@@ -1,6 +1,6 @@
 # RFC-0001: DPM-First Proposal Simulation Screen
 
-- Status: IMPLEMENTING
+- Status: IMPLEMENTED
 - Date: 2026-02-22
 
 ## Goal
