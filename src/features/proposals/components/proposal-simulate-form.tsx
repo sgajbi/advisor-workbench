@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
-import { simulateProposal } from "../api";
+import { createProposal, simulateProposal } from "../api";
 import { ProposalSimulateResponse } from "../types";
 
 const DEFAULT_PAYLOAD = {
@@ -42,13 +43,18 @@ export default function ProposalSimulateForm() {
     return `ui-${Date.now()}`;
   });
   const [loading, setLoading] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
+  const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
+  const [createdBy, setCreatedBy] = useState("advisor_1");
+  const [proposalTitle, setProposalTitle] = useState("DPM proposal draft");
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setResult(null);
+    setSavedProposalId(null);
     setLoading(true);
     try {
       const payload = JSON.parse(payloadText) as { body: Record<string, unknown> };
@@ -59,6 +65,33 @@ export default function ProposalSimulateForm() {
       setError(message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onSaveDraft() {
+    setError(null);
+    setSavingDraft(true);
+    try {
+      const payload = JSON.parse(payloadText) as { body: Record<string, unknown> };
+      const createResponse = await createProposal(
+        {
+          body: {
+            created_by: createdBy,
+            simulate_request: payload.body,
+            metadata: {
+              title: proposalTitle,
+            },
+          },
+        },
+        `${idempotencyKey}-create`
+      );
+      const proposal = (createResponse.data.proposal as { proposal_id?: string } | undefined) ?? {};
+      setSavedProposalId(proposal.proposal_id ?? null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
+    } finally {
+      setSavingDraft(false);
     }
   }
 
@@ -73,6 +106,20 @@ export default function ProposalSimulateForm() {
           onChange={(e) => setIdempotencyKey(e.target.value)}
           style={{ display: "block", width: "100%", marginBottom: "0.75rem" }}
         />
+        <label htmlFor="created-by">Created By</label>
+        <input
+          id="created-by"
+          value={createdBy}
+          onChange={(e) => setCreatedBy(e.target.value)}
+          style={{ display: "block", width: "100%", marginBottom: "0.75rem" }}
+        />
+        <label htmlFor="proposal-title">Proposal Title</label>
+        <input
+          id="proposal-title"
+          value={proposalTitle}
+          onChange={(e) => setProposalTitle(e.target.value)}
+          style={{ display: "block", width: "100%", marginBottom: "0.75rem" }}
+        />
 
         <label htmlFor="payload">Request Payload</label>
         <textarea
@@ -83,8 +130,16 @@ export default function ProposalSimulateForm() {
           style={{ display: "block", width: "100%", fontFamily: "monospace" }}
         />
 
-        <button type="submit" disabled={loading} style={{ marginTop: "0.75rem" }}>
+        <button type="submit" disabled={loading} style={{ marginTop: "0.75rem", marginRight: "0.5rem" }}>
           {loading ? "Simulating..." : "Simulate Proposal"}
+        </button>
+        <button
+          type="button"
+          onClick={onSaveDraft}
+          disabled={savingDraft}
+          style={{ marginTop: "0.75rem" }}
+        >
+          {savingDraft ? "Saving Draft..." : "Save Draft"}
         </button>
       </form>
 
@@ -103,6 +158,18 @@ export default function ProposalSimulateForm() {
           </details>
         </div>
       ) : null}
+
+      {savedProposalId ? (
+        <div style={{ marginTop: "0.75rem" }}>
+          <p>Draft saved as Proposal ID: {savedProposalId}</p>
+          <p>
+            <Link href={`/proposals/${savedProposalId}`}>Open Proposal Details</Link>
+          </p>
+        </div>
+      ) : null}
+      <p style={{ marginTop: "0.75rem" }}>
+        <Link href="/proposals">View Proposal Workspace</Link>
+      </p>
     </section>
   );
 }
