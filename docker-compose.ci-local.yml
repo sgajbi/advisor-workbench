@@ -4,6 +4,11 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
-    command: ["sh", "-lc", "npm ci && make ci-local"]
+    command:
+      [
+        "sh",
+        "-lc",
+        "npm ci && npm run lint && npm run typecheck && npm run test && npm run build"
+      ]
     environment:
       - BFF_BASE_URL=http://host.docker.internal:8100
