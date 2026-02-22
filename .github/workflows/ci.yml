@@ -1,12 +1,29 @@
-name: ci
+name: Advisor Workbench Pipeline
 
 on:
   pull_request:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  workflow-lint:
+    name: Workflow Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-actionlint@v1
+
+  check:
+    name: Lint, Typecheck, Test, Build
+    needs: [workflow-lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,10 +31,6 @@ jobs:
         with:
           node-version: '22'
       - name: Install
-        run: npm install
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Test
-        run: npm run test
-      - name: Build
-        run: npm run build
+        run: make install
+      - name: Check
+        run: make check
