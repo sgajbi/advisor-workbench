@@ -1,4 +1,4 @@
-.PHONY: install lint typecheck test build check ci-local run clean
+.PHONY: install lint typecheck test build check ci-local ci-local-docker ci-local-docker-down run clean docker-up docker-down
 
 install:
 	npm install
@@ -19,8 +19,20 @@ check: lint typecheck test build
 
 ci-local: check
 
+ci-local-docker:
+	docker compose -f docker-compose.ci-local.yml up --build --abort-on-container-exit --exit-code-from ci-local ci-local
+
+ci-local-docker-down:
+	docker compose -f docker-compose.ci-local.yml down -v --remove-orphans
+
 run:
 	npm run dev
+
+docker-up:
+	docker compose up -d --build
+
+docker-down:
+	docker compose down
 
 clean:
 	rm -rf .next node_modules

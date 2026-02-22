@@ -62,3 +62,39 @@ export type ProposalSubmitRequest = {
   reason?: Record<string, unknown>;
   related_version_no?: number;
 };
+
+export type ProposalApprovalActionRequest = {
+  actor_id: string;
+  expected_state: string;
+  details?: Record<string, unknown>;
+  related_version_no?: number;
+};
+
+export type ProposalWorkflowEvent = {
+  event_id: string;
+  event_type: string;
+  from_state?: string | null;
+  to_state: string;
+  actor_id: string;
+  occurred_at: string;
+};
+
+export type ProposalWorkflowEventsData = {
+  proposal_id: string;
+  current_state: string;
+  events: ProposalWorkflowEvent[];
+};
+
+export type ProposalApprovalRecord = {
+  approval_id: string;
+  approval_type: string;
+  approved: boolean;
+  actor_id: string;
+  occurred_at: string;
+};
+
+export type ProposalApprovalsData = {
+  proposal_id: string;
+  current_state: string;
+  approvals: ProposalApprovalRecord[];
+};

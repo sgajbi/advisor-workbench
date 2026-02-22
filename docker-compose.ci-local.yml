@@ -1,0 +1,9 @@
+services:
+  ci-local:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: ["sh", "-lc", "npm ci && make ci-local"]
+    environment:
+      - BFF_BASE_URL=http://host.docker.internal:8100

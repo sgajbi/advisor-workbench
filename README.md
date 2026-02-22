@@ -34,4 +34,19 @@ Set `BFF_BASE_URL` to point to `advisor-experience-api`.
 
 - `/proposals/simulate` - simulate and save draft proposal
 - `/proposals` - proposal workspace list
-- `/proposals/[proposalId]` - proposal detail and submit-for-review action
+- `/proposals/[proposalId]` - proposal detail with submit/approval/consent actions and workflow timeline
+
+## Docker
+
+```bash
+make docker-up
+make docker-down
+
+make ci-local-docker
+make ci-local-docker-down
+```
+
+## Demo Pack
+
+- `docs/demo/README.md`
+- `docs/demo/scripts/demo-ui-approval-chain.md`
