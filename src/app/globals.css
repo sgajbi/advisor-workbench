@@ -1,0 +1,16 @@
+html, body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  padding: 1.25rem;
+}
+
+section {
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+}
