@@ -9,6 +9,8 @@ import {
   submitProposal,
 } from "../../src/features/proposals/api";
 
+const expectedBaseUrl = process.env.BFF_BASE_URL ?? "http://localhost:8100";
+
 describe("proposal api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -33,7 +35,7 @@ describe("proposal api", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8100/api/v1/proposals/pp_1/submit",
+      `${expectedBaseUrl}/api/v1/proposals/pp_1/submit`,
       expect.any(Object)
     );
   });
@@ -61,12 +63,12 @@ describe("proposal api", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const calledUrls = fetchMock.mock.calls.map((call) => call[0] as string);
-    expect(calledUrls).toContain("http://localhost:8100/api/v1/proposals/pp_1/approve-risk");
+    expect(calledUrls).toContain(`${expectedBaseUrl}/api/v1/proposals/pp_1/approve-risk`);
     expect(calledUrls).toContain(
-      "http://localhost:8100/api/v1/proposals/pp_1/approve-compliance"
+      `${expectedBaseUrl}/api/v1/proposals/pp_1/approve-compliance`
     );
     expect(calledUrls).toContain(
-      "http://localhost:8100/api/v1/proposals/pp_1/record-client-consent"
+      `${expectedBaseUrl}/api/v1/proposals/pp_1/record-client-consent`
     );
   });
 
@@ -93,10 +95,10 @@ describe("proposal api", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8100/api/v1/proposals/pp_1/workflow-events"
+      `${expectedBaseUrl}/api/v1/proposals/pp_1/workflow-events`
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8100/api/v1/proposals/pp_1/approvals"
+      `${expectedBaseUrl}/api/v1/proposals/pp_1/approvals`
     );
   });
 });
