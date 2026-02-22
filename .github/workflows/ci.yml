@@ -34,3 +34,24 @@ jobs:
         run: make install
       - name: Check
         run: make check
+
+  docker-build:
+    name: Validate Docker Build
+    needs: [check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t advisor-workbench:ci-test .
+
+  ci-local-docker:
+    name: CI Local Docker Parity
+    needs: [check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dockerized local CI parity
+        run: make ci-local-docker
+      - name: Cleanup
+        if: always()
+        run: make ci-local-docker-down

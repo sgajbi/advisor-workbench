@@ -4,7 +4,15 @@ import { vi } from "vitest";
 
 import ProposalDetailView from "../../src/features/proposals/components/proposal-detail-view";
 
-const { getProposalMock, submitProposalMock } = vi.hoisted(() => ({
+const {
+  getProposalMock,
+  submitProposalMock,
+  approveRiskMock,
+  approveComplianceMock,
+  recordClientConsentMock,
+  getWorkflowEventsMock,
+  getApprovalsMock,
+} = vi.hoisted(() => ({
   getProposalMock: vi.fn(async () => ({
     proposal: {
       proposal_id: "pp_1",
@@ -13,28 +21,120 @@ const { getProposalMock, submitProposalMock } = vi.hoisted(() => ({
       current_version_no: 1,
     },
   })),
-  submitProposalMock: vi.fn(async () => ({
-    data: { proposal_id: "pp_1", current_state: "RISK_REVIEW" },
+  submitProposalMock: vi.fn(async () => ({ data: { current_state: "RISK_REVIEW" } })),
+  approveRiskMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
+  approveComplianceMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
+  recordClientConsentMock: vi.fn(async () => ({ data: { current_state: "EXECUTION_READY" } })),
+  getWorkflowEventsMock: vi.fn(async () => ({
+    proposal_id: "pp_1",
+    current_state: "DRAFT",
+    events: [
+      {
+        event_id: "pwe_1",
+        event_type: "CREATED",
+        from_state: null,
+        to_state: "DRAFT",
+        actor_id: "advisor_1",
+        occurred_at: "2026-02-22T00:00:00Z",
+      },
+    ],
+  })),
+  getApprovalsMock: vi.fn(async () => ({
+    proposal_id: "pp_1",
+    current_state: "DRAFT",
+    approvals: [
+      {
+        approval_id: "pap_1",
+        approval_type: "RISK",
+        approved: true,
+        actor_id: "risk_1",
+        occurred_at: "2026-02-22T00:00:01Z",
+      },
+    ],
   })),
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
   getProposal: getProposalMock,
   submitProposal: submitProposalMock,
+  approveRisk: approveRiskMock,
+  approveCompliance: approveComplianceMock,
+  recordClientConsent: recordClientConsentMock,
+  getProposalWorkflowEvents: getWorkflowEventsMock,
+  getProposalApprovals: getApprovalsMock,
 }));
 
 describe("ProposalDetailView", () => {
-  it("submits proposal for review from draft", async () => {
+  it("renders timeline and approvals", async () => {
     render(<ProposalDetailView proposalId="pp_1" />);
 
     await waitFor(() => {
       expect(screen.getByText("State: DRAFT")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Submit For Review" }));
+    expect(screen.getByText(/CREATED/)).toBeInTheDocument();
+    expect(screen.getByText(/RISK: APPROVED/)).toBeInTheDocument();
+  });
+
+  it("submits draft to risk review", async () => {
+    render(<ProposalDetailView proposalId="pp_1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Submit To Risk Review" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit To Risk Review" }));
 
     await waitFor(() => {
       expect(submitProposalMock).toHaveBeenCalled();
+    });
+  });
+
+  it("approves risk when in risk review", async () => {
+    getProposalMock.mockResolvedValueOnce({
+      proposal: {
+        proposal_id: "pp_1",
+        current_state: "RISK_REVIEW",
+        portfolio_id: "pf_1",
+        current_version_no: 1,
+      },
+    });
+
+    render(<ProposalDetailView proposalId="pp_1" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Approve Risk" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Approve Risk" }));
+
+    await waitFor(() => {
+      expect(approveRiskMock).toHaveBeenCalled();
+    });
+  });
+
+  it("records client consent when awaiting client consent", async () => {
+    getProposalMock.mockResolvedValueOnce({
+      proposal: {
+        proposal_id: "pp_1",
+        current_state: "AWAITING_CLIENT_CONSENT",
+        portfolio_id: "pf_1",
+        current_version_no: 1,
+      },
+    });
+
+    render(<ProposalDetailView proposalId="pp_1" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Record Client Consent" })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Record Client Consent" }));
+
+    await waitFor(() => {
+      expect(recordClientConsentMock).toHaveBeenCalled();
     });
   });
 });
