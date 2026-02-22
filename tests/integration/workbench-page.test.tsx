@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import PartialFailureBanner from "../../src/features/workbench/components/partial-failure-banner";
 
