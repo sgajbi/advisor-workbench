@@ -11,26 +11,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <header className="topbar">
               <div className="topbar-inner">
                 <Link href="/" className="brand">
-                  Advisor Workbench
+                  Wealth Operations
                 </Link>
                 <nav className="nav-links">
                   <Link href="/suite" className="nav-link">
-                    Suite
+                    Command Center
                   </Link>
                   <Link href="/pas/intake" className="nav-link">
-                    PAS Intake
+                    Portfolio Intake
                   </Link>
                   <Link href="/pa/analytics" className="nav-link">
-                    PA Analytics
+                    Analytics Studio
                   </Link>
                   <Link href="/proposals" className="nav-link">
-                    DPM Proposals
+                    Advisory Pipeline
                   </Link>
                   <Link href="/proposals/simulate" className="nav-link">
-                    DPM Simulation
+                    Scenario Builder
                   </Link>
                   <Link href="/workbench/PF_1001" className="nav-link">
-                    DPM Workbench
+                    Decision Console
                   </Link>
                 </nav>
               </div>

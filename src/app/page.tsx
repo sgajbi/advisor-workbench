@@ -5,55 +5,55 @@ export default function Home() {
     <main className="page-container">
       <h1 className="page-title">Wealth Suite Control Center</h1>
       <p className="page-subtitle">
-        Unified UI for PAS intake, PA analytics, and DPM advisory workflows through a single BFF experience.
+        Enterprise workspace for intake, analytics, and advisory decisions in one operational cockpit.
       </p>
 
       <section className="section-card suite-hero">
         <div>
           <p className="pill">System Storyline</p>
-          <h2>From Data Intake To Advisory Decisioning</h2>
+          <h2>From Data Intake To Client-Ready Decision</h2>
           <p className="muted">
-            PAS manages canonical portfolio and market data, PA derives advanced analytics, and DPM runs portfolio
-            construction and recommendation workflows.
+            Teams move from validated portfolio data, to analytics intelligence, to governed investment recommendations
+            without leaving a single workflow shell.
           </p>
         </div>
         <div className="suite-pipeline">
-          <div className="pipeline-node">PAS Core Platform</div>
+          <div className="pipeline-node">Portfolio Data Hub</div>
           <div className="pipeline-arrow">-&gt;</div>
-          <div className="pipeline-node">PA Analytics</div>
+          <div className="pipeline-node">Analytics Intelligence</div>
           <div className="pipeline-arrow">-&gt;</div>
-          <div className="pipeline-node">DPM Workflows</div>
+          <div className="pipeline-node">Advisory Workflow Engine</div>
           <div className="pipeline-arrow">-&gt;</div>
-          <div className="pipeline-node">Advisor UI + BFF</div>
+          <div className="pipeline-node">Client Decision Workspace</div>
         </div>
       </section>
 
       <section className="suite-grid">
         <article className="section-card suite-tile">
-          <h3>PAS Intake</h3>
+          <h3>Portfolio Intake</h3>
           <p className="muted">
-            Upload positions, transactions, and instruments through guided forms and file pipelines.
+            Capture positions, transactions, and instruments through guided forms and controlled file pipelines.
           </p>
           <Link href="/pas/intake" className="nav-link">
-            Open PAS Intake
+            Open Intake
           </Link>
         </article>
         <article className="section-card suite-tile">
-          <h3>PA Analytics</h3>
-          <p className="muted">Review performance, attribution, and risk insights built on PAS outputs.</p>
+          <h3>Analytics Studio</h3>
+          <p className="muted">Review performance, attribution, and risk insights with portfolio-level drilldowns.</p>
           <Link href="/pa/analytics" className="nav-link">
-            Open PA Analytics
+            Open Analytics
           </Link>
         </article>
         <article className="section-card suite-tile">
-          <h3>DPM Workbench</h3>
-          <p className="muted">Run proposal lifecycle, review gates, and approval actions using live DPM integration.</p>
+          <h3>Advisory Pipeline</h3>
+          <p className="muted">Run recommendation lifecycle, gate reviews, and approvals with full audit traceability.</p>
           <div className="toolbar">
             <Link href="/proposals" className="nav-link">
-              Proposals
+              Open Pipeline
             </Link>
             <Link href="/workbench/PF_1001" className="nav-link">
-              Workbench
+              Open Console
             </Link>
           </div>
         </article>

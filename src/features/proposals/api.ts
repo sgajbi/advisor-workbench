@@ -5,6 +5,7 @@ import {
   ProposalDetailData,
   ProposalEnvelopeResponse,
   ProposalListData,
+  ProposalLineageData,
   ProposalSimulateRequest,
   ProposalSimulateResponse,
   ProposalSubmitRequest,
@@ -120,6 +121,18 @@ export async function createProposalVersion(
   idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson(`/proposals/${proposalId}/versions`, payload, idempotencyKey);
+}
+
+export async function getProposalLineage(
+  proposalId: string
+): Promise<ProposalLineageData> {
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/lineage`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Proposal lineage failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as ProposalEnvelopeResponse;
+  return envelope.data as unknown as ProposalLineageData;
 }
 
 export async function submitProposal(

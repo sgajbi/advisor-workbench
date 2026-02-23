@@ -22,6 +22,7 @@ import {
   createProposalVersion,
   getProposal,
   getProposalApprovals,
+  getProposalLineage,
   getProposalVersion,
   getProposalWorkflowEvents,
   recordClientConsent,
@@ -30,6 +31,7 @@ import {
 import {
   ProposalApprovalsData,
   ProposalDetailData,
+  ProposalLineageData,
   ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "../types";
@@ -99,6 +101,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const approvalsQuery = useQuery({
     queryKey: ["proposal-approvals", proposalId, revision],
     queryFn: async () => await getProposalApprovals(proposalId),
+  });
+  const lineageQuery = useQuery({
+    queryKey: ["proposal-lineage", proposalId, revision],
+    queryFn: async () => await getProposalLineage(proposalId),
   });
 
   async function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
@@ -186,7 +192,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     }
   }
 
-  if (detailQuery.isLoading || workflowQuery.isLoading || approvalsQuery.isLoading) {
+  if (detailQuery.isLoading || workflowQuery.isLoading || approvalsQuery.isLoading || lineageQuery.isLoading) {
     return (
       <Paper className="section-card">
         <Stack direction="row" spacing={1} alignItems="center">
@@ -245,7 +251,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     }
   }
 
-  const queryError = detailQuery.error ?? workflowQuery.error ?? approvalsQuery.error;
+  const queryError = detailQuery.error ?? workflowQuery.error ?? approvalsQuery.error ?? lineageQuery.error;
 
   if (error || queryError) {
     return (
@@ -262,6 +268,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const data = detailQuery.data as ProposalDetailData;
   const workflow = workflowQuery.data as ProposalWorkflowEventsData | undefined;
   const approvals = approvalsQuery.data as ProposalApprovalsData | undefined;
+  const lineage = lineageQuery.data as ProposalLineageData | undefined;
   const currentVersion = (data.current_version as Record<string, unknown> | undefined) ?? {};
   const artifact = (currentVersion.artifact as Record<string, unknown> | undefined) ?? {};
   const evidence =
@@ -416,6 +423,34 @@ export default function ProposalDetailView({ proposalId }: Props) {
           {versionActionError}
         </Alert>
       ) : null}
+
+      <Divider sx={{ my: 1 }} />
+      <Typography variant="h6" component="h3">
+        Lineage Explorer
+      </Typography>
+      {lineage?.versions?.length ? (
+        <Stack spacing={0.8} sx={{ mt: 0.8, mb: 1 }}>
+          {lineage.versions.map((version) => (
+            <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5 }} key={`lineage-${String(version.version_no ?? "na")}`}>
+              <Typography variant="subtitle2">Version {String(version.version_no ?? "N/A")}</Typography>
+              <Typography sx={{ fontSize: 12, wordBreak: "break-all" }}>
+                Request Hash: {String(version.request_hash ?? "N/A")}
+              </Typography>
+              <Typography sx={{ fontSize: 12, wordBreak: "break-all" }}>
+                Simulation Hash: {String(version.simulation_hash ?? "N/A")}
+              </Typography>
+              <Typography sx={{ fontSize: 12, wordBreak: "break-all" }}>
+                Artifact Hash: {String(version.artifact_hash ?? "N/A")}
+              </Typography>
+              <Typography sx={{ fontSize: 12 }}>Created At: {String(version.created_at ?? "N/A")}</Typography>
+            </Paper>
+          ))}
+        </Stack>
+      ) : (
+        <Typography className="muted" sx={{ mb: 1 }}>
+          No lineage metadata returned for this proposal yet.
+        </Typography>
+      )}
 
       <Divider sx={{ my: 1 }} />
       <Typography variant="h6" component="h3">
