@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
   Divider,
@@ -21,6 +22,43 @@ import { ProposalSummary } from "../types";
 
 const STAGES = ["DRAFT", "RISK_REVIEW", "COMPLIANCE_REVIEW", "AWAITING_CLIENT_CONSENT", "EXECUTION_READY"] as const;
 type Stage = (typeof STAGES)[number];
+const DEMO_PROPOSALS: ProposalSummary[] = [
+  {
+    proposal_id: "PP-7716",
+    portfolio_id: "PF_1005",
+    current_state: "RISK_REVIEW",
+    title: "Tactical Equity Tilt",
+    created_by: "advisor_1",
+  },
+  {
+    proposal_id: "PP-7717",
+    portfolio_id: "PF_1700",
+    current_state: "COMPLIANCE_REVIEW",
+    title: "Duration Extension",
+    created_by: "advisor_2",
+  },
+  {
+    proposal_id: "PP-7718",
+    portfolio_id: "PF_9015",
+    current_state: "AWAITING_CLIENT_CONSENT",
+    title: "Income Overlay",
+    created_by: "advisor_1",
+  },
+  {
+    proposal_id: "PP-7720",
+    portfolio_id: "PF_1002",
+    current_state: "DRAFT",
+    title: "Cash Deployment Plan",
+    created_by: "advisor_3",
+  },
+  {
+    proposal_id: "PP-7721",
+    portfolio_id: "PF_1001",
+    current_state: "EXECUTION_READY",
+    title: "Core Rebalance",
+    created_by: "advisor_1",
+  },
+];
 
 function stageLabel(state: string): string {
   return state.replaceAll("_", " ");
@@ -62,6 +100,7 @@ function groupedByStage(items: ProposalSummary[]): Record<Stage, ProposalSummary
 }
 
 export default function ProposalListView() {
+  const [liveMode, setLiveMode] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [portfolioFilter, setPortfolioFilter] = useState("");
@@ -74,9 +113,12 @@ export default function ProposalListView() {
         portfolioId: portfolioFilter || undefined,
         createdBy: createdByFilter || undefined,
       }),
+    enabled: liveMode,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
-  const items = useMemo(() => data?.items ?? [], [data?.items]);
+  const items = useMemo(() => (liveMode ? data?.items ?? [] : DEMO_PROPOSALS), [data?.items, liveMode]);
   const visibleItems = useMemo(() => {
     const query = searchText.trim().toLowerCase();
     if (!query) {
@@ -95,7 +137,7 @@ export default function ProposalListView() {
   }, [items, searchText]);
   const grouped = useMemo(() => groupedByStage(visibleItems), [visibleItems]);
 
-  if (isLoading) {
+  if (liveMode && isLoading) {
     return (
       <Paper className="section-card">
         <Stack direction="row" spacing={1} alignItems="center">
@@ -103,14 +145,6 @@ export default function ProposalListView() {
           <Typography>Loading proposals...</Typography>
         </Stack>
       </Paper>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error">
-        Error: {error instanceof Error ? error.message : "Unknown error"}
-      </Alert>
     );
   }
 
@@ -122,6 +156,25 @@ export default function ProposalListView() {
       <Typography className="muted" sx={{ mb: 1 }}>
         Prioritize advisor tasks by workflow stage and jump directly to the next action.
       </Typography>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 1 }}>
+        <Chip
+          size="small"
+          color={liveMode ? "primary" : "default"}
+          label={liveMode ? "Live Queue Mode" : "Storyboard Mode"}
+        />
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => setLiveMode((prev) => !prev)}
+        >
+          {liveMode ? "Switch To Storyboard Mode" : "Load Live Queue"}
+        </Button>
+      </Stack>
+      {liveMode && error ? (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          Live queue is unavailable. Showing no live proposals.
+        </Alert>
+      ) : null}
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
         <TextField
