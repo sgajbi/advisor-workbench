@@ -239,10 +239,6 @@ export default function ProposalDetailView({ proposalId }: Props) {
       ) : (
         <Typography className="muted">No approvals recorded.</Typography>
       )}
-      <details style={{ marginTop: "0.75rem" }}>
-        <summary>Raw proposal detail</summary>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      </details>
     </Paper>
   );
 }
