@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { Chip, Paper, Stack, Typography } from "@mui/material";
 
-import { advisoryQueue, analyticsHighlights, intakeBatches } from "@/features/suite/mock-data";
+import {
+  advisoryQueue,
+  advisorPriorityBoard,
+  analyticsHighlights,
+  dpmActionPlaybook,
+  intakeBatches,
+} from "@/features/suite/mock-data";
 
 export default function SuitePage() {
   return (
@@ -12,7 +18,7 @@ export default function SuitePage() {
         Command Center
       </Typography>
       <Typography className="page-subtitle">
-        Run the full advisor workflow from intake to analytics to proposal decisioning in one workspace.
+        Start with client priorities, execute next-best workflow actions, and close the day with decision-ready outcomes.
       </Typography>
 
       <Paper className="section-card" elevation={0}>
@@ -37,6 +43,79 @@ export default function SuitePage() {
           </div>
         </div>
       </Paper>
+
+      <section className="suite-grid">
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Today&apos;s Client Priorities
+          </Typography>
+          {advisorPriorityBoard.map((item) => (
+            <div key={item.proposalId} className="suite-row">
+              <div>
+                <strong>{item.clientName}</strong>
+                <p className="muted">
+                  {item.portfolioId} • {item.workflowState}
+                </p>
+              </div>
+              <div>
+                <p>{item.urgency}</p>
+                <p className="muted">{item.businessAction}</p>
+              </div>
+            </div>
+          ))}
+          <div className="toolbar">
+            <Link href="/proposals" className="nav-link">
+              Open Proposal Pipeline
+            </Link>
+            <Link href="/workbench/PF_1001" className="nav-link">
+              Open Decision Console
+            </Link>
+          </div>
+        </Paper>
+
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            DPM Action Playbook
+          </Typography>
+          {dpmActionPlaybook.map((item) => (
+            <div key={item.workflowState} className="suite-row">
+              <div>
+                <strong>{item.workflowState}</strong>
+                <p className="muted">{item.advisorAction}</p>
+              </div>
+              <div>
+                <Link href={item.route} className="nav-link">
+                  {item.routeLabel}
+                </Link>
+              </div>
+            </div>
+          ))}
+        </Paper>
+
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Workflow Execution Controls
+          </Typography>
+          <div className="suite-row">
+            <span>New Recommendation</span>
+            <Link href="/proposals/simulate" className="nav-link">
+              Launch Simulation
+            </Link>
+          </div>
+          <div className="suite-row">
+            <span>Review Existing Proposals</span>
+            <Link href="/proposals" className="nav-link">
+              Open Pipeline
+            </Link>
+          </div>
+          <div className="suite-row">
+            <span>Portfolio Decision Context</span>
+            <Link href="/workbench/PF_1001" className="nav-link">
+              Open Workbench
+            </Link>
+          </div>
+        </Paper>
+      </section>
 
       <section className="suite-grid">
         <Paper className="section-card suite-panel" elevation={0}>
