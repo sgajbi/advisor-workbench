@@ -23,6 +23,8 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 import { ingestPortfolioBundle } from "@/features/intake/api";
@@ -48,6 +50,42 @@ type IntakeOperation =
   | "ADD_MARKET_DATA";
 
 type CatalogState = "manual" | "loading" | "online" | "fallback";
+
+const OPERATION_ORDER: IntakeOperation[] = [
+  "CREATE_PORTFOLIO",
+  "ADD_POSITIONS",
+  "ADD_TRANSACTIONS",
+  "ADD_INSTRUMENTS",
+  "ADD_MARKET_DATA",
+];
+
+const OPERATION_COPY: Record<IntakeOperation, { title: string; objective: string; checkpoint: string }> = {
+  CREATE_PORTFOLIO: {
+    title: "Create Portfolio Workspace",
+    objective: "Define core portfolio profile, mandate context, and ownership attributes.",
+    checkpoint: "Portfolio profile is complete and governance attributes are assigned.",
+  },
+  ADD_POSITIONS: {
+    title: "Add Positions Workspace",
+    objective: "Capture opening holdings with security, quantity, and valuation references.",
+    checkpoint: "Position rows are complete and security identifiers are validated.",
+  },
+  ADD_TRANSACTIONS: {
+    title: "Add Transactions Workspace",
+    objective: "Record trade activity with date, quantity, and transaction type context.",
+    checkpoint: "Transactions are complete and linked to the target portfolio.",
+  },
+  ADD_INSTRUMENTS: {
+    title: "Add Instruments Workspace",
+    objective: "Register reference instrument metadata required for downstream analytics.",
+    checkpoint: "Instrument master rows include security ID, ISIN, and product descriptors.",
+  },
+  ADD_MARKET_DATA: {
+    title: "Add Market Data Workspace",
+    objective: "Submit price observations required for valuation and performance workflows.",
+    checkpoint: "Market data rows have valid security IDs, price dates, and currency tags.",
+  },
+};
 
 function unique(values: string[]): string[] {
   return Array.from(new Set(values.filter((value) => value.trim())));
@@ -98,6 +136,8 @@ function catalogColor(state: CatalogState): "default" | "primary" | "warning" | 
 }
 
 export default function PasIntakePage() {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [operation, setOperation] = useState<IntakeOperation>("CREATE_PORTFOLIO");
   const [lookupEnabled, setLookupEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -182,6 +222,7 @@ export default function PasIntakePage() {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  const activeOperationIndex = OPERATION_ORDER.indexOf(operation);
 
   const readiness = useMemo(() => {
     if (operation === "CREATE_PORTFOLIO") {
@@ -204,6 +245,7 @@ export default function PasIntakePage() {
   }, [advisorId, baseCurrency, cifId, instruments, marketData, openDate, operation, portfolioId, positions, transactions]);
 
   const canSubmit = readiness === 100;
+  const activeCopy = OPERATION_COPY[operation];
   const fallbackPortfolioIds = useMemo(
     () =>
       unique([
@@ -286,6 +328,55 @@ export default function PasIntakePage() {
     currencyCatalogState === "online"
       ? unique((currencyLookupQuery.data ?? []).map((item) => item.id))
       : fallbackCurrencyCodes;
+  const validationGaps = useMemo(() => {
+    if (operation === "CREATE_PORTFOLIO") {
+      const gaps: string[] = [];
+      if (!portfolioId.trim()) gaps.push("Portfolio ID is required.");
+      if (!baseCurrency.trim()) gaps.push("Base currency is required.");
+      if (!openDate.trim()) gaps.push("Open date is required.");
+      if (!cifId.trim()) gaps.push("CIF ID is required.");
+      if (!advisorId.trim()) gaps.push("Advisor ID is required.");
+      return gaps;
+    }
+    if (operation === "ADD_POSITIONS") {
+      return positions
+        .map((row, index) => {
+          if (!row.securityId || row.quantity <= 0 || row.price <= 0) {
+            return `Position row ${index + 1} needs security ID, quantity, and price.`;
+          }
+          return "";
+        })
+        .filter(Boolean);
+    }
+    if (operation === "ADD_TRANSACTIONS") {
+      return transactions
+        .map((row, index) => {
+          if (!row.securityId || row.quantity <= 0 || row.price <= 0) {
+            return `Transaction row ${index + 1} needs security ID, quantity, and price.`;
+          }
+          return "";
+        })
+        .filter(Boolean);
+    }
+    if (operation === "ADD_INSTRUMENTS") {
+      return instruments
+        .map((row, index) => {
+          if (!row.securityId || !row.name || !row.isin) {
+            return `Instrument row ${index + 1} needs security ID, name, and ISIN.`;
+          }
+          return "";
+        })
+        .filter(Boolean);
+    }
+    return marketData
+      .map((row, index) => {
+        if (!row.securityId || row.price <= 0) {
+          return `Market data row ${index + 1} needs security ID and price.`;
+        }
+        return "";
+      })
+      .filter(Boolean);
+  }, [advisorId, baseCurrency, cifId, instruments, marketData, openDate, operation, portfolioId, positions, transactions]);
 
   async function submitCurrentOperation() {
     if (!canSubmit) {
@@ -368,6 +459,41 @@ export default function PasIntakePage() {
           Execute one intake intent at a time with list-based entity submission and governed selector catalogs.
         </Typography>
       </section>
+
+      <Paper className="section-card" elevation={0}>
+        <Stack spacing={1}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1} justifyContent="space-between">
+            <Box>
+              <Typography variant="h6">Workflow Guidance</Typography>
+              <Typography className="muted">{activeCopy.objective}</Typography>
+            </Box>
+            <Chip
+              size="small"
+              color={canSubmit ? "success" : "warning"}
+              label={`Step ${activeOperationIndex + 1} of ${OPERATION_ORDER.length}`}
+            />
+          </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={0.8} flexWrap="wrap">
+            {OPERATION_ORDER.map((item, index) => (
+              <Chip
+                key={item}
+                size="small"
+                label={`${index + 1}. ${OPERATION_COPY[item].title.replace(" Workspace", "")}`}
+                color={item === operation ? "primary" : "default"}
+                variant={item === operation ? "filled" : "outlined"}
+              />
+            ))}
+          </Stack>
+          <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
+            Checkpoint: {activeCopy.checkpoint}
+          </Typography>
+          {!canSubmit ? (
+            <Alert severity="info">
+              {validationGaps.length > 0 ? validationGaps[0] : "Complete required fields before submitting this operation."}
+            </Alert>
+          ) : null}
+        </Stack>
+      </Paper>
 
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
@@ -494,10 +620,10 @@ export default function PasIntakePage() {
       </Paper>
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, lg: 8 }}>
+        <Grid size={{ xs: 12, lg: 9, xl: 10 }}>
           <Paper className="section-card" elevation={0}>
             <Typography variant="h6" sx={{ mb: 1 }}>
-              {operation.replaceAll("_", " ")} Workspace
+              {activeCopy.title}
             </Typography>
             <Divider sx={{ mb: 1 }} />
 
@@ -570,36 +696,74 @@ export default function PasIntakePage() {
                     />
                   </Grid>
                 </Grid>
-                <Box sx={{ overflowX: "auto" }}>
-                <Table size="small" sx={{ minWidth: 980 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Security</TableCell>
-                      <TableCell>Name</TableCell>
-                      <TableCell>ISIN</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Qty</TableCell>
-                      <TableCell>Price</TableCell>
-                      <TableCell>Effective Date</TableCell>
-                      <TableCell>Txn Type</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
+                {isSmallScreen ? (
+                  <Stack spacing={1}>
                     {positions.map((row, index) => (
-                      <TableRow key={`pos-${index}`}>
-                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
-                        <TableCell><TextField size="small" value={row.instrumentName} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentName: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.isin} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.productType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.quantity} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.price} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.effectiveDate} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, effectiveDate: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.transactionType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></TableCell>
-                      </TableRow>
+                      <Paper key={`pos-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                          Position Row {index + 1}
+                        </Typography>
+                        <Grid container spacing={1}>
+                          <Grid size={{ xs: 12 }}>
+                            <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Name" value={row.instrumentName} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentName: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="ISIN" value={row.isin} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Type" value={row.productType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField fullWidth size="small" label="Qty" value={row.quantity} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField fullWidth size="small" label="Price" value={row.price} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Effective Date" value={row.effectiveDate} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, effectiveDate: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Txn Type" value={row.transactionType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} />
+                          </Grid>
+                        </Grid>
+                      </Paper>
                     ))}
-                  </TableBody>
-                </Table>
-                </Box>
+                  </Stack>
+                ) : (
+                  <Box sx={{ overflowX: "auto" }}>
+                    <Table size="small" sx={{ minWidth: 980 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Security</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>ISIN</TableCell>
+                          <TableCell>Type</TableCell>
+                          <TableCell>Qty</TableCell>
+                          <TableCell>Price</TableCell>
+                          <TableCell>Effective Date</TableCell>
+                          <TableCell>Txn Type</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {positions.map((row, index) => (
+                          <TableRow key={`pos-${index}`}>
+                            <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                            <TableCell><TextField size="small" value={row.instrumentName} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentName: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.isin} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.productType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.quantity} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.price} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.effectiveDate} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, effectiveDate: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.transactionType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                )}
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setPositions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Position Row
@@ -632,30 +796,59 @@ export default function PasIntakePage() {
                     renderInput={(params) => <TextField {...params} label="Base Currency" size="small" />}
                   />
                 </div>
-                <Box sx={{ overflowX: "auto" }}>
-                <Table size="small" sx={{ minWidth: 760 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Security</TableCell>
-                      <TableCell>Txn Type</TableCell>
-                      <TableCell>Quantity</TableCell>
-                      <TableCell>Price</TableCell>
-                      <TableCell>Date</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
+                {isSmallScreen ? (
+                  <Stack spacing={1}>
                     {transactions.map((row, index) => (
-                      <TableRow key={`txn-${index}`}>
-                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
-                        <TableCell><TextField size="small" value={row.transactionType} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.quantity} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.price} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.transactionDate} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionDate: e.target.value } : x)))} /></TableCell>
-                      </TableRow>
+                      <Paper key={`txn-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                          Transaction Row {index + 1}
+                        </Typography>
+                        <Grid container spacing={1}>
+                          <Grid size={{ xs: 12 }}>
+                            <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Txn Type" value={row.transactionType} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField fullWidth size="small" label="Quantity" value={row.quantity} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField fullWidth size="small" label="Price" value={row.price} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Date" value={row.transactionDate} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionDate: e.target.value } : x)))} />
+                          </Grid>
+                        </Grid>
+                      </Paper>
                     ))}
-                  </TableBody>
-                </Table>
-                </Box>
+                  </Stack>
+                ) : (
+                  <Box sx={{ overflowX: "auto" }}>
+                    <Table size="small" sx={{ minWidth: 760 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Security</TableCell>
+                          <TableCell>Txn Type</TableCell>
+                          <TableCell>Quantity</TableCell>
+                          <TableCell>Price</TableCell>
+                          <TableCell>Date</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {transactions.map((row, index) => (
+                          <TableRow key={`txn-${index}`}>
+                            <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                            <TableCell><TextField size="small" value={row.transactionType} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.quantity} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.price} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.transactionDate} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionDate: e.target.value } : x)))} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                )}
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setTransactions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Transaction Row
@@ -674,30 +867,59 @@ export default function PasIntakePage() {
 
             {operation === "ADD_INSTRUMENTS" ? (
               <>
-                <Box sx={{ overflowX: "auto" }}>
-                <Table size="small" sx={{ minWidth: 760 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Security</TableCell>
-                      <TableCell>Name</TableCell>
-                      <TableCell>ISIN</TableCell>
-                      <TableCell>Currency</TableCell>
-                      <TableCell>Product Type</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
+                {isSmallScreen ? (
+                  <Stack spacing={1}>
                     {instruments.map((row, index) => (
-                      <TableRow key={`ins-${index}`}>
-                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
-                        <TableCell><TextField size="small" value={row.name} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, name: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.isin} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></TableCell>
-                        <TableCell><Autocomplete freeSolo options={currencyOptionValues} value={row.instrumentCurrency} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
-                        <TableCell><TextField size="small" value={row.productType} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></TableCell>
-                      </TableRow>
+                      <Paper key={`ins-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                          Instrument Row {index + 1}
+                        </Typography>
+                        <Grid container spacing={1}>
+                          <Grid size={{ xs: 12 }}>
+                            <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Name" value={row.name} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, name: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="ISIN" value={row.isin} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <Autocomplete freeSolo options={currencyOptionValues} value={row.instrumentCurrency} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: value } : x)))} renderInput={(params) => <TextField {...params} label="Currency" size="small" />} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Product Type" value={row.productType} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} />
+                          </Grid>
+                        </Grid>
+                      </Paper>
                     ))}
-                  </TableBody>
-                </Table>
-                </Box>
+                  </Stack>
+                ) : (
+                  <Box sx={{ overflowX: "auto" }}>
+                    <Table size="small" sx={{ minWidth: 760 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Security</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>ISIN</TableCell>
+                          <TableCell>Currency</TableCell>
+                          <TableCell>Product Type</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {instruments.map((row, index) => (
+                          <TableRow key={`ins-${index}`}>
+                            <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                            <TableCell><TextField size="small" value={row.name} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, name: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.isin} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></TableCell>
+                            <TableCell><Autocomplete freeSolo options={currencyOptionValues} value={row.instrumentCurrency} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                            <TableCell><TextField size="small" value={row.productType} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                )}
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setInstruments((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Instrument Row
@@ -714,28 +936,54 @@ export default function PasIntakePage() {
 
             {operation === "ADD_MARKET_DATA" ? (
               <>
-                <Box sx={{ overflowX: "auto" }}>
-                <Table size="small" sx={{ minWidth: 680 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Security</TableCell>
-                      <TableCell>Price Date</TableCell>
-                      <TableCell>Price</TableCell>
-                      <TableCell>Currency</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
+                {isSmallScreen ? (
+                  <Stack spacing={1}>
                     {marketData.map((row, index) => (
-                      <TableRow key={`mkt-${index}`}>
-                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
-                        <TableCell><TextField size="small" value={row.priceDate} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, priceDate: e.target.value } : x)))} /></TableCell>
-                        <TableCell><TextField size="small" value={row.price} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
-                        <TableCell><Autocomplete freeSolo options={currencyOptionValues} value={row.currency} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
-                      </TableRow>
+                      <Paper key={`mkt-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                          Market Data Row {index + 1}
+                        </Typography>
+                        <Grid container spacing={1}>
+                          <Grid size={{ xs: 12 }}>
+                            <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth size="small" label="Price Date" value={row.priceDate} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, priceDate: e.target.value } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField fullWidth size="small" label="Price" value={row.price} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <Autocomplete freeSolo options={currencyOptionValues} value={row.currency} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: value } : x)))} renderInput={(params) => <TextField {...params} label="Currency" size="small" />} />
+                          </Grid>
+                        </Grid>
+                      </Paper>
                     ))}
-                  </TableBody>
-                </Table>
-                </Box>
+                  </Stack>
+                ) : (
+                  <Box sx={{ overflowX: "auto" }}>
+                    <Table size="small" sx={{ minWidth: 680 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Security</TableCell>
+                          <TableCell>Price Date</TableCell>
+                          <TableCell>Price</TableCell>
+                          <TableCell>Currency</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {marketData.map((row, index) => (
+                          <TableRow key={`mkt-${index}`}>
+                            <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                            <TableCell><TextField size="small" value={row.priceDate} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, priceDate: e.target.value } : x)))} /></TableCell>
+                            <TableCell><TextField size="small" value={row.price} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                            <TableCell><Autocomplete freeSolo options={currencyOptionValues} value={row.currency} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                )}
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setMarketData((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Market Data Row
@@ -752,7 +1000,7 @@ export default function PasIntakePage() {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 4 }}>
+        <Grid size={{ xs: 12, lg: 3, xl: 2 }}>
           <Paper className="section-card" elevation={0}>
             <Typography variant="h6">Private Banking UX Notes</Typography>
             <Typography className="muted" sx={{ mt: 1 }}>

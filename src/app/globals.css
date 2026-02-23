@@ -62,7 +62,7 @@ a:hover {
 }
 
 .topbar-inner {
-  max-width: 1280px;
+  max-width: 1560px;
   margin: 0 auto;
   padding: 0.85rem 1.2rem;
   display: flex;
@@ -108,7 +108,7 @@ a:hover {
 }
 
 .page-container {
-  width: min(1280px, 100%);
+  width: min(1560px, 100%);
   margin: 0 auto;
   padding: 1.4rem 1.25rem 2rem;
 }
