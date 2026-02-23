@@ -7,6 +7,7 @@ Unified UI for advisor workflows, currently scoped to DPM proposal simulation.
 - Contribution process: `CONTRIBUTING.md`
 - Docs-with-code standard: `docs/documentation/implementation-documentation-standard.md`
 - PR checklist template: `.github/pull_request_template.md`
+- Platform-wide architecture governance source: `https://github.com/sgajbi/pbwm-platform-docs`
 
 ## Standard Frontend Stack
 

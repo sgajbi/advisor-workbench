@@ -366,6 +366,38 @@ a:hover {
   margin-bottom: 1rem;
 }
 
+.journey-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.journey-card h2 {
+  margin-bottom: 0.5rem;
+}
+
+.journey-steps {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.journey-step {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  background: var(--panel-alt);
+  color: #17335f;
+  font-weight: 600;
+}
+
+.journey-step:hover {
+  border-color: #8aacde;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
 @media (max-width: 1080px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -404,6 +436,10 @@ a:hover {
   }
 
   .suite-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-grid {
     grid-template-columns: 1fr;
   }
 

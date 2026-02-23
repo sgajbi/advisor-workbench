@@ -39,6 +39,54 @@ export default function SuitePage() {
         </Typography>
       </section>
 
+      <section className="journey-grid">
+        <Paper className="section-card journey-card" elevation={0}>
+          <Typography variant="h6" component="h2">
+            Client Advisor Journey
+          </Typography>
+          <Typography className="muted" sx={{ mb: 1 }}>
+            Intake data, review analytics context, simulate recommendation, then progress approvals.
+          </Typography>
+          <div className="journey-steps">
+            <Link href="/pas/intake" className="journey-step">
+              1. Portfolio Intake
+            </Link>
+            <Link href="/pa/analytics" className="journey-step">
+              2. Analytics Context
+            </Link>
+            <Link href="/proposals/simulate" className="journey-step">
+              3. Simulate Proposal
+            </Link>
+            <Link href="/proposals" className="journey-step">
+              4. Submit And Track
+            </Link>
+          </div>
+        </Paper>
+
+        <Paper className="section-card journey-card" elevation={0}>
+          <Typography variant="h6" component="h2">
+            Portfolio Manager Journey
+          </Typography>
+          <Typography className="muted" sx={{ mb: 1 }}>
+            Monitor live portfolio state, inspect risk/review queue, and approve execution-ready decisions.
+          </Typography>
+          <div className="journey-steps">
+            <Link href="/workbench/PF_1001" className="journey-step">
+              1. Decision Console
+            </Link>
+            <Link href="/proposals" className="journey-step">
+              2. Review Pipeline
+            </Link>
+            <Link href="/proposals" className="journey-step">
+              3. Approval Chain
+            </Link>
+            <Link href="/suite" className="journey-step">
+              4. Command Center Metrics
+            </Link>
+          </div>
+        </Paper>
+      </section>
+
       <Paper className="section-card" elevation={0}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <Typography variant="h6" component="h2">
