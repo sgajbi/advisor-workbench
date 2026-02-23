@@ -17,7 +17,7 @@ const {
 } = vi.hoisted(() => ({
   getProposalMock: vi.fn(async () => ({
     proposal: {
-      proposal_id: "pp_1",
+      proposal_id: "pp-1",
       current_state: "DRAFT",
       portfolio_id: "pf_1",
       current_version_no: 1,
@@ -28,7 +28,7 @@ const {
   approveComplianceMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
   recordClientConsentMock: vi.fn(async () => ({ data: { current_state: "EXECUTION_READY" } })),
   getWorkflowEventsMock: vi.fn(async () => ({
-    proposal_id: "pp_1",
+    proposal_id: "pp-1",
     current_state: "DRAFT",
     events: [
       {
@@ -42,7 +42,7 @@ const {
     ],
   })),
   getApprovalsMock: vi.fn(async () => ({
-    proposal_id: "pp_1",
+    proposal_id: "pp-1",
     current_state: "DRAFT",
     approvals: [
       {
@@ -55,7 +55,7 @@ const {
     ],
   })),
   getLineageMock: vi.fn(async () => ({
-    proposal_id: "pp_1",
+    proposal_id: "pp-1",
     versions: [
       {
         version_no: 1,
@@ -83,7 +83,7 @@ describe("ProposalDetailView", () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <ProposalDetailView proposalId="pp_1" />
+        <ProposalDetailView proposalId="pp-1" />
       </QueryClientProvider>
     );
   }
@@ -118,7 +118,7 @@ describe("ProposalDetailView", () => {
   it("approves risk when in risk review", async () => {
     getProposalMock.mockResolvedValueOnce({
       proposal: {
-        proposal_id: "pp_1",
+        proposal_id: "pp-1",
         current_state: "RISK_REVIEW",
         portfolio_id: "pf_1",
         current_version_no: 1,
@@ -141,7 +141,7 @@ describe("ProposalDetailView", () => {
   it("records client consent when awaiting client consent", async () => {
     getProposalMock.mockResolvedValueOnce({
       proposal: {
-        proposal_id: "pp_1",
+        proposal_id: "pp-1",
         current_state: "AWAITING_CLIENT_CONSENT",
         portfolio_id: "pf_1",
         current_version_no: 1,

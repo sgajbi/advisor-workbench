@@ -21,9 +21,11 @@ describe("ProposalListView", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("pp_1")).toBeInTheDocument();
+      expect(screen.getByText(/ID:\s*PP-7720/i)).toBeInTheDocument();
     });
+    expect(screen.getByText(/Storyboard Mode/)).toBeInTheDocument();
     expect(screen.getByText(/DRAFT: 1/)).toBeInTheDocument();
-    expect(screen.getByText(/Next: Submit for risk or compliance review/)).toBeInTheDocument();
+    expect(screen.getByText(/Cash Deployment Plan/)).toBeInTheDocument();
+    expect(screen.getByText(/Next:\s*Submit for risk or compliance review/i)).toBeInTheDocument();
   });
 });
