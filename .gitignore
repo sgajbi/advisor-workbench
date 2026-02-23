@@ -5,3 +5,5 @@ coverage/
 .env*
 *.tsbuildinfo
 .artifacts/
+test-results/
+playwright-report/
