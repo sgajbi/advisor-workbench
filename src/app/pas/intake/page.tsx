@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
   Box,
@@ -17,16 +18,17 @@ import {
 
 import { ingestPortfolioBundle } from "@/features/intake/api";
 import { parseIntakeCsvToBundle } from "@/features/intake/csv-parser";
+import { getCurrencyLookups, getInstrumentLookups, getPortfolioLookups } from "@/features/intake/lookups-api";
 import {
-  PositionInput,
-  TransactionInput,
-  InstrumentInput,
-  MarketDataInput,
   buildCreatePortfolioPayload,
   buildInstrumentsPayloadFromList,
   buildMarketDataPayloadFromList,
   buildPositionSeedPayloadFromList,
   buildTransactionsPayloadFromList,
+  InstrumentInput,
+  MarketDataInput,
+  PositionInput,
+  TransactionInput,
 } from "@/features/intake/payload-builder";
 
 type IntakeOperation =
@@ -99,12 +101,30 @@ export default function PasIntakePage() {
     },
   ]);
 
+  const portfolioLookupQuery = useQuery({
+    queryKey: ["intake-lookups", "portfolios"],
+    queryFn: getPortfolioLookups,
+  });
+  const instrumentLookupQuery = useQuery({
+    queryKey: ["intake-lookups", "instruments"],
+    queryFn: getInstrumentLookups,
+  });
+  const currencyLookupQuery = useQuery({
+    queryKey: ["intake-lookups", "currencies"],
+    queryFn: getCurrencyLookups,
+  });
+  const portfolioOptions = portfolioLookupQuery.data ?? [];
+  const instrumentOptions = instrumentLookupQuery.data ?? [];
+  const currencyOptions = currencyLookupQuery.data ?? [];
+
   const readiness = useMemo(() => {
     if (operation === "CREATE_PORTFOLIO") {
       return [portfolioId, baseCurrency, openDate, cifId, advisorId].every((x) => x.trim()) ? 100 : 60;
     }
     if (operation === "ADD_POSITIONS") {
-      return positions.length > 0 && positions.every((row) => row.securityId && row.quantity > 0 && row.price > 0) ? 100 : 50;
+      return positions.length > 0 && positions.every((row) => row.securityId && row.quantity > 0 && row.price > 0)
+        ? 100
+        : 50;
     }
     if (operation === "ADD_TRANSACTIONS") {
       return transactions.length > 0 && transactions.every((row) => row.securityId && row.quantity > 0 && row.price > 0)
@@ -196,12 +216,15 @@ export default function PasIntakePage() {
         Portfolio Intake Operations Console
       </Typography>
       <Typography className="page-subtitle">
-        Execute exactly one intake intent at a time with list-based entity submission for enterprise operations.
+        Execute one intake intent at a time with list-based entity submission and governed selector catalogs.
       </Typography>
 
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
       {csvSummary ? <Alert severity="info">{csvSummary}</Alert> : null}
+      {portfolioLookupQuery.isError || instrumentLookupQuery.isError || currencyLookupQuery.isError ? (
+        <Alert severity="warning">Lookup services are unavailable. Manual value entry remains enabled.</Alert>
+      ) : null}
 
       <Paper className="section-card" elevation={0}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ xs: "flex-start", md: "center" }}>
@@ -236,8 +259,8 @@ export default function PasIntakePage() {
 
             {operation === "CREATE_PORTFOLIO" ? (
               <div className="suite-form-grid">
-                <label><span className="field-label">Portfolio ID</span><input className="input" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
-                <label><span className="field-label">Base Currency</span><input className="input" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
+                <label><span className="field-label">Portfolio ID</span><input className="input" list="portfolio-options" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
+                <label><span className="field-label">Base Currency</span><input className="input" list="currency-options" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
                 <label><span className="field-label">Open Date</span><input className="input" value={openDate} onChange={(e) => setOpenDate(e.target.value)} /></label>
                 <label><span className="field-label">Risk Exposure</span><input className="input" value={riskExposure} onChange={(e) => setRiskExposure(e.target.value)} /></label>
                 <label><span className="field-label">Time Horizon</span><input className="input" value={timeHorizon} onChange={(e) => setTimeHorizon(e.target.value)} /></label>
@@ -251,9 +274,13 @@ export default function PasIntakePage() {
 
             {operation === "ADD_POSITIONS" ? (
               <>
+                <div className="suite-form-grid">
+                  <label><span className="field-label">Existing Portfolio ID</span><input className="input" list="portfolio-options" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
+                  <label><span className="field-label">Base Currency</span><input className="input" list="currency-options" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
+                </div>
                 {positions.map((row, index) => (
                   <div key={`pos-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" value={row.securityId} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
+                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Instrument Name</span><input className="input" value={row.instrumentName} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentName: e.target.value } : x)))} /></label>
                     <label><span className="field-label">ISIN</span><input className="input" value={row.isin} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Product Type</span><input className="input" value={row.productType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></label>
@@ -272,9 +299,13 @@ export default function PasIntakePage() {
 
             {operation === "ADD_TRANSACTIONS" ? (
               <>
+                <div className="suite-form-grid">
+                  <label><span className="field-label">Existing Portfolio ID</span><input className="input" list="portfolio-options" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
+                  <label><span className="field-label">Base Currency</span><input className="input" list="currency-options" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
+                </div>
                 {transactions.map((row, index) => (
                   <div key={`txn-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" value={row.securityId} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
+                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Transaction Type</span><input className="input" value={row.transactionType} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Quantity</span><input className="input" value={row.quantity} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></label>
                     <label><span className="field-label">Price</span><input className="input" value={row.price} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></label>
@@ -292,10 +323,10 @@ export default function PasIntakePage() {
               <>
                 {instruments.map((row, index) => (
                   <div key={`ins-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" value={row.securityId} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
+                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Name</span><input className="input" value={row.name} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, name: e.target.value } : x)))} /></label>
                     <label><span className="field-label">ISIN</span><input className="input" value={row.isin} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Currency</span><input className="input" value={row.instrumentCurrency} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: e.target.value } : x)))} /></label>
+                    <label><span className="field-label">Currency</span><input className="input" list="currency-options" value={row.instrumentCurrency} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Product Type</span><input className="input" value={row.productType} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></label>
                   </div>
                 ))}
@@ -310,10 +341,10 @@ export default function PasIntakePage() {
               <>
                 {marketData.map((row, index) => (
                   <div key={`mkt-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" value={row.securityId} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
+                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Price Date</span><input className="input" value={row.priceDate} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, priceDate: e.target.value } : x)))} /></label>
                     <label><span className="field-label">Price</span><input className="input" value={row.price} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></label>
-                    <label><span className="field-label">Currency</span><input className="input" value={row.currency} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: e.target.value } : x)))} /></label>
+                    <label><span className="field-label">Currency</span><input className="input" list="currency-options" value={row.currency} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: e.target.value } : x)))} /></label>
                   </div>
                 ))}
                 <div className="toolbar">
@@ -343,14 +374,38 @@ export default function PasIntakePage() {
               Each operation owns one responsibility and can be submitted independently without forcing full payload duplication.
             </Typography>
             <Typography className="muted">
-              Existing portfolio enrichment flows support list-based row entry for operational teams.
+              Existing portfolio enrichment flows support list-based row entry for operations teams.
             </Typography>
             <Typography className="muted">
-              CSV remains available for bulk bundle ingestion with strict header validation.
+              Selector catalog: {portfolioLookupQuery.isLoading ? "loading portfolios..." : `${portfolioOptions.length} portfolios`},{" "}
+              {instrumentLookupQuery.isLoading ? "loading instruments..." : `${instrumentOptions.length} instruments`},{" "}
+              {currencyLookupQuery.isLoading ? "loading currencies..." : `${currencyOptions.length} currencies`}.
             </Typography>
           </Paper>
         </Grid>
       </Grid>
+
+      <datalist id="portfolio-options">
+        {portfolioOptions.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.label}
+          </option>
+        ))}
+      </datalist>
+      <datalist id="instrument-options">
+        {instrumentOptions.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.label}
+          </option>
+        ))}
+      </datalist>
+      <datalist id="currency-options">
+        {currencyOptions.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.label}
+          </option>
+        ))}
+      </datalist>
     </main>
   );
 }
