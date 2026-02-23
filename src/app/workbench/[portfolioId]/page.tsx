@@ -4,14 +4,13 @@ import PartialFailureBanner from "@/features/workbench/components/partial-failur
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
 import PositionsGrid from "@/features/workbench/components/positions-grid";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
-import { Alert, Typography } from "@mui/material";
 
 export default async function WorkbenchPage({
   params,
 }: {
-  params: { portfolioId: string };
+  params: Promise<{ portfolioId: string }>;
 }) {
-  const { portfolioId } = params;
+  const { portfolioId } = await params;
 
   let data;
   try {
@@ -21,9 +20,11 @@ export default async function WorkbenchPage({
     return (
       <main className="page-container">
         <h1 className="page-title">Advisor Workbench</h1>
-        <Alert severity="error" sx={{ mt: 1.1 }}>
-          Unable to load workbench overview for {portfolioId}. {detail}
-        </Alert>
+        <section className="section-card">
+          <p className="error-text">
+            Unable to load workbench overview for {portfolioId}. {detail}
+          </p>
+        </section>
       </main>
     );
   }
@@ -31,7 +32,7 @@ export default async function WorkbenchPage({
   return (
     <main className="page-container">
       <h1 className="page-title">Advisor Workbench: {data.portfolio.portfolio_id}</h1>
-      <Typography className="page-subtitle">As of: {data.as_of_date}</Typography>
+      <p className="page-subtitle">As of: {data.as_of_date}</p>
 
       <PartialFailureBanner items={data.partial_failures} />
 
