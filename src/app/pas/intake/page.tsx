@@ -259,11 +259,21 @@ export default function PasIntakePage() {
               }
             />
           </Stack>
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" onClick={() => csvInputRef.current?.click()} disabled={isSubmitting}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Button
+              variant="outlined"
+              onClick={() => csvInputRef.current?.click()}
+              disabled={isSubmitting}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+            >
               Upload CSV Bundle
             </Button>
-            <Button variant="contained" onClick={submitCurrentOperation} disabled={isSubmitting || !canSubmit}>
+            <Button
+              variant="contained"
+              onClick={submitCurrentOperation}
+              disabled={isSubmitting || !canSubmit}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+            >
               Submit Operation
             </Button>
             {isSubmitting ? <CircularProgress size={22} /> : null}
@@ -272,19 +282,25 @@ export default function PasIntakePage() {
         <Box sx={{ mt: 1.2 }}>
           <LinearProgress variant="determinate" value={readiness} />
         </Box>
-        <ToggleButtonGroup
-          exclusive
-          value={operation}
-          onChange={(_e, next: IntakeOperation | null) => next && setOperation(next)}
-          size="small"
-          sx={{ mt: 1, flexWrap: "wrap", gap: 0.6 }}
-        >
-          <ToggleButton value="CREATE_PORTFOLIO">Create Portfolio</ToggleButton>
-          <ToggleButton value="ADD_POSITIONS">Add Positions</ToggleButton>
-          <ToggleButton value="ADD_TRANSACTIONS">Add Transactions</ToggleButton>
-          <ToggleButton value="ADD_INSTRUMENTS">Add Instruments</ToggleButton>
-          <ToggleButton value="ADD_MARKET_DATA">Add Market Data</ToggleButton>
-        </ToggleButtonGroup>
+        <Box sx={{ mt: 1, overflowX: "auto", pb: 0.5 }}>
+          <ToggleButtonGroup
+            exclusive
+            value={operation}
+            onChange={(_e, next: IntakeOperation | null) => next && setOperation(next)}
+            size="small"
+            sx={{
+              flexWrap: { xs: "nowrap", md: "wrap" },
+              gap: 0.6,
+              minWidth: { xs: 860, md: "auto" },
+            }}
+          >
+            <ToggleButton value="CREATE_PORTFOLIO">Create Portfolio</ToggleButton>
+            <ToggleButton value="ADD_POSITIONS">Add Positions</ToggleButton>
+            <ToggleButton value="ADD_TRANSACTIONS">Add Transactions</ToggleButton>
+            <ToggleButton value="ADD_INSTRUMENTS">Add Instruments</ToggleButton>
+            <ToggleButton value="ADD_MARKET_DATA">Add Market Data</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
         <input ref={csvInputRef} type="file" accept=".csv,text/csv" onChange={handleCsvSelected} style={{ display: "none" }} />
       </Paper>
 
@@ -365,7 +381,8 @@ export default function PasIntakePage() {
                     />
                   </Grid>
                 </Grid>
-                <Table size="small">
+                <Box sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ minWidth: 980 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Security</TableCell>
@@ -393,6 +410,7 @@ export default function PasIntakePage() {
                     ))}
                   </TableBody>
                 </Table>
+                </Box>
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setPositions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Position Row
@@ -425,7 +443,8 @@ export default function PasIntakePage() {
                     renderInput={(params) => <TextField {...params} label="Base Currency" size="small" />}
                   />
                 </div>
-                <Table size="small">
+                <Box sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ minWidth: 760 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Security</TableCell>
@@ -447,6 +466,7 @@ export default function PasIntakePage() {
                     ))}
                   </TableBody>
                 </Table>
+                </Box>
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setTransactions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Transaction Row
@@ -465,7 +485,8 @@ export default function PasIntakePage() {
 
             {operation === "ADD_INSTRUMENTS" ? (
               <>
-                <Table size="small">
+                <Box sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ minWidth: 760 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Security</TableCell>
@@ -487,6 +508,7 @@ export default function PasIntakePage() {
                     ))}
                   </TableBody>
                 </Table>
+                </Box>
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setInstruments((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Instrument Row
@@ -503,7 +525,8 @@ export default function PasIntakePage() {
 
             {operation === "ADD_MARKET_DATA" ? (
               <>
-                <Table size="small">
+                <Box sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ minWidth: 680 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Security</TableCell>
@@ -523,6 +546,7 @@ export default function PasIntakePage() {
                     ))}
                   </TableBody>
                 </Table>
+                </Box>
                 <div className="toolbar">
                   <Button variant="outlined" onClick={() => setMarketData((prev) => [...prev, { ...prev[prev.length - 1] }])}>
                     Add Market Data Row
