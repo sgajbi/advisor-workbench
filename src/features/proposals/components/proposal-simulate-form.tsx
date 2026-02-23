@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, Box, Button, Paper, Stack, TextField, Typography } from "@mui/material";
 
 import { createProposal, simulateProposal } from "../api";
 import { ProposalSimulateResponse } from "../types";
@@ -29,36 +33,48 @@ const DEFAULT_PAYLOAD = {
   },
 };
 
-export default function ProposalSimulateForm() {
-  const defaultText = useMemo(
-    () => JSON.stringify(DEFAULT_PAYLOAD, null, 2),
-    []
-  );
+const schema = z.object({
+  idempotencyKey: z.string().min(6, "Idempotency key is required"),
+  createdBy: z.string().min(1, "Created by is required"),
+  proposalTitle: z.string().min(1, "Proposal title is required"),
+  payloadText: z.string().min(2, "Payload is required"),
+});
 
-  const [payloadText, setPayloadText] = useState(defaultText);
-  const [idempotencyKey, setIdempotencyKey] = useState(() => {
+type FormInput = z.infer<typeof schema>;
+
+export default function ProposalSimulateForm() {
+  const defaultText = useMemo(() => JSON.stringify(DEFAULT_PAYLOAD, null, 2), []);
+  const defaultIdempotencyKey = useMemo(() => {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
       return `ui-${crypto.randomUUID()}`;
     }
     return `ui-${Date.now()}`;
+  }, []);
+
+  const form = useForm<FormInput>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      idempotencyKey: defaultIdempotencyKey,
+      createdBy: "advisor_1",
+      proposalTitle: "DPM proposal draft",
+      payloadText: defaultText,
+    },
   });
+
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
   const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
-  const [createdBy, setCreatedBy] = useState("advisor_1");
-  const [proposalTitle, setProposalTitle] = useState("DPM proposal draft");
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(values: FormInput) {
     setError(null);
     setResult(null);
     setSavedProposalId(null);
     setLoading(true);
     try {
-      const payload = JSON.parse(payloadText) as { body: Record<string, unknown> };
-      const response = await simulateProposal(payload, idempotencyKey);
+      const payload = JSON.parse(values.payloadText) as { body: Record<string, unknown> };
+      const response = await simulateProposal(payload, values.idempotencyKey);
       setResult(response);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -69,21 +85,27 @@ export default function ProposalSimulateForm() {
   }
 
   async function onSaveDraft() {
+    const isValid = await form.trigger();
+    if (!isValid) {
+      return;
+    }
+
+    const values = form.getValues();
     setError(null);
     setSavingDraft(true);
     try {
-      const payload = JSON.parse(payloadText) as { body: Record<string, unknown> };
+      const payload = JSON.parse(values.payloadText) as { body: Record<string, unknown> };
       const createResponse = await createProposal(
         {
           body: {
-            created_by: createdBy,
+            created_by: values.createdBy,
             simulate_request: payload.body,
             metadata: {
-              title: proposalTitle,
+              title: values.proposalTitle,
             },
           },
         },
-        `${idempotencyKey}-create`
+        `${values.idempotencyKey}-create`
       );
       const proposal = (createResponse.data.proposal as { proposal_id?: string } | undefined) ?? {};
       setSavedProposalId(proposal.proposal_id ?? null);
@@ -96,80 +118,109 @@ export default function ProposalSimulateForm() {
   }
 
   return (
-    <section>
-      <h2>Proposal Simulation</h2>
-      <form onSubmit={onSubmit}>
-        <label htmlFor="idem-key">Idempotency Key</label>
-        <input
-          id="idem-key"
-          value={idempotencyKey}
-          onChange={(e) => setIdempotencyKey(e.target.value)}
-          style={{ display: "block", width: "100%", marginBottom: "0.75rem" }}
-        />
-        <label htmlFor="created-by">Created By</label>
-        <input
-          id="created-by"
-          value={createdBy}
-          onChange={(e) => setCreatedBy(e.target.value)}
-          style={{ display: "block", width: "100%", marginBottom: "0.75rem" }}
-        />
-        <label htmlFor="proposal-title">Proposal Title</label>
-        <input
-          id="proposal-title"
-          value={proposalTitle}
-          onChange={(e) => setProposalTitle(e.target.value)}
-          style={{ display: "block", width: "100%", marginBottom: "0.75rem" }}
-        />
+    <Paper className="section-card">
+      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
+        Proposal Simulation
+      </Typography>
+      <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
+        <Stack spacing={1}>
+          <Controller
+            control={form.control}
+            name="idempotencyKey"
+            render={({ field, fieldState }) => (
+              <TextField
+                label="Idempotency Key"
+                size="small"
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="createdBy"
+            render={({ field, fieldState }) => (
+              <TextField
+                label="Created By"
+                size="small"
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="proposalTitle"
+            render={({ field, fieldState }) => (
+              <TextField
+                label="Proposal Title"
+                size="small"
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="payloadText"
+            render={({ field, fieldState }) => (
+              <TextField
+                label="Request Payload"
+                multiline
+                minRows={16}
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ "& textarea": { fontFamily: '"IBM Plex Mono", ui-monospace, monospace', fontSize: 13 } }}
+              />
+            )}
+          />
+        </Stack>
 
-        <label htmlFor="payload">Request Payload</label>
-        <textarea
-          id="payload"
-          value={payloadText}
-          onChange={(e) => setPayloadText(e.target.value)}
-          rows={20}
-          style={{ display: "block", width: "100%", fontFamily: "monospace" }}
-        />
-
-        <button type="submit" disabled={loading} style={{ marginTop: "0.75rem", marginRight: "0.5rem" }}>
-          {loading ? "Simulating..." : "Simulate Proposal"}
-        </button>
-        <button
-          type="button"
-          onClick={onSaveDraft}
-          disabled={savingDraft}
-          style={{ marginTop: "0.75rem" }}
-        >
-          {savingDraft ? "Saving Draft..." : "Save Draft"}
-        </button>
-      </form>
+        <Stack direction="row" spacing={1} sx={{ mt: 1.2 }}>
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading ? "Simulating..." : "Simulate Proposal"}
+          </Button>
+          <Button type="button" variant="outlined" onClick={onSaveDraft} disabled={savingDraft}>
+            {savingDraft ? "Saving Draft..." : "Save Draft"}
+          </Button>
+        </Stack>
+      </Box>
 
       {error ? (
-        <p style={{ color: "crimson", marginTop: "0.75rem" }}>Error: {error}</p>
+        <Alert severity="error" sx={{ mt: 1.2 }}>
+          Error: {error}
+        </Alert>
       ) : null}
 
       {result ? (
-        <div style={{ marginTop: "0.75rem" }}>
-          <h3>Result</h3>
-          <p>Status: {result.data.status ?? "UNKNOWN"}</p>
-          <p>Proposal Run ID: {String(result.data.proposal_run_id ?? "N/A")}</p>
+        <Box sx={{ mt: 1.2 }}>
+          <Typography variant="h6" component="h3">
+            Result
+          </Typography>
+          <Typography>Status: {result.data.status ?? "UNKNOWN"}</Typography>
+          <Typography>Proposal Run ID: {String(result.data.proposal_run_id ?? "N/A")}</Typography>
           <details>
             <summary>Raw response</summary>
             <pre>{JSON.stringify(result, null, 2)}</pre>
           </details>
-        </div>
+        </Box>
       ) : null}
 
       {savedProposalId ? (
-        <div style={{ marginTop: "0.75rem" }}>
-          <p>Draft saved as Proposal ID: {savedProposalId}</p>
-          <p>
+        <Box sx={{ mt: 1.2 }}>
+          <Typography>Draft saved as Proposal ID: {savedProposalId}</Typography>
+          <Typography>
             <Link href={`/proposals/${savedProposalId}`}>Open Proposal Details</Link>
-          </p>
-        </div>
+          </Typography>
+        </Box>
       ) : null}
-      <p style={{ marginTop: "0.75rem" }}>
+      <Typography sx={{ mt: 1.2 }}>
         <Link href="/proposals">View Proposal Workspace</Link>
-      </p>
-    </section>
+      </Typography>
+    </Paper>
   );
 }

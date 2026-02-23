@@ -4,8 +4,9 @@ import ProposalListView from "@/features/proposals/components/proposal-list-view
 
 export default function ProposalsPage() {
   return (
-    <main style={{ padding: "1rem", maxWidth: "960px", margin: "0 auto" }}>
-      <h1>Advisory Proposals</h1>
+    <main className="page-container">
+      <h1 className="page-title">Advisory Proposals</h1>
+      <p className="page-subtitle">Proposal drafts, status transitions, and approval workflow.</p>
       <p>
         <Link href="/proposals/simulate">Create Proposal Draft</Link>
       </p>

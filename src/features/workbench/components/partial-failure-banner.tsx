@@ -1,3 +1,5 @@
+import { Alert, AlertTitle } from "@mui/material";
+
 type PartialFailure = {
   source_service: string;
   error_code: string;
@@ -14,8 +16,8 @@ export default function PartialFailureBanner(props: Props) {
   }
 
   return (
-    <section aria-label="partial-failures">
-      <h2>Partial Data Warning</h2>
+    <Alert severity="warning" aria-label="partial-failures" sx={{ mb: 1.2 }}>
+      <AlertTitle>Partial Data Warning</AlertTitle>
       <ul>
         {props.items.map((item) => (
           <li key={`${item.source_service}:${item.error_code}`}>
@@ -23,6 +25,6 @@ export default function PartialFailureBanner(props: Props) {
           </li>
         ))}
       </ul>
-    </section>
+    </Alert>
   );
 }

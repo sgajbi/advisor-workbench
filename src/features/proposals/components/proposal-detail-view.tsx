@@ -1,6 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 import {
   approveCompliance,
@@ -22,46 +32,26 @@ type Props = {
 };
 
 export default function ProposalDetailView({ proposalId }: Props) {
-  const [data, setData] = useState<ProposalDetailData | null>(null);
-  const [workflow, setWorkflow] = useState<ProposalWorkflowEventsData | null>(null);
-  const [approvals, setApprovals] = useState<ProposalApprovalsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [revision, setRevision] = useState(0);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [detail, workflowData, approvalsData] = await Promise.all([
-          getProposal(proposalId, false),
-          getProposalWorkflowEvents(proposalId),
-          getProposalApprovals(proposalId),
-        ]);
-        if (!cancelled) {
-          setData(detail);
-          setWorkflow(workflowData);
-          setApprovals(approvalsData);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Unknown error";
-          setError(message);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [proposalId]);
+  const queryKey = useMemo(() => ["proposal-detail", proposalId, revision], [proposalId, revision]);
+  const detailQuery = useQuery({
+    queryKey,
+    queryFn: async () => await getProposal(proposalId, false),
+  });
+  const workflowQuery = useQuery({
+    queryKey: ["proposal-workflow", proposalId, revision],
+    queryFn: async () => await getProposalWorkflowEvents(proposalId),
+  });
+  const approvalsQuery = useQuery({
+    queryKey: ["proposal-approvals", proposalId, revision],
+    queryFn: async () => await getProposalApprovals(proposalId),
+  });
 
   async function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
-    if (!data?.proposal?.current_state) {
+    if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
     setActing(true);
@@ -69,11 +59,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
     try {
       await submitProposal(proposalId, {
         actor_id: "advisor_1",
-        expected_state: data.proposal.current_state,
+        expected_state: detailQuery.data.proposal.current_state,
         review_type: reviewType,
         reason: { source: "ui" },
       });
-      await reloadAll();
+      setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -83,7 +73,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onApproveRisk() {
-    if (!data?.proposal?.current_state) {
+    if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
     setActing(true);
@@ -91,10 +81,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
     try {
       await approveRisk(proposalId, {
         actor_id: "risk_officer_1",
-        expected_state: data.proposal.current_state,
+        expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
       });
-      await reloadAll();
+      setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -104,7 +94,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onApproveCompliance() {
-    if (!data?.proposal?.current_state) {
+    if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
     setActing(true);
@@ -112,10 +102,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
     try {
       await approveCompliance(proposalId, {
         actor_id: "compliance_officer_1",
-        expected_state: data.proposal.current_state,
+        expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
       });
-      await reloadAll();
+      setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -125,7 +115,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onRecordClientConsent() {
-    if (!data?.proposal?.current_state) {
+    if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
     setActing(true);
@@ -133,10 +123,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
     try {
       await recordClientConsent(proposalId, {
         actor_id: "advisor_1",
-        expected_state: data.proposal.current_state,
+        expected_state: detailQuery.data.proposal.current_state,
         details: { channel: "IN_PERSON", source: "ui" },
       });
-      await reloadAll();
+      setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -145,99 +135,114 @@ export default function ProposalDetailView({ proposalId }: Props) {
     }
   }
 
-  async function reloadAll() {
-    const [detail, workflowData, approvalsData] = await Promise.all([
-      getProposal(proposalId, false),
-      getProposalWorkflowEvents(proposalId),
-      getProposalApprovals(proposalId),
-    ]);
-    setData(detail);
-    setWorkflow(workflowData);
-    setApprovals(approvalsData);
+  if (detailQuery.isLoading || workflowQuery.isLoading || approvalsQuery.isLoading) {
+    return (
+      <Paper className="section-card">
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={16} />
+          <Typography>Loading proposal...</Typography>
+        </Stack>
+      </Paper>
+    );
   }
 
-  if (loading) {
-    return <p>Loading proposal...</p>;
+  const queryError = detailQuery.error ?? workflowQuery.error ?? approvalsQuery.error;
+
+  if (error || queryError) {
+    return (
+      <Alert severity="error">
+        Error: {error ?? (queryError instanceof Error ? queryError.message : "Unknown error")}
+      </Alert>
+    );
   }
 
-  if (error) {
-    return <p style={{ color: "crimson" }}>Error: {error}</p>;
+  if (!detailQuery.data?.proposal) {
+    return <Typography>Proposal not found.</Typography>;
   }
 
-  if (!data?.proposal) {
-    return <p>Proposal not found.</p>;
-  }
+  const data = detailQuery.data as ProposalDetailData;
+  const workflow = workflowQuery.data as ProposalWorkflowEventsData | undefined;
+  const approvals = approvalsQuery.data as ProposalApprovalsData | undefined;
 
   return (
-    <section>
-      <h2>Proposal {data.proposal.proposal_id}</h2>
-      <p>State: {data.proposal.current_state}</p>
-      <p>Portfolio: {data.proposal.portfolio_id ?? "N/A"}</p>
-      <p>Current version: {String(data.proposal.current_version_no ?? "N/A")}</p>
+    <Paper className="section-card">
+      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
+        Proposal {data.proposal.proposal_id}
+      </Typography>
+      <Typography sx={{ mb: 0.4 }}>State: {data.proposal.current_state}</Typography>
+      <Typography sx={{ mb: 0.4 }}>Portfolio: {data.proposal.portfolio_id ?? "N/A"}</Typography>
+      <Typography sx={{ mb: 1.2 }}>Current version: {String(data.proposal.current_version_no ?? "N/A")}</Typography>
+
+      <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
       {data.proposal.current_state === "DRAFT" ? (
-        <div>
-          <button type="button" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
+        <>
+          <Button type="button" variant="contained" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
             Submit To Risk Review
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outlined"
             onClick={() => void onSubmitForReview("COMPLIANCE")}
             disabled={acting}
-            style={{ marginLeft: "0.5rem" }}
           >
             Submit To Compliance Review
-          </button>
-        </div>
+          </Button>
+        </>
       ) : null}
       {data.proposal.current_state === "RISK_REVIEW" ? (
-        <button type="button" onClick={onApproveRisk} disabled={acting}>
+        <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
           Approve Risk
-        </button>
+        </Button>
       ) : null}
       {data.proposal.current_state === "COMPLIANCE_REVIEW" ? (
-        <button type="button" onClick={onApproveCompliance} disabled={acting}>
+        <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
           Approve Compliance
-        </button>
+        </Button>
       ) : null}
       {data.proposal.current_state === "AWAITING_CLIENT_CONSENT" ? (
-        <button type="button" onClick={onRecordClientConsent} disabled={acting}>
+        <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
           Record Client Consent
-        </button>
+        </Button>
       ) : null}
       {data.proposal.current_state === "EXECUTION_READY" ? (
-        <p>Proposal is execution ready.</p>
+        <Typography color="success.main">Proposal is execution ready.</Typography>
       ) : null}
+      </Stack>
 
-      <h3 style={{ marginTop: "1rem" }}>Workflow Timeline</h3>
+      <Typography variant="h6" component="h3" sx={{ mt: 1.2 }}>
+        Workflow Timeline
+      </Typography>
       {workflow?.events?.length ? (
-        <ul>
+        <Box component="ul" sx={{ pl: 2.2, mt: 0.7 }}>
           {workflow.events.map((event) => (
             <li key={event.event_id}>
               {event.event_type} ({event.from_state ?? "N/A"} -&gt; {event.to_state}) by {event.actor_id}
             </li>
           ))}
-        </ul>
+        </Box>
       ) : (
-        <p>No workflow events.</p>
+        <Typography className="muted">No workflow events.</Typography>
       )}
 
-      <h3 style={{ marginTop: "1rem" }}>Approvals</h3>
+      <Typography variant="h6" component="h3" sx={{ mt: 1.2 }}>
+        Approvals
+      </Typography>
       {approvals?.approvals?.length ? (
-        <ul>
+        <Box component="ul" sx={{ pl: 2.2, mt: 0.7 }}>
           {approvals.approvals.map((approval) => (
             <li key={approval.approval_id}>
               {approval.approval_type}: {approval.approved ? "APPROVED" : "REJECTED"} by{" "}
               {approval.actor_id}
             </li>
           ))}
-        </ul>
+        </Box>
       ) : (
-        <p>No approvals recorded.</p>
+        <Typography className="muted">No approvals recorded.</Typography>
       )}
       <details style={{ marginTop: "0.75rem" }}>
         <summary>Raw proposal detail</summary>
         <pre>{JSON.stringify(data, null, 2)}</pre>
       </details>
-    </section>
+    </Paper>
   );
 }
