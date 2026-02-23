@@ -78,7 +78,15 @@ export default function SuitePage() {
               if (nextRole) setActiveRole(nextRole);
             }}
             size="small"
-            sx={{ flexWrap: "wrap", gap: 0.5 }}
+            sx={{
+              width: "100%",
+              flexWrap: "wrap",
+              gap: 0.5,
+              "& .MuiToggleButton-root": {
+                minWidth: 0,
+                flex: { xs: "1 1 calc(50% - 8px)", sm: "0 0 auto" },
+              },
+            }}
           >
             <ToggleButton value="ADVISOR">Advisor</ToggleButton>
             <ToggleButton value="RISK">Risk</ToggleButton>

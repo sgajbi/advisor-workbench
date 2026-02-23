@@ -316,6 +316,10 @@ a:hover {
   gap: 1rem;
 }
 
+.suite-grid > * {
+  min-width: 0;
+}
+
 .suite-tile {
   display: flex;
   flex-direction: column;
@@ -333,6 +337,10 @@ a:hover {
   gap: 0.8rem;
   padding: 0.7rem 0;
   border-top: 1px dashed #d5dfed;
+}
+
+.suite-row > * {
+  min-width: 0;
 }
 
 .suite-row:first-of-type {
@@ -378,6 +386,9 @@ a:hover {
 
   .nav-links {
     width: 100%;
+    overflow-x: visible;
+    flex-wrap: wrap;
+    gap: 0.45rem;
   }
 
   .page-container {
@@ -396,6 +407,11 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .suite-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .suite-form-grid {
     grid-template-columns: 1fr;
   }
@@ -405,7 +421,7 @@ a:hover {
   }
 
   .nav-link {
-    font-size: 0.82rem;
-    padding: 0.36rem 0.75rem;
+    font-size: 0.78rem;
+    padding: 0.34rem 0.62rem;
   }
 }

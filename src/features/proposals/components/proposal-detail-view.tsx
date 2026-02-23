@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -75,6 +76,17 @@ function stageDescription(state: string): string {
   return "Workflow state is not mapped yet.";
 }
 
+function isNotFound(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return /\(404\)/.test(error.message) || /not found/i.test(error.message);
+}
+
+function isValidProposalId(proposalId: string): boolean {
+  return /^[A-Za-z0-9-]+$/.test(proposalId);
+}
+
 export default function ProposalDetailView({ proposalId }: Props) {
   const [revision, setRevision] = useState(0);
   const [acting, setActing] = useState(false);
@@ -86,6 +98,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
 
+  const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
     () => ["proposal-detail", proposalId, revision, includeEvidence],
     [proposalId, revision, includeEvidence]
@@ -93,18 +106,30 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const detailQuery = useQuery({
     queryKey,
     queryFn: async () => await getProposal(proposalId, includeEvidence),
+    enabled: proposalIdValid,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const workflowQuery = useQuery({
     queryKey: ["proposal-workflow", proposalId, revision],
     queryFn: async () => await getProposalWorkflowEvents(proposalId),
+    enabled: !!detailQuery.data?.proposal,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const approvalsQuery = useQuery({
     queryKey: ["proposal-approvals", proposalId, revision],
     queryFn: async () => await getProposalApprovals(proposalId),
+    enabled: !!detailQuery.data?.proposal,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const lineageQuery = useQuery({
     queryKey: ["proposal-lineage", proposalId, revision],
     queryFn: async () => await getProposalLineage(proposalId),
+    enabled: !!detailQuery.data?.proposal,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   async function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
@@ -252,6 +277,48 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   const queryError = detailQuery.error ?? workflowQuery.error ?? approvalsQuery.error ?? lineageQuery.error;
+
+  if (!proposalIdValid) {
+    return (
+      <Paper className="section-card">
+        <Typography variant="h6" component="h2" sx={{ mb: 0.8 }}>
+          Invalid Proposal Identifier
+        </Typography>
+        <Typography className="muted" sx={{ mb: 1 }}>
+          Proposal ID `{proposalId}` is not a valid route key. Use alphanumeric IDs with hyphen separators only.
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Link href="/proposals" className="nav-link">
+            Open Proposal Workspace
+          </Link>
+          <Link href="/proposals/simulate" className="nav-link">
+            Create New Proposal Draft
+          </Link>
+        </Stack>
+      </Paper>
+    );
+  }
+
+  if (detailQuery.error && isNotFound(detailQuery.error)) {
+    return (
+      <Paper className="section-card">
+        <Typography variant="h6" component="h2" sx={{ mb: 0.8 }}>
+          Proposal Not Found
+        </Typography>
+        <Typography className="muted" sx={{ mb: 1 }}>
+          Proposal `{proposalId}` was not found in the active advisory pipeline.
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Link href="/proposals" className="nav-link">
+            Open Proposal Workspace
+          </Link>
+          <Link href="/proposals/simulate" className="nav-link">
+            Create New Proposal Draft
+          </Link>
+        </Stack>
+      </Paper>
+    );
+  }
 
   if (error || queryError) {
     return (

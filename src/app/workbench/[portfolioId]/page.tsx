@@ -4,6 +4,7 @@ import PartialFailureBanner from "@/features/workbench/components/partial-failur
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
 import PositionsGrid from "@/features/workbench/components/positions-grid";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
+import Link from "next/link";
 
 export default async function WorkbenchPage({
   params,
@@ -21,11 +22,23 @@ export default async function WorkbenchPage({
       <main className="page-container">
         <section className="page-header">
           <h1 className="page-title">Advisor Workbench</h1>
+          <p className="page-subtitle">Decision context is temporarily unavailable for {portfolioId}.</p>
         </section>
         <section className="section-card">
           <p className="error-text">
             Unable to load workbench overview for {portfolioId}. {detail}
           </p>
+          <div className="toolbar">
+            <Link href="/proposals" className="nav-link">
+              Open Proposal Workspace
+            </Link>
+            <Link href="/pas/intake" className="nav-link">
+              Open Portfolio Intake
+            </Link>
+            <Link href="/suite" className="nav-link">
+              Return To Command Center
+            </Link>
+          </div>
         </section>
       </main>
     );

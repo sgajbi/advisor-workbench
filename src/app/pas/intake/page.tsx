@@ -49,6 +49,7 @@ type IntakeOperation =
 
 export default function PasIntakePage() {
   const [operation, setOperation] = useState<IntakeOperation>("CREATE_PORTFOLIO");
+  const [lookupEnabled, setLookupEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -113,14 +114,23 @@ export default function PasIntakePage() {
   const portfolioLookupQuery = useQuery({
     queryKey: ["intake-lookups", "portfolios"],
     queryFn: getPortfolioLookups,
+    enabled: lookupEnabled,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const instrumentLookupQuery = useQuery({
     queryKey: ["intake-lookups", "instruments"],
     queryFn: getInstrumentLookups,
+    enabled: lookupEnabled,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const currencyLookupQuery = useQuery({
     queryKey: ["intake-lookups", "currencies"],
     queryFn: getCurrencyLookups,
+    enabled: lookupEnabled,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const portfolioOptions = portfolioLookupQuery.data ?? [];
   const instrumentOptions = instrumentLookupQuery.data ?? [];
@@ -236,7 +246,7 @@ export default function PasIntakePage() {
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
       {csvSummary ? <Alert severity="info">{csvSummary}</Alert> : null}
-      {portfolioLookupQuery.isError || instrumentLookupQuery.isError || currencyLookupQuery.isError ? (
+      {lookupEnabled && (portfolioLookupQuery.isError || instrumentLookupQuery.isError || currencyLookupQuery.isError) ? (
         <Alert severity="warning">Lookup services are unavailable. Manual value entry remains enabled.</Alert>
       ) : null}
 
@@ -260,8 +270,26 @@ export default function PasIntakePage() {
                         : "portfolio profile"
               }
             />
+            <Chip
+              size="small"
+              color={lookupEnabled ? "primary" : "default"}
+              label={lookupEnabled ? "Selector Catalog Online" : "Selector Catalog Manual"}
+            />
           </Stack>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setLookupEnabled(true);
+                void portfolioLookupQuery.refetch();
+                void instrumentLookupQuery.refetch();
+                void currencyLookupQuery.refetch();
+              }}
+              disabled={lookupEnabled && (portfolioLookupQuery.isLoading || instrumentLookupQuery.isLoading || currencyLookupQuery.isLoading)}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+            >
+              {lookupEnabled ? "Refresh Selector Catalog" : "Load Selector Catalog"}
+            </Button>
             <Button
               variant="outlined"
               onClick={() => csvInputRef.current?.click()}
@@ -585,9 +613,10 @@ export default function PasIntakePage() {
               Existing portfolio enrichment flows support list-based row entry for operations teams.
             </Typography>
             <Typography className="muted">
-              Selector catalog: {portfolioLookupQuery.isLoading ? "loading portfolios..." : `${portfolioOptions.length} portfolios`},{" "}
-              {instrumentLookupQuery.isLoading ? "loading instruments..." : `${instrumentOptions.length} instruments`},{" "}
-              {currencyLookupQuery.isLoading ? "loading currencies..." : `${currencyOptions.length} currencies`}.
+              Selector catalog:{" "}
+              {!lookupEnabled
+                ? "manual mode active (load catalog for governed suggestions)."
+                : `${portfolioOptions.length} portfolios, ${instrumentOptions.length} instruments, ${currencyOptions.length} currencies.`}
             </Typography>
           </Paper>
         </Grid>
