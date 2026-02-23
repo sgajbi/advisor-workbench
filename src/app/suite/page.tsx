@@ -30,12 +30,14 @@ export default function SuitePage() {
 
   return (
     <main className="page-container">
-      <Typography variant="h4" component="h1" className="page-title">
-        Command Center
-      </Typography>
-      <Typography className="page-subtitle">
-        Start with client priorities, execute next-best workflow actions, and close the day with decision-ready outcomes.
-      </Typography>
+      <section className="page-header">
+        <Typography variant="h4" component="h1" className="page-title">
+          Command Center
+        </Typography>
+        <Typography className="page-subtitle">
+          Start with client priorities, execute next-best workflow actions, and close the day with decision-ready outcomes.
+        </Typography>
+      </section>
 
       <Paper className="section-card" elevation={0}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>

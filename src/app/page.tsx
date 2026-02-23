@@ -3,10 +3,12 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="page-container">
-      <h1 className="page-title">Wealth Suite Control Center</h1>
-      <p className="page-subtitle">
-        Enterprise workspace for intake, analytics, and advisory decisions in one operational cockpit.
-      </p>
+      <section className="page-header">
+        <h1 className="page-title">Wealth Suite Control Center</h1>
+        <p className="page-subtitle">
+          Enterprise workspace for intake, analytics, and advisory decisions in one operational cockpit.
+        </p>
+      </section>
 
       <section className="section-card suite-hero">
         <div>

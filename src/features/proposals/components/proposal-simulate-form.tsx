@@ -173,6 +173,7 @@ export default function ProposalSimulateForm() {
               <TextField
                 label="Portfolio ID"
                 size="small"
+                fullWidth
                 {...field}
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message ?? "Internal portfolio identifier"}
@@ -187,6 +188,7 @@ export default function ProposalSimulateForm() {
                 <TextField
                   label="Base Currency"
                   size="small"
+                  fullWidth
                   {...field}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message ?? "Reporting currency (for example USD)"}
@@ -200,6 +202,7 @@ export default function ProposalSimulateForm() {
                 <TextField
                   label="Available Cash"
                   size="small"
+                  fullWidth
                   type="number"
                   value={field.value}
                   onChange={(event) => {
@@ -223,6 +226,7 @@ export default function ProposalSimulateForm() {
                 <TextField
                   label="Idempotency Key"
                   size="small"
+                  fullWidth
                   {...field}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message ?? "Used to prevent duplicate submissions"}
@@ -236,6 +240,7 @@ export default function ProposalSimulateForm() {
                 <TextField
                   label="Created By"
                   size="small"
+                  fullWidth
                   {...field}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message ?? "Advisor or user identifier"}
@@ -249,6 +254,7 @@ export default function ProposalSimulateForm() {
                 <TextField
                   label="Proposal Title"
                   size="small"
+                  fullWidth
                   {...field}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message ?? "Human-readable draft title"}
@@ -257,7 +263,7 @@ export default function ProposalSimulateForm() {
             />
         </Stack>
 
-        <Stack direction="row" spacing={1} sx={{ mt: 1.2 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1.2 }}>
           <Button type="submit" variant="contained" disabled={loading}>
             {loading ? "Simulating..." : "Simulate Proposal"}
           </Button>

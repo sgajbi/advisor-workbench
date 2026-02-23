@@ -7,12 +7,14 @@ import { analyticsHighlights } from "@/features/suite/mock-data";
 export default function PaAnalyticsPage() {
   return (
     <main className="page-container">
-      <Typography variant="h4" component="h1" className="page-title">
-        Analytics Studio
-      </Typography>
-      <Typography className="page-subtitle">
-        Evaluate performance, attribution, and risk with executive-ready insight panels.
-      </Typography>
+      <section className="page-header">
+        <Typography variant="h4" component="h1" className="page-title">
+          Analytics Studio
+        </Typography>
+        <Typography className="page-subtitle">
+          Evaluate performance, attribution, and risk with executive-ready insight panels.
+        </Typography>
+      </section>
 
       <Paper className="section-card" elevation={0}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>

@@ -224,12 +224,14 @@ export default function PasIntakePage() {
 
   return (
     <main className="page-container">
-      <Typography variant="h4" component="h1" className="page-title">
-        Portfolio Intake Operations Console
-      </Typography>
-      <Typography className="page-subtitle">
-        Execute one intake intent at a time with list-based entity submission and governed selector catalogs.
-      </Typography>
+      <section className="page-header">
+        <Typography variant="h4" component="h1" className="page-title">
+          Portfolio Intake Operations Console
+        </Typography>
+        <Typography className="page-subtitle">
+          Execute one intake intent at a time with list-based entity submission and governed selector catalogs.
+        </Typography>
+      </section>
 
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
@@ -242,7 +244,7 @@ export default function PasIntakePage() {
         <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={1}>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
             <Typography variant="h6">Intake Operation</Typography>
-            <Chip size="small" color="success" label="PAS Ingestion Live" />
+            <Chip size="small" color="success" label="Ingestion Pipeline Live" />
             <Chip size="small" label={`Readiness ${readiness}%`} color={canSubmit ? "success" : "warning"} />
             <Chip
               size="small"
@@ -282,16 +284,26 @@ export default function PasIntakePage() {
         <Box sx={{ mt: 1.2 }}>
           <LinearProgress variant="determinate" value={readiness} />
         </Box>
-        <Box sx={{ mt: 1, overflowX: "auto", pb: 0.5 }}>
+        <Box sx={{ mt: 1 }}>
           <ToggleButtonGroup
             exclusive
             value={operation}
             onChange={(_e, next: IntakeOperation | null) => next && setOperation(next)}
             size="small"
             sx={{
-              flexWrap: { xs: "nowrap", md: "wrap" },
+              width: "100%",
+              display: "flex",
+              flexWrap: "wrap",
               gap: 0.6,
-              minWidth: { xs: 860, md: "auto" },
+              "& .MuiToggleButton-root": {
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                flex: {
+                  xs: "1 1 100%",
+                  sm: "1 1 calc(50% - 8px)",
+                  lg: "1 1 calc(20% - 8px)",
+                },
+              },
             }}
           >
             <ToggleButton value="CREATE_PORTFOLIO">Create Portfolio</ToggleButton>
