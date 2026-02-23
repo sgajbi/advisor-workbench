@@ -1,61 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Alert, Chip, CircularProgress, List, ListItem, Paper, Stack, Typography } from "@mui/material";
 
 import { listProposals } from "../api";
-import { ProposalSummary } from "../types";
 
 export default function ProposalListView() {
-  const [items, setItems] = useState<ProposalSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["proposals"],
+    queryFn: async () => await listProposals(),
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const data = await listProposals();
-        if (!cancelled) {
-          setItems(data.items ?? []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Unknown error";
-          setError(message);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const items = data?.items ?? [];
 
-  if (loading) {
-    return <p>Loading proposals...</p>;
+  if (isLoading) {
+    return (
+      <Paper className="section-card">
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={16} />
+          <Typography>Loading proposals...</Typography>
+        </Stack>
+      </Paper>
+    );
   }
 
   if (error) {
-    return <p style={{ color: "crimson" }}>Error: {error}</p>;
+    return (
+      <Alert severity="error">
+        Error: {error instanceof Error ? error.message : "Unknown error"}
+      </Alert>
+    );
   }
 
   return (
-    <section>
-      <h2>Proposal Workspace</h2>
-      {items.length === 0 ? <p>No proposals found.</p> : null}
-      <ul>
+    <Paper className="section-card">
+      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
+        Proposal Workspace
+      </Typography>
+      {items.length === 0 ? <Typography className="muted">No proposals found.</Typography> : null}
+      <List dense disablePadding>
         {items.map((item) => (
-          <li key={item.proposal_id}>
+          <ListItem key={item.proposal_id} sx={{ px: 0, py: 0.6 }}>
             <Link href={`/proposals/${item.proposal_id}`}>{item.proposal_id}</Link>
-            {" "}- state: {item.current_state}
-          </li>
+            <Typography sx={{ mx: 1.1, color: "text.secondary" }}>
+              - state: {item.current_state}
+            </Typography>
+            <Chip size="small" label={item.current_state} />
+          </ListItem>
         ))}
-      </ul>
-    </section>
+      </List>
+    </Paper>
   );
 }

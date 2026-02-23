@@ -11,13 +11,13 @@ import {
   ProposalWorkflowEventsData,
 } from "./types";
 
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
+const BFF_PROXY_BASE = "/api/bff/api/v1";
 
 export async function simulateProposal(
   payload: ProposalSimulateRequest,
   idempotencyKey: string
 ): Promise<ProposalSimulateResponse> {
-  const response = await fetch(`${BFF_BASE_URL}/api/v1/proposals/simulate`, {
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/simulate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -38,12 +38,12 @@ export async function createProposal(
   payload: ProposalCreateRequest,
   idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson("/api/v1/proposals", payload, idempotencyKey);
+  return await postJson("/proposals", payload, idempotencyKey);
 }
 
 export async function listProposals(state?: string): Promise<ProposalListData> {
   const query = state ? `?state=${encodeURIComponent(state)}` : "";
-  const response = await fetch(`${BFF_BASE_URL}/api/v1/proposals${query}`);
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals${query}`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Proposal list failed (${response.status}): ${body}`);
@@ -57,9 +57,7 @@ export async function getProposal(
   includeEvidence = false
 ): Promise<ProposalDetailData> {
   const query = `?include_evidence=${includeEvidence ? "true" : "false"}`;
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/proposals/${proposalId}${query}`
-  );
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}${query}`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Proposal detail failed (${response.status}): ${body}`);
@@ -72,42 +70,34 @@ export async function submitProposal(
   proposalId: string,
   payload: ProposalSubmitRequest
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/api/v1/proposals/${proposalId}/submit`, payload);
+  return await postJson(`/proposals/${proposalId}/submit`, payload);
 }
 
 export async function approveRisk(
   proposalId: string,
   payload: ProposalApprovalActionRequest
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/api/v1/proposals/${proposalId}/approve-risk`, payload);
+  return await postJson(`/proposals/${proposalId}/approve-risk`, payload);
 }
 
 export async function approveCompliance(
   proposalId: string,
   payload: ProposalApprovalActionRequest
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(
-    `/api/v1/proposals/${proposalId}/approve-compliance`,
-    payload
-  );
+  return await postJson(`/proposals/${proposalId}/approve-compliance`, payload);
 }
 
 export async function recordClientConsent(
   proposalId: string,
   payload: ProposalApprovalActionRequest
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(
-    `/api/v1/proposals/${proposalId}/record-client-consent`,
-    payload
-  );
+  return await postJson(`/proposals/${proposalId}/record-client-consent`, payload);
 }
 
 export async function getProposalWorkflowEvents(
   proposalId: string
 ): Promise<ProposalWorkflowEventsData> {
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/proposals/${proposalId}/workflow-events`
-  );
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/workflow-events`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Workflow events failed (${response.status}): ${body}`);
@@ -119,9 +109,7 @@ export async function getProposalWorkflowEvents(
 export async function getProposalApprovals(
   proposalId: string
 ): Promise<ProposalApprovalsData> {
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/proposals/${proposalId}/approvals`
-  );
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/approvals`);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Approvals fetch failed (${response.status}): ${body}`);
@@ -141,7 +129,7 @@ async function postJson(
   if (idempotencyKey) {
     headers["Idempotency-Key"] = idempotencyKey;
   }
-  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+  const response = await fetch(`${BFF_PROXY_BASE}${path}`, {
     method: "POST",
     headers,
     body: JSON.stringify(payload),

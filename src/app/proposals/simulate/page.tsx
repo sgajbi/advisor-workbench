@@ -4,9 +4,9 @@ import ProposalSimulateForm from "@/features/proposals/components/proposal-simul
 
 export default function ProposalSimulatePage() {
   return (
-    <main style={{ padding: "1rem", maxWidth: "960px", margin: "0 auto" }}>
-      <h1>Advisory Proposals</h1>
-      <p>Run DPM proposal simulation via BFF.</p>
+    <main className="page-container">
+      <h1 className="page-title">Advisory Proposals</h1>
+      <p className="page-subtitle">Run DPM proposal simulation via BFF.</p>
       <p>
         <Link href="/proposals">Go to Proposal Workspace</Link>
       </p>

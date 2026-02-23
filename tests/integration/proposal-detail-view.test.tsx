@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 import ProposalDetailView from "../../src/features/proposals/components/proposal-detail-view";
@@ -65,8 +66,17 @@ vi.mock("../../src/features/proposals/api", () => ({
 }));
 
 describe("ProposalDetailView", () => {
+  function renderWithQueryClient() {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp_1" />
+      </QueryClientProvider>
+    );
+  }
+
   it("renders timeline and approvals", async () => {
-    render(<ProposalDetailView proposalId="pp_1" />);
+    renderWithQueryClient();
 
     await waitFor(() => {
       expect(screen.getByText("State: DRAFT")).toBeInTheDocument();
@@ -77,7 +87,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("submits draft to risk review", async () => {
-    render(<ProposalDetailView proposalId="pp_1" />);
+    renderWithQueryClient();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Submit To Risk Review" })).toBeInTheDocument();
@@ -100,7 +110,7 @@ describe("ProposalDetailView", () => {
       },
     });
 
-    render(<ProposalDetailView proposalId="pp_1" />);
+    renderWithQueryClient();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Approve Risk" })).toBeInTheDocument();
@@ -123,7 +133,7 @@ describe("ProposalDetailView", () => {
       },
     });
 
-    render(<ProposalDetailView proposalId="pp_1" />);
+    renderWithQueryClient();
 
     await waitFor(() => {
       expect(

@@ -11,7 +11,9 @@ type Props = {
 export default async function ProposalDetailPage({ params }: Props) {
   const { proposalId } = await params;
   return (
-    <main style={{ padding: "1rem", maxWidth: "960px", margin: "0 auto" }}>
+    <main className="page-container">
+      <h1 className="page-title">Proposal Detail</h1>
+      <p className="page-subtitle">Lifecycle status, approvals, and workflow events.</p>
       <p>
         <Link href="/proposals">Back to Proposal Workspace</Link>
       </p>

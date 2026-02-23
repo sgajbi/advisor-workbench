@@ -11,12 +11,28 @@ export default async function WorkbenchPage({
   params: Promise<{ portfolioId: string }>;
 }) {
   const { portfolioId } = await params;
-  const data = await getWorkbenchOverview(portfolioId);
+
+  let data;
+  try {
+    data = await getWorkbenchOverview(portfolioId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    return (
+      <main className="page-container">
+        <h1 className="page-title">Advisor Workbench</h1>
+        <section className="section-card">
+          <p className="error-text">
+            Unable to load workbench overview for {portfolioId}. {detail}
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
-    <main>
-      <h1>Advisor Workbench: {data.portfolio.portfolio_id}</h1>
-      <p>As of: {data.as_of_date}</p>
+    <main className="page-container">
+      <h1 className="page-title">Advisor Workbench: {data.portfolio.portfolio_id}</h1>
+      <p className="page-subtitle">As of: {data.as_of_date}</p>
 
       <PartialFailureBanner items={data.partial_failures} />
 
