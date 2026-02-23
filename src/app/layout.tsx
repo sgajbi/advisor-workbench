@@ -14,14 +14,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   Advisor Workbench
                 </Link>
                 <nav className="nav-links">
+                  <Link href="/suite" className="nav-link">
+                    Suite
+                  </Link>
+                  <Link href="/pas/intake" className="nav-link">
+                    PAS Intake
+                  </Link>
+                  <Link href="/pa/analytics" className="nav-link">
+                    PA Analytics
+                  </Link>
                   <Link href="/proposals" className="nav-link">
-                    Proposal Workspace
+                    DPM Proposals
                   </Link>
                   <Link href="/proposals/simulate" className="nav-link">
-                    Simulation
+                    DPM Simulation
                   </Link>
                   <Link href="/workbench/PF_1001" className="nav-link">
-                    Workbench
+                    DPM Workbench
                   </Link>
                 </nav>
               </div>
