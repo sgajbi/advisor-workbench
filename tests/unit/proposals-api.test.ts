@@ -4,6 +4,7 @@ import {
   approveCompliance,
   approveRisk,
   getProposalApprovals,
+  listProposals,
   getProposalWorkflowEvents,
   recordClientConsent,
   submitProposal,
@@ -95,6 +96,36 @@ describe("proposal api", () => {
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/approvals`
+    );
+  });
+
+  it("builds list query from server-side filters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "c",
+            contract_version: "v1",
+            data: { items: [] },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+    );
+
+    await listProposals({
+      state: "DRAFT",
+      portfolioId: "pf_1",
+      createdBy: "advisor_1",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals?portfolio_id=pf_1&state=DRAFT&created_by=advisor_1`
     );
   });
 });

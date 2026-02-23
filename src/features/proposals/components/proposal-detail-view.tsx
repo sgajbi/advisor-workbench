@@ -9,8 +9,10 @@ import {
   Chip,
   CircularProgress,
   Divider,
+  FormControlLabel,
   Paper,
   Stack,
+  Switch,
   Typography,
 } from "@mui/material";
 
@@ -72,11 +74,15 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [revision, setRevision] = useState(0);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [includeEvidence, setIncludeEvidence] = useState(false);
 
-  const queryKey = useMemo(() => ["proposal-detail", proposalId, revision], [proposalId, revision]);
+  const queryKey = useMemo(
+    () => ["proposal-detail", proposalId, revision, includeEvidence],
+    [proposalId, revision, includeEvidence]
+  );
   const detailQuery = useQuery({
     queryKey,
-    queryFn: async () => await getProposal(proposalId, false),
+    queryFn: async () => await getProposal(proposalId, includeEvidence),
   });
   const workflowQuery = useQuery({
     queryKey: ["proposal-workflow", proposalId, revision],
@@ -200,12 +206,42 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const data = detailQuery.data as ProposalDetailData;
   const workflow = workflowQuery.data as ProposalWorkflowEventsData | undefined;
   const approvals = approvalsQuery.data as ProposalApprovalsData | undefined;
+  const currentVersion = (data.current_version as Record<string, unknown> | undefined) ?? {};
+  const artifact = (currentVersion.artifact as Record<string, unknown> | undefined) ?? {};
+  const evidence =
+    ((artifact.evidence_bundle as Record<string, unknown> | undefined) ??
+      (currentVersion.evidence_bundle as Record<string, unknown> | undefined)) ??
+    null;
+  const evidenceHashes =
+    ((evidence?.hashes as Record<string, unknown> | undefined) ??
+      (currentVersion.hashes as Record<string, unknown> | undefined)) ??
+    {};
+  const artifactHash = (currentVersion.artifact_hash as string | undefined) ?? (evidenceHashes.artifact_hash as string | undefined);
+  const requestHash = evidenceHashes.request_hash as string | undefined;
+  const simulationHash = evidenceHashes.simulation_hash as string | undefined;
+  const generatedAt =
+    (artifact.generated_at as string | undefined) ??
+    (currentVersion.created_at as string | undefined) ??
+    (evidence?.generated_at as string | undefined);
 
   return (
     <Paper className="section-card">
       <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
         Proposal {data.proposal.proposal_id}
       </Typography>
+      <FormControlLabel
+        control={
+          <Switch
+            size="small"
+            checked={includeEvidence}
+            onChange={(event) => {
+              setIncludeEvidence(event.target.checked);
+            }}
+          />
+        }
+        label="Include Evidence Bundle"
+        sx={{ mb: 1 }}
+      />
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
         <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
           <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Current State</Typography>
@@ -271,6 +307,30 @@ export default function ProposalDetailView({ proposalId }: Props) {
           </Alert>
         ) : null}
       </Stack>
+
+      <Divider sx={{ my: 1 }} />
+      <Typography variant="h6" component="h3">
+        Evidence And Auditability
+      </Typography>
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 0.7, mb: 1.1 }}>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Artifact Hash</Typography>
+          <Typography sx={{ fontSize: 13 }}>{artifactHash ?? "Not available"}</Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Request Hash</Typography>
+          <Typography sx={{ fontSize: 13 }}>{requestHash ?? "Not available"}</Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Simulation Hash</Typography>
+          <Typography sx={{ fontSize: 13 }}>{simulationHash ?? "Not available"}</Typography>
+        </Paper>
+      </Stack>
+      <Typography className="muted" sx={{ mb: 1.1 }}>
+        {generatedAt
+          ? `Latest artifact generated at ${generatedAt}.`
+          : "Evidence metadata not available in current response. Turn on evidence or confirm backend evidence storage settings."}
+      </Typography>
 
       <Divider sx={{ my: 1 }} />
       <Typography variant="h6" component="h3" sx={{ mt: 1.2 }}>

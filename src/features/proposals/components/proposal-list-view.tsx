@@ -9,6 +9,7 @@ import {
   Chip,
   CircularProgress,
   Divider,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -62,9 +63,17 @@ function groupedByStage(items: ProposalSummary[]): Record<Stage, ProposalSummary
 
 export default function ProposalListView() {
   const [searchText, setSearchText] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
+  const [portfolioFilter, setPortfolioFilter] = useState("");
+  const [createdByFilter, setCreatedByFilter] = useState("");
   const { data, isLoading, error } = useQuery({
-    queryKey: ["proposals"],
-    queryFn: async () => await listProposals(),
+    queryKey: ["proposals", stateFilter, portfolioFilter, createdByFilter],
+    queryFn: async () =>
+      await listProposals({
+        state: stateFilter || undefined,
+        portfolioId: portfolioFilter || undefined,
+        createdBy: createdByFilter || undefined,
+      }),
   });
 
   const items = useMemo(() => data?.items ?? [], [data?.items]);
@@ -116,8 +125,45 @@ export default function ProposalListView() {
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
         <TextField
+          select
           size="small"
-          label="Search proposals"
+          label="State"
+          value={stateFilter}
+          onChange={(event) => {
+            setStateFilter(event.target.value);
+          }}
+          sx={{ minWidth: { md: 180 } }}
+        >
+          <MenuItem value="">All</MenuItem>
+          {STAGES.map((stage) => (
+            <MenuItem key={stage} value={stage}>
+              {stage}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          size="small"
+          label="Portfolio"
+          value={portfolioFilter}
+          onChange={(event) => {
+            setPortfolioFilter(event.target.value);
+          }}
+          placeholder="portfolio id"
+          sx={{ minWidth: { md: 220 } }}
+        />
+        <TextField
+          size="small"
+          label="Created By"
+          value={createdByFilter}
+          onChange={(event) => {
+            setCreatedByFilter(event.target.value);
+          }}
+          placeholder="advisor id"
+          sx={{ minWidth: { md: 200 } }}
+        />
+        <TextField
+          size="small"
+          label="Search In Results"
           value={searchText}
           onChange={(event) => {
             setSearchText(event.target.value);

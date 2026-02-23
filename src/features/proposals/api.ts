@@ -13,6 +13,16 @@ import {
 
 const BFF_PROXY_BASE = "/api/bff/api/v1";
 
+export type ProposalListFilters = {
+  portfolioId?: string;
+  state?: string;
+  createdBy?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  limit?: number;
+  cursor?: string;
+};
+
 export async function simulateProposal(
   payload: ProposalSimulateRequest,
   idempotencyKey: string
@@ -41,8 +51,30 @@ export async function createProposal(
   return await postJson("/proposals", payload, idempotencyKey);
 }
 
-export async function listProposals(state?: string): Promise<ProposalListData> {
-  const query = state ? `?state=${encodeURIComponent(state)}` : "";
+export async function listProposals(filters: ProposalListFilters = {}): Promise<ProposalListData> {
+  const params = new URLSearchParams();
+  if (filters.portfolioId) {
+    params.set("portfolio_id", filters.portfolioId);
+  }
+  if (filters.state) {
+    params.set("state", filters.state);
+  }
+  if (filters.createdBy) {
+    params.set("created_by", filters.createdBy);
+  }
+  if (filters.createdFrom) {
+    params.set("created_from", filters.createdFrom);
+  }
+  if (filters.createdTo) {
+    params.set("created_to", filters.createdTo);
+  }
+  if (filters.limit) {
+    params.set("limit", String(filters.limit));
+  }
+  if (filters.cursor) {
+    params.set("cursor", filters.cursor);
+  }
+  const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(`${BFF_PROXY_BASE}/proposals${query}`);
   if (!response.ok) {
     const body = await response.text();
