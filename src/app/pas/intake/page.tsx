@@ -1,11 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Alert, Chip, CircularProgress, Paper, Stack, Typography } from "@mui/material";
+import { ChangeEvent, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  Divider,
+  Grid,
+  LinearProgress,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 
 import { ingestPortfolioBundle } from "@/features/intake/api";
+import { parseIntakeCsvToBundle } from "@/features/intake/csv-parser";
 import { PortfolioBundlePayload } from "@/features/intake/types";
 import { intakeBatches } from "@/features/suite/mock-data";
+
+type CheckItem = {
+  label: string;
+  ok: boolean;
+};
 
 export default function PasIntakePage() {
   const [portfolioId, setPortfolioId] = useState("PORT_UI_1001");
@@ -28,6 +50,8 @@ export default function PasIntakePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [csvSummary, setCsvSummary] = useState<string | null>(null);
+  const csvInputRef = useRef<HTMLInputElement | null>(null);
 
   const grossAmount = useMemo(() => {
     const parsedQuantity = Number(quantity);
@@ -38,16 +62,21 @@ export default function PasIntakePage() {
     return parsedQuantity * parsedPrice;
   }, [price, quantity]);
 
-  const canSubmit = portfolioId.trim() && securityId.trim() && Number(quantity) > 0 && Number(price) > 0;
+  const checks: CheckItem[] = useMemo(
+    () => [
+      { label: "Portfolio ID provided", ok: portfolioId.trim().length > 0 },
+      { label: "Instrument mapped", ok: securityId.trim().length > 0 && isin.trim().length > 0 },
+      { label: "Trade economics valid", ok: Number(quantity) > 0 && Number(price) > 0 },
+      { label: "Client metadata complete", ok: cifId.trim().length > 0 && advisorId.trim().length > 0 },
+    ],
+    [advisorId, cifId, isin, portfolioId, price, quantity, securityId]
+  );
+  const readinessPct = Math.round((checks.filter((item) => item.ok).length / checks.length) * 100);
+  const canSubmit = readinessPct === 100;
 
-  async function handleCreatePortfolio() {
-    if (!canSubmit) {
-      setErrorMessage("Provide portfolio, instrument, quantity, and price before submitting.");
-      return;
-    }
-
+  function buildManualPayload(): PortfolioBundlePayload {
     const transactionId = `TRN_${portfolioId}_${Date.now()}`;
-    const payload: PortfolioBundlePayload = {
+    return {
       sourceSystem: "ADVISOR_WORKBENCH_UI",
       mode: "UPSERT",
       businessDates: [{ businessDate: openDate }],
@@ -100,7 +129,9 @@ export default function PasIntakePage() {
       ],
       fxRates: [],
     };
+  }
 
+  async function submitPayload(payload: PortfolioBundlePayload, successPrefix: string) {
     setIsSubmitting(true);
     setSuccessMessage(null);
     setErrorMessage(null);
@@ -108,7 +139,7 @@ export default function PasIntakePage() {
       const response = await ingestPortfolioBundle(payload);
       const publishedCounts = response.data.published_counts ?? {};
       setSuccessMessage(
-        `Portfolio bundle queued. Portfolios: ${publishedCounts.portfolios ?? 0}, Instruments: ${
+        `${successPrefix} Portfolios: ${publishedCounts.portfolios ?? 0}, Instruments: ${
           publishedCounts.instruments ?? 0
         }, Transactions: ${publishedCounts.transactions ?? 0}.`
       );
@@ -120,163 +151,233 @@ export default function PasIntakePage() {
     }
   }
 
+  async function handleCreatePortfolio() {
+    if (!canSubmit) {
+      setErrorMessage("Intake readiness is incomplete. Resolve validation checks before submission.");
+      return;
+    }
+    await submitPayload(buildManualPayload(), "Manual portfolio bundle queued.");
+  }
+
+  async function handleCsvSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setCsvSummary(null);
+    try {
+      const csvText = await file.text();
+      const payload = parseIntakeCsvToBundle(csvText);
+      await submitPayload(payload, `CSV bundle ${file.name} queued.`);
+      setCsvSummary(
+        `Transactions: ${payload.transactions.length}, Instruments: ${payload.instruments.length}, Portfolio: ${payload.portfolios[0]?.portfolioId ?? "N/A"}`
+      );
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown CSV ingestion error";
+      setErrorMessage(detail);
+    }
+  }
+
   return (
     <main className="page-container">
       <Typography variant="h4" component="h1" className="page-title">
-        Portfolio Intake Workspace
+        Portfolio Intake Operations Console
       </Typography>
       <Typography className="page-subtitle">
-        Create real PAS portfolios from UI using a bundle ingestion flow through BFF.
+        Production-grade onboarding for portfolio creation into PAS with governed validation and auditable ingestion.
       </Typography>
 
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {csvSummary ? <Alert severity="info">{csvSummary}</Alert> : null}
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <Paper className="section-card" elevation={0}>
+            <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} spacing={1}>
+              <Typography variant="h6">Manual Intake Workflow</Typography>
+              <Chip label="PAS Ingestion Live" size="small" color="success" />
+              <Chip label={`Readiness ${readinessPct}%`} size="small" color={readinessPct === 100 ? "success" : "warning"} />
+            </Stack>
+            <Box sx={{ mt: 1 }}>
+              <LinearProgress variant="determinate" value={readinessPct} />
+            </Box>
+            <Divider sx={{ my: 1 }} />
+
+            <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+              Portfolio Master Data
+            </Typography>
+            <div className="suite-form-grid">
+              <label>
+                <span className="field-label">Portfolio ID</span>
+                <input className="input" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Base Currency</span>
+                <input className="input" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Open Date</span>
+                <input className="input" value={openDate} onChange={(e) => setOpenDate(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Risk Exposure</span>
+                <input className="input" value={riskExposure} onChange={(e) => setRiskExposure(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Investment Horizon</span>
+                <input className="input" value={timeHorizon} onChange={(e) => setTimeHorizon(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Portfolio Type</span>
+                <input className="input" value={portfolioType} onChange={(e) => setPortfolioType(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Booking Center</span>
+                <input className="input" value={bookingCenter} onChange={(e) => setBookingCenter(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">CIF ID</span>
+                <input className="input" value={cifId} onChange={(e) => setCifId(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Advisor ID</span>
+                <input className="input" value={advisorId} onChange={(e) => setAdvisorId(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Status</span>
+                <input className="input" value={status} onChange={(e) => setStatus(e.target.value)} />
+              </label>
+            </div>
+
+            <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.8 }}>
+              Holding and Trade Capture
+            </Typography>
+            <div className="suite-form-grid">
+              <label>
+                <span className="field-label">Security ID</span>
+                <input className="input" value={securityId} onChange={(e) => setSecurityId(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Instrument Name</span>
+                <input className="input" value={instrumentName} onChange={(e) => setInstrumentName(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">ISIN</span>
+                <input className="input" value={isin} onChange={(e) => setIsin(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Product Type</span>
+                <input className="input" value={productType} onChange={(e) => setProductType(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Transaction Type</span>
+                <input className="input" value={transactionType} onChange={(e) => setTransactionType(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Quantity</span>
+                <input className="input" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Price</span>
+                <input className="input" value={price} onChange={(e) => setPrice(e.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Gross Amount</span>
+                <input className="input" value={grossAmount.toFixed(2)} readOnly />
+              </label>
+            </div>
+
+            <div className="toolbar">
+              <button type="button" className="btn" onClick={handleCreatePortfolio} disabled={isSubmitting || !canSubmit}>
+                {isSubmitting ? "Submitting..." : "Submit Manual Bundle"}
+              </button>
+              {isSubmitting ? <CircularProgress size={18} /> : null}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSuccessMessage(null);
+                  setErrorMessage(null);
+                  setCsvSummary(null);
+                }}
+              >
+                Clear Alerts
+              </button>
+            </div>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Paper className="section-card" elevation={0}>
+            <Typography variant="h6">Operational Readiness</Typography>
+            <Divider sx={{ my: 1 }} />
+            <Stack spacing={0.7}>
+              {checks.map((item) => (
+                <Stack key={item.label} direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography className="muted">{item.label}</Typography>
+                  <Chip size="small" color={item.ok ? "success" : "warning"} label={item.ok ? "OK" : "Pending"} />
+                </Stack>
+              ))}
+            </Stack>
+          </Paper>
+
+          <Paper className="section-card" elevation={0}>
+            <Typography variant="h6">CSV Batch Intake</Typography>
+            <Typography className="muted" sx={{ mt: 0.6 }}>
+              Use governed CSV template to ingest multiple holdings in one operation.
+            </Typography>
+            <div className="toolbar">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => csvInputRef.current?.click()}
+                disabled={isSubmitting}
+              >
+                Upload CSV Package
+              </button>
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleCsvSelected}
+                style={{ display: "none" }}
+              />
+            </div>
+            <Typography className="muted" sx={{ fontSize: 12, mt: 0.8 }}>
+              Required columns: portfolio_id, base_currency, open_date, risk_exposure, investment_time_horizon,
+              portfolio_type, booking_center, cif_id, advisor_id, status, security_id, instrument_name, isin,
+              product_type, transaction_type, quantity, price, transaction_date.
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
 
       <Paper className="section-card" elevation={0}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant="h6" component="h2">
-            Intake Channels
-          </Typography>
-          <Chip size="small" color="success" label="PAS Ingestion Live" />
-        </Stack>
-        <div className="toolbar">
-          <button type="button" className="btn" onClick={handleCreatePortfolio} disabled={isSubmitting || !canSubmit}>
-            {isSubmitting ? "Submitting..." : "Create Portfolio In PAS"}
-          </button>
-          {isSubmitting ? <CircularProgress size={18} /> : null}
-          <button type="button" className="btn btn-secondary" disabled>
-            CSV Upload (next)
-          </button>
-          <button type="button" className="btn btn-secondary" disabled>
-            Excel Upload (next)
-          </button>
-        </div>
+        <Typography variant="h6">Ingestion Processing Queue</Typography>
+        <Table size="small" sx={{ mt: 1 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Batch ID</TableCell>
+              <TableCell>Source</TableCell>
+              <TableCell>Portfolio</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Rows</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {intakeBatches.map((batch) => (
+              <TableRow key={batch.batchId}>
+                <TableCell>{batch.batchId}</TableCell>
+                <TableCell>{batch.source}</TableCell>
+                <TableCell>{batch.portfolioId}</TableCell>
+                <TableCell>{batch.status}</TableCell>
+                <TableCell align="right">{batch.records}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Paper>
-
-      <section className="suite-grid">
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Portfolio + Holding Draft
-          </Typography>
-          <div className="suite-form-grid">
-            <label>
-              <span className="field-label">Portfolio ID</span>
-              <input className="input" value={portfolioId} onChange={(event) => setPortfolioId(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Base Currency</span>
-              <input className="input" value={baseCurrency} onChange={(event) => setBaseCurrency(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Open Date</span>
-              <input className="input" value={openDate} onChange={(event) => setOpenDate(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Risk Exposure</span>
-              <input className="input" value={riskExposure} onChange={(event) => setRiskExposure(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Time Horizon</span>
-              <input className="input" value={timeHorizon} onChange={(event) => setTimeHorizon(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Portfolio Type</span>
-              <input className="input" value={portfolioType} onChange={(event) => setPortfolioType(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Booking Center</span>
-              <input className="input" value={bookingCenter} onChange={(event) => setBookingCenter(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">CIF ID</span>
-              <input className="input" value={cifId} onChange={(event) => setCifId(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Advisor ID</span>
-              <input className="input" value={advisorId} onChange={(event) => setAdvisorId(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Portfolio Status</span>
-              <input className="input" value={status} onChange={(event) => setStatus(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Security ID</span>
-              <input className="input" value={securityId} onChange={(event) => setSecurityId(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Instrument Name</span>
-              <input
-                className="input"
-                value={instrumentName}
-                onChange={(event) => setInstrumentName(event.target.value)}
-              />
-            </label>
-            <label>
-              <span className="field-label">ISIN</span>
-              <input className="input" value={isin} onChange={(event) => setIsin(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Product Type</span>
-              <input className="input" value={productType} onChange={(event) => setProductType(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Transaction Type</span>
-              <input
-                className="input"
-                value={transactionType}
-                onChange={(event) => setTransactionType(event.target.value)}
-              />
-            </label>
-            <label>
-              <span className="field-label">Quantity</span>
-              <input className="input" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Price</span>
-              <input className="input" value={price} onChange={(event) => setPrice(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Gross Amount</span>
-              <input className="input" value={grossAmount.toFixed(2)} readOnly />
-            </label>
-          </div>
-          <div className="toolbar">
-            <button type="button" className="btn" onClick={handleCreatePortfolio} disabled={isSubmitting || !canSubmit}>
-              {isSubmitting ? "Submitting..." : "Submit to PAS"}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setSuccessMessage(null);
-                setErrorMessage(null);
-              }}
-            >
-              Clear Messages
-            </button>
-          </div>
-        </Paper>
-
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Batch Processing Pipeline
-          </Typography>
-          {intakeBatches.map((batch) => (
-            <div key={batch.batchId} className="suite-row">
-              <div>
-                <strong>{batch.batchId}</strong>
-                <p className="muted">
-                  {batch.source} • {batch.portfolioId}
-                </p>
-              </div>
-              <div>
-                <p>{batch.status}</p>
-                <p className="muted">{batch.records} rows</p>
-              </div>
-            </div>
-          ))}
-        </Paper>
-      </section>
     </main>
   );
 }
