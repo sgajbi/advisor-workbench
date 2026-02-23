@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Chip, Paper, Stack, Typography } from "@mui/material";
+import { useMemo, useState } from "react";
+import { Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 
 import {
   advisoryQueue,
@@ -9,9 +10,24 @@ import {
   analyticsHighlights,
   dpmActionPlaybook,
   intakeBatches,
+  OperatingRole,
 } from "@/features/suite/mock-data";
 
 export default function SuitePage() {
+  const [activeRole, setActiveRole] = useState<OperatingRole>("ADVISOR");
+
+  const roleLabel = useMemo(() => {
+    if (activeRole === "RISK") return "Risk Officer";
+    if (activeRole === "COMPLIANCE") return "Compliance Officer";
+    return "Advisor";
+  }, [activeRole]);
+
+  const rolePriorities = useMemo(
+    () => advisorPriorityBoard.filter((item) => item.assignedRole === activeRole),
+    [activeRole]
+  );
+  const rolePlaybook = useMemo(() => dpmActionPlaybook.filter((item) => item.role === activeRole), [activeRole]);
+
   return (
     <main className="page-container">
       <Typography variant="h4" component="h1" className="page-title">
@@ -47,9 +63,37 @@ export default function SuitePage() {
       <section className="suite-grid">
         <Paper className="section-card suite-panel" elevation={0}>
           <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Today&apos;s Client Priorities
+            Role Operations Lens
           </Typography>
-          {advisorPriorityBoard.map((item) => (
+          <Typography className="muted" sx={{ mb: 1 }}>
+            Switch the active role to view ownership, queues, and actions for that operating function.
+          </Typography>
+          <ToggleButtonGroup
+            color="primary"
+            exclusive
+            value={activeRole}
+            onChange={(_event, nextRole: OperatingRole | null) => {
+              if (nextRole) setActiveRole(nextRole);
+            }}
+            size="small"
+            sx={{ flexWrap: "wrap", gap: 0.5 }}
+          >
+            <ToggleButton value="ADVISOR">Advisor</ToggleButton>
+            <ToggleButton value="RISK">Risk</ToggleButton>
+            <ToggleButton value="COMPLIANCE">Compliance</ToggleButton>
+          </ToggleButtonGroup>
+          <div className="toolbar">
+            <Chip label={`Active Role: ${roleLabel}`} size="small" color="primary" />
+            <Chip label={`Assigned Items: ${rolePriorities.length}`} size="small" />
+            <Chip label={`Action Templates: ${rolePlaybook.length}`} size="small" />
+          </div>
+        </Paper>
+
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            {roleLabel} Priorities
+          </Typography>
+          {rolePriorities.map((item) => (
             <div key={item.proposalId} className="suite-row">
               <div>
                 <strong>{item.clientName}</strong>
@@ -63,6 +107,7 @@ export default function SuitePage() {
               </div>
             </div>
           ))}
+          {rolePriorities.length === 0 ? <Typography className="muted">No active items for this role.</Typography> : null}
           <div className="toolbar">
             <Link href="/proposals" className="nav-link">
               Open Proposal Pipeline
@@ -75,9 +120,9 @@ export default function SuitePage() {
 
         <Paper className="section-card suite-panel" elevation={0}>
           <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            DPM Action Playbook
+            {roleLabel} Action Playbook
           </Typography>
-          {dpmActionPlaybook.map((item) => (
+          {rolePlaybook.map((item) => (
             <div key={item.workflowState} className="suite-row">
               <div>
                 <strong>{item.workflowState}</strong>
@@ -90,8 +135,11 @@ export default function SuitePage() {
               </div>
             </div>
           ))}
+          {rolePlaybook.length === 0 ? <Typography className="muted">No mapped actions for this role.</Typography> : null}
         </Paper>
+      </section>
 
+      <section className="suite-grid">
         <Paper className="section-card suite-panel" elevation={0}>
           <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
             Workflow Execution Controls
@@ -115,9 +163,7 @@ export default function SuitePage() {
             </Link>
           </div>
         </Paper>
-      </section>
 
-      <section className="suite-grid">
         <Paper className="section-card suite-panel" elevation={0}>
           <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
             Intake Control Tower

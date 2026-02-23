@@ -1,3 +1,5 @@
+export type OperatingRole = "ADVISOR" | "RISK" | "COMPLIANCE";
+
 export const intakeBatches = [
   { batchId: "BATCH-9021", source: "CSV Upload", portfolioId: "PF_1001", status: "VALIDATION_PENDING", records: 1423 },
   { batchId: "BATCH-9018", source: "Manual Form", portfolioId: "PF_2007", status: "READY_TO_COMMIT", records: 26 },
@@ -25,6 +27,7 @@ export const advisorPriorityBoard = [
     workflowState: "RISK_REVIEW",
     businessAction: "Route to risk officer for same-day clearance",
     urgency: "High",
+    assignedRole: "RISK" as OperatingRole,
   },
   {
     clientName: "Northbridge Trust",
@@ -33,6 +36,7 @@ export const advisorPriorityBoard = [
     workflowState: "COMPLIANCE_REVIEW",
     businessAction: "Resolve compliance exceptions before consent pack",
     urgency: "Medium",
+    assignedRole: "COMPLIANCE" as OperatingRole,
   },
   {
     clientName: "Sterling Private Bank Client 014",
@@ -41,35 +45,68 @@ export const advisorPriorityBoard = [
     workflowState: "AWAITING_CLIENT_CONSENT",
     businessAction: "Capture client sign-off and schedule execution handoff",
     urgency: "Medium",
+    assignedRole: "ADVISOR" as OperatingRole,
+  },
+  {
+    clientName: "Cedar Asset Partners",
+    portfolioId: "PF_1190",
+    proposalId: "PP-7734",
+    workflowState: "DRAFT",
+    businessAction: "Finalize scenario package and send for risk review",
+    urgency: "High",
+    assignedRole: "ADVISOR" as OperatingRole,
+  },
+  {
+    clientName: "Lakeside Global Mandate",
+    portfolioId: "PF_2104",
+    proposalId: "PP-7740",
+    workflowState: "RISK_REVIEW",
+    businessAction: "Review concentration breach and risk waiver rationale",
+    urgency: "High",
+    assignedRole: "RISK" as OperatingRole,
+  },
+  {
+    clientName: "Orchid Legacy Account",
+    portfolioId: "PF_3042",
+    proposalId: "PP-7744",
+    workflowState: "COMPLIANCE_REVIEW",
+    businessAction: "Complete cross-border compliance attestation",
+    urgency: "Medium",
+    assignedRole: "COMPLIANCE" as OperatingRole,
   },
 ];
 
 export const dpmActionPlaybook = [
   {
+    role: "ADVISOR" as OperatingRole,
     workflowState: "DRAFT",
     advisorAction: "Run scenario simulation and submit for review",
     route: "/proposals/simulate",
     routeLabel: "Open Scenario Builder",
   },
   {
-    workflowState: "RISK_REVIEW",
-    advisorAction: "Track risk approvals and attach evidence",
-    route: "/proposals",
-    routeLabel: "Open Proposal Pipeline",
-  },
-  {
-    workflowState: "COMPLIANCE_REVIEW",
-    advisorAction: "Address compliance checks and attestations",
-    route: "/proposals",
-    routeLabel: "Open Proposal Pipeline",
-  },
-  {
+    role: "ADVISOR" as OperatingRole,
     workflowState: "AWAITING_CLIENT_CONSENT",
     advisorAction: "Present recommendation and record consent",
     route: "/proposals",
     routeLabel: "Open Proposal Pipeline",
   },
   {
+    role: "RISK" as OperatingRole,
+    workflowState: "RISK_REVIEW",
+    advisorAction: "Track risk approvals and attach evidence",
+    route: "/proposals",
+    routeLabel: "Open Proposal Pipeline",
+  },
+  {
+    role: "COMPLIANCE" as OperatingRole,
+    workflowState: "COMPLIANCE_REVIEW",
+    advisorAction: "Address compliance checks and attestations",
+    route: "/proposals",
+    routeLabel: "Open Proposal Pipeline",
+  },
+  {
+    role: "ADVISOR" as OperatingRole,
     workflowState: "EXECUTION_READY",
     advisorAction: "Hand off to execution desk with traceable artifacts",
     route: "/workbench/PF_1001",
