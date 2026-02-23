@@ -1,36 +1,48 @@
+"use client";
+
 import Link from "next/link";
+import { Chip, Paper, Stack, Typography } from "@mui/material";
 
 import { advisoryQueue, analyticsHighlights, intakeBatches } from "@/features/suite/mock-data";
 
 export default function SuitePage() {
   return (
     <main className="page-container">
-      <h1 className="page-title">Suite Operations Storyboard</h1>
-      <p className="page-subtitle">
-        PAS and PA are currently mocked for UX visualization. DPM workflows are connected through the active BFF path.
-      </p>
+      <Typography variant="h4" component="h1" className="page-title">
+        Command Center
+      </Typography>
+      <Typography className="page-subtitle">
+        Run the full advisor workflow from intake to analytics to proposal decisioning in one workspace.
+      </Typography>
 
-      <section className="section-card">
-        <h2>Live Status</h2>
+      <Paper className="section-card" elevation={0}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant="h6" component="h2">
+            Integration Status
+          </Typography>
+          <Chip size="small" color="success" label="Decision Flow Live" />
+        </Stack>
         <div className="kpi-grid">
           <div className="kpi-box">
-            <p className="kpi-label">PAS Connection</p>
-            <p className="kpi-value">Mock Mode</p>
+            <p className="kpi-label">Portfolio Data Hub</p>
+            <p className="kpi-value">Storyboard</p>
           </div>
           <div className="kpi-box">
-            <p className="kpi-label">PA Connection</p>
-            <p className="kpi-value">Mock Mode</p>
+            <p className="kpi-label">Analytics Intelligence</p>
+            <p className="kpi-value">Storyboard</p>
           </div>
           <div className="kpi-box">
-            <p className="kpi-label">DPM Connection</p>
+            <p className="kpi-label">Decision Workflow</p>
             <p className="kpi-value">Live via BFF</p>
           </div>
         </div>
-      </section>
+      </Paper>
 
       <section className="suite-grid">
-        <article className="section-card suite-panel">
-          <h3>PAS Intake Queue</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Intake Control Tower
+          </Typography>
           {intakeBatches.map((batch) => (
             <div key={batch.batchId} className="suite-row">
               <div>
@@ -46,12 +58,14 @@ export default function SuitePage() {
             </div>
           ))}
           <Link href="/pas/intake" className="nav-link">
-            Open PAS Intake Workspace
+            Open Intake Workspace
           </Link>
-        </article>
+        </Paper>
 
-        <article className="section-card suite-panel">
-          <h3>PA Analytics Snapshot</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Analytics Intelligence Desk
+          </Typography>
           {analyticsHighlights.map((item) => (
             <div key={item.label} className="suite-row">
               <span>{item.label}</span>
@@ -59,12 +73,14 @@ export default function SuitePage() {
             </div>
           ))}
           <Link href="/pa/analytics" className="nav-link">
-            Open PA Analytics Workspace
+            Open Analytics Workspace
           </Link>
-        </article>
+        </Paper>
 
-        <article className="section-card suite-panel">
-          <h3>DPM Advisory Queue</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Advisory Decision Queue
+          </Typography>
           {advisoryQueue.map((item) => (
             <div key={item.proposalId} className="suite-row">
               <div>
@@ -79,13 +95,13 @@ export default function SuitePage() {
           ))}
           <div className="toolbar">
             <Link href="/proposals" className="nav-link">
-              Open DPM Proposals
+              Open Proposal Pipeline
             </Link>
             <Link href="/workbench/PF_1001" className="nav-link">
-              Open DPM Workbench
+              Open Decision Console
             </Link>
           </div>
-        </article>
+        </Paper>
       </section>
     </main>
   );

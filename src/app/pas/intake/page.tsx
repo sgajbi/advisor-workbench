@@ -1,31 +1,44 @@
+"use client";
+
+import { Chip, Paper, Stack, Typography } from "@mui/material";
+
 import { intakeBatches } from "@/features/suite/mock-data";
 
 export default function PasIntakePage() {
   return (
     <main className="page-container">
-      <h1 className="page-title">PAS Portfolio Intake</h1>
-      <p className="page-subtitle">
-        Mocked UX for intake orchestration: manual entry, CSV/Excel upload, validation, and commit lifecycle.
-      </p>
+      <Typography variant="h4" component="h1" className="page-title">
+        Portfolio Intake Workspace
+      </Typography>
+      <Typography className="page-subtitle">
+        Capture portfolio data through guided intake, file onboarding, validation, and controlled commit steps.
+      </Typography>
 
-      <section className="section-card">
-        <h2>Import Actions</h2>
+      <Paper className="section-card" elevation={0}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant="h6" component="h2">
+            Intake Channels
+          </Typography>
+          <Chip size="small" label="Storyboard" />
+        </Stack>
         <div className="toolbar">
           <button type="button" className="btn">
-            New Manual Intake
+            Start Manual Intake
           </button>
           <button type="button" className="btn btn-secondary">
-            Upload CSV
+            Upload CSV Package
           </button>
           <button type="button" className="btn btn-secondary">
-            Upload Excel
+            Upload Excel Package
           </button>
         </div>
-      </section>
+      </Paper>
 
       <section className="suite-grid">
-        <article className="section-card suite-panel">
-          <h3>Manual Entry Draft (Mock)</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Manual Intake Draft
+          </Typography>
           <div className="suite-form-grid">
             <label>
               <span className="field-label">Portfolio ID</span>
@@ -46,16 +59,18 @@ export default function PasIntakePage() {
           </div>
           <div className="toolbar">
             <button type="button" className="btn">
-              Validate Draft
+              Run Validation
             </button>
             <button type="button" className="btn btn-secondary">
-              Save For Review
+              Save for Operations Review
             </button>
           </div>
-        </article>
+        </Paper>
 
-        <article className="section-card suite-panel">
-          <h3>Batch Pipeline (Mock)</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Batch Processing Pipeline
+          </Typography>
           {intakeBatches.map((batch) => (
             <div key={batch.batchId} className="suite-row">
               <div>
@@ -70,7 +85,7 @@ export default function PasIntakePage() {
               </div>
             </div>
           ))}
-        </article>
+        </Paper>
       </section>
     </main>
   );

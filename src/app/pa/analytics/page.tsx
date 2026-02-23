@@ -1,15 +1,26 @@
+"use client";
+
+import { Chip, Paper, Stack, Typography } from "@mui/material";
+
 import { analyticsHighlights } from "@/features/suite/mock-data";
 
 export default function PaAnalyticsPage() {
   return (
     <main className="page-container">
-      <h1 className="page-title">PA Advanced Analytics</h1>
-      <p className="page-subtitle">
-        Mocked PA views for performance, attribution, and risk analytics on top of PAS canonical data.
-      </p>
+      <Typography variant="h4" component="h1" className="page-title">
+        Analytics Studio
+      </Typography>
+      <Typography className="page-subtitle">
+        Evaluate performance, attribution, and risk with executive-ready insight panels.
+      </Typography>
 
-      <section className="section-card">
-        <h2>Analytics Snapshot</h2>
+      <Paper className="section-card" elevation={0}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant="h6" component="h2">
+            Portfolio Intelligence Snapshot
+          </Typography>
+          <Chip size="small" label="Storyboard" />
+        </Stack>
         <div className="kpi-grid">
           {analyticsHighlights.map((item) => (
             <div key={item.label} className="kpi-box">
@@ -18,11 +29,13 @@ export default function PaAnalyticsPage() {
             </div>
           ))}
         </div>
-      </section>
+      </Paper>
 
       <section className="suite-grid">
-        <article className="section-card suite-panel">
-          <h3>Attribution Breakdown (Mock)</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Attribution Breakdown
+          </Typography>
           <div className="suite-row">
             <span>Allocation Effect</span>
             <strong>+64 bps</strong>
@@ -35,10 +48,12 @@ export default function PaAnalyticsPage() {
             <span>FX Effect</span>
             <strong>+16 bps</strong>
           </div>
-        </article>
+        </Paper>
 
-        <article className="section-card suite-panel">
-          <h3>Risk Signals (Mock)</h3>
+        <Paper className="section-card suite-panel" elevation={0}>
+          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+            Risk Signals
+          </Typography>
           <div className="suite-row">
             <span>Volatility (1Y)</span>
             <strong>11.8%</strong>
@@ -51,7 +66,7 @@ export default function PaAnalyticsPage() {
             <span>Beta vs Benchmark</span>
             <strong>0.92</strong>
           </div>
-        </article>
+        </Paper>
       </section>
     </main>
   );
