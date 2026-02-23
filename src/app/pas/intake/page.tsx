@@ -47,6 +47,56 @@ type IntakeOperation =
   | "ADD_INSTRUMENTS"
   | "ADD_MARKET_DATA";
 
+type CatalogState = "manual" | "loading" | "online" | "fallback";
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values.filter((value) => value.trim())));
+}
+
+function resolveCatalogState(
+  enabled: boolean,
+  isLoading: boolean,
+  hasError: boolean,
+  itemCount: number
+): CatalogState {
+  if (!enabled) {
+    return "manual";
+  }
+  if (isLoading) {
+    return "loading";
+  }
+  if (hasError || itemCount === 0) {
+    return "fallback";
+  }
+  return "online";
+}
+
+function catalogLabel(name: string, state: CatalogState, count: number): string {
+  if (state === "loading") {
+    return `${name} loading`;
+  }
+  if (state === "online") {
+    return `${name} ${count}`;
+  }
+  if (state === "fallback") {
+    return `${name} fallback`;
+  }
+  return `${name} manual`;
+}
+
+function catalogColor(state: CatalogState): "default" | "primary" | "warning" | "success" {
+  if (state === "online") {
+    return "success";
+  }
+  if (state === "loading") {
+    return "primary";
+  }
+  if (state === "fallback") {
+    return "warning";
+  }
+  return "default";
+}
+
 export default function PasIntakePage() {
   const [operation, setOperation] = useState<IntakeOperation>("CREATE_PORTFOLIO");
   const [lookupEnabled, setLookupEnabled] = useState(false);
@@ -113,28 +163,25 @@ export default function PasIntakePage() {
 
   const portfolioLookupQuery = useQuery({
     queryKey: ["intake-lookups", "portfolios"],
-    queryFn: getPortfolioLookups,
+    queryFn: async () => await getPortfolioLookups({ cifId, bookingCenter, limit: 500 }),
     enabled: lookupEnabled,
     retry: false,
     refetchOnWindowFocus: false,
   });
   const instrumentLookupQuery = useQuery({
     queryKey: ["intake-lookups", "instruments"],
-    queryFn: getInstrumentLookups,
+    queryFn: async () => await getInstrumentLookups({ limit: 500 }),
     enabled: lookupEnabled,
     retry: false,
     refetchOnWindowFocus: false,
   });
   const currencyLookupQuery = useQuery({
     queryKey: ["intake-lookups", "currencies"],
-    queryFn: getCurrencyLookups,
+    queryFn: async () => await getCurrencyLookups({ source: "ALL", limit: 100 }),
     enabled: lookupEnabled,
     retry: false,
     refetchOnWindowFocus: false,
   });
-  const portfolioOptions = portfolioLookupQuery.data ?? [];
-  const instrumentOptions = instrumentLookupQuery.data ?? [];
-  const currencyOptions = currencyLookupQuery.data ?? [];
 
   const readiness = useMemo(() => {
     if (operation === "CREATE_PORTFOLIO") {
@@ -157,9 +204,88 @@ export default function PasIntakePage() {
   }, [advisorId, baseCurrency, cifId, instruments, marketData, openDate, operation, portfolioId, positions, transactions]);
 
   const canSubmit = readiness === 100;
-  const portfolioOptionValues = portfolioOptions.map((item) => item.id);
-  const instrumentOptionValues = instrumentOptions.map((item) => item.id);
-  const currencyOptionValues = currencyOptions.map((item) => item.id);
+  const fallbackPortfolioIds = useMemo(
+    () =>
+      unique([
+        portfolioId,
+        ...positions.map((row) => row.portfolioId),
+        ...transactions.map((row) => row.portfolioId),
+      ]),
+    [portfolioId, positions, transactions]
+  );
+  const fallbackInstrumentIds = useMemo(
+    () =>
+      unique([
+        ...positions.map((row) => row.securityId),
+        ...transactions.map((row) => row.securityId),
+        ...instruments.map((row) => row.securityId),
+        ...marketData.map((row) => row.securityId),
+      ]),
+    [instruments, marketData, positions, transactions]
+  );
+  const fallbackCurrencyCodes = useMemo(
+    () =>
+      unique([
+        baseCurrency,
+        ...instruments.map((row) => row.instrumentCurrency),
+        ...marketData.map((row) => row.currency),
+        "USD",
+        "EUR",
+        "GBP",
+        "SGD",
+        "HKD",
+      ]),
+    [baseCurrency, instruments, marketData]
+  );
+
+  const portfolioCatalogState = resolveCatalogState(
+    lookupEnabled,
+    portfolioLookupQuery.isLoading,
+    portfolioLookupQuery.isError,
+    portfolioLookupQuery.data?.length ?? 0
+  );
+  const instrumentCatalogState = resolveCatalogState(
+    lookupEnabled,
+    instrumentLookupQuery.isLoading,
+    instrumentLookupQuery.isError,
+    instrumentLookupQuery.data?.length ?? 0
+  );
+  const currencyCatalogState = resolveCatalogState(
+    lookupEnabled,
+    currencyLookupQuery.isLoading,
+    currencyLookupQuery.isError,
+    currencyLookupQuery.data?.length ?? 0
+  );
+  const hasLookupWarning =
+    lookupEnabled &&
+    (portfolioCatalogState === "fallback" ||
+      instrumentCatalogState === "fallback" ||
+      currencyCatalogState === "fallback");
+  const catalogSummaryState: CatalogState =
+    !lookupEnabled
+      ? "manual"
+      : portfolioCatalogState === "online" &&
+          instrumentCatalogState === "online" &&
+          currencyCatalogState === "online"
+        ? "online"
+        : portfolioCatalogState === "loading" ||
+            instrumentCatalogState === "loading" ||
+            currencyCatalogState === "loading"
+          ? "loading"
+          : "fallback";
+
+  const portfolioOptionValues =
+    portfolioCatalogState === "online"
+      ? unique((portfolioLookupQuery.data ?? []).map((item) => item.id))
+      : fallbackPortfolioIds;
+  const instrumentOptionValues =
+    instrumentCatalogState === "online"
+      ? unique((instrumentLookupQuery.data ?? []).map((item) => item.id))
+      : fallbackInstrumentIds;
+  const currencyOptionValues =
+    currencyCatalogState === "online"
+      ? unique((currencyLookupQuery.data ?? []).map((item) => item.id))
+      : fallbackCurrencyCodes;
 
   async function submitCurrentOperation() {
     if (!canSubmit) {
@@ -246,8 +372,8 @@ export default function PasIntakePage() {
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
       {csvSummary ? <Alert severity="info">{csvSummary}</Alert> : null}
-      {lookupEnabled && (portfolioLookupQuery.isError || instrumentLookupQuery.isError || currencyLookupQuery.isError) ? (
-        <Alert severity="warning">Lookup services are unavailable. Manual value entry remains enabled.</Alert>
+      {hasLookupWarning ? (
+        <Alert severity="warning">Selector catalog degraded. Using local fallback suggestions and manual entry.</Alert>
       ) : null}
 
       <Paper className="section-card" elevation={0}>
@@ -272,8 +398,31 @@ export default function PasIntakePage() {
             />
             <Chip
               size="small"
-              color={lookupEnabled ? "primary" : "default"}
-              label={lookupEnabled ? "Selector Catalog Online" : "Selector Catalog Manual"}
+              color={catalogColor(catalogSummaryState)}
+              label={
+                catalogSummaryState === "online"
+                  ? "Selector Catalog Online"
+                  : catalogSummaryState === "loading"
+                    ? "Selector Catalog Loading"
+                    : catalogSummaryState === "fallback"
+                      ? "Selector Catalog Fallback"
+                      : "Selector Catalog Manual"
+              }
+            />
+            <Chip
+              size="small"
+              color={catalogColor(portfolioCatalogState)}
+              label={catalogLabel("Portfolios", portfolioCatalogState, portfolioOptionValues.length)}
+            />
+            <Chip
+              size="small"
+              color={catalogColor(instrumentCatalogState)}
+              label={catalogLabel("Instruments", instrumentCatalogState, instrumentOptionValues.length)}
+            />
+            <Chip
+              size="small"
+              color={catalogColor(currencyCatalogState)}
+              label={catalogLabel("Currencies", currencyCatalogState, currencyOptionValues.length)}
             />
           </Stack>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
@@ -616,7 +765,7 @@ export default function PasIntakePage() {
               Selector catalog:{" "}
               {!lookupEnabled
                 ? "manual mode active (load catalog for governed suggestions)."
-                : `${portfolioOptions.length} portfolios, ${instrumentOptions.length} instruments, ${currencyOptions.length} currencies.`}
+                : `${portfolioOptionValues.length} portfolios, ${instrumentOptionValues.length} instruments, ${currencyOptionValues.length} currencies.`}
             </Typography>
           </Paper>
         </Grid>
