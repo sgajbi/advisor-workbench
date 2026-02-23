@@ -23,6 +23,7 @@ describe("ProposalListView", () => {
     await waitFor(() => {
       expect(screen.getByText("pp_1")).toBeInTheDocument();
     });
-    expect(screen.getByText(/state: DRAFT/)).toBeInTheDocument();
+    expect(screen.getByText(/DRAFT: 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Next: Submit for risk or compliance review/)).toBeInTheDocument();
   });
 });

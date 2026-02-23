@@ -79,11 +79,13 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByText("State: DRAFT")).toBeInTheDocument();
+      expect(screen.getByText("Current State")).toBeInTheDocument();
     });
 
+    expect(screen.getByText("DRAFT")).toBeInTheDocument();
     expect(screen.getByText(/CREATED/)).toBeInTheDocument();
-    expect(screen.getByText(/RISK: APPROVED/)).toBeInTheDocument();
+    expect(screen.getByText("RISK")).toBeInTheDocument();
+    expect(screen.getByText(/risk_1/)).toBeInTheDocument();
   });
 
   it("submits draft to risk review", async () => {

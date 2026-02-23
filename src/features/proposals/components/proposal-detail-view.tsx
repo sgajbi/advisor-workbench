@@ -6,7 +6,9 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
+  Divider,
   Paper,
   Stack,
   Typography,
@@ -30,6 +32,41 @@ import {
 type Props = {
   proposalId: string;
 };
+
+function stageOrder(state: string): number {
+  if (state === "DRAFT") {
+    return 1;
+  }
+  if (state === "RISK_REVIEW" || state === "COMPLIANCE_REVIEW") {
+    return 2;
+  }
+  if (state === "AWAITING_CLIENT_CONSENT") {
+    return 3;
+  }
+  if (state === "EXECUTION_READY") {
+    return 4;
+  }
+  return 0;
+}
+
+function stageDescription(state: string): string {
+  if (state === "DRAFT") {
+    return "Advisor draft is ready for review submission.";
+  }
+  if (state === "RISK_REVIEW") {
+    return "Risk team review is currently pending.";
+  }
+  if (state === "COMPLIANCE_REVIEW") {
+    return "Compliance team review is currently pending.";
+  }
+  if (state === "AWAITING_CLIENT_CONSENT") {
+    return "Client consent is required before execution.";
+  }
+  if (state === "EXECUTION_READY") {
+    return "Proposal has cleared all gates and is ready for execution.";
+  }
+  return "Workflow state is not mapped yet.";
+}
 
 export default function ProposalDetailView({ proposalId }: Props) {
   const [revision, setRevision] = useState(0);
@@ -169,54 +206,82 @@ export default function ProposalDetailView({ proposalId }: Props) {
       <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
         Proposal {data.proposal.proposal_id}
       </Typography>
-      <Typography sx={{ mb: 0.4 }}>State: {data.proposal.current_state}</Typography>
-      <Typography sx={{ mb: 0.4 }}>Portfolio: {data.proposal.portfolio_id ?? "N/A"}</Typography>
-      <Typography sx={{ mb: 1.2 }}>Current version: {String(data.proposal.current_version_no ?? "N/A")}</Typography>
-
-      <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
-      {data.proposal.current_state === "DRAFT" ? (
-        <>
-          <Button type="button" variant="contained" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
-            Submit To Risk Review
-          </Button>
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={() => void onSubmitForReview("COMPLIANCE")}
-            disabled={acting}
-          >
-            Submit To Compliance Review
-          </Button>
-        </>
-      ) : null}
-      {data.proposal.current_state === "RISK_REVIEW" ? (
-        <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
-          Approve Risk
-        </Button>
-      ) : null}
-      {data.proposal.current_state === "COMPLIANCE_REVIEW" ? (
-        <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
-          Approve Compliance
-        </Button>
-      ) : null}
-      {data.proposal.current_state === "AWAITING_CLIENT_CONSENT" ? (
-        <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
-          Record Client Consent
-        </Button>
-      ) : null}
-      {data.proposal.current_state === "EXECUTION_READY" ? (
-        <Typography color="success.main">Proposal is execution ready.</Typography>
-      ) : null}
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Current State</Typography>
+          <Typography sx={{ fontWeight: 700 }}>{data.proposal.current_state}</Typography>
+          <Typography sx={{ fontSize: 13, mt: 0.4 }}>{stageDescription(data.proposal.current_state)}</Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Portfolio</Typography>
+          <Typography sx={{ fontWeight: 700 }}>{data.proposal.portfolio_id ?? "N/A"}</Typography>
+          <Typography sx={{ fontSize: 13, mt: 0.4 }}>
+            Version: {String(data.proposal.current_version_no ?? "N/A")}
+          </Typography>
+        </Paper>
       </Stack>
 
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 0.6 }}>
+        Workflow Progress
+      </Typography>
+      <Stack direction="row" spacing={0.7} flexWrap="wrap" sx={{ mb: 1 }}>
+        <Chip label="Draft" color={stageOrder(data.proposal.current_state) >= 1 ? "primary" : "default"} />
+        <Chip label="Review" color={stageOrder(data.proposal.current_state) >= 2 ? "primary" : "default"} />
+        <Chip label="Client Consent" color={stageOrder(data.proposal.current_state) >= 3 ? "primary" : "default"} />
+        <Chip label="Execution Ready" color={stageOrder(data.proposal.current_state) >= 4 ? "success" : "default"} />
+      </Stack>
+
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 0.6 }}>
+        Available Actions
+      </Typography>
+      <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
+        {data.proposal.current_state === "DRAFT" ? (
+          <>
+            <Button type="button" variant="contained" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
+              Submit To Risk Review
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => void onSubmitForReview("COMPLIANCE")}
+              disabled={acting}
+            >
+              Submit To Compliance Review
+            </Button>
+          </>
+        ) : null}
+        {data.proposal.current_state === "RISK_REVIEW" ? (
+          <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
+            Approve Risk
+          </Button>
+        ) : null}
+        {data.proposal.current_state === "COMPLIANCE_REVIEW" ? (
+          <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
+            Approve Compliance
+          </Button>
+        ) : null}
+        {data.proposal.current_state === "AWAITING_CLIENT_CONSENT" ? (
+          <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
+            Record Client Consent
+          </Button>
+        ) : null}
+        {data.proposal.current_state === "EXECUTION_READY" ? (
+          <Alert severity="success" sx={{ py: 0, alignItems: "center" }}>
+            Proposal is execution ready.
+          </Alert>
+        ) : null}
+      </Stack>
+
+      <Divider sx={{ my: 1 }} />
       <Typography variant="h6" component="h3" sx={{ mt: 1.2 }}>
         Workflow Timeline
       </Typography>
       {workflow?.events?.length ? (
-        <Box component="ul" sx={{ pl: 2.2, mt: 0.7 }}>
+        <Box component="ul" sx={{ pl: 2.2, mt: 0.7, mb: 0 }}>
           {workflow.events.map((event) => (
-            <li key={event.event_id}>
-              {event.event_type} ({event.from_state ?? "N/A"} -&gt; {event.to_state}) by {event.actor_id}
+            <li key={event.event_id} style={{ marginBottom: 8 }}>
+              <strong>{event.event_type}</strong> ({event.from_state ?? "N/A"} -&gt; {event.to_state}) by{" "}
+              {event.actor_id}
             </li>
           ))}
         </Box>
@@ -228,10 +293,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
         Approvals
       </Typography>
       {approvals?.approvals?.length ? (
-        <Box component="ul" sx={{ pl: 2.2, mt: 0.7 }}>
+        <Box component="ul" sx={{ pl: 2.2, mt: 0.7, mb: 0 }}>
           {approvals.approvals.map((approval) => (
-            <li key={approval.approval_id}>
-              {approval.approval_type}: {approval.approved ? "APPROVED" : "REJECTED"} by{" "}
+            <li key={approval.approval_id} style={{ marginBottom: 8 }}>
+              <strong>{approval.approval_type}</strong>: {approval.approved ? "APPROVED" : "REJECTED"} by{" "}
               {approval.actor_id}
             </li>
           ))}
