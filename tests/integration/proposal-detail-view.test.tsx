@@ -13,6 +13,7 @@ const {
   recordClientConsentMock,
   getWorkflowEventsMock,
   getApprovalsMock,
+  getLineageMock,
 } = vi.hoisted(() => ({
   getProposalMock: vi.fn(async () => ({
     proposal: {
@@ -53,6 +54,17 @@ const {
       },
     ],
   })),
+  getLineageMock: vi.fn(async () => ({
+    proposal_id: "pp_1",
+    versions: [
+      {
+        version_no: 1,
+        request_hash: "rh_1",
+        simulation_hash: "sh_1",
+        artifact_hash: "ah_1",
+      },
+    ],
+  })),
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
@@ -63,6 +75,7 @@ vi.mock("../../src/features/proposals/api", () => ({
   recordClientConsent: recordClientConsentMock,
   getProposalWorkflowEvents: getWorkflowEventsMock,
   getProposalApprovals: getApprovalsMock,
+  getProposalLineage: getLineageMock,
 }));
 
 describe("ProposalDetailView", () => {
@@ -79,11 +92,13 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByText("State: DRAFT")).toBeInTheDocument();
+      expect(screen.getByText("Current State")).toBeInTheDocument();
     });
 
+    expect(screen.getByText("DRAFT")).toBeInTheDocument();
     expect(screen.getByText(/CREATED/)).toBeInTheDocument();
-    expect(screen.getByText(/RISK: APPROVED/)).toBeInTheDocument();
+    expect(screen.getByText("RISK")).toBeInTheDocument();
+    expect(screen.getByText(/risk_1/)).toBeInTheDocument();
   });
 
   it("submits draft to risk review", async () => {

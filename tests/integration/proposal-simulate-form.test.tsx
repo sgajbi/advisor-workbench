@@ -6,7 +6,7 @@ import ProposalSimulateForm from "../../src/features/proposals/components/propos
 describe("ProposalSimulateForm", () => {
   it("renders proposal simulation form", () => {
     render(<ProposalSimulateForm />);
-    expect(screen.getByText("Proposal Simulation")).toBeInTheDocument();
+    expect(screen.getByText("Create And Simulate Proposal")).toBeInTheDocument();
     expect(screen.getByText("Simulate Proposal")).toBeInTheDocument();
   });
 });

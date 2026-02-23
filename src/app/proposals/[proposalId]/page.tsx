@@ -12,11 +12,15 @@ export default async function ProposalDetailPage({ params }: Props) {
   const { proposalId } = await params;
   return (
     <main className="page-container">
-      <h1 className="page-title">Proposal Detail</h1>
-      <p className="page-subtitle">Lifecycle status, approvals, and workflow events.</p>
-      <p>
-        <Link href="/proposals">Back to Proposal Workspace</Link>
-      </p>
+      <section className="page-header">
+        <h1 className="page-title">Proposal Detail</h1>
+        <p className="page-subtitle">Lifecycle status, approvals, version lineage, and workflow events.</p>
+      </section>
+      <div className="action-strip">
+        <Link href="/proposals" className="nav-link">
+          Back to Proposal Workspace
+        </Link>
+      </div>
       <ProposalDetailView proposalId={proposalId} />
     </main>
   );

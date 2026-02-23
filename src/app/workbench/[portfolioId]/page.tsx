@@ -19,7 +19,9 @@ export default async function WorkbenchPage({
     const detail = error instanceof Error ? error.message : "Unknown error";
     return (
       <main className="page-container">
-        <h1 className="page-title">Advisor Workbench</h1>
+        <section className="page-header">
+          <h1 className="page-title">Advisor Workbench</h1>
+        </section>
         <section className="section-card">
           <p className="error-text">
             Unable to load workbench overview for {portfolioId}. {detail}
@@ -31,8 +33,10 @@ export default async function WorkbenchPage({
 
   return (
     <main className="page-container">
-      <h1 className="page-title">Advisor Workbench: {data.portfolio.portfolio_id}</h1>
-      <p className="page-subtitle">As of: {data.as_of_date}</p>
+      <section className="page-header">
+        <h1 className="page-title">Advisor Workbench: {data.portfolio.portfolio_id}</h1>
+        <p className="page-subtitle">As of: {data.as_of_date}</p>
+      </section>
 
       <PartialFailureBanner items={data.partial_failures} />
 
