@@ -55,6 +55,15 @@ export type ProposalDetailData = {
   [key: string]: unknown;
 };
 
+export type ProposalVersionData = {
+  proposal_id?: string;
+  version_no?: number;
+  status_at_creation?: string;
+  created_at?: string;
+  artifact_hash?: string;
+  [key: string]: unknown;
+};
+
 export type ProposalSubmitRequest = {
   actor_id: string;
   expected_state: string;

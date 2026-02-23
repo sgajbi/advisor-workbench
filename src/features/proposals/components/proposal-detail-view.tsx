@@ -19,8 +19,10 @@ import {
 import {
   approveCompliance,
   approveRisk,
+  createProposalVersion,
   getProposal,
   getProposalApprovals,
+  getProposalVersion,
   getProposalWorkflowEvents,
   recordClientConsent,
   submitProposal,
@@ -28,6 +30,7 @@ import {
 import {
   ProposalApprovalsData,
   ProposalDetailData,
+  ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "../types";
 
@@ -75,6 +78,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [includeEvidence, setIncludeEvidence] = useState(false);
+  const [versionLookupNo, setVersionLookupNo] = useState<number>(1);
+  const [versionLookup, setVersionLookup] = useState<ProposalVersionData | null>(null);
+  const [versionActionError, setVersionActionError] = useState<string | null>(null);
+  const [creatingVersion, setCreatingVersion] = useState(false);
+  const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
 
   const queryKey = useMemo(
     () => ["proposal-detail", proposalId, revision, includeEvidence],
@@ -187,6 +195,54 @@ export default function ProposalDetailView({ proposalId }: Props) {
         </Stack>
       </Paper>
     );
+  }
+
+  async function onLoadVersion() {
+    setVersionActionError(null);
+    try {
+      const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
+      setVersionLookup(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setVersionActionError(message);
+    }
+  }
+
+  async function onCreateNextVersion() {
+    const currentVersionData = (detailQuery.data as ProposalDetailData | undefined)?.current_version as
+      | Record<string, unknown>
+      | undefined;
+    const simulateRequest = (currentVersionData?.simulate_request as Record<string, unknown> | undefined) ?? null;
+    if (!simulateRequest) {
+      setVersionActionError(
+        "Current version simulate_request is not present in response. Enable evidence or verify backend payload shape."
+      );
+      return;
+    }
+    setVersionActionError(null);
+    setCreatingVersion(true);
+    setCreatedVersionNo(null);
+    try {
+      const idempotencyKey = `ui-version-${proposalId}-${Date.now()}`;
+      const response = await createProposalVersion(
+        proposalId,
+        {
+          body: {
+            created_by: "advisor_1",
+            simulate_request: simulateRequest,
+          },
+        },
+        idempotencyKey
+      );
+      const currentVersionNo = (response.data.current_version_no as number | undefined) ?? undefined;
+      setCreatedVersionNo(currentVersionNo ?? null);
+      setRevision((value) => value + 1);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setVersionActionError(message);
+    } finally {
+      setCreatingVersion(false);
+    }
   }
 
   const queryError = detailQuery.error ?? workflowQuery.error ?? approvalsQuery.error;
@@ -307,6 +363,59 @@ export default function ProposalDetailView({ proposalId }: Props) {
           </Alert>
         ) : null}
       </Stack>
+
+      <Divider sx={{ my: 1 }} />
+      <Typography variant="h6" component="h3">
+        Version Management
+      </Typography>
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 0.7, mb: 1 }}>
+        <Button type="button" variant="outlined" onClick={() => void onCreateNextVersion()} disabled={creatingVersion}>
+          {creatingVersion ? "Creating Version..." : "Create Next Version"}
+        </Button>
+        <Button type="button" variant="outlined" onClick={() => void onLoadVersion()}>
+          Load Version
+        </Button>
+      </Stack>
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, minWidth: { md: 220 } }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Lookup Version Number</Typography>
+          <input
+            className="input"
+            type="number"
+            min={1}
+            value={versionLookupNo}
+            onChange={(event) => {
+              const next = Number.parseInt(event.target.value, 10);
+              setVersionLookupNo(Number.isNaN(next) ? 1 : next);
+            }}
+            style={{ marginTop: 6 }}
+          />
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Current Version</Typography>
+          <Typography sx={{ fontWeight: 700 }}>{String(data.proposal.current_version_no ?? "N/A")}</Typography>
+          {createdVersionNo ? (
+            <Typography sx={{ fontSize: 13, mt: 0.5, color: "success.main" }}>
+              Version created successfully: {createdVersionNo}
+            </Typography>
+          ) : null}
+        </Paper>
+      </Stack>
+      {versionLookup ? (
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, mb: 1 }}>
+          <Typography variant="subtitle2">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Typography>
+          <Typography sx={{ fontSize: 13 }}>Status At Creation: {String(versionLookup.status_at_creation ?? "N/A")}</Typography>
+          <Typography sx={{ fontSize: 13 }}>Created At: {String(versionLookup.created_at ?? "N/A")}</Typography>
+          <Typography sx={{ fontSize: 13, wordBreak: "break-all" }}>
+            Artifact Hash: {String(versionLookup.artifact_hash ?? "N/A")}
+          </Typography>
+        </Paper>
+      ) : null}
+      {versionActionError ? (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          {versionActionError}
+        </Alert>
+      ) : null}
 
       <Divider sx={{ my: 1 }} />
       <Typography variant="h6" component="h3">

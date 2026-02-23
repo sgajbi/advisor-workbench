@@ -8,6 +8,7 @@ import {
   ProposalSimulateRequest,
   ProposalSimulateResponse,
   ProposalSubmitRequest,
+  ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "./types";
 
@@ -96,6 +97,29 @@ export async function getProposal(
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDetailData;
+}
+
+export async function getProposalVersion(
+  proposalId: string,
+  versionNo: number,
+  includeEvidence = false
+): Promise<ProposalVersionData> {
+  const query = `?include_evidence=${includeEvidence ? "true" : "false"}`;
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}${query}`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Proposal version failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as ProposalEnvelopeResponse;
+  return envelope.data as unknown as ProposalVersionData;
+}
+
+export async function createProposalVersion(
+  proposalId: string,
+  payload: ProposalCreateRequest,
+  idempotencyKey: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson(`/proposals/${proposalId}/versions`, payload, idempotencyKey);
 }
 
 export async function submitProposal(
