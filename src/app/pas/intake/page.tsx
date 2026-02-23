@@ -3,14 +3,23 @@
 import { ChangeEvent, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Autocomplete,
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
+  Divider,
   Grid,
   LinearProgress,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -138,6 +147,9 @@ export default function PasIntakePage() {
   }, [advisorId, baseCurrency, cifId, instruments, marketData, openDate, operation, portfolioId, positions, transactions]);
 
   const canSubmit = readiness === 100;
+  const portfolioOptionValues = portfolioOptions.map((item) => item.id);
+  const instrumentOptionValues = instrumentOptions.map((item) => item.id);
+  const currencyOptionValues = currencyOptions.map((item) => item.id);
 
   async function submitCurrentOperation() {
     if (!canSubmit) {
@@ -227,12 +239,37 @@ export default function PasIntakePage() {
       ) : null}
 
       <Paper className="section-card" elevation={0}>
-        <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ xs: "flex-start", md: "center" }}>
-          <Typography variant="h6">Intake Operation</Typography>
-          <Chip size="small" color="success" label="PAS Ingestion Live" />
-          <Chip size="small" label={`Readiness ${readiness}%`} color={canSubmit ? "success" : "warning"} />
+        <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={1}>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+            <Typography variant="h6">Intake Operation</Typography>
+            <Chip size="small" color="success" label="PAS Ingestion Live" />
+            <Chip size="small" label={`Readiness ${readiness}%`} color={canSubmit ? "success" : "warning"} />
+            <Chip
+              size="small"
+              label={
+                operation === "ADD_POSITIONS"
+                  ? `${positions.length} position rows`
+                  : operation === "ADD_TRANSACTIONS"
+                    ? `${transactions.length} transaction rows`
+                    : operation === "ADD_INSTRUMENTS"
+                      ? `${instruments.length} instrument rows`
+                      : operation === "ADD_MARKET_DATA"
+                        ? `${marketData.length} market rows`
+                        : "portfolio profile"
+              }
+            />
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" onClick={() => csvInputRef.current?.click()} disabled={isSubmitting}>
+              Upload CSV Bundle
+            </Button>
+            <Button variant="contained" onClick={submitCurrentOperation} disabled={isSubmitting || !canSubmit}>
+              Submit Operation
+            </Button>
+            {isSubmitting ? <CircularProgress size={22} /> : null}
+          </Stack>
         </Stack>
-        <Box sx={{ mt: 1 }}>
+        <Box sx={{ mt: 1.2 }}>
           <LinearProgress variant="determinate" value={readiness} />
         </Box>
         <ToggleButtonGroup
@@ -248,6 +285,7 @@ export default function PasIntakePage() {
           <ToggleButton value="ADD_INSTRUMENTS">Add Instruments</ToggleButton>
           <ToggleButton value="ADD_MARKET_DATA">Add Market Data</ToggleButton>
         </ToggleButtonGroup>
+        <input ref={csvInputRef} type="file" accept=".csv,text/csv" onChange={handleCsvSelected} style={{ display: "none" }} />
       </Paper>
 
       <Grid container spacing={2}>
@@ -256,43 +294,115 @@ export default function PasIntakePage() {
             <Typography variant="h6" sx={{ mb: 1 }}>
               {operation.replaceAll("_", " ")} Workspace
             </Typography>
+            <Divider sx={{ mb: 1 }} />
 
             {operation === "CREATE_PORTFOLIO" ? (
-              <div className="suite-form-grid">
-                <label><span className="field-label">Portfolio ID</span><input className="input" list="portfolio-options" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
-                <label><span className="field-label">Base Currency</span><input className="input" list="currency-options" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
-                <label><span className="field-label">Open Date</span><input className="input" value={openDate} onChange={(e) => setOpenDate(e.target.value)} /></label>
-                <label><span className="field-label">Risk Exposure</span><input className="input" value={riskExposure} onChange={(e) => setRiskExposure(e.target.value)} /></label>
-                <label><span className="field-label">Time Horizon</span><input className="input" value={timeHorizon} onChange={(e) => setTimeHorizon(e.target.value)} /></label>
-                <label><span className="field-label">Portfolio Type</span><input className="input" value={portfolioType} onChange={(e) => setPortfolioType(e.target.value)} /></label>
-                <label><span className="field-label">Booking Center</span><input className="input" value={bookingCenter} onChange={(e) => setBookingCenter(e.target.value)} /></label>
-                <label><span className="field-label">CIF ID</span><input className="input" value={cifId} onChange={(e) => setCifId(e.target.value)} /></label>
-                <label><span className="field-label">Advisor ID</span><input className="input" value={advisorId} onChange={(e) => setAdvisorId(e.target.value)} /></label>
-                <label><span className="field-label">Status</span><input className="input" value={status} onChange={(e) => setStatus(e.target.value)} /></label>
-              </div>
+              <Grid container spacing={1.2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Autocomplete
+                    freeSolo
+                    options={portfolioOptionValues}
+                    value={portfolioId}
+                    onInputChange={(_e, value) => setPortfolioId(value)}
+                    renderInput={(params) => <TextField {...params} label="Portfolio ID" size="small" />}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Autocomplete
+                    freeSolo
+                    options={currencyOptionValues}
+                    value={baseCurrency}
+                    onInputChange={(_e, value) => setBaseCurrency(value)}
+                    renderInput={(params) => <TextField {...params} label="Base Currency" size="small" />}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Open Date" value={openDate} onChange={(e) => setOpenDate(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Risk Exposure" value={riskExposure} onChange={(e) => setRiskExposure(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Time Horizon" value={timeHorizon} onChange={(e) => setTimeHorizon(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Portfolio Type" value={portfolioType} onChange={(e) => setPortfolioType(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Booking Center" value={bookingCenter} onChange={(e) => setBookingCenter(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="CIF ID" value={cifId} onChange={(e) => setCifId(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Advisor ID" value={advisorId} onChange={(e) => setAdvisorId(e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value)} />
+                </Grid>
+              </Grid>
             ) : null}
 
             {operation === "ADD_POSITIONS" ? (
               <>
-                <div className="suite-form-grid">
-                  <label><span className="field-label">Existing Portfolio ID</span><input className="input" list="portfolio-options" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
-                  <label><span className="field-label">Base Currency</span><input className="input" list="currency-options" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
-                </div>
-                {positions.map((row, index) => (
-                  <div key={`pos-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Instrument Name</span><input className="input" value={row.instrumentName} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentName: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">ISIN</span><input className="input" value={row.isin} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Product Type</span><input className="input" value={row.productType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Quantity</span><input className="input" value={row.quantity} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></label>
-                    <label><span className="field-label">Price</span><input className="input" value={row.price} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></label>
-                    <label><span className="field-label">Effective Date</span><input className="input" value={row.effectiveDate} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, effectiveDate: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Transaction Type</span><input className="input" value={row.transactionType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></label>
-                  </div>
-                ))}
+                <Grid container spacing={1.2} sx={{ mb: 1 }}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Autocomplete
+                      freeSolo
+                      options={portfolioOptionValues}
+                      value={portfolioId}
+                      onInputChange={(_e, value) => setPortfolioId(value)}
+                      renderInput={(params) => <TextField {...params} label="Existing Portfolio ID" size="small" />}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Autocomplete
+                      freeSolo
+                      options={currencyOptionValues}
+                      value={baseCurrency}
+                      onInputChange={(_e, value) => setBaseCurrency(value)}
+                      renderInput={(params) => <TextField {...params} label="Base Currency" size="small" />}
+                    />
+                  </Grid>
+                </Grid>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Security</TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell>ISIN</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Qty</TableCell>
+                      <TableCell>Price</TableCell>
+                      <TableCell>Effective Date</TableCell>
+                      <TableCell>Txn Type</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {positions.map((row, index) => (
+                      <TableRow key={`pos-${index}`}>
+                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                        <TableCell><TextField size="small" value={row.instrumentName} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentName: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.isin} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.productType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.quantity} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.price} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.effectiveDate} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, effectiveDate: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.transactionType} onChange={(e) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
                 <div className="toolbar">
-                  <button type="button" className="btn btn-secondary" onClick={() => setPositions((prev) => [...prev, { ...prev[prev.length - 1] }])}>Add Position Row</button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setPositions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}>Remove Last Row</button>
+                  <Button variant="outlined" onClick={() => setPositions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
+                    Add Position Row
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setPositions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                  >
+                    Remove Last Row
+                  </Button>
                 </div>
               </>
             ) : null}
@@ -300,70 +410,132 @@ export default function PasIntakePage() {
             {operation === "ADD_TRANSACTIONS" ? (
               <>
                 <div className="suite-form-grid">
-                  <label><span className="field-label">Existing Portfolio ID</span><input className="input" list="portfolio-options" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} /></label>
-                  <label><span className="field-label">Base Currency</span><input className="input" list="currency-options" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} /></label>
+                  <Autocomplete
+                    freeSolo
+                    options={portfolioOptionValues}
+                    value={portfolioId}
+                    onInputChange={(_e, value) => setPortfolioId(value)}
+                    renderInput={(params) => <TextField {...params} label="Existing Portfolio ID" size="small" />}
+                  />
+                  <Autocomplete
+                    freeSolo
+                    options={currencyOptionValues}
+                    value={baseCurrency}
+                    onInputChange={(_e, value) => setBaseCurrency(value)}
+                    renderInput={(params) => <TextField {...params} label="Base Currency" size="small" />}
+                  />
                 </div>
-                {transactions.map((row, index) => (
-                  <div key={`txn-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Transaction Type</span><input className="input" value={row.transactionType} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Quantity</span><input className="input" value={row.quantity} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></label>
-                    <label><span className="field-label">Price</span><input className="input" value={row.price} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></label>
-                    <label><span className="field-label">Transaction Date</span><input className="input" value={row.transactionDate} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionDate: e.target.value } : x)))} /></label>
-                  </div>
-                ))}
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Security</TableCell>
+                      <TableCell>Txn Type</TableCell>
+                      <TableCell>Quantity</TableCell>
+                      <TableCell>Price</TableCell>
+                      <TableCell>Date</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {transactions.map((row, index) => (
+                      <TableRow key={`txn-${index}`}>
+                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                        <TableCell><TextField size="small" value={row.transactionType} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionType: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.quantity} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.price} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.transactionDate} onChange={(e) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, transactionDate: e.target.value } : x)))} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
                 <div className="toolbar">
-                  <button type="button" className="btn btn-secondary" onClick={() => setTransactions((prev) => [...prev, { ...prev[prev.length - 1] }])}>Add Transaction Row</button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setTransactions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}>Remove Last Row</button>
+                  <Button variant="outlined" onClick={() => setTransactions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
+                    Add Transaction Row
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() =>
+                      setTransactions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
+                    }
+                  >
+                    Remove Last Row
+                  </Button>
                 </div>
               </>
             ) : null}
 
             {operation === "ADD_INSTRUMENTS" ? (
               <>
-                {instruments.map((row, index) => (
-                  <div key={`ins-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Name</span><input className="input" value={row.name} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, name: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">ISIN</span><input className="input" value={row.isin} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Currency</span><input className="input" list="currency-options" value={row.instrumentCurrency} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Product Type</span><input className="input" value={row.productType} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></label>
-                  </div>
-                ))}
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Security</TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell>ISIN</TableCell>
+                      <TableCell>Currency</TableCell>
+                      <TableCell>Product Type</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {instruments.map((row, index) => (
+                      <TableRow key={`ins-${index}`}>
+                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                        <TableCell><TextField size="small" value={row.name} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, name: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.isin} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, isin: e.target.value } : x)))} /></TableCell>
+                        <TableCell><Autocomplete freeSolo options={currencyOptionValues} value={row.instrumentCurrency} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, instrumentCurrency: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                        <TableCell><TextField size="small" value={row.productType} onChange={(e) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, productType: e.target.value } : x)))} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
                 <div className="toolbar">
-                  <button type="button" className="btn btn-secondary" onClick={() => setInstruments((prev) => [...prev, { ...prev[prev.length - 1] }])}>Add Instrument Row</button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setInstruments((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}>Remove Last Row</button>
+                  <Button variant="outlined" onClick={() => setInstruments((prev) => [...prev, { ...prev[prev.length - 1] }])}>
+                    Add Instrument Row
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setInstruments((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                  >
+                    Remove Last Row
+                  </Button>
                 </div>
               </>
             ) : null}
 
             {operation === "ADD_MARKET_DATA" ? (
               <>
-                {marketData.map((row, index) => (
-                  <div key={`mkt-${index}`} className="suite-form-grid">
-                    <label><span className="field-label">Security ID</span><input className="input" list="instrument-options" value={row.securityId} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Price Date</span><input className="input" value={row.priceDate} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, priceDate: e.target.value } : x)))} /></label>
-                    <label><span className="field-label">Price</span><input className="input" value={row.price} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></label>
-                    <label><span className="field-label">Currency</span><input className="input" list="currency-options" value={row.currency} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: e.target.value } : x)))} /></label>
-                  </div>
-                ))}
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Security</TableCell>
+                      <TableCell>Price Date</TableCell>
+                      <TableCell>Price</TableCell>
+                      <TableCell>Currency</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {marketData.map((row, index) => (
+                      <TableRow key={`mkt-${index}`}>
+                        <TableCell><Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                        <TableCell><TextField size="small" value={row.priceDate} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, priceDate: e.target.value } : x)))} /></TableCell>
+                        <TableCell><TextField size="small" value={row.price} onChange={(e) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, price: Number(e.target.value) || 0 } : x)))} /></TableCell>
+                        <TableCell><Autocomplete freeSolo options={currencyOptionValues} value={row.currency} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, currency: value } : x)))} renderInput={(params) => <TextField {...params} size="small" />} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
                 <div className="toolbar">
-                  <button type="button" className="btn btn-secondary" onClick={() => setMarketData((prev) => [...prev, { ...prev[prev.length - 1] }])}>Add Market Data Row</button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setMarketData((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}>Remove Last Row</button>
+                  <Button variant="outlined" onClick={() => setMarketData((prev) => [...prev, { ...prev[prev.length - 1] }])}>
+                    Add Market Data Row
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setMarketData((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                  >
+                    Remove Last Row
+                  </Button>
                 </div>
               </>
             ) : null}
-
-            <div className="toolbar">
-              <button type="button" className="btn" onClick={submitCurrentOperation} disabled={isSubmitting || !canSubmit}>
-                {isSubmitting ? "Submitting..." : "Submit Operation"}
-              </button>
-              {isSubmitting ? <CircularProgress size={18} /> : null}
-              <button type="button" className="btn btn-secondary" onClick={() => csvInputRef.current?.click()} disabled={isSubmitting}>
-                Upload CSV Bundle
-              </button>
-              <input ref={csvInputRef} type="file" accept=".csv,text/csv" onChange={handleCsvSelected} style={{ display: "none" }} />
-            </div>
           </Paper>
         </Grid>
 
@@ -384,28 +556,6 @@ export default function PasIntakePage() {
           </Paper>
         </Grid>
       </Grid>
-
-      <datalist id="portfolio-options">
-        {portfolioOptions.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.label}
-          </option>
-        ))}
-      </datalist>
-      <datalist id="instrument-options">
-        {instrumentOptions.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.label}
-          </option>
-        ))}
-      </datalist>
-      <datalist id="currency-options">
-        {currencyOptions.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.label}
-          </option>
-        ))}
-      </datalist>
     </main>
   );
 }
