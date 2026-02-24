@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-import { getReportingSnapshot, getWorkbenchAnalytics } from "@/features/workbench/api";
+import {
+  getReportingSnapshot,
+  getWorkbenchAnalytics,
+  getWorkbenchOverview,
+} from "@/features/workbench/api";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 
@@ -41,6 +45,21 @@ async function getDefaultPortfolioId(): Promise<string | null> {
   }
 }
 
+async function listPortfolioIds(limit = 8): Promise<string[]> {
+  try {
+    const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=${limit}`, {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      return [];
+    }
+    const payload = (await response.json()) as LookupEnvelope;
+    return (payload.items ?? []).map((item) => item.id).filter((item) => item.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 export default async function PaAnalyticsPage({
   searchParams,
 }: {
@@ -69,8 +88,19 @@ export default async function PaAnalyticsPage({
 
   const period = resolvedSearch.period?.trim() || "YTD";
   const benchmark = resolvedSearch.benchmark?.trim() || "MODEL_60_40";
+  const portfolioOptions = await listPortfolioIds();
+  const periodOptions = ["YTD", "1M", "3M", "1Y"];
+  const benchmarkOptions = ["MODEL_60_40", "MSCI_ACWI", "CUSTOM"];
+
+  let overview: Awaited<ReturnType<typeof getWorkbenchOverview>> | null = null;
   let analytics: Awaited<ReturnType<typeof getWorkbenchAnalytics>> | null = null;
   let reporting: Awaited<ReturnType<typeof getReportingSnapshot>> | null = null;
+
+  try {
+    overview = await getWorkbenchOverview(portfolioId);
+  } catch {
+    overview = null;
+  }
 
   try {
     analytics = await getWorkbenchAnalytics(portfolioId, {
@@ -83,7 +113,10 @@ export default async function PaAnalyticsPage({
   }
 
   try {
-    reporting = await getReportingSnapshot(portfolioId, new Date().toISOString().slice(0, 10));
+    reporting = await getReportingSnapshot(
+      portfolioId,
+      overview?.as_of_date ?? new Date().toISOString().slice(0, 10)
+    );
   } catch {
     reporting = null;
   }
@@ -95,6 +128,63 @@ export default async function PaAnalyticsPage({
         <p className="page-subtitle">
           Backend-driven analytics from PA with reporting-ready rows from the aggregation service.
         </p>
+      </section>
+
+      <section className="section-card">
+        <h2>Analytics Context</h2>
+        <div className="suite-row">
+          <span>As Of Date</span>
+          <strong>{overview?.as_of_date ?? "N/A"}</strong>
+        </div>
+        <div className="suite-row">
+          <span>Selected Period</span>
+          <strong>{period}</strong>
+        </div>
+        <div className="suite-row">
+          <span>Selected Benchmark</span>
+          <strong>{benchmark}</strong>
+        </div>
+        <div className="toolbar">
+          {portfolioOptions.map((candidatePortfolioId) => (
+            <Link
+              className="nav-link"
+              key={candidatePortfolioId}
+              href={`/pa/analytics?portfolioId=${encodeURIComponent(
+                candidatePortfolioId
+              )}&period=${encodeURIComponent(period)}&benchmark=${encodeURIComponent(benchmark)}`}
+            >
+              {candidatePortfolioId}
+            </Link>
+          ))}
+        </div>
+        <div className="toolbar">
+          {periodOptions.map((candidatePeriod) => (
+            <Link
+              className="nav-link"
+              key={candidatePeriod}
+              href={`/pa/analytics?portfolioId=${encodeURIComponent(
+                portfolioId
+              )}&period=${encodeURIComponent(candidatePeriod)}&benchmark=${encodeURIComponent(
+                benchmark
+              )}`}
+            >
+              Period: {candidatePeriod}
+            </Link>
+          ))}
+          {benchmarkOptions.map((candidateBenchmark) => (
+            <Link
+              className="nav-link"
+              key={candidateBenchmark}
+              href={`/pa/analytics?portfolioId=${encodeURIComponent(
+                portfolioId
+              )}&period=${encodeURIComponent(period)}&benchmark=${encodeURIComponent(
+                candidateBenchmark
+              )}`}
+            >
+              Benchmark: {candidateBenchmark}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {analytics ? (
