@@ -77,7 +77,11 @@ function simulationHighlights(result: ProposalSimulateResponse): Array<{ label: 
   return highlights.slice(0, 8);
 }
 
-export default function ProposalSimulateForm() {
+export default function ProposalSimulateForm({
+  initialPortfolioId = "pf_demo_ui_1",
+}: {
+  initialPortfolioId?: string;
+}) {
   const defaultIdempotencyKey = useMemo(() => {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
       return `ui-${crypto.randomUUID()}`;
@@ -91,7 +95,7 @@ export default function ProposalSimulateForm() {
       idempotencyKey: defaultIdempotencyKey,
       createdBy: "advisor_1",
       proposalTitle: "DPM proposal draft",
-      portfolioId: "pf_demo_ui_1",
+      portfolioId: initialPortfolioId,
       baseCurrency: "USD",
       cashAmount: 10000,
     },
