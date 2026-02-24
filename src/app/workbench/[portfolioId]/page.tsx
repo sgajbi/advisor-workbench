@@ -1,8 +1,10 @@
 import { getPortfolio360 } from "@/features/workbench/api";
 import { AnalyticsGroupBy, resolveBenchmarkReturn } from "@/features/workbench/analytics";
 import AnalyticsControls from "@/features/workbench/components/analytics-controls";
+import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
 import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
 import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
+import ExceptionQueue from "@/features/workbench/components/exception-queue";
 import OverviewCards from "@/features/workbench/components/overview-cards";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
@@ -211,6 +213,18 @@ export default async function WorkbenchPage({
             currentPositions={data.current_positions}
             projectedPositions={data.projected_positions}
             groupBy={groupBy}
+          />
+
+          <ExceptionQueue
+            warnings={data.warnings}
+            partialFailures={data.partial_failures}
+          />
+
+          <AdvisorSummaryCard
+            portfolioId={data.portfolio.portfolio_id}
+            warningCount={data.warnings.length}
+            failureCount={data.partial_failures.length}
+            netDeltaQuantity={data.projected_summary?.net_delta_quantity ?? 0}
           />
         </div>
       </section>
