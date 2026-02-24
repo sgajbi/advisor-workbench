@@ -22,6 +22,11 @@ vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
       inputModesBySource: {},
       inputModesUnion: [],
       moduleHealth: { pas: "available", pa: "unavailable", dpm: "available" },
+      policyVersionsBySource: {
+        pas: "pas-default-v1",
+        pa: "pa-default-v1",
+        dpm: "dpm-default-v1",
+      },
     },
   })),
 }));
