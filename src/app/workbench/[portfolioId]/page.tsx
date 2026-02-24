@@ -1,5 +1,4 @@
-import { getPortfolio360 } from "@/features/workbench/api";
-import { AnalyticsGroupBy, resolveBenchmarkReturn } from "@/features/workbench/analytics";
+import { getPortfolio360, getWorkbenchAnalytics } from "@/features/workbench/api";
 import AnalyticsControls from "@/features/workbench/components/analytics-controls";
 import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
 import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
@@ -32,10 +31,11 @@ export default async function WorkbenchPage({
   const period = resolvedSearch.period?.trim() || "YTD";
   const benchmark = resolvedSearch.benchmark?.trim() || "MODEL_60_40";
   const preset = resolvedSearch.preset?.trim() || "EXEC_SUMMARY";
-  const groupBy: AnalyticsGroupBy =
+  const groupBy =
     resolvedSearch.groupBy?.trim() === "SECURITY" ? "SECURITY" : "ASSET_CLASS";
 
   let data: Awaited<ReturnType<typeof getPortfolio360>>;
+  let analytics: Awaited<ReturnType<typeof getWorkbenchAnalytics>> | null = null;
   try {
     data = await getPortfolio360(portfolioId, sessionId);
   } catch (error) {
@@ -66,10 +66,17 @@ export default async function WorkbenchPage({
     );
   }
 
-  const benchmarkReturn = resolveBenchmarkReturn(
-    benchmark,
-    data.performance_snapshot?.benchmark_return_pct
-  );
+  try {
+    analytics = await getWorkbenchAnalytics(portfolioId, {
+      period,
+      groupBy,
+      benchmark,
+      sessionId,
+    });
+  } catch {
+    analytics = null;
+  }
+
   const projectedCoveragePct =
     data.projected_summary &&
     data.projected_summary.total_baseline_positions > 0
@@ -103,10 +110,19 @@ export default async function WorkbenchPage({
       />
 
       <BenchmarkKpiStrip
-        returnPct={data.performance_snapshot?.return_pct ?? null}
-        benchmarkReturnPct={benchmarkReturn}
+        returnPct={analytics?.portfolio_return_pct ?? null}
+        benchmarkReturnPct={analytics?.benchmark_return_pct ?? null}
+        activeReturnPct={analytics?.active_return_pct ?? null}
         projectedCoveragePct={projectedCoveragePct}
       />
+      {analytics === null ? (
+        <section className="section-card">
+          <p className="muted">
+            Backend analytics endpoint is unavailable. Portfolio analytics panels will populate once
+            the API is online.
+          </p>
+        </section>
+      ) : null}
 
       <section className="workbench-split">
         <div className="workbench-col">
@@ -210,8 +226,7 @@ export default async function WorkbenchPage({
           </section>
 
           <DeltaAnalyticsPanel
-            currentPositions={data.current_positions}
-            projectedPositions={data.projected_positions}
+            buckets={analytics?.allocation_buckets ?? []}
             groupBy={groupBy}
           />
 

@@ -1,6 +1,7 @@
 type Props = {
   returnPct: number | null;
-  benchmarkReturnPct: number;
+  benchmarkReturnPct: number | null;
+  activeReturnPct: number | null;
   projectedCoveragePct: number;
 };
 
@@ -12,9 +13,6 @@ function formatPct(value: number | null): string {
 }
 
 export default function BenchmarkKpiStrip(props: Props) {
-  const activeReturn =
-    props.returnPct === null ? null : props.returnPct - props.benchmarkReturnPct;
-
   return (
     <section className="section-card">
       <h3>Benchmark Relative Snapshot</h3>
@@ -29,7 +27,7 @@ export default function BenchmarkKpiStrip(props: Props) {
         </div>
         <div className="kpi-box">
           <p className="kpi-label">Active Return</p>
-          <p className="kpi-value">{formatPct(activeReturn)}</p>
+          <p className="kpi-value">{formatPct(props.activeReturnPct)}</p>
         </div>
         <div className="kpi-box">
           <p className="kpi-label">Simulation Coverage</p>

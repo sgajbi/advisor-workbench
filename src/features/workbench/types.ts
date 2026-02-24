@@ -87,3 +87,44 @@ export type WorkbenchSandboxState = {
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };
+
+export type WorkbenchAnalyticsBucket = {
+  bucket_key: string;
+  bucket_label: string;
+  current_quantity: number;
+  proposed_quantity: number;
+  delta_quantity: number;
+  current_weight_pct: number;
+  proposed_weight_pct: number;
+};
+
+export type WorkbenchAnalyticsTopChange = {
+  security_id: string;
+  instrument_name: string;
+  delta_quantity: number;
+  direction: string;
+};
+
+export type WorkbenchAnalyticsRiskProxy = {
+  hhi_current: number;
+  hhi_proposed: number;
+  hhi_delta: number;
+};
+
+export type WorkbenchAnalytics = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  session_id: string | null;
+  period: string;
+  group_by: string;
+  benchmark_code: string;
+  portfolio_return_pct: number | null;
+  benchmark_return_pct: number | null;
+  active_return_pct: number | null;
+  allocation_buckets: WorkbenchAnalyticsBucket[];
+  top_changes: WorkbenchAnalyticsTopChange[];
+  risk_proxy: WorkbenchAnalyticsRiskProxy;
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+};

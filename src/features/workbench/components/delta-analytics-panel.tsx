@@ -1,24 +1,12 @@
-import {
-  AnalyticsGroupBy,
-  buildDeltaAnalyticsRows,
-} from "../analytics";
-import {
-  WorkbenchPositionView,
-  WorkbenchProjectedPositionView,
-} from "../types";
+import { WorkbenchAnalyticsBucket } from "../types";
 
 type Props = {
-  currentPositions: WorkbenchPositionView[];
-  projectedPositions: WorkbenchProjectedPositionView[];
-  groupBy: AnalyticsGroupBy;
+  buckets: WorkbenchAnalyticsBucket[];
+  groupBy: string;
 };
 
 export default function DeltaAnalyticsPanel(props: Props) {
-  const rows = buildDeltaAnalyticsRows(
-    props.currentPositions,
-    props.projectedPositions,
-    props.groupBy
-  );
+  const rows = props.buckets;
 
   return (
     <section className="section-card">
@@ -38,13 +26,13 @@ export default function DeltaAnalyticsPanel(props: Props) {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.key}>
-                  <td>{row.label}</td>
-                  <td align="right">{row.baselineQuantity.toFixed(4)}</td>
-                  <td align="right">{row.proposedQuantity.toFixed(4)}</td>
-                  <td align="right">{row.deltaQuantity.toFixed(4)}</td>
-                  <td align="right">{row.baselineWeightPct.toFixed(2)}%</td>
-                  <td align="right">{row.proposedWeightPct.toFixed(2)}%</td>
+                <tr key={row.bucket_key}>
+                  <td>{row.bucket_label}</td>
+                  <td align="right">{row.current_quantity.toFixed(4)}</td>
+                  <td align="right">{row.proposed_quantity.toFixed(4)}</td>
+                  <td align="right">{row.delta_quantity.toFixed(4)}</td>
+                  <td align="right">{row.current_weight_pct.toFixed(2)}%</td>
+                  <td align="right">{row.proposed_weight_pct.toFixed(2)}%</td>
                 </tr>
               ))}
             </tbody>
