@@ -109,7 +109,7 @@ export const dpmActionPlaybook = [
     role: "ADVISOR" as OperatingRole,
     workflowState: "EXECUTION_READY",
     advisorAction: "Hand off to execution desk with traceable artifacts",
-    route: "/workbench/PF_1001",
+    route: "/workbench",
     routeLabel: "Open Decision Console",
   },
 ];

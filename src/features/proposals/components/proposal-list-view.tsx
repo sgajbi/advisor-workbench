@@ -100,7 +100,7 @@ function groupedByStage(items: ProposalSummary[]): Record<Stage, ProposalSummary
 }
 
 export default function ProposalListView() {
-  const [liveMode, setLiveMode] = useState(false);
+  const [liveMode, setLiveMode] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [portfolioFilter, setPortfolioFilter] = useState("");
@@ -258,7 +258,9 @@ export default function ProposalListView() {
                 {grouped[stage].map((item) => (
                   <Paper key={item.proposal_id} variant="outlined" sx={{ p: 0.8, borderRadius: 1.5 }}>
                     <Typography sx={{ fontWeight: 700, lineHeight: 1.3 }}>
-                      <Link href={`/proposals/${item.proposal_id}`}>{item.title || item.proposal_id}</Link>
+                      <Link href={liveMode ? `/proposals/${item.proposal_id}` : "/proposals/simulate"}>
+                        {item.title || item.proposal_id}
+                      </Link>
                     </Typography>
                     <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
                       ID: {item.proposal_id}

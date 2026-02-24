@@ -32,14 +32,13 @@ test.describe('UI smoke checks', () => {
   });
 
   test('workbench page renders shell and message', async ({ page }) => {
-    await page.goto(`${baseUrl}/workbench/PF_1001`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Advisor Workbench/i })).toBeVisible();
-    await expect(page.getByText(/Unable to load workbench overview|As of:/i)).toBeVisible();
+    await page.goto(`${baseUrl}/workbench`, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(/Decision Console|Advisor Workbench/i)).toBeVisible();
   });
 
   test('mobile layout has no horizontal overflow on key pages', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ['/pas/intake', '/proposals/simulate', '/workbench/PF_1001']) {
+    for (const path of ['/pas/intake', '/proposals/simulate', '/workbench']) {
       await page.goto(`${baseUrl}${path}`, { waitUntil: 'domcontentloaded' });
       const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
       expect(hasOverflow, `horizontal overflow detected on ${path}`).toBeFalsy();

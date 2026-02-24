@@ -11,3 +11,4 @@ Governance boundary:
 | RFC-0003 | UI Approval Chain v1 and Supportability Panels | IMPLEMENTED | `docs/rfcs/RFC-0003-ui-approval-chain-and-supportability-panels.md` |
 | RFC-0004 | Intake Workflow UX v2 (Desktop Utilization + Mobile Operations) | IMPLEMENTED | `docs/rfcs/RFC-0004-intake-workflow-ux-v2.md` |
 | RFC-0005 | UI Role-Based Journey Navigation | IMPLEMENTED | `docs/rfcs/RFC-0005-ui-role-based-journey-navigation.md` |
+| RFC-0006 | Backend-Resolved Reference IDs for Proposal and Workbench Routes | IMPLEMENTED | `docs/rfcs/RFC-0006-backend-resolved-reference-ids-for-proposal-and-workbench-routes.md` |

@@ -16,7 +16,7 @@ const NAV_ENTRIES: NavEntry[] = [
   { label: "Analytics Studio", href: "/pa/analytics", key: "analytics_studio" },
   { label: "Advisory Pipeline", href: "/proposals", key: "advisory_pipeline" },
   { label: "Scenario Builder", href: "/proposals/simulate", key: "scenario_builder" },
-  { label: "Decision Console", href: "/workbench/PF_1001", key: "decision_console" },
+  { label: "Decision Console", href: "/workbench", key: "decision_console" },
 ];
 
 export default function TopNav() {
