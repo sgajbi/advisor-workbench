@@ -1,4 +1,5 @@
 import {
+  WorkbenchAnalytics,
   WorkbenchOverview,
   WorkbenchPortfolio360,
   WorkbenchSandboxState,
@@ -76,4 +77,32 @@ export async function applySandboxChanges(
     throw new Error(`Sandbox apply failed (${response.status}): ${body}`);
   }
   return (await response.json()) as WorkbenchSandboxState;
+}
+
+export async function getWorkbenchAnalytics(
+  portfolioId: string,
+  params: {
+    period: string;
+    groupBy: string;
+    benchmark: string;
+    sessionId?: string;
+  }
+): Promise<WorkbenchAnalytics> {
+  const query = new URLSearchParams();
+  query.set("period", params.period);
+  query.set("group_by", params.groupBy);
+  query.set("benchmark_code", params.benchmark);
+  if (params.sessionId) {
+    query.set("session_id", params.sessionId);
+  }
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/analytics?${query.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch workbench analytics (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchAnalytics;
 }

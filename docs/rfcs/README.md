@@ -19,3 +19,4 @@ Governance boundary:
 | RFC-0011 | Workbench Split View and Constraint Rail | IMPLEMENTED | `docs/rfcs/RFC-0011-workbench-split-view-and-constraint-rail.md` |
 | RFC-0012 | Workbench Analytics Controls and Delta Panel | IMPLEMENTED | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
 | RFC-0013 | Workbench Exception Queue and Advisor Summary | IMPLEMENTED | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |
+| RFC-0014 | Workbench Backend Analytics Consumption | IMPLEMENTED | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |

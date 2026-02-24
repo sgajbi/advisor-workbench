@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { applySandboxChanges, createSandboxSession } from "../../src/features/workbench/api";
+import {
+  applySandboxChanges,
+  createSandboxSession,
+  getWorkbenchAnalytics,
+} from "../../src/features/workbench/api";
 
 const expectedBaseUrl = "/api/bff/api/v1";
 
@@ -78,6 +82,49 @@ describe("workbench api", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/workbench/PF_1001/sandbox/sessions/sess_1/changes`,
       expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("calls backend analytics endpoint", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            session_id: "sess_1",
+            period: "YTD",
+            group_by: "ASSET_CLASS",
+            benchmark_code: "MODEL_60_40",
+            portfolio_return_pct: 2.1,
+            benchmark_return_pct: 1.6,
+            active_return_pct: 0.5,
+            allocation_buckets: [],
+            top_changes: [],
+            risk_proxy: { hhi_current: 1500, hhi_proposed: 1600, hhi_delta: 100 },
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchAnalytics("PF_1001", {
+      period: "YTD",
+      groupBy: "ASSET_CLASS",
+      benchmark: "MODEL_60_40",
+      sessionId: "sess_1",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "/api/v1/workbench/PF_1001/analytics?period=YTD&group_by=ASSET_CLASS&benchmark_code=MODEL_60_40&session_id=sess_1"
+      ),
+      expect.objectContaining({ cache: "no-store" })
     );
   });
 });
