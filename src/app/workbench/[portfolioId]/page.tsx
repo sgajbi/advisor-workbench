@@ -65,94 +65,110 @@ export default async function WorkbenchPage({
         baseCurrency={data.portfolio.base_currency}
       />
 
-      <SandboxControls portfolioId={data.portfolio.portfolio_id} sessionId={data.active_session_id} />
+      <section className="workbench-split">
+        <div className="workbench-col">
+          <section className="section-card">
+            <h3>Portfolio 360 Baseline Positions</h3>
+            {data.current_positions.length ? (
+              <div className="table-wrap">
+                <table className="position-table">
+                  <thead>
+                    <tr>
+                      <th align="left">Security</th>
+                      <th align="left">Instrument</th>
+                      <th align="left">Asset Class</th>
+                      <th align="right">Quantity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.current_positions.map((row) => (
+                      <tr key={row.security_id}>
+                        <td>{row.security_id}</td>
+                        <td>{row.instrument_name}</td>
+                        <td>{row.asset_class ?? "N/A"}</td>
+                        <td align="right">{row.quantity.toFixed(4)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="muted">No current positions available in snapshot.</p>
+            )}
+          </section>
 
-      {data.projected_summary ? (
-        <section className="section-card">
-          <h3>Projected Summary</h3>
-          <div className="suite-row">
-            <span>Baseline Positions</span>
-            <strong>{data.projected_summary.total_baseline_positions}</strong>
-          </div>
-          <div className="suite-row">
-            <span>Proposed Positions</span>
-            <strong>{data.projected_summary.total_proposed_positions}</strong>
-          </div>
-          <div className="suite-row">
-            <span>Net Delta Quantity</span>
-            <strong>{data.projected_summary.net_delta_quantity.toFixed(4)}</strong>
-          </div>
-        </section>
-      ) : null}
+          <PerformanceSnapshot
+            period={data.performance_snapshot?.period ?? "YTD"}
+            returnPct={data.performance_snapshot?.return_pct ?? null}
+            benchmarkReturnPct={data.performance_snapshot?.benchmark_return_pct ?? null}
+          />
 
-      <section className="section-card">
-        <h3>Portfolio 360 Current Positions</h3>
-        {data.current_positions.length ? (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th align="left">Security</th>
-                <th align="left">Instrument</th>
-                <th align="left">Asset Class</th>
-                <th align="right">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.current_positions.slice(0, 20).map((row) => (
-                <tr key={row.security_id}>
-                  <td>{row.security_id}</td>
-                  <td>{row.instrument_name}</td>
-                  <td>{row.asset_class ?? "N/A"}</td>
-                  <td align="right">{row.quantity.toFixed(4)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="muted">No current positions available in snapshot.</p>
-        )}
+          <RebalanceStatus
+            status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
+            lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
+          />
+        </div>
+
+        <div className="workbench-col">
+          <SandboxControls
+            portfolioId={data.portfolio.portfolio_id}
+            sessionId={data.active_session_id}
+            warnings={data.warnings}
+          />
+
+          {data.projected_summary ? (
+            <section className="section-card">
+              <h3>Projected Summary</h3>
+              <div className="suite-row">
+                <span>Baseline Positions</span>
+                <strong>{data.projected_summary.total_baseline_positions}</strong>
+              </div>
+              <div className="suite-row">
+                <span>Proposed Positions</span>
+                <strong>{data.projected_summary.total_proposed_positions}</strong>
+              </div>
+              <div className="suite-row">
+                <span>Net Delta Quantity</span>
+                <strong>{data.projected_summary.net_delta_quantity.toFixed(4)}</strong>
+              </div>
+            </section>
+          ) : null}
+
+          <section className="section-card">
+            <h3>Live Sandbox Projected Positions</h3>
+            {data.projected_positions.length ? (
+              <div className="table-wrap">
+                <table className="position-table">
+                  <thead>
+                    <tr>
+                      <th align="left">Security</th>
+                      <th align="left">Instrument</th>
+                      <th align="right">Baseline</th>
+                      <th align="right">Proposed</th>
+                      <th align="right">Delta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.projected_positions.map((row) => (
+                      <tr key={row.security_id}>
+                        <td>{row.security_id}</td>
+                        <td>{row.instrument_name}</td>
+                        <td align="right">{row.baseline_quantity.toFixed(4)}</td>
+                        <td align="right">{row.proposed_quantity.toFixed(4)}</td>
+                        <td align="right">{row.delta_quantity.toFixed(4)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="muted">Create and update a sandbox session to see projected holdings.</p>
+            )}
+          </section>
+        </div>
       </section>
 
-      {data.projected_positions.length ? (
-        <section className="section-card">
-          <h3>Live Sandbox Projected Positions</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th align="left">Security</th>
-                <th align="left">Instrument</th>
-                <th align="right">Baseline</th>
-                <th align="right">Proposed</th>
-                <th align="right">Delta</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.projected_positions.slice(0, 20).map((row) => (
-                <tr key={row.security_id}>
-                  <td>{row.security_id}</td>
-                  <td>{row.instrument_name}</td>
-                  <td align="right">{row.baseline_quantity.toFixed(4)}</td>
-                  <td align="right">{row.proposed_quantity.toFixed(4)}</td>
-                  <td align="right">{row.delta_quantity.toFixed(4)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      ) : null}
-
       <PositionsGrid count={data.overview.position_count} />
-
-      <PerformanceSnapshot
-        period={data.performance_snapshot?.period ?? "YTD"}
-        returnPct={data.performance_snapshot?.return_pct ?? null}
-        benchmarkReturnPct={data.performance_snapshot?.benchmark_return_pct ?? null}
-      />
-
-      <RebalanceStatus
-        status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
-        lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
-      />
     </main>
   );
 }
