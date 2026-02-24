@@ -107,6 +107,13 @@ a:hover {
   color: var(--brand-strong);
 }
 
+.nav-link.nav-link-disabled {
+  color: #7a8da8;
+  border-color: #d7e0ed;
+  background: #f2f5fa;
+  cursor: not-allowed;
+}
+
 .page-container {
   width: min(1560px, 100%);
   margin: 0 auto;
@@ -396,6 +403,13 @@ a:hover {
   border-color: #8aacde;
   background: var(--brand-soft);
   color: var(--brand-strong);
+}
+
+.journey-step.disabled {
+  color: #7a8da8;
+  border-color: #d7e0ed;
+  background: #f2f5fa;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1080px) {

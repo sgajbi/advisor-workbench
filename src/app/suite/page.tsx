@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Alert, Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 
 import {
   advisoryQueue,
@@ -12,9 +12,12 @@ import {
   intakeBatches,
   OperatingRole,
 } from "@/features/suite/mock-data";
+import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
 
 export default function SuitePage() {
   const [activeRole, setActiveRole] = useState<OperatingRole>("ADVISOR");
+  const capabilities = usePlatformCapabilities();
+  const navFlags = capabilities.normalized.navigation;
 
   const roleLabel = useMemo(() => {
     if (activeRole === "RISK") return "Risk Officer";
@@ -28,6 +31,21 @@ export default function SuitePage() {
   );
   const rolePlaybook = useMemo(() => dpmActionPlaybook.filter((item) => item.role === activeRole), [activeRole]);
 
+  function renderRouteAction(label: string, href: string, enabled: boolean) {
+    if (!enabled) {
+      return (
+        <span className="journey-step disabled" aria-disabled="true">
+          {label}
+        </span>
+      );
+    }
+    return (
+      <Link href={href} className="journey-step">
+        {label}
+      </Link>
+    );
+  }
+
   return (
     <main className="page-container">
       <section className="page-header">
@@ -38,6 +56,11 @@ export default function SuitePage() {
           Start with client priorities, execute next-best workflow actions, and close the day with decision-ready outcomes.
         </Typography>
       </section>
+      {capabilities.partialFailure ? (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          Platform capability negotiation is partially degraded. Some routes are disabled based on currently available services.
+        </Alert>
+      ) : null}
 
       <section className="journey-grid">
         <Paper className="section-card journey-card" elevation={0}>
@@ -48,18 +71,10 @@ export default function SuitePage() {
             Intake data, review analytics context, simulate recommendation, then progress approvals.
           </Typography>
           <div className="journey-steps">
-            <Link href="/pas/intake" className="journey-step">
-              1. Portfolio Intake
-            </Link>
-            <Link href="/pa/analytics" className="journey-step">
-              2. Analytics Context
-            </Link>
-            <Link href="/proposals/simulate" className="journey-step">
-              3. Simulate Proposal
-            </Link>
-            <Link href="/proposals" className="journey-step">
-              4. Submit And Track
-            </Link>
+            {renderRouteAction("1. Portfolio Intake", "/pas/intake", navFlags.portfolio_intake !== false)}
+            {renderRouteAction("2. Analytics Context", "/pa/analytics", navFlags.analytics_studio !== false)}
+            {renderRouteAction("3. Simulate Proposal", "/proposals/simulate", navFlags.scenario_builder !== false)}
+            {renderRouteAction("4. Submit And Track", "/proposals", navFlags.advisory_pipeline !== false)}
           </div>
         </Paper>
 
@@ -71,18 +86,10 @@ export default function SuitePage() {
             Monitor live portfolio state, inspect risk/review queue, and approve execution-ready decisions.
           </Typography>
           <div className="journey-steps">
-            <Link href="/workbench/PF_1001" className="journey-step">
-              1. Decision Console
-            </Link>
-            <Link href="/proposals" className="journey-step">
-              2. Review Pipeline
-            </Link>
-            <Link href="/proposals" className="journey-step">
-              3. Approval Chain
-            </Link>
-            <Link href="/suite" className="journey-step">
-              4. Command Center Metrics
-            </Link>
+            {renderRouteAction("1. Decision Console", "/workbench/PF_1001", navFlags.decision_console !== false)}
+            {renderRouteAction("2. Review Pipeline", "/proposals", navFlags.advisory_pipeline !== false)}
+            {renderRouteAction("3. Approval Chain", "/proposals", navFlags.advisory_pipeline !== false)}
+            {renderRouteAction("4. Command Center Metrics", "/suite", navFlags.command_center !== false)}
           </div>
         </Paper>
       </section>
@@ -204,21 +211,33 @@ export default function SuitePage() {
           </Typography>
           <div className="suite-row">
             <span>New Recommendation</span>
-            <Link href="/proposals/simulate" className="nav-link">
-              Launch Simulation
-            </Link>
+            {navFlags.scenario_builder === false ? (
+              <span className="nav-link nav-link-disabled">Launch Simulation</span>
+            ) : (
+              <Link href="/proposals/simulate" className="nav-link">
+                Launch Simulation
+              </Link>
+            )}
           </div>
           <div className="suite-row">
             <span>Review Existing Proposals</span>
-            <Link href="/proposals" className="nav-link">
-              Open Pipeline
-            </Link>
+            {navFlags.advisory_pipeline === false ? (
+              <span className="nav-link nav-link-disabled">Open Pipeline</span>
+            ) : (
+              <Link href="/proposals" className="nav-link">
+                Open Pipeline
+              </Link>
+            )}
           </div>
           <div className="suite-row">
             <span>Portfolio Decision Context</span>
-            <Link href="/workbench/PF_1001" className="nav-link">
-              Open Workbench
-            </Link>
+            {navFlags.decision_console === false ? (
+              <span className="nav-link nav-link-disabled">Open Workbench</span>
+            ) : (
+              <Link href="/workbench/PF_1001" className="nav-link">
+                Open Workbench
+              </Link>
+            )}
           </div>
         </Paper>
 
