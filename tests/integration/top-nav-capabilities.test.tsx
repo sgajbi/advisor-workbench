@@ -46,7 +46,7 @@ describe("TopNav", () => {
   it("disables routes based on normalized navigation capabilities", () => {
     render(<TopNav />);
 
-    expect(screen.getByRole("link", { name: "Command Center" })).toHaveAttribute("href", "/suite");
+    expect(screen.getByRole("link", { name: "Portfolio Foundation" })).toHaveAttribute("href", "/portfolios");
     expect(screen.getByRole("link", { name: "Portfolio Intake" })).toHaveAttribute("href", "/pas/intake");
     expect(screen.getByRole("link", { name: "Advisory Pipeline" })).toHaveAttribute("href", "/proposals");
 

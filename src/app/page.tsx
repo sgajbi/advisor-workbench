@@ -32,12 +32,12 @@ export default function Home() {
 
       <section className="suite-grid">
         <article className="section-card suite-tile">
-          <h3>Portfolio Intake</h3>
+          <h3>Portfolio Foundation</h3>
           <p className="muted">
-            Capture positions, transactions, and instruments through guided forms and controlled file pipelines.
+            Review existing portfolios, composition, and health signals before moving into advisory iteration.
           </p>
-          <Link href="/pas/intake" className="nav-link">
-            Open Intake
+          <Link href="/portfolios" className="nav-link">
+            Open Foundation
           </Link>
         </article>
         <article className="section-card suite-tile">
