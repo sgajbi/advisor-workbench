@@ -1,3 +1,15 @@
+export type PasPolicyDiagnostics = {
+  available: boolean;
+  allowedSections: string[];
+  warnings: string[];
+  policyProvenance: {
+    policyVersion: string;
+    policySource: string;
+    matchedRuleId: string;
+    strictMode: boolean;
+  };
+};
+
 export type PlatformNormalizedCapabilities = {
   navigation: Record<string, boolean>;
   workflowFlags: Record<string, boolean>;
@@ -5,6 +17,7 @@ export type PlatformNormalizedCapabilities = {
   inputModesUnion: string[];
   moduleHealth: Record<string, string>;
   policyVersionsBySource: Record<string, string>;
+  pasPolicyDiagnostics: PasPolicyDiagnostics;
 };
 
 export type PlatformCapabilitiesError = {

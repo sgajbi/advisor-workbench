@@ -20,6 +20,7 @@ export default function SuitePage() {
   const navFlags = capabilities.normalized.navigation;
   const moduleHealth = capabilities.normalized.moduleHealth;
   const policyVersions = capabilities.normalized.policyVersionsBySource;
+  const pasPolicyDiagnostics = capabilities.normalized.pasPolicyDiagnostics;
   const sources = ["pas", "pa", "dpm"] as const;
 
   const roleLabel = useMemo(() => {
@@ -112,6 +113,28 @@ export default function SuitePage() {
               <p className="kpi-label">Policy: {policyVersions[source] ?? "unknown"}</p>
             </div>
           ))}
+        </div>
+        <div className="suite-row">
+          <div>
+            <strong>PAS Policy Diagnostics</strong>
+            <p className="muted">
+              {pasPolicyDiagnostics.available ? "available" : "unavailable"} | strict mode:{" "}
+              {pasPolicyDiagnostics.policyProvenance.strictMode ? "on" : "off"}
+            </p>
+            <p className="muted">
+              Rule: {pasPolicyDiagnostics.policyProvenance.matchedRuleId} | Source:{" "}
+              {pasPolicyDiagnostics.policyProvenance.policySource}
+            </p>
+            <p className="muted">
+              Allowed sections:{" "}
+              {pasPolicyDiagnostics.allowedSections.length > 0
+                ? pasPolicyDiagnostics.allowedSections.join(", ")
+                : "none"}
+            </p>
+            {pasPolicyDiagnostics.warnings.length > 0 ? (
+              <p className="muted">Warnings: {pasPolicyDiagnostics.warnings.join(", ")}</p>
+            ) : null}
+          </div>
         </div>
       </Paper>
 

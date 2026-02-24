@@ -27,6 +27,17 @@ describe("platform capabilities api", () => {
                 inputModesUnion: [],
                 moduleHealth: {},
                 policyVersionsBySource: {},
+                pasPolicyDiagnostics: {
+                  available: true,
+                  allowedSections: ["OVERVIEW"],
+                  warnings: [],
+                  policyProvenance: {
+                    policyVersion: "pas-default-v1",
+                    policySource: "default",
+                    matchedRuleId: "default",
+                    strictMode: false,
+                  },
+                },
               },
             },
           }),
@@ -67,5 +78,6 @@ describe("platform capabilities api", () => {
       pa: "unknown",
       dpm: "unknown",
     });
+    expect(a.pasPolicyDiagnostics.available).toBe(false);
   });
 });
