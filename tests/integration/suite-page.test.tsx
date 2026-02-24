@@ -22,6 +22,11 @@ vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
       inputModesBySource: {},
       inputModesUnion: [],
       moduleHealth: { pas: "available", pa: "available", dpm: "available" },
+      policyVersionsBySource: {
+        pas: "pas-default-v1",
+        pa: "pa-default-v1",
+        dpm: "dpm-default-v1",
+      },
     },
   })),
 }));
@@ -34,5 +39,8 @@ describe("SuitePage", () => {
     expect(screen.getByText("Portfolio Manager Journey")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /1\. Portfolio Intake/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /1\. Decision Console/i })).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes("pas-default-v1"))).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes("pa-default-v1"))).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes("dpm-default-v1"))).toBeInTheDocument();
   });
 });

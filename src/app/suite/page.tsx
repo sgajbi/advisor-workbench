@@ -18,6 +18,9 @@ export default function SuitePage() {
   const [activeRole, setActiveRole] = useState<OperatingRole>("ADVISOR");
   const capabilities = usePlatformCapabilities();
   const navFlags = capabilities.normalized.navigation;
+  const moduleHealth = capabilities.normalized.moduleHealth;
+  const policyVersions = capabilities.normalized.policyVersionsBySource;
+  const sources = ["pas", "pa", "dpm"] as const;
 
   const roleLabel = useMemo(() => {
     if (activeRole === "RISK") return "Risk Officer";
@@ -102,18 +105,13 @@ export default function SuitePage() {
           <Chip size="small" color="success" label="Decision Flow Live" />
         </Stack>
         <div className="kpi-grid">
-          <div className="kpi-box">
-            <p className="kpi-label">Portfolio Data Hub</p>
-            <p className="kpi-value">Storyboard</p>
-          </div>
-          <div className="kpi-box">
-            <p className="kpi-label">Analytics Intelligence</p>
-            <p className="kpi-value">Storyboard</p>
-          </div>
-          <div className="kpi-box">
-            <p className="kpi-label">Decision Workflow</p>
-            <p className="kpi-value">Live via BFF</p>
-          </div>
+          {sources.map((source) => (
+            <div key={source} className="kpi-box">
+              <p className="kpi-label">{source.toUpperCase()} Module Health</p>
+              <p className="kpi-value">{moduleHealth[source] ?? "unknown"}</p>
+              <p className="kpi-label">Policy: {policyVersions[source] ?? "unknown"}</p>
+            </div>
+          ))}
         </div>
       </Paper>
 

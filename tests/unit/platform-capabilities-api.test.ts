@@ -26,6 +26,7 @@ describe("platform capabilities api", () => {
                 inputModesBySource: {},
                 inputModesUnion: [],
                 moduleHealth: {},
+                policyVersionsBySource: {},
               },
             },
           }),
@@ -61,5 +62,10 @@ describe("platform capabilities api", () => {
 
     expect(b.navigation.command_center).toBe(true);
     expect(a.moduleHealth).toEqual({ pas: "unknown", pa: "unknown", dpm: "unknown" });
+    expect(a.policyVersionsBySource).toEqual({
+      pas: "unknown",
+      pa: "unknown",
+      dpm: "unknown",
+    });
   });
 });

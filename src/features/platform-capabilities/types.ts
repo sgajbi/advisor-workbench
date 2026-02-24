@@ -4,6 +4,7 @@ export type PlatformNormalizedCapabilities = {
   inputModesBySource: Record<string, string[]>;
   inputModesUnion: string[];
   moduleHealth: Record<string, string>;
+  policyVersionsBySource: Record<string, string>;
 };
 
 export type PlatformCapabilitiesError = {
