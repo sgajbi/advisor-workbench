@@ -54,7 +54,7 @@ export default function Home() {
             <Link href="/proposals" className="nav-link">
               Open Pipeline
             </Link>
-            <Link href="/workbench/PF_1001" className="nav-link">
+            <Link href="/workbench" className="nav-link">
               Open Console
             </Link>
           </div>

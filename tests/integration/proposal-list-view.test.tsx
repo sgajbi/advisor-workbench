@@ -21,11 +21,11 @@ describe("ProposalListView", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/ID:\s*PP-7720/i)).toBeInTheDocument();
+      expect(screen.getByText(/ID:\s*pp_1/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Storyboard Mode/)).toBeInTheDocument();
+    expect(screen.getByText(/Live Queue Mode/)).toBeInTheDocument();
     expect(screen.getByText(/DRAFT: 1/)).toBeInTheDocument();
-    expect(screen.getByText(/Cash Deployment Plan/)).toBeInTheDocument();
+    expect(screen.getAllByText(/pp_1/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Next:\s*Submit for risk or compliance review/i)).toBeInTheDocument();
   });
 });

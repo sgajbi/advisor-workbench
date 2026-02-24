@@ -90,7 +90,7 @@ export default function SuitePage() {
             Monitor live portfolio state, inspect risk/review queue, and approve execution-ready decisions.
           </Typography>
           <div className="journey-steps">
-            {renderRouteAction("1. Decision Console", "/workbench/PF_1001", navFlags.decision_console !== false)}
+            {renderRouteAction("1. Decision Console", "/workbench", navFlags.decision_console !== false)}
             {renderRouteAction("2. Review Pipeline", "/proposals", navFlags.advisory_pipeline !== false)}
             {renderRouteAction("3. Approval Chain", "/proposals", navFlags.advisory_pipeline !== false)}
             {renderRouteAction("4. Command Center Metrics", "/suite", navFlags.command_center !== false)}
@@ -198,7 +198,7 @@ export default function SuitePage() {
             <Link href="/proposals" className="nav-link">
               Open Proposal Pipeline
             </Link>
-            <Link href="/workbench/PF_1001" className="nav-link">
+            <Link href="/workbench" className="nav-link">
               Open Decision Console
             </Link>
           </div>
@@ -255,7 +255,7 @@ export default function SuitePage() {
             {navFlags.decision_console === false ? (
               <span className="nav-link nav-link-disabled">Open Workbench</span>
             ) : (
-              <Link href="/workbench/PF_1001" className="nav-link">
+              <Link href="/workbench" className="nav-link">
                 Open Workbench
               </Link>
             )}
@@ -320,7 +320,7 @@ export default function SuitePage() {
             <Link href="/proposals" className="nav-link">
               Open Proposal Pipeline
             </Link>
-            <Link href="/workbench/PF_1001" className="nav-link">
+            <Link href="/workbench" className="nav-link">
               Open Decision Console
             </Link>
           </div>
