@@ -1,4 +1,8 @@
 import { getPortfolio360 } from "@/features/workbench/api";
+import { AnalyticsGroupBy, resolveBenchmarkReturn } from "@/features/workbench/analytics";
+import AnalyticsControls from "@/features/workbench/components/analytics-controls";
+import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
+import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
 import OverviewCards from "@/features/workbench/components/overview-cards";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
@@ -12,11 +16,22 @@ export default async function WorkbenchPage({
   searchParams,
 }: {
   params: Promise<{ portfolioId: string }>;
-  searchParams: Promise<{ sessionId?: string }>;
+  searchParams: Promise<{
+    sessionId?: string;
+    period?: string;
+    groupBy?: string;
+    benchmark?: string;
+    preset?: string;
+  }>;
 }) {
   const { portfolioId } = await params;
   const resolvedSearch = await searchParams;
   const sessionId = resolvedSearch.sessionId?.trim() || undefined;
+  const period = resolvedSearch.period?.trim() || "YTD";
+  const benchmark = resolvedSearch.benchmark?.trim() || "MODEL_60_40";
+  const preset = resolvedSearch.preset?.trim() || "EXEC_SUMMARY";
+  const groupBy: AnalyticsGroupBy =
+    resolvedSearch.groupBy?.trim() === "SECURITY" ? "SECURITY" : "ASSET_CLASS";
 
   let data: Awaited<ReturnType<typeof getPortfolio360>>;
   try {
@@ -49,6 +64,18 @@ export default async function WorkbenchPage({
     );
   }
 
+  const benchmarkReturn = resolveBenchmarkReturn(
+    benchmark,
+    data.performance_snapshot?.benchmark_return_pct
+  );
+  const projectedCoveragePct =
+    data.projected_summary &&
+    data.projected_summary.total_baseline_positions > 0
+      ? (data.projected_summary.total_proposed_positions /
+          data.projected_summary.total_baseline_positions) *
+        100
+      : 0;
+
   return (
     <main className="page-container">
       <section className="page-header">
@@ -63,6 +90,20 @@ export default async function WorkbenchPage({
         cashWeightPct={data.overview.cash_weight_pct}
         positionCount={data.overview.position_count}
         baseCurrency={data.portfolio.base_currency}
+      />
+
+      <AnalyticsControls
+        sessionId={data.active_session_id}
+        period={period}
+        groupBy={groupBy}
+        benchmark={benchmark}
+        preset={preset}
+      />
+
+      <BenchmarkKpiStrip
+        returnPct={data.performance_snapshot?.return_pct ?? null}
+        benchmarkReturnPct={benchmarkReturn}
+        projectedCoveragePct={projectedCoveragePct}
       />
 
       <section className="workbench-split">
@@ -165,6 +206,12 @@ export default async function WorkbenchPage({
               <p className="muted">Create and update a sandbox session to see projected holdings.</p>
             )}
           </section>
+
+          <DeltaAnalyticsPanel
+            currentPositions={data.current_positions}
+            projectedPositions={data.projected_positions}
+            groupBy={groupBy}
+          />
         </div>
       </section>
 
