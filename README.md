@@ -36,6 +36,7 @@ Set `BFF_BASE_URL` to point to `advisor-experience-api`.
 - `/proposals/simulate` - simulate and save draft proposal
 - `/proposals` - proposal workspace list
 - `/proposals/[proposalId]` - proposal detail with submit/approval/consent actions and workflow timeline
+- `/workbench/[portfolioId]` - portfolio 360, sandbox projections, backend analytics, and reporting snapshot
 
 ## Docker
 

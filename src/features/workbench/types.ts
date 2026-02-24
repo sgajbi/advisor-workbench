@@ -130,3 +130,13 @@ export type WorkbenchAnalytics = {
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };
+
+export type WorkbenchReportingSnapshot = {
+  correlationId: string;
+  contractVersion: string;
+  sourceService: string;
+  portfolioId: string;
+  asOfDate: string;
+  generatedAt: string;
+  rows: Array<Record<string, unknown>>;
+};
