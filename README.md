@@ -51,3 +51,13 @@ make ci-local-docker-down
 
 - `docs/demo/README.md`
 - `docs/demo/scripts/demo-ui-approval-chain.md`
+
+## Automation
+
+- Automation runbook: `docs/automation/Automation-Ecosystem.md`
+- One-shot pulse (sync + PR monitor): `npm run auto:pulse`
+- Sync all repositories: `npm run auto:sync`
+- Monitor open PRs (`author:@me`): `npm run auto:pr`
+- Continuous agent loop with status feed: `npm run auto:agent`
+- Single agent iteration: `npm run auto:agent:once`
+- Targeted PAS refresh: `npm run auto:refresh:pas -- query_service demo_data_loader`

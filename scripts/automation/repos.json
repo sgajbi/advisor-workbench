@@ -1,0 +1,32 @@
+[
+  {
+    "name": "advisor-workbench",
+    "github": "sgajbi/advisor-workbench",
+    "path": "C:/Users/Sandeep/projects/advisor-workbench"
+  },
+  {
+    "name": "advisor-experience-api",
+    "github": "sgajbi/advisor-experience-api",
+    "path": "C:/Users/Sandeep/projects/advisor-experience-api"
+  },
+  {
+    "name": "dpm-rebalance-engine",
+    "github": "sgajbi/dpm-rebalance-engine",
+    "path": "C:/Users/Sandeep/projects/dpm-rebalance-engine"
+  },
+  {
+    "name": "pbwm-platform-docs",
+    "github": "sgajbi/pbwm-platform-docs",
+    "path": "C:/Users/Sandeep/projects/pbwm-platform-docs"
+  },
+  {
+    "name": "performanceAnalytics",
+    "github": "sgajbi/performanceAnalytics",
+    "path": "C:/Users/Sandeep/projects/performanceAnalytics"
+  },
+  {
+    "name": "portfolio-analytics-system",
+    "github": "sgajbi/portfolio-analytics-system",
+    "path": "C:/Users/Sandeep/projects/portfolio-analytics-system"
+  }
+]
