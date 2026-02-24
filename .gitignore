@@ -9,3 +9,5 @@ test-results/
 playwright-report/
 .playwright-cli/
 output/playwright/
+output/pr-monitor.json
+output/agent-status.md

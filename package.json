@@ -8,7 +8,13 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "auto:pulse": "powershell -ExecutionPolicy Bypass -File scripts/automation/Platform-Pulse.ps1",
+    "auto:sync": "powershell -ExecutionPolicy Bypass -File scripts/automation/Sync-Repos.ps1",
+    "auto:pr": "powershell -ExecutionPolicy Bypass -File scripts/automation/PR-Monitor.ps1",
+    "auto:agent": "powershell -ExecutionPolicy Bypass -File scripts/automation/Run-Agent.ps1",
+    "auto:agent:once": "powershell -ExecutionPolicy Bypass -File scripts/automation/Run-Agent.ps1 -Once",
+    "auto:refresh:pas": "powershell -ExecutionPolicy Bypass -File scripts/automation/Service-Refresh.ps1 -ProjectPath C:/Users/Sandeep/projects/portfolio-analytics-system -Services"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
