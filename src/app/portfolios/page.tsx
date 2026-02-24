@@ -38,6 +38,17 @@ type ReportingSnapshot = {
   rows: Array<{ bucket?: string; metric?: string; value?: number | string | null }>;
 };
 
+type Portfolio360Snapshot = {
+  current_positions: Array<{
+    security_id: string;
+    instrument_name: string;
+    asset_class: string | null;
+    quantity: number;
+    market_value_base: number | null;
+    weight_pct: number | null;
+  }>;
+};
+
 type PortfolioCatalogRow = {
   portfolioId: string;
   asOfDate: string | null;
@@ -95,6 +106,22 @@ async function getReportingSnapshot(
   }
 }
 
+async function getPortfolio360Snapshot(
+  portfolioId: string
+): Promise<Portfolio360Snapshot | null> {
+  try {
+    const response = await fetch(`${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/portfolio-360`, {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as Portfolio360Snapshot;
+  } catch {
+    return null;
+  }
+}
+
 function formatPct(value: number | null): string {
   if (value === null) {
     return "N/A";
@@ -129,8 +156,14 @@ export default async function PortfolioFoundationPage({
   const overview = selectedId ? await getOverview(selectedId) : null;
   const reportingSnapshot =
     overview && selectedId ? await getReportingSnapshot(selectedId, overview.as_of_date) : null;
+  const portfolio360 = selectedId ? await getPortfolio360Snapshot(selectedId) : null;
   const reportingYtd = extractMetricValue(reportingSnapshot, "return_ytd_pct");
   const reportingMarketValue = extractMetricValue(reportingSnapshot, "market_value_base");
+  const topPositions =
+    portfolio360?.current_positions
+      ?.slice()
+      .sort((left, right) => (right.market_value_base ?? 0) - (left.market_value_base ?? 0))
+      .slice(0, 5) ?? [];
   const catalogRows = await Promise.all(
     portfolios.slice(0, 12).map(async (portfolio) => {
       const portfolioOverview = await getOverview(portfolio.id);
@@ -265,6 +298,42 @@ export default async function PortfolioFoundationPage({
                     Start Advisory Iteration
                   </Link>
                 </div>
+                <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "12px 0" }} />
+                <h4 style={{ margin: "0 0 8px", fontSize: "0.95rem" }}>Top Holdings Snapshot</h4>
+                {topPositions.length ? (
+                  <div className="table-wrap">
+                    <table className="position-table">
+                      <thead>
+                        <tr>
+                          <th align="left">Security</th>
+                          <th align="left">Instrument</th>
+                          <th align="left">Asset Class</th>
+                          <th align="right">Quantity</th>
+                          <th align="right">Market Value</th>
+                          <th align="right">Weight</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topPositions.map((row) => (
+                          <tr key={row.security_id}>
+                            <td>{row.security_id}</td>
+                            <td>{row.instrument_name}</td>
+                            <td>{row.asset_class ?? "N/A"}</td>
+                            <td align="right">{row.quantity.toFixed(4)}</td>
+                            <td align="right">
+                              {row.market_value_base === null
+                                ? "N/A"
+                                : formatCurrency(row.market_value_base, overview.portfolio.base_currency)}
+                            </td>
+                            <td align="right">{row.weight_pct === null ? "N/A" : `${row.weight_pct.toFixed(2)}%`}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="muted">Portfolio 360 positions are unavailable for this portfolio.</p>
+                )}
               </>
             )}
           </article>
