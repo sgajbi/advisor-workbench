@@ -98,6 +98,31 @@ describe("PortfolioFoundationPage", () => {
             }),
           } as Response;
         }
+        if (url.includes("/api/v1/workbench/PORT_UI_1001/portfolio-360")) {
+          return {
+            ok: true,
+            json: async () => ({
+              current_positions: [
+                {
+                  security_id: "AAPL.US",
+                  instrument_name: "Apple Inc",
+                  asset_class: "EQUITY",
+                  quantity: 120,
+                  market_value_base: 250000,
+                  weight_pct: 20,
+                },
+                {
+                  security_id: "MSFT.US",
+                  instrument_name: "Microsoft Corp",
+                  asset_class: "EQUITY",
+                  quantity: 90,
+                  market_value_base: 180000,
+                  weight_pct: 14.4,
+                },
+              ],
+            }),
+          } as Response;
+        }
         return { ok: false, json: async () => ({}) } as Response;
       })
     );
@@ -113,6 +138,10 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("8.42%")).toBeInTheDocument();
     expect(screen.getAllByText("4.30%").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("3.10%")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Top Holdings Snapshot/i })).toBeInTheDocument();
+    expect(screen.getByText("AAPL.US")).toBeInTheDocument();
+    expect(screen.getByText("Apple Inc")).toBeInTheDocument();
+    expect(screen.getByText("20.00%")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open Decision Console/i })).toHaveAttribute(
       "href",
       "/workbench/PORT_UI_1001"
