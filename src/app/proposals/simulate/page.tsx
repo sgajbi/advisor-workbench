@@ -29,7 +29,7 @@ export default async function ProposalSimulatePage({
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const initialPortfolioId = resolvedSearchParams.portfolioId?.trim() || "pf_demo_ui_1";
+  const initialPortfolioId = resolvedSearchParams.portfolioId?.trim() || "DEMO_DPM_EUR_001";
   const overview = await loadOverview(initialPortfolioId);
 
   return (

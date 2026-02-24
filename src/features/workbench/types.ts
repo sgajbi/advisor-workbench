@@ -36,6 +36,8 @@ export type WorkbenchPositionView = {
   instrument_name: string;
   asset_class: string | null;
   quantity: number;
+  market_value_base: number | null;
+  weight_pct: number | null;
 };
 
 export type WorkbenchProjectedPositionView = {

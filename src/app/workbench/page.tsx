@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 const WORKBENCH_FALLBACK_PORTFOLIO_IDS =
-  process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ?? "pf_demo_ui_1,pf_demo_ui_2,pf_demo_ui_3";
+  process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ??
+  "DEMO_DPM_EUR_001,DEMO_INCOME_CHF_001,DEMO_BALANCED_SGD_001,DEMO_REBAL_USD_001,DEMO_ADV_USD_001";
 
 type LookupItem = {
   id: string;
