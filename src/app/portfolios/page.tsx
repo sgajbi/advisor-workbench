@@ -59,6 +59,12 @@ type PortfolioCatalogRow = {
   rebalanceStatus: string | null;
 };
 
+type AllocationBucket = {
+  assetClass: string;
+  weightPct: number;
+  marketValueBase: number;
+};
+
 async function getPortfolios(): Promise<LookupItem[]> {
   try {
     const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=100`, { cache: "no-store" });
@@ -144,6 +150,31 @@ function extractMetricValue(
   return typeof row.value === "number" ? row.value : null;
 }
 
+function buildAllocationBuckets(snapshot: Portfolio360Snapshot | null): AllocationBucket[] {
+  if (!snapshot) {
+    return [];
+  }
+
+  const grouped = new Map<string, { marketValueBase: number; weightPct: number }>();
+  for (const row of snapshot.current_positions) {
+    const key = row.asset_class ?? "UNCLASSIFIED";
+    const current = grouped.get(key) ?? { marketValueBase: 0, weightPct: 0 };
+    grouped.set(key, {
+      marketValueBase: current.marketValueBase + (row.market_value_base ?? 0),
+      weightPct: current.weightPct + (row.weight_pct ?? 0),
+    });
+  }
+
+  return Array.from(grouped.entries())
+    .map(([assetClass, values]) => ({
+      assetClass,
+      marketValueBase: values.marketValueBase,
+      weightPct: values.weightPct,
+    }))
+    .sort((left, right) => right.marketValueBase - left.marketValueBase)
+    .slice(0, 5);
+}
+
 export default async function PortfolioFoundationPage({
   searchParams,
 }: {
@@ -164,6 +195,7 @@ export default async function PortfolioFoundationPage({
       ?.slice()
       .sort((left, right) => (right.market_value_base ?? 0) - (left.market_value_base ?? 0))
       .slice(0, 5) ?? [];
+  const topAllocations = buildAllocationBuckets(portfolio360);
   const catalogRows = await Promise.all(
     portfolios.slice(0, 12).map(async (portfolio) => {
       const portfolioOverview = await getOverview(portfolio.id);
@@ -333,6 +365,33 @@ export default async function PortfolioFoundationPage({
                   </div>
                 ) : (
                   <p className="muted">Portfolio 360 positions are unavailable for this portfolio.</p>
+                )}
+                <h4 style={{ margin: "12px 0 8px", fontSize: "0.95rem" }}>Asset Class Allocation Snapshot</h4>
+                {topAllocations.length ? (
+                  <div className="table-wrap">
+                    <table className="position-table">
+                      <thead>
+                        <tr>
+                          <th align="left">Asset Class</th>
+                          <th align="right">Market Value</th>
+                          <th align="right">Weight</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topAllocations.map((bucket) => (
+                          <tr key={bucket.assetClass}>
+                            <td>{bucket.assetClass}</td>
+                            <td align="right">
+                              {formatCurrency(bucket.marketValueBase, overview.portfolio.base_currency)}
+                            </td>
+                            <td align="right">{bucket.weightPct.toFixed(2)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="muted">Asset-class allocation is unavailable until positions are loaded.</p>
                 )}
               </>
             )}

@@ -119,6 +119,14 @@ describe("PortfolioFoundationPage", () => {
                   market_value_base: 180000,
                   weight_pct: 14.4,
                 },
+                {
+                  security_id: "UST10Y",
+                  instrument_name: "US Treasury 10Y",
+                  asset_class: "FIXED_INCOME",
+                  quantity: 75,
+                  market_value_base: 110000,
+                  weight_pct: 8.8,
+                },
               ],
             }),
           } as Response;
@@ -142,6 +150,9 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("AAPL.US")).toBeInTheDocument();
     expect(screen.getByText("Apple Inc")).toBeInTheDocument();
     expect(screen.getByText("20.00%")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Asset Class Allocation Snapshot/i })).toBeInTheDocument();
+    expect(screen.getAllByText("EQUITY").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("FIXED_INCOME").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("link", { name: /Open Decision Console/i })).toHaveAttribute(
       "href",
       "/workbench/PORT_UI_1001"

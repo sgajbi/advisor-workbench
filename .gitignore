@@ -11,3 +11,4 @@ playwright-report/
 output/playwright/
 output/pr-monitor.json
 output/agent-status.md
+output/async-docker-build-*.log
