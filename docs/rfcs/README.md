@@ -15,3 +15,4 @@ Governance boundary:
 | RFC-0007 | Portfolio-First Domain UX and Lifecycle Workspace Navigation | PROPOSED | `docs/rfcs/RFC-0007-portfolio-first-domain-ux-and-lifecycle-workspace-navigation.md` |
 | RFC-0008 | Advisory Iterative Intent Builder for Proposal Simulation | IMPLEMENTED | `docs/rfcs/RFC-0008-advisory-iterative-intent-builder-for-proposal-simulation.md` |
 | RFC-0009 | Decision Console Fallback Routing Resilience | IMPLEMENTED | `docs/rfcs/RFC-0009-decision-console-fallback-routing-resilience.md` |
+| RFC-0010 | Workbench Portfolio 360 and Live Sandbox UI | IMPLEMENTED | `docs/rfcs/RFC-0010-workbench-portfolio-360-and-live-sandbox-ui.md` |
