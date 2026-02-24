@@ -11,6 +11,7 @@ import {
   Button,
   Divider,
   Grid,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -18,6 +19,11 @@ import {
 } from "@mui/material";
 
 import { createProposal, simulateProposal } from "../api";
+import {
+  buildSimulatePayload,
+  CashFlowIntentInput,
+  TradeIntentInput,
+} from "../simulation-payload";
 import { ProposalSimulateResponse } from "../types";
 
 const schema = z.object({
@@ -31,33 +37,30 @@ const schema = z.object({
 
 type FormInput = z.infer<typeof schema>;
 
-function buildSimulatePayload(values: FormInput) {
+type CashFlowIntentRow = CashFlowIntentInput & {
+  id: string;
+};
+
+type TradeIntentRow = TradeIntentInput & {
+  id: string;
+};
+
+function createCashFlowIntent(index: number, baseCurrency: string): CashFlowIntentRow {
   return {
-    body: {
-      portfolio_snapshot: {
-        portfolio_id: values.portfolioId,
-        base_currency: values.baseCurrency.toUpperCase(),
-        positions: [],
-        cash_balances: [
-          {
-            currency: values.baseCurrency.toUpperCase(),
-            amount: values.cashAmount.toFixed(2),
-          },
-        ],
-      },
-      market_data_snapshot: {
-        prices: [],
-        fx_rates: [],
-      },
-      shelf_entries: [],
-      options: {
-        enable_proposal_simulation: true,
-        proposal_apply_cash_flows_first: true,
-        proposal_block_negative_cash: true,
-      },
-      proposed_cash_flows: [],
-      proposed_trades: [],
-    },
+    id: `cash_${index}`,
+    currency: baseCurrency,
+    amount: 0,
+    direction: "IN",
+    description: "",
+  };
+}
+
+function createTradeIntent(index: number): TradeIntentRow {
+  return {
+    id: `trade_${index}`,
+    side: "BUY",
+    instrumentId: "",
+    quantity: 0,
   };
 }
 
@@ -101,11 +104,43 @@ export default function ProposalSimulateForm({
     },
   });
 
+  const [cashFlows, setCashFlows] = useState<CashFlowIntentRow[]>([
+    createCashFlowIntent(1, "USD"),
+  ]);
+  const [trades, setTrades] = useState<TradeIntentRow[]>([createTradeIntent(1)]);
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
   const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
+
+  function updateCashFlow(id: string, patch: Partial<CashFlowIntentRow>) {
+    setCashFlows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  function updateTrade(id: string, patch: Partial<TradeIntentRow>) {
+    setTrades((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  function addCashFlow(baseCurrency: string) {
+    setCashFlows((current) => [...current, createCashFlowIntent(current.length + 1, baseCurrency)]);
+  }
+
+  function addTrade() {
+    setTrades((current) => [...current, createTradeIntent(current.length + 1)]);
+  }
+
+  function netCashImpact(): string {
+    const total = cashFlows.reduce((sum, item) => {
+      const amount = Math.abs(item.amount || 0);
+      return item.direction === "OUT" ? sum - amount : sum + amount;
+    }, 0);
+    return total.toFixed(2);
+  }
+
+  function validTradeCount(): number {
+    return trades.filter((item) => item.instrumentId.trim().length > 0 && item.quantity > 0).length;
+  }
 
   async function onSubmit(values: FormInput) {
     setError(null);
@@ -113,7 +148,7 @@ export default function ProposalSimulateForm({
     setSavedProposalId(null);
     setLoading(true);
     try {
-      const payload = buildSimulatePayload(values);
+      const payload = buildSimulatePayload(values, cashFlows, trades);
       const response = await simulateProposal(payload, values.idempotencyKey);
       setResult(response);
     } catch (err) {
@@ -134,7 +169,7 @@ export default function ProposalSimulateForm({
     setError(null);
     setSavingDraft(true);
     try {
-      const payload = buildSimulatePayload(values);
+      const payload = buildSimulatePayload(values, cashFlows, trades);
       const createResponse = await createProposal(
         {
           body: {
@@ -163,7 +198,7 @@ export default function ProposalSimulateForm({
         Create And Simulate Proposal
       </Typography>
       <Typography className="muted" sx={{ mb: 1 }}>
-        Capture core advisory inputs and generate a proposal run without exposing raw API payloads.
+        Build iterative intent sets, simulate impact, and persist an advisory draft.
       </Typography>
       <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
         <Stack spacing={1.2}>
@@ -221,50 +256,165 @@ export default function ProposalSimulateForm({
           </Stack>
 
           <Typography variant="subtitle2" sx={{ color: "text.secondary", mt: 0.5 }}>
+            Scenario Intent Builder
+          </Typography>
+          <Typography className="muted">
+            Net cash impact: {netCashImpact()} | Valid trades: {validTradeCount()}
+          </Typography>
+
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">Cash Flow Intents</Typography>
+            {cashFlows.map((item) => (
+              <Stack key={item.id} direction={{ xs: "column", md: "row" }} spacing={1}>
+                <TextField
+                  label="Direction"
+                  size="small"
+                  select
+                  value={item.direction}
+                  onChange={(event) =>
+                    updateCashFlow(item.id, { direction: event.target.value as "IN" | "OUT" })
+                  }
+                  sx={{ minWidth: 120 }}
+                >
+                  <MenuItem value="IN">IN</MenuItem>
+                  <MenuItem value="OUT">OUT</MenuItem>
+                </TextField>
+                <TextField
+                  label="Currency"
+                  size="small"
+                  value={item.currency}
+                  onChange={(event) => updateCashFlow(item.id, { currency: event.target.value })}
+                />
+                <TextField
+                  label="Amount"
+                  size="small"
+                  type="number"
+                  value={item.amount}
+                  onChange={(event) => {
+                    const next = (event.target as HTMLInputElement).valueAsNumber;
+                    updateCashFlow(item.id, { amount: Number.isNaN(next) ? 0 : next });
+                  }}
+                />
+                <TextField
+                  label="Description"
+                  size="small"
+                  fullWidth
+                  value={item.description ?? ""}
+                  onChange={(event) => updateCashFlow(item.id, { description: event.target.value })}
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="inherit"
+                  disabled={cashFlows.length === 1}
+                  onClick={() => setCashFlows((current) => current.filter((row) => row.id !== item.id))}
+                >
+                  Remove
+                </Button>
+              </Stack>
+            ))}
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => addCashFlow(form.getValues().baseCurrency || "USD")}
+            >
+              Add Cash Flow
+            </Button>
+          </Stack>
+
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">Trade Intents</Typography>
+            {trades.map((item) => (
+              <Stack key={item.id} direction={{ xs: "column", md: "row" }} spacing={1}>
+                <TextField
+                  label="Side"
+                  size="small"
+                  select
+                  value={item.side}
+                  onChange={(event) => updateTrade(item.id, { side: event.target.value as "BUY" | "SELL" })}
+                  sx={{ minWidth: 120 }}
+                >
+                  <MenuItem value="BUY">BUY</MenuItem>
+                  <MenuItem value="SELL">SELL</MenuItem>
+                </TextField>
+                <TextField
+                  label="Instrument ID"
+                  size="small"
+                  fullWidth
+                  value={item.instrumentId}
+                  onChange={(event) => updateTrade(item.id, { instrumentId: event.target.value })}
+                />
+                <TextField
+                  label="Quantity"
+                  size="small"
+                  type="number"
+                  value={item.quantity}
+                  onChange={(event) => {
+                    const next = (event.target as HTMLInputElement).valueAsNumber;
+                    updateTrade(item.id, { quantity: Number.isNaN(next) ? 0 : next });
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="inherit"
+                  disabled={trades.length === 1}
+                  onClick={() => setTrades((current) => current.filter((row) => row.id !== item.id))}
+                >
+                  Remove
+                </Button>
+              </Stack>
+            ))}
+            <Button type="button" variant="outlined" onClick={addTrade}>
+              Add Trade
+            </Button>
+          </Stack>
+
+          <Typography variant="subtitle2" sx={{ color: "text.secondary", mt: 0.5 }}>
             Proposal Metadata
           </Typography>
           <Controller
             control={form.control}
             name="idempotencyKey"
             render={({ field, fieldState }) => (
-                <TextField
-                  label="Idempotency Key"
-                  size="small"
-                  fullWidth
-                  {...field}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message ?? "Used to prevent duplicate submissions"}
-                />
-              )}
-            />
+              <TextField
+                label="Idempotency Key"
+                size="small"
+                fullWidth
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message ?? "Used to prevent duplicate submissions"}
+              />
+            )}
+          />
           <Controller
             control={form.control}
             name="createdBy"
             render={({ field, fieldState }) => (
-                <TextField
-                  label="Created By"
-                  size="small"
-                  fullWidth
-                  {...field}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message ?? "Advisor or user identifier"}
-                />
-              )}
-            />
+              <TextField
+                label="Created By"
+                size="small"
+                fullWidth
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message ?? "Advisor or user identifier"}
+              />
+            )}
+          />
           <Controller
             control={form.control}
             name="proposalTitle"
             render={({ field, fieldState }) => (
-                <TextField
-                  label="Proposal Title"
-                  size="small"
-                  fullWidth
-                  {...field}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message ?? "Human-readable draft title"}
-                />
-              )}
-            />
+              <TextField
+                label="Proposal Title"
+                size="small"
+                fullWidth
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message ?? "Human-readable draft title"}
+              />
+            )}
+          />
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1.2 }}>
@@ -322,9 +472,7 @@ export default function ProposalSimulateForm({
               ))}
             </Grid>
           ) : (
-            <Typography className="muted">
-              No additional scalar metrics were returned by the simulation engine.
-            </Typography>
+            <Typography className="muted">No additional scalar metrics were returned by the simulation engine.</Typography>
           )}
         </Box>
       ) : null}
