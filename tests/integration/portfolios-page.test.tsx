@@ -18,7 +18,10 @@ describe("PortfolioFoundationPage", () => {
           return {
             ok: true,
             json: async () => ({
-              items: [{ id: "PORT_UI_1001", label: "PORT_UI_1001" }],
+              items: [
+                { id: "PORT_UI_1001", label: "PORT_UI_1001" },
+                { id: "PORT_UI_1002", label: "PORT_UI_1002" },
+              ],
             }),
           } as Response;
         }
@@ -49,6 +52,33 @@ describe("PortfolioFoundationPage", () => {
             }),
           } as Response;
         }
+        if (url.includes("/api/v1/workbench/PORT_UI_1002/overview")) {
+          return {
+            ok: true,
+            json: async () => ({
+              as_of_date: "2026-02-24",
+              portfolio: {
+                portfolio_id: "PORT_UI_1002",
+                base_currency: "USD",
+                booking_center_code: "SG",
+              },
+              overview: {
+                market_value_base: 980000,
+                cash_weight_pct: 5.25,
+                position_count: 9,
+              },
+              performance_snapshot: {
+                period: "YTD",
+                return_pct: 3.02,
+                benchmark_return_pct: 2.87,
+              },
+              rebalance_snapshot: {
+                status: "READY",
+                last_rebalance_run_id: "run_002",
+              },
+            }),
+          } as Response;
+        }
         if (url.includes("/api/v1/reports/PORT_UI_1001/snapshot?asOfDate=2026-02-24")) {
           return {
             ok: true,
@@ -60,6 +90,14 @@ describe("PortfolioFoundationPage", () => {
             }),
           } as Response;
         }
+        if (url.includes("/api/v1/reports/PORT_UI_1002/snapshot?asOfDate=2026-02-24")) {
+          return {
+            ok: true,
+            json: async () => ({
+              rows: [{ bucket: "TOTAL", metric: "return_ytd_pct", value: 3.1 }],
+            }),
+          } as Response;
+        }
         return { ok: false, json: async () => ({}) } as Response;
       })
     );
@@ -67,11 +105,14 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: /Portfolio Foundation/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "PORT_UI_1001" })).toBeInTheDocument();
-    expect(screen.getAllByText("$1,250,000")).toHaveLength(2);
-    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "PORT_UI_1001" }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole("link", { name: "PORT_UI_1002" }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("heading", { name: /Portfolio Catalog Snapshot/i })).toBeInTheDocument();
+    expect(screen.getAllByText("$1,250,000").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("12").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("8.42%")).toBeInTheDocument();
-    expect(screen.getByText("4.30%")).toBeInTheDocument();
+    expect(screen.getAllByText("4.30%").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("3.10%")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open Decision Console/i })).toHaveAttribute(
       "href",
       "/workbench/PORT_UI_1001"

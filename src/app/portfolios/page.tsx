@@ -38,6 +38,16 @@ type ReportingSnapshot = {
   rows: Array<{ bucket?: string; metric?: string; value?: number | string | null }>;
 };
 
+type PortfolioCatalogRow = {
+  portfolioId: string;
+  asOfDate: string | null;
+  marketValueBase: number | null;
+  positionCount: number | null;
+  performanceYtdPct: number | null;
+  reportingYtdPct: number | null;
+  rebalanceStatus: string | null;
+};
+
 async function getPortfolios(): Promise<LookupItem[]> {
   try {
     const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=100`, { cache: "no-store" });
@@ -96,6 +106,17 @@ function formatCurrency(value: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 }
 
+function extractMetricValue(
+  snapshot: ReportingSnapshot | null,
+  metric: string
+): number | null {
+  const row = snapshot?.rows.find((item) => item.metric === metric);
+  if (!row) {
+    return null;
+  }
+  return typeof row.value === "number" ? row.value : null;
+}
+
 export default async function PortfolioFoundationPage({
   searchParams,
 }: {
@@ -108,10 +129,35 @@ export default async function PortfolioFoundationPage({
   const overview = selectedId ? await getOverview(selectedId) : null;
   const reportingSnapshot =
     overview && selectedId ? await getReportingSnapshot(selectedId, overview.as_of_date) : null;
-  const ytdReportingRow =
-    reportingSnapshot?.rows.find((row) => row.metric === "return_ytd_pct") ?? null;
-  const totalMarketValueRow =
-    reportingSnapshot?.rows.find((row) => row.metric === "market_value_base") ?? null;
+  const reportingYtd = extractMetricValue(reportingSnapshot, "return_ytd_pct");
+  const reportingMarketValue = extractMetricValue(reportingSnapshot, "market_value_base");
+  const catalogRows = await Promise.all(
+    portfolios.slice(0, 12).map(async (portfolio) => {
+      const portfolioOverview = await getOverview(portfolio.id);
+      if (!portfolioOverview) {
+        return {
+          portfolioId: portfolio.id,
+          asOfDate: null,
+          marketValueBase: null,
+          positionCount: null,
+          performanceYtdPct: null,
+          reportingYtdPct: null,
+          rebalanceStatus: null,
+        } satisfies PortfolioCatalogRow;
+      }
+
+      const snapshot = await getReportingSnapshot(portfolio.id, portfolioOverview.as_of_date);
+      return {
+        portfolioId: portfolio.id,
+        asOfDate: portfolioOverview.as_of_date,
+        marketValueBase: portfolioOverview.overview.market_value_base,
+        positionCount: portfolioOverview.overview.position_count,
+        performanceYtdPct: portfolioOverview.performance_snapshot?.return_pct ?? null,
+        reportingYtdPct: extractMetricValue(snapshot, "return_ytd_pct"),
+        rebalanceStatus: portfolioOverview.rebalance_snapshot?.status ?? null,
+      } satisfies PortfolioCatalogRow;
+    })
+  );
 
   return (
     <main className="page-container">
@@ -194,15 +240,13 @@ export default async function PortfolioFoundationPage({
                 </div>
                 <div className="suite-row">
                   <span>Reporting YTD Return</span>
-                  <strong>
-                    {typeof ytdReportingRow?.value === "number" ? `${ytdReportingRow.value.toFixed(2)}%` : "N/A"}
-                  </strong>
+                  <strong>{reportingYtd === null ? "N/A" : `${reportingYtd.toFixed(2)}%`}</strong>
                 </div>
                 <div className="suite-row">
                   <span>Reporting Market Value</span>
                   <strong>
-                    {typeof totalMarketValueRow?.value === "number"
-                      ? formatCurrency(totalMarketValueRow.value, overview.portfolio.base_currency)
+                    {typeof reportingMarketValue === "number"
+                      ? formatCurrency(reportingMarketValue, overview.portfolio.base_currency)
                       : "N/A"}
                   </strong>
                 </div>
@@ -226,6 +270,52 @@ export default async function PortfolioFoundationPage({
           </article>
         </section>
       )}
+
+      {catalogRows.length > 0 ? (
+        <section className="section-card">
+          <h3>Portfolio Catalog Snapshot</h3>
+          <p className="muted">
+            Cross-portfolio summary from PAS/PA/BFF and reporting aggregation outputs.
+          </p>
+          <div className="table-wrap">
+            <table className="position-table">
+              <thead>
+                <tr>
+                  <th align="left">Portfolio</th>
+                  <th align="left">As Of Date</th>
+                  <th align="right">Market Value</th>
+                  <th align="right">Positions</th>
+                  <th align="right">PA Return YTD</th>
+                  <th align="right">Reporting Return YTD</th>
+                  <th align="left">Rebalance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {catalogRows.map((row) => (
+                  <tr key={row.portfolioId}>
+                    <td>
+                      <Link
+                        href={`/portfolios?portfolioId=${encodeURIComponent(row.portfolioId)}`}
+                        className="nav-link"
+                      >
+                        {row.portfolioId}
+                      </Link>
+                    </td>
+                    <td>{row.asOfDate ?? "N/A"}</td>
+                    <td align="right">
+                      {row.marketValueBase === null ? "N/A" : formatCurrency(row.marketValueBase, "USD")}
+                    </td>
+                    <td align="right">{row.positionCount ?? "N/A"}</td>
+                    <td align="right">{row.performanceYtdPct === null ? "N/A" : `${row.performanceYtdPct.toFixed(2)}%`}</td>
+                    <td align="right">{row.reportingYtdPct === null ? "N/A" : `${row.reportingYtdPct.toFixed(2)}%`}</td>
+                    <td>{row.rebalanceStatus ?? "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }
