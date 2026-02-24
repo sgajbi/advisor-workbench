@@ -170,7 +170,10 @@ export default async function PortfolioFoundationPage({
                   <Link href={`/workbench/${overview.portfolio.portfolio_id}`} className="nav-link">
                     Open Decision Console
                   </Link>
-                  <Link href="/proposals/simulate" className="nav-link">
+                  <Link
+                    href={`/proposals/simulate?portfolioId=${encodeURIComponent(overview.portfolio.portfolio_id)}`}
+                    className="nav-link"
+                  >
                     Start Advisory Iteration
                   </Link>
                 </div>

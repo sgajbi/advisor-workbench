@@ -64,5 +64,9 @@ describe("PortfolioFoundationPage", () => {
       "href",
       "/workbench/PORT_UI_1001"
     );
+    expect(screen.getByRole("link", { name: /Start Advisory Iteration/i })).toHaveAttribute(
+      "href",
+      "/proposals/simulate?portfolioId=PORT_UI_1001"
+    );
   });
 });
