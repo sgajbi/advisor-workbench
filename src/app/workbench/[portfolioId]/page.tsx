@@ -7,6 +7,7 @@ import AnalyticsControls from "@/features/workbench/components/analytics-control
 import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
 import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
 import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
+import DecisionReadinessPanel from "@/features/workbench/components/decision-readiness-panel";
 import ExceptionQueue from "@/features/workbench/components/exception-queue";
 import OverviewCards from "@/features/workbench/components/overview-cards";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
@@ -116,6 +117,8 @@ export default async function WorkbenchPage({
   const hasValuationData =
     data.overview.market_value_base > 0 ||
     data.current_positions.some((row) => row.market_value_base !== null);
+  const hasAnalytics = analytics !== null;
+  const hasReporting = reportingSnapshot !== null;
 
   return (
     <main className="page-container">
@@ -295,6 +298,16 @@ export default async function WorkbenchPage({
           <ExceptionQueue
             warnings={data.warnings}
             partialFailures={data.partial_failures}
+          />
+
+          <DecisionReadinessPanel
+            hasValuationData={hasValuationData}
+            hasAnalytics={hasAnalytics}
+            hasReporting={hasReporting}
+            hasActiveSandbox={Boolean(data.active_session_id)}
+            warningCount={data.warnings.length}
+            failureCount={data.partial_failures.length}
+            hhiProposed={analytics?.risk_proxy.hhi_proposed ?? null}
           />
 
           <AdvisorSummaryCard
