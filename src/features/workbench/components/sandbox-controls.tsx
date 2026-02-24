@@ -1,0 +1,132 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Alert, Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+
+import { applySandboxChanges, createSandboxSession } from "../api";
+
+export default function SandboxControls({
+  portfolioId,
+  sessionId,
+}: {
+  portfolioId: string;
+  sessionId: string | null;
+}) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [securityId, setSecurityId] = useState("");
+  const [transactionType, setTransactionType] = useState<"BUY" | "SELL">("BUY");
+  const [quantity, setQuantity] = useState(1);
+  const [evaluatePolicy, setEvaluatePolicy] = useState(true);
+
+  async function onCreateSession() {
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await createSandboxSession(portfolioId, {
+        created_by: "advisor_1",
+        ttl_hours: 24,
+      });
+      router.push(`/workbench/${encodeURIComponent(portfolioId)}?sessionId=${encodeURIComponent(response.session_id)}`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create session");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onApplyChange() {
+    if (!sessionId) {
+      setError("Create a sandbox session first.");
+      return;
+    }
+    if (!securityId.trim()) {
+      setError("Security ID is required.");
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    try {
+      await applySandboxChanges(portfolioId, sessionId, {
+        changes: [
+          {
+            security_id: securityId.trim(),
+            transaction_type: transactionType,
+            quantity,
+          },
+        ],
+        evaluate_policy: evaluatePolicy,
+      });
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to apply changes");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="section-card">
+      <Typography variant="h6">Live Sandbox</Typography>
+      <Typography className="muted" sx={{ mb: 1 }}>
+        Session: {sessionId ?? "none"}.
+      </Typography>
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
+        <Button variant="outlined" onClick={onCreateSession} disabled={loading}>
+          {loading ? "Working..." : "Create Session"}
+        </Button>
+      </Stack>
+      <Box>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+          <TextField
+            label="Security ID"
+            size="small"
+            value={securityId}
+            onChange={(event) => setSecurityId(event.target.value)}
+          />
+          <TextField
+            label="Transaction"
+            size="small"
+            select
+            value={transactionType}
+            onChange={(event) => setTransactionType(event.target.value as "BUY" | "SELL")}
+          >
+            <MenuItem value="BUY">BUY</MenuItem>
+            <MenuItem value="SELL">SELL</MenuItem>
+          </TextField>
+          <TextField
+            label="Quantity"
+            size="small"
+            type="number"
+            value={quantity}
+            onChange={(event) => {
+              const next = Number((event.target as HTMLInputElement).value);
+              setQuantity(Number.isNaN(next) ? 0 : next);
+            }}
+          />
+          <TextField
+            label="Policy Eval"
+            size="small"
+            select
+            value={evaluatePolicy ? "ON" : "OFF"}
+            onChange={(event) => setEvaluatePolicy(event.target.value === "ON")}
+          >
+            <MenuItem value="ON">ON</MenuItem>
+            <MenuItem value="OFF">OFF</MenuItem>
+          </TextField>
+          <Button variant="contained" onClick={onApplyChange} disabled={loading || !sessionId}>
+            {loading ? "Applying..." : "Apply Change"}
+          </Button>
+        </Stack>
+      </Box>
+      {error ? (
+        <Alert severity="error" sx={{ mt: 1 }}>
+          {error}
+        </Alert>
+      ) : null}
+    </section>
+  );
+}
