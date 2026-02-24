@@ -18,3 +18,4 @@ Governance boundary:
 | RFC-0010 | Workbench Portfolio 360 and Live Sandbox UI | IMPLEMENTED | `docs/rfcs/RFC-0010-workbench-portfolio-360-and-live-sandbox-ui.md` |
 | RFC-0011 | Workbench Split View and Constraint Rail | IMPLEMENTED | `docs/rfcs/RFC-0011-workbench-split-view-and-constraint-rail.md` |
 | RFC-0012 | Workbench Analytics Controls and Delta Panel | IMPLEMENTED | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
+| RFC-0013 | Workbench Exception Queue and Advisor Summary | IMPLEMENTED | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |

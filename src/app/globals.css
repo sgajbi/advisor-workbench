@@ -508,6 +508,41 @@ a:hover {
   color: #41526f;
 }
 
+.exception-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.exception-item {
+  border: 1px solid #d4dfef;
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.exception-item.warn {
+  border-color: #ddbb6e;
+  background: #fff8ea;
+}
+
+.exception-item.fail {
+  border-color: #d5a3a3;
+  background: #fff1f1;
+}
+
+.summary-ready {
+  color: #1f6a34;
+}
+
+.summary-caution {
+  color: #8a5d08;
+}
+
+.summary-blocked {
+  color: #8f2f2f;
+}
+
 @media (max-width: 1080px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
