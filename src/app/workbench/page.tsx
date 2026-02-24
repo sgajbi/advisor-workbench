@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
+const WORKBENCH_FALLBACK_PORTFOLIO_IDS =
+  process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ?? "pf_demo_ui_1,pf_demo_ui_2,pf_demo_ui_3";
 
 type LookupItem = {
   id: string;
@@ -24,11 +26,22 @@ async function getDefaultPortfolioId(): Promise<string | null> {
   }
 }
 
+function getFallbackPortfolioIds(): string[] {
+  return WORKBENCH_FALLBACK_PORTFOLIO_IDS.split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
 export default async function WorkbenchEntryPage() {
   const portfolioId = await getDefaultPortfolioId();
+  const fallbackPortfolioIds = getFallbackPortfolioIds();
 
   if (portfolioId) {
     redirect(`/workbench/${portfolioId}`);
+  }
+
+  if (fallbackPortfolioIds.length > 0) {
+    redirect(`/workbench/${fallbackPortfolioIds[0]}`);
   }
 
   return (
@@ -36,7 +49,7 @@ export default async function WorkbenchEntryPage() {
       <section className="page-header">
         <h1 className="page-title">Decision Console</h1>
         <p className="page-subtitle">
-          No portfolio is currently available from the platform lookup catalog. Create or ingest a portfolio first.
+          No portfolio is currently available from the platform lookup catalog and no fallback IDs are configured.
         </p>
       </section>
     </main>

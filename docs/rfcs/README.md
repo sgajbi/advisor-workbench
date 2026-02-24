@@ -14,3 +14,4 @@ Governance boundary:
 | RFC-0006 | Backend-Resolved Reference IDs for Proposal and Workbench Routes | IMPLEMENTED | `docs/rfcs/RFC-0006-backend-resolved-reference-ids-for-proposal-and-workbench-routes.md` |
 | RFC-0007 | Portfolio-First Domain UX and Lifecycle Workspace Navigation | PROPOSED | `docs/rfcs/RFC-0007-portfolio-first-domain-ux-and-lifecycle-workspace-navigation.md` |
 | RFC-0008 | Advisory Iterative Intent Builder for Proposal Simulation | IMPLEMENTED | `docs/rfcs/RFC-0008-advisory-iterative-intent-builder-for-proposal-simulation.md` |
+| RFC-0009 | Decision Console Fallback Routing Resilience | IMPLEMENTED | `docs/rfcs/RFC-0009-decision-console-fallback-routing-resilience.md` |
