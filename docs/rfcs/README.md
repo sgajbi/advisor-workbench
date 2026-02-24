@@ -17,3 +17,4 @@ Governance boundary:
 | RFC-0009 | Decision Console Fallback Routing Resilience | IMPLEMENTED | `docs/rfcs/RFC-0009-decision-console-fallback-routing-resilience.md` |
 | RFC-0010 | Workbench Portfolio 360 and Live Sandbox UI | IMPLEMENTED | `docs/rfcs/RFC-0010-workbench-portfolio-360-and-live-sandbox-ui.md` |
 | RFC-0011 | Workbench Split View and Constraint Rail | IMPLEMENTED | `docs/rfcs/RFC-0011-workbench-split-view-and-constraint-rail.md` |
+| RFC-0012 | Workbench Analytics Controls and Delta Panel | IMPLEMENTED | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
