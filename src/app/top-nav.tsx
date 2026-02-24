@@ -11,7 +11,7 @@ type NavEntry = {
 };
 
 const NAV_ENTRIES: NavEntry[] = [
-  { label: "Command Center", href: "/suite", key: "command_center" },
+  { label: "Portfolio Foundation", href: "/portfolios", key: "command_center" },
   { label: "Portfolio Intake", href: "/pas/intake", key: "portfolio_intake" },
   { label: "Analytics Studio", href: "/pa/analytics", key: "analytics_studio" },
   { label: "Advisory Pipeline", href: "/proposals", key: "advisory_pipeline" },
