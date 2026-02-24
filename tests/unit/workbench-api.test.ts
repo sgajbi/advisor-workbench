@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   applySandboxChanges,
   createSandboxSession,
+  getReportingSnapshot,
   getWorkbenchAnalytics,
 } from "../../src/features/workbench/api";
 
@@ -124,6 +125,34 @@ describe("workbench api", () => {
       expect.stringContaining(
         "/api/v1/workbench/PF_1001/analytics?period=YTD&group_by=ASSET_CLASS&benchmark_code=MODEL_60_40&session_id=sess_1"
       ),
+      expect.objectContaining({ cache: "no-store" })
+    );
+  });
+
+  it("calls backend reporting snapshot endpoint", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlationId: "corr",
+            contractVersion: "v1",
+            sourceService: "reporting-aggregation-service",
+            portfolioId: "PF_1001",
+            asOfDate: "2026-02-24",
+            generatedAt: "2026-02-24T07:00:00Z",
+            rows: [{ bucket: "TOTAL", metric: "market_value_base", value: 1250000.12 }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getReportingSnapshot("PF_1001", "2026-02-24");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/api/v1/reports/PF_1001/snapshot?asOfDate=2026-02-24"),
       expect.objectContaining({ cache: "no-store" })
     );
   });

@@ -1,4 +1,8 @@
-import { getPortfolio360, getWorkbenchAnalytics } from "@/features/workbench/api";
+import {
+  getPortfolio360,
+  getReportingSnapshot,
+  getWorkbenchAnalytics,
+} from "@/features/workbench/api";
 import AnalyticsControls from "@/features/workbench/components/analytics-controls";
 import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
 import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
@@ -8,6 +12,7 @@ import OverviewCards from "@/features/workbench/components/overview-cards";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
+import ReportingSnapshotPanel from "@/features/workbench/components/reporting-snapshot-panel";
 import SandboxControls from "@/features/workbench/components/sandbox-controls";
 import Link from "next/link";
 
@@ -53,6 +58,7 @@ export default async function WorkbenchPage({
 
   let data: Awaited<ReturnType<typeof getPortfolio360>>;
   let analytics: Awaited<ReturnType<typeof getWorkbenchAnalytics>> | null = null;
+  let reportingSnapshot: Awaited<ReturnType<typeof getReportingSnapshot>> | null = null;
   try {
     data = await getPortfolio360(portfolioId, sessionId);
   } catch (error) {
@@ -92,6 +98,12 @@ export default async function WorkbenchPage({
     });
   } catch {
     analytics = null;
+  }
+
+  try {
+    reportingSnapshot = await getReportingSnapshot(portfolioId, data.as_of_date);
+  } catch {
+    reportingSnapshot = null;
   }
 
   const projectedCoveragePct =
@@ -200,6 +212,22 @@ export default async function WorkbenchPage({
             status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
             lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
           />
+
+          {reportingSnapshot ? (
+            <ReportingSnapshotPanel
+              asOfDate={reportingSnapshot.asOfDate}
+              sourceService={reportingSnapshot.sourceService}
+              rows={reportingSnapshot.rows}
+            />
+          ) : (
+            <section className="section-card">
+              <h3>Reporting Snapshot</h3>
+              <p className="muted">
+                Reporting service is unavailable. This panel will populate when reporting
+                aggregation is online.
+              </p>
+            </section>
+          )}
         </div>
 
         <div className="workbench-col">

@@ -2,6 +2,7 @@ import {
   WorkbenchAnalytics,
   WorkbenchOverview,
   WorkbenchPortfolio360,
+  WorkbenchReportingSnapshot,
   WorkbenchSandboxState,
 } from "./types";
 
@@ -105,4 +106,25 @@ export async function getWorkbenchAnalytics(
     throw new Error(`Failed to fetch workbench analytics (${response.status})`);
   }
   return (await response.json()) as WorkbenchAnalytics;
+}
+
+export async function getReportingSnapshot(
+  portfolioId: string,
+  asOfDate: string
+): Promise<WorkbenchReportingSnapshot> {
+  const query = new URLSearchParams();
+  query.set("asOfDate", asOfDate);
+
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/reports/${portfolioId}/snapshot?${query.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch reporting snapshot (${response.status})`);
+  }
+
+  return (await response.json()) as WorkbenchReportingSnapshot;
 }
