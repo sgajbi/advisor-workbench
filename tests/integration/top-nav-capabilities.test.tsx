@@ -27,6 +27,17 @@ vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
         pa: "pa-default-v1",
         dpm: "dpm-default-v1",
       },
+      pasPolicyDiagnostics: {
+        available: true,
+        allowedSections: ["OVERVIEW"],
+        warnings: [],
+        policyProvenance: {
+          policyVersion: "pas-default-v1",
+          policySource: "default",
+          matchedRuleId: "default",
+          strictMode: false,
+        },
+      },
     },
   })),
 }));

@@ -27,6 +27,17 @@ vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
         pa: "pa-default-v1",
         dpm: "dpm-default-v1",
       },
+      pasPolicyDiagnostics: {
+        available: true,
+        allowedSections: ["OVERVIEW", "HOLDINGS"],
+        warnings: ["SECTIONS_FILTERED_BY_POLICY"],
+        policyProvenance: {
+          policyVersion: "pas-default-v1",
+          policySource: "tenant",
+          matchedRuleId: "tenant.default.consumers.UI",
+          strictMode: true,
+        },
+      },
     },
   })),
 }));
@@ -42,5 +53,9 @@ describe("SuitePage", () => {
     expect(screen.getByText((text) => text.includes("pas-default-v1"))).toBeInTheDocument();
     expect(screen.getByText((text) => text.includes("pa-default-v1"))).toBeInTheDocument();
     expect(screen.getByText((text) => text.includes("dpm-default-v1"))).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes("strict mode: on"))).toBeInTheDocument();
+    expect(
+      screen.getByText((text) => text.includes("tenant.default.consumers.UI"))
+    ).toBeInTheDocument();
   });
 });

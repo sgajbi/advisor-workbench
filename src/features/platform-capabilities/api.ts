@@ -41,5 +41,16 @@ export function fallbackNormalizedCapabilities(): PlatformNormalizedCapabilities
       pa: "unknown",
       dpm: "unknown",
     },
+    pasPolicyDiagnostics: {
+      available: false,
+      allowedSections: [],
+      warnings: [],
+      policyProvenance: {
+        policyVersion: "unknown",
+        policySource: "unknown",
+        matchedRuleId: "unknown",
+        strictMode: false,
+      },
+    },
   };
 }
