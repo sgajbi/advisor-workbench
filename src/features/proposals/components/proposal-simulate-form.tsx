@@ -81,7 +81,7 @@ function simulationHighlights(result: ProposalSimulateResponse): Array<{ label: 
 }
 
 export default function ProposalSimulateForm({
-  initialPortfolioId = "pf_demo_ui_1",
+  initialPortfolioId = "DEMO_DPM_EUR_001",
 }: {
   initialPortfolioId?: string;
 }) {

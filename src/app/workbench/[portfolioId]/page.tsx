@@ -7,10 +7,27 @@ import ExceptionQueue from "@/features/workbench/components/exception-queue";
 import OverviewCards from "@/features/workbench/components/overview-cards";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
-import PositionsGrid from "@/features/workbench/components/positions-grid";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
 import SandboxControls from "@/features/workbench/components/sandbox-controls";
 import Link from "next/link";
+
+function formatCurrency(value: number | null | undefined, currency: string): string {
+  if (value === null || value === undefined) {
+    return "N/A";
+  }
+  return value.toLocaleString(undefined, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  });
+}
+
+function formatPct(value: number | null | undefined): string {
+  if (value === null || value === undefined) {
+    return "N/A";
+  }
+  return `${value.toFixed(2)}%`;
+}
 
 export default async function WorkbenchPage({
   params,
@@ -84,6 +101,9 @@ export default async function WorkbenchPage({
           data.projected_summary.total_baseline_positions) *
         100
       : 0;
+  const hasValuationData =
+    data.overview.market_value_base > 0 ||
+    data.current_positions.some((row) => row.market_value_base !== null);
 
   return (
     <main className="page-container">
@@ -100,6 +120,14 @@ export default async function WorkbenchPage({
         positionCount={data.overview.position_count}
         baseCurrency={data.portfolio.base_currency}
       />
+      {!hasValuationData ? (
+        <section className="section-card">
+          <p className="muted">
+            Valuation is not available for this portfolio yet. Load market prices and rerun PAS
+            valuation to unlock position-level values and weights.
+          </p>
+        </section>
+      ) : null}
 
       <AnalyticsControls
         sessionId={data.active_session_id}
@@ -137,6 +165,8 @@ export default async function WorkbenchPage({
                       <th align="left">Instrument</th>
                       <th align="left">Asset Class</th>
                       <th align="right">Quantity</th>
+                      <th align="right">Market Value</th>
+                      <th align="right">Weight</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -146,6 +176,10 @@ export default async function WorkbenchPage({
                         <td>{row.instrument_name}</td>
                         <td>{row.asset_class ?? "N/A"}</td>
                         <td align="right">{row.quantity.toFixed(4)}</td>
+                        <td align="right">
+                          {formatCurrency(row.market_value_base, data.portfolio.base_currency)}
+                        </td>
+                        <td align="right">{formatPct(row.weight_pct)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -243,8 +277,6 @@ export default async function WorkbenchPage({
           />
         </div>
       </section>
-
-      <PositionsGrid count={data.overview.position_count} />
     </main>
   );
 }

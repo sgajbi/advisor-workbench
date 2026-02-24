@@ -20,3 +20,4 @@ Governance boundary:
 | RFC-0012 | Workbench Analytics Controls and Delta Panel | IMPLEMENTED | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
 | RFC-0013 | Workbench Exception Queue and Advisor Summary | IMPLEMENTED | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |
 | RFC-0014 | Workbench Backend Analytics Consumption | IMPLEMENTED | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |
+| RFC-0015 | Valuation-Ready Default Routing and Workbench Readiness | IMPLEMENTED | `docs/rfcs/RFC-0015-valuation-ready-default-routing-and-workbench-readiness.md` |
