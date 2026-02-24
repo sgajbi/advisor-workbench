@@ -49,6 +49,17 @@ describe("PortfolioFoundationPage", () => {
             }),
           } as Response;
         }
+        if (url.includes("/api/v1/reports/PORT_UI_1001/snapshot?asOfDate=2026-02-24")) {
+          return {
+            ok: true,
+            json: async () => ({
+              rows: [
+                { bucket: "TOTAL", metric: "market_value_base", value: 1250000 },
+                { bucket: "TOTAL", metric: "return_ytd_pct", value: 4.3 },
+              ],
+            }),
+          } as Response;
+        }
         return { ok: false, json: async () => ({}) } as Response;
       })
     );
@@ -57,9 +68,10 @@ describe("PortfolioFoundationPage", () => {
 
     expect(screen.getByRole("heading", { name: /Portfolio Foundation/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "PORT_UI_1001" })).toBeInTheDocument();
-    expect(screen.getByText("$1,250,000")).toBeInTheDocument();
+    expect(screen.getAllByText("$1,250,000")).toHaveLength(2);
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("8.42%")).toBeInTheDocument();
+    expect(screen.getByText("4.30%")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open Decision Console/i })).toHaveAttribute(
       "href",
       "/workbench/PORT_UI_1001"

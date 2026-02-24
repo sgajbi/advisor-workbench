@@ -34,6 +34,10 @@ type WorkbenchOverview = {
   } | null;
 };
 
+type ReportingSnapshot = {
+  rows: Array<{ bucket?: string; metric?: string; value?: number | string | null }>;
+};
+
 async function getPortfolios(): Promise<LookupItem[]> {
   try {
     const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=100`, { cache: "no-store" });
@@ -61,6 +65,26 @@ async function getOverview(portfolioId: string): Promise<WorkbenchOverview | nul
   }
 }
 
+async function getReportingSnapshot(
+  portfolioId: string,
+  asOfDate: string
+): Promise<ReportingSnapshot | null> {
+  try {
+    const response = await fetch(
+      `${BFF_BASE_URL}/api/v1/reports/${portfolioId}/snapshot?asOfDate=${encodeURIComponent(asOfDate)}`,
+      {
+        cache: "no-store",
+      }
+    );
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as ReportingSnapshot;
+  } catch {
+    return null;
+  }
+}
+
 function formatPct(value: number | null): string {
   if (value === null) {
     return "N/A";
@@ -82,6 +106,12 @@ export default async function PortfolioFoundationPage({
   const selectedId =
     portfolios.find((item) => item.id === resolvedSearch.portfolioId)?.id ?? portfolios[0]?.id ?? null;
   const overview = selectedId ? await getOverview(selectedId) : null;
+  const reportingSnapshot =
+    overview && selectedId ? await getReportingSnapshot(selectedId, overview.as_of_date) : null;
+  const ytdReportingRow =
+    reportingSnapshot?.rows.find((row) => row.metric === "return_ytd_pct") ?? null;
+  const totalMarketValueRow =
+    reportingSnapshot?.rows.find((row) => row.metric === "market_value_base") ?? null;
 
   return (
     <main className="page-container">
@@ -161,6 +191,20 @@ export default async function PortfolioFoundationPage({
                 <div className="suite-row">
                   <span>Benchmark Return</span>
                   <strong>{formatPct(overview.performance_snapshot?.benchmark_return_pct ?? null)}</strong>
+                </div>
+                <div className="suite-row">
+                  <span>Reporting YTD Return</span>
+                  <strong>
+                    {typeof ytdReportingRow?.value === "number" ? `${ytdReportingRow.value.toFixed(2)}%` : "N/A"}
+                  </strong>
+                </div>
+                <div className="suite-row">
+                  <span>Reporting Market Value</span>
+                  <strong>
+                    {typeof totalMarketValueRow?.value === "number"
+                      ? formatCurrency(totalMarketValueRow.value, overview.portfolio.base_currency)
+                      : "N/A"}
+                  </strong>
                 </div>
                 <div className="suite-row">
                   <span>Rebalance Status</span>
