@@ -1,32 +1,32 @@
 [
   {
-    "name": "advisor-workbench",
-    "github": "sgajbi/advisor-workbench",
-    "path": "C:/Users/Sandeep/projects/advisor-workbench"
+    "name": "lotus-workbench",
+    "github": "sgajbi/lotus-workbench",
+    "path": "C:/Users/Sandeep/projects/lotus-workbench"
   },
   {
-    "name": "advisor-experience-api",
-    "github": "sgajbi/advisor-experience-api",
-    "path": "C:/Users/Sandeep/projects/advisor-experience-api"
+    "name": "lotus-gateway",
+    "github": "sgajbi/lotus-gateway",
+    "path": "C:/Users/Sandeep/projects/lotus-gateway"
   },
   {
-    "name": "dpm-rebalance-engine",
-    "github": "sgajbi/dpm-rebalance-engine",
-    "path": "C:/Users/Sandeep/projects/dpm-rebalance-engine"
+    "name": "lotus-manage",
+    "github": "sgajbi/lotus-manage",
+    "path": "C:/Users/Sandeep/projects/lotus-manage"
   },
   {
-    "name": "pbwm-platform-docs",
-    "github": "sgajbi/pbwm-platform-docs",
-    "path": "C:/Users/Sandeep/projects/pbwm-platform-docs"
+    "name": "lotus-platform",
+    "github": "sgajbi/lotus-platform",
+    "path": "C:/Users/Sandeep/projects/lotus-platform"
   },
   {
-    "name": "performanceAnalytics",
-    "github": "sgajbi/performanceAnalytics",
-    "path": "C:/Users/Sandeep/projects/performanceAnalytics"
+    "name": "lotus-performance",
+    "github": "sgajbi/lotus-performance",
+    "path": "C:/Users/Sandeep/projects/lotus-performance"
   },
   {
-    "name": "portfolio-analytics-system",
-    "github": "sgajbi/portfolio-analytics-system",
-    "path": "C:/Users/Sandeep/projects/portfolio-analytics-system"
+    "name": "lotus-core",
+    "github": "sgajbi/lotus-core",
+    "path": "C:/Users/Sandeep/projects/lotus-core"
   }
 ]

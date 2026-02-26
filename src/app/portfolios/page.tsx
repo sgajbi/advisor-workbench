@@ -229,7 +229,7 @@ export default async function PortfolioFoundationPage({
       <section className="page-header">
         <h1 className="page-title">Portfolio Foundation</h1>
         <p className="page-subtitle">
-          Review live portfolios, composition, and health before entering advisory or DPM workflows.
+          Review live portfolios, composition, and health before entering advisory or lotus-manage workflows.
         </p>
       </section>
 
@@ -271,7 +271,7 @@ export default async function PortfolioFoundationPage({
             <h3>Portfolio Health and Composition</h3>
             {!overview ? (
               <p className="error-text">
-                Unable to load detailed portfolio context for {selectedId}. Validate upstream PAS/PA/DPM services.
+                Unable to load detailed portfolio context for {selectedId}. Validate upstream lotus-core/lotus-performance/lotus-manage services.
               </p>
             ) : (
               <>
@@ -403,7 +403,7 @@ export default async function PortfolioFoundationPage({
         <section className="section-card">
           <h3>Portfolio Catalog Snapshot</h3>
           <p className="muted">
-            Cross-portfolio summary from PAS/PA/BFF and reporting aggregation outputs.
+            Cross-portfolio summary from lotus-core/lotus-performance/lotus-gateway and reporting aggregation outputs.
           </p>
           <div className="table-wrap">
             <table className="position-table">
@@ -413,7 +413,7 @@ export default async function PortfolioFoundationPage({
                   <th align="left">As Of Date</th>
                   <th align="right">Market Value</th>
                   <th align="right">Positions</th>
-                  <th align="right">PA Return YTD</th>
+                  <th align="right">lotus-performance Return YTD</th>
                   <th align="right">Reporting Return YTD</th>
                   <th align="left">Rebalance</th>
                 </tr>

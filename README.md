@@ -1,6 +1,6 @@
-# advisor-workbench
+# lotus-workbench
 
-Unified UI for advisor workflows, currently scoped to DPM proposal simulation.
+Unified UI for advisor workflows, currently scoped to lotus-manage proposal simulation.
 
 ## Contribution Standards
 
@@ -61,5 +61,5 @@ make ci-local-docker-down
 - Monitor open PRs (`author:@me`): `npm run auto:pr`
 - Continuous agent loop with status feed: `npm run auto:agent`
 - Single agent iteration: `npm run auto:agent:once`
-- Targeted PAS refresh: `npm run auto:refresh:pas -- query_service demo_data_loader`
+- Targeted lotus-core refresh: `npm run auto:refresh:pas -- query_service demo_data_loader`
 

@@ -47,7 +47,7 @@ export default async function ProposalSimulatePage({
         <h3>Selected Portfolio Baseline</h3>
         {!overview ? (
           <p className="error-text">
-            Unable to load workbench overview for {initialPortfolioId}. Check BFF and upstream integrations.
+            Unable to load workbench overview for {initialPortfolioId}. Check lotus-gateway and upstream integrations.
           </p>
         ) : (
           <>

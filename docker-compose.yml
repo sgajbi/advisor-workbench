@@ -1,9 +1,9 @@
 services:
-  advisor-workbench:
+  lotus-workbench:
     build:
       context: .
       dockerfile: Dockerfile
-    image: advisor-workbench:latest
+    image: lotus-workbench:latest
     ports:
       - "3000:3000"
     environment:

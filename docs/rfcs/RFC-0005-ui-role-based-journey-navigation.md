@@ -29,4 +29,4 @@ Add journey panels in `/suite` that provide natural step-by-step navigation:
 
 1. Improves clarity of end-to-end workflow ownership.
 2. Reduces navigation friction between key platform features.
-3. Aligns UI with BFF-orchestrated operating model.
+3. Aligns UI with lotus-gateway-orchestrated operating model.

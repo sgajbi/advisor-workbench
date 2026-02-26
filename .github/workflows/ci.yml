@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build image
-        run: docker build -t advisor-workbench:ci-test .
+        run: docker build -t lotus-workbench:ci-test .
 
   ci-local-docker:
     name: CI Local Docker Parity

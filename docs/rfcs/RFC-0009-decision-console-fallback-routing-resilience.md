@@ -10,14 +10,14 @@ The `/workbench` entry route can appear broken when portfolio lookup fails or re
 
 ## Root Cause
 
-- Entry routing was hard-dependent on BFF lookup response.
+- Entry routing was hard-dependent on lotus-gateway lookup response.
 - No deterministic fallback portfolio routing was configured.
 
 ## Proposed Solution
 
 Add configurable fallback portfolio IDs for `/workbench` entry routing:
 
-1. Attempt BFF lookup-driven routing first.
+1. Attempt lotus-gateway lookup-driven routing first.
 2. If lookup is empty/unavailable, route to first configured fallback portfolio.
 3. Keep explicit empty-state message only when no fallback IDs are configured.
 

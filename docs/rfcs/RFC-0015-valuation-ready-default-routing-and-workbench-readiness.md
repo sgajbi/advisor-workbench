@@ -6,10 +6,10 @@ Initial user flows in Decision Console and Proposal Simulation can route to non-
 ## Root Cause
 - Legacy fallback IDs (`pf_demo_ui_*`) no longer match actual demo portfolios.
 - Default proposal simulation portfolio used the same invalid legacy ID.
-- Workbench did not explicitly communicate valuation data readiness when PAS returns positions without priced valuation.
+- Workbench did not explicitly communicate valuation data readiness when lotus-core returns positions without priced valuation.
 
 ## Proposed Solution
-- Replace fallback routing IDs with canonical PAS demo portfolios:
+- Replace fallback routing IDs with canonical lotus-core demo portfolios:
   - `DEMO_ADV_USD_001`
   - `DEMO_DPM_EUR_001`
   - `DEMO_INCOME_CHF_001`
@@ -20,7 +20,7 @@ Initial user flows in Decision Console and Proposal Simulation can route to non-
 
 ## Architectural Impact
 - No API shape changes.
-- Improves reliability of the UI entry path by aligning routing defaults with canonical seeded PAS data.
+- Improves reliability of the UI entry path by aligning routing defaults with canonical seeded lotus-core data.
 - Preserves backend-driven UX: readiness state is surfaced from backend response data.
 
 ## Risks and Trade-offs
@@ -31,7 +31,7 @@ Initial user flows in Decision Console and Proposal Simulation can route to non-
 1. Update workbench route fallback IDs to canonical demo portfolios.
 2. Update proposal simulation defaults to canonical demo portfolio ID.
 3. Keep valuation readiness banner visible when `market_value_base` and per-position valuation fields are absent.
-4. Validate by rebuilding `advisor-workbench` and navigating `/workbench` and `/proposals/simulate`.
+4. Validate by rebuilding `lotus-workbench` and navigating `/workbench` and `/proposals/simulate`.
 
 ## Status
 IMPLEMENTED

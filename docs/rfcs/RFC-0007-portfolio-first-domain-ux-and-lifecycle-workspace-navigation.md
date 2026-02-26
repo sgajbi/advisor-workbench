@@ -6,7 +6,7 @@
 
 ## Problem Statement
 
-The current UI flow does not reflect how advisors and DPM users operate in practice. Core portfolio review, iterative proposal refinement, and lifecycle progression are not presented as one coherent product experience.
+The current UI flow does not reflect how advisors and lotus-manage users operate in practice. Core portfolio review, iterative proposal refinement, and lifecycle progression are not presented as one coherent product experience.
 
 ## Root Cause
 
@@ -22,13 +22,13 @@ Reframe UI into three workspace layers:
    - Portfolio list, composition, positions, transactions, health, performance, risk.
 2. Advisory Lifecycle Workspace (CA)
    - Load current portfolio, stage iterative trade/cash deltas, see immediate analytics and constraint feedback, progress to proposal/consent/execution.
-3. DPM Lifecycle Workspace (DPM)
-   - Similar lifecycle shell with DPM-specific automation controls and governance context.
+3. lotus-manage Lifecycle Workspace (lotus-manage)
+   - Similar lifecycle shell with lotus-manage-specific automation controls and governance context.
 
 ## Architectural Impact
 
 - UI routes align to domain workflows and product mental model.
-- Increased dependency on lifecycle-aggregated BFF contracts.
+- Increased dependency on lifecycle-aggregated lotus-gateway contracts.
 - Requires component model that supports persistent simulation context across steps.
 
 ## Risks and Trade-offs
@@ -39,7 +39,7 @@ Reframe UI into three workspace layers:
 
 ## High-Level Implementation Approach
 
-1. Introduce new top-level navigation: Foundation, Advisory Lifecycle, DPM Lifecycle.
+1. Introduce new top-level navigation: Foundation, Advisory Lifecycle, lotus-manage Lifecycle.
 2. Deliver Portfolio Foundation first as the universal landing and insight baseline.
 3. Implement iterative advisory workspace with side-by-side edits and impact panels.
 4. Add lifecycle progression UI (proposal generation, consent, execution handoff).

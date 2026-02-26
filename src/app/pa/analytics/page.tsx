@@ -126,7 +126,7 @@ export default async function PaAnalyticsPage({
       <section className="page-header">
         <h1 className="page-title">Analytics Studio: {portfolioId}</h1>
         <p className="page-subtitle">
-          Backend-driven analytics from PA with reporting-ready rows from the aggregation service.
+          Backend-driven analytics from lotus-performance with reporting-ready rows from the aggregation service.
         </p>
       </section>
 
@@ -207,7 +207,7 @@ export default async function PaAnalyticsPage({
         </section>
       ) : (
         <section className="section-card">
-          <p className="muted">PA analytics are unavailable right now. Retry once PA is online.</p>
+          <p className="muted">lotus-performance analytics are unavailable right now. Retry once lotus-performance is online.</p>
         </section>
       )}
 

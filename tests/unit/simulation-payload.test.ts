@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildSimulatePayload } from "../../src/features/proposals/simulation-payload";
 
 describe("buildSimulatePayload", () => {
-  it("maps advisory intent rows into DPM-compatible proposal payload", () => {
+  it("maps advisory intent rows into lotus-manage-compatible proposal payload", () => {
     const payload = buildSimulatePayload(
       {
         portfolioId: "PORT_1001",

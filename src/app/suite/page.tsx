@@ -116,7 +116,7 @@ export default function SuitePage() {
         </div>
         <div className="suite-row">
           <div>
-            <strong>PAS Policy Diagnostics</strong>
+            <strong>lotus-core Policy Diagnostics</strong>
             <p className="muted">
               {pasPolicyDiagnostics.available ? "available" : "unavailable"} | strict mode:{" "}
               {pasPolicyDiagnostics.policyProvenance.strictMode ? "on" : "off"}
