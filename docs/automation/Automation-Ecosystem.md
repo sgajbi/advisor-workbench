@@ -1,6 +1,11 @@
 # Automation Ecosystem
 
-This workspace now includes reusable automation scripts to accelerate day-to-day delivery across all six repositories.
+This workspace includes local wrappers and scripts for automation, while the canonical source of truth is in `lotus-platform/automation`.
+
+Canonical documentation:
+- `lotus-platform/automation/docs/Automation-Guide.md` (what to run and when)
+- `lotus-platform/automation/docs/Profile-Reference.md` (profiles and intent)
+- `lotus-platform/automation/docs/Directory-Map.md` (organized automation map)
 
 ## What It Automates
 
@@ -11,11 +16,17 @@ This workspace now includes reusable automation scripts to accelerate day-to-day
 
 ## Scripts
 
+Local workbench wrappers:
 - `scripts/automation/Sync-Repos.ps1`
 - `scripts/automation/PR-Monitor.ps1`
 - `scripts/automation/Service-Refresh.ps1`
 - `scripts/automation/Run-Agent.ps1`
 - `scripts/automation/repos.json`
+
+Platform canonical scripts and profiles:
+- `lotus-platform/automation/README.md`
+- `lotus-platform/automation/task-profiles.json`
+- `lotus-platform/automation/repos.json`
 
 ## Quick Start
 
