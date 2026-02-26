@@ -6,8 +6,8 @@ Run a deterministic UI walkthrough for proposal lifecycle and approval chain.
 
 ## Prerequisites
 
-- DPM running at `http://127.0.0.1:8000`
-- BFF running at `http://127.0.0.1:8100`
+- lotus-manage running at `http://127.0.0.1:8000`
+- lotus-gateway running at `http://127.0.0.1:8100`
 - UI running at `http://127.0.0.1:3000`
 
 ## Walkthrough

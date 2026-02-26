@@ -7,7 +7,7 @@ Keep implementation and documentation synchronized so every merged PR is executa
 ## Required updates per PR
 
 - Code change: add/update tests.
-- Contract/behavior change: update `README.md` and relevant UI/BFF flow docs.
+- Contract/behavior change: update `README.md` and relevant UI/lotus-gateway flow docs.
 - Architecture change: add/update RFC under `docs/rfcs` and index entry in `docs/rfcs/README.md`.
 - Tooling/CI change: document new commands and pipeline behavior under `docs/documentation`.
 

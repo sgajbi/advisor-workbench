@@ -18,14 +18,14 @@ Decision Console still behaves as a static overview. Advisors need a single work
 
 Implement Portfolio 360 and live sandbox in Workbench UI:
 
-1. Load Portfolio 360 from BFF endpoint with optional session context.
+1. Load Portfolio 360 from lotus-gateway endpoint with optional session context.
 2. Add sandbox controls to create session and apply simple change intents.
 3. Display current vs projected positions and projected summary deltas.
 4. Surface optional policy feedback from sandbox updates.
 
 ## Architectural Impact
 
-- UI now consumes lifecycle-oriented BFF workbench contracts.
+- UI now consumes lifecycle-oriented lotus-gateway workbench contracts.
 - Workbench route becomes the domain entry point for iterative proposal pre-work.
 
 ## Risks and Trade-offs

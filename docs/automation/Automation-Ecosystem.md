@@ -49,7 +49,7 @@ Run one agent iteration:
 npm run auto:agent:once
 ```
 
-Refresh only specific services in PAS:
+Refresh only specific services in lotus-core:
 
 ```powershell
 npm run auto:refresh:pas -- query_service demo_data_loader

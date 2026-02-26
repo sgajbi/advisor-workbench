@@ -10,7 +10,7 @@ This repository follows a docs-with-code rule: every implementation change must 
   - Update `README.md` route/feature notes.
   - Update or add integration tests.
   - If behavior is material, add/update an RFC in `docs/rfcs` and update `docs/rfcs/README.md`.
-- Architecture or BFF contract mapping changes:
+- Architecture or lotus-gateway contract mapping changes:
   - Add/update an RFC in `docs/rfcs`.
   - Update architecture docs under `docs/documentation`.
 - Tooling/CI/quality gate changes:

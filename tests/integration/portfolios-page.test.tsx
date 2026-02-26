@@ -9,7 +9,7 @@ describe("PortfolioFoundationPage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders portfolio list and health context from BFF responses", async () => {
+  it("renders portfolio list and health context from lotus-gateway responses", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string | URL) => {

@@ -138,7 +138,7 @@ export default async function WorkbenchPage({
       {!hasValuationData ? (
         <section className="section-card">
           <p className="muted">
-            Valuation is not available for this portfolio yet. Load market prices and rerun PAS
+            Valuation is not available for this portfolio yet. Load market prices and rerun lotus-core
             valuation to unlock position-level values and weights.
           </p>
         </section>

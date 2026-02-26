@@ -22,8 +22,8 @@ Workbench lacks an explicit analytics control layer and benchmark-relative delta
 
 ## Architectural Impact
 
-- UI-only increment using existing BFF contract fields.
-- Prepares Workbench for richer PA-driven attribution and risk dimensions.
+- UI-only increment using existing lotus-gateway contract fields.
+- Prepares Workbench for richer lotus-performance-driven attribution and risk dimensions.
 
 ## Risks and Trade-offs
 

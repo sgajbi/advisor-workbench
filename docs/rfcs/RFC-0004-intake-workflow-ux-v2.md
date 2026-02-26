@@ -29,7 +29,7 @@ Implement Intake UX v2 with the following standards:
 - Preserve dense table editing for desktop.
 
 4. Selector-catalog continuity
-- Preserve BFF-backed lookup catalog behavior and fallback modes introduced previously.
+- Preserve lotus-gateway-backed lookup catalog behavior and fallback modes introduced previously.
 
 ## Implementation Notes
 - Updated `src/app/globals.css` for container and topbar max widths.

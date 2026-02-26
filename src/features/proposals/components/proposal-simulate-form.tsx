@@ -97,7 +97,7 @@ export default function ProposalSimulateForm({
     defaultValues: {
       idempotencyKey: defaultIdempotencyKey,
       createdBy: "advisor_1",
-      proposalTitle: "DPM proposal draft",
+      proposalTitle: "lotus-manage proposal draft",
       portfolioId: initialPortfolioId,
       baseCurrency: "USD",
       cashAmount: 10000,
