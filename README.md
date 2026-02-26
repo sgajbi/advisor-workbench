@@ -7,7 +7,7 @@ Unified UI for advisor workflows, currently scoped to DPM proposal simulation.
 - Contribution process: `CONTRIBUTING.md`
 - Docs-with-code standard: `docs/documentation/implementation-documentation-standard.md`
 - PR checklist template: `.github/pull_request_template.md`
-- Platform-wide architecture governance source: `https://github.com/sgajbi/pbwm-platform-docs`
+- Platform-wide architecture governance source: `https://github.com/sgajbi/lotus-platform`
 
 ## Standard Frontend Stack
 
@@ -29,7 +29,7 @@ npm run dev
 
 Open `http://localhost:3000/proposals/simulate`.
 
-Set `BFF_BASE_URL` to point to `advisor-experience-api`.
+Set `BFF_BASE_URL` to point to `lotus-gateway`.
 
 ## Current Routes
 
@@ -62,3 +62,4 @@ make ci-local-docker-down
 - Continuous agent loop with status feed: `npm run auto:agent`
 - Single agent iteration: `npm run auto:agent:once`
 - Targeted PAS refresh: `npm run auto:refresh:pas -- query_service demo_data_loader`
+

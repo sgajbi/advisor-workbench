@@ -8,7 +8,7 @@ describe("ReportingSnapshotPanel", () => {
     render(
       <ReportingSnapshotPanel
         asOfDate="2026-02-24"
-        sourceService="reporting-aggregation-service"
+        sourceService="lotus-report"
         rows={[
           { bucket: "TOTAL", metric: "market_value_base", value: 1250000.12 },
           { bucket: "TOTAL", metric: "return_ytd_pct", value: 4.2 },
@@ -26,7 +26,7 @@ describe("ReportingSnapshotPanel", () => {
     render(
       <ReportingSnapshotPanel
         asOfDate="2026-02-24"
-        sourceService="reporting-aggregation-service"
+        sourceService="lotus-report"
         rows={[]}
       />
     );
