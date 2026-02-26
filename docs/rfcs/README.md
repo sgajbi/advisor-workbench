@@ -2,7 +2,7 @@
 
 Governance boundary:
 - Service-specific UI implementation RFCs belong in this repository.
-- Cross-cutting platform and multi-service architecture RFCs belong in `https://github.com/sgajbi/pbwm-platform-docs`.
+- Cross-cutting platform and multi-service architecture RFCs belong in `https://github.com/sgajbi/lotus-platform`.
 
 | RFC | Title | Status | File |
 | --- | --- | --- | --- |
@@ -21,3 +21,4 @@ Governance boundary:
 | RFC-0013 | Workbench Exception Queue and Advisor Summary | IMPLEMENTED | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |
 | RFC-0014 | Workbench Backend Analytics Consumption | IMPLEMENTED | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |
 | RFC-0015 | Valuation-Ready Default Routing and Workbench Readiness | IMPLEMENTED | `docs/rfcs/RFC-0015-valuation-ready-default-routing-and-workbench-readiness.md` |
+

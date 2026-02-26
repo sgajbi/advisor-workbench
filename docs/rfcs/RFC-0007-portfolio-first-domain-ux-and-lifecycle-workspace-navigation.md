@@ -47,7 +47,8 @@ Reframe UI into three workspace layers:
 
 ## Upstream Dependencies
 
-- `advisor-experience-api` RFC-0010
-- `portfolio-analytics-system` RFC-046
-- `performanceAnalytics` RFC-032
-- `dpm-rebalance-engine` RFC-0029
+- `lotus-gateway` RFC-0010
+- `lotus-core` RFC-046
+- `lotus-performance` RFC-032
+- `lotus-advise` RFC-0029
+
