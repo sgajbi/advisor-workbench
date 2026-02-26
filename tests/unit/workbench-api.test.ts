@@ -137,7 +137,7 @@ describe("workbench api", () => {
           JSON.stringify({
             correlationId: "corr",
             contractVersion: "v1",
-            sourceService: "reporting-aggregation-service",
+            sourceService: "lotus-report",
             portfolioId: "PF_1001",
             asOfDate: "2026-02-24",
             generatedAt: "2026-02-24T07:00:00Z",

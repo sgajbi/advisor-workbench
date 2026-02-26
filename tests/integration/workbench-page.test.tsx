@@ -112,7 +112,7 @@ describe("WorkbenchPage", () => {
             json: async () => ({
               correlationId: "corr_3",
               contractVersion: "v1",
-              sourceService: "reporting-aggregation-service",
+              sourceService: "lotus-report",
               portfolioId: "PF_1001",
               asOfDate: "2026-02-24",
               generatedAt: "2026-02-24T00:00:00Z",
@@ -142,3 +142,4 @@ describe("WorkbenchPage", () => {
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);
   });
 });
+
