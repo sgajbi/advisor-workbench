@@ -1,5 +1,12 @@
-import PerformanceWorkspaceClient from "./components/performance-workspace-client";
+import dynamic from "next/dynamic";
 import { getWorkbenchPerformanceWorkspace } from "@/features/workbench/api";
+
+const PerformanceWorkspaceClient = dynamic(
+  () => import("./components/performance-workspace-client"),
+  {
+    ssr: false,
+  }
+);
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 

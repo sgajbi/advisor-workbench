@@ -10,6 +10,24 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+vi.mock("next/dynamic", () => ({
+  default: (loader: () => Promise<unknown>) => {
+    const React = require("react");
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const [Component, setComponent] = React.useState(
+        null as React.ComponentType<Record<string, unknown>> | null
+      );
+      React.useEffect(() => {
+        loader().then((mod: unknown) => {
+          const resolved = (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          setComponent(() => resolved ?? null);
+        });
+      }, []);
+      return Component ? React.createElement(Component, props) : null;
+    };
+  },
+}));
+
 vi.mock("echarts-for-react", () => ({
   default: ({ style }: { style?: React.CSSProperties }) => (
     <div data-testid="performance-echart" style={style} />
@@ -188,7 +206,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
     expect(screen.getByText("5.88%")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
@@ -207,7 +225,7 @@ describe("PerformanceAnalyticsPage", () => {
       "/api/v1/workbench/DEMO_ADV_USD_001/performance?period=YTD&chart_frequency=monthly&detail_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
     expect(performanceCall?.[1]).toEqual(expect.objectContaining({ cache: "no-store" }));
-    expect(screen.getByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
+    expect(await screen.findByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 
   it("passes a selected benchmark through to the performance workspace request", async () => {
@@ -292,6 +310,6 @@ describe("PerformanceAnalyticsPage", () => {
       input.toString().includes("/api/v1/workbench/PF_1001/performance")
     );
     expect(performanceCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
-    expect(screen.getByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
+    expect(await screen.findByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 });
