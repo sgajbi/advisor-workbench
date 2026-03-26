@@ -185,4 +185,87 @@ describe("PerformanceAnalyticsPage", () => {
     expect(performanceCall?.[0].toString()).not.toContain("benchmark_code=");
     expect(performanceCall?.[1]).toEqual(expect.objectContaining({ cache: "no-store" }));
   });
+
+  it("passes a selected benchmark through to the performance workspace request", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "PF_1001", label: "Global Balanced Mandate" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PF_1001/performance")) {
+          return {
+            ok: true,
+            json: async () => ({
+              correlation_id: "corr-performance",
+              contract_version: "v1",
+              portfolio_id: "PF_1001",
+              as_of_date: "2026-02-24",
+              period: "YTD",
+              chart_frequency: "monthly",
+              detail_dimension: "asset_class",
+              detail_basis: "NET",
+              benchmark_code: "MODEL_60_40",
+              portfolio: {
+                portfolio_id: "PF_1001",
+                client_id: "CIF_1001",
+                base_currency: "USD",
+                booking_center_code: "SG",
+              },
+              overview: {
+                market_value_base: 1250000,
+                cash_weight_pct: 6.8,
+                position_count: 18,
+              },
+              net_performance: {
+                metric_basis: "NET",
+                portfolio_return_pct: 5.42,
+                benchmark_return_pct: 4.9,
+                active_return_pct: 0.52,
+                annualized_return_pct: 5.42,
+                benchmark_id: "MODEL_60_40",
+                benchmark_return_source: "calculated",
+              },
+              gross_performance: {
+                metric_basis: "GROSS",
+                portfolio_return_pct: 5.88,
+                benchmark_return_pct: 4.9,
+                active_return_pct: 0.98,
+                annualized_return_pct: 5.88,
+                benchmark_id: "MODEL_60_40",
+                benchmark_return_source: "calculated",
+              },
+              money_weighted_return: null,
+              net_chart: [],
+              gross_chart: [],
+              contribution: null,
+              attribution: null,
+              warnings: [],
+              partial_failures: [],
+            }),
+          } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({ benchmark: "MODEL_60_40" }),
+      })
+    );
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const performanceCall = fetchMock.mock.calls.find(([input]) =>
+      input.toString().includes("/api/v1/workbench/PF_1001/performance")
+    );
+    expect(performanceCall?.[0].toString()).toContain("benchmark_code=MODEL_60_40");
+    expect(screen.getAllByText("Model 60/40").length).toBeGreaterThan(0);
+  });
 });

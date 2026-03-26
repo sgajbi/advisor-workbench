@@ -5,18 +5,20 @@ function buildHref({
   period,
   detailBasis,
   detailDimension,
+  benchmark,
 }: {
   portfolioId: string;
   period: string;
   detailBasis: string;
   detailDimension: string;
+  benchmark?: string;
 }) {
-  return (
+  const href =
     `/performance?portfolioId=${encodeURIComponent(portfolioId)}` +
     `&period=${encodeURIComponent(period)}` +
     `&detailBasis=${encodeURIComponent(detailBasis)}` +
-    `&detailDimension=${encodeURIComponent(detailDimension)}`
-  );
+    `&detailDimension=${encodeURIComponent(detailDimension)}`;
+  return benchmark ? `${href}&benchmark=${encodeURIComponent(benchmark)}` : href;
 }
 
 export default function PerformanceRail({
@@ -25,6 +27,7 @@ export default function PerformanceRail({
   period,
   detailBasis,
   detailDimension,
+  benchmark,
 }: {
   portfolios: Array<{
     id: string;
@@ -34,6 +37,7 @@ export default function PerformanceRail({
   period: string;
   detailBasis: string;
   detailDimension: string;
+  benchmark?: string;
 }) {
   return (
     <WorkspaceRail>
@@ -51,6 +55,7 @@ export default function PerformanceRail({
                 period,
                 detailBasis,
                 detailDimension,
+                benchmark,
               })}
               title={item.label}
               meta={item.id}

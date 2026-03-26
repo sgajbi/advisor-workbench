@@ -47,6 +47,7 @@ export default function PerformanceWorkspaceView({
   period,
   detailBasis,
   detailDimension,
+  benchmark,
 }: {
   portfolios: Array<{ id: string; label: string }>;
   selectedPortfolioId: string | null;
@@ -54,6 +55,7 @@ export default function PerformanceWorkspaceView({
   period: string;
   detailBasis: string;
   detailDimension: string;
+  benchmark?: string;
 }) {
   const hasBenchmark = workspace ? hasBenchmarkContext(workspace) : false;
   const contributionLevels = workspace?.contribution?.levels ?? [];
@@ -71,6 +73,11 @@ export default function PerformanceWorkspaceView({
     ...bottomContributors.map((row) => Math.abs(row.contribution_pct))
   );
   const suspiciousMoneyWeighted = workspace ? isMoneyWeightedReturnSuspicious(workspace) : false;
+  const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
+  const benchmarkUnavailable =
+    Boolean(selectedBenchmarkCode) &&
+    !hasBenchmark &&
+    workspace?.warnings.some((warning) => warning.includes("PERFORMANCE_UNAVAILABLE") || warning.includes("ATTRIBUTION_UNAVAILABLE"));
 
   return (
     <WorkspaceLayout className="performance-layout">
@@ -80,6 +87,7 @@ export default function PerformanceWorkspaceView({
         period={period}
         detailBasis={detailBasis}
         detailDimension={detailDimension}
+        benchmark={benchmark}
       />
 
       <WorkspaceMain className="performance-main">
@@ -98,7 +106,14 @@ export default function PerformanceWorkspaceView({
               period={period}
               detailBasis={detailBasis}
               detailDimension={detailDimension}
+              benchmark={benchmark}
             />
+
+            {benchmarkUnavailable ? (
+              <Panel className="warn-banner performance-benchmark-banner">
+                <strong>{selectedBenchmarkCode}</strong> is selected, but no benchmark composition window is available for this mandate in the current seeded environment.
+              </Panel>
+            ) : null}
 
             <Panel className="performance-command-strip">
               <a href="#performance-overview" className="performance-command-link">Overview</a>
@@ -147,7 +162,7 @@ export default function PerformanceWorkspaceView({
                     {getCoverageLabel(workspace)}
                   </StatusChip>
                   {hasHistory ? <StatusChip>{workspace.net_chart.length} observations</StatusChip> : <StatusChip>Limited history</StatusChip>}
-                  {hasBenchmark ? <StatusChip>Relative measurement</StatusChip> : <StatusChip>No benchmark assigned</StatusChip>}
+                  {hasBenchmark ? <StatusChip>Relative measurement</StatusChip> : <StatusChip>{selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}</StatusChip>}
                   {workspace.partial_failures.length ? <StatusChip tone="warn">Partial service degradation</StatusChip> : null}
                 </div>
               </div>

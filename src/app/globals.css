@@ -808,6 +808,15 @@ a:hover {
     linear-gradient(180deg, rgba(243, 239, 242, 0.92) 0%, rgba(239, 234, 238, 0.9) 100%);
 }
 
+.performance-benchmark-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
 .performance-command-link {
   display: inline-flex;
   align-items: center;
