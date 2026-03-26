@@ -1,12 +1,12 @@
 export type ShellAppId =
   | "home"
-  | "foundation"
+  | "clients"
+  | "portfolio"
   | "performance"
   | "risk"
-  | "proposal"
-  | "manage"
+  | "recommendations"
   | "reporting"
-  | "platform";
+  | "operations";
 
 export type ShellApp = {
   id: ShellAppId;
@@ -16,78 +16,81 @@ export type ShellApp = {
   matchers: string[];
   capabilityKey?: string;
   available: boolean;
+  visible?: boolean;
 };
 
 export const SHELL_APPS: ShellApp[] = [
   {
     id: "home",
-    label: "Home",
-    href: "/",
-    description: "Launch point for the Lotus operating workspace.",
+    label: "Overview",
+    href: "/portfolio",
+    description: "Portfolio overview.",
     matchers: ["/"],
     available: true,
+    visible: false,
   },
   {
-    id: "foundation",
-    label: "Foundation",
-    href: "/portfolios",
-    description: "Portfolio-first entry point for holdings, readiness, and workflow launch.",
-    matchers: ["/portfolios", "/pas/intake"],
+    id: "clients",
+    label: "Relationship Book",
+    href: "/clients",
+    description: "Client relationships.",
+    matchers: ["/clients"],
+    available: false,
+  },
+  {
+    id: "portfolio",
+    label: "Portfolio",
+    href: "/portfolio",
+    description: "Holdings and portfolio position.",
+    matchers: ["/portfolio", "/portfolios", "/pas/intake"],
     capabilityKey: "command_center",
     available: true,
   },
   {
     id: "performance",
     label: "Performance",
-    href: "/pa/analytics",
-    description: "Benchmark-aware analytics and comparative performance review.",
-    matchers: ["/pa/analytics"],
+    href: "/performance",
+    description: "Performance review.",
+    matchers: ["/performance", "/pa/analytics"],
     capabilityKey: "analytics_studio",
     available: true,
   },
   {
     id: "risk",
-    label: "Risk",
-    href: "/risk",
-    description: "Risk posture, concentration, drawdown, and scenario review.",
-    matchers: ["/risk"],
+    label: "Suitability",
+    href: "/risk-and-suitability",
+    description: "Suitability review.",
+    matchers: ["/risk-and-suitability", "/risk"],
+    capabilityKey: "analytics_studio",
     available: false,
   },
   {
-    id: "proposal",
-    label: "Proposal",
-    href: "/proposals",
-    description: "Advisory drafting, workflow, approvals, and consent readiness.",
-    matchers: ["/proposals"],
+    id: "recommendations",
+    label: "Recommendations",
+    href: "/recommendations",
+    description: "Recommendations workflow.",
+    matchers: ["/recommendations", "/proposals"],
     capabilityKey: "advisory_pipeline",
-    available: true,
-  },
-  {
-    id: "manage",
-    label: "Manage",
-    href: "/workbench",
-    description: "Discretionary decision console and management workflow entry.",
-    matchers: ["/workbench"],
-    capabilityKey: "decision_console",
     available: true,
   },
   {
     id: "reporting",
     label: "Reporting",
     href: "/reporting",
-    description: "Report-ready portfolio outputs and evidence-rich summary views.",
+    description: "Client reporting.",
     matchers: ["/reporting"],
     capabilityKey: "reporting_hub",
     available: false,
   },
   {
-    id: "platform",
-    label: "Platform",
-    href: "/suite",
-    description: "Platform posture, capability policy, and workflow launch context.",
-    matchers: ["/suite"],
-    capabilityKey: "command_center",
+    id: "operations",
+    label: "Operations",
+    href: "/workbench",
+    description: "Operational workflows.",
+    matchers: ["/workbench", "/suite"],
+    capabilityKey: "decision_console",
     available: true,
+    visible: false,
   },
 ];
 

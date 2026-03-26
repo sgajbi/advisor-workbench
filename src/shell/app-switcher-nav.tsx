@@ -19,10 +19,11 @@ function isAppEnabled(app: ShellApp, navigation: Record<string, boolean | undefi
 export default function AppSwitcherNav() {
   const { normalized } = usePlatformCapabilities();
   const navigation = normalized.navigation;
+  const visibleApps = SHELL_APPS.filter((app) => app.visible !== false);
 
   return (
     <nav className="shell-nav" aria-label="Application Switcher">
-      {SHELL_APPS.map((app) => {
+      {visibleApps.map((app) => {
         const enabled = isAppEnabled(app, navigation);
         if (!enabled) {
           return (

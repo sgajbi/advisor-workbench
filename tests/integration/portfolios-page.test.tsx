@@ -9,123 +9,88 @@ describe("PortfolioFoundationPage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders portfolio list and health context from lotus-gateway responses", async () => {
+  it("renders the advisor-grade portfolio experience from Foundation contracts", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string | URL) => {
         const url = input.toString();
-        if (url.includes("/api/v1/lookups/portfolios")) {
-          return {
-            ok: true,
-            json: async () => ({
-              items: [
-                { id: "PORT_UI_1001", label: "PORT_UI_1001" },
-                { id: "PORT_UI_1002", label: "PORT_UI_1002" },
-              ],
-            }),
-          } as Response;
-        }
-        if (url.includes("/api/v1/workbench/PORT_UI_1001/overview")) {
+        if (url.includes("/api/v1/foundation/portfolios/PORT_UI_1001/workspace")) {
           return {
             ok: true,
             json: async () => ({
               as_of_date: "2026-02-24",
               portfolio: {
                 portfolio_id: "PORT_UI_1001",
+                display_name: "Global Balanced",
+                client_id: "CIF_1001",
                 base_currency: "USD",
                 booking_center_code: "SG",
               },
-              overview: {
+              summary: {
                 market_value_base: 1250000,
-                cash_weight_pct: 8.42,
+                total_cash_base: 105000,
+                cash_weight_pct: 8.4,
                 position_count: 12,
               },
-              performance_snapshot: {
+              performance: {
                 period: "YTD",
                 return_pct: 4.12,
-                benchmark_return_pct: 3.87,
               },
-              rebalance_snapshot: {
-                status: "READY",
+              rebalance: {
+                status: "MONITORED",
                 last_rebalance_run_id: "run_001",
+                last_run_at_utc: "2026-02-24T08:30:00Z",
               },
-            }),
-          } as Response;
-        }
-        if (url.includes("/api/v1/workbench/PORT_UI_1002/overview")) {
-          return {
-            ok: true,
-            json: async () => ({
-              as_of_date: "2026-02-24",
-              portfolio: {
-                portfolio_id: "PORT_UI_1002",
-                base_currency: "USD",
-                booking_center_code: "SG",
+              readiness: {
+                has_positions: true,
+                reporting: {
+                  status: "READY",
+                  generated_at_utc: "2026-02-24T08:32:00Z",
+                  row_count: 14,
+                },
               },
-              overview: {
-                market_value_base: 980000,
-                cash_weight_pct: 5.25,
-                position_count: 9,
-              },
-              performance_snapshot: {
-                period: "YTD",
-                return_pct: 3.02,
-                benchmark_return_pct: 2.87,
-              },
-              rebalance_snapshot: {
-                status: "READY",
-                last_rebalance_run_id: "run_002",
-              },
-            }),
-          } as Response;
-        }
-        if (url.includes("/api/v1/reports/PORT_UI_1001/snapshot?asOfDate=2026-02-24")) {
-          return {
-            ok: true,
-            json: async () => ({
-              rows: [
-                { bucket: "TOTAL", metric: "market_value_base", value: 1250000 },
-                { bucket: "TOTAL", metric: "return_ytd_pct", value: 4.3 },
+              allocations: [
+                {
+                  asset_class: "Equities",
+                  position_count: 7,
+                  market_value_base: 725000,
+                  weight_pct: 58,
+                },
+                {
+                  asset_class: "Fixed Income",
+                  position_count: 4,
+                  market_value_base: 320000,
+                  weight_pct: 25.6,
+                },
               ],
+              workflow_cues: [
+                { key: "performance", label: "Performance", href: "/ignored" },
+                { key: "risk", label: "Risk", href: "/ignored" },
+                { key: "proposal", label: "Proposal", href: "/ignored" },
+              ],
+              warnings: [],
+              partial_failures: [],
             }),
           } as Response;
         }
-        if (url.includes("/api/v1/reports/PORT_UI_1002/snapshot?asOfDate=2026-02-24")) {
+        if (url.includes("/api/v1/foundation/portfolios")) {
           return {
             ok: true,
             json: async () => ({
-              rows: [{ bucket: "TOTAL", metric: "return_ytd_pct", value: 3.1 }],
-            }),
-          } as Response;
-        }
-        if (url.includes("/api/v1/workbench/PORT_UI_1001/portfolio-360")) {
-          return {
-            ok: true,
-            json: async () => ({
-              current_positions: [
+              items: [
                 {
-                  security_id: "AAPL.US",
-                  instrument_name: "Apple Inc",
-                  asset_class: "EQUITY",
-                  quantity: 120,
-                  market_value_base: 250000,
-                  weight_pct: 20,
+                  portfolio_id: "PORT_UI_1001",
+                  display_name: "Global Balanced",
+                  base_currency: "USD",
+                  client_id: "CIF_1001",
+                  booking_center_code: "SG",
                 },
                 {
-                  security_id: "MSFT.US",
-                  instrument_name: "Microsoft Corp",
-                  asset_class: "EQUITY",
-                  quantity: 90,
-                  market_value_base: 180000,
-                  weight_pct: 14.4,
-                },
-                {
-                  security_id: "UST10Y",
-                  instrument_name: "US Treasury 10Y",
-                  asset_class: "FIXED_INCOME",
-                  quantity: 75,
-                  market_value_base: 110000,
-                  weight_pct: 8.8,
+                  portfolio_id: "PORT_UI_1002",
+                  display_name: "Income Plus",
+                  base_currency: "USD",
+                  client_id: "CIF_1002",
+                  booking_center_code: "HK",
                 },
               ],
             }),
@@ -137,29 +102,25 @@ describe("PortfolioFoundationPage", () => {
 
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByRole("heading", { name: /Portfolio Foundation/i })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "PORT_UI_1001" }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByRole("link", { name: "PORT_UI_1002" }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("heading", { name: /Portfolio Catalog Snapshot/i })).toBeInTheDocument();
-    expect(screen.getAllByText("$1,250,000").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText("12").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("8.42%")).toBeInTheDocument();
-    expect(screen.getAllByText("4.30%").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("3.10%")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Top Holdings Snapshot/i })).toBeInTheDocument();
-    expect(screen.getByText("AAPL.US")).toBeInTheDocument();
-    expect(screen.getByText("Apple Inc")).toBeInTheDocument();
-    expect(screen.getByText("20.00%")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Asset Class Allocation Snapshot/i })).toBeInTheDocument();
-    expect(screen.getAllByText("EQUITY").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("FIXED_INCOME").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("link", { name: /Open Decision Console/i })).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: /^Portfolio$/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Global Balanced/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Client Portfolios/i })).toBeInTheDocument();
+    expect(screen.getByText("Income Plus")).toBeInTheDocument();
+    expect(screen.getAllByText("$1,250,000").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("$105,000").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("8.40%").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("MONITORED")).toBeInTheDocument();
+    expect(screen.getByText("2026-02-24T08:32:00Z")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Allocation Shape/i })).toBeInTheDocument();
+    expect(screen.getByText("Equities")).toBeInTheDocument();
+    expect(screen.getByText("Fixed Income")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Open Performance/i })).toHaveAttribute(
       "href",
-      "/workbench/PORT_UI_1001"
+      "/performance?portfolioId=PORT_UI_1001"
     );
-    expect(screen.getByRole("link", { name: /Start Advisory Iteration/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Prepare Recommendation/i })).toHaveAttribute(
       "href",
-      "/proposals/simulate?portfolioId=PORT_UI_1001"
+      "/recommendations?portfolioId=PORT_UI_1001"
     );
   });
 });
