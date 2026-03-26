@@ -1,6 +1,12 @@
 export const PERIOD_OPTIONS = ["MTD", "QTD", "YTD", "1Y", "3Y", "5Y"] as const;
 export const BASIS_OPTIONS = ["NET", "GROSS"] as const;
-export const DIMENSION_OPTIONS = ["asset_class", "sector", "country"] as const;
+export const CONTRIBUTION_DIMENSION_OPTIONS = ["asset_class", "sector", "country"] as const;
+export const ATTRIBUTION_DIMENSION_OPTIONS = [
+  "asset_class",
+  "sector",
+  "country",
+  "currency",
+] as const;
 export const CHART_FREQUENCY_OPTIONS = [
   { value: "monthly", label: "Monthly" },
   { value: "quarterly", label: "Quarterly" },
@@ -14,7 +20,8 @@ export function buildPerformanceHref({
   portfolioId,
   period,
   detailBasis,
-  detailDimension,
+  contributionDimension,
+  attributionDimension,
   chartFrequency,
   benchmark,
   reportStartDate,
@@ -23,7 +30,8 @@ export function buildPerformanceHref({
   portfolioId: string;
   period: string;
   detailBasis: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
   reportStartDate?: string;
@@ -33,7 +41,8 @@ export function buildPerformanceHref({
   query.set("portfolioId", portfolioId);
   query.set("period", period);
   query.set("detailBasis", detailBasis);
-  query.set("detailDimension", detailDimension);
+  query.set("contributionDimension", contributionDimension);
+  query.set("attributionDimension", attributionDimension);
   query.set("chartFrequency", chartFrequency);
   if (benchmark) {
     query.set("benchmark", benchmark);

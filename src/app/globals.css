@@ -1826,6 +1826,71 @@ a:hover {
   color: #8f2f2f;
 }
 
+.performance-inline-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #66748a;
+}
+
+.performance-inline-select select {
+  border: 1px solid #d4dfef;
+  border-radius: 999px;
+  background: #fff;
+  color: #22324a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.35rem 0.8rem;
+}
+
+.performance-section-heading-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.performance-section-benchmark {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #d4dfef;
+  background: #f7f9fc;
+  color: #425168;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.34rem 0.7rem;
+}
+
+.performance-attribution-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.95rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(52, 70, 95, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(250, 251, 253, 0.95), rgba(245, 248, 252, 0.92));
+}
+
+.performance-attribution-summary-strip span {
+  display: block;
+  margin-bottom: 0.18rem;
+  color: #6a7689;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.performance-attribution-summary-strip strong {
+  color: #22324a;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
 @media (max-width: 1080px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1903,6 +1968,10 @@ a:hover {
 
   .performance-control-strip {
     grid-template-columns: 1fr;
+  }
+
+  .performance-attribution-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
 }
@@ -2013,5 +2082,15 @@ a:hover {
   .shell-nav-link {
     font-size: 0.78rem;
     padding: 0.34rem 0.68rem;
+  }
+
+  .performance-section-heading-meta {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .performance-attribution-summary-strip {
+    grid-template-columns: 1fr;
   }
 }

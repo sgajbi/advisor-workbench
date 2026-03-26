@@ -18,6 +18,27 @@ vi.mock("echarts-for-react", () => ({
 
 vi.mock("next/navigation", () => ({
   redirect: (target: string) => redirectMock(target),
+  useRouter: () => ({
+    replace: vi.fn(),
+  }),
+}));
+
+vi.mock("next/dynamic", () => ({
+  default: (loader: () => Promise<unknown>) => {
+    const React = require("react");
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const [Component, setComponent] = React.useState(
+        null as React.ComponentType<Record<string, unknown>> | null
+      );
+      React.useEffect(() => {
+        loader().then((mod: unknown) => {
+          const resolved = (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          setComponent(() => resolved ?? null);
+        });
+      }, []);
+      return Component ? React.createElement(Component, props) : null;
+    };
+  },
 }));
 
 describe("app route entrypoints", () => {
@@ -51,7 +72,8 @@ describe("app route entrypoints", () => {
               as_of_date: "2026-03-26",
               period: "YTD",
               chart_frequency: "monthly",
-              detail_dimension: "asset_class",
+              contribution_dimension: "asset_class",
+              attribution_dimension: "asset_class",
               detail_basis: "NET",
               benchmark_code: null,
               portfolio: {
@@ -108,7 +130,7 @@ describe("app route entrypoints", () => {
       await PerformanceAppPage({ searchParams: Promise.resolve({ portfolioId: "PORT_1001" }) })
     );
 
-    expect(screen.getByRole("heading", { name: "PORT_1001" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "PORT_1001" })).toBeInTheDocument();
   });
 
   it("routes recommendations into proposal simulation when portfolio context exists", async () => {

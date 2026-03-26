@@ -24,14 +24,16 @@ export default function PerformanceControlStrip({
   selectedPortfolioId,
   period,
   detailBasis,
-  detailDimension,
+  contributionDimension,
+  attributionDimension,
   chartFrequency,
   benchmark,
 }: {
   selectedPortfolioId: string | null;
   period: string;
   detailBasis: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
 }) {
@@ -51,7 +53,8 @@ export default function PerformanceControlStrip({
               portfolioId,
               period: option,
               detailBasis,
-              detailDimension,
+              contributionDimension,
+              attributionDimension,
               chartFrequency,
               benchmark,
             })}
@@ -70,7 +73,8 @@ export default function PerformanceControlStrip({
               portfolioId,
               period,
               detailBasis: option,
-              detailDimension,
+              contributionDimension,
+              attributionDimension,
               chartFrequency,
               benchmark,
             })}

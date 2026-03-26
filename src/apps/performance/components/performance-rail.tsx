@@ -6,7 +6,8 @@ export default function PerformanceRail({
   selectedPortfolioId,
   period,
   detailBasis,
-  detailDimension,
+  contributionDimension,
+  attributionDimension,
   chartFrequency,
   benchmark,
 }: {
@@ -17,7 +18,8 @@ export default function PerformanceRail({
   selectedPortfolioId: string | null;
   period: string;
   detailBasis: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
 }) {
@@ -36,7 +38,8 @@ export default function PerformanceRail({
                 portfolioId: item.id,
                 period,
                 detailBasis,
-                detailDimension,
+                contributionDimension,
+                attributionDimension,
                 chartFrequency,
                 benchmark,
               })}

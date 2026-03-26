@@ -9,6 +9,10 @@ import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import {
+  ATTRIBUTION_DIMENSION_OPTIONS,
+  CONTRIBUTION_DIMENSION_OPTIONS,
+} from "../navigation";
+import {
   getBottomPositionContributionRows,
   getBottomContributionRows,
   getTopPositionContributionRows,
@@ -26,7 +30,8 @@ export default function PerformanceWorkspaceView({
   workspace,
   period,
   detailBasis,
-  detailDimension,
+  contributionDimension,
+  attributionDimension,
   chartFrequency,
   benchmark,
   onRequestChange,
@@ -35,14 +40,16 @@ export default function PerformanceWorkspaceView({
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;
   detailBasis: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
   onRequestChange?: (patch: {
     portfolioId?: string;
     period?: string;
     detailBasis?: string;
-    detailDimension?: string;
+    contributionDimension?: string;
+    attributionDimension?: string;
     chartFrequency?: string;
     benchmark?: string;
     reportStartDate?: string;
@@ -151,7 +158,8 @@ export default function PerformanceWorkspaceView({
                 portfolioId={workspace.portfolio.portfolio_id}
                 period={period}
                 detailBasis={detailBasis}
-                detailDimension={detailDimension}
+                contributionDimension={contributionDimension}
+                attributionDimension={attributionDimension}
                 chartFrequency={chartFrequency}
                 benchmark={benchmark}
                 reportStartDate={workspace.report_start_date}
@@ -247,6 +255,25 @@ export default function PerformanceWorkspaceView({
               <Panel id="performance-drivers">
                 <div className="performance-section-heading">
                   <h3>Contribution Detail</h3>
+                  <label className="performance-inline-select">
+                    <span>Segment</span>
+                    <select
+                      aria-label="Contribution Segment"
+                      value={contributionDimension}
+                      onChange={(event) =>
+                        onRequestChange?.({
+                          contributionDimension: event.currentTarget.value,
+                        })
+                      }
+                      disabled={isUpdating}
+                    >
+                      {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {formatLabel(option)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 {hasContribution ? (
                   contributionLevels.map((level) => (
@@ -331,7 +358,53 @@ export default function PerformanceWorkspaceView({
               <Panel id="performance-attribution">
                 <div className="performance-section-heading">
                   <h3>Attribution Detail</h3>
+                  <div className="performance-section-heading-meta">
+                    <label className="performance-inline-select">
+                      <span>Segment</span>
+                      <select
+                        aria-label="Attribution Segment"
+                        value={attributionDimension}
+                        onChange={(event) =>
+                          onRequestChange?.({
+                            attributionDimension: event.currentTarget.value,
+                          })
+                        }
+                        disabled={isUpdating}
+                      >
+                        {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {formatLabel(option)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {workspace.attribution?.benchmark_id ? (
+                      <span className="performance-section-benchmark">
+                        Versus {formatLabel(workspace.attribution.benchmark_id)}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
+                {workspace.attribution?.benchmark_id ? (
+                  <div className="performance-attribution-summary-strip">
+                    <div>
+                      <span>Benchmark</span>
+                      <strong>{formatLabel(workspace.attribution.benchmark_id)}</strong>
+                    </div>
+                    <div>
+                      <span>Active Return</span>
+                      <strong>{formatPct(workspace.attribution.active_return_pct)}</strong>
+                    </div>
+                    <div>
+                      <span>Effects Sum</span>
+                      <strong>{formatPct(workspace.attribution.sum_of_effects_pct)}</strong>
+                    </div>
+                    <div>
+                      <span>Residual</span>
+                      <strong>{formatPct(workspace.attribution.residual_pct)}</strong>
+                    </div>
+                  </div>
+                ) : null}
                 {hasAttribution ? (
                   attributionLevels.map((level) => (
                     <div

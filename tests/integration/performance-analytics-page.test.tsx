@@ -67,7 +67,8 @@ describe("PerformanceAnalyticsPage", () => {
               report_start_date: "2026-01-01",
               report_end_date: "2026-02-24",
               chart_frequency: "monthly",
-              detail_dimension: "asset_class",
+              contribution_dimension: "asset_class",
+              attribution_dimension: "asset_class",
               detail_basis: "NET",
               benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
               portfolio: {
@@ -222,7 +223,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(performanceCall).toBeTruthy();
     expect(performanceCall?.[0].toString()).toContain(
-      "/api/v1/workbench/DEMO_ADV_USD_001/performance?period=YTD&chart_frequency=monthly&detail_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+      "/api/v1/workbench/DEMO_ADV_USD_001/performance?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
     expect(performanceCall?.[1]).toEqual(expect.objectContaining({ cache: "no-store" }));
     expect(await screen.findByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
@@ -253,7 +254,8 @@ describe("PerformanceAnalyticsPage", () => {
               report_start_date: "2026-01-01",
               report_end_date: "2026-02-24",
               chart_frequency: "monthly",
-              detail_dimension: "asset_class",
+              contribution_dimension: "asset_class",
+              attribution_dimension: "asset_class",
               detail_basis: "NET",
               benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
               portfolio: {

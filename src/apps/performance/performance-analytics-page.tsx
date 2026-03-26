@@ -33,6 +33,8 @@ export default async function PerformanceAnalyticsPage({
     period?: string;
     detailBasis?: string;
     detailDimension?: string;
+    contributionDimension?: string;
+    attributionDimension?: string;
     chartFrequency?: string;
     benchmark?: string;
     reportStartDate?: string;
@@ -48,7 +50,11 @@ export default async function PerformanceAnalyticsPage({
     null;
   const period = resolvedSearch.period?.trim() || "YTD";
   const detailBasis = resolvedSearch.detailBasis?.trim() || "NET";
-  const detailDimension = resolvedSearch.detailDimension?.trim() || "asset_class";
+  const legacyDetailDimension = resolvedSearch.detailDimension?.trim();
+  const contributionDimension =
+    resolvedSearch.contributionDimension?.trim() || legacyDetailDimension || "asset_class";
+  const attributionDimension =
+    resolvedSearch.attributionDimension?.trim() || legacyDetailDimension || "asset_class";
   const chartFrequency = resolvedSearch.chartFrequency?.trim() || "monthly";
   const benchmark =
     resolvedSearch.benchmark?.trim() ||
@@ -62,7 +68,8 @@ export default async function PerformanceAnalyticsPage({
       workspace = await getWorkbenchPerformanceWorkspace(selectedPortfolioId, {
         period,
         chartFrequency,
-        detailDimension,
+        contributionDimension,
+        attributionDimension,
         detailBasis,
         benchmark,
         reportStartDate,
@@ -80,7 +87,8 @@ export default async function PerformanceAnalyticsPage({
         initialPortfolioId={selectedPortfolioId}
         initialPeriod={period}
         initialDetailBasis={detailBasis}
-        initialDetailDimension={detailDimension}
+        initialContributionDimension={contributionDimension}
+        initialAttributionDimension={attributionDimension}
         initialChartFrequency={chartFrequency}
         initialBenchmark={benchmark}
       />

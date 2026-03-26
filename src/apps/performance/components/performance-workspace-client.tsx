@@ -16,7 +16,8 @@ type PerformanceWorkspaceClientProps = {
   initialPortfolioId: string | null;
   initialPeriod: string;
   initialDetailBasis: string;
-  initialDetailDimension: string;
+  initialContributionDimension: string;
+  initialAttributionDimension: string;
   initialChartFrequency: string;
   initialBenchmark?: string;
 };
@@ -25,7 +26,8 @@ type PerformanceControlState = {
   portfolioId: string;
   period: string;
   detailBasis: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
   reportStartDate?: string;
@@ -37,7 +39,8 @@ export default function PerformanceWorkspaceClient({
   initialPortfolioId,
   initialPeriod,
   initialDetailBasis,
-  initialDetailDimension,
+  initialContributionDimension,
+  initialAttributionDimension,
   initialChartFrequency,
   initialBenchmark,
 }: PerformanceWorkspaceClientProps) {
@@ -50,7 +53,10 @@ export default function PerformanceWorkspaceClient({
           portfolioId: initialPortfolioId,
           period: initialWorkspace?.period ?? initialPeriod,
           detailBasis: initialWorkspace?.detail_basis ?? initialDetailBasis,
-          detailDimension: initialWorkspace?.detail_dimension ?? initialDetailDimension,
+          contributionDimension:
+            initialWorkspace?.contribution_dimension ?? initialContributionDimension,
+          attributionDimension:
+            initialWorkspace?.attribution_dimension ?? initialAttributionDimension,
           chartFrequency: initialWorkspace?.chart_frequency ?? initialChartFrequency,
           benchmark: initialWorkspace?.benchmark_code ?? initialBenchmark,
           reportStartDate: initialWorkspace?.report_start_date,
@@ -78,7 +84,8 @@ export default function PerformanceWorkspaceClient({
         {
           period: nextControls.period,
           chartFrequency: nextControls.chartFrequency,
-          detailDimension: nextControls.detailDimension,
+          contributionDimension: nextControls.contributionDimension,
+          attributionDimension: nextControls.attributionDimension,
           detailBasis: nextControls.detailBasis,
           benchmark: nextControls.benchmark,
           reportStartDate: nextControls.reportStartDate,
@@ -90,7 +97,8 @@ export default function PerformanceWorkspaceClient({
         ...nextControls,
         period: nextWorkspace.period,
         detailBasis: nextWorkspace.detail_basis,
-        detailDimension: nextWorkspace.detail_dimension,
+        contributionDimension: nextWorkspace.contribution_dimension,
+        attributionDimension: nextWorkspace.attribution_dimension,
         chartFrequency: nextWorkspace.chart_frequency,
         benchmark: nextWorkspace.benchmark_code ?? undefined,
         reportStartDate: nextWorkspace.report_start_date,
@@ -108,7 +116,12 @@ export default function PerformanceWorkspaceClient({
       workspace={workspace}
       period={controls?.period ?? initialPeriod}
       detailBasis={controls?.detailBasis ?? initialDetailBasis}
-      detailDimension={controls?.detailDimension ?? initialDetailDimension}
+      contributionDimension={
+        controls?.contributionDimension ?? initialContributionDimension
+      }
+      attributionDimension={
+        controls?.attributionDimension ?? initialAttributionDimension
+      }
       chartFrequency={controls?.chartFrequency ?? initialChartFrequency}
       benchmark={controls?.benchmark}
       onRequestChange={handleRequestChange}

@@ -23,7 +23,8 @@ function buildWorkspace(overrides: Partial<WorkbenchPerformanceWorkspace> = {}):
     report_start_date: "2026-01-01",
     report_end_date: "2026-03-26",
     chart_frequency: "monthly",
-    detail_dimension: "asset_class",
+    contribution_dimension: "asset_class",
+    attribution_dimension: "asset_class",
     detail_basis: "NET",
     benchmark_code: null,
     portfolio: {

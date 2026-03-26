@@ -219,6 +219,7 @@ export type AttributionSummaryView = {
   model: string | null;
   linking: string | null;
   benchmark_id: string | null;
+  benchmark_return_source: string | null;
   active_return_pct: number | null;
   sum_of_effects_pct: number | null;
   residual_pct: number | null;
@@ -234,7 +235,8 @@ export type WorkbenchPerformanceWorkspace = {
   report_start_date: string;
   report_end_date: string;
   chart_frequency: string;
-  detail_dimension: string;
+  contribution_dimension: string;
+  attribution_dimension: string;
   detail_basis: string;
   benchmark_code: string | null;
   portfolio: WorkbenchOverview["portfolio"];

@@ -19,7 +19,8 @@ type PerformanceControlPatch = {
   portfolioId?: string;
   period?: string;
   detailBasis?: string;
-  detailDimension?: string;
+  contributionDimension?: string;
+  attributionDimension?: string;
   chartFrequency?: string;
   benchmark?: string;
   reportStartDate?: string;
@@ -70,7 +71,8 @@ export default function PerformanceChartPanel({
   portfolioId,
   period,
   detailBasis,
-  detailDimension,
+  contributionDimension,
+  attributionDimension,
   chartFrequency,
   benchmark,
   reportStartDate,
@@ -85,7 +87,8 @@ export default function PerformanceChartPanel({
   portfolioId: string;
   period: string;
   detailBasis: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
   reportStartDate: string;
@@ -288,7 +291,8 @@ export default function PerformanceChartPanel({
       portfolioId,
       period,
       detailBasis,
-      detailDimension,
+      contributionDimension,
+      attributionDimension,
       chartFrequency,
       benchmark,
       reportStartDate,

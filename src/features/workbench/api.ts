@@ -13,7 +13,8 @@ const BFF_PROXY_BASE = "/api/bff/api/v1";
 function buildPerformanceWorkspaceQuery(params: {
   period: string;
   chartFrequency: string;
-  detailDimension: string;
+  contributionDimension: string;
+  attributionDimension: string;
   detailBasis: string;
   benchmark?: string;
   reportStartDate?: string;
@@ -22,7 +23,8 @@ function buildPerformanceWorkspaceQuery(params: {
   const query = new URLSearchParams();
   query.set("period", params.period);
   query.set("chart_frequency", params.chartFrequency);
-  query.set("detail_dimension", params.detailDimension);
+  query.set("contribution_dimension", params.contributionDimension);
+  query.set("attribution_dimension", params.attributionDimension);
   query.set("detail_basis", params.detailBasis);
   if (params.benchmark) {
     query.set("benchmark_code", params.benchmark);
@@ -142,7 +144,8 @@ export async function getWorkbenchPerformanceWorkspace(
   params: {
     period: string;
     chartFrequency: string;
-    detailDimension: string;
+    contributionDimension: string;
+    attributionDimension: string;
     detailBasis: string;
     benchmark?: string;
     reportStartDate?: string;
@@ -167,7 +170,8 @@ export async function getWorkbenchPerformanceWorkspaceClient(
   params: {
     period: string;
     chartFrequency: string;
-    detailDimension: string;
+    contributionDimension: string;
+    attributionDimension: string;
     detailBasis: string;
     benchmark?: string;
     reportStartDate?: string;
