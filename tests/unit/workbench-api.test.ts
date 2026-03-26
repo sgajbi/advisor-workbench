@@ -5,6 +5,7 @@ import {
   createSandboxSession,
   getReportingSnapshot,
   getWorkbenchAnalytics,
+  getWorkbenchPerformanceWorkspaceClient,
   getWorkbenchPerformanceWorkspace,
 } from "../../src/features/workbench/api";
 
@@ -267,6 +268,79 @@ describe("workbench api", () => {
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
+  });
+
+  it("uses the proxy path for client-side performance workspace refreshes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-performance",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-02-24",
+            period: "3Y",
+            report_start_date: "2023-02-25",
+            report_end_date: "2026-02-24",
+            chart_frequency: "monthly",
+            detail_dimension: "asset_class",
+            detail_basis: "NET",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            portfolio: {
+              portfolio_id: "PF_1001",
+              client_id: "CIF_1001",
+              base_currency: "USD",
+              booking_center_code: "SG",
+            },
+            overview: {
+              market_value_base: 1250000,
+              cash_weight_pct: 6.8,
+              position_count: 18,
+            },
+            net_performance: {
+              metric_basis: "NET",
+              portfolio_return_pct: 5.42,
+              benchmark_return_pct: 4.9,
+              active_return_pct: 0.52,
+              annualized_return_pct: 1.78,
+              benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
+              benchmark_return_source: "calculated",
+            },
+            gross_performance: {
+              metric_basis: "GROSS",
+              portfolio_return_pct: 5.88,
+              benchmark_return_pct: 4.9,
+              active_return_pct: 0.98,
+              annualized_return_pct: 1.91,
+              benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
+              benchmark_return_source: "calculated",
+            },
+            money_weighted_return: null,
+            net_chart: [],
+            gross_chart: [],
+            contribution: null,
+            attribution: null,
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceWorkspaceClient("PF_1001", {
+      period: "3Y",
+      chartFrequency: "monthly",
+      detailDimension: "asset_class",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/bff/api/v1/workbench/PF_1001/performance?period=3Y&chart_frequency=monthly&detail_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+    );
   });
 
   it("calls backend reporting snapshot endpoint", async () => {

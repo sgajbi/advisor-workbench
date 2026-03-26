@@ -13,8 +13,18 @@ import {
   BENCHMARK_OPTIONS,
   CHART_FREQUENCY_OPTIONS,
   PERIOD_OPTIONS,
-  buildPerformanceHref,
 } from "../navigation";
+
+type PerformanceControlPatch = {
+  portfolioId?: string;
+  period?: string;
+  detailBasis?: string;
+  detailDimension?: string;
+  chartFrequency?: string;
+  benchmark?: string;
+  reportStartDate?: string;
+  reportEndDate?: string;
+};
 
 type ComparativeSummary = {
   portfolio_return_pct: number | null;
@@ -65,6 +75,8 @@ export default function PerformanceChartPanel({
   benchmark,
   reportStartDate,
   reportEndDate,
+  onRequestChange,
+  isUpdating = false,
   id,
 }: {
   title: string;
@@ -78,6 +90,8 @@ export default function PerformanceChartPanel({
   benchmark?: string;
   reportStartDate: string;
   reportEndDate: string;
+  onRequestChange: (patch: PerformanceControlPatch) => void;
+  isUpdating?: boolean;
   id?: string;
 }) {
   const [fromDate, setFromDate] = useState(reportStartDate);
@@ -262,15 +276,24 @@ export default function PerformanceChartPanel({
     if (!fromDate || !toDate) {
       return;
     }
-    window.location.href = buildPerformanceHref({
-      portfolioId,
+    onRequestChange({
       period: "EXPLICIT",
+      reportStartDate: fromDate,
+      reportEndDate: toDate,
+    });
+  }
+
+  function updateSelection(patch: PerformanceControlPatch) {
+    onRequestChange({
+      portfolioId,
+      period,
       detailBasis,
       detailDimension,
       chartFrequency,
       benchmark,
-      reportStartDate: fromDate,
-      reportEndDate: toDate,
+      reportStartDate,
+      reportEndDate,
+      ...patch,
     });
   }
 
@@ -287,22 +310,21 @@ export default function PerformanceChartPanel({
               <span>Horizon</span>
               <div className="performance-chart-pill-row">
                 {PERIOD_OPTIONS.map((option) => (
-                  <a
+                  <button
+                    type="button"
                     key={option}
-                    href={buildPerformanceHref({
-                      portfolioId,
-                      period: option,
-                      detailBasis,
-                      detailDimension,
-                      chartFrequency,
-                      benchmark,
-                      reportStartDate: undefined,
-                      reportEndDate: undefined,
-                    })}
+                    onClick={() =>
+                      updateSelection({
+                        period: option,
+                        reportStartDate: undefined,
+                        reportEndDate: undefined,
+                      })
+                    }
                     className={`performance-control-option ${option === period ? "performance-control-option-active" : ""}`}
+                    disabled={isUpdating && option === period}
                   >
                     {option}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>
@@ -329,7 +351,7 @@ export default function PerformanceChartPanel({
                 />
               </label>
               <button className="performance-chart-apply" type="submit">
-                Apply
+                {isUpdating ? "Updating..." : "Apply"}
               </button>
             </form>
             <label className="performance-chart-select-group">
@@ -337,18 +359,12 @@ export default function PerformanceChartPanel({
               <select
                 aria-label="Frequency"
                 value={chartFrequency}
-                onChange={(event) => {
-                  window.location.href = buildPerformanceHref({
-                    portfolioId,
-                    period,
-                    detailBasis,
-                    detailDimension,
+                onChange={(event) =>
+                  updateSelection({
                     chartFrequency: event.currentTarget.value,
-                    benchmark,
-                    reportStartDate,
-                    reportEndDate,
-                  });
-                }}
+                  })
+                }
+                disabled={isUpdating}
               >
                 {CHART_FREQUENCY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -362,18 +378,12 @@ export default function PerformanceChartPanel({
               <select
                 aria-label="Compared To"
                 value={benchmark ?? ""}
-                onChange={(event) => {
-                  window.location.href = buildPerformanceHref({
-                    portfolioId,
-                    period,
-                    detailBasis,
-                    detailDimension,
-                    chartFrequency,
+                onChange={(event) =>
+                  updateSelection({
                     benchmark: event.currentTarget.value || undefined,
-                    reportStartDate,
-                    reportEndDate,
-                  });
-                }}
+                  })
+                }
+                disabled={isUpdating}
               >
                 {BENCHMARK_OPTIONS.map((option) => (
                   <option key={option.value || "none"} value={option.value}>
@@ -386,22 +396,19 @@ export default function PerformanceChartPanel({
               <span>Basis</span>
               <div className="performance-chart-pill-row">
                 {BASIS_OPTIONS.map((option) => (
-                  <a
+                  <button
+                    type="button"
                     key={option}
-                    href={buildPerformanceHref({
-                      portfolioId,
-                      period,
-                      detailBasis: option,
-                      detailDimension,
-                      chartFrequency,
-                      benchmark,
-                      reportStartDate,
-                      reportEndDate,
-                    })}
+                    onClick={() =>
+                      updateSelection({
+                        detailBasis: option,
+                      })
+                    }
                     className={`performance-control-option ${option === detailBasis ? "performance-control-option-active" : ""}`}
+                    disabled={isUpdating && option === detailBasis}
                   >
                     {option}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>

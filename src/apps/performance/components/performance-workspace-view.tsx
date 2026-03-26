@@ -29,6 +29,8 @@ export default function PerformanceWorkspaceView({
   detailDimension,
   chartFrequency,
   benchmark,
+  onRequestChange,
+  isUpdating = false,
 }: {
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;
@@ -36,6 +38,17 @@ export default function PerformanceWorkspaceView({
   detailDimension: string;
   chartFrequency: string;
   benchmark?: string;
+  onRequestChange?: (patch: {
+    portfolioId?: string;
+    period?: string;
+    detailBasis?: string;
+    detailDimension?: string;
+    chartFrequency?: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }) => void;
+  isUpdating?: boolean;
 }) {
   const hasBenchmark = workspace ? hasBenchmarkContext(workspace) : false;
   const contributionLevels = workspace?.contribution?.levels ?? [];
@@ -143,6 +156,8 @@ export default function PerformanceWorkspaceView({
                 benchmark={benchmark}
                 reportStartDate={workspace.report_start_date}
                 reportEndDate={workspace.report_end_date}
+                onRequestChange={onRequestChange ?? (() => undefined)}
+                isUpdating={isUpdating}
                 id="performance-trend"
               />
             </WorkspaceGrid>
