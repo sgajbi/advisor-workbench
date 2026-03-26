@@ -119,6 +119,8 @@ export async function getWorkbenchPerformanceWorkspace(
     detailDimension: string;
     detailBasis: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspace> {
   const query = new URLSearchParams();
@@ -128,6 +130,12 @@ export async function getWorkbenchPerformanceWorkspace(
   query.set("detail_basis", params.detailBasis);
   if (params.benchmark) {
     query.set("benchmark_code", params.benchmark);
+  }
+  if (params.reportStartDate) {
+    query.set("report_start_date", params.reportStartDate);
+  }
+  if (params.reportEndDate) {
+    query.set("report_end_date", params.reportEndDate);
   }
   const response = await fetch(
     `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance?${query.toString()}`,

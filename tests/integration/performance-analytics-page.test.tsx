@@ -40,6 +40,8 @@ describe("PerformanceAnalyticsPage", () => {
               portfolio_id: "DEMO_ADV_USD_001",
               as_of_date: "2026-02-24",
               period: "YTD",
+              report_start_date: "2026-01-01",
+              report_end_date: "2026-02-24",
               chart_frequency: "monthly",
               detail_dimension: "asset_class",
               detail_basis: "NET",
@@ -182,13 +184,14 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(screen.getByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("5.88%").length).toBeGreaterThan(1);
-    expect(screen.getByText("XIRR")).toBeInTheDocument();
+    expect(screen.getByText("5.88%")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
+    expect(screen.getByLabelText("To")).toHaveValue("2026-02-24");
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
     expect(screen.getAllByText("AAPL").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Total").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(1);
+    expect(screen.getByText("$1,250,000")).toBeInTheDocument();
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const performanceCall = fetchMock.mock.calls.find(([input]) =>
       input.toString().includes("/api/v1/workbench/DEMO_ADV_USD_001/performance")
@@ -223,6 +226,8 @@ describe("PerformanceAnalyticsPage", () => {
               portfolio_id: "PF_1001",
               as_of_date: "2026-02-24",
               period: "YTD",
+              report_start_date: "2026-01-01",
+              report_end_date: "2026-02-24",
               chart_frequency: "monthly",
               detail_dimension: "asset_class",
               detail_basis: "NET",

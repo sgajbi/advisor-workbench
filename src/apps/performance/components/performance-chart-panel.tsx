@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
 
 import { Panel } from "@/design-system";
 import type { PerformanceChartPoint } from "@/features/workbench/types";
 
-import { formatDate, formatLabel, formatPct } from "../formatters";
+import { formatDate, formatPct } from "../formatters";
 import {
   BASIS_OPTIONS,
   BENCHMARK_OPTIONS,
@@ -53,15 +53,6 @@ function formatBenchmarkLabel(benchmark?: string) {
   return BENCHMARK_OPTIONS.find((option) => option.value === benchmark)?.label ?? benchmark;
 }
 
-function resolveExplicitDateRange(points: PerformanceChartPoint[]) {
-  const start = points.find((point) => point.period_start)?.period_start ?? null;
-  const end = [...points].reverse().find((point) => point.period_end)?.period_end ?? null;
-  if (!start && !end) {
-    return null;
-  }
-  return `${formatDate(start)} - ${formatDate(end)}`;
-}
-
 export default function PerformanceChartPanel({
   title,
   points,
@@ -72,6 +63,8 @@ export default function PerformanceChartPanel({
   detailDimension,
   chartFrequency,
   benchmark,
+  reportStartDate,
+  reportEndDate,
   id,
 }: {
   title: string;
@@ -83,8 +76,18 @@ export default function PerformanceChartPanel({
   detailDimension: string;
   chartFrequency: string;
   benchmark?: string;
+  reportStartDate: string;
+  reportEndDate: string;
   id?: string;
 }) {
+  const [fromDate, setFromDate] = useState(reportStartDate);
+  const [toDate, setToDate] = useState(reportEndDate);
+
+  useEffect(() => {
+    setFromDate(reportStartDate);
+    setToDate(reportEndDate);
+  }, [reportEndDate, reportStartDate]);
+
   const hasBenchmarkSeries = points.some(
     (point) =>
       point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
@@ -252,7 +255,24 @@ export default function PerformanceChartPanel({
   const latestValue = latest?.portfolio_return_pct ?? summary.portfolio_return_pct;
   const highestValue = periodicPortfolioValues.length ? Math.max(...periodicPortfolioValues) : null;
   const lowestValue = periodicPortfolioValues.length ? Math.min(...periodicPortfolioValues) : null;
-  const explicitDateRange = resolveExplicitDateRange(points);
+  const explicitDateRange = `${formatDate(reportStartDate)} - ${formatDate(reportEndDate)}`;
+
+  function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!fromDate || !toDate) {
+      return;
+    }
+    window.location.href = buildPerformanceHref({
+      portfolioId,
+      period: "EXPLICIT",
+      detailBasis,
+      detailDimension,
+      chartFrequency,
+      benchmark,
+      reportStartDate: fromDate,
+      reportEndDate: toDate,
+    });
+  }
 
   return (
     <Panel id={id} className="performance-chart-stage">
@@ -260,7 +280,7 @@ export default function PerformanceChartPanel({
         <div className="performance-chart-toolbar-left">
           <div className="performance-section-heading performance-chart-stage-heading">
             <h3>{title}</h3>
-            <span>{explicitDateRange ?? formatLabel(chartFrequency)}</span>
+            <span>{explicitDateRange}</span>
           </div>
           <div className="performance-chart-inline-controls">
             <div className="performance-chart-pill-group">
@@ -276,6 +296,8 @@ export default function PerformanceChartPanel({
                       detailDimension,
                       chartFrequency,
                       benchmark,
+                      reportStartDate: undefined,
+                      reportEndDate: undefined,
                     })}
                     className={`performance-control-option ${option === period ? "performance-control-option-active" : ""}`}
                   >
@@ -284,6 +306,32 @@ export default function PerformanceChartPanel({
                 ))}
               </div>
             </div>
+            <form className="performance-chart-date-form" onSubmit={applyExplicitDates}>
+              <label className="performance-chart-select-group">
+                <span>From</span>
+                <input
+                  aria-label="From"
+                  type="date"
+                  value={fromDate}
+                  max={toDate}
+                  onChange={(event) => setFromDate(event.currentTarget.value)}
+                />
+              </label>
+              <label className="performance-chart-select-group">
+                <span>To</span>
+                <input
+                  aria-label="To"
+                  type="date"
+                  value={toDate}
+                  min={fromDate}
+                  max={reportEndDate}
+                  onChange={(event) => setToDate(event.currentTarget.value)}
+                />
+              </label>
+              <button className="performance-chart-apply" type="submit">
+                Apply
+              </button>
+            </form>
             <label className="performance-chart-select-group">
               <span>Frequency</span>
               <select
@@ -297,6 +345,8 @@ export default function PerformanceChartPanel({
                     detailDimension,
                     chartFrequency: event.currentTarget.value,
                     benchmark,
+                    reportStartDate,
+                    reportEndDate,
                   });
                 }}
               >
@@ -320,6 +370,8 @@ export default function PerformanceChartPanel({
                     detailDimension,
                     chartFrequency,
                     benchmark: event.currentTarget.value || undefined,
+                    reportStartDate,
+                    reportEndDate,
                   });
                 }}
               >
@@ -343,6 +395,8 @@ export default function PerformanceChartPanel({
                       detailDimension,
                       chartFrequency,
                       benchmark,
+                      reportStartDate,
+                      reportEndDate,
                     })}
                     className={`performance-control-option ${option === detailBasis ? "performance-control-option-active" : ""}`}
                   >

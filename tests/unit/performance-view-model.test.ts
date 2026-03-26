@@ -20,6 +20,8 @@ function buildWorkspace(overrides: Partial<WorkbenchPerformanceWorkspace> = {}):
     portfolio_id: "PF_1",
     as_of_date: "2026-03-26",
     period: "YTD",
+    report_start_date: "2026-01-01",
+    report_end_date: "2026-03-26",
     chart_frequency: "monthly",
     detail_dimension: "asset_class",
     detail_basis: "NET",

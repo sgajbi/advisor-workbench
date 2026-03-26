@@ -17,6 +17,8 @@ export function buildPerformanceHref({
   detailDimension,
   chartFrequency,
   benchmark,
+  reportStartDate,
+  reportEndDate,
 }: {
   portfolioId: string;
   period: string;
@@ -24,6 +26,8 @@ export function buildPerformanceHref({
   detailDimension: string;
   chartFrequency: string;
   benchmark?: string;
+  reportStartDate?: string;
+  reportEndDate?: string;
 }) {
   const query = new URLSearchParams();
   query.set("portfolioId", portfolioId);
@@ -33,6 +37,12 @@ export function buildPerformanceHref({
   query.set("chartFrequency", chartFrequency);
   if (benchmark) {
     query.set("benchmark", benchmark);
+  }
+  if (reportStartDate) {
+    query.set("reportStartDate", reportStartDate);
+  }
+  if (reportEndDate) {
+    query.set("reportEndDate", reportEndDate);
   }
   return `/performance?${query.toString()}`;
 }

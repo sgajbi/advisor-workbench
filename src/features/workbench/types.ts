@@ -231,6 +231,8 @@ export type WorkbenchPerformanceWorkspace = {
   portfolio_id: string;
   as_of_date: string;
   period: string;
+  report_start_date: string;
+  report_end_date: string;
   chart_frequency: string;
   detail_dimension: string;
   detail_basis: string;

@@ -1,6 +1,5 @@
 import {
   Panel,
-  SectionLabel,
   StatusChip,
   WorkspaceGrid,
   WorkspaceLayout,
@@ -16,12 +15,10 @@ import {
   getPrimaryContributionRow,
   getTopContributionRows,
   hasBenchmarkContext,
-  hasDistinctGrossPerformance,
   hasMeaningfulHistory,
   hasPositionContributionRanking,
   hasUsableAttribution,
   hasUsableContribution,
-  isMoneyWeightedReturnSuspicious,
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
 
@@ -45,7 +42,6 @@ export default function PerformanceWorkspaceView({
   const attributionLevels = workspace?.attribution?.levels ?? [];
   const hasAttribution = workspace ? hasUsableAttribution(workspace) : false;
   const hasContribution = workspace ? hasUsableContribution(workspace) : false;
-  const hasDistinctGross = workspace ? hasDistinctGrossPerformance(workspace) : false;
   const hasHistory = workspace ? hasMeaningfulHistory(workspace.net_chart) : false;
   const primaryDriver = workspace ? getPrimaryContributionRow(workspace) : null;
   const hasPositionRanking = workspace ? hasPositionContributionRanking(workspace) : false;
@@ -62,7 +58,6 @@ export default function PerformanceWorkspaceView({
       Math.abs(row.contribution_pct)
     )
   );
-  const suspiciousMoneyWeighted = workspace ? isMoneyWeightedReturnSuspicious(workspace) : false;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
 
   return (
@@ -70,7 +65,6 @@ export default function PerformanceWorkspaceView({
       <WorkspaceMain className="performance-main">
         {!workspace ? (
           <Panel className="degraded-state-panel">
-            <SectionLabel>Performance</SectionLabel>
             <h2>Performance data unavailable</h2>
             <p className="error-text">
               The selected portfolio could not be loaded from the performance workspace contract.
@@ -80,86 +74,22 @@ export default function PerformanceWorkspaceView({
           <>
             <Panel className="performance-hero">
               <div className="performance-hero-title">
-                <SectionLabel>Portfolio Performance</SectionLabel>
                 <h2>{workspace.portfolio.portfolio_id}</h2>
-                <div className="performance-meta-grid">
-                  <div className="performance-meta-item">
-                    <span>As of</span>
-                    <strong>{formatDate(workspace.as_of_date)}</strong>
-                  </div>
-                  <div className="performance-meta-item">
-                    <span>Period</span>
-                    <strong>{workspace.period}</strong>
-                  </div>
-                  <div className="performance-meta-item">
-                    <span>Basis</span>
-                    <strong>{workspace.detail_basis}</strong>
-                  </div>
-                  <div className="performance-meta-item">
-                    <span>Breakdown</span>
-                    <strong>{formatLabel(workspace.detail_dimension)}</strong>
-                  </div>
-                  <div className="performance-meta-item">
-                    <span>Frequency</span>
-                    <strong>{formatLabel(workspace.chart_frequency)}</strong>
-                  </div>
-                  {hasBenchmark ? (
-                    <div className="performance-meta-item">
-                      <span>Benchmark</span>
-                      <strong>
-                        {workspace.benchmark_code ??
-                          workspace.net_performance.benchmark_id ??
-                          workspace.gross_performance.benchmark_id ??
-                          workspace.attribution?.benchmark_id}
-                      </strong>
-                    </div>
-                  ) : null}
-                </div>
                 <div className="performance-observation-strip">
-                  {hasHistory ? <StatusChip>{workspace.net_chart.length} observations</StatusChip> : <StatusChip>Limited history</StatusChip>}
-                  {hasBenchmark ? <StatusChip>Relative measurement</StatusChip> : <StatusChip>{selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}</StatusChip>}
-                </div>
-              </div>
-              <div className="performance-hero-metrics">
-                <div className="performance-kpi">
-                  <span>Net</span>
-                  <strong>{formatPct(workspace.net_performance.portfolio_return_pct)}</strong>
-                  <small>
-                    {hasBenchmark
-                      ? `Active ${formatCompactPct(workspace.net_performance.active_return_pct)}`
-                      : `Period ${workspace.period}`}
-                  </small>
-                </div>
-                <div className="performance-kpi">
-                  <span>Gross</span>
-                  <strong>{formatPct(workspace.gross_performance.portfolio_return_pct)}</strong>
-                  <small>
-                    {hasDistinctGross
-                      ? `Fees impact ${formatCompactPct(
-                          (workspace.gross_performance.portfolio_return_pct ?? 0) -
-                            (workspace.net_performance.portfolio_return_pct ?? 0)
-                        )}`
-                      : "Aligned with net"}
-                  </small>
-                </div>
-                <div className="performance-kpi">
-                  <span>Money-weighted</span>
-                  <strong>{formatPct(workspace.money_weighted_return?.money_weighted_return_pct)}</strong>
-                  <small>
-                    {suspiciousMoneyWeighted
-                      ? "Review cash-flow window"
-                      : workspace.money_weighted_return?.method ?? "Unavailable"}
-                  </small>
-                </div>
-                <div className="performance-kpi">
-                  <span>Market Value</span>
-                  <strong>
-                    {formatCurrency(
-                      workspace.overview.market_value_base,
-                      workspace.portfolio.base_currency
-                    )}
-                  </strong>
-                  <small>As of {formatDate(workspace.as_of_date)}</small>
+                  <StatusChip>As of {formatDate(workspace.as_of_date)}</StatusChip>
+                  <StatusChip>{workspace.portfolio.base_currency}</StatusChip>
+                  {hasHistory ? (
+                    <StatusChip>{workspace.net_chart.length} observations</StatusChip>
+                  ) : (
+                    <StatusChip>Limited history</StatusChip>
+                  )}
+                  {hasBenchmark ? (
+                    <StatusChip>Relative measurement</StatusChip>
+                  ) : (
+                    <StatusChip>
+                      {selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}
+                    </StatusChip>
+                  )}
                 </div>
               </div>
             </Panel>
@@ -196,14 +126,6 @@ export default function PerformanceWorkspaceView({
                   <span>Primary Driver</span>
                   <strong>{primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}</strong>
                 </div>
-                <div className="performance-overview-stat">
-                  <span>Benchmark</span>
-                  <strong>{hasBenchmark ? "Assigned" : "Not assigned"}</strong>
-                </div>
-                <div className="performance-overview-stat">
-                  <span>Attribution</span>
-                  <strong>{hasAttribution ? "Available" : "Unavailable"}</strong>
-                </div>
               </div>
             </Panel>
             <WorkspaceGrid className="performance-chart-grid">
@@ -219,6 +141,8 @@ export default function PerformanceWorkspaceView({
                 detailDimension={detailDimension}
                 chartFrequency={chartFrequency}
                 benchmark={benchmark}
+                reportStartDate={workspace.report_start_date}
+                reportEndDate={workspace.report_end_date}
                 id="performance-trend"
               />
             </WorkspaceGrid>
@@ -308,7 +232,6 @@ export default function PerformanceWorkspaceView({
               <Panel id="performance-drivers">
                 <div className="performance-section-heading">
                   <h3>Contribution Detail</h3>
-                  <span>{formatLabel(workspace.detail_dimension)}</span>
                 </div>
                 {hasContribution ? (
                   contributionLevels.map((level) => (
@@ -318,7 +241,6 @@ export default function PerformanceWorkspaceView({
                         <div key={`${level.level}-${level.name}`} className="performance-detail-block">
                           <div className="performance-level-heading">
                             <strong>{formatLabel(level.name)}</strong>
-                            <span>{formatPct(level.total_contribution_pct)}</span>
                           </div>
                           <div className="table-wrap">
                             <table className="position-table">
@@ -394,7 +316,6 @@ export default function PerformanceWorkspaceView({
               <Panel id="performance-attribution">
                 <div className="performance-section-heading">
                   <h3>Attribution Detail</h3>
-                  <span>{formatLabel(workspace.detail_dimension)}</span>
                 </div>
                 {hasAttribution ? (
                   attributionLevels.map((level) => (
@@ -404,7 +325,6 @@ export default function PerformanceWorkspaceView({
                     >
                       <div className="performance-level-heading">
                         <strong>{formatLabel(level.dimension)}</strong>
-                        <span>{formatPct(level.total_effect_pct)}</span>
                       </div>
                       <div className="performance-effect-strip">
                         {level.rows.map((row) => (

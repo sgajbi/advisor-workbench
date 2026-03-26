@@ -35,6 +35,8 @@ export default async function PerformanceAnalyticsPage({
     detailDimension?: string;
     chartFrequency?: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
   }>;
 }) {
   const resolvedSearch = await searchParams;
@@ -51,6 +53,8 @@ export default async function PerformanceAnalyticsPage({
   const benchmark =
     resolvedSearch.benchmark?.trim() ||
     (selectedPortfolioId === DEFAULT_PORTFOLIO_ID ? DEFAULT_BENCHMARK_ID : undefined);
+  const reportStartDate = resolvedSearch.reportStartDate?.trim() || undefined;
+  const reportEndDate = resolvedSearch.reportEndDate?.trim() || undefined;
 
   let workspace = null;
   if (selectedPortfolioId) {
@@ -61,6 +65,8 @@ export default async function PerformanceAnalyticsPage({
         detailDimension,
         detailBasis,
         benchmark,
+        reportStartDate,
+        reportEndDate,
       });
     } catch {
       workspace = null;
