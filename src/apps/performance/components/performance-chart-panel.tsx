@@ -1,9 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
+import ReactECharts from "echarts-for-react";
+import type { EChartsOption } from "echarts";
+
 import { Panel } from "@/design-system";
 import type { PerformanceChartPoint } from "@/features/workbench/types";
 
-import { formatCompactPct, formatLabel, formatPct } from "../formatters";
+import { formatLabel, formatPct } from "../formatters";
 import {
   BENCHMARK_OPTIONS,
   CHART_FREQUENCY_OPTIONS,
@@ -16,41 +20,35 @@ type ComparativeSummary = {
   active_return_pct: number | null;
 };
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+function toNumeric(value: number | null | undefined): number | null {
+  return value === null || value === undefined || Number.isNaN(value) ? null : value;
 }
 
-function buildLinePath(points: number[], width: number, height: number, min: number, max: number): string {
-  const range = max - min || 1;
-  return points
-    .map((point, index) => {
-      const x = (index / Math.max(points.length - 1, 1)) * width;
-      const y = height - ((point - min) / range) * height;
-      return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
-    })
-    .join(" ");
-}
+function buildPercentAxisBounds(values: Array<number | null | undefined>) {
+  const numericValues = values
+    .map((value) => toNumeric(value))
+    .filter((value): value is number => value !== null);
 
-function buildAreaPath(path: string, width: number, height: number): string {
-  if (!path) {
-    return "";
+  if (!numericValues.length) {
+    return { min: -1, max: 1 };
   }
-  return `${path} L${width} ${height} L0 ${height} Z`;
+
+  const rawMin = Math.min(...numericValues, 0);
+  const rawMax = Math.max(...numericValues, 0);
+  const spread = rawMax - rawMin || 1;
+  const padding = Math.max(spread * 0.12, 1);
+
+  return {
+    min: Math.floor((rawMin - padding) * 10) / 10,
+    max: Math.ceil((rawMax + padding) * 10) / 10,
+  };
 }
 
-function buildBarLayout(points: PerformanceChartPoint[]) {
-  const values = points.flatMap((point) => [
-    Math.abs(point.portfolio_return_pct ?? 0),
-    Math.abs(point.benchmark_return_pct ?? 0),
-  ]);
-  const maxMagnitude = Math.max(0.01, ...values);
-  return points.map((point) => ({
-    label: point.label,
-    portfolio: point.portfolio_return_pct ?? 0,
-    benchmark: point.benchmark_return_pct ?? 0,
-    portfolioHeight: (Math.abs(point.portfolio_return_pct ?? 0) / maxMagnitude) * 100,
-    benchmarkHeight: (Math.abs(point.benchmark_return_pct ?? 0) / maxMagnitude) * 100,
-  }));
+function formatBenchmarkLabel(benchmark?: string) {
+  if (!benchmark) {
+    return "Benchmark";
+  }
+  return BENCHMARK_OPTIONS.find((option) => option.value === benchmark)?.label ?? benchmark;
 }
 
 export default function PerformanceChartPanel({
@@ -76,34 +74,173 @@ export default function PerformanceChartPanel({
   benchmark?: string;
   id?: string;
 }) {
-  const width = 760;
-  const height = 300;
-  const portfolioSeries = points.map((point) => point.cumulative_portfolio_return_pct ?? 0);
-  const benchmarkSeries = points.map((point) => point.cumulative_benchmark_return_pct ?? 0);
-  const hasBenchmark = points.some(
+  const hasBenchmarkSeries = points.some(
     (point) =>
       point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
   );
-  const allSeries = [...portfolioSeries, ...(hasBenchmark ? benchmarkSeries : [])];
-  const min = Math.min(0, ...allSeries);
-  const max = Math.max(0, ...allSeries);
-  const range = max - min || 1;
-  const portfolioPath = buildLinePath(portfolioSeries, width, height, min, max);
-  const benchmarkPath = hasBenchmark
-    ? buildLinePath(benchmarkSeries, width, height, min, max)
-    : "";
-  const areaPath = buildAreaPath(portfolioPath, width, height);
+
+  const chartOption = useMemo(() => {
+    const categories = points.map((point) => point.label);
+    const portfolioCumulative = points.map((point) =>
+      toNumeric(point.cumulative_portfolio_return_pct)
+    );
+    const benchmarkCumulative = points.map((point) =>
+      toNumeric(point.cumulative_benchmark_return_pct)
+    );
+    const portfolioPeriodic = points.map((point) => toNumeric(point.portfolio_return_pct));
+    const benchmarkPeriodic = points.map((point) => toNumeric(point.benchmark_return_pct));
+
+    const cumulativeBounds = buildPercentAxisBounds([
+      ...portfolioCumulative,
+      ...benchmarkCumulative,
+    ]);
+    const barBounds = buildPercentAxisBounds([...portfolioPeriodic, ...benchmarkPeriodic]);
+
+    return {
+      animation: false,
+      color: ["#cf4156", "#32465f", "#e8b55f", "#9db5c9"],
+      grid: {
+        left: 58,
+        right: 24,
+        top: 24,
+        bottom: 52,
+        containLabel: true,
+      },
+      legend: {
+        bottom: 6,
+        left: "center",
+        itemWidth: 18,
+        itemHeight: 8,
+        textStyle: {
+          color: "#586377",
+          fontSize: 12,
+          fontWeight: 700,
+        },
+        data: [
+          "Portfolio Return",
+          ...(hasBenchmarkSeries ? [formatBenchmarkLabel(benchmark)] : []),
+          "Portfolio Period",
+          ...(hasBenchmarkSeries ? ["Benchmark Period"] : []),
+        ],
+      },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "cross" },
+        valueFormatter: (value: unknown) => {
+          if (typeof value === "number") {
+            return `${value.toFixed(2)}%`;
+          }
+          if (typeof value === "string") {
+            return value;
+          }
+          return "";
+        },
+      },
+      xAxis: {
+        type: "category" as const,
+        data: categories,
+        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.18)" } },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "#5a6476",
+          fontSize: 11,
+          fontWeight: 600,
+        },
+      },
+      yAxis: [
+        {
+          type: "value" as const,
+          min: cumulativeBounds.min,
+          max: cumulativeBounds.max,
+          axisLabel: {
+            color: "#5a6476",
+            formatter: (value: number) => `${value}%`,
+          },
+          splitLine: {
+            lineStyle: {
+              color: "rgba(52, 70, 95, 0.1)",
+            },
+          },
+        },
+        {
+          type: "value" as const,
+          min: barBounds.min,
+          max: barBounds.max,
+          show: false,
+        },
+      ],
+      series: [
+        {
+          name: "Portfolio Period",
+          type: "bar" as const,
+          yAxisIndex: 1,
+          data: portfolioPeriodic,
+          barWidth: 10,
+          barGap: "20%",
+          z: 1,
+          itemStyle: {
+            color: "rgba(207, 65, 86, 0.18)",
+            borderRadius: [4, 4, 0, 0],
+          },
+        },
+        ...(hasBenchmarkSeries
+          ? [
+              {
+                name: "Benchmark Period",
+                type: "bar" as const,
+                yAxisIndex: 1,
+                data: benchmarkPeriodic,
+                barWidth: 10,
+                z: 1,
+                itemStyle: {
+                  color: "rgba(50, 70, 95, 0.16)",
+                  borderRadius: [4, 4, 0, 0],
+                },
+              },
+            ]
+          : []),
+        {
+          name: "Portfolio Return",
+          type: "line" as const,
+          data: portfolioCumulative,
+          smooth: true,
+          symbol: "none",
+          z: 3,
+          lineStyle: {
+            width: 4,
+            color: "#cf4156",
+          },
+          areaStyle: {
+            color: "rgba(207, 65, 86, 0.05)",
+          },
+        },
+        ...(hasBenchmarkSeries
+          ? [
+              {
+                name: formatBenchmarkLabel(benchmark),
+                type: "line" as const,
+                data: benchmarkCumulative,
+                smooth: true,
+                symbol: "none",
+                z: 3,
+                lineStyle: {
+                  width: 3,
+                  color: "#32465f",
+                },
+              },
+            ]
+          : []),
+      ],
+    } satisfies EChartsOption;
+  }, [benchmark, hasBenchmarkSeries, points]);
+
   const latest = points.at(-1);
+  const periodicPortfolioValues = points
+    .map((point) => toNumeric(point.portfolio_return_pct))
+    .filter((value): value is number => value !== null);
   const latestValue = latest?.portfolio_return_pct ?? summary.portfolio_return_pct;
-  const highestValue = points.length
-    ? Math.max(...points.map((point) => point.portfolio_return_pct ?? Number.NEGATIVE_INFINITY))
-    : summary.portfolio_return_pct;
-  const lowestValue = points.length
-    ? Math.min(...points.map((point) => point.portfolio_return_pct ?? Number.POSITIVE_INFINITY))
-    : summary.portfolio_return_pct;
-  const barRows = buildBarLayout(points);
-  const zeroLineY = height - ((0 - min) / range) * height;
-  const gridValues = Array.from({ length: 5 }, (_, index) => max - (range / 4) * index);
+  const highestValue = periodicPortfolioValues.length ? Math.max(...periodicPortfolioValues) : null;
+  const lowestValue = periodicPortfolioValues.length ? Math.min(...periodicPortfolioValues) : null;
 
   return (
     <Panel id={id} className="performance-chart-stage">
@@ -168,12 +305,12 @@ export default function PerformanceChartPanel({
             <strong>{formatPct(summary.portfolio_return_pct)}</strong>
           </div>
           <div className="performance-chart-chip performance-chart-chip-benchmark">
-            <span>Benchmark</span>
-            <strong>{hasBenchmark ? formatPct(summary.benchmark_return_pct) : "N/A"}</strong>
+            <span>{formatBenchmarkLabel(benchmark)}</span>
+            <strong>{hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "N/A"}</strong>
           </div>
           <div className="performance-chart-chip performance-chart-chip-active">
             <span>Active</span>
-            <strong>{hasBenchmark ? formatPct(summary.active_return_pct) : "N/A"}</strong>
+            <strong>{hasBenchmarkSeries ? formatPct(summary.active_return_pct) : "N/A"}</strong>
           </div>
         </div>
       </div>
@@ -199,69 +336,18 @@ export default function PerformanceChartPanel({
             </div>
           </div>
 
-          <div className="performance-chart-canvas-wrap">
-            <div className="performance-chart-axis">
-              {gridValues.map((value) => (
-                <span key={value}>{formatCompactPct(value)}</span>
-              ))}
-            </div>
-            <svg
-              className="performance-chart-canvas"
-              viewBox={`0 0 ${width} ${height}`}
-              role="img"
-              aria-label={`${title} chart`}
-            >
-              {gridValues.map((value) => {
-                const y = height - ((value - min) / range) * height;
-                return (
-                  <path
-                    key={value}
-                    className="performance-chart-grid-line"
-                    d={`M0 ${y.toFixed(2)} H${width}`}
-                  />
-                );
-              })}
-              <path
-                className="performance-chart-zero-line"
-                d={`M0 ${clamp(zeroLineY, 0, height).toFixed(2)} H${width}`}
-              />
-              {areaPath ? <path className="performance-chart-area" d={areaPath} /> : null}
-              {benchmarkPath ? <path className="performance-chart-line-benchmark" d={benchmarkPath} /> : null}
-              {portfolioPath ? <path className="performance-chart-line-portfolio" d={portfolioPath} /> : null}
-            </svg>
-          </div>
-
-          <div className="performance-chart-legend performance-chart-legend-strong">
-            <span className="performance-chart-legend-item performance-chart-legend-item-portfolio">
-              Portfolio
-            </span>
-            <span className="performance-chart-legend-item performance-chart-legend-item-benchmark">
-              Benchmark
-            </span>
-          </div>
-
-          <div className="performance-return-bars">
-            {barRows.map((row) => (
-              <div key={row.label} className="performance-return-bar-group">
-                <div className="performance-return-bar-stack">
-                  <div
-                    className={`performance-return-bar performance-return-bar-portfolio ${
-                      row.portfolio < 0 ? "performance-return-bar-negative" : ""
-                    }`}
-                    style={{ height: `${row.portfolioHeight}%` }}
-                    title={`Portfolio ${formatPct(row.portfolio)}`}
-                  />
-                  <div
-                    className={`performance-return-bar performance-return-bar-benchmark ${
-                      row.benchmark < 0 ? "performance-return-bar-negative" : ""
-                    }`}
-                    style={{ height: `${row.benchmarkHeight}%` }}
-                    title={`Benchmark ${formatPct(row.benchmark)}`}
-                  />
-                </div>
-                <span>{row.label}</span>
-              </div>
-            ))}
+          <div
+            className="performance-chart-library-frame"
+            role="img"
+            aria-label={`${title} chart`}
+          >
+            <ReactECharts
+              option={chartOption}
+              style={{ width: "100%", height: "460px" }}
+              opts={{ renderer: "svg" }}
+              notMerge
+              lazyUpdate
+            />
           </div>
         </>
       ) : (

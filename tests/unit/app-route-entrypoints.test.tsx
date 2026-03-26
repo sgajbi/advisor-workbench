@@ -10,6 +10,12 @@ const redirectMock = vi.fn((target: string) => {
   throw new Error(`REDIRECT:${target}`);
 });
 
+vi.mock("echarts-for-react", () => ({
+  default: ({ style }: { style?: React.CSSProperties }) => (
+    <div data-testid="performance-echart" style={style} />
+  ),
+}));
+
 vi.mock("next/navigation", () => ({
   redirect: (target: string) => redirectMock(target),
 }));

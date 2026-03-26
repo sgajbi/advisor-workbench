@@ -4,6 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
 
+vi.mock("echarts-for-react", () => ({
+  default: ({ style }: { style?: React.CSSProperties }) => (
+    <div data-testid="performance-echart" style={style} />
+  ),
+}));
+
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
