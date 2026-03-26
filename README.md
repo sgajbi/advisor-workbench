@@ -1,6 +1,8 @@
 # lotus-workbench
 
-Unified UI for advisor workflows, currently scoped to lotus-manage proposal simulation.
+Unified product workspace for the Lotus ecosystem, evolving from proposal-first slices into a
+world-class multi-application operating surface for portfolio, analytics, risk, proposal,
+management, and reporting workflows.
 
 ## Contribution Standards
 
@@ -20,6 +22,15 @@ Unified UI for advisor workflows, currently scoped to lotus-manage proposal simu
 - React Hook Form
 - Zod
 
+## Architecture Direction
+
+- Product architecture blueprint:
+  `docs/documentation/product-architecture-blueprint.md`
+- Platform-wide architecture governance source:
+  `https://github.com/sgajbi/lotus-platform`
+- Current RFC history:
+  `docs/rfcs/README.md`
+
 ## Quickstart
 
 ```bash
@@ -27,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000/proposals/simulate`.
+Open `http://localhost:3000`.
 
 Set `BFF_BASE_URL` to point to `lotus-gateway`.
 
@@ -37,6 +48,10 @@ Set `BFF_BASE_URL` to point to `lotus-gateway`.
 - `/proposals` - proposal workspace list
 - `/proposals/[proposalId]` - proposal detail with submit/approval/consent actions and workflow timeline
 - `/workbench/[portfolioId]` - portfolio 360, sandbox projections, backend analytics, and reporting snapshot
+
+These routes are the current implementation baseline, not the final product topology. The target
+future direction is an app-shell model documented in
+`docs/documentation/product-architecture-blueprint.md`.
 
 ## Docker
 
