@@ -47,6 +47,7 @@ export default function PerformanceWorkspaceView({
   period,
   detailBasis,
   detailDimension,
+  chartFrequency,
   benchmark,
 }: {
   portfolios: Array<{ id: string; label: string }>;
@@ -55,6 +56,7 @@ export default function PerformanceWorkspaceView({
   period: string;
   detailBasis: string;
   detailDimension: string;
+  chartFrequency: string;
   benchmark?: string;
 }) {
   const hasBenchmark = workspace ? hasBenchmarkContext(workspace) : false;
@@ -87,6 +89,7 @@ export default function PerformanceWorkspaceView({
         period={period}
         detailBasis={detailBasis}
         detailDimension={detailDimension}
+        chartFrequency={chartFrequency}
         benchmark={benchmark}
       />
 
@@ -101,14 +104,6 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <>
-            <PerformanceControlStrip
-              selectedPortfolioId={selectedPortfolioId}
-              period={period}
-              detailBasis={detailBasis}
-              detailDimension={detailDimension}
-              benchmark={benchmark}
-            />
-
             {benchmarkUnavailable ? (
               <Panel className="warn-banner performance-benchmark-banner">
                 <strong>{selectedBenchmarkCode}</strong> is selected, but no benchmark composition window is available for this mandate in the current seeded environment.
@@ -144,6 +139,10 @@ export default function PerformanceWorkspaceView({
                   <div className="performance-meta-item">
                     <span>Breakdown</span>
                     <strong>{formatLabel(workspace.detail_dimension)}</strong>
+                  </div>
+                  <div className="performance-meta-item">
+                    <span>Frequency</span>
+                    <strong>{formatLabel(workspace.chart_frequency)}</strong>
                   </div>
                   {hasBenchmark ? (
                     <div className="performance-meta-item">
@@ -367,64 +366,73 @@ export default function PerformanceWorkspaceView({
               </Panel>
             </WorkspaceGrid>
 
+            <PerformanceControlStrip
+              selectedPortfolioId={selectedPortfolioId}
+              period={period}
+              detailBasis={detailBasis}
+              detailDimension={detailDimension}
+              chartFrequency={chartFrequency}
+              benchmark={benchmark}
+            />
+
             <WorkspaceGrid className="performance-chart-grid">
               <PerformanceChartPanel
-                title="Net Return Path"
-                points={workspace.net_chart}
-                tone="net"
+                title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
+                points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
+                summary={
+                  detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance
+                }
+                portfolioId={workspace.portfolio.portfolio_id}
+                period={period}
+                detailBasis={detailBasis}
+                detailDimension={detailDimension}
+                chartFrequency={chartFrequency}
+                benchmark={benchmark}
                 id="performance-trend"
               />
-              {hasDistinctGross ? (
-                <PerformanceChartPanel
-                  title="Gross Return Path"
-                  points={workspace.gross_chart}
-                  tone="gross"
-                />
-              ) : (
-                <Panel id="performance-measurement" className="performance-measurement-panel">
-                  <div className="performance-section-heading">
-                    <h3>Measurement Notes</h3>
-                    <span>{workspace.period}</span>
+              <Panel id="performance-measurement" className="performance-measurement-panel">
+                <div className="performance-section-heading">
+                  <h3>Measurement Notes</h3>
+                  <span>{workspace.period}</span>
+                </div>
+                <div className="performance-note-list">
+                  <div className="performance-note-item">
+                    <strong>Benchmark</strong>
+                    <span>
+                      {hasBenchmark
+                        ? workspace.benchmark_code ??
+                          workspace.net_performance.benchmark_id ??
+                          workspace.gross_performance.benchmark_id ??
+                          workspace.attribution?.benchmark_id
+                        : "No benchmark assigned"}
+                    </span>
                   </div>
-                  <div className="performance-note-list">
-                    <div className="performance-note-item">
-                      <strong>Benchmark</strong>
-                      <span>
-                        {hasBenchmark
-                          ? workspace.benchmark_code ??
-                            workspace.net_performance.benchmark_id ??
-                            workspace.gross_performance.benchmark_id ??
-                            workspace.attribution?.benchmark_id
-                          : "No benchmark assigned"}
-                      </span>
-                    </div>
-                    <div className="performance-note-item">
-                      <strong>Attribution</strong>
-                      <span>
-                        {hasAttribution
-                          ? "Attribution effects available below"
-                          : "Benchmark-linked attribution is not available for this mandate"}
-                      </span>
-                    </div>
-                    <div className="performance-note-item">
-                      <strong>Cash-flow Return</strong>
-                      <span>
-                        {suspiciousMoneyWeighted
-                          ? "Money-weighted return is distorted by the current cash-flow window"
-                          : `${workspace.money_weighted_return?.method ?? "Return"} calculated successfully`}
-                      </span>
-                    </div>
-                    <div className="performance-note-item">
-                      <strong>Driver</strong>
-                      <span>
-                        {primaryDriver
-                          ? `${formatLabel(primaryDriver.key_label)} contributes ${formatPct(primaryDriver.contribution_pct)}`
-                          : "Contribution detail not available"}
-                      </span>
-                    </div>
+                  <div className="performance-note-item">
+                    <strong>Attribution</strong>
+                    <span>
+                      {hasAttribution
+                        ? "Attribution effects available below"
+                        : "Benchmark-linked attribution is not available for this mandate"}
+                    </span>
                   </div>
-                </Panel>
-              )}
+                  <div className="performance-note-item">
+                    <strong>Cash-flow Return</strong>
+                    <span>
+                      {suspiciousMoneyWeighted
+                        ? "Money-weighted return is distorted by the current cash-flow window"
+                        : `${workspace.money_weighted_return?.method ?? "Return"} calculated successfully`}
+                    </span>
+                  </div>
+                  <div className="performance-note-item">
+                    <strong>Driver</strong>
+                    <span>
+                      {primaryDriver
+                        ? `${formatLabel(primaryDriver.key_label)} contributes ${formatPct(primaryDriver.contribution_pct)}`
+                        : "Contribution detail not available"}
+                    </span>
+                  </div>
+                </div>
+              </Panel>
             </WorkspaceGrid>
 
             <WorkspaceGrid className="performance-detail-grid">

@@ -30,6 +30,7 @@ export default async function PerformanceAnalyticsPage({
     period?: string;
     detailBasis?: string;
     detailDimension?: string;
+    chartFrequency?: string;
     benchmark?: string;
   }>;
 }) {
@@ -39,6 +40,7 @@ export default async function PerformanceAnalyticsPage({
   const period = resolvedSearch.period?.trim() || "YTD";
   const detailBasis = resolvedSearch.detailBasis?.trim() || "NET";
   const detailDimension = resolvedSearch.detailDimension?.trim() || "asset_class";
+  const chartFrequency = resolvedSearch.chartFrequency?.trim() || "monthly";
   const benchmark = resolvedSearch.benchmark?.trim() || undefined;
 
   let workspace = null;
@@ -46,7 +48,7 @@ export default async function PerformanceAnalyticsPage({
     try {
       workspace = await getWorkbenchPerformanceWorkspace(selectedPortfolioId, {
         period,
-        chartFrequency: "monthly",
+        chartFrequency,
         detailDimension,
         detailBasis,
         benchmark,
@@ -65,6 +67,7 @@ export default async function PerformanceAnalyticsPage({
         period={period}
         detailBasis={detailBasis}
         detailDimension={detailDimension}
+        chartFrequency={chartFrequency}
         benchmark={benchmark}
       />
     </main>

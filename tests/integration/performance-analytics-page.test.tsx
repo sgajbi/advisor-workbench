@@ -171,7 +171,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(1);
     expect(screen.getByRole("link", { name: /Asia Growth Mandate/i })).toHaveAttribute(
       "href",
-      "/performance?portfolioId=PF_2002&period=YTD&detailBasis=NET&detailDimension=asset_class"
+      "/performance?portfolioId=PF_2002&period=YTD&detailBasis=NET&detailDimension=asset_class&chartFrequency=monthly"
     );
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -266,6 +266,6 @@ describe("PerformanceAnalyticsPage", () => {
       input.toString().includes("/api/v1/workbench/PF_1001/performance")
     );
     expect(performanceCall?.[0].toString()).toContain("benchmark_code=MODEL_60_40");
-    expect(screen.getAllByText("Model 60/40").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Compared To")).toHaveValue("MODEL_60_40");
   });
 });
