@@ -78,7 +78,7 @@ export default async function WorkbenchPage({
             <Link href="/proposals" className="nav-link">
               Open Proposal Workspace
             </Link>
-            <Link href="/pas/intake" className="nav-link">
+            <Link href="/intake" className="nav-link">
               Open Portfolio Intake
             </Link>
             <Link href="/suite" className="nav-link">

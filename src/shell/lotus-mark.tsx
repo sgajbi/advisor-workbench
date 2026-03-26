@@ -2,34 +2,68 @@ export default function LotusMark() {
   return (
     <svg
       className="lotus-mark"
-      viewBox="0 0 88 88"
+      viewBox="0 0 160 104"
       role="img"
       aria-label="Lotus"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <defs>
+        <linearGradient
+          id="lotusPetalGradient"
+          x1="22"
+          y1="16"
+          x2="132"
+          y2="96"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#f26d72" />
+          <stop offset="0.52" stopColor="#e54148" />
+          <stop offset="1" stopColor="#cb1f29" />
+        </linearGradient>
+        <linearGradient
+          id="lotusPetalGradientSoft"
+          x1="34"
+          y1="18"
+          x2="124"
+          y2="88"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#f7b2b6" />
+          <stop offset="1" stopColor="#df4f57" />
+        </linearGradient>
+      </defs>
+
       <path
-        d="M44 13C36.8 22.1 34.6 29.2 34.6 36.4C34.6 44.2 39.2 49.9 44 53.2C48.8 49.9 53.4 44.2 53.4 36.4C53.4 29.2 51.2 22.1 44 13Z"
-        className="lotus-mark-core"
+        d="M80 8C70.5 16.8 65.8 27.5 65.8 39.2C65.8 52.8 71.1 63.5 80 70.8C88.9 63.5 94.2 52.8 94.2 39.2C94.2 27.5 89.5 16.8 80 8Z"
+        className="lotus-mark-center"
       />
       <path
-        d="M27.8 22.2C18.8 27.2 13.8 34.3 13.8 42.4C13.8 53.1 22.7 59.6 34.3 59.6C31.6 55.6 29.9 51.1 29.9 46.3C29.9 38.3 33 30.7 27.8 22.2Z"
-        className="lotus-mark-petal-left"
+        d="M53.6 15.4C42.6 22.8 35.6 32.8 33.4 44.5C30.8 58.5 38.1 69 49.8 74.1C49 70.8 48.6 67.4 48.6 63.9C48.6 45.8 58.3 29.6 53.6 15.4Z"
+        className="lotus-mark-mid"
       />
       <path
-        d="M60.2 22.2C69.2 27.2 74.2 34.3 74.2 42.4C74.2 53.1 65.3 59.6 53.7 59.6C56.4 55.6 58.1 51.1 58.1 46.3C58.1 38.3 55 30.7 60.2 22.2Z"
-        className="lotus-mark-petal-right"
+        d="M106.4 15.4C117.4 22.8 124.4 32.8 126.6 44.5C129.2 58.5 121.9 69 110.2 74.1C111 70.8 111.4 67.4 111.4 63.9C111.4 45.8 101.7 29.6 106.4 15.4Z"
+        className="lotus-mark-mid"
       />
       <path
-        d="M18.7 34.1C15.6 39 14 44.1 14 48.8C14 56.6 20 61.8 27.8 63C25.8 59.3 24.8 55.2 24.8 50.9C24.8 44.7 26.8 39 18.7 34.1Z"
-        className="lotus-mark-petal-outer"
+        d="M30.9 33.9C20.4 38.5 12.8 45.9 9.7 55.1C6.1 65.7 11.9 74.8 23.2 79.7C28.9 82.2 36.1 83.7 44.3 83.4C34.8 75.7 29.1 65.9 30.9 33.9Z"
+        className="lotus-mark-wide"
       />
       <path
-        d="M69.3 34.1C72.4 39 74 44.1 74 48.8C74 56.6 68 61.8 60.2 63C62.2 59.3 63.2 55.2 63.2 50.9C63.2 44.7 61.2 39 69.3 34.1Z"
-        className="lotus-mark-petal-outer"
+        d="M129.1 33.9C139.6 38.5 147.2 45.9 150.3 55.1C153.9 65.7 148.1 74.8 136.8 79.7C131.1 82.2 123.9 83.7 115.7 83.4C125.2 75.7 130.9 65.9 129.1 33.9Z"
+        className="lotus-mark-wide"
       />
       <path
-        d="M28.5 65.7C32.3 69.3 37.5 71.4 44 71.4C50.5 71.4 55.7 69.3 59.5 65.7C55.4 66.9 50.3 67.6 44 67.6C37.7 67.6 32.6 66.9 28.5 65.7Z"
+        d="M15.2 57C8.5 59.9 3.8 64.8 1.9 70.9C-0.2 77.7 3.5 83.7 11.1 87C16.1 89.1 22.4 90.1 29.4 89.4C23 84.7 18.1 79 15.2 57Z"
+        className="lotus-mark-wing"
+      />
+      <path
+        d="M144.8 57C151.5 59.9 156.2 64.8 158.1 70.9C160.2 77.7 156.5 83.7 148.9 87C143.9 89.1 137.6 90.1 130.6 89.4C137 84.7 141.9 79 144.8 57Z"
+        className="lotus-mark-wing"
+      />
+      <path
+        d="M47.6 73.6C55.6 82.8 66.1 88.4 80 88.4C93.9 88.4 104.4 82.8 112.4 73.6C103 77.1 92.2 79 80 79C67.8 79 57 77.1 47.6 73.6Z"
         className="lotus-mark-base"
       />
     </svg>

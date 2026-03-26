@@ -1,4 +1,4 @@
-export type PasPolicyDiagnostics = {
+export type LotusCorePolicyDiagnostics = {
   available: boolean;
   allowedSections: string[];
   warnings: string[];
@@ -17,7 +17,7 @@ export type PlatformNormalizedCapabilities = {
   inputModesUnion: string[];
   moduleHealth: Record<string, string>;
   policyVersionsBySource: Record<string, string>;
-  pasPolicyDiagnostics: PasPolicyDiagnostics;
+  lotusCorePolicyDiagnostics: LotusCorePolicyDiagnostics;
 };
 
 export type PlatformCapabilitiesError = {

@@ -11,7 +11,7 @@ import {
   WorkspaceSide,
 } from "@/design-system";
 
-import { formatCurrency, formatPct, formatQuantity } from "../formatters";
+import { formatBooleanFlag, formatCurrency, formatDate, formatPct, formatQuantity } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
 import {
   getCoverageWarningLabel,
@@ -97,6 +97,22 @@ export default function PortfolioWorkspaceView({
 
             <WorkspaceGrid>
               <Panel>
+                <h3>Mandate</h3>
+                <MetricRow label="Status" value={workspace.profile.status ?? "N/A"} />
+                <MetricRow label="Portfolio type" value={workspace.profile.portfolio_type ?? "N/A"} />
+                <MetricRow label="Risk profile" value={workspace.profile.risk_exposure ?? "N/A"} />
+                <MetricRow
+                  label="Investment horizon"
+                  value={workspace.profile.investment_time_horizon ?? "N/A"}
+                />
+                <MetricRow label="Objective" value={workspace.profile.objective ?? "N/A"} />
+                <MetricRow
+                  label="Leverage allowed"
+                  value={formatBooleanFlag(workspace.profile.is_leverage_allowed)}
+                />
+              </Panel>
+
+              <Panel>
                 <h3>Performance Review</h3>
                 <MetricRow label="Performance period" value={workspace.performance?.period ?? "N/A"} />
                 <MetricRow
@@ -127,6 +143,21 @@ export default function PortfolioWorkspaceView({
                   label="Cash weight"
                   value={formatPct(workspace.summary.cash_weight_pct)}
                 />
+                <MetricRow
+                  label="Projected net cashflow"
+                  value={formatCurrency(
+                    workspace.cashflow_outlook?.total_net_cashflow_base,
+                    workspace.portfolio.base_currency
+                  )}
+                />
+                <MetricRow
+                  label="Projection horizon"
+                  value={
+                    workspace.cashflow_outlook
+                      ? `${workspace.cashflow_outlook.projection_days} days`
+                      : "N/A"
+                  }
+                />
                 <MetricRow label="Base currency" value={workspace.portfolio.base_currency} />
                 <MetricRow
                   label="Booking center"
@@ -147,6 +178,96 @@ export default function PortfolioWorkspaceView({
                 </div>
               </Panel>
             ) : null}
+
+            <WorkspaceGrid>
+              <Panel>
+                <h3>Positions</h3>
+                {workspace.positions.length ? (
+                  <div className="table-wrap">
+                    <table className="position-table">
+                      <thead>
+                        <tr>
+                          <th align="left">Instrument</th>
+                          <th align="left">Asset Class</th>
+                          <th align="right">Quantity</th>
+                          <th align="right">Cost</th>
+                          <th align="right">Market Value</th>
+                          <th align="right">Weight</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {workspace.positions.map((position) => (
+                          <tr key={position.security_id}>
+                            <td>{position.instrument_name}</td>
+                            <td>{position.asset_class ?? "N/A"}</td>
+                            <td align="right">{formatQuantity(position.quantity)}</td>
+                            <td align="right">
+                              {formatCurrency(
+                                position.cost_basis_base,
+                                workspace.portfolio.base_currency
+                              )}
+                            </td>
+                            <td align="right">
+                              {formatCurrency(
+                                position.market_value_base,
+                                workspace.portfolio.base_currency
+                              )}
+                            </td>
+                            <td align="right">{formatPct(position.weight_pct)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="muted">Position detail is not available yet for this portfolio.</p>
+                )}
+              </Panel>
+
+              <Panel>
+                <h3>Recent Transactions</h3>
+                {workspace.recent_transactions.length ? (
+                  <div className="table-wrap">
+                    <table className="position-table">
+                      <thead>
+                        <tr>
+                          <th align="left">Date</th>
+                          <th align="left">Type</th>
+                          <th align="left">Instrument</th>
+                          <th align="right">Quantity</th>
+                          <th align="right">Gross</th>
+                          <th align="right">Net Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {workspace.recent_transactions.map((transaction) => (
+                          <tr key={transaction.transaction_id}>
+                            <td>{formatDate(transaction.transaction_date)}</td>
+                            <td>{transaction.transaction_type}</td>
+                            <td>{transaction.instrument_id}</td>
+                            <td align="right">{formatQuantity(transaction.quantity)}</td>
+                            <td align="right">
+                              {formatCurrency(
+                                transaction.gross_amount,
+                                transaction.currency ?? workspace.portfolio.base_currency
+                              )}
+                            </td>
+                            <td align="right">
+                              {formatCurrency(
+                                transaction.net_cost_base,
+                                workspace.portfolio.base_currency
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="muted">Recent transactions are not available right now.</p>
+                )}
+              </Panel>
+            </WorkspaceGrid>
 
             <WorkspaceGrid>
               <Panel>
@@ -221,6 +342,42 @@ export default function PortfolioWorkspaceView({
                 )}
               </Panel>
             </WorkspaceGrid>
+
+            {workspace.cashflow_outlook ? (
+              <Panel>
+                <h3>Cashflow Outlook</h3>
+                <div className="table-wrap">
+                  <table className="position-table">
+                    <thead>
+                      <tr>
+                        <th align="left">Date</th>
+                        <th align="right">Net Cashflow</th>
+                        <th align="right">Cumulative</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {workspace.cashflow_outlook.upcoming_points.map((point) => (
+                        <tr key={point.projection_date}>
+                          <td>{formatDate(point.projection_date)}</td>
+                          <td align="right">
+                            {formatCurrency(
+                              point.net_cashflow_base,
+                              workspace.portfolio.base_currency
+                            )}
+                          </td>
+                          <td align="right">
+                            {formatCurrency(
+                              point.projected_cumulative_cashflow_base,
+                              workspace.portfolio.base_currency
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
+            ) : null}
           </>
         )}
       </WorkspaceMain>
@@ -231,6 +388,7 @@ export default function PortfolioWorkspaceView({
             <Panel className="portfolio-side-card">
               <h3>Portfolio Snapshot</h3>
               <MetricRow label="As of date" value={workspace.as_of_date} />
+              <MetricRow label="Open date" value={formatDate(workspace.profile.open_date)} />
               <MetricRow
                 label="Market value"
                 value={formatCurrency(
@@ -259,6 +417,10 @@ export default function PortfolioWorkspaceView({
               <MetricRow
                 label="Reporting generated"
                 value={workspace.readiness.reporting.generated_at_utc ?? "N/A"}
+              />
+              <MetricRow
+                label="Cashflow horizon"
+                value={workspace.cashflow_outlook?.range_end_date ?? "N/A"}
               />
             </Panel>
 

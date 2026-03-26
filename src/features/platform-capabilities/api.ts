@@ -32,16 +32,16 @@ export function fallbackNormalizedCapabilities(): PlatformNormalizedCapabilities
     inputModesBySource: {},
     inputModesUnion: [],
     moduleHealth: {
-      pas: "unknown",
-      pa: "unknown",
-      dpm: "unknown",
+      lotus_core: "unknown",
+      lotus_performance: "unknown",
+      lotus_manage: "unknown",
     },
     policyVersionsBySource: {
-      pas: "unknown",
-      pa: "unknown",
-      dpm: "unknown",
+      lotus_core: "unknown",
+      lotus_performance: "unknown",
+      lotus_manage: "unknown",
     },
-    pasPolicyDiagnostics: {
+    lotusCorePolicyDiagnostics: {
       available: false,
       allowedSections: [],
       warnings: [],

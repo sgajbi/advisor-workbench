@@ -135,7 +135,7 @@ function catalogColor(state: CatalogState): "default" | "primary" | "warning" | 
   return "default";
 }
 
-export default function PasIntakePage() {
+export default function IntakePage() {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [operation, setOperation] = useState<IntakeOperation>("CREATE_PORTFOLIO");

@@ -22,5 +22,5 @@ Governance boundary:
 | RFC-0014 | Workbench Backend Analytics Consumption | IMPLEMENTED | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |
 | RFC-0015 | Valuation-Ready Default Routing and Workbench Readiness | IMPLEMENTED | `docs/rfcs/RFC-0015-valuation-ready-default-routing-and-workbench-readiness.md` |
 | RFC-0016 | Workbench Application Shell and Design-System Foundation | IMPLEMENTED | `docs/rfcs/RFC-0016-workbench-application-shell-and-design-system-foundation.md` |
-| RFC-0017 | Foundation App First-Production Surface | IN PROGRESS | `docs/rfcs/RFC-0017-foundation-app-first-production-surface.md` |
+| RFC-0017 | Foundation App First-Production Surface | IMPLEMENTED | `docs/rfcs/RFC-0017-foundation-app-first-production-surface.md` |
 

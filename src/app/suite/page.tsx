@@ -20,8 +20,8 @@ export default function SuitePage() {
   const navFlags = capabilities.normalized.navigation;
   const moduleHealth = capabilities.normalized.moduleHealth;
   const policyVersions = capabilities.normalized.policyVersionsBySource;
-  const pasPolicyDiagnostics = capabilities.normalized.pasPolicyDiagnostics;
-  const sources = ["pas", "pa", "dpm"] as const;
+  const lotusCorePolicyDiagnostics = capabilities.normalized.lotusCorePolicyDiagnostics;
+  const sources = ["lotus_core", "lotus_performance", "lotus_manage"] as const;
 
   const roleLabel = useMemo(() => {
     if (activeRole === "RISK") return "Risk Officer";
@@ -75,8 +75,8 @@ export default function SuitePage() {
             Intake data, review analytics context, simulate recommendation, then progress approvals.
           </Typography>
           <div className="journey-steps">
-            {renderRouteAction("1. Portfolio Intake", "/pas/intake", navFlags.portfolio_intake !== false)}
-            {renderRouteAction("2. Analytics Context", "/pa/analytics", navFlags.analytics_studio !== false)}
+            {renderRouteAction("1. Portfolio Intake", "/intake", navFlags.portfolio_intake !== false)}
+            {renderRouteAction("2. Analytics Context", "/performance", navFlags.analytics_studio !== false)}
             {renderRouteAction("3. Simulate Proposal", "/proposals/simulate", navFlags.scenario_builder !== false)}
             {renderRouteAction("4. Submit And Track", "/proposals", navFlags.advisory_pipeline !== false)}
           </div>
@@ -118,21 +118,21 @@ export default function SuitePage() {
           <div>
             <strong>lotus-core Policy Diagnostics</strong>
             <p className="muted">
-              {pasPolicyDiagnostics.available ? "available" : "unavailable"} | strict mode:{" "}
-              {pasPolicyDiagnostics.policyProvenance.strictMode ? "on" : "off"}
+              {lotusCorePolicyDiagnostics.available ? "available" : "unavailable"} | strict mode:{" "}
+              {lotusCorePolicyDiagnostics.policyProvenance.strictMode ? "on" : "off"}
             </p>
             <p className="muted">
-              Rule: {pasPolicyDiagnostics.policyProvenance.matchedRuleId} | Source:{" "}
-              {pasPolicyDiagnostics.policyProvenance.policySource}
+              Rule: {lotusCorePolicyDiagnostics.policyProvenance.matchedRuleId} | Source:{" "}
+              {lotusCorePolicyDiagnostics.policyProvenance.policySource}
             </p>
             <p className="muted">
               Allowed sections:{" "}
-              {pasPolicyDiagnostics.allowedSections.length > 0
-                ? pasPolicyDiagnostics.allowedSections.join(", ")
+              {lotusCorePolicyDiagnostics.allowedSections.length > 0
+                ? lotusCorePolicyDiagnostics.allowedSections.join(", ")
                 : "none"}
             </p>
-            {pasPolicyDiagnostics.warnings.length > 0 ? (
-              <p className="muted">Warnings: {pasPolicyDiagnostics.warnings.join(", ")}</p>
+            {lotusCorePolicyDiagnostics.warnings.length > 0 ? (
+              <p className="muted">Warnings: {lotusCorePolicyDiagnostics.warnings.join(", ")}</p>
             ) : null}
           </div>
         </div>
@@ -280,7 +280,7 @@ export default function SuitePage() {
               </div>
             </div>
           ))}
-          <Link href="/pas/intake" className="nav-link">
+          <Link href="/intake" className="nav-link">
             Open Intake Workspace
           </Link>
         </Paper>
@@ -295,7 +295,7 @@ export default function SuitePage() {
               <strong>{item.value}</strong>
             </div>
           ))}
-          <Link href="/pa/analytics" className="nav-link">
+          <Link href="/performance" className="nav-link">
             Open Analytics Workspace
           </Link>
         </Paper>
