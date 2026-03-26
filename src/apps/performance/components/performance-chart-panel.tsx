@@ -22,14 +22,23 @@ function buildChartPath(points: number[]): string {
     .join(" ");
 }
 
+function buildAreaPath(path: string): string {
+  if (!path) {
+    return "";
+  }
+  return `${path} L320 120 L0 120 Z`;
+}
+
 export default function PerformanceChartPanel({
   title,
   points,
   tone,
+  id,
 }: {
   title: string;
   points: PerformanceChartPoint[];
   tone: "net" | "gross";
+  id?: string;
 }) {
   const portfolioSeries = points.map((point) => point.cumulative_portfolio_return_pct ?? 0);
   const hasBenchmark = points.some(
@@ -39,16 +48,39 @@ export default function PerformanceChartPanel({
   const hasActiveReturn = points.some((point) => point.active_return_pct !== null);
   const benchmarkSeries = points.map((point) => point.cumulative_benchmark_return_pct ?? 0);
   const portfolioPath = buildChartPath(portfolioSeries);
+  const portfolioArea = buildAreaPath(portfolioPath);
   const benchmarkPath = hasBenchmark ? buildChartPath(benchmarkSeries) : "";
+  const latestPoint = points[points.length - 1];
+  const highestPoint = portfolioSeries.length ? Math.max(...portfolioSeries) : null;
+  const lowestPoint = portfolioSeries.length ? Math.min(...portfolioSeries) : null;
+  const hasMeaningfulHistory = points.length >= 2;
 
   return (
-    <Panel className="performance-chart-panel">
+    <Panel id={id} className="performance-chart-panel">
       <div className="performance-section-heading">
         <h3>{title}</h3>
         <span>{points.length ? formatLabel(points[0].frequency) : "No series"}</span>
       </div>
       {points.length ? (
         <>
+          <div className="performance-chart-summary">
+            <div>
+              <span>Latest</span>
+              <strong>{formatPct(latestPoint?.cumulative_portfolio_return_pct)}</strong>
+            </div>
+            <div>
+              <span>High</span>
+              <strong>{formatPct(highestPoint)}</strong>
+            </div>
+            <div>
+              <span>Low</span>
+              <strong>{formatPct(lowestPoint)}</strong>
+            </div>
+            <div>
+              <span>Observations</span>
+              <strong>{points.length}</strong>
+            </div>
+          </div>
           <div className="performance-chart-frame">
             <svg
               className={`performance-chart performance-chart-${tone}`}
@@ -57,6 +89,7 @@ export default function PerformanceChartPanel({
               aria-label={`${title} chart`}
             >
               <path className="performance-chart-track" d="M0 110 H320" />
+              {portfolioArea ? <path className="performance-chart-fill" d={portfolioArea} /> : null}
               {benchmarkPath ? <path className="performance-chart-benchmark" d={benchmarkPath} /> : null}
               {portfolioPath ? <path className="performance-chart-portfolio" d={portfolioPath} /> : null}
             </svg>
@@ -65,34 +98,40 @@ export default function PerformanceChartPanel({
             <span>Portfolio</span>
             {hasBenchmark ? <span>Benchmark</span> : null}
           </div>
-          <div className="table-wrap">
-            <table className="position-table">
-              <thead>
-                <tr>
-                  <th align="left">Period</th>
-                  <th align="right">Portfolio</th>
-                  {hasBenchmark ? <th align="right">Benchmark</th> : null}
-                  {hasActiveReturn ? <th align="right">Active</th> : null}
-                  <th align="right">Cum. Portfolio</th>
-                </tr>
-              </thead>
-              <tbody>
-                {points.map((point) => (
-                  <tr key={`${point.label}-${point.period_end ?? point.period_start ?? point.frequency}`}>
-                    <td>{point.label}</td>
-                    <td align="right">{formatPct(point.portfolio_return_pct)}</td>
-                    {hasBenchmark ? (
-                      <td align="right">{formatPct(point.benchmark_return_pct)}</td>
-                    ) : null}
-                    {hasActiveReturn ? (
-                      <td align="right">{formatPct(point.active_return_pct)}</td>
-                    ) : null}
-                    <td align="right">{formatCompactPct(point.cumulative_portfolio_return_pct)}</td>
+          {hasMeaningfulHistory ? (
+            <div className="table-wrap">
+              <table className="position-table">
+                <thead>
+                  <tr>
+                    <th align="left">Period</th>
+                    <th align="right">Portfolio</th>
+                    {hasBenchmark ? <th align="right">Benchmark</th> : null}
+                    {hasActiveReturn ? <th align="right">Active</th> : null}
+                    <th align="right">Cum. Portfolio</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {points.map((point) => (
+                    <tr key={`${point.label}-${point.period_end ?? point.period_start ?? point.frequency}`}>
+                      <td>{point.label}</td>
+                      <td align="right">{formatPct(point.portfolio_return_pct)}</td>
+                      {hasBenchmark ? (
+                        <td align="right">{formatPct(point.benchmark_return_pct)}</td>
+                      ) : null}
+                      {hasActiveReturn ? (
+                        <td align="right">{formatPct(point.active_return_pct)}</td>
+                      ) : null}
+                      <td align="right">{formatCompactPct(point.cumulative_portfolio_return_pct)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="muted performance-chart-note">
+              Only one measurement is currently available for this view, so trend comparison is limited.
+            </p>
+          )}
         </>
       ) : (
         <p className="muted">Performance breakdown is not available for the selected period.</p>

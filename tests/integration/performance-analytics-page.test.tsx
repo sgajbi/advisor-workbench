@@ -168,7 +168,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("XIRR").length).toBeGreaterThan(1);
     expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
-    expect(screen.getByText("$1,250,000")).toBeInTheDocument();
+    expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(1);
     expect(screen.getByRole("link", { name: /Asia Growth Mandate/i })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PF_2002&period=YTD&detailBasis=NET&detailDimension=asset_class"
