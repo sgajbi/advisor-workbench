@@ -1,6 +1,6 @@
 # RFC-0016: Workbench Application Shell and Design-System Foundation
 
-- Status: PROPOSED
+- Status: IMPLEMENTED
 - Date: 2026-03-26
 - Owners: lotus-workbench
 - Requires Approval From:
@@ -37,6 +37,20 @@ It introduces:
 
 The purpose of this RFC is to ensure that future work in `lotus-workbench` compounds into one
 coherent premium product instead of growing as disconnected UI slices.
+
+## User-Facing Naming Rule
+
+Internal Lotus application boundaries must not appear directly in front-office navigation.
+
+The shell may still map to internal domains and upstream contracts, but advisor-facing surfaces
+should use product language that feels native to a relationship-led wealth workflow.
+
+Examples:
+
+1. `Foundation` should surface as `Portfolio`,
+2. `Proposal` should surface as `Recommendations`,
+3. internal service or repository names should not appear in shell navigation, primary headings,
+   or main route labels.
 
 ## Scope Clarification For Slice 1
 
@@ -139,7 +153,7 @@ The product will have one persistent shell that owns:
 
 The shell will host bounded product applications, not just page groups.
 
-Target app map:
+Internal app map:
 
 1. Home
 2. Foundation
@@ -149,6 +163,17 @@ Target app map:
 6. Manage
 7. Reporting
 8. Platform
+
+User-facing navigation map:
+
+1. Home
+2. Clients
+3. Portfolio
+4. Performance
+5. Risk & Suitability
+6. Recommendations
+7. Reporting
+8. Operations only where explicitly needed
 
 ### 3. Design-system foundation
 
@@ -179,6 +204,9 @@ The shell should own:
 4. common trust metadata surfaces,
 5. shell-level loading and degraded states,
 6. route transition polish and motion rules.
+
+The shell should also own the translation from internal app boundaries into user-facing product
+language so navigation remains natural to advisors.
 
 ### App responsibilities
 
@@ -229,12 +257,23 @@ direction for new strategic work.
 This RFC establishes shell-level quality expectations for future implementation:
 
 1. dense but readable information design,
-2. clear visual hierarchy,
-3. polished transitions and motion,
-4. resilient partial-failure rendering,
-5. accessibility and keyboard usability,
-6. no default-library visual posture,
-7. production-grade loading, empty, and error states.
+2. full-canvas workspace composition instead of brochure-style whitespace,
+3. minimal functional copy rather than explanatory product narration,
+4. visible labels that read like wealth-management workspace terms,
+5. clear visual hierarchy,
+6. polished transitions and motion,
+7. resilient partial-failure rendering,
+8. accessibility and keyboard usability,
+9. no default-library visual posture,
+10. production-grade loading, empty, and error states.
+
+It also establishes a visual direction:
+
+1. calm and premium rather than loud or novelty-driven,
+2. fresh color composition with strong contrast and restrained accent use,
+3. distinct Lotus branding through a mark and visual system rather than generic product chrome,
+4. navigation and page structure that follow the natural advisor workflow,
+5. workstation density over center-column page layouts.
 
 ## Relationship To Other Lotus Repositories
 
@@ -267,6 +306,10 @@ Acceptance gate:
 2. an app registry and route-to-app mapping exist,
 3. future apps can plug into it without redesigning core chrome.
 
+Implementation status:
+
+1. implemented
+
 ### Slice 2: Design-system foundation
 
 Outcome:
@@ -280,6 +323,14 @@ Acceptance gate:
 1. new product surfaces use shared primitives instead of bespoke page CSS,
 2. the visual system becomes more coherent with each new page.
 
+Implementation status:
+
+1. implemented
+2. shared primitives, layout wrappers, and degraded-state building blocks exist in
+   `src/design-system/`,
+3. the active `Portfolio` surface consumes those shared primitives as the default path for new
+   product work.
+
 ### Slice 3: App-oriented package migration
 
 Outcome:
@@ -292,6 +343,14 @@ Acceptance gate:
 1. the new app surface does not depend on legacy page-level structure,
 2. the package direction is credible and repeatable.
 
+Implementation status:
+
+1. implemented
+2. app route modules now live under `src/apps/`,
+3. `src/app/` route files act as shell mount points rather than owning the product logic for the
+   front-office entry routes,
+4. the package direction is now repeatable for later applications.
+
 ### Slice 4: Foundation app first-production surface
 
 Outcome:
@@ -303,6 +362,13 @@ Acceptance gate:
 
 1. the surface is materially better than the existing slice UI,
 2. it provides a template for later app waves.
+
+Implementation status:
+
+1. implemented
+2. the first `Portfolio` surface exists on the new shell and design-system foundation,
+3. the app is modularized under `src/apps/portfolio/` and acts as the reference pattern for later
+   app waves.
 
 ## Risks
 
@@ -338,7 +404,8 @@ The first implementation work after approval should be:
 1. create the shell layout and navigation model,
 2. establish the app registry and top-level app map,
 3. create the first shell-level chrome and route context components,
-4. defer deeper design-system and app-surface work to later slices.
+4. establish user-facing naming and route patterns,
+5. defer deeper design-system and app-surface work to later slices.
 
 The first AI-related work in `lotus-workbench` should be deferred until this shell foundation
 exists, so future `lotus-ai` capabilities land in a polished and governed product environment.

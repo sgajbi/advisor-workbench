@@ -31,6 +31,21 @@ management, and reporting workflows.
 - Current RFC history:
   `docs/rfcs/README.md`
 
+## Design System Foundation
+
+- Shared frontend primitives live in `src/design-system/`
+- Shared shell composition lives in `src/shell/`
+- New product surfaces should prefer design-system primitives over page-local structural markup
+- The current reference implementation is the `Portfolio` surface under `src/apps/portfolio/`
+
+## App Package Direction
+
+- `src/app/` owns route mounting only
+- `src/apps/home/` owns the home entry redirect
+- `src/apps/portfolio/` owns the portfolio workspace
+- `src/apps/performance/` owns the performance entry behavior
+- `src/apps/recommendations/` owns the recommendations entry behavior
+
 ## Quickstart
 
 ```bash
@@ -44,10 +59,13 @@ Set `BFF_BASE_URL` to point to `lotus-gateway`.
 
 ## Current Routes
 
-- `/proposals/simulate` - simulate and save draft proposal
-- `/proposals` - proposal workspace list
-- `/proposals/[proposalId]` - proposal detail with submit/approval/consent actions and workflow timeline
-- `/workbench/[portfolioId]` - portfolio 360, sandbox projections, backend analytics, and reporting snapshot
+- `/portfolio` - primary portfolio review surface for holdings, allocation, readiness, and next actions
+- `/performance` - front-office entry route for performance review
+- `/recommendations` - front-office entry route for investment recommendations
+- `/proposals/simulate` - recommendation drafting flow
+- `/proposals` - recommendation workspace list
+- `/proposals/[proposalId]` - recommendation detail with submit/approval/consent actions and workflow timeline
+- `/workbench/[portfolioId]` - legacy operational console compatibility route
 
 These routes are the current implementation baseline, not the final product topology. The target
 future direction is an app-shell model documented in

@@ -16,9 +16,11 @@
 The first production-grade application to be built on the new `lotus-workbench` shell should be
 the `Foundation` app.
 
-`Foundation` is the universal portfolio entry point for the Lotus product ecosystem. It should give
-users a premium, trustworthy, portfolio-first workspace before they move into Performance, Risk,
-Proposal, Manage, or Reporting flows.
+`Foundation` is the internal implementation name for the universal portfolio entry point of the
+Lotus product ecosystem. In the UI, this surface should present itself as `Portfolio`.
+
+It should give users a premium, trustworthy, portfolio-first workspace before they move into
+Performance, Risk & Suitability, Recommendations, Operations, or Reporting flows.
 
 This RFC defines `Foundation` as the first real app surface on the new shell and design-system
 foundation.
@@ -69,6 +71,8 @@ Current issues:
 2. the source of portfolio context for the rest of the shell,
 3. the first product-grade proof of the new workbench architecture.
 
+The user-facing product name for that app should be `Portfolio`, not `Foundation`.
+
 ## Goals
 
 1. Build `Foundation` as the first production-grade app on the new shell.
@@ -89,7 +93,7 @@ Current issues:
 
 `Foundation` will be the first product-grade app built on the shell foundation.
 
-### 1. `Foundation` is the universal portfolio entry point
+### 1. `Foundation` is the internal implementation name for the `Portfolio` app
 
 Users should enter the Lotus ecosystem through a portfolio-first application that answers:
 
@@ -153,9 +157,9 @@ The initial `Foundation` surface should include:
 `Foundation` should lead users naturally to:
 
 1. Performance app,
-2. Risk app,
-3. Proposal app,
-4. Manage app,
+2. Risk & Suitability app,
+3. Recommendations app,
+4. Operations app where relevant,
 5. Reporting app.
 
 ## UX Direction
@@ -166,13 +170,18 @@ The `Foundation` app should feel:
 2. premium,
 3. information-dense but readable,
 4. operationally trustworthy,
-5. clearly portfolio-first.
+5. clearly portfolio-first,
+6. structured like a working desk rather than a marketing page.
+
+It should also read like a refined advisory product rather than a collection of internal system
+modules.
 
 It should not feel like:
 
 1. a raw data table,
 2. a generic dashboard,
-3. a temporary staging page.
+3. a temporary staging page,
+4. a center-column experience padded with explanatory copy.
 
 ## Technical Direction
 
@@ -292,7 +301,7 @@ Reason:
 
 The first implementation work after approval should be:
 
-1. define the `Foundation` app route and layout on the new shell,
+1. define the `Portfolio` app route and layout on the new shell,
 2. replace the current fragmented portfolio entry experience with a coherent app surface,
 3. identify gateway contract changes needed for the first production-grade version,
 4. file upstream issues immediately when domain-owned gaps are discovered.
