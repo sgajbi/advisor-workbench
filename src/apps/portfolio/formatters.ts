@@ -18,3 +18,12 @@ export function formatCurrency(
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+export function formatQuantity(value: number | null | undefined): string {
+  if (typeof value !== "number") {
+    return "N/A";
+  }
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 4,
+  }).format(value);
+}

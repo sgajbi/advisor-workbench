@@ -4,6 +4,8 @@ export const FALLBACK_WORK_AREAS = [
   { href: "/workbench", title: "Operations", value: "Available", note: "Console" },
 ] as const;
 
+export const WORKFLOW_DISPLAY_ORDER = ["performance", "risk", "proposal"] as const;
+
 export function mapWorkflowHref(key: string, portfolioId: string): string {
   switch (key) {
     case "performance":
@@ -25,5 +27,52 @@ export function getWorkflowActionLabel(key: string): string {
       return "Review Suitability";
     default:
       return "Open Performance";
+  }
+}
+
+export function getWorkflowTaskLabel(key: string): string {
+  switch (key) {
+    case "proposal":
+      return "Prepare recommendation";
+    case "risk":
+      return "Review suitability";
+    default:
+      return "Review performance";
+  }
+}
+
+export function getCoverageWarningLabel(warning: string): string {
+  switch (warning) {
+    case "FOUNDATION_PERFORMANCE_UNAVAILABLE":
+      return "Performance temporarily unavailable";
+    case "FOUNDATION_REBALANCE_UNAVAILABLE":
+      return "Monitoring temporarily unavailable";
+    case "FOUNDATION_REPORTING_UNAVAILABLE":
+      return "Reporting temporarily unavailable";
+    case "FOUNDATION_PERFORMANCE_INVALID":
+      return "Performance data needs review";
+    default:
+      return warning
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+}
+
+export function getEvidenceServiceLabel(sourceService: string): string {
+  switch (sourceService) {
+    case "lotus-core":
+      return "Portfolio data";
+    case "lotus-performance":
+      return "Performance";
+    case "lotus-report":
+      return "Reporting";
+    case "lotus-manage":
+      return "Monitoring";
+    default:
+      return sourceService
+        .replace(/^lotus-/, "")
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 }

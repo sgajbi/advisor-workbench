@@ -11,9 +11,16 @@ import {
   WorkspaceSide,
 } from "@/design-system";
 
-import { formatCurrency, formatPct } from "../formatters";
+import { formatCurrency, formatPct, formatQuantity } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
-import { getWorkflowActionLabel, mapWorkflowHref } from "../workspace-config";
+import {
+  getCoverageWarningLabel,
+  getEvidenceServiceLabel,
+  getWorkflowActionLabel,
+  getWorkflowTaskLabel,
+  mapWorkflowHref,
+  WORKFLOW_DISPLAY_ORDER,
+} from "../workspace-config";
 import PortfolioRail from "./portfolio-rail";
 
 export default function PortfolioWorkspaceView({
@@ -31,6 +38,19 @@ export default function PortfolioWorkspaceView({
   selectedPortfolioId: string | null;
   workspace: PortfolioWorkspace | null;
 }) {
+  const orderedWorkflowCues = workspace
+    ? [...workspace.workflow_cues].sort((left, right) => {
+        const leftOrder = WORKFLOW_DISPLAY_ORDER.indexOf(
+          left.key as (typeof WORKFLOW_DISPLAY_ORDER)[number]
+        );
+        const rightOrder = WORKFLOW_DISPLAY_ORDER.indexOf(
+          right.key as (typeof WORKFLOW_DISPLAY_ORDER)[number]
+        );
+        return (leftOrder === -1 ? Number.MAX_SAFE_INTEGER : leftOrder) -
+          (rightOrder === -1 ? Number.MAX_SAFE_INTEGER : rightOrder);
+      })
+    : [];
+
   return (
     <WorkspaceLayout>
       <PortfolioRail portfolios={portfolios} selectedPortfolioId={selectedPortfolioId} />
@@ -64,7 +84,7 @@ export default function PortfolioWorkspaceView({
                 </div>
               </div>
               <div className="portfolio-hero-actions">
-                {workspace.workflow_cues.map((cue) => (
+                {orderedWorkflowCues.map((cue) => (
                   <ActionLink
                     key={cue.key}
                     href={mapWorkflowHref(cue.key, workspace.portfolio.portfolio_id)}
@@ -121,7 +141,7 @@ export default function PortfolioWorkspaceView({
                 <div className="portfolio-warning-list">
                   {workspace.warnings.map((warning) => (
                     <StatusChip key={warning} tone="warn">
-                      {warning}
+                      {getCoverageWarningLabel(warning)}
                     </StatusChip>
                   ))}
                 </div>
@@ -161,6 +181,43 @@ export default function PortfolioWorkspaceView({
                   </div>
                 ) : (
                   <p className="muted">Allocation data is not available yet for this portfolio.</p>
+                )}
+              </Panel>
+
+              <Panel>
+                <h3>Top Positions</h3>
+                {workspace.top_positions.length ? (
+                  <div className="table-wrap">
+                    <table className="position-table">
+                      <thead>
+                        <tr>
+                          <th align="left">Position</th>
+                          <th align="left">Asset Class</th>
+                          <th align="right">Quantity</th>
+                          <th align="right">Market Value</th>
+                          <th align="right">Weight</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {workspace.top_positions.map((position) => (
+                          <tr key={position.security_id}>
+                            <td>{position.instrument_name}</td>
+                            <td>{position.asset_class ?? "N/A"}</td>
+                            <td align="right">{formatQuantity(position.quantity)}</td>
+                            <td align="right">
+                              {formatCurrency(
+                                position.market_value_base,
+                                workspace.portfolio.base_currency
+                              )}
+                            </td>
+                            <td align="right">{formatPct(position.weight_pct)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="muted">Position detail is not available yet for this portfolio.</p>
                 )}
               </Panel>
             </WorkspaceGrid>
@@ -205,18 +262,33 @@ export default function PortfolioWorkspaceView({
               />
             </Panel>
 
+            {workspace.partial_failures.length ? (
+              <Panel className="portfolio-side-card">
+                <h3>Data Coverage</h3>
+                <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
+                <div className="portfolio-guidance-list">
+                  {workspace.partial_failures.map((failure) => (
+                    <div
+                      key={`${failure.source_service}-${failure.error_code}`}
+                      className="portfolio-guidance-item"
+                    >
+                      <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
+                      <span className="portfolio-evidence-meta">{failure.error_code}</span>
+                      <p className="portfolio-evidence-copy">{failure.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            ) : null}
+
             <Panel className="portfolio-side-card">
               <h3>Next Actions</h3>
               <div className="portfolio-guidance-list">
-                <div className="portfolio-guidance-item">
-                  <strong>Review performance</strong>
-                </div>
-                <div className="portfolio-guidance-item">
-                  <strong>Review suitability</strong>
-                </div>
-                <div className="portfolio-guidance-item">
-                  <strong>Prepare recommendation</strong>
-                </div>
+                {orderedWorkflowCues.map((cue) => (
+                  <div key={cue.key} className="portfolio-guidance-item">
+                    <strong>{getWorkflowTaskLabel(cue.key)}</strong>
+                  </div>
+                ))}
               </div>
             </Panel>
           </>
