@@ -17,6 +17,15 @@ export type PortfolioAllocationBucket = {
   weight_pct: number | null;
 };
 
+export type PortfolioTopPosition = {
+  security_id: string;
+  instrument_name: string;
+  asset_class: string | null;
+  quantity: number;
+  market_value_base: number | null;
+  weight_pct: number | null;
+};
+
 export type PortfolioWorkflowCue = {
   key: string;
   label: string;
@@ -39,6 +48,7 @@ export type PortfolioWorkspace = {
     position_count: number;
   };
   allocations: PortfolioAllocationBucket[];
+  top_positions: PortfolioTopPosition[];
   performance: {
     period: string;
     return_pct: number | null;

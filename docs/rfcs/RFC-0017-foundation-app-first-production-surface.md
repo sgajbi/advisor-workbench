@@ -1,6 +1,6 @@
 # RFC-0017: Foundation App First-Production Surface
 
-- Status: PROPOSED
+- Status: IN PROGRESS
 - Date: 2026-03-26
 - Owners: lotus-workbench
 - Requires Approval From:
@@ -232,6 +232,10 @@ Acceptance gate:
 1. the app has a clear route and layout model,
 2. it fits naturally into the new shell.
 
+Implementation status:
+
+1. completed in `lotus-workbench` via the new `Portfolio` route and shell-mounted workspace.
+
 ### Slice 2: Foundation portfolio catalog and summary
 
 Outcome:
@@ -244,6 +248,11 @@ Acceptance gate:
 
 1. the app is already a better ecosystem entry point than the current route mix,
 2. degraded states are clear and usable.
+
+Implementation status:
+
+1. completed in `lotus-workbench` with portfolio rail, summary, review panels, and bounded
+   degraded states.
 
 ### Slice 3: Foundation holdings, allocation, and readiness
 
@@ -258,6 +267,11 @@ Acceptance gate:
 1. users can confidently decide where to go next,
 2. evidence and readiness are understandable without reading raw backend data.
 
+Implementation status:
+
+1. in progress with allocation, top-position, readiness, and data-coverage panels implemented,
+2. completed upstream contract extension tracked in `lotus-gateway` for top-position summary.
+
 ### Slice 4: Upstream issue-routing and cleanup
 
 Outcome:
@@ -270,6 +284,12 @@ Acceptance gate:
 
 1. the implementation improves the ecosystem rather than only the local surface,
 2. ownership discipline is preserved.
+
+Implementation status:
+
+1. upstream gap issues filed in `lotus-gateway`:
+   - `#65` advisor-facing evidence metadata for partial failures
+   - `#66` holdings and top-position summary for the Foundation workspace contract
 
 ## Risks
 

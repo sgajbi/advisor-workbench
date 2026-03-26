@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { getWorkflowActionLabel, mapWorkflowHref } from "@/apps/portfolio/workspace-config";
+import {
+  getCoverageWarningLabel,
+  getEvidenceServiceLabel,
+  getWorkflowActionLabel,
+  getWorkflowTaskLabel,
+  mapWorkflowHref,
+} from "@/apps/portfolio/workspace-config";
 
 describe("portfolio workspace config", () => {
   it("maps workflow cues into front-office routes", () => {
@@ -21,5 +27,24 @@ describe("portfolio workspace config", () => {
     expect(getWorkflowActionLabel("risk")).toBe("Review Suitability");
     expect(getWorkflowActionLabel("proposal")).toBe("Prepare Recommendation");
     expect(getWorkflowActionLabel("unknown")).toBe("Open Performance");
+  });
+
+  it("maps workflow cues into concise task labels", () => {
+    expect(getWorkflowTaskLabel("performance")).toBe("Review performance");
+    expect(getWorkflowTaskLabel("risk")).toBe("Review suitability");
+    expect(getWorkflowTaskLabel("proposal")).toBe("Prepare recommendation");
+    expect(getWorkflowTaskLabel("unknown")).toBe("Review performance");
+  });
+
+  it("maps warnings and evidence services into advisor-facing labels", () => {
+    expect(getCoverageWarningLabel("FOUNDATION_REPORTING_UNAVAILABLE")).toBe(
+      "Reporting temporarily unavailable"
+    );
+    expect(getCoverageWarningLabel("FOUNDATION_PERFORMANCE_INVALID")).toBe(
+      "Performance data needs review"
+    );
+    expect(getEvidenceServiceLabel("lotus-report")).toBe("Reporting");
+    expect(getEvidenceServiceLabel("lotus-performance")).toBe("Performance");
+    expect(getEvidenceServiceLabel("custom-service")).toBe("Custom Service");
   });
 });

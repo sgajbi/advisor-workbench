@@ -714,6 +714,21 @@ a:hover {
   background: linear-gradient(180deg, #fdfefe 0%, #f4f7f8 100%);
 }
 
+.portfolio-evidence-meta {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+}
+
+.portfolio-evidence-copy {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .portfolio-empty-state {
   max-width: none;
 }

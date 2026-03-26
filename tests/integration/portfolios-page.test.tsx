@@ -63,13 +63,37 @@ describe("PortfolioFoundationPage", () => {
                   weight_pct: 25.6,
                 },
               ],
+              top_positions: [
+                {
+                  security_id: "EQ_1",
+                  instrument_name: "Apple Inc",
+                  asset_class: "Equities",
+                  quantity: 120,
+                  market_value_base: 250000,
+                  weight_pct: 20,
+                },
+                {
+                  security_id: "FI_1",
+                  instrument_name: "US Treasury 10Y",
+                  asset_class: "Fixed Income",
+                  quantity: 80,
+                  market_value_base: 180000,
+                  weight_pct: 14.4,
+                },
+              ],
               workflow_cues: [
                 { key: "performance", label: "Performance", href: "/ignored" },
                 { key: "risk", label: "Risk", href: "/ignored" },
                 { key: "proposal", label: "Proposal", href: "/ignored" },
               ],
-              warnings: [],
-              partial_failures: [],
+              warnings: ["FOUNDATION_REPORTING_UNAVAILABLE"],
+              partial_failures: [
+                {
+                  source_service: "lotus-report",
+                  error_code: "HTTP_503",
+                  detail: "snapshot service unavailable",
+                },
+              ],
             }),
           } as Response;
         }
@@ -112,8 +136,16 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("MONITORED")).toBeInTheDocument();
     expect(screen.getByText("2026-02-24T08:32:00Z")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Allocation Shape/i })).toBeInTheDocument();
-    expect(screen.getByText("Equities")).toBeInTheDocument();
-    expect(screen.getByText("Fixed Income")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Top Positions/i })).toBeInTheDocument();
+    expect(screen.getByText("Apple Inc")).toBeInTheDocument();
+    expect(screen.getByText("US Treasury 10Y")).toBeInTheDocument();
+    expect(screen.getAllByText("Equities").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Fixed Income").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Reporting temporarily unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
+    expect(screen.getByText("Reporting")).toBeInTheDocument();
+    expect(screen.getByText("HTTP_503")).toBeInTheDocument();
+    expect(screen.getByText("snapshot service unavailable")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open Performance/i })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PORT_UI_1001"
