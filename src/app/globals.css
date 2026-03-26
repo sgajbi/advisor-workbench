@@ -1,18 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg: #f3f0f2;
-  --bg-alt: #e7e2e7;
-  --panel: #fdfcfd;
-  --panel-alt: #f6f3f6;
+  --bg: #f6f1f4;
+  --bg-alt: #efe6ec;
+  --panel: #fffdfd;
+  --panel-alt: #faf5f8;
   --text: #1d2430;
   --text-muted: #626979;
-  --border: #d6cfd7;
-  --brand: #8a5b72;
+  --border: #dccfd8;
+  --brand: #d86aa5;
   --brand-strong: #222c3b;
-  --brand-soft: #f2e9ee;
-  --brand-accent: #b68497;
-  --brand-highlight: #b39a67;
+  --brand-soft: #f8e7f0;
+  --brand-accent: #ec93bf;
+  --brand-highlight: #e3a9c8;
   --warn-bg: #fff5e8;
   --warn-border: #edc17b;
   --warn-text: #7b4f0f;
@@ -37,9 +37,9 @@ body {
   font-family: var(--font-ui);
   color: var(--text);
   background:
-    radial-gradient(circle at 8% 2%, rgba(182, 132, 151, 0.16) 0%, transparent 30%),
-    radial-gradient(circle at 94% -10%, rgba(179, 154, 103, 0.14) 0%, transparent 24%),
-    radial-gradient(circle at 85% 24%, rgba(138, 91, 114, 0.1) 0%, transparent 22%),
+    radial-gradient(circle at 8% 2%, rgba(236, 147, 191, 0.16) 0%, transparent 30%),
+    radial-gradient(circle at 94% -10%, rgba(227, 169, 200, 0.14) 0%, transparent 24%),
+    radial-gradient(circle at 85% 24%, rgba(216, 106, 165, 0.1) 0%, transparent 22%),
     linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 280px, var(--bg) 100%);
 }
 
@@ -69,7 +69,7 @@ a:hover {
   top: 0;
   z-index: 20;
   border-bottom: 1px solid var(--border);
-  background: rgba(248, 251, 251, 0.94);
+  background: rgba(252, 249, 251, 0.94);
   backdrop-filter: blur(14px);
   box-shadow: 0 10px 28px rgba(20, 48, 62, 0.06);
 }
@@ -109,12 +109,12 @@ a:hover {
   padding: 0.2rem 0.26rem 0.18rem;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.96), transparent 46%),
-    linear-gradient(180deg, rgba(247, 242, 233, 0.99) 0%, rgba(231, 222, 204, 0.96) 100%);
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.98), transparent 46%),
+    linear-gradient(180deg, rgba(255, 247, 251, 0.99) 0%, rgba(244, 231, 238, 0.96) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     0 10px 24px rgba(34, 44, 59, 0.08);
-  border: 1px solid rgba(164, 138, 86, 0.22);
+  border: 1px solid rgba(216, 106, 165, 0.2);
 }
 
 .shell-brand-text {
@@ -133,38 +133,26 @@ a:hover {
 }
 
 .lotus-mark-core {
-  fill: url(#lotusCenter);
+  fill: url(#lotusPetalGradient);
 }
 
-.lotus-mark-petal-left,
-.lotus-mark-petal-right {
-  fill: url(#lotusOuter);
+.lotus-mark-mid,
+.lotus-mark-wide {
+  fill: url(#lotusPetalGradient);
 }
 
-.lotus-mark-petal-outer {
-  fill: #91a3b8;
-  opacity: 0.94;
-}
-
+.lotus-mark-wing,
 .lotus-mark-base {
-  fill: #b9924e;
+  fill: url(#lotusPetalGradientSoft);
 }
 
-.lotus-mark-line {
-  stroke: rgba(181, 147, 83, 0.82);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-}
-
-.lotus-mark-stroke {
-  stroke: rgba(33, 47, 68, 0.72);
-  stroke-width: 1.45;
-  stroke-linejoin: round;
-}
-
-.lotus-mark-stroke-soft {
-  stroke: rgba(59, 78, 102, 0.52);
-  stroke-width: 1.15;
+.lotus-mark-center,
+.lotus-mark-mid,
+.lotus-mark-wide,
+.lotus-mark-wing,
+.lotus-mark-base {
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 3.2;
   stroke-linejoin: round;
 }
 
