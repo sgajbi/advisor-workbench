@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useState } from "react";
+import { startTransition, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -64,21 +64,87 @@ export default function PerformanceWorkspaceClient({
         }
       : null
   );
+  const requestSequenceRef = useRef(0);
+
+  const initialCacheKey = useMemo(
+    () =>
+      initialPortfolioId
+        ? buildWorkspaceCacheKey({
+            portfolioId: initialPortfolioId,
+            period: initialWorkspace?.period ?? initialPeriod,
+            detailBasis: initialWorkspace?.detail_basis ?? initialDetailBasis,
+            contributionDimension:
+              initialWorkspace?.contribution_dimension ?? initialContributionDimension,
+            attributionDimension:
+              initialWorkspace?.attribution_dimension ?? initialAttributionDimension,
+            chartFrequency: initialWorkspace?.chart_frequency ?? initialChartFrequency,
+            benchmark: initialWorkspace?.benchmark_code ?? initialBenchmark,
+            reportStartDate: initialWorkspace?.report_start_date,
+            reportEndDate: initialWorkspace?.report_end_date,
+          })
+        : null,
+    [
+      initialAttributionDimension,
+      initialBenchmark,
+      initialChartFrequency,
+      initialContributionDimension,
+      initialDetailBasis,
+      initialPeriod,
+      initialPortfolioId,
+      initialWorkspace,
+    ]
+  );
+
+  const workspaceCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspace | null>>(
+    initialCacheKey ? new Map([[initialCacheKey, initialWorkspace]]) : new Map()
+  );
 
   async function handleRequestChange(patch: Partial<PerformanceControlState>) {
     if (!controls) {
       return;
     }
+    const normalizedPatch =
+      patch.period && patch.period !== "EXPLICIT"
+        ? {
+            ...patch,
+            reportStartDate: patch.reportStartDate,
+            reportEndDate: patch.reportEndDate,
+          }
+        : patch;
+    if (patch.period && patch.period !== "EXPLICIT") {
+      normalizedPatch.reportStartDate = undefined;
+      normalizedPatch.reportEndDate = undefined;
+    }
     const nextControls: PerformanceControlState = {
       ...controls,
-      ...patch,
+      ...normalizedPatch,
     };
+    const currentKey = buildWorkspaceCacheKey(controls);
+    const nextKey = buildWorkspaceCacheKey(nextControls);
+    if (nextKey === currentKey) {
+      return;
+    }
+
     setControls(nextControls);
+    const cachedWorkspace = workspaceCacheRef.current.get(nextKey);
+    if (cachedWorkspace) {
+      setWorkspace(cachedWorkspace);
+    }
     setIsUpdating(true);
+    const requestId = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestId;
     startTransition(() => {
       router.replace(buildPerformanceHref(nextControls), { scroll: false });
     });
+
     try {
+      if (cachedWorkspace) {
+        if (requestSequenceRef.current === requestId) {
+          setIsUpdating(false);
+        }
+        return;
+      }
+
       const nextWorkspace = await getWorkbenchPerformanceWorkspaceClient(
         nextControls.portfolioId,
         {
@@ -92,8 +158,11 @@ export default function PerformanceWorkspaceClient({
           reportEndDate: nextControls.reportEndDate,
         }
       );
-      setWorkspace(nextWorkspace);
-      setControls({
+      workspaceCacheRef.current.set(nextKey, nextWorkspace);
+      if (requestSequenceRef.current !== requestId) {
+        return;
+      }
+      const normalizedControls = {
         ...nextControls,
         period: nextWorkspace.period,
         detailBasis: nextWorkspace.detail_basis,
@@ -103,11 +172,17 @@ export default function PerformanceWorkspaceClient({
         benchmark: nextWorkspace.benchmark_code ?? undefined,
         reportStartDate: nextWorkspace.report_start_date,
         reportEndDate: nextWorkspace.report_end_date,
-      });
+      };
+      setWorkspace(nextWorkspace);
+      setControls(normalizedControls);
     } catch {
-      setWorkspace((currentWorkspace) => currentWorkspace);
+      if (requestSequenceRef.current === requestId) {
+        setWorkspace((currentWorkspace) => currentWorkspace);
+      }
     } finally {
-      setIsUpdating(false);
+      if (requestSequenceRef.current === requestId) {
+        setIsUpdating(false);
+      }
     }
   }
 
@@ -128,4 +203,19 @@ export default function PerformanceWorkspaceClient({
       isUpdating={isUpdating}
     />
   );
+}
+
+function buildWorkspaceCacheKey(controls: PerformanceControlState): string {
+  const isExplicitWindow = controls.period === "EXPLICIT";
+  return JSON.stringify({
+    portfolioId: controls.portfolioId,
+    period: controls.period,
+    detailBasis: controls.detailBasis,
+    contributionDimension: controls.contributionDimension,
+    attributionDimension: controls.attributionDimension,
+    chartFrequency: controls.chartFrequency,
+    benchmark: controls.benchmark ?? null,
+    reportStartDate: isExplicitWindow ? controls.reportStartDate ?? null : null,
+    reportEndDate: isExplicitWindow ? controls.reportEndDate ?? null : null,
+  });
 }

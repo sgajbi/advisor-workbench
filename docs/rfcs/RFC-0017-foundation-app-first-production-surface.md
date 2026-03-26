@@ -218,6 +218,19 @@ Because the platform is pre-live:
 
 The same rule applies to workbench routing and naming:
 
+### Interaction performance
+
+The `Portfolio` and `Performance` surfaces should optimize for responsive front-office use, not
+full-page report refreshes.
+
+Implementation direction:
+
+1. keep stable portfolio context separate from frequently changing analytics controls,
+2. avoid redundant client fetches for already-resolved workspace states where safe,
+3. protect the UI against stale async responses during rapid control changes,
+4. avoid unnecessary upstream orchestration when the requested window is already explicit,
+5. treat interaction latency as part of product quality, not a later polish step.
+
 1. `/performance` is the owned analytics route,
 2. legacy route families such as `/pa/*` should be removed once the clean route is live,
 3. compatibility aliases should not become permanent architecture.
