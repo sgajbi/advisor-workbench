@@ -1,6 +1,6 @@
 # RFC-0017: Foundation App First-Production Surface
 
-- Status: IN PROGRESS
+- Status: IMPLEMENTED
 - Date: 2026-03-26
 - Owners: lotus-workbench
 - Requires Approval From:
@@ -326,6 +326,11 @@ Implementation status:
 1. upstream gap issues filed in `lotus-gateway`:
    - `#65` advisor-facing evidence metadata for partial failures
    - `#66` holdings and top-position summary for the Foundation workspace contract
+2. adjacent analytics contract gaps discovered during delivery were routed to the owning
+   `lotus-performance` repository:
+   - `#113` Enhance attribution and contribution contracts for benchmark-aware front-office
+     analytics
+   - `#114` Evaluate interaction-efficient analytics contract for performance workspace
 
 ## Risks
 
