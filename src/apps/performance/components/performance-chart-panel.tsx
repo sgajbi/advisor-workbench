@@ -54,6 +54,7 @@ export default function PerformanceChartPanel({
   const highestPoint = portfolioSeries.length ? Math.max(...portfolioSeries) : null;
   const lowestPoint = portfolioSeries.length ? Math.min(...portfolioSeries) : null;
   const hasMeaningfulHistory = points.length >= 2;
+  const gridLines = [20, 50, 80, 110];
 
   return (
     <Panel id={id} className="performance-chart-panel">
@@ -88,10 +89,25 @@ export default function PerformanceChartPanel({
               role="img"
               aria-label={`${title} chart`}
             >
-              <path className="performance-chart-track" d="M0 110 H320" />
+              {gridLines.map((line) => (
+                <path key={line} className="performance-chart-track" d={`M0 ${line} H320`} />
+              ))}
               {portfolioArea ? <path className="performance-chart-fill" d={portfolioArea} /> : null}
               {benchmarkPath ? <path className="performance-chart-benchmark" d={benchmarkPath} /> : null}
               {portfolioPath ? <path className="performance-chart-portfolio" d={portfolioPath} /> : null}
+              {portfolioPath && latestPoint ? (
+                <circle
+                  className="performance-chart-marker"
+                  cx="320"
+                  cy={(() => {
+                    const max = Math.max(...portfolioSeries);
+                    const min = Math.min(...portfolioSeries);
+                    const range = max - min || 1;
+                    return 120 - (((latestPoint.cumulative_portfolio_return_pct ?? 0) - min) / range) * 120;
+                  })()}
+                  r="4"
+                />
+              ) : null}
             </svg>
           </div>
           <div className="performance-chart-legend">

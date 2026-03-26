@@ -65,6 +65,11 @@ export default function PerformanceWorkspaceView({
   const primaryDriver = workspace ? getPrimaryContributionRow(workspace) : null;
   const topContributors = workspace ? getTopContributionRows(workspace) : [];
   const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
+  const contributorScale = Math.max(
+    0.01,
+    ...topContributors.map((row) => Math.abs(row.contribution_pct)),
+    ...bottomContributors.map((row) => Math.abs(row.contribution_pct))
+  );
   const suspiciousMoneyWeighted = workspace ? isMoneyWeightedReturnSuspicious(workspace) : false;
 
   return (
@@ -190,109 +195,48 @@ export default function PerformanceWorkspaceView({
               </div>
             </Panel>
 
-            <WorkspaceGrid className="performance-overview-grid">
-              <Panel
-                id="performance-overview"
-                className="performance-overview-card performance-overview-card-primary"
-              >
-                <div className="performance-overview-heading">
-                  <h3>Return Snapshot</h3>
-                  <span>{workspace.period}</span>
-                </div>
-                <div className="performance-big-number">
+            <Panel id="performance-overview" className="performance-overview-band">
+              <div className="performance-overview-band-primary">
+                <span className="performance-overview-band-label">Net Return</span>
+                <div className="performance-overview-band-value">
                   {formatPct(workspace.net_performance.portfolio_return_pct)}
                 </div>
-                <div className="performance-overview-lines">
-                  <MetricRow
-                    label="Gross"
-                    value={formatPct(workspace.gross_performance.portfolio_return_pct)}
-                  />
-                  <MetricRow
-                    label="Annualized"
-                    value={formatPct(workspace.net_performance.annualized_return_pct)}
-                  />
-                  {hasBenchmark ? (
-                    <MetricRow
-                      label="Active"
-                      value={formatPct(workspace.net_performance.active_return_pct)}
-                    />
-                  ) : (
-                    <MetricRow label="Benchmark" value="Not assigned" />
-                  )}
-                </div>
-              </Panel>
+                <p className="performance-overview-band-copy">
+                  {hasBenchmark
+                    ? `Active ${formatCompactPct(workspace.net_performance.active_return_pct)} versus assigned benchmark`
+                    : "Absolute performance for the selected mandate and horizon"}
+                </p>
+              </div>
 
-              <Panel className="performance-overview-card">
-                <div className="performance-overview-heading">
-                  <h3>Mandate Structure</h3>
-                  <span>{workspace.portfolio.base_currency}</span>
+              <div className="performance-overview-band-stats">
+                <div className="performance-overview-stat">
+                  <span>Gross</span>
+                  <strong>{formatPct(workspace.gross_performance.portfolio_return_pct)}</strong>
                 </div>
-                <div className="performance-big-number">
-                  {formatCurrency(workspace.overview.market_value_base, workspace.portfolio.base_currency)}
+                <div className="performance-overview-stat">
+                  <span>Market Value</span>
+                  <strong>
+                    {formatCurrency(workspace.overview.market_value_base, workspace.portfolio.base_currency)}
+                  </strong>
                 </div>
-                <div className="performance-overview-lines">
-                  <MetricRow label="Cash Weight" value={formatPct(workspace.overview.cash_weight_pct)} />
-                  <MetricRow label="Positions" value={`${workspace.overview.position_count}`} />
-                  <MetricRow
-                    label="Booking Center"
-                    value={workspace.portfolio.booking_center_code ?? "N/A"}
-                  />
+                <div className="performance-overview-stat">
+                  <span>Cash Weight</span>
+                  <strong>{formatPct(workspace.overview.cash_weight_pct)}</strong>
                 </div>
-              </Panel>
-
-              <Panel className="performance-overview-card">
-                <div className="performance-overview-heading">
-                  <h3>Primary Driver</h3>
-                  <span>{formatLabel(workspace.detail_dimension)}</span>
+                <div className="performance-overview-stat">
+                  <span>Primary Driver</span>
+                  <strong>{primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}</strong>
                 </div>
-                <div className="performance-big-number performance-big-number-secondary">
-                  {primaryDriver ? formatLabel(primaryDriver.key_label) : "Not available"}
+                <div className="performance-overview-stat">
+                  <span>Benchmark</span>
+                  <strong>{hasBenchmark ? "Assigned" : "Not assigned"}</strong>
                 </div>
-                <div className="performance-overview-lines">
-                  <MetricRow
-                    label="Contribution"
-                    value={primaryDriver ? formatPct(primaryDriver.contribution_pct) : "N/A"}
-                  />
-                  <MetricRow
-                    label="Average Weight"
-                    value={primaryDriver ? formatPct(primaryDriver.weight_avg_pct) : "N/A"}
-                  />
-                  <MetricRow
-                    label="Coverage"
-                    value={formatPct(workspace.contribution?.coverage_mv_pct)}
-                  />
+                <div className="performance-overview-stat">
+                  <span>Attribution</span>
+                  <strong>{hasAttribution ? "Available" : "Unavailable"}</strong>
                 </div>
-              </Panel>
-
-              <Panel className="performance-overview-card">
-                <div className="performance-overview-heading">
-                  <h3>Measurement Status</h3>
-                  <span>Controls</span>
-                </div>
-                <div className="performance-note-list">
-                  <div className="performance-note-item">
-                    <strong>Trend</strong>
-                    <span>
-                      {hasHistory
-                        ? `${workspace.net_chart.length} ${formatLabel(workspace.chart_frequency)} observations`
-                        : "Single observation only"}
-                    </span>
-                  </div>
-                  <div className="performance-note-item">
-                    <strong>Benchmark</strong>
-                    <span>{hasBenchmark ? "Assigned" : "Not assigned"}</span>
-                  </div>
-                  <div className="performance-note-item">
-                    <strong>Attribution</strong>
-                    <span>{hasAttribution ? "Available" : "Unavailable"}</span>
-                  </div>
-                  <div className="performance-note-item">
-                    <strong>Cash-flow Return</strong>
-                    <span>{suspiciousMoneyWeighted ? "Review required" : "Within expected range"}</span>
-                  </div>
-                </div>
-              </Panel>
-            </WorkspaceGrid>
+              </div>
+            </Panel>
 
             <WorkspaceGrid className="performance-summary-grid">
               <Panel>
@@ -481,25 +425,24 @@ export default function PerformanceWorkspaceView({
                         <strong>Highest</strong>
                         <span>Contribution</span>
                       </div>
-                      <div className="table-wrap">
-                        <table className="position-table">
-                          <thead>
-                            <tr>
-                              <th align="left">Bucket</th>
-                              <th align="right">Avg. Weight</th>
-                              <th align="right">Contribution</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {topContributors.map((row) => (
-                              <tr key={`top-${row.key_label}`}>
-                                <td>{row.key_label}</td>
-                                <td align="right">{formatPct(row.weight_avg_pct)}</td>
-                                <td align="right">{formatPct(row.contribution_pct)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="performance-ranked-list">
+                        {topContributors.map((row) => (
+                          <div key={`top-${row.key_label}`} className="performance-ranked-row">
+                            <div className="performance-ranked-meta">
+                              <strong>{row.key_label}</strong>
+                              <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
+                            </div>
+                            <div className="performance-ranked-bar-track">
+                              <div
+                                className="performance-ranked-bar performance-ranked-bar-positive"
+                                style={{ width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%` }}
+                              />
+                            </div>
+                            <div className="performance-ranked-value">
+                              {formatPct(row.contribution_pct)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -508,25 +451,24 @@ export default function PerformanceWorkspaceView({
                         <strong>Lowest</strong>
                         <span>Contribution</span>
                       </div>
-                      <div className="table-wrap">
-                        <table className="position-table">
-                          <thead>
-                            <tr>
-                              <th align="left">Bucket</th>
-                              <th align="right">Avg. Weight</th>
-                              <th align="right">Contribution</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {bottomContributors.map((row) => (
-                              <tr key={`bottom-${row.key_label}`}>
-                                <td>{row.key_label}</td>
-                                <td align="right">{formatPct(row.weight_avg_pct)}</td>
-                                <td align="right">{formatPct(row.contribution_pct)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="performance-ranked-list">
+                        {bottomContributors.map((row) => (
+                          <div key={`bottom-${row.key_label}`} className="performance-ranked-row">
+                            <div className="performance-ranked-meta">
+                              <strong>{row.key_label}</strong>
+                              <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
+                            </div>
+                            <div className="performance-ranked-bar-track">
+                              <div
+                                className="performance-ranked-bar performance-ranked-bar-negative"
+                                style={{ width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%` }}
+                              />
+                            </div>
+                            <div className="performance-ranked-value">
+                              {formatPct(row.contribution_pct)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>

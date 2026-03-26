@@ -936,55 +936,70 @@ a:hover {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.performance-overview-grid {
-  grid-template-columns: 1.1fr 1fr 1fr 0.95fr;
-}
-
-.performance-overview-card {
-  min-height: 15rem;
+.performance-overview-band {
   display: grid;
-  gap: 1rem;
-}
-
-.performance-overview-card-primary {
+  grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.7fr);
+  gap: 1.25rem;
+  align-items: stretch;
   background:
-    radial-gradient(circle at top right, rgba(179, 154, 103, 0.18), transparent 32%),
-    linear-gradient(180deg, #fffefe 0%, #f4eff3 100%);
+    radial-gradient(circle at top right, rgba(179, 154, 103, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 239, 243, 0.95) 100%);
 }
 
-.performance-overview-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+.performance-overview-band-primary {
+  display: grid;
+  gap: 0.55rem;
+  padding-right: 1rem;
+  border-right: 1px solid rgba(34, 44, 59, 0.08);
 }
 
-.performance-overview-heading h3 {
-  margin: 0;
-}
-
-.performance-overview-heading span {
+.performance-overview-band-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
 }
 
-.performance-big-number {
-  font-family: var(--font-ui);
-  font-size: clamp(2.1rem, 3vw, 3rem);
-  font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.05em;
+.performance-overview-band-value {
+  font-size: clamp(2.6rem, 3.4vw, 4rem);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  font-weight: 800;
   color: var(--brand-strong);
 }
 
-.performance-big-number-secondary {
-  font-size: clamp(1.5rem, 2.2vw, 2rem);
+.performance-overview-band-copy {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--text-muted);
+  line-height: 1.45;
 }
 
-.performance-overview-lines {
+.performance-overview-band-stats {
   display: grid;
-  gap: 0.25rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+.performance-overview-stat {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.performance-overview-stat span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.performance-overview-stat strong {
+  font-size: 1.02rem;
+  line-height: 1.2;
+  color: var(--brand-strong);
 }
 
 .performance-observation-strip {
@@ -1042,6 +1057,61 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
+}
+
+.performance-ranked-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.performance-ranked-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(120px, 1fr) 74px;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.performance-ranked-meta {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.performance-ranked-meta strong {
+  color: var(--brand-strong);
+  font-size: 0.88rem;
+}
+
+.performance-ranked-meta span {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.performance-ranked-bar-track {
+  position: relative;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: rgba(34, 44, 59, 0.08);
+  overflow: hidden;
+}
+
+.performance-ranked-bar {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.performance-ranked-bar-positive {
+  background: linear-gradient(90deg, #5d9d4e 0%, #86bb56 100%);
+}
+
+.performance-ranked-bar-negative {
+  background: linear-gradient(90deg, #cc6a5b 0%, #e38d7c 100%);
+}
+
+.performance-ranked-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--brand-strong);
 }
 
 .performance-ranked-heading {
@@ -1153,6 +1223,12 @@ a:hover {
   stroke: rgba(34, 44, 59, 0.12);
   stroke-width: 1;
   fill: none;
+}
+
+.performance-chart-marker {
+  fill: var(--brand-strong);
+  stroke: #fff;
+  stroke-width: 2;
 }
 
 .performance-chart-fill {
@@ -1505,6 +1581,21 @@ a:hover {
 
   .performance-overview-grid {
     grid-template-columns: 1fr;
+  }
+
+  .performance-overview-band {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-overview-band-primary {
+    padding-right: 0;
+    padding-bottom: 0.85rem;
+    border-right: 0;
+    border-bottom: 1px solid rgba(34, 44, 59, 0.08);
+  }
+
+  .performance-overview-band-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .performance-summary-grid {
