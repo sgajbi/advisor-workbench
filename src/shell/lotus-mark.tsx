@@ -17,9 +17,9 @@ export default function LotusMark() {
           y2="96"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stopColor="#f4a7cd" />
-          <stop offset="0.52" stopColor="#ea81b6" />
-          <stop offset="1" stopColor="#d85d9f" />
+          <stop offset="0" stopColor="#f26d72" />
+          <stop offset="0.52" stopColor="#e54148" />
+          <stop offset="1" stopColor="#cb1f29" />
         </linearGradient>
         <linearGradient
           id="lotusPetalGradientSoft"
@@ -29,8 +29,8 @@ export default function LotusMark() {
           y2="88"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stopColor="#f8c4dc" />
-          <stop offset="1" stopColor="#e98abd" />
+          <stop offset="0" stopColor="#f7b2b6" />
+          <stop offset="1" stopColor="#df4f57" />
         </linearGradient>
       </defs>
 

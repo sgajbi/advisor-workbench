@@ -33,6 +33,13 @@ type ComparativeSummary = {
   active_return_pct: number | null;
 };
 
+const CHART_COLORS = {
+  portfolio: "#da1e28",
+  benchmark: "#2d3748",
+  portfolioBar: "rgba(218, 30, 40, 0.18)",
+  benchmarkBar: "rgba(45, 55, 72, 0.16)",
+};
+
 function toNumeric(value: number | null | undefined): number | null {
   return value === null || value === undefined || Number.isNaN(value) ? null : value;
 }
@@ -62,6 +69,26 @@ function formatBenchmarkLabel(benchmark?: string) {
     return "Benchmark";
   }
   return BENCHMARK_OPTIONS.find((option) => option.value === benchmark)?.label ?? benchmark;
+}
+
+function resolveReportDates(
+  points: PerformanceChartPoint[],
+  reportStartDate?: string,
+  reportEndDate?: string
+) {
+  const fallbackStartDate =
+    points.find((point) => point.period_start)?.period_start ??
+    points.find((point) => point.period_end)?.period_end ??
+    "";
+  const fallbackEndDate =
+    [...points].reverse().find((point) => point.period_end)?.period_end ??
+    [...points].reverse().find((point) => point.period_start)?.period_start ??
+    fallbackStartDate;
+
+  return {
+    startDate: reportStartDate || fallbackStartDate,
+    endDate: reportEndDate || fallbackEndDate,
+  };
 }
 
 export default function PerformanceChartPanel({
@@ -97,13 +124,17 @@ export default function PerformanceChartPanel({
   isUpdating?: boolean;
   id?: string;
 }) {
-  const [fromDate, setFromDate] = useState(reportStartDate);
-  const [toDate, setToDate] = useState(reportEndDate);
+  const resolvedReportDates = useMemo(
+    () => resolveReportDates(points, reportStartDate, reportEndDate),
+    [points, reportEndDate, reportStartDate]
+  );
+  const [fromDate, setFromDate] = useState(resolvedReportDates.startDate);
+  const [toDate, setToDate] = useState(resolvedReportDates.endDate);
 
   useEffect(() => {
-    setFromDate(reportStartDate);
-    setToDate(reportEndDate);
-  }, [reportEndDate, reportStartDate]);
+    setFromDate(resolvedReportDates.startDate);
+    setToDate(resolvedReportDates.endDate);
+  }, [resolvedReportDates.endDate, resolvedReportDates.startDate]);
 
   const hasBenchmarkSeries = points.some(
     (point) =>
@@ -129,7 +160,12 @@ export default function PerformanceChartPanel({
 
     return {
       animation: false,
-      color: ["#cf4156", "#32465f", "#e8b55f", "#9db5c9"],
+      color: [
+        CHART_COLORS.portfolio,
+        CHART_COLORS.benchmark,
+        CHART_COLORS.portfolioBar,
+        CHART_COLORS.benchmarkBar,
+      ],
       grid: {
         left: 58,
         right: 24,
@@ -210,7 +246,7 @@ export default function PerformanceChartPanel({
           barGap: "20%",
           z: 1,
           itemStyle: {
-            color: "rgba(207, 65, 86, 0.18)",
+            color: CHART_COLORS.portfolioBar,
             borderRadius: [4, 4, 0, 0],
           },
         },
@@ -224,7 +260,7 @@ export default function PerformanceChartPanel({
                 barWidth: 10,
                 z: 1,
                 itemStyle: {
-                  color: "rgba(50, 70, 95, 0.16)",
+                  color: CHART_COLORS.benchmarkBar,
                   borderRadius: [4, 4, 0, 0],
                 },
               },
@@ -239,10 +275,10 @@ export default function PerformanceChartPanel({
           z: 3,
           lineStyle: {
             width: 4,
-            color: "#cf4156",
+            color: CHART_COLORS.portfolio,
           },
           areaStyle: {
-            color: "rgba(207, 65, 86, 0.05)",
+            color: "rgba(218, 30, 40, 0.05)",
           },
         },
         ...(hasBenchmarkSeries
@@ -256,7 +292,7 @@ export default function PerformanceChartPanel({
                 z: 3,
                 lineStyle: {
                   width: 3,
-                  color: "#32465f",
+                  color: CHART_COLORS.benchmark,
                 },
               },
             ]
@@ -272,7 +308,10 @@ export default function PerformanceChartPanel({
   const latestValue = latest?.portfolio_return_pct ?? summary.portfolio_return_pct;
   const highestValue = periodicPortfolioValues.length ? Math.max(...periodicPortfolioValues) : null;
   const lowestValue = periodicPortfolioValues.length ? Math.min(...periodicPortfolioValues) : null;
-  const explicitDateRange = `${formatDate(reportStartDate)} - ${formatDate(reportEndDate)}`;
+  const explicitDateRange =
+    resolvedReportDates.startDate && resolvedReportDates.endDate
+      ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
+      : "Date range unavailable";
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -339,7 +378,7 @@ export default function PerformanceChartPanel({
                   aria-label="From"
                   type="date"
                   value={fromDate}
-                  max={toDate}
+                  max={toDate || resolvedReportDates.endDate}
                   onChange={(event) => setFromDate(event.currentTarget.value)}
                 />
               </label>
@@ -350,7 +389,7 @@ export default function PerformanceChartPanel({
                   type="date"
                   value={toDate}
                   min={fromDate}
-                  max={reportEndDate}
+                  max={resolvedReportDates.endDate}
                   onChange={(event) => setToDate(event.currentTarget.value)}
                 />
               </label>
