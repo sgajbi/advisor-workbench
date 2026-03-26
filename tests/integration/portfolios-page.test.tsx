@@ -26,6 +26,15 @@ describe("PortfolioFoundationPage", () => {
                 base_currency: "USD",
                 booking_center_code: "SG",
               },
+              profile: {
+                status: "ACTIVE",
+                portfolio_type: "ADVISORY",
+                risk_exposure: "MODERATE",
+                investment_time_horizon: "LONG_TERM",
+                objective: "GROWTH",
+                is_leverage_allowed: false,
+                open_date: "2024-01-01",
+              },
               summary: {
                 market_value_base: 1250000,
                 total_cash_base: 105000,
@@ -81,6 +90,53 @@ describe("PortfolioFoundationPage", () => {
                   weight_pct: 14.4,
                 },
               ],
+              positions: [
+                {
+                  security_id: "EQ_1",
+                  instrument_name: "Apple Inc",
+                  asset_class: "Equities",
+                  quantity: 120,
+                  cost_basis_base: 200000,
+                  market_value_base: 250000,
+                  weight_pct: 20,
+                },
+                {
+                  security_id: "FI_1",
+                  instrument_name: "US Treasury 10Y",
+                  asset_class: "Fixed Income",
+                  quantity: 80,
+                  cost_basis_base: 175000,
+                  market_value_base: 180000,
+                  weight_pct: 14.4,
+                },
+              ],
+              recent_transactions: [
+                {
+                  transaction_id: "TX_1",
+                  transaction_date: "2026-02-20T08:30:00Z",
+                  transaction_type: "BUY",
+                  security_id: "EQ_1",
+                  instrument_id: "AAPL",
+                  quantity: 10,
+                  gross_amount: 18000,
+                  net_cost_base: 18000,
+                  currency: "USD",
+                },
+              ],
+              cashflow_outlook: {
+                as_of_date: "2026-02-24",
+                range_end_date: "2026-03-05",
+                total_net_cashflow_base: -25000,
+                projection_days: 10,
+                include_projected: true,
+                upcoming_points: [
+                  {
+                    projection_date: "2026-02-25",
+                    net_cashflow_base: -15000,
+                    projected_cumulative_cashflow_base: -15000,
+                  },
+                ],
+              },
               workflow_cues: [
                 { key: "performance", label: "Performance", href: "/ignored" },
                 { key: "risk", label: "Risk", href: "/ignored" },
@@ -135,10 +191,18 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("8.40%").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("MONITORED")).toBeInTheDocument();
     expect(screen.getByText("2026-02-24T08:32:00Z")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Mandate/i })).toBeInTheDocument();
+    expect(screen.getByText("ADVISORY")).toBeInTheDocument();
+    expect(screen.getByText("MODERATE")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^Positions$/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Recent Transactions/i })).toBeInTheDocument();
+    expect(screen.getByText("AAPL")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Cashflow Outlook/i })).toBeInTheDocument();
+    expect(screen.getByText("2026-02-25")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Allocation Shape/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Top Positions/i })).toBeInTheDocument();
-    expect(screen.getByText("Apple Inc")).toBeInTheDocument();
-    expect(screen.getByText("US Treasury 10Y")).toBeInTheDocument();
+    expect(screen.getAllByText("Apple Inc").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("US Treasury 10Y").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Equities").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Fixed Income").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Reporting temporarily unavailable")).toBeInTheDocument();

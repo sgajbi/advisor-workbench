@@ -27,3 +27,17 @@ export function formatQuantity(value: number | null | undefined): string {
     maximumFractionDigits: 4,
   }).format(value);
 }
+
+export function formatDate(value: string | null | undefined): string {
+  if (!value) {
+    return "N/A";
+  }
+  return value;
+}
+
+export function formatBooleanFlag(value: boolean | null | undefined): string {
+  if (typeof value !== "boolean") {
+    return "N/A";
+  }
+  return value ? "Yes" : "No";
+}

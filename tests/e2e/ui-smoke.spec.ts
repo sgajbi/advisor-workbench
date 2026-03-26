@@ -10,7 +10,7 @@ test.describe('UI smoke checks', () => {
   });
 
   test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {
-    await page.goto(`${baseUrl}/pas/intake`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${baseUrl}/intake`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })).toBeVisible();
 
     await page.getByRole('button', { name: /Create Portfolio/i }).click();
@@ -44,7 +44,7 @@ test.describe('UI smoke checks', () => {
 
   test('mobile layout has no horizontal overflow on key pages', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ['/portfolios', '/pas/intake', '/proposals/simulate', '/workbench']) {
+    for (const path of ['/portfolios', '/intake', '/proposals/simulate', '/workbench']) {
       await page.goto(`${baseUrl}${path}`, { waitUntil: 'domcontentloaded' });
       const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
       expect(hasOverflow, `horizontal overflow detected on ${path}`).toBeFalsy();

@@ -23,16 +23,16 @@ vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
       inputModesUnion: [],
       moduleHealth: { pas: "available", pa: "unavailable", dpm: "available" },
       policyVersionsBySource: {
-        pas: "pas-default-v1",
-        pa: "pa-default-v1",
-        dpm: "dpm-default-v1",
+        pas: "lotus-core-default-v1",
+        pa: "lotus-performance-default-v1",
+        dpm: "lotus-manage-default-v1",
       },
-      pasPolicyDiagnostics: {
+      lotusCorePolicyDiagnostics: {
         available: true,
         allowedSections: ["OVERVIEW"],
         warnings: [],
         policyProvenance: {
-          policyVersion: "pas-default-v1",
+          policyVersion: "lotus-core-default-v1",
           policySource: "default",
           matchedRuleId: "default",
           strictMode: false,

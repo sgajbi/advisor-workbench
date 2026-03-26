@@ -49,6 +49,10 @@ export function getCoverageWarningLabel(warning: string): string {
       return "Monitoring temporarily unavailable";
     case "FOUNDATION_REPORTING_UNAVAILABLE":
       return "Reporting temporarily unavailable";
+    case "FOUNDATION_TRANSACTIONS_UNAVAILABLE":
+      return "Transaction ledger temporarily unavailable";
+    case "FOUNDATION_CASHFLOW_UNAVAILABLE":
+      return "Cashflow outlook temporarily unavailable";
     case "FOUNDATION_PERFORMANCE_INVALID":
       return "Performance data needs review";
     default:

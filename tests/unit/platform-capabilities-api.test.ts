@@ -27,12 +27,12 @@ describe("platform capabilities api", () => {
                 inputModesUnion: [],
                 moduleHealth: {},
                 policyVersionsBySource: {},
-                pasPolicyDiagnostics: {
+                lotusCorePolicyDiagnostics: {
                   available: true,
                   allowedSections: ["OVERVIEW"],
                   warnings: [],
                   policyProvenance: {
-                    policyVersion: "pas-default-v1",
+                    policyVersion: "lotus-core-default-v1",
                     policySource: "default",
                     matchedRuleId: "default",
                     strictMode: false,
@@ -72,12 +72,12 @@ describe("platform capabilities api", () => {
     a.navigation.command_center = false;
 
     expect(b.navigation.command_center).toBe(true);
-    expect(a.moduleHealth).toEqual({ pas: "unknown", pa: "unknown", dpm: "unknown" });
+    expect(a.moduleHealth).toEqual({ lotus_core: "unknown", lotus_performance: "unknown", lotus_manage: "unknown" });
     expect(a.policyVersionsBySource).toEqual({
-      pas: "unknown",
-      pa: "unknown",
-      dpm: "unknown",
+      lotus_core: "unknown",
+      lotus_performance: "unknown",
+      lotus_manage: "unknown",
     });
-    expect(a.pasPolicyDiagnostics.available).toBe(false);
+    expect(a.lotusCorePolicyDiagnostics.available).toBe(false);
   });
 });
