@@ -68,6 +68,26 @@ export function getPrimaryContributionRow(
   )[0] ?? null;
 }
 
+export function getTopContributionRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 5
+): ContributionRowView[] {
+  const rows = workspace.contribution?.levels?.[0]?.rows ?? [];
+  return [...rows]
+    .sort((left, right) => right.contribution_pct - left.contribution_pct)
+    .slice(0, count);
+}
+
+export function getBottomContributionRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 5
+): ContributionRowView[] {
+  const rows = workspace.contribution?.levels?.[0]?.rows ?? [];
+  return [...rows]
+    .sort((left, right) => left.contribution_pct - right.contribution_pct)
+    .slice(0, count);
+}
+
 export function isMoneyWeightedReturnSuspicious(
   workspace: WorkbenchPerformanceWorkspace
 ): boolean {

@@ -967,6 +967,36 @@ a:hover {
   gap: 0.85rem;
 }
 
+.performance-contributors-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.performance-contributors-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.performance-ranked-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.performance-ranked-heading strong {
+  color: var(--brand-strong);
+  font-size: 0.92rem;
+}
+
+.performance-ranked-heading span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .performance-section-heading,
 .performance-level-heading {
   display: flex;
@@ -990,6 +1020,48 @@ a:hover {
 .performance-unavailable-copy {
   margin: 0.5rem 0 0;
   line-height: 1.45;
+}
+
+.performance-effect-strip {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.performance-effect-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 1.7fr) 72px;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.performance-effect-label,
+.performance-effect-total {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.performance-effect-bars {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  min-height: 0.6rem;
+}
+
+.performance-effect-bar {
+  height: 0.48rem;
+  border-radius: 999px;
+}
+
+.performance-effect-bar-allocation {
+  background: #4b90c9;
+}
+
+.performance-effect-bar-selection {
+  background: #72a63f;
+}
+
+.performance-effect-bar-interaction {
+  background: #b68497;
 }
 
 .performance-chart-frame {
@@ -1357,6 +1429,10 @@ a:hover {
   }
 
   .performance-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-contributors-grid {
     grid-template-columns: 1fr;
   }
 

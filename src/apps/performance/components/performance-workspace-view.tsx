@@ -13,7 +13,9 @@ import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import {
   getCoverageLabel,
+  getBottomContributionRows,
   getPrimaryContributionRow,
+  getTopContributionRows,
   hasBenchmarkContext,
   hasDistinctGrossPerformance,
   hasMeaningfulHistory,
@@ -60,6 +62,8 @@ export default function PerformanceWorkspaceView({
   const hasDistinctGross = workspace ? hasDistinctGrossPerformance(workspace) : false;
   const hasHistory = workspace ? hasMeaningfulHistory(workspace.net_chart) : false;
   const primaryDriver = workspace ? getPrimaryContributionRow(workspace) : null;
+  const topContributors = workspace ? getTopContributionRows(workspace) : [];
+  const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
   const suspiciousMoneyWeighted = workspace ? isMoneyWeightedReturnSuspicious(workspace) : false;
 
   return (
@@ -457,6 +461,72 @@ export default function PerformanceWorkspaceView({
             </WorkspaceGrid>
 
             <WorkspaceGrid className="performance-detail-grid">
+              <Panel className="performance-contributors-panel">
+                <div className="performance-section-heading">
+                  <h3>Top / Bottom Contributors</h3>
+                  <span>{workspace.period}</span>
+                </div>
+                {hasContribution ? (
+                  <div className="performance-contributors-grid">
+                    <div>
+                      <div className="performance-ranked-heading">
+                        <strong>Highest</strong>
+                        <span>Contribution</span>
+                      </div>
+                      <div className="table-wrap">
+                        <table className="position-table">
+                          <thead>
+                            <tr>
+                              <th align="left">Bucket</th>
+                              <th align="right">Avg. Weight</th>
+                              <th align="right">Contribution</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {topContributors.map((row) => (
+                              <tr key={`top-${row.key_label}`}>
+                                <td>{row.key_label}</td>
+                                <td align="right">{formatPct(row.weight_avg_pct)}</td>
+                                <td align="right">{formatPct(row.contribution_pct)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="performance-ranked-heading">
+                        <strong>Lowest</strong>
+                        <span>Contribution</span>
+                      </div>
+                      <div className="table-wrap">
+                        <table className="position-table">
+                          <thead>
+                            <tr>
+                              <th align="left">Bucket</th>
+                              <th align="right">Avg. Weight</th>
+                              <th align="right">Contribution</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bottomContributors.map((row) => (
+                              <tr key={`bottom-${row.key_label}`}>
+                                <td>{row.key_label}</td>
+                                <td align="right">{formatPct(row.weight_avg_pct)}</td>
+                                <td align="right">{formatPct(row.contribution_pct)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="muted">Contributor ranking is not available for the current selection.</p>
+                )}
+              </Panel>
+
               <Panel id="performance-drivers">
                 <div className="performance-section-heading">
                   <h3>Contribution Detail</h3>
@@ -514,6 +584,30 @@ export default function PerformanceWorkspaceView({
                       <div className="performance-level-heading">
                         <strong>{formatLabel(level.dimension)}</strong>
                         <span>{formatPct(level.total_effect_pct)}</span>
+                      </div>
+                      <div className="performance-effect-strip">
+                        {level.rows.map((row) => (
+                          <div key={`effect-${level.dimension}-${row.key_label}`} className="performance-effect-row">
+                            <div className="performance-effect-label">{row.key_label}</div>
+                            <div className="performance-effect-bars">
+                              <div
+                                className="performance-effect-bar performance-effect-bar-allocation"
+                                style={{ width: `${Math.min(Math.abs(row.allocation_pct) * 18, 100)}%` }}
+                              />
+                              <div
+                                className="performance-effect-bar performance-effect-bar-selection"
+                                style={{ width: `${Math.min(Math.abs(row.selection_pct) * 18, 100)}%` }}
+                              />
+                              <div
+                                className="performance-effect-bar performance-effect-bar-interaction"
+                                style={{ width: `${Math.min(Math.abs(row.interaction_pct) * 18, 100)}%` }}
+                              />
+                            </div>
+                            <div className="performance-effect-total">
+                              {formatPct(row.total_effect_pct)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       <div className="table-wrap">
                         <table className="position-table">
