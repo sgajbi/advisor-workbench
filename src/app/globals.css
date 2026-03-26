@@ -1,18 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg: #f5f2ef;
-  --bg-alt: #ebe7e2;
-  --panel: #fffdfb;
-  --panel-alt: #f7f3ef;
-  --text: #1d2430;
-  --text-muted: #626b76;
-  --border: #d9d2cb;
-  --brand: #8a5672;
-  --brand-strong: #222c3b;
-  --brand-soft: #f1e8ed;
-  --brand-accent: #b9899f;
-  --brand-highlight: #b69a63;
+  --bg: #f3f1ee;
+  --bg-alt: #e8e5e1;
+  --panel: #fdfcf9;
+  --panel-alt: #f6f3ef;
+  --text: #1c2430;
+  --text-muted: #5f6976;
+  --border: #d6d1ca;
+  --brand: #7d536a;
+  --brand-strong: #1f2b3a;
+  --brand-soft: #eee7eb;
+  --brand-accent: #aa8698;
+  --brand-highlight: #ad9561;
   --warn-bg: #fff5e8;
   --warn-border: #edc17b;
   --warn-text: #7b4f0f;
@@ -50,9 +50,9 @@ body {
   font-family: var(--font-ui);
   color: var(--text);
   background:
-    radial-gradient(circle at 8% 2%, rgba(185, 137, 159, 0.12) 0%, transparent 30%),
-    radial-gradient(circle at 94% -10%, rgba(182, 154, 99, 0.1) 0%, transparent 24%),
-    radial-gradient(circle at 85% 24%, rgba(138, 86, 114, 0.08) 0%, transparent 22%),
+    radial-gradient(circle at 8% 2%, rgba(170, 134, 152, 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 94% -10%, rgba(173, 149, 97, 0.09) 0%, transparent 24%),
+    radial-gradient(circle at 85% 24%, rgba(125, 83, 106, 0.07) 0%, transparent 22%),
     linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 280px, var(--bg) 100%);
   font-size: 16px;
   line-height: var(--leading-body);
@@ -87,7 +87,7 @@ a:hover {
   top: 0;
   z-index: 20;
   border-bottom: 1px solid var(--border);
-  background: rgba(250, 248, 245, 0.94);
+  background: rgba(248, 246, 242, 0.95);
   backdrop-filter: blur(14px);
   box-shadow: 0 10px 28px rgba(20, 48, 62, 0.06);
 }
@@ -128,11 +128,11 @@ a:hover {
   border-radius: 20px;
   background:
     radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.98), transparent 46%),
-    linear-gradient(180deg, rgba(252, 248, 250, 0.99) 0%, rgba(242, 234, 238, 0.96) 100%);
+    linear-gradient(180deg, rgba(250, 247, 248, 0.99) 0%, rgba(239, 233, 236, 0.96) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     0 10px 24px rgba(34, 44, 59, 0.08);
-  border: 1px solid rgba(138, 86, 114, 0.18);
+  border: 1px solid rgba(125, 83, 106, 0.18);
 }
 
 .shell-brand-text {
@@ -223,7 +223,7 @@ a:hover {
   font-weight: 700;
   line-height: var(--leading-tight);
   color: var(--brand-strong);
-  background: linear-gradient(180deg, #fdfcfb 0%, #f2efeb 100%);
+  background: linear-gradient(180deg, #fcfbf8 0%, #f0ece7 100%);
   box-shadow: 0 6px 16px rgba(19, 45, 59, 0.05);
   transition:
     transform 140ms ease,
@@ -235,8 +235,8 @@ a:hover {
 
 .shell-nav-link:hover {
   transform: translateY(-1px);
-  border-color: #b79faf;
-  background: linear-gradient(180deg, #fcf8fa 0%, #efe7eb 100%);
+  border-color: #af97a5;
+  background: linear-gradient(180deg, #faf7f9 0%, #ece5e8 100%);
   color: var(--brand-strong);
   box-shadow: 0 10px 18px rgba(19, 45, 59, 0.08);
 }
@@ -1106,11 +1106,11 @@ a:hover {
 }
 
 .performance-ranked-bar-positive {
-  background: linear-gradient(90deg, #5f8f59 0%, #88a36d 100%);
+  background: linear-gradient(90deg, #5e8165 0%, #7f9a82 100%);
 }
 
 .performance-ranked-bar-negative {
-  background: linear-gradient(90deg, #a55d5a 0%, #c07d79 100%);
+  background: linear-gradient(90deg, #8e625f 0%, #b1827e 100%);
 }
 
 .performance-ranked-value {
@@ -1229,15 +1229,15 @@ a:hover {
 }
 
 .performance-effect-bar-allocation {
-  background: #5a8ebd;
+  background: #6487ad;
 }
 
 .performance-effect-bar-selection {
-  background: #7b9b56;
+  background: #7a8f63;
 }
 
 .performance-effect-bar-interaction {
-  background: #a87f91;
+  background: #9a7b8d;
 }
 
 .performance-chart-frame {
@@ -1486,7 +1486,7 @@ a:hover {
 }
 
 .performance-chart-chip-portfolio strong {
-  color: #8a5672;
+  color: #7d536a;
 }
 
 .performance-chart-chip-benchmark strong {
@@ -1494,7 +1494,7 @@ a:hover {
 }
 
 .performance-chart-chip-active strong {
-  color: #a98645;
+  color: #a18750;
 }
 
 .performance-chart-summary-band {
@@ -1584,7 +1584,7 @@ a:hover {
 }
 
 .performance-chart-area {
-  fill: rgba(138, 86, 114, 0.08);
+  fill: rgba(125, 83, 106, 0.08);
 }
 
 .performance-chart-line-portfolio,
@@ -1596,7 +1596,7 @@ a:hover {
 }
 
 .performance-chart-line-portfolio {
-  stroke: #8a5672;
+  stroke: #7d536a;
 }
 
 .performance-chart-line-benchmark {
@@ -1964,6 +1964,40 @@ a:hover {
   font-weight: 800;
 }
 
+@media (max-width: 1320px) {
+  .shell-topbar-main {
+    align-items: flex-start;
+  }
+
+  .shell-nav {
+    justify-content: flex-start;
+  }
+
+  .performance-chart-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .performance-chart-toolbar-right {
+    min-width: 0;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .performance-chart-inline-controls {
+    gap: 0.8rem 0.9rem;
+  }
+
+  .performance-chart-select-group select,
+  .performance-chart-select-group input {
+    min-width: 9.5rem;
+  }
+
+  .performance-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1080px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2037,6 +2071,31 @@ a:hover {
 
   .performance-contributors-grid {
     grid-template-columns: 1fr;
+  }
+
+  .performance-chart-toolbar-right {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-chart-date-form {
+    width: 100%;
+  }
+
+  .performance-chart-date-form .performance-chart-select-group,
+  .performance-chart-inline-controls > .performance-chart-select-group,
+  .performance-chart-inline-controls > .performance-chart-pill-group {
+    flex: 1 1 14rem;
+    min-width: 0;
+  }
+
+  .performance-chart-select-group select,
+  .performance-chart-select-group input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .performance-chart-canvas-wrap {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
   }
 
   .performance-control-strip {
@@ -2117,6 +2176,30 @@ a:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .performance-chart-toolbar-right {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-chart-summary-band {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-chart-date-form,
+  .performance-chart-inline-controls {
+    gap: 0.7rem;
+  }
+
+  .performance-ranked-row,
+  .performance-effect-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .performance-ranked-bar-track,
+  .performance-effect-bars {
+    width: 100%;
+  }
+
   .portfolio-hero-actions {
     justify-content: flex-start;
   }
@@ -2165,5 +2248,51 @@ a:hover {
 
   .performance-attribution-summary-strip {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell-brand {
+    gap: 0.48rem;
+  }
+
+  .shell-brand-emblem {
+    width: 2.7rem;
+    height: 2.3rem;
+  }
+
+  .shell-brand-text {
+    font-size: 1.35rem;
+  }
+
+  .section-card {
+    padding: 0.82rem;
+    border-radius: 14px;
+  }
+
+  .performance-overview-band-stats,
+  .performance-chart-summary-band,
+  .performance-chart-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-chart-canvas-wrap {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .performance-chart-axis {
+    justify-items: start;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 0;
+  }
+
+  .performance-chart-library-frame {
+    min-height: 24rem;
+  }
+
+  .performance-chart-stage {
+    padding: 0.85rem 0.85rem 1rem;
   }
 }
