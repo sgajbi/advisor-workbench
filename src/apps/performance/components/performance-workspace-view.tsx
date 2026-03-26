@@ -18,6 +18,7 @@ import {
   getTopPositionContributionRows,
   getPrimaryContributionRow,
   getTopContributionRows,
+  isMoneyWeightedReturnSuspicious,
   hasBenchmarkContext,
   hasMeaningfulHistory,
   hasPositionContributionRanking,
@@ -65,6 +66,13 @@ export default function PerformanceWorkspaceView({
   const hasHistory = workspace ? hasMeaningfulHistory(workspace.net_chart) : false;
   const primaryDriver = workspace ? getPrimaryContributionRow(workspace) : null;
   const hasPositionRanking = workspace ? hasPositionContributionRanking(workspace) : false;
+  const hasMoneyWeightedReturn = Boolean(
+    workspace?.money_weighted_return?.money_weighted_return_pct !== null &&
+      workspace?.money_weighted_return?.money_weighted_return_pct !== undefined
+  );
+  const suspiciousMoneyWeightedReturn = workspace
+    ? isMoneyWeightedReturnSuspicious(workspace)
+    : false;
   const topPositionContributors = workspace ? getTopPositionContributionRows(workspace) : [];
   const bottomPositionContributors = workspace ? getBottomPositionContributionRows(workspace) : [];
   const topContributors = workspace ? getTopContributionRows(workspace) : [];
@@ -143,8 +151,28 @@ export default function PerformanceWorkspaceView({
                   <strong>{formatPct(workspace.overview.cash_weight_pct)}</strong>
                 </div>
                 <div className="performance-overview-stat">
+                  <span>Money-Weighted</span>
+                  <strong>
+                    {workspace.money_weighted_return
+                      ? formatPct(workspace.money_weighted_return.money_weighted_return_pct)
+                      : "N/A"}
+                  </strong>
+                  {hasMoneyWeightedReturn ? (
+                    <small>
+                      {workspace.money_weighted_return?.annualized_return_pct != null
+                        ? `Annualized ${formatCompactPct(
+                            workspace.money_weighted_return.annualized_return_pct
+                          )}`
+                        : workspace.money_weighted_return?.method ?? "MWR"}
+                    </small>
+                  ) : null}
+                </div>
+                <div className="performance-overview-stat">
                   <span>Primary Driver</span>
                   <strong>{primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}</strong>
+                  {suspiciousMoneyWeightedReturn ? (
+                    <small>Review cash-flow timing</small>
+                  ) : null}
                 </div>
               </div>
             </Panel>
@@ -405,6 +433,20 @@ export default function PerformanceWorkspaceView({
                     </div>
                   </div>
                 ) : null}
+                <div className="performance-effect-legend" aria-label="Attribution effect legend">
+                  <span className="performance-effect-legend-item">
+                    <i className="performance-effect-legend-swatch performance-effect-bar-allocation" />
+                    Allocation
+                  </span>
+                  <span className="performance-effect-legend-item">
+                    <i className="performance-effect-legend-swatch performance-effect-bar-selection" />
+                    Selection
+                  </span>
+                  <span className="performance-effect-legend-item">
+                    <i className="performance-effect-legend-swatch performance-effect-bar-interaction" />
+                    Interaction
+                  </span>
+                </div>
                 {hasAttribution ? (
                   attributionLevels.map((level) => (
                     <div

@@ -965,6 +965,13 @@ a:hover {
   color: var(--brand-strong);
 }
 
+.performance-overview-stat small {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .performance-observation-strip {
   display: flex;
   flex-wrap: wrap;
@@ -1148,6 +1155,29 @@ a:hover {
   gap: 0.35rem;
   align-items: center;
   min-height: 0.6rem;
+}
+
+.performance-effect-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.performance-effect-legend-item {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.performance-effect-legend-swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 0.42rem;
+  border-radius: 999px;
 }
 
 .performance-effect-bar {

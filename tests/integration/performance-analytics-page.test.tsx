@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
@@ -217,6 +217,13 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("AAPL").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Total").length).toBeGreaterThan(1);
     expect(screen.getByText("$1,250,000")).toBeInTheDocument();
+    expect(screen.getByText("Money-Weighted")).toBeInTheDocument();
+    expect(screen.getByText("Annualized 5.12%")).toBeInTheDocument();
+    const attributionLegend = screen.getByLabelText("Attribution effect legend");
+    expect(attributionLegend).toBeInTheDocument();
+    expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
+    expect(within(attributionLegend).getByText("Selection")).toBeInTheDocument();
+    expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const performanceCall = fetchMock.mock.calls.find(([input]) =>
       input.toString().includes("/api/v1/workbench/DEMO_ADV_USD_001/performance")
