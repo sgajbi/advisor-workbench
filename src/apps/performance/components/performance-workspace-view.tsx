@@ -24,6 +24,7 @@ import {
   isMoneyWeightedReturnSuspicious,
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
+import PerformanceControlStrip from "./performance-control-strip";
 import PerformanceRail from "./performance-rail";
 
 function contributionCoverageTone(coverage: number | null | undefined): "default" | "warn" | "success" {
@@ -87,6 +88,13 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <>
+            <PerformanceControlStrip
+              selectedPortfolioId={selectedPortfolioId}
+              period={period}
+              detailBasis={detailBasis}
+              detailDimension={detailDimension}
+            />
+
             <Panel className="performance-command-strip">
               <a href="#performance-overview" className="performance-command-link">Overview</a>
               <a href="#performance-trend" className="performance-command-link">Trend</a>
