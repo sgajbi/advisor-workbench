@@ -46,16 +46,21 @@ describe("TopNav", () => {
   it("disables routes based on normalized navigation capabilities", () => {
     render(<TopNav />);
 
-    expect(screen.getByRole("link", { name: "Portfolio Foundation" })).toHaveAttribute("href", "/portfolios");
-    expect(screen.getByRole("link", { name: "Portfolio Intake" })).toHaveAttribute("href", "/pas/intake");
-    expect(screen.getByRole("link", { name: "Advisory Pipeline" })).toHaveAttribute("href", "/proposals");
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Foundation" })).toHaveAttribute("href", "/portfolios");
+    expect(screen.getByRole("link", { name: "Proposal" })).toHaveAttribute("href", "/proposals");
+    expect(screen.getByRole("link", { name: "Manage" })).toHaveAttribute("href", "/workbench");
+    expect(screen.getByRole("link", { name: "Platform" })).toHaveAttribute("href", "/suite");
 
-    const analyticsDisabled = screen.getByText("Analytics Studio");
-    const scenarioDisabled = screen.getByText("Scenario Builder");
+    const analyticsDisabled = screen.getByText("Performance");
+    const riskDisabled = screen.getByText("Risk");
+    const reportingDisabled = screen.getByText("Reporting");
 
     expect(analyticsDisabled.tagName).toBe("SPAN");
     expect(analyticsDisabled).toHaveAttribute("aria-disabled", "true");
-    expect(scenarioDisabled.tagName).toBe("SPAN");
-    expect(scenarioDisabled).toHaveAttribute("aria-disabled", "true");
+    expect(riskDisabled.tagName).toBe("SPAN");
+    expect(riskDisabled).toHaveAttribute("aria-disabled", "true");
+    expect(reportingDisabled.tagName).toBe("SPAN");
+    expect(reportingDisabled).toHaveAttribute("aria-disabled", "true");
   });
 });
