@@ -166,7 +166,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
     expect(screen.getAllByText("5.88%").length).toBeGreaterThan(1);
     expect(screen.getAllByText("XIRR").length).toBeGreaterThan(1);
-    expect(screen.getByRole("img", { name: "Net Trend chart" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
     expect(screen.getByText("$1,250,000")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Asia Growth Mandate/i })).toHaveAttribute(

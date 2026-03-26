@@ -34,7 +34,6 @@ export default function PerformanceWorkspaceView({
   period,
   detailBasis,
   detailDimension,
-  benchmark,
 }: {
   portfolios: Array<{ id: string; label: string }>;
   selectedPortfolioId: string | null;
@@ -42,8 +41,20 @@ export default function PerformanceWorkspaceView({
   period: string;
   detailBasis: string;
   detailDimension: string;
-  benchmark?: string;
 }) {
+  const hasBenchmark = Boolean(
+    workspace?.benchmark_code ||
+      workspace?.net_performance.benchmark_id ||
+      workspace?.gross_performance.benchmark_id ||
+      workspace?.attribution?.benchmark_id ||
+      workspace?.net_performance.benchmark_return_pct !== null ||
+      workspace?.gross_performance.benchmark_return_pct !== null
+  );
+  const contributionLevels = workspace?.contribution?.levels ?? [];
+  const attributionLevels = workspace?.attribution?.levels ?? [];
+  const hasAttribution = attributionLevels.length > 0;
+  const hasContribution = contributionLevels.length > 0;
+
   return (
     <WorkspaceLayout>
       <PerformanceRail
@@ -52,7 +63,6 @@ export default function PerformanceWorkspaceView({
         period={period}
         detailBasis={detailBasis}
         detailDimension={detailDimension}
-        benchmark={benchmark}
       />
 
       <WorkspaceMain>
@@ -68,13 +78,36 @@ export default function PerformanceWorkspaceView({
           <>
             <Panel className="performance-hero">
               <div className="performance-hero-title">
-                <SectionLabel>Performance</SectionLabel>
+                <SectionLabel>Portfolio Performance</SectionLabel>
                 <h2>{workspace.portfolio.portfolio_id}</h2>
-                <div className="page-meta-strip">
-                  <StatusChip>{workspace.period}</StatusChip>
-                  <StatusChip>{workspace.detail_basis}</StatusChip>
-                  <StatusChip>{formatLabel(workspace.detail_dimension)}</StatusChip>
-                  {workspace.benchmark_code ? <StatusChip>{workspace.benchmark_code}</StatusChip> : null}
+                <div className="performance-meta-grid">
+                  <div className="performance-meta-item">
+                    <span>As of</span>
+                    <strong>{formatDate(workspace.as_of_date)}</strong>
+                  </div>
+                  <div className="performance-meta-item">
+                    <span>Period</span>
+                    <strong>{workspace.period}</strong>
+                  </div>
+                  <div className="performance-meta-item">
+                    <span>Basis</span>
+                    <strong>{workspace.detail_basis}</strong>
+                  </div>
+                  <div className="performance-meta-item">
+                    <span>Breakdown</span>
+                    <strong>{formatLabel(workspace.detail_dimension)}</strong>
+                  </div>
+                  {hasBenchmark ? (
+                    <div className="performance-meta-item">
+                      <span>Benchmark</span>
+                      <strong>
+                        {workspace.benchmark_code ??
+                          workspace.net_performance.benchmark_id ??
+                          workspace.gross_performance.benchmark_id ??
+                          workspace.attribution?.benchmark_id}
+                      </strong>
+                    </div>
+                  ) : null}
                 </div>
               </div>
               <div className="performance-hero-metrics">
@@ -108,19 +141,23 @@ export default function PerformanceWorkspaceView({
 
             <WorkspaceGrid className="performance-summary-grid">
               <Panel>
-                <h3>Net Relative Return</h3>
+                <h3>{hasBenchmark ? "Net Relative Return" : "Net Return"}</h3>
                 <MetricRow
                   label="Portfolio"
                   value={formatPct(workspace.net_performance.portfolio_return_pct)}
                 />
-                <MetricRow
-                  label="Benchmark"
-                  value={formatPct(workspace.net_performance.benchmark_return_pct)}
-                />
-                <MetricRow
-                  label="Active"
-                  value={formatPct(workspace.net_performance.active_return_pct)}
-                />
+                {hasBenchmark ? (
+                  <MetricRow
+                    label="Benchmark"
+                    value={formatPct(workspace.net_performance.benchmark_return_pct)}
+                  />
+                ) : null}
+                {hasBenchmark ? (
+                  <MetricRow
+                    label="Active"
+                    value={formatPct(workspace.net_performance.active_return_pct)}
+                  />
+                ) : null}
                 <MetricRow
                   label="Annualized"
                   value={formatPct(workspace.net_performance.annualized_return_pct)}
@@ -128,19 +165,23 @@ export default function PerformanceWorkspaceView({
               </Panel>
 
               <Panel>
-                <h3>Gross Relative Return</h3>
+                <h3>{hasBenchmark ? "Gross Relative Return" : "Gross Return"}</h3>
                 <MetricRow
                   label="Portfolio"
                   value={formatPct(workspace.gross_performance.portfolio_return_pct)}
                 />
-                <MetricRow
-                  label="Benchmark"
-                  value={formatPct(workspace.gross_performance.benchmark_return_pct)}
-                />
-                <MetricRow
-                  label="Active"
-                  value={formatPct(workspace.gross_performance.active_return_pct)}
-                />
+                {hasBenchmark ? (
+                  <MetricRow
+                    label="Benchmark"
+                    value={formatPct(workspace.gross_performance.benchmark_return_pct)}
+                  />
+                ) : null}
+                {hasBenchmark ? (
+                  <MetricRow
+                    label="Active"
+                    value={formatPct(workspace.gross_performance.active_return_pct)}
+                  />
+                ) : null}
                 <MetricRow
                   label="Annualized"
                   value={formatPct(workspace.gross_performance.annualized_return_pct)}
@@ -169,29 +210,37 @@ export default function PerformanceWorkspaceView({
 
               <Panel>
                 <h3>Attribution</h3>
-                <MetricRow
-                  label="Active"
-                  value={formatPct(workspace.attribution?.active_return_pct)}
-                />
-                <MetricRow
-                  label="Effects"
-                  value={formatPct(workspace.attribution?.sum_of_effects_pct)}
-                />
-                <MetricRow
-                  label="Residual"
-                  value={formatPct(workspace.attribution?.residual_pct)}
-                />
-                <MetricRow
-                  label="Model"
-                  value={workspace.attribution?.model ?? "N/A"}
-                />
+                {hasAttribution ? (
+                  <>
+                    <MetricRow
+                      label="Active"
+                      value={formatPct(workspace.attribution?.active_return_pct)}
+                    />
+                    <MetricRow
+                      label="Effects"
+                      value={formatPct(workspace.attribution?.sum_of_effects_pct)}
+                    />
+                    <MetricRow
+                      label="Residual"
+                      value={formatPct(workspace.attribution?.residual_pct)}
+                    />
+                    <MetricRow
+                      label="Model"
+                      value={workspace.attribution?.model ?? "N/A"}
+                    />
+                  </>
+                ) : (
+                  <p className="muted performance-unavailable-copy">
+                    Attribution is available when benchmark-linked measurement is present.
+                  </p>
+                )}
               </Panel>
             </WorkspaceGrid>
 
             <WorkspaceGrid className="performance-chart-grid">
-              <PerformanceChartPanel title="Net Trend" points={workspace.net_chart} tone="net" />
+              <PerformanceChartPanel title="Net Return Path" points={workspace.net_chart} tone="net" />
               <PerformanceChartPanel
-                title="Gross Trend"
+                title="Gross Return Path"
                 points={workspace.gross_chart}
                 tone="gross"
               />
@@ -203,8 +252,8 @@ export default function PerformanceWorkspaceView({
                   <h3>Contribution Detail</h3>
                   <span>{formatLabel(workspace.detail_dimension)}</span>
                 </div>
-                {workspace.contribution?.levels.length ? (
-                  workspace.contribution.levels.map((level) => (
+                {hasContribution ? (
+                  contributionLevels.map((level) => (
                     <div key={`${level.level}-${level.name}`} className="performance-detail-block">
                       <div className="performance-level-heading">
                         <strong>{formatLabel(level.name)}</strong>
@@ -246,8 +295,8 @@ export default function PerformanceWorkspaceView({
                   <h3>Attribution Detail</h3>
                   <span>{formatLabel(workspace.detail_dimension)}</span>
                 </div>
-                {workspace.attribution?.levels.length ? (
-                  workspace.attribution.levels.map((level) => (
+                {hasAttribution ? (
+                  attributionLevels.map((level) => (
                     <div
                       key={`${level.dimension}-${level.total_effect_pct}`}
                       className="performance-detail-block"
@@ -299,7 +348,13 @@ export default function PerformanceWorkspaceView({
               <MetricRow label="As of" value={formatDate(workspace.as_of_date)} />
               <MetricRow
                 label="Benchmark"
-                value={workspace.benchmark_code ?? (benchmark ? benchmark : "Not assigned")}
+                value={
+                  workspace.benchmark_code ??
+                  workspace.net_performance.benchmark_id ??
+                  workspace.gross_performance.benchmark_id ??
+                  workspace.attribution?.benchmark_id ??
+                  "Not assigned"
+                }
               />
               <MetricRow label="Breakdown" value={formatLabel(workspace.detail_dimension)} />
               <MetricRow label="Basis" value={workspace.detail_basis} />
@@ -336,9 +391,7 @@ export default function PerformanceWorkspaceView({
                 <StatusChip>
                   Positions {workspace.overview.position_count}
                 </StatusChip>
-                {workspace.attribution?.benchmark_id ? (
-                  <StatusChip>{workspace.attribution.benchmark_id}</StatusChip>
-                ) : null}
+                {hasBenchmark ? <StatusChip>Benchmark-linked</StatusChip> : <StatusChip>No benchmark</StatusChip>}
               </div>
             </Panel>
 

@@ -32,9 +32,14 @@ export default function PerformanceChartPanel({
   tone: "net" | "gross";
 }) {
   const portfolioSeries = points.map((point) => point.cumulative_portfolio_return_pct ?? 0);
+  const hasBenchmark = points.some(
+    (point) =>
+      point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
+  );
+  const hasActiveReturn = points.some((point) => point.active_return_pct !== null);
   const benchmarkSeries = points.map((point) => point.cumulative_benchmark_return_pct ?? 0);
   const portfolioPath = buildChartPath(portfolioSeries);
-  const benchmarkPath = buildChartPath(benchmarkSeries);
+  const benchmarkPath = hasBenchmark ? buildChartPath(benchmarkSeries) : "";
 
   return (
     <Panel className="performance-chart-panel">
@@ -58,7 +63,7 @@ export default function PerformanceChartPanel({
           </div>
           <div className="performance-chart-legend">
             <span>Portfolio</span>
-            <span>Benchmark</span>
+            {hasBenchmark ? <span>Benchmark</span> : null}
           </div>
           <div className="table-wrap">
             <table className="position-table">
@@ -66,8 +71,8 @@ export default function PerformanceChartPanel({
                 <tr>
                   <th align="left">Period</th>
                   <th align="right">Portfolio</th>
-                  <th align="right">Benchmark</th>
-                  <th align="right">Active</th>
+                  {hasBenchmark ? <th align="right">Benchmark</th> : null}
+                  {hasActiveReturn ? <th align="right">Active</th> : null}
                   <th align="right">Cum. Portfolio</th>
                 </tr>
               </thead>
@@ -76,8 +81,12 @@ export default function PerformanceChartPanel({
                   <tr key={`${point.label}-${point.period_end ?? point.period_start ?? point.frequency}`}>
                     <td>{point.label}</td>
                     <td align="right">{formatPct(point.portfolio_return_pct)}</td>
-                    <td align="right">{formatPct(point.benchmark_return_pct)}</td>
-                    <td align="right">{formatPct(point.active_return_pct)}</td>
+                    {hasBenchmark ? (
+                      <td align="right">{formatPct(point.benchmark_return_pct)}</td>
+                    ) : null}
+                    {hasActiveReturn ? (
+                      <td align="right">{formatPct(point.active_return_pct)}</td>
+                    ) : null}
                     <td align="right">{formatCompactPct(point.cumulative_portfolio_return_pct)}</td>
                   </tr>
                 ))}

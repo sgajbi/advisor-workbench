@@ -5,27 +5,24 @@ import { formatLabel } from "../formatters";
 const PERIOD_OPTIONS = ["MTD", "QTD", "YTD", "1Y", "3Y", "5Y"];
 const BASIS_OPTIONS = ["NET", "GROSS"];
 const DIMENSION_OPTIONS = ["asset_class", "sector", "country"];
-const BENCHMARK_OPTIONS = ["MODEL_60_40", "MSCI_ACWI", "BALANCED_GLOBAL"];
 
 function buildHref({
   portfolioId,
   period,
   detailBasis,
   detailDimension,
-  benchmark,
 }: {
   portfolioId: string;
   period: string;
   detailBasis: string;
   detailDimension: string;
-  benchmark?: string;
 }) {
-  const baseHref =
+  return (
     `/performance?portfolioId=${encodeURIComponent(portfolioId)}` +
     `&period=${encodeURIComponent(period)}` +
     `&detailBasis=${encodeURIComponent(detailBasis)}` +
-    `&detailDimension=${encodeURIComponent(detailDimension)}`;
-  return benchmark ? `${baseHref}&benchmark=${encodeURIComponent(benchmark)}` : baseHref;
+    `&detailDimension=${encodeURIComponent(detailDimension)}`
+  );
 }
 
 export default function PerformanceRail({
@@ -34,7 +31,6 @@ export default function PerformanceRail({
   period,
   detailBasis,
   detailDimension,
-  benchmark,
 }: {
   portfolios: Array<{
     id: string;
@@ -44,7 +40,6 @@ export default function PerformanceRail({
   period: string;
   detailBasis: string;
   detailDimension: string;
-  benchmark?: string;
 }) {
   const portfolioId = selectedPortfolioId ?? portfolios[0]?.id ?? "";
 
@@ -53,7 +48,7 @@ export default function PerformanceRail({
       <Panel className="portfolio-rail performance-rail">
         <div className="portfolio-rail-header">
           <SectionLabel>Performance</SectionLabel>
-          <h2>Coverage Set</h2>
+          <h2>Mandates</h2>
         </div>
         <div className="portfolio-rail-list">
           {portfolios.map((item) => (
@@ -64,7 +59,6 @@ export default function PerformanceRail({
                 period,
                 detailBasis,
                 detailDimension,
-                benchmark,
               })}
               title={item.label}
               meta={item.id}
@@ -84,7 +78,6 @@ export default function PerformanceRail({
                   period: option,
                   detailBasis,
                   detailDimension,
-                  benchmark,
                 })}
                 title={option}
                 active={option === period}
@@ -104,7 +97,6 @@ export default function PerformanceRail({
                   period,
                   detailBasis: option,
                   detailDimension,
-                  benchmark,
                 })}
                 title={option}
                 active={option === detailBasis}
@@ -124,30 +116,9 @@ export default function PerformanceRail({
                   period,
                   detailBasis,
                   detailDimension: option,
-                  benchmark,
                 })}
                 title={formatLabel(option)}
                 active={option === detailDimension}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="performance-rail-section">
-          <SectionLabel>Benchmark</SectionLabel>
-          <div className="portfolio-rail-list">
-            {BENCHMARK_OPTIONS.map((option) => (
-              <WorkspaceRailLink
-                key={option}
-                href={buildHref({
-                  portfolioId,
-                  period,
-                  detailBasis,
-                  detailDimension,
-                  benchmark: option,
-                })}
-                title={option}
-                active={option === benchmark}
               />
             ))}
           </div>

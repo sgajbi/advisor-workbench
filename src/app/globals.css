@@ -744,6 +744,35 @@ a:hover {
   gap: 0.55rem;
 }
 
+.performance-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.55rem;
+}
+
+.performance-meta-item {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(34, 44, 59, 0.08);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.performance-meta-item span {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.performance-meta-item strong {
+  font-size: 0.95rem;
+  line-height: 1.15;
+  color: var(--brand-strong);
+}
+
 .performance-hero-title h2 {
   margin: 0;
   font-family: var(--font-display);
@@ -826,6 +855,11 @@ a:hover {
   color: var(--text-muted);
   font-size: 0.84rem;
   font-weight: 700;
+}
+
+.performance-unavailable-copy {
+  margin: 0.5rem 0 0;
+  line-height: 1.45;
 }
 
 .performance-chart-frame {
