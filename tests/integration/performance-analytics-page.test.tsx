@@ -25,27 +25,27 @@ describe("PerformanceAnalyticsPage", () => {
             ok: true,
             json: async () => ({
               items: [
-                { id: "PF_1001", label: "Global Balanced Mandate" },
+                { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
                 { id: "PF_2002", label: "Asia Growth Mandate" },
               ],
             }),
           } as Response;
         }
-        if (url.includes("/api/v1/workbench/PF_1001/performance")) {
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance")) {
           return {
             ok: true,
             json: async () => ({
               correlation_id: "corr-performance",
               contract_version: "v1",
-              portfolio_id: "PF_1001",
+              portfolio_id: "DEMO_ADV_USD_001",
               as_of_date: "2026-02-24",
               period: "YTD",
               chart_frequency: "monthly",
               detail_dimension: "asset_class",
               detail_basis: "NET",
-              benchmark_code: null,
+              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
               portfolio: {
-                portfolio_id: "PF_1001",
+                portfolio_id: "DEMO_ADV_USD_001",
                 client_id: "CIF_1001",
                 base_currency: "USD",
                 booking_center_code: "SG",
@@ -58,20 +58,20 @@ describe("PerformanceAnalyticsPage", () => {
               net_performance: {
                 metric_basis: "NET",
                 portfolio_return_pct: 5.42,
-                benchmark_return_pct: null,
+                benchmark_return_pct: 4.91,
                 active_return_pct: 0.52,
                 annualized_return_pct: 5.42,
-                benchmark_id: null,
-                benchmark_return_source: null,
+                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
+                benchmark_return_source: "calculated",
               },
               gross_performance: {
                 metric_basis: "GROSS",
                 portfolio_return_pct: 5.88,
-                benchmark_return_pct: null,
+                benchmark_return_pct: 5.12,
                 active_return_pct: 0.98,
                 annualized_return_pct: 5.88,
-                benchmark_id: null,
-                benchmark_return_source: null,
+                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
+                benchmark_return_source: "calculated",
               },
               money_weighted_return: {
                 money_weighted_return_pct: 5.12,
@@ -88,10 +88,10 @@ describe("PerformanceAnalyticsPage", () => {
                   period_start: "2026-01-01",
                   period_end: "2026-01-31",
                   portfolio_return_pct: 2.2,
-                  benchmark_return_pct: null,
+                  benchmark_return_pct: 1.9,
                   active_return_pct: 0.3,
                   cumulative_portfolio_return_pct: 2.2,
-                  cumulative_benchmark_return_pct: null,
+                  cumulative_benchmark_return_pct: 1.9,
                   cumulative_active_return_pct: 0.3,
                 },
               ],
@@ -102,10 +102,10 @@ describe("PerformanceAnalyticsPage", () => {
                   period_start: "2026-01-01",
                   period_end: "2026-01-31",
                   portfolio_return_pct: 2.4,
-                  benchmark_return_pct: null,
+                  benchmark_return_pct: 2.0,
                   active_return_pct: 0.5,
                   cumulative_portfolio_return_pct: 2.4,
-                  cumulative_benchmark_return_pct: null,
+                  cumulative_benchmark_return_pct: 2.0,
                   cumulative_active_return_pct: 0.5,
                 },
               ],
@@ -137,7 +137,7 @@ describe("PerformanceAnalyticsPage", () => {
                 metric_basis: "NET",
                 model: "BF",
                 linking: "carino",
-                benchmark_id: null,
+                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
                 active_return_pct: 0.52,
                 sum_of_effects_pct: 0.5,
                 residual_pct: 0.02,
@@ -168,7 +168,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByRole("heading", { name: "PF_1001" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
     expect(screen.getAllByText("5.88%").length).toBeGreaterThan(1);
     expect(screen.getByText("XIRR")).toBeInTheDocument();
@@ -177,14 +177,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(1);
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const performanceCall = fetchMock.mock.calls.find(([input]) =>
-      input.toString().includes("/api/v1/workbench/PF_1001/performance")
+      input.toString().includes("/api/v1/workbench/DEMO_ADV_USD_001/performance")
     );
     expect(performanceCall).toBeTruthy();
     expect(performanceCall?.[0].toString()).toContain(
-      "/api/v1/workbench/PF_1001/performance?period=YTD&chart_frequency=monthly&detail_dimension=asset_class&detail_basis=NET"
+      "/api/v1/workbench/DEMO_ADV_USD_001/performance?period=YTD&chart_frequency=monthly&detail_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
-    expect(performanceCall?.[0].toString()).not.toContain("benchmark_code=");
     expect(performanceCall?.[1]).toEqual(expect.objectContaining({ cache: "no-store" }));
+    expect(screen.getByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 
   it("passes a selected benchmark through to the performance workspace request", async () => {
@@ -212,7 +212,7 @@ describe("PerformanceAnalyticsPage", () => {
               chart_frequency: "monthly",
               detail_dimension: "asset_class",
               detail_basis: "NET",
-              benchmark_code: "MODEL_60_40",
+              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
               portfolio: {
                 portfolio_id: "PF_1001",
                 client_id: "CIF_1001",
@@ -230,7 +230,7 @@ describe("PerformanceAnalyticsPage", () => {
                 benchmark_return_pct: 4.9,
                 active_return_pct: 0.52,
                 annualized_return_pct: 5.42,
-                benchmark_id: "MODEL_60_40",
+                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
                 benchmark_return_source: "calculated",
               },
               gross_performance: {
@@ -239,7 +239,7 @@ describe("PerformanceAnalyticsPage", () => {
                 benchmark_return_pct: 4.9,
                 active_return_pct: 0.98,
                 annualized_return_pct: 5.88,
-                benchmark_id: "MODEL_60_40",
+                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
                 benchmark_return_source: "calculated",
               },
               money_weighted_return: null,
@@ -258,7 +258,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(
       await PerformanceAnalyticsPage({
-        searchParams: Promise.resolve({ benchmark: "MODEL_60_40" }),
+        searchParams: Promise.resolve({ benchmark: "BMK_GLOBAL_BALANCED_60_40" }),
       })
     );
 
@@ -266,7 +266,7 @@ describe("PerformanceAnalyticsPage", () => {
     const performanceCall = fetchMock.mock.calls.find(([input]) =>
       input.toString().includes("/api/v1/workbench/PF_1001/performance")
     );
-    expect(performanceCall?.[0].toString()).toContain("benchmark_code=MODEL_60_40");
-    expect(screen.getByLabelText("Compared To")).toHaveValue("MODEL_60_40");
+    expect(performanceCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
+    expect(screen.getByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 });

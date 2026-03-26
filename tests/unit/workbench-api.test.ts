@@ -99,7 +99,7 @@ describe("workbench api", () => {
             session_id: "sess_1",
             period: "YTD",
             group_by: "ASSET_CLASS",
-            benchmark_code: "MODEL_60_40",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
             portfolio_return_pct: 2.1,
             benchmark_return_pct: 1.6,
             active_return_pct: 0.5,
@@ -117,14 +117,14 @@ describe("workbench api", () => {
     await getWorkbenchAnalytics("PF_1001", {
       period: "YTD",
       groupBy: "ASSET_CLASS",
-      benchmark: "MODEL_60_40",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
       sessionId: "sess_1",
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining(
-        "/api/v1/workbench/PF_1001/analytics?period=YTD&group_by=ASSET_CLASS&benchmark_code=MODEL_60_40&session_id=sess_1"
+        "/api/v1/workbench/PF_1001/analytics?period=YTD&group_by=ASSET_CLASS&benchmark_code=BMK_GLOBAL_BALANCED_60_40&session_id=sess_1"
       ),
       expect.objectContaining({ cache: "no-store" })
     );
@@ -216,7 +216,7 @@ describe("workbench api", () => {
           chart_frequency: "monthly",
           detail_dimension: "asset_class",
           detail_basis: "NET",
-          benchmark_code: "MODEL_60_40",
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
           portfolio: {
             portfolio_id: "PF_1001",
             client_id: "CIF_1001",
@@ -234,7 +234,7 @@ describe("workbench api", () => {
             benchmark_return_pct: 4.9,
             active_return_pct: 0.52,
             annualized_return_pct: 5.42,
-            benchmark_id: "MODEL_60_40",
+            benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
             benchmark_return_source: "calculated",
           },
           gross_performance: {
@@ -243,7 +243,7 @@ describe("workbench api", () => {
             benchmark_return_pct: 4.9,
             active_return_pct: 0.98,
             annualized_return_pct: 5.88,
-            benchmark_id: "MODEL_60_40",
+            benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
             benchmark_return_source: "calculated",
           },
           money_weighted_return: null,
@@ -262,11 +262,11 @@ describe("workbench api", () => {
       chartFrequency: "monthly",
       detailDimension: "asset_class",
       detailBasis: "NET",
-      benchmark: "MODEL_60_40",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
-    expect(requestedUrl).toContain("benchmark_code=MODEL_60_40");
+    expect(requestedUrl).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
   });
 
   it("calls backend reporting snapshot endpoint", async () => {

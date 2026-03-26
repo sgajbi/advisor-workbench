@@ -8,6 +8,7 @@ type LookupEnvelope = {
 };
 
 const DEFAULT_PORTFOLIO_ID = "DEMO_ADV_USD_001";
+const DEFAULT_BENCHMARK_ID = "BMK_GLOBAL_BALANCED_60_40";
 
 async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
   try {
@@ -47,7 +48,9 @@ export default async function PerformanceAnalyticsPage({
   const detailBasis = resolvedSearch.detailBasis?.trim() || "NET";
   const detailDimension = resolvedSearch.detailDimension?.trim() || "asset_class";
   const chartFrequency = resolvedSearch.chartFrequency?.trim() || "monthly";
-  const benchmark = resolvedSearch.benchmark?.trim() || undefined;
+  const benchmark =
+    resolvedSearch.benchmark?.trim() ||
+    (selectedPortfolioId === DEFAULT_PORTFOLIO_ID ? DEFAULT_BENCHMARK_ID : undefined);
 
   let workspace = null;
   if (selectedPortfolioId) {
@@ -67,7 +70,6 @@ export default async function PerformanceAnalyticsPage({
   return (
     <main className="page-container">
       <PerformanceWorkspaceView
-        selectedPortfolioId={selectedPortfolioId}
         workspace={workspace}
         period={period}
         detailBasis={detailBasis}

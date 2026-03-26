@@ -7,10 +7,12 @@ import type { EChartsOption } from "echarts";
 import { Panel } from "@/design-system";
 import type { PerformanceChartPoint } from "@/features/workbench/types";
 
-import { formatLabel, formatPct } from "../formatters";
+import { formatDate, formatLabel, formatPct } from "../formatters";
 import {
+  BASIS_OPTIONS,
   BENCHMARK_OPTIONS,
   CHART_FREQUENCY_OPTIONS,
+  PERIOD_OPTIONS,
   buildPerformanceHref,
 } from "../navigation";
 
@@ -49,6 +51,15 @@ function formatBenchmarkLabel(benchmark?: string) {
     return "Benchmark";
   }
   return BENCHMARK_OPTIONS.find((option) => option.value === benchmark)?.label ?? benchmark;
+}
+
+function resolveExplicitDateRange(points: PerformanceChartPoint[]) {
+  const start = points.find((point) => point.period_start)?.period_start ?? null;
+  const end = [...points].reverse().find((point) => point.period_end)?.period_end ?? null;
+  if (!start && !end) {
+    return null;
+  }
+  return `${formatDate(start)} - ${formatDate(end)}`;
 }
 
 export default function PerformanceChartPanel({
@@ -241,6 +252,7 @@ export default function PerformanceChartPanel({
   const latestValue = latest?.portfolio_return_pct ?? summary.portfolio_return_pct;
   const highestValue = periodicPortfolioValues.length ? Math.max(...periodicPortfolioValues) : null;
   const lowestValue = periodicPortfolioValues.length ? Math.min(...periodicPortfolioValues) : null;
+  const explicitDateRange = resolveExplicitDateRange(points);
 
   return (
     <Panel id={id} className="performance-chart-stage">
@@ -248,32 +260,30 @@ export default function PerformanceChartPanel({
         <div className="performance-chart-toolbar-left">
           <div className="performance-section-heading performance-chart-stage-heading">
             <h3>{title}</h3>
-            <span>{formatLabel(chartFrequency)}</span>
+            <span>{explicitDateRange ?? formatLabel(chartFrequency)}</span>
           </div>
           <div className="performance-chart-inline-controls">
-            <label className="performance-chart-select-group">
-              <span>Compared To</span>
-              <select
-                aria-label="Compared To"
-                value={benchmark ?? ""}
-                onChange={(event) => {
-                  window.location.href = buildPerformanceHref({
-                    portfolioId,
-                    period,
-                    detailBasis,
-                    detailDimension,
-                    chartFrequency,
-                    benchmark: event.currentTarget.value || undefined,
-                  });
-                }}
-              >
-                {BENCHMARK_OPTIONS.map((option) => (
-                  <option key={option.value || "none"} value={option.value}>
-                    {option.label}
-                  </option>
+            <div className="performance-chart-pill-group">
+              <span>Horizon</span>
+              <div className="performance-chart-pill-row">
+                {PERIOD_OPTIONS.map((option) => (
+                  <a
+                    key={option}
+                    href={buildPerformanceHref({
+                      portfolioId,
+                      period: option,
+                      detailBasis,
+                      detailDimension,
+                      chartFrequency,
+                      benchmark,
+                    })}
+                    className={`performance-control-option ${option === period ? "performance-control-option-active" : ""}`}
+                  >
+                    {option}
+                  </a>
                 ))}
-              </select>
-            </label>
+              </div>
+            </div>
             <label className="performance-chart-select-group">
               <span>Frequency</span>
               <select
@@ -297,6 +307,50 @@ export default function PerformanceChartPanel({
                 ))}
               </select>
             </label>
+            <label className="performance-chart-select-group">
+              <span>Compared To</span>
+              <select
+                aria-label="Compared To"
+                value={benchmark ?? ""}
+                onChange={(event) => {
+                  window.location.href = buildPerformanceHref({
+                    portfolioId,
+                    period,
+                    detailBasis,
+                    detailDimension,
+                    chartFrequency,
+                    benchmark: event.currentTarget.value || undefined,
+                  });
+                }}
+              >
+                {BENCHMARK_OPTIONS.map((option) => (
+                  <option key={option.value || "none"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="performance-chart-pill-group">
+              <span>Basis</span>
+              <div className="performance-chart-pill-row">
+                {BASIS_OPTIONS.map((option) => (
+                  <a
+                    key={option}
+                    href={buildPerformanceHref({
+                      portfolioId,
+                      period,
+                      detailBasis: option,
+                      detailDimension,
+                      chartFrequency,
+                      benchmark,
+                    })}
+                    className={`performance-control-option ${option === detailBasis ? "performance-control-option-active" : ""}`}
+                  >
+                    {option}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
         <div className="performance-chart-toolbar-right">

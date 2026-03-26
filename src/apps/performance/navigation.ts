@@ -7,10 +7,7 @@ export const CHART_FREQUENCY_OPTIONS = [
 ] as const;
 export const BENCHMARK_OPTIONS = [
   { value: "", label: "No Benchmark" },
-  { value: "MODEL_60_40", label: "Model 60/40" },
-  { value: "MSCI_ACWI", label: "MSCI ACWI" },
-  { value: "BALANCED_GLOBAL", label: "Balanced Global" },
-  { value: "S&P500", label: "S&P 500" },
+  { value: "BMK_GLOBAL_BALANCED_60_40", label: "Global Balanced 60/40" },
 ] as const;
 
 export function buildPerformanceHref({

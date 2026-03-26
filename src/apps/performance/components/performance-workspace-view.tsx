@@ -21,10 +21,8 @@ import {
   isMoneyWeightedReturnSuspicious,
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
-import PerformanceControlStrip from "./performance-control-strip";
 
 export default function PerformanceWorkspaceView({
-  selectedPortfolioId,
   workspace,
   period,
   detailBasis,
@@ -32,7 +30,6 @@ export default function PerformanceWorkspaceView({
   chartFrequency,
   benchmark,
 }: {
-  selectedPortfolioId: string | null;
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;
   detailBasis: string;
@@ -57,10 +54,6 @@ export default function PerformanceWorkspaceView({
   );
   const suspiciousMoneyWeighted = workspace ? isMoneyWeightedReturnSuspicious(workspace) : false;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
-  const benchmarkUnavailable =
-    Boolean(selectedBenchmarkCode) &&
-    !hasBenchmark &&
-    workspace?.warnings.some((warning) => warning.includes("PERFORMANCE_UNAVAILABLE") || warning.includes("ATTRIBUTION_UNAVAILABLE"));
 
   return (
     <WorkspaceLayout className="performance-layout">
@@ -75,12 +68,6 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <>
-            {benchmarkUnavailable ? (
-              <Panel className="warn-banner performance-benchmark-banner">
-                <strong>{selectedBenchmarkCode}</strong> is selected, but no benchmark composition window is available for this mandate in the current seeded environment.
-              </Panel>
-            ) : null}
-
             <Panel className="performance-hero">
               <div className="performance-hero-title">
                 <SectionLabel>Portfolio Performance</SectionLabel>
@@ -209,16 +196,6 @@ export default function PerformanceWorkspaceView({
                 </div>
               </div>
             </Panel>
-
-            <PerformanceControlStrip
-              selectedPortfolioId={selectedPortfolioId}
-              period={period}
-              detailBasis={detailBasis}
-              detailDimension={detailDimension}
-              chartFrequency={chartFrequency}
-              benchmark={benchmark}
-            />
-
             <WorkspaceGrid className="performance-chart-grid">
               <PerformanceChartPanel
                 title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
