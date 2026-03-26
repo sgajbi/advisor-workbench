@@ -1,18 +1,15 @@
 import {
-  MetricRow,
   Panel,
   SectionLabel,
   StatusChip,
   WorkspaceGrid,
   WorkspaceLayout,
   WorkspaceMain,
-  WorkspaceSide,
 } from "@/design-system";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import {
-  getCoverageLabel,
   getBottomContributionRows,
   getPrimaryContributionRow,
   getTopContributionRows,
@@ -25,23 +22,8 @@ import {
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
 import PerformanceControlStrip from "./performance-control-strip";
-import PerformanceRail from "./performance-rail";
-
-function contributionCoverageTone(coverage: number | null | undefined): "default" | "warn" | "success" {
-  if (coverage === null || coverage === undefined) {
-    return "default";
-  }
-  if (coverage >= 98) {
-    return "success";
-  }
-  if (coverage >= 90) {
-    return "warn";
-  }
-  return "default";
-}
 
 export default function PerformanceWorkspaceView({
-  portfolios,
   selectedPortfolioId,
   workspace,
   period,
@@ -50,7 +32,6 @@ export default function PerformanceWorkspaceView({
   chartFrequency,
   benchmark,
 }: {
-  portfolios: Array<{ id: string; label: string }>;
   selectedPortfolioId: string | null;
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;
@@ -83,16 +64,6 @@ export default function PerformanceWorkspaceView({
 
   return (
     <WorkspaceLayout className="performance-layout">
-      <PerformanceRail
-        portfolios={portfolios}
-        selectedPortfolioId={selectedPortfolioId}
-        period={period}
-        detailBasis={detailBasis}
-        detailDimension={detailDimension}
-        chartFrequency={chartFrequency}
-        benchmark={benchmark}
-      />
-
       <WorkspaceMain className="performance-main">
         {!workspace ? (
           <Panel className="degraded-state-panel">
@@ -109,15 +80,6 @@ export default function PerformanceWorkspaceView({
                 <strong>{selectedBenchmarkCode}</strong> is selected, but no benchmark composition window is available for this mandate in the current seeded environment.
               </Panel>
             ) : null}
-
-            <Panel className="performance-command-strip">
-              <a href="#performance-overview" className="performance-command-link">Overview</a>
-              <a href="#performance-trend" className="performance-command-link">Trend</a>
-              <a href="#performance-drivers" className="performance-command-link">Drivers</a>
-              <a href={hasAttribution ? "#performance-attribution" : "#performance-measurement"} className="performance-command-link">
-                {hasAttribution ? "Attribution" : "Measurement"}
-              </a>
-            </Panel>
 
             <Panel className="performance-hero">
               <div className="performance-hero-title">
@@ -157,12 +119,8 @@ export default function PerformanceWorkspaceView({
                   ) : null}
                 </div>
                 <div className="performance-observation-strip">
-                  <StatusChip tone={contributionCoverageTone(workspace.contribution?.coverage_mv_pct)}>
-                    {getCoverageLabel(workspace)}
-                  </StatusChip>
                   {hasHistory ? <StatusChip>{workspace.net_chart.length} observations</StatusChip> : <StatusChip>Limited history</StatusChip>}
                   {hasBenchmark ? <StatusChip>Relative measurement</StatusChip> : <StatusChip>{selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}</StatusChip>}
-                  {workspace.partial_failures.length ? <StatusChip tone="warn">Partial service degradation</StatusChip> : null}
                 </div>
               </div>
               <div className="performance-hero-metrics">
@@ -252,120 +210,6 @@ export default function PerformanceWorkspaceView({
               </div>
             </Panel>
 
-            <WorkspaceGrid className="performance-summary-grid">
-              <Panel>
-                <h3>{hasBenchmark ? "Net Relative Return" : "Net Return"}</h3>
-                <MetricRow
-                  label="Portfolio"
-                  value={formatPct(workspace.net_performance.portfolio_return_pct)}
-                />
-                {hasBenchmark ? (
-                  <MetricRow
-                    label="Benchmark"
-                    value={formatPct(workspace.net_performance.benchmark_return_pct)}
-                  />
-                ) : null}
-                {hasBenchmark ? (
-                  <MetricRow
-                    label="Active"
-                    value={formatPct(workspace.net_performance.active_return_pct)}
-                  />
-                ) : null}
-                <MetricRow
-                  label="Annualized"
-                  value={formatPct(workspace.net_performance.annualized_return_pct)}
-                />
-              </Panel>
-
-              {hasDistinctGross ? (
-                <Panel>
-                  <h3>{hasBenchmark ? "Gross Relative Return" : "Gross Return"}</h3>
-                  <MetricRow
-                    label="Portfolio"
-                    value={formatPct(workspace.gross_performance.portfolio_return_pct)}
-                  />
-                  {hasBenchmark ? (
-                    <MetricRow
-                      label="Benchmark"
-                      value={formatPct(workspace.gross_performance.benchmark_return_pct)}
-                    />
-                  ) : null}
-                  {hasBenchmark ? (
-                    <MetricRow
-                      label="Active"
-                      value={formatPct(workspace.gross_performance.active_return_pct)}
-                    />
-                  ) : null}
-                  <MetricRow
-                    label="Annualized"
-                    value={formatPct(workspace.gross_performance.annualized_return_pct)}
-                  />
-                </Panel>
-              ) : (
-                <Panel>
-                  <h3>Net / Gross Alignment</h3>
-                  <MetricRow
-                    label="Difference"
-                    value={formatPct(
-                      (workspace.gross_performance.portfolio_return_pct ?? 0) -
-                        (workspace.net_performance.portfolio_return_pct ?? 0)
-                    )}
-                  />
-                  <MetricRow label="Interpretation" value="No material fee drag in the selected window" />
-                  <MetricRow label="Gross Basis" value={workspace.gross_performance.metric_basis} />
-                  <MetricRow label="Net Basis" value={workspace.net_performance.metric_basis} />
-                </Panel>
-              )}
-
-              <Panel>
-                <h3>Contribution</h3>
-                <MetricRow
-                  label="Portfolio"
-                  value={formatPct(workspace.contribution?.portfolio_contribution_pct)}
-                />
-                <MetricRow
-                  label="Total Return"
-                  value={formatPct(workspace.contribution?.total_portfolio_return_pct)}
-                />
-                <MetricRow
-                  label="Coverage"
-                  value={formatPct(workspace.contribution?.coverage_mv_pct)}
-                />
-                <MetricRow
-                  label="Weighting"
-                  value={workspace.contribution?.weighting_scheme ?? "N/A"}
-                />
-              </Panel>
-
-              <Panel>
-                <h3>Attribution</h3>
-                {hasAttribution ? (
-                  <>
-                    <MetricRow
-                      label="Active"
-                      value={formatPct(workspace.attribution?.active_return_pct)}
-                    />
-                    <MetricRow
-                      label="Effects"
-                      value={formatPct(workspace.attribution?.sum_of_effects_pct)}
-                    />
-                    <MetricRow
-                      label="Residual"
-                      value={formatPct(workspace.attribution?.residual_pct)}
-                    />
-                    <MetricRow
-                      label="Model"
-                      value={workspace.attribution?.model ?? "N/A"}
-                    />
-                  </>
-                ) : (
-                  <p className="muted performance-unavailable-copy">
-                    Attribution is available when benchmark-linked measurement is present.
-                  </p>
-                )}
-              </Panel>
-            </WorkspaceGrid>
-
             <PerformanceControlStrip
               selectedPortfolioId={selectedPortfolioId}
               period={period}
@@ -390,49 +234,6 @@ export default function PerformanceWorkspaceView({
                 benchmark={benchmark}
                 id="performance-trend"
               />
-              <Panel id="performance-measurement" className="performance-measurement-panel">
-                <div className="performance-section-heading">
-                  <h3>Measurement Notes</h3>
-                  <span>{workspace.period}</span>
-                </div>
-                <div className="performance-note-list">
-                  <div className="performance-note-item">
-                    <strong>Benchmark</strong>
-                    <span>
-                      {hasBenchmark
-                        ? workspace.benchmark_code ??
-                          workspace.net_performance.benchmark_id ??
-                          workspace.gross_performance.benchmark_id ??
-                          workspace.attribution?.benchmark_id
-                        : "No benchmark assigned"}
-                    </span>
-                  </div>
-                  <div className="performance-note-item">
-                    <strong>Attribution</strong>
-                    <span>
-                      {hasAttribution
-                        ? "Attribution effects available below"
-                        : "Benchmark-linked attribution is not available for this mandate"}
-                    </span>
-                  </div>
-                  <div className="performance-note-item">
-                    <strong>Cash-flow Return</strong>
-                    <span>
-                      {suspiciousMoneyWeighted
-                        ? "Money-weighted return is distorted by the current cash-flow window"
-                        : `${workspace.money_weighted_return?.method ?? "Return"} calculated successfully`}
-                    </span>
-                  </div>
-                  <div className="performance-note-item">
-                    <strong>Driver</strong>
-                    <span>
-                      {primaryDriver
-                        ? `${formatLabel(primaryDriver.key_label)} contributes ${formatPct(primaryDriver.contribution_pct)}`
-                        : "Contribution detail not available"}
-                    </span>
-                  </div>
-                </div>
-              </Panel>
             </WorkspaceGrid>
 
             <WorkspaceGrid className="performance-detail-grid">
@@ -617,81 +418,6 @@ export default function PerformanceWorkspaceView({
         )}
       </WorkspaceMain>
 
-      <WorkspaceSide className="performance-side">
-        {workspace ? (
-          <>
-            <Panel className="portfolio-side-card">
-              <h3>Measurement</h3>
-              <MetricRow label="As of" value={formatDate(workspace.as_of_date)} />
-              <MetricRow
-                label="Benchmark"
-                value={
-                  workspace.benchmark_code ??
-                  workspace.net_performance.benchmark_id ??
-                  workspace.gross_performance.benchmark_id ??
-                  workspace.attribution?.benchmark_id ??
-                  "Not assigned"
-                }
-              />
-              <MetricRow label="Breakdown" value={formatLabel(workspace.detail_dimension)} />
-              <MetricRow label="Basis" value={workspace.detail_basis} />
-              <MetricRow label="Cash Weight" value={formatPct(workspace.overview.cash_weight_pct)} />
-            </Panel>
-
-            <Panel className="portfolio-side-card">
-              <h3>Money-Weighted Return</h3>
-              <MetricRow
-                label="Return"
-                value={formatPct(workspace.money_weighted_return?.money_weighted_return_pct)}
-              />
-              <MetricRow
-                label="Annualized"
-                value={formatPct(workspace.money_weighted_return?.annualized_return_pct)}
-              />
-              <MetricRow label="Method" value={workspace.money_weighted_return?.method ?? "N/A"} />
-              <MetricRow
-                label="Window Start"
-                value={formatDate(workspace.money_weighted_return?.start_date)}
-              />
-              <MetricRow
-                label="Window End"
-                value={formatDate(workspace.money_weighted_return?.end_date)}
-              />
-            </Panel>
-
-            <Panel className="portfolio-side-card">
-              <h3>Coverage</h3>
-              <div className="portfolio-warning-list">
-                <StatusChip tone={contributionCoverageTone(workspace.contribution?.coverage_mv_pct)}>
-                  {getCoverageLabel(workspace)}
-                </StatusChip>
-                <StatusChip>
-                  Positions {workspace.overview.position_count}
-                </StatusChip>
-                {hasBenchmark ? <StatusChip>Benchmark-linked</StatusChip> : <StatusChip>No benchmark</StatusChip>}
-              </div>
-            </Panel>
-
-            {workspace.partial_failures.length ? (
-              <Panel className="portfolio-side-card">
-                <h3>Exceptions</h3>
-                <div className="portfolio-guidance-list">
-                  {workspace.partial_failures.map((failure) => (
-                    <div
-                      key={`${failure.source_service}-${failure.error_code}`}
-                      className="portfolio-guidance-item"
-                    >
-                      <strong>{failure.source_service}</strong>
-                      <span className="portfolio-evidence-meta">{failure.error_code}</span>
-                      <p className="portfolio-evidence-copy">{failure.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </Panel>
-            ) : null}
-          </>
-        ) : null}
-      </WorkspaceSide>
     </WorkspaceLayout>
   );
 }

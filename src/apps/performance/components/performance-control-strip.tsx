@@ -1,9 +1,6 @@
 import { Panel } from "@/design-system";
-
-import { formatLabel } from "../formatters";
 import {
   BASIS_OPTIONS,
-  DIMENSION_OPTIONS,
   PERIOD_OPTIONS,
   buildPerformanceHref,
 } from "../navigation";
@@ -84,24 +81,6 @@ export default function PerformanceControlStrip({
         ))}
       </ControlGroup>
 
-      <ControlGroup title="Breakdown">
-        {DIMENSION_OPTIONS.map((option) => (
-          <a
-            key={option}
-            href={buildPerformanceHref({
-              portfolioId,
-              period,
-              detailBasis,
-              detailDimension: option,
-              chartFrequency,
-              benchmark,
-            })}
-            className={`performance-control-option ${option === detailDimension ? "performance-control-option-active" : ""}`}
-          >
-            {formatLabel(option)}
-          </a>
-        ))}
-      </ControlGroup>
     </Panel>
   );
 }

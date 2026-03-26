@@ -165,15 +165,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("heading", { name: "PF_1001" })).toBeInTheDocument();
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
     expect(screen.getAllByText("5.88%").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("XIRR").length).toBeGreaterThan(1);
+    expect(screen.getByText("XIRR")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
     expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(1);
-    expect(screen.getByRole("link", { name: /Asia Growth Mandate/i })).toHaveAttribute(
-      "href",
-      "/performance?portfolioId=PF_2002&period=YTD&detailBasis=NET&detailDimension=asset_class&chartFrequency=monthly"
-    );
-
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const performanceCall = fetchMock.mock.calls.find(([input]) =>
       input.toString().includes("/api/v1/workbench/PF_1001/performance")

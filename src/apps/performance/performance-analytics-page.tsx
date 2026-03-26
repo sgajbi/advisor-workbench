@@ -7,6 +7,8 @@ type LookupEnvelope = {
   items?: Array<{ id: string; label: string }>;
 };
 
+const DEFAULT_PORTFOLIO_ID = "DEMO_ADV_USD_001";
+
 async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
   try {
     const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=${limit}`, {
@@ -36,7 +38,11 @@ export default async function PerformanceAnalyticsPage({
 }) {
   const resolvedSearch = await searchParams;
   const portfolios = await getPortfolioOptions();
-  const selectedPortfolioId = resolvedSearch.portfolioId?.trim() || portfolios[0]?.id || null;
+  const selectedPortfolioId =
+    resolvedSearch.portfolioId?.trim() ||
+    portfolios.find((portfolio) => portfolio.id === DEFAULT_PORTFOLIO_ID)?.id ||
+    portfolios[0]?.id ||
+    null;
   const period = resolvedSearch.period?.trim() || "YTD";
   const detailBasis = resolvedSearch.detailBasis?.trim() || "NET";
   const detailDimension = resolvedSearch.detailDimension?.trim() || "asset_class";
@@ -61,7 +67,6 @@ export default async function PerformanceAnalyticsPage({
   return (
     <main className="page-container">
       <PerformanceWorkspaceView
-        portfolios={portfolios}
         selectedPortfolioId={selectedPortfolioId}
         workspace={workspace}
         period={period}
