@@ -172,6 +172,15 @@ export type ContributionRowView = {
   is_other: boolean;
 };
 
+export type ContributionPositionView = {
+  position_id: string;
+  contribution_pct: number;
+  weight_avg_pct: number | null;
+  total_return_pct: number | null;
+  local_contribution_pct: number | null;
+  fx_contribution_pct: number | null;
+};
+
 export type ContributionLevelView = {
   level: number;
   name: string;
@@ -185,6 +194,9 @@ export type ContributionSummaryView = {
   portfolio_contribution_pct: number | null;
   total_portfolio_return_pct: number | null;
   coverage_mv_pct: number | null;
+  portfolio_local_contribution_pct: number | null;
+  portfolio_fx_contribution_pct: number | null;
+  position_rows: ContributionPositionView[];
   levels: ContributionLevelView[];
 };
 

@@ -10,12 +10,15 @@ import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import {
+  getBottomPositionContributionRows,
   getBottomContributionRows,
+  getTopPositionContributionRows,
   getPrimaryContributionRow,
   getTopContributionRows,
   hasBenchmarkContext,
   hasDistinctGrossPerformance,
   hasMeaningfulHistory,
+  hasPositionContributionRanking,
   hasUsableAttribution,
   hasUsableContribution,
   isMoneyWeightedReturnSuspicious,
@@ -45,12 +48,19 @@ export default function PerformanceWorkspaceView({
   const hasDistinctGross = workspace ? hasDistinctGrossPerformance(workspace) : false;
   const hasHistory = workspace ? hasMeaningfulHistory(workspace.net_chart) : false;
   const primaryDriver = workspace ? getPrimaryContributionRow(workspace) : null;
+  const hasPositionRanking = workspace ? hasPositionContributionRanking(workspace) : false;
+  const topPositionContributors = workspace ? getTopPositionContributionRows(workspace) : [];
+  const bottomPositionContributors = workspace ? getBottomPositionContributionRows(workspace) : [];
   const topContributors = workspace ? getTopContributionRows(workspace) : [];
   const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
   const contributorScale = Math.max(
     0.01,
-    ...topContributors.map((row) => Math.abs(row.contribution_pct)),
-    ...bottomContributors.map((row) => Math.abs(row.contribution_pct))
+    ...(hasPositionRanking ? topPositionContributors : topContributors).map((row) =>
+      Math.abs(row.contribution_pct)
+    ),
+    ...(hasPositionRanking ? bottomPositionContributors : bottomContributors).map((row) =>
+      Math.abs(row.contribution_pct)
+    )
   );
   const suspiciousMoneyWeighted = workspace ? isMoneyWeightedReturnSuspicious(workspace) : false;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
@@ -220,59 +230,76 @@ export default function PerformanceWorkspaceView({
                   <span>{workspace.period}</span>
                 </div>
                 {hasContribution ? (
-                  <div className="performance-contributors-grid">
-                    <div>
-                      <div className="performance-ranked-heading">
-                        <strong>Highest</strong>
-                        <span>Contribution</span>
+                  hasPositionRanking ? (
+                    <div className="performance-contributors-grid">
+                      <div>
+                        <div className="performance-ranked-heading">
+                          <strong>Highest</strong>
+                          <span>Contribution</span>
+                        </div>
+                        <div className="performance-ranked-list">
+                          {topPositionContributors.map((row) => (
+                            <div
+                              key={`top-position-${row.position_id}`}
+                              className="performance-ranked-row"
+                            >
+                              <div className="performance-ranked-meta">
+                                <strong>{row.position_id}</strong>
+                                <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
+                              </div>
+                              <div className="performance-ranked-bar-track">
+                                <div
+                                  className="performance-ranked-bar performance-ranked-bar-positive"
+                                  style={{
+                                    width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                              <div className="performance-ranked-value">
+                                {formatPct(row.contribution_pct)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="performance-ranked-list">
-                        {topContributors.map((row) => (
-                          <div key={`top-${row.key_label}`} className="performance-ranked-row">
-                            <div className="performance-ranked-meta">
-                              <strong>{row.key_label}</strong>
-                              <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
-                            </div>
-                            <div className="performance-ranked-bar-track">
-                              <div
-                                className="performance-ranked-bar performance-ranked-bar-positive"
-                                style={{ width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%` }}
-                              />
-                            </div>
-                            <div className="performance-ranked-value">
-                              {formatPct(row.contribution_pct)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    <div>
-                      <div className="performance-ranked-heading">
-                        <strong>Lowest</strong>
-                        <span>Contribution</span>
-                      </div>
-                      <div className="performance-ranked-list">
-                        {bottomContributors.map((row) => (
-                          <div key={`bottom-${row.key_label}`} className="performance-ranked-row">
-                            <div className="performance-ranked-meta">
-                              <strong>{row.key_label}</strong>
-                              <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
+                      <div>
+                        <div className="performance-ranked-heading">
+                          <strong>Lowest</strong>
+                          <span>Contribution</span>
+                        </div>
+                        <div className="performance-ranked-list">
+                          {bottomPositionContributors.map((row) => (
+                            <div
+                              key={`bottom-position-${row.position_id}`}
+                              className="performance-ranked-row"
+                            >
+                              <div className="performance-ranked-meta">
+                                <strong>{row.position_id}</strong>
+                                <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
+                              </div>
+                              <div className="performance-ranked-bar-track">
+                                <div
+                                  className="performance-ranked-bar performance-ranked-bar-negative"
+                                  style={{
+                                    width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                              <div className="performance-ranked-value">
+                                {formatPct(row.contribution_pct)}
+                              </div>
                             </div>
-                            <div className="performance-ranked-bar-track">
-                              <div
-                                className="performance-ranked-bar performance-ranked-bar-negative"
-                                style={{ width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%` }}
-                              />
-                            </div>
-                            <div className="performance-ranked-value">
-                              {formatPct(row.contribution_pct)}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <p className="muted">
+                      Position-level contributor ranking is not available from the current
+                      analytics contract.
+                    </p>
+                  )
                 ) : (
                   <p className="muted">Contributor ranking is not available for the current selection.</p>
                 )}
@@ -285,36 +312,79 @@ export default function PerformanceWorkspaceView({
                 </div>
                 {hasContribution ? (
                   contributionLevels.map((level) => (
-                    <div key={`${level.level}-${level.name}`} className="performance-detail-block">
-                      <div className="performance-level-heading">
-                        <strong>{formatLabel(level.name)}</strong>
-                        <span>{formatPct(level.total_contribution_pct)}</span>
-                      </div>
-                      <div className="table-wrap">
-                        <table className="position-table">
-                          <thead>
-                            <tr>
-                              <th align="left">Bucket</th>
-                              <th align="right">Contribution</th>
-                              <th align="right">Avg. Weight</th>
-                              <th align="right">Local</th>
-                              <th align="right">FX</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {level.rows.map((row) => (
-                              <tr key={`${level.name}-${row.key_label}`}>
-                                <td>{row.key_label}</td>
-                                <td align="right">{formatPct(row.contribution_pct)}</td>
-                                <td align="right">{formatPct(row.weight_avg_pct)}</td>
-                                <td align="right">{formatPct(row.local_contribution_pct)}</td>
-                                <td align="right">{formatPct(row.fx_contribution_pct)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+                    (() => {
+                      const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
+                      return (
+                        <div key={`${level.level}-${level.name}`} className="performance-detail-block">
+                          <div className="performance-level-heading">
+                            <strong>{formatLabel(level.name)}</strong>
+                            <span>{formatPct(level.total_contribution_pct)}</span>
+                          </div>
+                          <div className="table-wrap">
+                            <table className="position-table">
+                              <thead>
+                                <tr>
+                                  <th align="left">Bucket</th>
+                                  <th align="right">Contribution</th>
+                                  <th align="right">Avg. Weight</th>
+                                  {showLocalFxColumns ? <th align="right">Local</th> : null}
+                                  {showLocalFxColumns ? <th align="right">FX</th> : null}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {level.rows.map((row) => (
+                                  <tr key={`${level.name}-${row.key_label}`}>
+                                    <td>{row.key_label}</td>
+                                    <td align="right">{formatPct(row.contribution_pct)}</td>
+                                    <td align="right">{formatPct(row.weight_avg_pct)}</td>
+                                    {showLocalFxColumns ? (
+                                      <td align="right">{formatPct(row.local_contribution_pct)}</td>
+                                    ) : null}
+                                    {showLocalFxColumns ? (
+                                      <td align="right">{formatPct(row.fx_contribution_pct)}</td>
+                                    ) : null}
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr>
+                                  <td>Total</td>
+                                  <td align="right">
+                                    {formatPct(
+                                      getContributionTotals(workspace, level)
+                                        ?.portfolioContributionPct ??
+                                        level.total_contribution_pct
+                                    )}
+                                  </td>
+                                  <td align="right">
+                                    {formatPct(
+                                      getContributionTotals(workspace, level)?.weightAvgPct ??
+                                        null
+                                    )}
+                                  </td>
+                                  {showLocalFxColumns ? (
+                                    <td align="right">
+                                      {formatPct(
+                                        getContributionTotals(workspace, level)
+                                          ?.localContributionPct ?? null
+                                      )}
+                                    </td>
+                                  ) : null}
+                                  {showLocalFxColumns ? (
+                                    <td align="right">
+                                      {formatPct(
+                                        getContributionTotals(workspace, level)
+                                          ?.fxContributionPct ?? null
+                                      )}
+                                    </td>
+                                  ) : null}
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })()
                   ))
                 ) : (
                   <p className="muted">Contribution detail is not available for the current selection.</p>
@@ -382,6 +452,26 @@ export default function PerformanceWorkspaceView({
                               </tr>
                             ))}
                           </tbody>
+                          <tfoot>
+                            <tr>
+                              <td>Total</td>
+                              <td align="right">
+                                {formatPct(getAttributionTotals(level).allocationPct)}
+                              </td>
+                              <td align="right">
+                                {formatPct(getAttributionTotals(level).selectionPct)}
+                              </td>
+                              <td align="right">
+                                {formatPct(getAttributionTotals(level).interactionPct)}
+                              </td>
+                              <td align="right">
+                                {formatPct(
+                                  getAttributionTotals(level).totalEffectPct ??
+                                    level.total_effect_pct
+                                )}
+                              </td>
+                            </tr>
+                          </tfoot>
                         </table>
                       </div>
                     </div>
@@ -397,4 +487,62 @@ export default function PerformanceWorkspaceView({
 
     </WorkspaceLayout>
   );
+}
+
+function shouldShowContributionLocalFx(
+  level: NonNullable<WorkbenchPerformanceWorkspace["contribution"]>["levels"][number],
+  workspace: WorkbenchPerformanceWorkspace
+): boolean {
+  if (
+    workspace.contribution?.portfolio_local_contribution_pct !== null &&
+    workspace.contribution?.portfolio_local_contribution_pct !== undefined
+  ) {
+    return true;
+  }
+  if (
+    workspace.contribution?.portfolio_fx_contribution_pct !== null &&
+    workspace.contribution?.portfolio_fx_contribution_pct !== undefined
+  ) {
+    return true;
+  }
+  return level.rows.some(
+    (row) => row.local_contribution_pct != null || row.fx_contribution_pct != null
+  );
+}
+
+function getContributionTotals(
+  workspace: WorkbenchPerformanceWorkspace,
+  level: NonNullable<WorkbenchPerformanceWorkspace["contribution"]>["levels"][number]
+): {
+  portfolioContributionPct: number | null;
+  weightAvgPct: number | null;
+  localContributionPct: number | null;
+  fxContributionPct: number | null;
+} | null {
+  if (!workspace.contribution) {
+    return null;
+  }
+  return {
+    portfolioContributionPct: workspace.contribution.portfolio_contribution_pct,
+    weightAvgPct: level.rows.reduce((sum, row) => sum + (row.weight_avg_pct ?? 0), 0),
+    localContributionPct: workspace.contribution.portfolio_local_contribution_pct,
+    fxContributionPct: workspace.contribution.portfolio_fx_contribution_pct,
+  };
+}
+
+function getAttributionTotals(
+  level: NonNullable<WorkbenchPerformanceWorkspace["attribution"]>["levels"][number]
+): {
+  allocationPct: number;
+  selectionPct: number;
+  interactionPct: number;
+  totalEffectPct: number | null;
+} {
+  const rows = level.rows;
+  return {
+    allocationPct: rows.reduce((sum, row) => sum + row.allocation_pct, 0),
+    selectionPct: rows.reduce((sum, row) => sum + row.selection_pct, 0),
+    interactionPct: rows.reduce((sum, row) => sum + row.interaction_pct, 0),
+    totalEffectPct: level.total_effect_pct ?? rows.reduce((sum, row) => sum + row.total_effect_pct, 0),
+  };
 }

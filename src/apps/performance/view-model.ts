@@ -1,4 +1,5 @@
 import type {
+  ContributionPositionView,
   ContributionRowView,
   PerformanceChartPoint,
   WorkbenchPerformanceWorkspace,
@@ -83,6 +84,32 @@ export function getBottomContributionRows(
   count = 5
 ): ContributionRowView[] {
   const rows = workspace.contribution?.levels?.[0]?.rows ?? [];
+  return [...rows]
+    .sort((left, right) => left.contribution_pct - right.contribution_pct)
+    .slice(0, count);
+}
+
+export function hasPositionContributionRanking(
+  workspace: WorkbenchPerformanceWorkspace
+): boolean {
+  return (workspace.contribution?.position_rows ?? []).length > 0;
+}
+
+export function getTopPositionContributionRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 5
+): ContributionPositionView[] {
+  const rows = workspace.contribution?.position_rows ?? [];
+  return [...rows]
+    .sort((left, right) => right.contribution_pct - left.contribution_pct)
+    .slice(0, count);
+}
+
+export function getBottomPositionContributionRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 5
+): ContributionPositionView[] {
+  const rows = workspace.contribution?.position_rows ?? [];
   return [...rows]
     .sort((left, right) => left.contribution_pct - right.contribution_pct)
     .slice(0, count);

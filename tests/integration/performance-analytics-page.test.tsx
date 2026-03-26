@@ -115,6 +115,18 @@ describe("PerformanceAnalyticsPage", () => {
                 portfolio_contribution_pct: 5.42,
                 total_portfolio_return_pct: 5.42,
                 coverage_mv_pct: 98.7,
+                portfolio_local_contribution_pct: 4.8,
+                portfolio_fx_contribution_pct: 0.62,
+                position_rows: [
+                  {
+                    position_id: "AAPL",
+                    contribution_pct: 1.55,
+                    weight_avg_pct: 24.1,
+                    total_return_pct: 8.2,
+                    local_contribution_pct: 1.18,
+                    fx_contribution_pct: 0.37,
+                  },
+                ],
                 levels: [
                   {
                     level: 1,
@@ -174,6 +186,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("XIRR")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("AAPL").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Total").length).toBeGreaterThan(1);
     expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(1);
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const performanceCall = fetchMock.mock.calls.find(([input]) =>

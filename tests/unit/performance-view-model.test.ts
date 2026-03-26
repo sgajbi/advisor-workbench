@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import {
+  getBottomPositionContributionRows,
   getCoverageLabel,
   getPrimaryContributionRow,
+  getTopPositionContributionRows,
   hasBenchmarkContext,
   hasDistinctGrossPerformance,
   hasMeaningfulHistory,
+  hasPositionContributionRanking,
   isMoneyWeightedReturnSuspicious,
 } from "../../src/apps/performance/view-model";
 
@@ -116,6 +119,26 @@ function buildWorkspace(overrides: Partial<WorkbenchPerformanceWorkspace> = {}):
       portfolio_contribution_pct: 5,
       total_portfolio_return_pct: 5,
       coverage_mv_pct: 100,
+      portfolio_local_contribution_pct: 4.6,
+      portfolio_fx_contribution_pct: 0.4,
+      position_rows: [
+        {
+          position_id: "AAPL",
+          contribution_pct: 1.5,
+          weight_avg_pct: 24,
+          total_return_pct: 8,
+          local_contribution_pct: 1.1,
+          fx_contribution_pct: 0.4,
+        },
+        {
+          position_id: "TLT",
+          contribution_pct: -0.2,
+          weight_avg_pct: 8,
+          total_return_pct: -2,
+          local_contribution_pct: -0.2,
+          fx_contribution_pct: 0,
+        },
+      ],
       levels: [
         {
           level: 1,
@@ -194,5 +217,12 @@ describe("performance view model", () => {
     expect(getCoverageLabel(buildWorkspace())).toBe("Full coverage");
     expect(hasMeaningfulHistory(buildWorkspace().net_chart)).toBe(true);
     expect(hasMeaningfulHistory(buildWorkspace({ net_chart: [buildWorkspace().net_chart[0]] }).net_chart)).toBe(false);
+  });
+
+  it("prefers position-level contribution rankings when available", () => {
+    const workspace = buildWorkspace();
+    expect(hasPositionContributionRanking(workspace)).toBe(true);
+    expect(getTopPositionContributionRows(workspace)[0]?.position_id).toBe("AAPL");
+    expect(getBottomPositionContributionRows(workspace)[0]?.position_id).toBe("TLT");
   });
 });
