@@ -1,6 +1,7 @@
 import {
   WorkbenchAnalytics,
   WorkbenchOverview,
+  WorkbenchPerformanceWorkspace,
   WorkbenchPortfolio360,
   WorkbenchReportingSnapshot,
   WorkbenchSandboxState,
@@ -85,14 +86,16 @@ export async function getWorkbenchAnalytics(
   params: {
     period: string;
     groupBy: string;
-    benchmark: string;
+    benchmark?: string;
     sessionId?: string;
   }
 ): Promise<WorkbenchAnalytics> {
   const query = new URLSearchParams();
   query.set("period", params.period);
   query.set("group_by", params.groupBy);
-  query.set("benchmark_code", params.benchmark);
+  if (params.benchmark) {
+    query.set("benchmark_code", params.benchmark);
+  }
   if (params.sessionId) {
     query.set("session_id", params.sessionId);
   }
@@ -106,6 +109,36 @@ export async function getWorkbenchAnalytics(
     throw new Error(`Failed to fetch workbench analytics (${response.status})`);
   }
   return (await response.json()) as WorkbenchAnalytics;
+}
+
+export async function getWorkbenchPerformanceWorkspace(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    detailDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspace> {
+  const query = new URLSearchParams();
+  query.set("period", params.period);
+  query.set("chart_frequency", params.chartFrequency);
+  query.set("detail_dimension", params.detailDimension);
+  query.set("detail_basis", params.detailBasis);
+  if (params.benchmark) {
+    query.set("benchmark_code", params.benchmark);
+  }
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance?${query.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspace;
 }
 
 export async function getReportingSnapshot(

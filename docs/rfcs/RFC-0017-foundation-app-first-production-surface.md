@@ -200,12 +200,27 @@ Target direction:
 
 `Foundation` should consume gateway contracts shaped for product entry and portfolio context.
 
+The primary source boundary for this RFC is now explicit:
+
+1. canonical portfolio, positions, transactions, and cashflow reads should come from
+   `lotus-core query_service`,
+2. governed evidence, policy, analytics-input, simulation, and support contracts should come from
+   `lotus-core query_control_plane_service`,
+3. `lotus-gateway` should compose these surfaces into one product-grade portfolio workspace
+   contract without pretending they are the same kind of source.
+
 Because the platform is pre-live:
 
 1. if current gateway contracts are not the right shape,
 2. they should be replaced,
 3. old gateway APIs should be removed when the new contract is ready,
 4. the program should not preserve stale endpoint families by default.
+
+The same rule applies to workbench routing and naming:
+
+1. `/performance` is the owned analytics route,
+2. legacy route families such as `/pa/*` should be removed once the clean route is live,
+3. compatibility aliases should not become permanent architecture.
 
 ### Upstream contract discipline
 
@@ -260,17 +275,25 @@ Outcome:
 
 1. the app shows portfolio composition clearly,
 2. it expresses readiness for later workflows,
-3. reporting and valuation posture are legible.
+3. reporting and valuation posture are legible,
+4. positions, recent transactions, and near-term liquidity are visible in one coherent workspace.
 
 Acceptance gate:
 
 1. users can confidently decide where to go next,
-2. evidence and readiness are understandable without reading raw backend data.
+2. evidence and readiness are understandable without reading raw backend data,
+3. the gateway contract is based on real `lotus-core` canonical read endpoints rather than a
+   snapshot-only shortcut.
 
 Implementation status:
 
-1. in progress with allocation, top-position, readiness, and data-coverage panels implemented,
-2. completed upstream contract extension tracked in `lotus-gateway` for top-position summary.
+1. completed with portfolio mandate, positions, recent transactions, allocation, top positions,
+   cashflow outlook, readiness, and data-coverage panels implemented,
+2. completed upstream contract extension in `lotus-gateway` using:
+   - `lotus-core query_service` for portfolio record, positions, transactions, and cashflow
+     projection,
+   - `lotus-core query_control_plane_service` for governed overview snapshot context,
+   - bounded optional integrations for performance, monitoring, and reporting.
 
 ### Slice 4: Upstream issue-routing and cleanup
 
