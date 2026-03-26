@@ -104,13 +104,13 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.9rem;
-  height: 2.45rem;
-  padding: 0.24rem 0.3rem 0.22rem;
-  border-radius: 18px;
+  width: 3.05rem;
+  height: 2.6rem;
+  padding: 0.2rem 0.26rem 0.18rem;
+  border-radius: 20px;
   background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.92), transparent 48%),
-    linear-gradient(180deg, rgba(246, 241, 233, 0.98) 0%, rgba(232, 224, 210, 0.94) 100%);
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.96), transparent 46%),
+    linear-gradient(180deg, rgba(247, 242, 233, 0.99) 0%, rgba(231, 222, 204, 0.96) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     0 10px 24px rgba(34, 44, 59, 0.08);
@@ -127,32 +127,44 @@ a:hover {
 }
 
 .lotus-mark {
-  width: 2.35rem;
-  height: 1.82rem;
+  width: 2.48rem;
+  height: 1.96rem;
   flex-shrink: 0;
 }
 
 .lotus-mark-core {
-  fill: url(#lotusGlow);
+  fill: url(#lotusCenter);
 }
 
 .lotus-mark-petal-left,
 .lotus-mark-petal-right {
-  fill: url(#lotusPetal);
+  fill: url(#lotusOuter);
 }
 
 .lotus-mark-petal-outer {
-  fill: #8ea0b5;
-  opacity: 0.88;
+  fill: #91a3b8;
+  opacity: 0.94;
 }
 
 .lotus-mark-base {
   fill: #b9924e;
 }
 
+.lotus-mark-line {
+  stroke: rgba(181, 147, 83, 0.82);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
 .lotus-mark-stroke {
   stroke: rgba(33, 47, 68, 0.72);
-  stroke-width: 1.35;
+  stroke-width: 1.45;
+  stroke-linejoin: round;
+}
+
+.lotus-mark-stroke-soft {
+  stroke: rgba(59, 78, 102, 0.52);
+  stroke-width: 1.15;
   stroke-linejoin: round;
 }
 
