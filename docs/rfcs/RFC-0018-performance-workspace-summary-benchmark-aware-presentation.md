@@ -198,6 +198,16 @@ The seeded analytics path should provide:
 4. realistic holdings, transactions, valuation path, and benchmark compositions,
 5. a reusable ingestion/seed mechanism documented for local demo bring-up.
 
+Seed replay and reference-data hygiene rules:
+
+1. repeated demo seed runs must not degrade benchmark switching or workspace-summary analytics,
+2. superseded effective-dated benchmark rows must not leak duplicate definitions or duplicate
+   component segments into benchmark catalog or composition-window payloads,
+3. downstream contracts should resolve the latest valid benchmark definition and component set
+   deterministically for the requested as-of date or window,
+4. demo verification should prove benchmark catalog uniqueness and benchmark composition-window
+   usability for the flagship mandate.
+
 ## UX Direction
 
 The `Performance` workspace should feel like one analytical workstation.
