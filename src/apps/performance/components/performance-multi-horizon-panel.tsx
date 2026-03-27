@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Typography } from "@mui/material";
 
-import { Panel } from "@/design-system";
+import { AnalyticsModule } from "@/design-system";
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
   PerformanceBenchmarkOptionView,
@@ -96,11 +97,24 @@ export default function PerformanceMultiHorizonPanel({
   );
 
   return (
-    <Panel className="performance-detail-panel-compact performance-multi-horizon-panel">
-      <div className="performance-section-heading">
-        <h3>Multi-Horizon Returns</h3>
-        <span>{detailBasis} basis</span>
-      </div>
+    <AnalyticsModule
+      title="Multi-Horizon Returns"
+      subtitle={`${detailBasis} basis comparative view`}
+      actions={
+        <Typography
+          component="span"
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "text.secondary",
+          }}
+        >
+          {detailBasis}
+        </Typography>
+      }
+    >
       {isLoading ? (
         <p className="muted">Loading comparative horizon summaries.</p>
       ) : rows && rows.length > 0 ? (
@@ -142,6 +156,6 @@ export default function PerformanceMultiHorizonPanel({
       ) : (
         <p className="muted">Comparative horizon summaries are not available for this mandate.</p>
       )}
-    </Panel>
+    </AnalyticsModule>
   );
 }

@@ -186,7 +186,10 @@ The presentation layer should also move toward a stronger design-system-led impl
 2. keep `globals.css` focused on shell, responsive layout rails, and small visual bridges rather
    than bespoke control behavior,
 3. evolve reusable design-system primitives for analytics screens instead of styling each module as
-   a one-off surface.
+   a one-off surface,
+4. standardize analytical sub-panels around shared module shells, table shells, and comparative
+   section patterns so the lower canvas behaves like one workstation rather than several unrelated
+   widgets.
 
 The presentation target for the attribution canvas also includes a benchmark-relative segment
 matrix that surfaces, for each selected segment:

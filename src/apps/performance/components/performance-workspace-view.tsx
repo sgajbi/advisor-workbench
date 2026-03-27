@@ -1,6 +1,7 @@
 import { Box, Divider, FormControl, MenuItem, Select, Stack, Typography } from "@mui/material";
 
 import {
+  AnalyticsModule,
   AnalyticsSectionHeader,
   AnalyticsStat,
   AnalyticsTable,
@@ -469,11 +470,10 @@ export default function PerformanceWorkspaceView({
                   <div className="performance-analytic-duo-grid">
                     <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
 
-                    <div className="performance-mini-module">
-                      <div className="performance-mini-module-header">
-                        <strong>Total Effect Ranking</strong>
-                        <span>Largest benchmark-relative effects</span>
-                      </div>
+                    <AnalyticsModule
+                      title="Total Effect Ranking"
+                      subtitle="Largest benchmark-relative effects"
+                    >
                       <div className="performance-comparative-list">
                         {topAttributionEffectRows.map((row) => (
                           <div
@@ -510,7 +510,7 @@ export default function PerformanceWorkspaceView({
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </AnalyticsModule>
                   </div>
                 ) : null}
                 <div className="performance-effect-legend" aria-label="Attribution effect legend">

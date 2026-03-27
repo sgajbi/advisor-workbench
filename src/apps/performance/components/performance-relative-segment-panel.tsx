@@ -1,5 +1,8 @@
 "use client";
 
+import { Typography } from "@mui/material";
+
+import { AnalyticsModule } from "@/design-system";
 import type { AttributionRowView } from "@/features/workbench/types";
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
@@ -16,15 +19,14 @@ export default function PerformanceRelativeSegmentPanel({
 }) {
   if (!rows.length) {
     return (
-      <div className="performance-mini-module">
-        <div className="performance-mini-module-header">
-          <strong>Relative Segment Matrix</strong>
-          <span>Portfolio versus benchmark by selected segment</span>
-        </div>
-        <p className="muted">
+      <AnalyticsModule
+        title="Relative Segment Matrix"
+        subtitle="Portfolio versus benchmark by selected segment"
+      >
+        <Typography className="muted">
           Segment-level relative weight and return context is not available for this selection.
-        </p>
-      </div>
+        </Typography>
+      </AnalyticsModule>
     );
   }
 
@@ -32,11 +34,10 @@ export default function PerformanceRelativeSegmentPanel({
   const returnScale = Math.max(0.01, ...rows.map((row) => Math.abs(row.active_return_pct)));
 
   return (
-    <div className="performance-mini-module">
-      <div className="performance-mini-module-header">
-        <strong>Relative Segment Matrix</strong>
-        <span>Portfolio versus benchmark by selected segment</span>
-      </div>
+    <AnalyticsModule
+      title="Relative Segment Matrix"
+      subtitle="Portfolio versus benchmark by selected segment"
+    >
       <div className="performance-relative-matrix">
         {rows.map((row) => (
           <div key={`relative-segment-${row.key_label}`} className="performance-relative-row">
@@ -105,6 +106,6 @@ export default function PerformanceRelativeSegmentPanel({
           </div>
         ))}
       </div>
-    </div>
+    </AnalyticsModule>
   );
 }

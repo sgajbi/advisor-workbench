@@ -1,4 +1,5 @@
 export { default as ActionLink } from "./components/action-link";
+export { default as AnalyticsModule } from "./components/analytics-module";
 export { default as AnalyticsSectionHeader } from "./components/analytics-section-header";
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
