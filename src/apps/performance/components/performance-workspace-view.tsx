@@ -1,7 +1,9 @@
 import { Box, Divider, FormControl, MenuItem, Select, Stack, Typography } from "@mui/material";
 
 import {
+  AnalyticsEffectStrip,
   AnalyticsModule,
+  AnalyticsRankedList,
   AnalyticsSectionHeader,
   AnalyticsStat,
   AnalyticsTable,
@@ -329,75 +331,40 @@ export default function PerformanceWorkspaceView({
                 chartFrequency={chartFrequency}
                 benchmarkOptions={workspace.benchmark_options ?? []}
               />
-              <Panel className="performance-contributors-panel performance-detail-panel-compact">
-                <div className="performance-section-heading">
-                  <h3>Top / Bottom Contributors</h3>
-                  <span>{workspace.period}</span>
-                </div>
+              <AnalyticsModule
+                title="Top / Bottom Contributors"
+                subtitle={`${workspace.period} position ranking`}
+              >
                 {hasContribution ? (
                   hasPositionRanking ? (
                     <div className="performance-contributors-grid">
-                      <div>
-                        <div className="performance-ranked-heading">
-                          <strong>Highest</strong>
-                          <span>Contribution</span>
-                        </div>
-                        <div className="performance-ranked-list">
-                          {topPositionContributors.map((row) => (
-                            <div
-                              key={`top-position-${row.position_id}`}
-                              className="performance-ranked-row"
-                            >
-                              <div className="performance-ranked-meta">
-                                <strong>{row.position_id}</strong>
-                                <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
-                              </div>
-                              <div className="performance-ranked-bar-track">
-                                <div
-                                  className="performance-ranked-bar performance-ranked-bar-positive"
-                                  style={{
-                                    width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%`,
-                                  }}
-                                />
-                              </div>
-                              <div className="performance-ranked-value">
-                                {formatPct(row.contribution_pct)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <AnalyticsRankedList
+                        title="Highest"
+                        label="Contribution"
+                        scale={contributorScale}
+                        rows={topPositionContributors.map((row) => ({
+                          key: `top-position-${row.position_id}`,
+                          title: row.position_id,
+                          subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+                          value: formatPct(row.contribution_pct),
+                          magnitudePct: row.contribution_pct,
+                          tone: "positive" as const,
+                        }))}
+                      />
 
-                      <div>
-                        <div className="performance-ranked-heading">
-                          <strong>Lowest</strong>
-                          <span>Contribution</span>
-                        </div>
-                        <div className="performance-ranked-list">
-                          {bottomPositionContributors.map((row) => (
-                            <div
-                              key={`bottom-position-${row.position_id}`}
-                              className="performance-ranked-row"
-                            >
-                              <div className="performance-ranked-meta">
-                                <strong>{row.position_id}</strong>
-                                <span>Avg. Weight {formatPct(row.weight_avg_pct)}</span>
-                              </div>
-                              <div className="performance-ranked-bar-track">
-                                <div
-                                  className="performance-ranked-bar performance-ranked-bar-negative"
-                                  style={{
-                                    width: `${(Math.abs(row.contribution_pct) / contributorScale) * 100}%`,
-                                  }}
-                                />
-                              </div>
-                              <div className="performance-ranked-value">
-                                {formatPct(row.contribution_pct)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <AnalyticsRankedList
+                        title="Lowest"
+                        label="Contribution"
+                        scale={contributorScale}
+                        rows={bottomPositionContributors.map((row) => ({
+                          key: `bottom-position-${row.position_id}`,
+                          title: row.position_id,
+                          subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+                          value: formatPct(row.contribution_pct),
+                          magnitudePct: row.contribution_pct,
+                          tone: "negative" as const,
+                        }))}
+                      />
                     </div>
                   ) : (
                     <p className="muted">
@@ -412,7 +379,7 @@ export default function PerformanceWorkspaceView({
                 ) : (
                   <p className="muted">Contributor ranking is not available for the current selection.</p>
                 )}
-              </Panel>
+              </AnalyticsModule>
 
               <Panel id="performance-attribution" className="performance-detail-panel-compact">
                 <div className="performance-section-heading">
@@ -536,30 +503,16 @@ export default function PerformanceWorkspaceView({
                       <div className="performance-level-heading">
                         <strong>{formatLabel(level.dimension)}</strong>
                       </div>
-                      <div className="performance-effect-strip">
-                        {level.rows.map((row) => (
-                          <div key={`effect-${level.dimension}-${row.key_label}`} className="performance-effect-row">
-                            <div className="performance-effect-label">{row.key_label}</div>
-                            <div className="performance-effect-bars">
-                              <div
-                                className="performance-effect-bar performance-effect-bar-allocation"
-                                style={{ width: `${Math.min(Math.abs(row.allocation_pct) * 18, 100)}%` }}
-                              />
-                              <div
-                                className="performance-effect-bar performance-effect-bar-selection"
-                                style={{ width: `${Math.min(Math.abs(row.selection_pct) * 18, 100)}%` }}
-                              />
-                              <div
-                                className="performance-effect-bar performance-effect-bar-interaction"
-                                style={{ width: `${Math.min(Math.abs(row.interaction_pct) * 18, 100)}%` }}
-                              />
-                            </div>
-                            <div className="performance-effect-total">
-                              {formatPct(row.total_effect_pct)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <AnalyticsEffectStrip
+                        rows={level.rows.map((row) => ({
+                          key: `effect-${level.dimension}-${row.key_label}`,
+                          label: row.key_label,
+                          allocationPct: row.allocation_pct,
+                          selectionPct: row.selection_pct,
+                          interactionPct: row.interaction_pct,
+                          totalPct: formatPct(row.total_effect_pct),
+                        }))}
+                      />
                       <AnalyticsTable
                         ariaLabel={`${formatLabel(level.dimension)} attribution table`}
                         columns={[

@@ -189,7 +189,9 @@ The presentation layer should also move toward a stronger design-system-led impl
    a one-off surface,
 4. standardize analytical sub-panels around shared module shells, table shells, and comparative
    section patterns so the lower canvas behaves like one workstation rather than several unrelated
-   widgets.
+   widgets,
+5. standardize ranked contributor modules and attribution effect-strip visuals on shared analytical
+   primitives instead of duplicating custom HTML/CSS for each panel.
 
 The presentation target for the attribution canvas also includes a benchmark-relative segment
 matrix that surfaces, for each selected segment:
