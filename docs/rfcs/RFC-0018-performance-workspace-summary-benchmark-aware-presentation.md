@@ -140,6 +140,26 @@ contract that does not yet fully mirror the richer source-owned workspace summar
 
 `lotus-gateway` and `lotus-workbench` should align to the new source-owned performance model.
 
+## Implementation Slices
+
+This RFC should be executed in the following order:
+
+1. enrich `lotus-core` demo data with one stronger flagship mandate, longer history, and two
+   switchable benchmarks,
+2. cut `lotus-gateway` over from stitched analytics calls to the source-owned
+   `workspace-summary` contract plus Lotus Core benchmark catalog discovery,
+3. move `lotus-workbench` from hard-coded benchmark options and partial attribution rendering to
+   the richer benchmark-aware contract,
+4. tighten chart spacing, panel rhythm, and analytical density once the richer data is live,
+5. bring the runtime stack up together and validate benchmark switching and benchmark-aware
+   contribution/attribution presentation end to end.
+
+The active implementation rule is:
+
+1. do not add fake UI data to compensate for missing source contracts,
+2. keep the route boundary stable where possible,
+3. reduce complexity while migrating rather than preserving transitional duplication.
+
 ### 1. Gateway should adopt `workspace-summary` as the primary performance workspace contract
 
 The main performance workspace route should be backed by one primary analytics request:
@@ -192,10 +212,120 @@ It should emphasize:
 6. tighter vertical rhythm between sections,
 7. graceful responsiveness across laptop, tablet, and smaller viewport widths.
 
+### Comparative analytical composition
+
+The lower analytical canvas should move toward a denser comparative composition similar to
+institutional portfolio analytics workstations:
+
+1. active weights by segment,
+2. top and bottom portfolio contributors with average weight, total return, and contribution,
+3. multi-horizon portfolio-versus-benchmark return bars,
+4. total attribution effect by segment,
+5. benchmark and currency context visible at the analytical module level.
+
+This pattern is preferred over:
+
+1. isolated mini-cards,
+2. repeated summary facts,
+3. large empty gaps between analytical panels,
+4. generic dashboard tiling.
+
+Where the source contract supports it, the workstation should favor:
+
+1. side-by-side portfolio and benchmark comparison,
+2. effect ranking and contributor ranking,
+3. explicit weight and return context,
+4. compact tables paired with compact analytical bars.
+
+### Professional analytics interaction model
+
+The workstation should also learn from professional portfolio analytics applications that feel:
+
+1. modular,
+2. chart-first,
+3. operational,
+4. dense without feeling chaotic,
+5. fast under repeated interaction.
+
+Desired direction:
+
+1. tabs or subviews for major analytical modes when the screen becomes too crowded,
+2. compact module headers with contextual tools instead of oversized explanatory sections,
+3. interactive comparative charts and bars that react quickly to control changes,
+4. stronger use of the available canvas,
+5. less visual dead space between analytical modules,
+6. a workstation feel closer to an institutional analytics desk than a modern marketing dashboard.
+
+Not every pattern in legacy analytics products should be copied literally, but the following
+qualities are explicitly desirable:
+
+1. seriousness,
+2. density,
+3. predictable interaction,
+4. visible benchmark-relative comparison,
+5. multiple analytical lenses within one coherent workspace.
+
+### Multi-panel analytical workstation pattern
+
+Another desirable reference pattern is the disciplined four-panel analytical desk:
+
+1. cumulative return chart,
+2. risk oversight comparison bars,
+3. hierarchical performance table,
+4. policy or target-band exposure comparison.
+
+This matters because it shows how multiple analytical questions can live in one screen without the
+UI collapsing into noise.
+
+The `Performance` workspace should adopt the same principles where the source contracts support
+them:
+
+1. line-based comparative return history in a dedicated chart module,
+2. ranked or comparative bar modules for oversight-style metrics,
+3. expandable or hierarchy-aware performance tables,
+4. target-band or benchmark-relative comparison modules where portfolio policy context exists.
+
+Not all of these modules belong in the first implementation slice, but the RFC should explicitly
+aim for:
+
+1. a workstation that supports adjacent analytical modules,
+2. cross-reading between charts, tables, and comparative bars,
+3. a layout that uses the canvas efficiently instead of stacking every module vertically.
+
 Panel spacing should be reviewed critically:
 
 1. where spacing supports scanability, it should remain,
 2. where spacing creates visual drift or the feeling of disconnected boxes, it should be reduced.
+
+### Attribution over time
+
+The workstation should also support an attribution-over-time visual treatment for users who need to
+understand how active return accumulated through the selected window.
+
+Target visual pattern:
+
+1. stacked or grouped bars for period attribution effects,
+2. one line for cumulative total effect or cumulative active return,
+3. period labels anchored to the selected chart frequency,
+4. consistent legend semantics and color mapping,
+5. seamless switching between tabular and visual attribution analysis.
+
+The first implementation should use source-owned effects already available from the current Lotus
+contract:
+
+1. `allocation`,
+2. `selection`,
+3. `interaction`,
+4. `total_effect`.
+
+If future `lotus-performance` contracts expose richer fixed-income attribution factors such as:
+
+1. `shift`,
+2. `twist`,
+3. `spread`,
+4. curve or carry components,
+
+the same visual pattern can be extended without changing the workstation interaction model.
 
 ## Delivery Slices
 
@@ -234,6 +364,13 @@ Outcome:
 3. benchmark selector is source-backed,
 4. the page performs well and remains readable across screen sizes.
 
+Additional expectation:
+
+1. attribution should have both a tabular detail treatment and an over-time visual treatment where
+   source data supports it.
+2. the detail region should support a denser institutional composition for active weights,
+   contributors, horizon comparisons, and effect ranking.
+
 ### Slice 5: Live stack validation
 
 Outcome:
@@ -255,6 +392,8 @@ The RFC can be marked implemented only when:
 5. seeded demo data covers a longer realistic history window,
 6. local bring-up and seeding documentation exists,
 7. meaningful tests protect gateway mapping, UI rendering, and demo-data ingestion.
+8. the RFC explicitly governs how attribution-over-time should be surfaced, even if some richer
+   factor families remain a later upstream enhancement.
 
 ## Repository Impact
 

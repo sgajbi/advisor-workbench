@@ -5,15 +5,13 @@ import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
 
 import { Panel } from "@/design-system";
-import type { PerformanceChartPoint } from "@/features/workbench/types";
+import type {
+  PerformanceBenchmarkOptionView,
+  PerformanceChartPoint,
+} from "@/features/workbench/types";
 
 import { formatDate, formatPct } from "../formatters";
-import {
-  BASIS_OPTIONS,
-  BENCHMARK_OPTIONS,
-  CHART_FREQUENCY_OPTIONS,
-  PERIOD_OPTIONS,
-} from "../navigation";
+import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -64,11 +62,17 @@ function buildPercentAxisBounds(values: Array<number | null | undefined>) {
   };
 }
 
-function formatBenchmarkLabel(benchmark?: string) {
+function formatBenchmarkLabel(
+  benchmark?: string,
+  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
+) {
   if (!benchmark) {
     return "Benchmark";
   }
-  return BENCHMARK_OPTIONS.find((option) => option.value === benchmark)?.label ?? benchmark;
+  return (
+    benchmarkOptions.find((option) => option.benchmark_code === benchmark)?.benchmark_name ??
+    benchmark
+  );
 }
 
 function resolveReportDates(
@@ -102,6 +106,7 @@ export default function PerformanceChartPanel({
   attributionDimension,
   chartFrequency,
   benchmark,
+  benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
   onRequestChange,
@@ -118,6 +123,7 @@ export default function PerformanceChartPanel({
   attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
+  benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate: string;
   reportEndDate: string;
   onRequestChange: (patch: PerformanceControlPatch) => void;
@@ -140,6 +146,21 @@ export default function PerformanceChartPanel({
     (point) =>
       point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
   );
+  const resolvedBenchmarkOptions = useMemo(() => {
+    if (benchmarkOptions.length > 0) {
+      return benchmarkOptions;
+    }
+    if (!benchmark) {
+      return [];
+    }
+    return [
+      {
+        benchmark_code: benchmark,
+        benchmark_name: benchmark,
+        is_assigned: true,
+      } satisfies PerformanceBenchmarkOptionView,
+    ];
+  }, [benchmark, benchmarkOptions]);
 
   const chartOption = useMemo(() => {
     const categories = points.map((point) => point.label);
@@ -185,7 +206,9 @@ export default function PerformanceChartPanel({
         },
         data: [
           "Portfolio Return",
-          ...(hasBenchmarkSeries ? [formatBenchmarkLabel(benchmark)] : []),
+          ...(hasBenchmarkSeries
+            ? [formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)]
+            : []),
           "Portfolio Period",
           ...(hasBenchmarkSeries ? ["Benchmark Period"] : []),
         ],
@@ -284,7 +307,7 @@ export default function PerformanceChartPanel({
         ...(hasBenchmarkSeries
           ? [
               {
-                name: formatBenchmarkLabel(benchmark),
+                name: formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions),
                 type: "line" as const,
                 data: benchmarkCumulative,
                 smooth: true,
@@ -299,7 +322,7 @@ export default function PerformanceChartPanel({
           : []),
       ],
     } satisfies EChartsOption;
-  }, [benchmark, hasBenchmarkSeries, points]);
+  }, [benchmark, hasBenchmarkSeries, points, resolvedBenchmarkOptions]);
 
   const latest = points.at(-1);
   const periodicPortfolioValues = points
@@ -428,9 +451,9 @@ export default function PerformanceChartPanel({
                 }
                 disabled={isUpdating}
               >
-                {BENCHMARK_OPTIONS.map((option) => (
-                  <option key={option.value || "none"} value={option.value}>
-                    {option.label}
+                {resolvedBenchmarkOptions.map((option) => (
+                  <option key={option.benchmark_code} value={option.benchmark_code}>
+                    {option.benchmark_name}
                   </option>
                 ))}
               </select>
@@ -463,7 +486,7 @@ export default function PerformanceChartPanel({
             <strong>{formatPct(summary.portfolio_return_pct)}</strong>
           </div>
           <div className="performance-chart-chip performance-chart-chip-benchmark">
-            <span>{formatBenchmarkLabel(benchmark)}</span>
+            <span>{formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)}</span>
             <strong>{hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "N/A"}</strong>
           </div>
           <div className="performance-chart-chip performance-chart-chip-active">

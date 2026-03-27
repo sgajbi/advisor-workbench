@@ -190,6 +190,7 @@ export default function PerformanceWorkspaceView({
                 attributionDimension={attributionDimension}
                 chartFrequency={chartFrequency}
                 benchmark={benchmark}
+                benchmarkOptions={workspace.benchmark_options ?? []}
                 reportStartDate={workspace.report_start_date}
                 reportEndDate={workspace.report_end_date}
                 onRequestChange={onRequestChange ?? (() => undefined)}
@@ -319,6 +320,7 @@ export default function PerformanceWorkspaceView({
                                   <th align="left">Bucket</th>
                                   <th align="right">Contribution</th>
                                   <th align="right">Avg. Weight</th>
+                                  <th align="right">Return</th>
                                   {showLocalFxColumns ? <th align="right">Local</th> : null}
                                   {showLocalFxColumns ? <th align="right">FX</th> : null}
                                 </tr>
@@ -329,6 +331,7 @@ export default function PerformanceWorkspaceView({
                                     <td>{row.key_label}</td>
                                     <td align="right">{formatPct(row.contribution_pct)}</td>
                                     <td align="right">{formatPct(row.weight_avg_pct)}</td>
+                                    <td align="right">{formatPct(row.total_return_pct)}</td>
                                     {showLocalFxColumns ? (
                                       <td align="right">{formatPct(row.local_contribution_pct)}</td>
                                     ) : null}
@@ -350,7 +353,15 @@ export default function PerformanceWorkspaceView({
                                   </td>
                                   <td align="right">
                                     {formatPct(
-                                      getContributionTotals(workspace, level)?.weightAvgPct ??
+                                      level.total_weight_avg_pct ??
+                                        getContributionTotals(workspace, level)?.weightAvgPct ??
+                                        null
+                                    )}
+                                  </td>
+                                  <td align="right">
+                                    {formatPct(
+                                      level.total_portfolio_return_pct ??
+                                        workspace.contribution?.total_portfolio_return_pct ??
                                         null
                                     )}
                                   </td>
@@ -485,6 +496,10 @@ export default function PerformanceWorkspaceView({
                           <thead>
                             <tr>
                               <th align="left">Bucket</th>
+                              <th align="right">Port Wt</th>
+                              <th align="right">Bmk Wt</th>
+                              <th align="right">Port Return</th>
+                              <th align="right">Bmk Return</th>
                               <th align="right">Allocation</th>
                               <th align="right">Selection</th>
                               <th align="right">Interaction</th>
@@ -495,6 +510,14 @@ export default function PerformanceWorkspaceView({
                             {level.rows.map((row) => (
                               <tr key={`${level.dimension}-${row.key_label}`}>
                                 <td>{row.key_label}</td>
+                                <td align="right">
+                                  {formatPct(row.portfolio_weight_avg_pct)}
+                                </td>
+                                <td align="right">
+                                  {formatPct(row.benchmark_weight_avg_pct)}
+                                </td>
+                                <td align="right">{formatPct(row.portfolio_return_pct)}</td>
+                                <td align="right">{formatPct(row.benchmark_return_pct)}</td>
                                 <td align="right">{formatPct(row.allocation_pct)}</td>
                                 <td align="right">{formatPct(row.selection_pct)}</td>
                                 <td align="right">{formatPct(row.interaction_pct)}</td>
@@ -506,13 +529,34 @@ export default function PerformanceWorkspaceView({
                             <tr>
                               <td>Total</td>
                               <td align="right">
-                                {formatPct(getAttributionTotals(level).allocationPct)}
+                                {formatPct(getAttributionTotals(level).portfolioWeightAvgPct)}
                               </td>
                               <td align="right">
-                                {formatPct(getAttributionTotals(level).selectionPct)}
+                                {formatPct(getAttributionTotals(level).benchmarkWeightAvgPct)}
                               </td>
                               <td align="right">
-                                {formatPct(getAttributionTotals(level).interactionPct)}
+                                {formatPct(getAttributionTotals(level).portfolioReturnPct)}
+                              </td>
+                              <td align="right">
+                                {formatPct(getAttributionTotals(level).benchmarkReturnPct)}
+                              </td>
+                              <td align="right">
+                                {formatPct(
+                                  level.allocation_total_pct ??
+                                    getAttributionTotals(level).allocationPct
+                                )}
+                              </td>
+                              <td align="right">
+                                {formatPct(
+                                  level.selection_total_pct ??
+                                    getAttributionTotals(level).selectionPct
+                                )}
+                              </td>
+                              <td align="right">
+                                {formatPct(
+                                  level.interaction_total_pct ??
+                                    getAttributionTotals(level).interactionPct
+                                )}
                               </td>
                               <td align="right">
                                 {formatPct(
@@ -583,6 +627,10 @@ function getContributionTotals(
 function getAttributionTotals(
   level: NonNullable<WorkbenchPerformanceWorkspace["attribution"]>["levels"][number]
 ): {
+  portfolioWeightAvgPct: number | null;
+  benchmarkWeightAvgPct: number | null;
+  portfolioReturnPct: number | null;
+  benchmarkReturnPct: number | null;
   allocationPct: number;
   selectionPct: number;
   interactionPct: number;
@@ -590,9 +638,21 @@ function getAttributionTotals(
 } {
   const rows = level.rows;
   return {
+    portfolioWeightAvgPct: sumOptional(rows.map((row) => row.portfolio_weight_avg_pct)),
+    benchmarkWeightAvgPct: sumOptional(rows.map((row) => row.benchmark_weight_avg_pct)),
+    portfolioReturnPct: null,
+    benchmarkReturnPct: null,
     allocationPct: rows.reduce((sum, row) => sum + row.allocation_pct, 0),
     selectionPct: rows.reduce((sum, row) => sum + row.selection_pct, 0),
     interactionPct: rows.reduce((sum, row) => sum + row.interaction_pct, 0),
     totalEffectPct: level.total_effect_pct ?? rows.reduce((sum, row) => sum + row.total_effect_pct, 0),
   };
+}
+
+function sumOptional(values: Array<number | null | undefined>): number | null {
+  const numericValues = values.filter((value): value is number => value != null);
+  if (!numericValues.length) {
+    return null;
+  }
+  return numericValues.reduce((sum, value) => sum + value, 0);
 }
