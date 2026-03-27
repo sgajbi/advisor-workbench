@@ -237,6 +237,27 @@ export type PerformanceBenchmarkOptionView = {
   is_assigned: boolean;
 };
 
+export type PerformanceHorizonComparisonRow = {
+  period: string;
+  portfolio_return_pct: number | null;
+  benchmark_return_pct: number | null;
+  active_return_pct: number | null;
+  annualized_return_pct: number | null;
+};
+
+export type WorkbenchPerformanceHorizonComparison = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  as_of_date: string;
+  detail_basis: string;
+  benchmark_code: string | null;
+  benchmark_options: PerformanceBenchmarkOptionView[];
+  rows: PerformanceHorizonComparisonRow[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+};
+
 export type AttributionSummaryView = {
   metric_basis: string;
   model: string | null;

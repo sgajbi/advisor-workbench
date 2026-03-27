@@ -3,40 +3,31 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Panel } from "@/design-system";
-import { getWorkbenchPerformanceWorkspaceSummaryClient } from "@/features/workbench/api";
-import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
+import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
+import type {
+  PerformanceBenchmarkOptionView,
+  PerformanceHorizonComparisonRow,
+} from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
-
-type MultiHorizonSummary = {
-  period: string;
-  portfolioReturnPct: number | null;
-  benchmarkReturnPct: number | null;
-};
-
-const HORIZONS = ["MTD", "QTD", "YTD", "1Y"] as const;
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
   detailBasis,
   benchmark,
   chartFrequency,
-  contributionDimension,
-  attributionDimension,
   benchmarkOptions = [],
 }: {
   portfolioId: string;
   detailBasis: string;
   benchmark?: string;
   chartFrequency: string;
-  contributionDimension: string;
-  attributionDimension: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
 }) {
-  const [rows, setRows] = useState<MultiHorizonSummary[] | null>(null);
+  const [rows, setRows] = useState<PerformanceHorizonComparisonRow[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const requestIdRef = useRef(0);
-  const cacheRef = useRef<Map<string, MultiHorizonSummary[]>>(new Map());
+  const cacheRef = useRef<Map<string, PerformanceHorizonComparisonRow[]>>(new Map());
 
   const benchmarkLabel = useMemo(() => {
     if (!benchmark) {
@@ -54,8 +45,6 @@ export default function PerformanceMultiHorizonPanel({
       detailBasis,
       benchmark: benchmark ?? null,
       chartFrequency,
-      contributionDimension,
-      attributionDimension,
     });
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {
@@ -68,31 +57,17 @@ export default function PerformanceMultiHorizonPanel({
     requestIdRef.current = requestId;
     setIsLoading(true);
 
-    void Promise.all(
-      HORIZONS.map(async (period) => {
-        const summary = await getWorkbenchPerformanceWorkspaceSummaryClient(portfolioId, {
-          period,
-          chartFrequency,
-          contributionDimension,
-          attributionDimension,
-          detailBasis,
-          benchmark,
-        });
-        const performance =
-          detailBasis === "GROSS" ? summary.gross_performance : summary.net_performance;
-        return {
-          period,
-          portfolioReturnPct: performance.portfolio_return_pct,
-          benchmarkReturnPct: performance.benchmark_return_pct,
-        } satisfies MultiHorizonSummary;
-      })
-    )
+    void getWorkbenchPerformanceHorizonComparisonClient(portfolioId, {
+      detailBasis,
+      benchmark,
+      chartFrequency,
+    })
       .then((result) => {
         if (requestIdRef.current !== requestId) {
           return;
         }
-        cacheRef.current.set(cacheKey, result);
-        setRows(result);
+        cacheRef.current.set(cacheKey, result.rows);
+        setRows(result.rows);
       })
       .catch(() => {
         if (requestIdRef.current !== requestId) {
@@ -106,10 +81,8 @@ export default function PerformanceMultiHorizonPanel({
         }
       });
   }, [
-    attributionDimension,
     benchmark,
     chartFrequency,
-    contributionDimension,
     detailBasis,
     portfolioId,
   ]);
@@ -117,8 +90,8 @@ export default function PerformanceMultiHorizonPanel({
   const scale = Math.max(
     1,
     ...(rows ?? []).flatMap((row) => [
-      Math.abs(row.portfolioReturnPct ?? 0),
-      Math.abs(row.benchmarkReturnPct ?? 0),
+      Math.abs(row.portfolio_return_pct ?? 0),
+      Math.abs(row.benchmark_return_pct ?? 0),
     ])
   );
 
@@ -144,20 +117,20 @@ export default function PerformanceMultiHorizonPanel({
             {rows.map((row) => (
               <div key={row.period} className="performance-horizon-bar-group">
                 <div className="performance-horizon-bar-values">
-                  <span>{formatPct(row.portfolioReturnPct)}</span>
-                  <span>{formatPct(row.benchmarkReturnPct)}</span>
+                  <span>{formatPct(row.portfolio_return_pct)}</span>
+                  <span>{formatPct(row.benchmark_return_pct)}</span>
                 </div>
                 <div className="performance-horizon-bar-track">
                   <div
                     className="performance-horizon-bar performance-horizon-bar-portfolio"
                     style={{
-                      height: `${(Math.abs(row.portfolioReturnPct ?? 0) / scale) * 120}px`,
+                      height: `${(Math.abs(row.portfolio_return_pct ?? 0) / scale) * 120}px`,
                     }}
                   />
                   <div
                     className="performance-horizon-bar performance-horizon-bar-benchmark"
                     style={{
-                      height: `${(Math.abs(row.benchmarkReturnPct ?? 0) / scale) * 120}px`,
+                      height: `${(Math.abs(row.benchmark_return_pct ?? 0) / scale) * 120}px`,
                     }}
                   />
                 </div>

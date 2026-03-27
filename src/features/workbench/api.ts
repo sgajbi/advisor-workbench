@@ -1,6 +1,7 @@
 import {
   WorkbenchAnalytics,
   WorkbenchOverview,
+  WorkbenchPerformanceHorizonComparison,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPerformanceWorkspace,
@@ -292,6 +293,32 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
     throw new Error(`Failed to fetch performance workspace details (${response.status})`);
   }
   return (await response.json()) as WorkbenchPerformanceWorkspaceDetails;
+}
+
+export async function getWorkbenchPerformanceHorizonComparisonClient(
+  portfolioId: string,
+  params: {
+    detailBasis: string;
+    benchmark?: string;
+    chartFrequency?: string;
+  }
+): Promise<WorkbenchPerformanceHorizonComparison> {
+  const query = new URLSearchParams();
+  query.set("detail_basis", params.detailBasis);
+  query.set("chart_frequency", params.chartFrequency ?? "monthly");
+  if (params.benchmark) {
+    query.set("benchmark_code", params.benchmark);
+  }
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/horizon-comparison?${query.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance horizon comparison (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceHorizonComparison;
 }
 
 export async function getReportingSnapshot(

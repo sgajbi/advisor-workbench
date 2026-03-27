@@ -119,13 +119,7 @@ describe("PerformanceAnalyticsPage", () => {
             }),
           } as Response;
         }
-        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
-          const requestUrl = new URL(url, "http://localhost:3000");
-          const period = requestUrl.searchParams.get("period") ?? "YTD";
-          const portfolioReturnPct =
-            period === "MTD" ? 1.2 : period === "QTD" ? 2.8 : period === "YTD" ? 5.42 : 12.1;
-          const benchmarkReturnPct =
-            period === "MTD" ? 1.0 : period === "QTD" ? 2.4 : period === "YTD" ? 4.91 : 10.7;
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
           return {
             ok: true,
             json: async () => ({
@@ -133,10 +127,6 @@ describe("PerformanceAnalyticsPage", () => {
               contract_version: "v1",
               portfolio_id: "DEMO_ADV_USD_001",
               as_of_date: "2026-02-24",
-              period,
-              report_start_date: "2026-01-01",
-              report_end_date: "2026-02-24",
-              chart_frequency: "monthly",
               detail_basis: "NET",
               benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
               benchmark_options: [
@@ -146,36 +136,36 @@ describe("PerformanceAnalyticsPage", () => {
                   is_assigned: true,
                 },
               ],
-              portfolio: {
-                portfolio_id: "DEMO_ADV_USD_001",
-                client_id: "CIF_1001",
-                base_currency: "USD",
-                booking_center_code: "SG",
-              },
-              overview: {
-                market_value_base: 1250000,
-                cash_weight_pct: 6.8,
-                position_count: 18,
-              },
-              net_performance: {
-                metric_basis: "NET",
-                portfolio_return_pct: portfolioReturnPct,
-                benchmark_return_pct: benchmarkReturnPct,
-                active_return_pct: portfolioReturnPct - benchmarkReturnPct,
-                annualized_return_pct: portfolioReturnPct,
-                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-                benchmark_return_source: "calculated",
-              },
-              gross_performance: {
-                metric_basis: "GROSS",
-                portfolio_return_pct: portfolioReturnPct + 0.4,
-                benchmark_return_pct: benchmarkReturnPct,
-                active_return_pct: portfolioReturnPct + 0.4 - benchmarkReturnPct,
-                annualized_return_pct: portfolioReturnPct + 0.4,
-                benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-                benchmark_return_source: "calculated",
-              },
-              money_weighted_return: null,
+              rows: [
+                {
+                  period: "MTD",
+                  portfolio_return_pct: 1.2,
+                  benchmark_return_pct: 1.0,
+                  active_return_pct: 0.2,
+                  annualized_return_pct: 1.2,
+                },
+                {
+                  period: "QTD",
+                  portfolio_return_pct: 2.8,
+                  benchmark_return_pct: 2.4,
+                  active_return_pct: 0.4,
+                  annualized_return_pct: 2.8,
+                },
+                {
+                  period: "YTD",
+                  portfolio_return_pct: 5.42,
+                  benchmark_return_pct: 4.91,
+                  active_return_pct: 0.51,
+                  annualized_return_pct: 5.42,
+                },
+                {
+                  period: "1Y",
+                  portfolio_return_pct: 12.1,
+                  benchmark_return_pct: 10.7,
+                  active_return_pct: 1.4,
+                  annualized_return_pct: 12.1,
+                },
+              ],
               warnings: [],
               partial_failures: [],
             }),

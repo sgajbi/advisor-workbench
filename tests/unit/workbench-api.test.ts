@@ -5,6 +5,7 @@ import {
   createSandboxSession,
   getReportingSnapshot,
   getWorkbenchAnalytics,
+  getWorkbenchPerformanceHorizonComparisonClient,
   getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummary,
   getWorkbenchPerformanceWorkspaceClient,
@@ -448,6 +449,40 @@ describe("workbench api", () => {
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/v1/workbench/PF_1001/performance/details?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+    );
+  });
+
+  it("calls the client-side horizon comparison endpoint", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-performance",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-02-24",
+            detail_basis: "NET",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_options: [],
+            rows: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceHorizonComparisonClient("PF_1001", {
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      chartFrequency: "monthly",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/bff/api/v1/workbench/PF_1001/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
   });
 

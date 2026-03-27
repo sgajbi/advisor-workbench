@@ -295,8 +295,6 @@ export default function PerformanceWorkspaceView({
                 detailBasis={detailBasis}
                 benchmark={workspace.benchmark_code ?? benchmark}
                 chartFrequency={chartFrequency}
-                contributionDimension={contributionDimension}
-                attributionDimension={attributionDimension}
                 benchmarkOptions={workspace.benchmark_options ?? []}
               />
               <Panel className="performance-contributors-panel performance-detail-panel-compact">

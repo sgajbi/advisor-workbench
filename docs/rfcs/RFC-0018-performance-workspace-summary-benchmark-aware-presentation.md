@@ -173,6 +173,12 @@ Instead, the gateway should evolve toward:
 2. narrower analytical detail APIs,
 3. clear ownership boundaries per sub-screen or heavy panel.
 
+The immediate pattern for this RFC is:
+
+1. `performance/summary` for first paint,
+2. `performance/details` for the lower analytical canvas,
+3. a dedicated `performance/horizon-comparison` module contract for compact comparative bars.
+
 This RFC adopts that direction immediately, even if the first implementation slices still reuse
 some shared upstream calls while the source contracts mature.
 
