@@ -6,6 +6,7 @@ import {
   getBottomPositionContributionRows,
   getCoverageLabel,
   getPrimaryContributionRow,
+  getRelativeSegmentRows,
   getTopAttributionEffectRows,
   getTopPositionContributionRows,
   hasBenchmarkContext,
@@ -281,6 +282,11 @@ describe("performance view model", () => {
     expect(getActiveWeightRows(workspace)[0]).toMatchObject({
       key_label: "Equity",
       active_weight_pct: 7,
+    });
+    expect(getRelativeSegmentRows(workspace)[0]).toMatchObject({
+      key_label: "Equity",
+      active_weight_pct: 7,
+      active_return_pct: 0.9,
     });
     expect(getTopAttributionEffectRows(workspace)[0]?.key_label).toBe("Equity");
   });

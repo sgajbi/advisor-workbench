@@ -13,10 +13,10 @@ import {
   CONTRIBUTION_DIMENSION_OPTIONS,
 } from "../navigation";
 import {
-  getActiveWeightRows,
   getBottomPositionContributionRows,
   getBottomContributionRows,
   getTopPositionContributionRows,
+  getRelativeSegmentRows,
   getTopAttributionEffectRows,
   getPrimaryContributionRow,
   getTopContributionRows,
@@ -29,6 +29,7 @@ import {
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
 import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
+import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 
 export default function PerformanceWorkspaceView({
   workspace,
@@ -82,7 +83,7 @@ export default function PerformanceWorkspaceView({
   const bottomPositionContributors = workspace ? getBottomPositionContributionRows(workspace) : [];
   const topContributors = workspace ? getTopContributionRows(workspace) : [];
   const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
-  const activeWeightRows = workspace ? getActiveWeightRows(workspace) : [];
+  const relativeSegmentRows = workspace ? getRelativeSegmentRows(workspace) : [];
   const topAttributionEffectRows = workspace ? getTopAttributionEffectRows(workspace) : [];
   const contributorScale = Math.max(
     0.01,
@@ -99,10 +100,6 @@ export default function PerformanceWorkspaceView({
     : undefined;
   const selectedPerformance =
     workspace && detailBasis === "GROSS" ? workspace.gross_performance : workspace?.net_performance;
-  const activeWeightScale = Math.max(
-    0.01,
-    ...activeWeightRows.map((row) => Math.abs(row.active_weight_pct))
-  );
   const attributionEffectScale = Math.max(
     0.01,
     ...topAttributionEffectRows.map((row) => Math.abs(row.total_effect_pct))
@@ -434,48 +431,7 @@ export default function PerformanceWorkspaceView({
                 ) : null}
                 {hasAttribution ? (
                   <div className="performance-analytic-duo-grid">
-                    <div className="performance-mini-module">
-                      <div className="performance-mini-module-header">
-                        <strong>Active Weights</strong>
-                        <span>Portfolio minus benchmark</span>
-                      </div>
-                      <div className="performance-comparative-list">
-                        {activeWeightRows.map((row) => (
-                          <div
-                            key={`active-weight-${row.key_label}`}
-                            className="performance-comparative-row"
-                          >
-                            <div className="performance-comparative-meta">
-                              <strong>{formatLabel(row.key_label)}</strong>
-                              <span>
-                                Port {formatPct(row.portfolio_weight_avg_pct)} / Bmk{" "}
-                                {formatPct(row.benchmark_weight_avg_pct)}
-                              </span>
-                            </div>
-                            <div className="performance-comparative-bar-track">
-                              <div className="performance-comparative-bar-axis" />
-                              <div
-                                className={`performance-comparative-bar ${
-                                  row.active_weight_pct >= 0
-                                    ? "performance-comparative-bar-positive"
-                                    : "performance-comparative-bar-negative"
-                                }`}
-                                style={{
-                                  width: `${(Math.abs(row.active_weight_pct) / activeWeightScale) * 50}%`,
-                                  marginLeft:
-                                    row.active_weight_pct >= 0
-                                      ? "50%"
-                                      : `${50 - (Math.abs(row.active_weight_pct) / activeWeightScale) * 50}%`,
-                                }}
-                              />
-                            </div>
-                            <div className="performance-comparative-value">
-                              {formatPct(row.active_weight_pct)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
 
                     <div className="performance-mini-module">
                       <div className="performance-mini-module-header">

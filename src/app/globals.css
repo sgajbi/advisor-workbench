@@ -2143,6 +2143,62 @@ a:hover {
   font-weight: 700;
 }
 
+.performance-relative-matrix {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.performance-relative-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(150px, 1fr) minmax(150px, 1fr) 88px;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-top: 1px solid rgba(52, 70, 95, 0.08);
+}
+
+.performance-relative-row:first-child {
+  border-top: 0;
+  padding-top: 0.15rem;
+}
+
+.performance-relative-meta {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.performance-relative-meta strong {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+}
+
+.performance-relative-meta span,
+.performance-relative-effect span,
+.performance-relative-metric label,
+.performance-relative-effect label {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.performance-relative-metric {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.performance-relative-metric strong,
+.performance-relative-effect strong {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.performance-relative-effect {
+  display: grid;
+  gap: 0.16rem;
+  justify-items: end;
+  text-align: right;
+}
+
 .performance-comparative-list {
   display: grid;
   gap: 0.45rem;
@@ -2479,6 +2535,11 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .performance-relative-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
   .performance-horizon-bars {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2636,6 +2697,11 @@ a:hover {
   .performance-comparative-row {
     grid-template-columns: 1fr;
     align-items: start;
+  }
+
+  .performance-relative-effect {
+    justify-items: start;
+    text-align: left;
   }
 
   .performance-comparative-bar-track {

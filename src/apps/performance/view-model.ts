@@ -9,6 +9,10 @@ import type {
 const RETURN_TOLERANCE = 0.0001;
 const EXTREME_MWR_THRESHOLD = 50;
 
+function roundMetric(value: number): number {
+  return Number(value.toFixed(6));
+}
+
 export function hasBenchmarkContext(workspace: WorkbenchPerformanceWorkspace): boolean {
   return Boolean(
     workspace.benchmark_code ||
@@ -149,6 +153,53 @@ export function getTopAttributionEffectRows(
   const rows = workspace.attribution?.levels?.[0]?.rows ?? [];
   return [...rows]
     .sort((left, right) => Math.abs(right.total_effect_pct) - Math.abs(left.total_effect_pct))
+    .slice(0, count);
+}
+
+export function getRelativeSegmentRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 8
+): Array<
+  AttributionRowView & {
+    active_weight_pct: number;
+    active_return_pct: number;
+  }
+> {
+  const rows = workspace.attribution?.levels?.[0]?.rows ?? [];
+  return rows
+    .filter(
+      (row) =>
+        row.portfolio_weight_avg_pct !== null &&
+        row.portfolio_weight_avg_pct !== undefined &&
+        row.benchmark_weight_avg_pct !== null &&
+        row.benchmark_weight_avg_pct !== undefined &&
+        row.portfolio_return_pct !== null &&
+        row.portfolio_return_pct !== undefined &&
+        row.benchmark_return_pct !== null &&
+        row.benchmark_return_pct !== undefined
+    )
+    .map((row) => ({
+      ...row,
+      active_weight_pct: roundMetric(
+        (row.portfolio_weight_avg_pct ?? 0) - (row.benchmark_weight_avg_pct ?? 0)
+      ),
+      active_return_pct: roundMetric(
+        (row.portfolio_return_pct ?? 0) - (row.benchmark_return_pct ?? 0)
+      ),
+    }))
+    .sort((left, right) => {
+      const leftMagnitude = Math.max(
+        Math.abs(left.active_weight_pct),
+        Math.abs(left.active_return_pct),
+        Math.abs(left.total_effect_pct)
+      );
+      const rightMagnitude = Math.max(
+        Math.abs(right.active_weight_pct),
+        Math.abs(right.active_return_pct),
+        Math.abs(right.total_effect_pct)
+      );
+      return rightMagnitude - leftMagnitude;
+    })
     .slice(0, count);
 }
 

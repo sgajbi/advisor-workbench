@@ -179,6 +179,17 @@ The immediate pattern for this RFC is:
 2. `performance/details` for the lower analytical canvas,
 3. a dedicated `performance/horizon-comparison` module contract for compact comparative bars.
 
+The presentation target for the attribution canvas also includes a benchmark-relative segment
+matrix that surfaces, for each selected segment:
+
+1. portfolio weight,
+2. benchmark weight,
+3. active weight,
+4. portfolio return,
+5. benchmark return,
+6. active return,
+7. total effect context.
+
 This RFC adopts that direction immediately, even if the first implementation slices still reuse
 some shared upstream calls while the source contracts mature.
 

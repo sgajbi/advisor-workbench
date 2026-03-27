@@ -305,6 +305,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
     expect(screen.getByText("Benchmark Comparison")).toBeInTheDocument();
     expect(screen.getByText("Economic Context")).toBeInTheDocument();
+    expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-24");
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
@@ -315,11 +316,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("MWR annualized 5.12%")).toBeInTheDocument();
     expect(screen.getAllByText("Global Balanced 60/40").length).toBeGreaterThan(0);
     expect(screen.getByText("Primary Contributor")).toBeInTheDocument();
-    expect(screen.getByText("Active Weights")).toBeInTheDocument();
+    expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
-    expect(screen.getAllByText("Port 61.00% / Bmk 58.00%").length).toBeGreaterThan(0);
+    expect(screen.getByText("Wt 61.00% vs 58.00%")).toBeInTheDocument();
+    expect(screen.getByText("Ret 7.40% vs 6.80%")).toBeInTheDocument();
     const attributionLegend = screen.getByLabelText("Attribution effect legend");
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
     expect(within(attributionLegend).getByText("Selection")).toBeInTheDocument();
