@@ -3,6 +3,7 @@ import { Box, Divider, FormControl, MenuItem, Select, Stack, Typography } from "
 import {
   AnalyticsSectionHeader,
   AnalyticsStat,
+  AnalyticsTable,
   Panel,
   StatusChip,
   WorkspaceGrid,
@@ -559,83 +560,54 @@ export default function PerformanceWorkspaceView({
                           </div>
                         ))}
                       </div>
-                      <div className="table-wrap">
-                        <table className="position-table">
-                          <thead>
-                            <tr>
-                              <th align="left">Bucket</th>
-                              <th align="right">Port Wt</th>
-                              <th align="right">Bmk Wt</th>
-                              <th align="right">Port Return</th>
-                              <th align="right">Bmk Return</th>
-                              <th align="right">Allocation</th>
-                              <th align="right">Selection</th>
-                              <th align="right">Interaction</th>
-                              <th align="right">Total Effect</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {level.rows.map((row) => (
-                              <tr key={`${level.dimension}-${row.key_label}`}>
-                                <td>{row.key_label}</td>
-                                <td align="right">
-                                  {formatPct(row.portfolio_weight_avg_pct)}
-                                </td>
-                                <td align="right">
-                                  {formatPct(row.benchmark_weight_avg_pct)}
-                                </td>
-                                <td align="right">{formatPct(row.portfolio_return_pct)}</td>
-                                <td align="right">{formatPct(row.benchmark_return_pct)}</td>
-                                <td align="right">{formatPct(row.allocation_pct)}</td>
-                                <td align="right">{formatPct(row.selection_pct)}</td>
-                                <td align="right">{formatPct(row.interaction_pct)}</td>
-                                <td align="right">{formatPct(row.total_effect_pct)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                          <tfoot>
-                            <tr>
-                              <td>Total</td>
-                              <td align="right">
-                                {formatPct(getAttributionTotals(level).portfolioWeightAvgPct)}
-                              </td>
-                              <td align="right">
-                                {formatPct(getAttributionTotals(level).benchmarkWeightAvgPct)}
-                              </td>
-                              <td align="right">
-                                {formatPct(getAttributionTotals(level).portfolioReturnPct)}
-                              </td>
-                              <td align="right">
-                                {formatPct(getAttributionTotals(level).benchmarkReturnPct)}
-                              </td>
-                              <td align="right">
-                                {formatPct(
-                                  level.allocation_total_pct ??
-                                    getAttributionTotals(level).allocationPct
-                                )}
-                              </td>
-                              <td align="right">
-                                {formatPct(
-                                  level.selection_total_pct ??
-                                    getAttributionTotals(level).selectionPct
-                                )}
-                              </td>
-                              <td align="right">
-                                {formatPct(
-                                  level.interaction_total_pct ??
-                                    getAttributionTotals(level).interactionPct
-                                )}
-                              </td>
-                              <td align="right">
-                                {formatPct(
-                                  getAttributionTotals(level).totalEffectPct ??
-                                    level.total_effect_pct
-                                )}
-                              </td>
-                            </tr>
-                          </tfoot>
-                        </table>
-                      </div>
+                      <AnalyticsTable
+                        ariaLabel={`${formatLabel(level.dimension)} attribution table`}
+                        columns={[
+                          { key: "bucket", label: "Bucket" },
+                          { key: "portWt", label: "Port Wt", align: "right" },
+                          { key: "bmkWt", label: "Bmk Wt", align: "right" },
+                          { key: "portRet", label: "Port Return", align: "right" },
+                          { key: "bmkRet", label: "Bmk Return", align: "right" },
+                          { key: "allocation", label: "Allocation", align: "right" },
+                          { key: "selection", label: "Selection", align: "right" },
+                          { key: "interaction", label: "Interaction", align: "right" },
+                          { key: "total", label: "Total Effect", align: "right" },
+                        ]}
+                        rows={level.rows.map((row) => ({
+                          key: `${level.dimension}-${row.key_label}`,
+                          cells: [
+                            row.key_label,
+                            formatPct(row.portfolio_weight_avg_pct),
+                            formatPct(row.benchmark_weight_avg_pct),
+                            formatPct(row.portfolio_return_pct),
+                            formatPct(row.benchmark_return_pct),
+                            formatPct(row.allocation_pct),
+                            formatPct(row.selection_pct),
+                            formatPct(row.interaction_pct),
+                            formatPct(row.total_effect_pct),
+                          ],
+                        }))}
+                        footer={[
+                          "Total",
+                          formatPct(getAttributionTotals(level).portfolioWeightAvgPct),
+                          formatPct(getAttributionTotals(level).benchmarkWeightAvgPct),
+                          formatPct(getAttributionTotals(level).portfolioReturnPct),
+                          formatPct(getAttributionTotals(level).benchmarkReturnPct),
+                          formatPct(
+                            level.allocation_total_pct ?? getAttributionTotals(level).allocationPct
+                          ),
+                          formatPct(
+                            level.selection_total_pct ?? getAttributionTotals(level).selectionPct
+                          ),
+                          formatPct(
+                            level.interaction_total_pct ??
+                              getAttributionTotals(level).interactionPct
+                          ),
+                          formatPct(
+                            getAttributionTotals(level).totalEffectPct ?? level.total_effect_pct
+                          ),
+                        ]}
+                      />
                     </div>
                   ))
                 ) : isDetailsPending ? (
@@ -681,78 +653,65 @@ export default function PerformanceWorkspaceView({
                           <div className="performance-level-heading">
                             <strong>{formatLabel(level.name)}</strong>
                           </div>
-                          <div className="table-wrap">
-                            <table className="position-table">
-                              <thead>
-                                <tr>
-                                  <th align="left">Bucket</th>
-                                  <th align="right">Contribution</th>
-                                  <th align="right">Avg. Weight</th>
-                                  <th align="right">Return</th>
-                                  {showLocalFxColumns ? <th align="right">Local</th> : null}
-                                  {showLocalFxColumns ? <th align="right">FX</th> : null}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {level.rows.map((row) => (
-                                  <tr key={`${level.name}-${row.key_label}`}>
-                                    <td>{row.key_label}</td>
-                                    <td align="right">{formatPct(row.contribution_pct)}</td>
-                                    <td align="right">{formatPct(row.weight_avg_pct)}</td>
-                                    <td align="right">{formatPct(row.total_return_pct)}</td>
-                                    {showLocalFxColumns ? (
-                                      <td align="right">{formatPct(row.local_contribution_pct)}</td>
-                                    ) : null}
-                                    {showLocalFxColumns ? (
-                                      <td align="right">{formatPct(row.fx_contribution_pct)}</td>
-                                    ) : null}
-                                  </tr>
-                                ))}
-                              </tbody>
-                              <tfoot>
-                                <tr>
-                                  <td>Total</td>
-                                  <td align="right">
-                                    {formatPct(
+                          <AnalyticsTable
+                            ariaLabel={`${formatLabel(level.name)} contribution table`}
+                            columns={[
+                              { key: "bucket", label: "Bucket" },
+                              { key: "contribution", label: "Contribution", align: "right" },
+                              { key: "weight", label: "Avg. Weight", align: "right" },
+                              { key: "return", label: "Return", align: "right" },
+                              ...(showLocalFxColumns
+                                ? [
+                                    { key: "local", label: "Local", align: "right" as const },
+                                    { key: "fx", label: "FX", align: "right" as const },
+                                  ]
+                                : []),
+                            ]}
+                            rows={level.rows.map((row) => ({
+                              key: `${level.name}-${row.key_label}`,
+                              cells: [
+                                row.key_label,
+                                formatPct(row.contribution_pct),
+                                formatPct(row.weight_avg_pct),
+                                formatPct(row.total_return_pct),
+                                ...(showLocalFxColumns
+                                  ? [
+                                      formatPct(row.local_contribution_pct),
+                                      formatPct(row.fx_contribution_pct),
+                                    ]
+                                  : []),
+                              ],
+                            }))}
+                            footer={[
+                              "Total",
+                              formatPct(
+                                getContributionTotals(workspace, level)?.portfolioContributionPct ??
+                                  level.total_contribution_pct
+                              ),
+                              formatPct(
+                                level.total_weight_avg_pct ??
+                                  getContributionTotals(workspace, level)?.weightAvgPct ??
+                                  null
+                              ),
+                              formatPct(
+                                level.total_portfolio_return_pct ??
+                                  workspace.contribution?.total_portfolio_return_pct ??
+                                  null
+                              ),
+                              ...(showLocalFxColumns
+                                ? [
+                                    formatPct(
                                       getContributionTotals(workspace, level)
-                                        ?.portfolioContributionPct ??
-                                        level.total_contribution_pct
-                                    )}
-                                  </td>
-                                  <td align="right">
-                                    {formatPct(
-                                      level.total_weight_avg_pct ??
-                                        getContributionTotals(workspace, level)?.weightAvgPct ??
+                                        ?.localContributionPct ?? null
+                                    ),
+                                    formatPct(
+                                      getContributionTotals(workspace, level)?.fxContributionPct ??
                                         null
-                                    )}
-                                  </td>
-                                  <td align="right">
-                                    {formatPct(
-                                      level.total_portfolio_return_pct ??
-                                        workspace.contribution?.total_portfolio_return_pct ??
-                                        null
-                                    )}
-                                  </td>
-                                  {showLocalFxColumns ? (
-                                    <td align="right">
-                                      {formatPct(
-                                        getContributionTotals(workspace, level)
-                                          ?.localContributionPct ?? null
-                                      )}
-                                    </td>
-                                  ) : null}
-                                  {showLocalFxColumns ? (
-                                    <td align="right">
-                                      {formatPct(
-                                        getContributionTotals(workspace, level)
-                                          ?.fxContributionPct ?? null
-                                      )}
-                                    </td>
-                                  ) : null}
-                                </tr>
-                              </tfoot>
-                            </table>
-                          </div>
+                                    ),
+                                  ]
+                                : []),
+                            ]}
+                          />
                         </div>
                       );
                     })()
