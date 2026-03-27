@@ -87,6 +87,11 @@ export default function PerformanceWorkspaceView({
     )
   );
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
+  const selectedBenchmarkLabel = workspace
+    ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
+    : undefined;
+  const selectedPerformance =
+    workspace && detailBasis === "GROSS" ? workspace.gross_performance : workspace?.net_performance;
 
   return (
     <WorkspaceLayout className="performance-layout">
@@ -100,78 +105,147 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <>
-            <Panel className="performance-hero">
-              <div className="performance-hero-title">
-                <h2>{workspace.portfolio.portfolio_id}</h2>
-                <div className="performance-observation-strip">
-                  <StatusChip>As of {formatDate(workspace.as_of_date)}</StatusChip>
-                  <StatusChip>{workspace.portfolio.base_currency}</StatusChip>
-                  {hasHistory ? (
-                    <StatusChip>{workspace.net_chart.length} observations</StatusChip>
-                  ) : (
-                    <StatusChip>Limited history</StatusChip>
-                  )}
-                  {hasBenchmark ? (
-                    <StatusChip>Relative measurement</StatusChip>
-                  ) : (
-                    <StatusChip>
-                      {selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}
-                    </StatusChip>
-                  )}
+            <Panel id="performance-overview" className="performance-summary-stage">
+              <div className="performance-summary-stage-header">
+                <div className="performance-hero-title">
+                  <h2>{workspace.portfolio.portfolio_id}</h2>
+                  <div className="performance-observation-strip">
+                    <StatusChip>As of {formatDate(workspace.as_of_date)}</StatusChip>
+                    <StatusChip>{workspace.portfolio.base_currency}</StatusChip>
+                    {hasHistory ? (
+                      <StatusChip>{workspace.net_chart.length} observations</StatusChip>
+                    ) : (
+                      <StatusChip>Limited history</StatusChip>
+                    )}
+                    {hasBenchmark ? (
+                      <StatusChip>Relative measurement</StatusChip>
+                    ) : (
+                      <StatusChip>
+                        {selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}
+                      </StatusChip>
+                    )}
+                  </div>
+                </div>
+                <div className="performance-summary-stage-context">
+                  <div className="performance-context-block">
+                    <span>Benchmark</span>
+                    <strong>{selectedBenchmarkLabel ?? "Unassigned"}</strong>
+                  </div>
+                  <div className="performance-context-block">
+                    <span>Primary Contributor</span>
+                    <strong>{primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}</strong>
+                  </div>
                 </div>
               </div>
-            </Panel>
 
-            <Panel id="performance-overview" className="performance-overview-band">
-              <div className="performance-overview-band-primary">
-                <span className="performance-overview-band-label">Net Return</span>
-                <div className="performance-overview-band-value">
-                  {formatPct(workspace.net_performance.portfolio_return_pct)}
+              <div className="performance-summary-grid">
+                <div className="performance-summary-card performance-summary-card-primary">
+                  <span>{detailBasis === "GROSS" ? "Gross Return" : "Net Return"}</span>
+                  <strong>{formatPct(selectedPerformance?.portfolio_return_pct ?? null)}</strong>
+                  <p>
+                    {hasBenchmark
+                      ? `Active ${formatCompactPct(selectedPerformance?.active_return_pct ?? null)} versus benchmark`
+                      : "Absolute performance for the selected mandate and horizon"}
+                  </p>
                 </div>
-                <p className="performance-overview-band-copy">
-                  {hasBenchmark
-                    ? `Active ${formatCompactPct(workspace.net_performance.active_return_pct)} versus assigned benchmark`
-                    : "Absolute performance for the selected mandate and horizon"}
-                </p>
-              </div>
 
-              <div className="performance-overview-band-stats">
-                <div className="performance-overview-stat">
-                  <span>Gross</span>
-                  <strong>{formatPct(workspace.gross_performance.portfolio_return_pct)}</strong>
+                <div className="performance-summary-card">
+                  <span>Benchmark Comparison</span>
+                  <div className="performance-summary-metrics">
+                    <div>
+                      <label>Portfolio</label>
+                      <strong>{formatPct(selectedPerformance?.portfolio_return_pct ?? null)}</strong>
+                    </div>
+                    <div>
+                      <label>Benchmark</label>
+                      <strong>{formatPct(selectedPerformance?.benchmark_return_pct ?? null)}</strong>
+                    </div>
+                    <div>
+                      <label>Active</label>
+                      <strong>{formatPct(selectedPerformance?.active_return_pct ?? null)}</strong>
+                    </div>
+                    <div>
+                      <label>Annualized</label>
+                      <strong>{formatPct(selectedPerformance?.annualized_return_pct ?? null)}</strong>
+                    </div>
+                  </div>
                 </div>
-                <div className="performance-overview-stat">
-                  <span>Market Value</span>
-                  <strong>
-                    {formatCurrency(workspace.overview.market_value_base, workspace.portfolio.base_currency)}
-                  </strong>
+
+                <div className="performance-summary-card">
+                  <span>Economic Context</span>
+                  <div className="performance-summary-metrics">
+                    <div>
+                      <label>Start MV</label>
+                      <strong>
+                        {formatCurrency(
+                          selectedPerformance?.begin_market_value ?? null,
+                          workspace.portfolio.base_currency
+                        )}
+                      </strong>
+                    </div>
+                    <div>
+                      <label>End MV</label>
+                      <strong>
+                        {formatCurrency(
+                          selectedPerformance?.end_market_value ?? workspace.overview.market_value_base,
+                          workspace.portfolio.base_currency
+                        )}
+                      </strong>
+                    </div>
+                    <div>
+                      <label>Net Cash Flow</label>
+                      <strong>
+                        {formatCurrency(
+                          selectedPerformance?.net_cash_flow ?? null,
+                          workspace.portfolio.base_currency
+                        )}
+                      </strong>
+                    </div>
+                    <div>
+                      <label>Cash Weight</label>
+                      <strong>{formatPct(workspace.overview.cash_weight_pct)}</strong>
+                    </div>
+                  </div>
                 </div>
-                <div className="performance-overview-stat">
-                  <span>Cash Weight</span>
-                  <strong>{formatPct(workspace.overview.cash_weight_pct)}</strong>
-                </div>
-                <div className="performance-overview-stat">
-                  <span>Money-Weighted</span>
-                  <strong>
-                    {workspace.money_weighted_return
-                      ? formatPct(workspace.money_weighted_return.money_weighted_return_pct)
-                      : "N/A"}
-                  </strong>
+
+                <div className="performance-summary-card">
+                  <span>Mandate Context</span>
+                  <div className="performance-summary-metrics">
+                    <div>
+                      <label>Money-Weighted</label>
+                      <strong>
+                        {workspace.money_weighted_return
+                          ? formatPct(workspace.money_weighted_return.money_weighted_return_pct)
+                          : "N/A"}
+                      </strong>
+                    </div>
+                    <div>
+                      <label>Position Count</label>
+                      <strong>{workspace.overview.position_count}</strong>
+                    </div>
+                    <div>
+                      <label>Market Value</label>
+                      <strong>
+                        {formatCurrency(
+                          workspace.overview.market_value_base,
+                          workspace.portfolio.base_currency
+                        )}
+                      </strong>
+                    </div>
+                    <div>
+                      <label>Basis</label>
+                      <strong>{detailBasis}</strong>
+                    </div>
+                  </div>
                   {hasMoneyWeightedReturn ? (
-                    <small>
+                    <p className="performance-summary-footnote">
                       {workspace.money_weighted_return?.annualized_return_pct != null
-                        ? `Annualized ${formatCompactPct(
+                        ? `MWR annualized ${formatCompactPct(
                             workspace.money_weighted_return.annualized_return_pct
                           )}`
                         : workspace.money_weighted_return?.method ?? "MWR"}
-                    </small>
-                  ) : null}
-                </div>
-                <div className="performance-overview-stat">
-                  <span>Primary Driver</span>
-                  <strong>{primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}</strong>
-                  {suspiciousMoneyWeightedReturn ? (
-                    <small>Review cash-flow timing</small>
+                      {suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""}
+                    </p>
                   ) : null}
                 </div>
               </div>
@@ -200,7 +274,7 @@ export default function PerformanceWorkspaceView({
             </WorkspaceGrid>
 
             <WorkspaceGrid className="performance-detail-grid">
-              <Panel className="performance-contributors-panel">
+              <Panel className="performance-contributors-panel performance-detail-panel-compact">
                 <div className="performance-section-heading">
                   <h3>Top / Bottom Contributors</h3>
                   <span>{workspace.period}</span>
@@ -281,120 +355,7 @@ export default function PerformanceWorkspaceView({
                 )}
               </Panel>
 
-              <Panel id="performance-drivers">
-                <div className="performance-section-heading">
-                  <h3>Contribution Detail</h3>
-                  <label className="performance-inline-select">
-                    <span>Segment</span>
-                    <select
-                      aria-label="Contribution Segment"
-                      value={contributionDimension}
-                      onChange={(event) =>
-                        onRequestChange?.({
-                          contributionDimension: event.currentTarget.value,
-                        })
-                      }
-                      disabled={isUpdating}
-                    >
-                      {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {formatLabel(option)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                {hasContribution ? (
-                  contributionLevels.map((level) => (
-                    (() => {
-                      const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
-                      return (
-                        <div key={`${level.level}-${level.name}`} className="performance-detail-block">
-                          <div className="performance-level-heading">
-                            <strong>{formatLabel(level.name)}</strong>
-                          </div>
-                          <div className="table-wrap">
-                            <table className="position-table">
-                              <thead>
-                                <tr>
-                                  <th align="left">Bucket</th>
-                                  <th align="right">Contribution</th>
-                                  <th align="right">Avg. Weight</th>
-                                  <th align="right">Return</th>
-                                  {showLocalFxColumns ? <th align="right">Local</th> : null}
-                                  {showLocalFxColumns ? <th align="right">FX</th> : null}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {level.rows.map((row) => (
-                                  <tr key={`${level.name}-${row.key_label}`}>
-                                    <td>{row.key_label}</td>
-                                    <td align="right">{formatPct(row.contribution_pct)}</td>
-                                    <td align="right">{formatPct(row.weight_avg_pct)}</td>
-                                    <td align="right">{formatPct(row.total_return_pct)}</td>
-                                    {showLocalFxColumns ? (
-                                      <td align="right">{formatPct(row.local_contribution_pct)}</td>
-                                    ) : null}
-                                    {showLocalFxColumns ? (
-                                      <td align="right">{formatPct(row.fx_contribution_pct)}</td>
-                                    ) : null}
-                                  </tr>
-                                ))}
-                              </tbody>
-                              <tfoot>
-                                <tr>
-                                  <td>Total</td>
-                                  <td align="right">
-                                    {formatPct(
-                                      getContributionTotals(workspace, level)
-                                        ?.portfolioContributionPct ??
-                                        level.total_contribution_pct
-                                    )}
-                                  </td>
-                                  <td align="right">
-                                    {formatPct(
-                                      level.total_weight_avg_pct ??
-                                        getContributionTotals(workspace, level)?.weightAvgPct ??
-                                        null
-                                    )}
-                                  </td>
-                                  <td align="right">
-                                    {formatPct(
-                                      level.total_portfolio_return_pct ??
-                                        workspace.contribution?.total_portfolio_return_pct ??
-                                        null
-                                    )}
-                                  </td>
-                                  {showLocalFxColumns ? (
-                                    <td align="right">
-                                      {formatPct(
-                                        getContributionTotals(workspace, level)
-                                          ?.localContributionPct ?? null
-                                      )}
-                                    </td>
-                                  ) : null}
-                                  {showLocalFxColumns ? (
-                                    <td align="right">
-                                      {formatPct(
-                                        getContributionTotals(workspace, level)
-                                          ?.fxContributionPct ?? null
-                                      )}
-                                    </td>
-                                  ) : null}
-                                </tr>
-                              </tfoot>
-                            </table>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ))
-                ) : (
-                  <p className="muted">Contribution detail is not available for the current selection.</p>
-                )}
-              </Panel>
-
-              <Panel id="performance-attribution">
+              <Panel id="performance-attribution" className="performance-detail-panel-compact">
                 <div className="performance-section-heading">
                   <h3>Attribution Detail</h3>
                   <div className="performance-section-heading-meta">
@@ -574,6 +535,119 @@ export default function PerformanceWorkspaceView({
                   <p className="muted">Attribution detail is not available for the current selection.</p>
                 )}
               </Panel>
+
+              <Panel id="performance-drivers" className="performance-detail-panel-wide">
+                <div className="performance-section-heading">
+                  <h3>Contribution Detail</h3>
+                  <label className="performance-inline-select">
+                    <span>Segment</span>
+                    <select
+                      aria-label="Contribution Segment"
+                      value={contributionDimension}
+                      onChange={(event) =>
+                        onRequestChange?.({
+                          contributionDimension: event.currentTarget.value,
+                        })
+                      }
+                      disabled={isUpdating}
+                    >
+                      {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {formatLabel(option)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {hasContribution ? (
+                  contributionLevels.map((level) => (
+                    (() => {
+                      const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
+                      return (
+                        <div key={`${level.level}-${level.name}`} className="performance-detail-block">
+                          <div className="performance-level-heading">
+                            <strong>{formatLabel(level.name)}</strong>
+                          </div>
+                          <div className="table-wrap">
+                            <table className="position-table">
+                              <thead>
+                                <tr>
+                                  <th align="left">Bucket</th>
+                                  <th align="right">Contribution</th>
+                                  <th align="right">Avg. Weight</th>
+                                  <th align="right">Return</th>
+                                  {showLocalFxColumns ? <th align="right">Local</th> : null}
+                                  {showLocalFxColumns ? <th align="right">FX</th> : null}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {level.rows.map((row) => (
+                                  <tr key={`${level.name}-${row.key_label}`}>
+                                    <td>{row.key_label}</td>
+                                    <td align="right">{formatPct(row.contribution_pct)}</td>
+                                    <td align="right">{formatPct(row.weight_avg_pct)}</td>
+                                    <td align="right">{formatPct(row.total_return_pct)}</td>
+                                    {showLocalFxColumns ? (
+                                      <td align="right">{formatPct(row.local_contribution_pct)}</td>
+                                    ) : null}
+                                    {showLocalFxColumns ? (
+                                      <td align="right">{formatPct(row.fx_contribution_pct)}</td>
+                                    ) : null}
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr>
+                                  <td>Total</td>
+                                  <td align="right">
+                                    {formatPct(
+                                      getContributionTotals(workspace, level)
+                                        ?.portfolioContributionPct ??
+                                        level.total_contribution_pct
+                                    )}
+                                  </td>
+                                  <td align="right">
+                                    {formatPct(
+                                      level.total_weight_avg_pct ??
+                                        getContributionTotals(workspace, level)?.weightAvgPct ??
+                                        null
+                                    )}
+                                  </td>
+                                  <td align="right">
+                                    {formatPct(
+                                      level.total_portfolio_return_pct ??
+                                        workspace.contribution?.total_portfolio_return_pct ??
+                                        null
+                                    )}
+                                  </td>
+                                  {showLocalFxColumns ? (
+                                    <td align="right">
+                                      {formatPct(
+                                        getContributionTotals(workspace, level)
+                                          ?.localContributionPct ?? null
+                                      )}
+                                    </td>
+                                  ) : null}
+                                  {showLocalFxColumns ? (
+                                    <td align="right">
+                                      {formatPct(
+                                        getContributionTotals(workspace, level)
+                                          ?.fxContributionPct ?? null
+                                      )}
+                                    </td>
+                                  ) : null}
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ))
+                ) : (
+                  <p className="muted">Contribution detail is not available for the current selection.</p>
+                )}
+              </Panel>
             </WorkspaceGrid>
           </>
         )}
@@ -601,6 +675,20 @@ function shouldShowContributionLocalFx(
   }
   return level.rows.some(
     (row) => row.local_contribution_pct != null || row.fx_contribution_pct != null
+  );
+}
+
+function getBenchmarkLabel(
+  workspace: WorkbenchPerformanceWorkspace,
+  benchmarkCode?: string
+): string | null {
+  if (!benchmarkCode) {
+    return null;
+  }
+  return (
+    workspace.benchmark_options?.find((option) => option.benchmark_code === benchmarkCode)
+      ?.benchmark_name ??
+    formatLabel(benchmarkCode)
   );
 }
 

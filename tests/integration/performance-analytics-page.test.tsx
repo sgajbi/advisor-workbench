@@ -71,6 +71,13 @@ describe("PerformanceAnalyticsPage", () => {
               attribution_dimension: "asset_class",
               detail_basis: "NET",
               benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+              benchmark_options: [
+                {
+                  benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+                  benchmark_name: "Global Balanced 60/40",
+                  is_assigned: true,
+                },
+              ],
               portfolio: {
                 portfolio_id: "DEMO_ADV_USD_001",
                 client_id: "CIF_1001",
@@ -209,16 +216,19 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
     expect(screen.getAllByText("5.42%").length).toBeGreaterThan(1);
-    expect(screen.getByText("5.88%")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Comparison")).toBeInTheDocument();
+    expect(screen.getByText("Economic Context")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-24");
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
     expect(screen.getAllByText("AAPL").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Total").length).toBeGreaterThan(1);
-    expect(screen.getByText("$1,250,000")).toBeInTheDocument();
+    expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(0);
     expect(screen.getByText("Money-Weighted")).toBeInTheDocument();
-    expect(screen.getByText("Annualized 5.12%")).toBeInTheDocument();
+    expect(screen.getByText("MWR annualized 5.12%")).toBeInTheDocument();
+    expect(screen.getAllByText("Global Balanced 60/40").length).toBeGreaterThan(0);
+    expect(screen.getByText("Primary Contributor")).toBeInTheDocument();
     const attributionLegend = screen.getByLabelText("Attribution effect legend");
     expect(attributionLegend).toBeInTheDocument();
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();

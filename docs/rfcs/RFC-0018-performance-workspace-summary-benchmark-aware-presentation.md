@@ -80,6 +80,8 @@ These are now solvable with cleaner source-aligned contracts and stronger demo d
 7. Tighten UI spacing, rhythm, and responsiveness so the performance screen uses the canvas more
    intelligently across screen sizes.
 8. Keep naming, APIs, and documentation aligned to Lotus vocabulary and platform standards.
+9. Move the performance screen toward a hybrid composition model instead of a permanently
+   monolithic gateway payload.
 
 ## Non-Goals
 
@@ -124,8 +126,9 @@ These are now solvable with cleaner source-aligned contracts and stronger demo d
 
 ### `lotus-gateway`
 
-`lotus-gateway` currently still orchestrates the older detailed flow and maintains a UI-shaped
-contract that does not yet fully mirror the richer source-owned workspace summary.
+`lotus-gateway` currently still exposes one screen-shaped performance route. That is acceptable as
+an initial integration boundary, but it should not become the permanent contract shape for every
+interactive analytical panel.
 
 ### `lotus-workbench`
 
@@ -138,7 +141,40 @@ contract that does not yet fully mirror the richer source-owned workspace summar
 
 ## Decision
 
-`lotus-gateway` and `lotus-workbench` should align to the new source-owned performance model.
+`lotus-gateway` and `lotus-workbench` should align to the new source-owned performance model, but
+they should do so with a hybrid composition architecture rather than assuming one gateway response
+must serve the full workstation forever.
+
+### Hybrid composition decision
+
+The preferred target architecture is:
+
+1. one `performance workspace summary` contract for first paint and shared screen context,
+2. dedicated analytical sub-contracts for heavier or independently refreshed panels,
+3. one shared URL and client state model so all panels remain synchronized on:
+   - portfolio,
+   - benchmark,
+   - horizon,
+   - basis,
+   - segment,
+   - explicit date window.
+
+This means the long-term screen should not rely on a single oversized gateway response for:
+
+1. contribution detail,
+2. attribution detail,
+3. attribution over time,
+4. benchmark exploration,
+5. future risk and policy comparison modules.
+
+Instead, the gateway should evolve toward:
+
+1. `summary` or `first-paint` APIs,
+2. narrower analytical detail APIs,
+3. clear ownership boundaries per sub-screen or heavy panel.
+
+This RFC adopts that direction immediately, even if the first implementation slices still reuse
+some shared upstream calls while the source contracts mature.
 
 ## Implementation Slices
 
@@ -160,14 +196,23 @@ The active implementation rule is:
 2. keep the route boundary stable where possible,
 3. reduce complexity while migrating rather than preserving transitional duplication.
 
-### 1. Gateway should adopt `workspace-summary` as the primary performance workspace contract
+### 1. Gateway should adopt `workspace-summary` as the primary first-paint performance contract
 
-The main performance workspace route should be backed by one primary analytics request:
+The initial performance workspace render should be backed by one primary analytics request:
 
 1. `workspace-summary`
 
 The gateway may still use bounded supplementary calls only when the source contract does not yet
 provide a required screen element, but the old stitched path should not remain the default.
+
+The gateway should also begin separating:
+
+1. summary and shared-context shaping,
+2. detail-panel shaping,
+3. benchmark discovery and switching support.
+
+The first implementation does not need to expose every split route immediately, but the internal
+service structure should move in that direction.
 
 ### 2. Workbench should render benchmark-aware analytics directly from the richer response
 
@@ -363,7 +408,9 @@ Outcome:
 1. gateway adopts `workspace-summary`,
 2. hard-coded benchmark behavior is removed,
 3. gateway contract exposes richer comparative, contribution, attribution, and benchmark data,
-4. tests prove the contract mapping.
+4. tests prove the contract mapping,
+5. internal gateway shaping separates first-paint summary concerns from heavier analytical detail
+   concerns.
 
 ### Slice 4: Workbench workstation upgrade
 
@@ -372,7 +419,8 @@ Outcome:
 1. UI shows benchmark-aware analytics clearly,
 2. spacing and composition are tightened,
 3. benchmark selector is source-backed,
-4. the page performs well and remains readable across screen sizes.
+4. the page performs well and remains readable across screen sizes,
+5. the workstation becomes structurally ready for panel-level or sub-screen analytical fetching.
 
 Additional expectation:
 
@@ -404,6 +452,10 @@ The RFC can be marked implemented only when:
 7. meaningful tests protect gateway mapping, UI rendering, and demo-data ingestion.
 8. the RFC explicitly governs how attribution-over-time should be surfaced, even if some richer
    factor families remain a later upstream enhancement.
+9. the implementation direction is explicitly hybrid:
+   - initial summary composition may stay consolidated,
+   - heavier analytical panels should be able to split into dedicated APIs without redesigning the
+     screen state model.
 
 ## Repository Impact
 
