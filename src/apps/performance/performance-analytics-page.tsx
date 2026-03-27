@@ -1,4 +1,7 @@
-import { getWorkbenchPerformanceWorkspace } from "@/features/workbench/api";
+import {
+  getWorkbenchPerformanceWorkspaceDetails,
+  getWorkbenchPerformanceWorkspaceSummary,
+} from "@/features/workbench/api";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
@@ -62,28 +65,43 @@ export default async function PerformanceAnalyticsPage({
   const reportStartDate = resolvedSearch.reportStartDate?.trim() || undefined;
   const reportEndDate = resolvedSearch.reportEndDate?.trim() || undefined;
 
-  let workspace = null;
+  let workspaceSummary = null;
+  let workspaceDetails = null;
   if (selectedPortfolioId) {
     try {
-      workspace = await getWorkbenchPerformanceWorkspace(selectedPortfolioId, {
-        period,
-        chartFrequency,
-        contributionDimension,
-        attributionDimension,
-        detailBasis,
-        benchmark,
-        reportStartDate,
-        reportEndDate,
-      });
+      [workspaceSummary, workspaceDetails] = await Promise.all([
+        getWorkbenchPerformanceWorkspaceSummary(selectedPortfolioId, {
+          period,
+          chartFrequency,
+          contributionDimension,
+          attributionDimension,
+          detailBasis,
+          benchmark,
+          reportStartDate,
+          reportEndDate,
+        }),
+        getWorkbenchPerformanceWorkspaceDetails(selectedPortfolioId, {
+          period,
+          chartFrequency,
+          contributionDimension,
+          attributionDimension,
+          detailBasis,
+          benchmark,
+          reportStartDate,
+          reportEndDate,
+        }),
+      ]);
     } catch {
-      workspace = null;
+      workspaceSummary = null;
+      workspaceDetails = null;
     }
   }
 
   return (
     <main className="page-container">
       <PerformanceWorkspaceEntry
-        initialWorkspace={workspace}
+        initialSummary={workspaceSummary}
+        initialDetails={workspaceDetails}
         initialPortfolioId={selectedPortfolioId}
         initialPeriod={period}
         initialDetailBasis={detailBasis}

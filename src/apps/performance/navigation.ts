@@ -11,10 +11,6 @@ export const CHART_FREQUENCY_OPTIONS = [
   { value: "monthly", label: "Monthly" },
   { value: "quarterly", label: "Quarterly" },
 ] as const;
-export const BENCHMARK_OPTIONS = [
-  { value: "", label: "No Benchmark" },
-  { value: "BMK_GLOBAL_BALANCED_60_40", label: "Global Balanced 60/40" },
-] as const;
 
 export function buildPerformanceHref({
   portfolioId,

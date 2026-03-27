@@ -57,6 +57,31 @@ Open `http://localhost:3000`.
 
 Set `BFF_BASE_URL` to point to `lotus-gateway`.
 
+## Live Performance Demo
+
+The current flagship demo path is the benchmark-aware performance workstation:
+
+- UI: `http://127.0.0.1:3000/performance`
+- Gateway: `http://127.0.0.1:8100`
+- Required upstreams:
+  - `lotus-core` query: `http://127.0.0.1:8201`
+  - `lotus-core` control plane: `http://127.0.0.1:8202`
+  - `lotus-performance`: `http://127.0.0.1:8002`
+
+Flagship seeded mandate and benchmarks:
+
+- portfolio: `DEMO_ADV_USD_001`
+- assigned benchmark: `BMK_GLOBAL_BALANCED_60_40` (`Global Balanced 60/40`)
+- alternate benchmark: `BMK_GLOBAL_GROWTH_80_20` (`Global Growth 80/20`)
+
+Expected live behavior:
+
+- the `Performance` route first paints benchmark-aware summary context immediately
+- the chart stage supports horizon, explicit dates, basis, frequency, and benchmark switching
+- the lower analytical canvas refreshes independently for heavy analytical modules
+- the multi-horizon comparison module shows `MTD`, `QTD`, `YTD`, and `1Y`
+- attribution-over-time, contribution, and relative segment analytics use real gateway data
+
 ## Current Routes
 
 - `/portfolio` - primary portfolio review surface for holdings, allocation, readiness, and next actions

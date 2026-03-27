@@ -139,6 +139,9 @@ export type PerformanceComparativeSummary = {
   annualized_return_pct: number | null;
   benchmark_id: string | null;
   benchmark_return_source: string | null;
+  begin_market_value?: number | null;
+  end_market_value?: number | null;
+  net_cash_flow?: number | null;
 };
 
 export type PerformanceChartPoint = {
@@ -167,6 +170,7 @@ export type ContributionRowView = {
   key_label: string;
   contribution_pct: number;
   weight_avg_pct: number | null;
+  total_return_pct?: number | null;
   local_contribution_pct: number | null;
   fx_contribution_pct: number | null;
   is_other: boolean;
@@ -186,6 +190,8 @@ export type ContributionLevelView = {
   name: string;
   rows: ContributionRowView[];
   total_contribution_pct: number | null;
+  total_weight_avg_pct?: number | null;
+  total_portfolio_return_pct?: number | null;
 };
 
 export type ContributionSummaryView = {
@@ -202,6 +208,10 @@ export type ContributionSummaryView = {
 
 export type AttributionRowView = {
   key_label: string;
+  portfolio_weight_avg_pct?: number | null;
+  benchmark_weight_avg_pct?: number | null;
+  portfolio_return_pct?: number | null;
+  benchmark_return_pct?: number | null;
   allocation_pct: number;
   selection_pct: number;
   interaction_pct: number;
@@ -210,8 +220,73 @@ export type AttributionRowView = {
 
 export type AttributionLevelView = {
   dimension: string;
+  allocation_total_pct?: number | null;
+  selection_total_pct?: number | null;
+  interaction_total_pct?: number | null;
   total_effect_pct: number;
   rows: AttributionRowView[];
+};
+
+export type PerformanceBenchmarkOptionView = {
+  benchmark_code: string;
+  benchmark_name: string;
+  benchmark_currency?: string | null;
+  benchmark_type?: string | null;
+  benchmark_family?: string | null;
+  benchmark_provider?: string | null;
+  is_assigned: boolean;
+};
+
+export type PerformanceHorizonComparisonRow = {
+  period: string;
+  portfolio_return_pct: number | null;
+  benchmark_return_pct: number | null;
+  active_return_pct: number | null;
+  annualized_return_pct: number | null;
+};
+
+export type WorkbenchPerformanceHorizonComparison = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  as_of_date: string;
+  detail_basis: string;
+  benchmark_code: string | null;
+  benchmark_options: PerformanceBenchmarkOptionView[];
+  rows: PerformanceHorizonComparisonRow[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+};
+
+export type PerformanceAttributionTrendRow = {
+  period_label: string;
+  period_start: string;
+  period_end: string;
+  frequency: string;
+  allocation_pct: number | null;
+  selection_pct: number | null;
+  interaction_pct: number | null;
+  total_effect_pct: number | null;
+  cumulative_total_effect_pct: number | null;
+  active_return_pct: number | null;
+  residual_pct: number | null;
+};
+
+export type WorkbenchPerformanceAttributionTrend = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  as_of_date: string;
+  period: string;
+  report_start_date: string;
+  report_end_date: string;
+  chart_frequency: string;
+  detail_basis: string;
+  attribution_dimension: string;
+  benchmark_code: string | null;
+  rows: PerformanceAttributionTrendRow[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
 };
 
 export type AttributionSummaryView = {
@@ -238,7 +313,9 @@ export type WorkbenchPerformanceWorkspace = {
   contribution_dimension: string;
   attribution_dimension: string;
   detail_basis: string;
+  segment?: string;
   benchmark_code: string | null;
+  benchmark_options?: PerformanceBenchmarkOptionView[];
   portfolio: WorkbenchOverview["portfolio"];
   overview: WorkbenchOverview["overview"];
   net_performance: PerformanceComparativeSummary;
@@ -251,6 +328,51 @@ export type WorkbenchPerformanceWorkspace = {
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };
+
+export type WorkbenchPerformanceWorkspaceSummary = Pick<
+  WorkbenchPerformanceWorkspace,
+  | "correlation_id"
+  | "contract_version"
+  | "portfolio_id"
+  | "as_of_date"
+  | "period"
+  | "report_start_date"
+  | "report_end_date"
+  | "chart_frequency"
+  | "detail_basis"
+  | "benchmark_code"
+  | "benchmark_options"
+  | "portfolio"
+  | "overview"
+  | "net_performance"
+  | "gross_performance"
+  | "money_weighted_return"
+  | "warnings"
+  | "partial_failures"
+>;
+
+export type WorkbenchPerformanceWorkspaceDetails = Pick<
+  WorkbenchPerformanceWorkspace,
+  | "correlation_id"
+  | "contract_version"
+  | "portfolio_id"
+  | "as_of_date"
+  | "period"
+  | "report_start_date"
+  | "report_end_date"
+  | "chart_frequency"
+  | "contribution_dimension"
+  | "attribution_dimension"
+  | "detail_basis"
+  | "segment"
+  | "benchmark_code"
+  | "net_chart"
+  | "gross_chart"
+  | "contribution"
+  | "attribution"
+  | "warnings"
+  | "partial_failures"
+>;
 
 export type WorkbenchReportingSnapshot = {
   correlationId: string;

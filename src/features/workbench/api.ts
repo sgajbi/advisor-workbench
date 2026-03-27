@@ -1,6 +1,10 @@
 import {
   WorkbenchAnalytics,
+  WorkbenchPerformanceAttributionTrend,
   WorkbenchOverview,
+  WorkbenchPerformanceHorizonComparison,
+  WorkbenchPerformanceWorkspaceDetails,
+  WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPerformanceWorkspace,
   WorkbenchPortfolio360,
   WorkbenchReportingSnapshot,
@@ -186,6 +190,174 @@ export async function getWorkbenchPerformanceWorkspaceClient(
     throw new Error(`Failed to fetch performance workspace (${response.status})`);
   }
   return (await response.json()) as WorkbenchPerformanceWorkspace;
+}
+
+export async function getWorkbenchPerformanceWorkspaceSummary(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspaceSummary> {
+  const query = buildPerformanceWorkspaceQuery(params);
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance/summary?${query}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace summary (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspaceSummary;
+}
+
+export async function getWorkbenchPerformanceWorkspaceDetails(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspaceDetails> {
+  const query = buildPerformanceWorkspaceQuery(params);
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance/details?${query}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace details (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspaceDetails;
+}
+
+export async function getWorkbenchPerformanceWorkspaceSummaryClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspaceSummary> {
+  const query = buildPerformanceWorkspaceQuery(params);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/summary?${query}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace summary (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspaceSummary;
+}
+
+export async function getWorkbenchPerformanceWorkspaceDetailsClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspaceDetails> {
+  const query = buildPerformanceWorkspaceQuery(params);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/details?${query}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace details (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspaceDetails;
+}
+
+export async function getWorkbenchPerformanceHorizonComparisonClient(
+  portfolioId: string,
+  params: {
+    detailBasis: string;
+    benchmark?: string;
+    chartFrequency?: string;
+  }
+): Promise<WorkbenchPerformanceHorizonComparison> {
+  const query = new URLSearchParams();
+  query.set("detail_basis", params.detailBasis);
+  query.set("chart_frequency", params.chartFrequency ?? "monthly");
+  if (params.benchmark) {
+    query.set("benchmark_code", params.benchmark);
+  }
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/horizon-comparison?${query.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance horizon comparison (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceHorizonComparison;
+}
+
+export async function getWorkbenchPerformanceAttributionTrendClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceAttributionTrend> {
+  const query = new URLSearchParams();
+  query.set("period", params.period);
+  query.set("chart_frequency", params.chartFrequency);
+  query.set("attribution_dimension", params.attributionDimension);
+  query.set("detail_basis", params.detailBasis);
+  if (params.benchmark) {
+    query.set("benchmark_code", params.benchmark);
+  }
+  if (params.reportStartDate) {
+    query.set("report_start_date", params.reportStartDate);
+  }
+  if (params.reportEndDate) {
+    query.set("report_end_date", params.reportEndDate);
+  }
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/attribution-trend?${query.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance attribution trend (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceAttributionTrend;
 }
 
 export async function getReportingSnapshot(

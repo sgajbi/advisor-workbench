@@ -1,12 +1,21 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 
-const PerformanceWorkspaceClient = dynamic(
-  () => import("./performance-workspace-client"),
-  {
-    ssr: false,
+import PerformanceWorkspaceClient from "./performance-workspace-client";
+
+export default function PerformanceWorkspaceEntry(
+  props: React.ComponentProps<typeof PerformanceWorkspaceClient>
+) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
   }
-);
 
-export default PerformanceWorkspaceClient;
+  return <PerformanceWorkspaceClient {...props} />;
+}
