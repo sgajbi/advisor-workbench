@@ -1,4 +1,4 @@
-import { getWorkbenchPerformanceWorkspace } from "@/features/workbench/api";
+import { getWorkbenchPerformanceWorkspaceSummary } from "@/features/workbench/api";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
@@ -62,10 +62,10 @@ export default async function PerformanceAnalyticsPage({
   const reportStartDate = resolvedSearch.reportStartDate?.trim() || undefined;
   const reportEndDate = resolvedSearch.reportEndDate?.trim() || undefined;
 
-  let workspace = null;
+  let workspaceSummary = null;
   if (selectedPortfolioId) {
     try {
-      workspace = await getWorkbenchPerformanceWorkspace(selectedPortfolioId, {
+      workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(selectedPortfolioId, {
         period,
         chartFrequency,
         contributionDimension,
@@ -76,14 +76,14 @@ export default async function PerformanceAnalyticsPage({
         reportEndDate,
       });
     } catch {
-      workspace = null;
+      workspaceSummary = null;
     }
   }
 
   return (
     <main className="page-container">
       <PerformanceWorkspaceEntry
-        initialWorkspace={workspace}
+        initialSummary={workspaceSummary}
         initialPortfolioId={selectedPortfolioId}
         initialPeriod={period}
         initialDetailBasis={detailBasis}
