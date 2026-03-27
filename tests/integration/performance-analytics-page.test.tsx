@@ -171,6 +171,41 @@ describe("PerformanceAnalyticsPage", () => {
             }),
           } as Response;
         }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
+          return {
+            ok: true,
+            json: async () => ({
+              correlation_id: "corr-performance",
+              contract_version: "v1",
+              portfolio_id: "DEMO_ADV_USD_001",
+              as_of_date: "2026-02-24",
+              period: "YTD",
+              report_start_date: "2026-01-01",
+              report_end_date: "2026-02-24",
+              chart_frequency: "monthly",
+              detail_basis: "NET",
+              attribution_dimension: "asset_class",
+              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+              rows: [
+                {
+                  period_label: "2026-01",
+                  period_start: "2026-01-01",
+                  period_end: "2026-01-31",
+                  frequency: "monthly",
+                  allocation_pct: 0.12,
+                  selection_pct: 0.08,
+                  interaction_pct: 0.02,
+                  total_effect_pct: 0.22,
+                  cumulative_total_effect_pct: 0.22,
+                  active_return_pct: 0.22,
+                  residual_pct: 0,
+                },
+              ],
+              warnings: [],
+              partial_failures: [],
+            }),
+          } as Response;
+        }
         if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
           return {
             ok: true,
@@ -319,6 +354,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
+    expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(screen.getByText("Wt 61.00% vs 58.00%")).toBeInTheDocument();
     expect(screen.getByText("Ret 7.40% vs 6.80%")).toBeInTheDocument();

@@ -258,6 +258,37 @@ export type WorkbenchPerformanceHorizonComparison = {
   partial_failures: WorkbenchOverview["partial_failures"];
 };
 
+export type PerformanceAttributionTrendRow = {
+  period_label: string;
+  period_start: string;
+  period_end: string;
+  frequency: string;
+  allocation_pct: number | null;
+  selection_pct: number | null;
+  interaction_pct: number | null;
+  total_effect_pct: number | null;
+  cumulative_total_effect_pct: number | null;
+  active_return_pct: number | null;
+  residual_pct: number | null;
+};
+
+export type WorkbenchPerformanceAttributionTrend = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  as_of_date: string;
+  period: string;
+  report_start_date: string;
+  report_end_date: string;
+  chart_frequency: string;
+  detail_basis: string;
+  attribution_dimension: string;
+  benchmark_code: string | null;
+  rows: PerformanceAttributionTrendRow[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+};
+
 export type AttributionSummaryView = {
   metric_basis: string;
   model: string | null;

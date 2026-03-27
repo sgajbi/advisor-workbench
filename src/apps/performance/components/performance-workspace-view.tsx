@@ -37,6 +37,7 @@ import {
   hasUsableContribution,
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
+import PerformanceAttributionTrendPanel from "./performance-attribution-trend-panel";
 import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 
@@ -355,6 +356,16 @@ export default function PerformanceWorkspaceView({
                 benchmark={workspace.benchmark_code ?? benchmark}
                 chartFrequency={chartFrequency}
                 benchmarkOptions={workspace.benchmark_options ?? []}
+              />
+              <PerformanceAttributionTrendPanel
+                portfolioId={workspace.portfolio.portfolio_id}
+                period={period}
+                chartFrequency={chartFrequency}
+                attributionDimension={attributionDimension}
+                detailBasis={detailBasis}
+                benchmark={workspace.benchmark_code ?? benchmark}
+                reportStartDate={workspace.report_start_date}
+                reportEndDate={workspace.report_end_date}
               />
               <AnalyticsModule
                 title="Top / Bottom Contributors"

@@ -5,6 +5,7 @@ import {
   createSandboxSession,
   getReportingSnapshot,
   getWorkbenchAnalytics,
+  getWorkbenchPerformanceAttributionTrendClient,
   getWorkbenchPerformanceHorizonComparisonClient,
   getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummary,
@@ -483,6 +484,48 @@ describe("workbench api", () => {
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+    );
+  });
+
+  it("calls the client-side attribution trend endpoint", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-performance",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-02-24",
+            period: "YTD",
+            report_start_date: "2026-01-01",
+            report_end_date: "2026-02-24",
+            chart_frequency: "monthly",
+            detail_basis: "NET",
+            attribution_dimension: "asset_class",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            rows: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceAttributionTrendClient("PF_1001", {
+      period: "YTD",
+      chartFrequency: "monthly",
+      attributionDimension: "asset_class",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-02-24",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/bff/api/v1/workbench/PF_1001/performance/attribution-trend?period=YTD&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
     );
   });
 
