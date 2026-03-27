@@ -309,7 +309,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-24");
     expect(screen.getAllByText("Equity").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("AAPL").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("AAPL").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Total").length).toBeGreaterThan(1);
     expect(screen.getAllByText("$1,250,000").length).toBeGreaterThan(0);
     expect(screen.getByText("Money-Weighted")).toBeInTheDocument();

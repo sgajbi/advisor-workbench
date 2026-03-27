@@ -5,7 +5,9 @@ import {
   getActiveWeightRows,
   getBottomPositionContributionRows,
   getCoverageLabel,
+  getNegativePositionContributionRows,
   getPrimaryContributionRow,
+  getPositivePositionContributionRows,
   getRelativeSegmentRows,
   getTopAttributionEffectRows,
   getTopPositionContributionRows,
@@ -275,6 +277,27 @@ describe("performance view model", () => {
     expect(hasPositionContributionRanking(workspace)).toBe(true);
     expect(getTopPositionContributionRows(workspace)[0]?.position_id).toBe("AAPL");
     expect(getBottomPositionContributionRows(workspace)[0]?.position_id).toBe("TLT");
+    expect(getPositivePositionContributionRows(workspace)[0]?.position_id).toBe("AAPL");
+    expect(getNegativePositionContributionRows(workspace)[0]?.position_id).toBe("TLT");
+    expect(
+      getNegativePositionContributionRows(
+        buildWorkspace({
+          contribution: {
+            ...buildWorkspace().contribution!,
+            position_rows: [
+              {
+                position_id: "AAPL",
+                contribution_pct: 0,
+                weight_avg_pct: 24,
+                total_return_pct: 8,
+                local_contribution_pct: 0,
+                fx_contribution_pct: 0,
+              },
+            ],
+          },
+        })
+      )
+    ).toEqual([]);
   });
 
   it("derives active weights and effect rankings from attribution rows", () => {

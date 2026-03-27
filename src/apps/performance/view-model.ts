@@ -110,12 +110,34 @@ export function getTopPositionContributionRows(
     .slice(0, count);
 }
 
+export function getPositivePositionContributionRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 5
+): ContributionPositionView[] {
+  const rows = workspace.contribution?.position_rows ?? [];
+  return [...rows]
+    .filter((row) => row.contribution_pct > RETURN_TOLERANCE)
+    .sort((left, right) => right.contribution_pct - left.contribution_pct)
+    .slice(0, count);
+}
+
 export function getBottomPositionContributionRows(
   workspace: WorkbenchPerformanceWorkspace,
   count = 5
 ): ContributionPositionView[] {
   const rows = workspace.contribution?.position_rows ?? [];
   return [...rows]
+    .sort((left, right) => left.contribution_pct - right.contribution_pct)
+    .slice(0, count);
+}
+
+export function getNegativePositionContributionRows(
+  workspace: WorkbenchPerformanceWorkspace,
+  count = 5
+): ContributionPositionView[] {
+  const rows = workspace.contribution?.position_rows ?? [];
+  return [...rows]
+    .filter((row) => row.contribution_pct < -RETURN_TOLERANCE)
     .sort((left, right) => left.contribution_pct - right.contribution_pct)
     .slice(0, count);
 }

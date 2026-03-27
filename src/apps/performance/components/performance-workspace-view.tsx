@@ -21,9 +21,9 @@ import {
   CONTRIBUTION_DIMENSION_OPTIONS,
 } from "../navigation";
 import {
-  getBottomPositionContributionRows,
   getBottomContributionRows,
-  getTopPositionContributionRows,
+  getNegativePositionContributionRows,
+  getPositivePositionContributionRows,
   getRelativeSegmentRows,
   getTopAttributionEffectRows,
   getPrimaryContributionRow,
@@ -87,18 +87,22 @@ export default function PerformanceWorkspaceView({
   const suspiciousMoneyWeightedReturn = workspace
     ? isMoneyWeightedReturnSuspicious(workspace)
     : false;
-  const topPositionContributors = workspace ? getTopPositionContributionRows(workspace) : [];
-  const bottomPositionContributors = workspace ? getBottomPositionContributionRows(workspace) : [];
+  const positivePositionContributors = workspace
+    ? getPositivePositionContributionRows(workspace)
+    : [];
+  const negativePositionContributors = workspace
+    ? getNegativePositionContributionRows(workspace)
+    : [];
   const topContributors = workspace ? getTopContributionRows(workspace) : [];
   const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
   const relativeSegmentRows = workspace ? getRelativeSegmentRows(workspace) : [];
   const topAttributionEffectRows = workspace ? getTopAttributionEffectRows(workspace) : [];
   const contributorScale = Math.max(
     0.01,
-    ...(hasPositionRanking ? topPositionContributors : topContributors).map((row) =>
+    ...(hasPositionRanking ? positivePositionContributors : topContributors).map((row) =>
       Math.abs(row.contribution_pct)
     ),
-    ...(hasPositionRanking ? bottomPositionContributors : bottomContributors).map((row) =>
+    ...(hasPositionRanking ? negativePositionContributors : bottomContributors).map((row) =>
       Math.abs(row.contribution_pct)
     )
   );
@@ -342,7 +346,7 @@ export default function PerformanceWorkspaceView({
                         title="Highest"
                         label="Contribution"
                         scale={contributorScale}
-                        rows={topPositionContributors.map((row) => ({
+                        rows={positivePositionContributors.map((row) => ({
                           key: `top-position-${row.position_id}`,
                           title: row.position_id,
                           subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
@@ -350,13 +354,14 @@ export default function PerformanceWorkspaceView({
                           magnitudePct: row.contribution_pct,
                           tone: "positive" as const,
                         }))}
+                        emptyMessage="No positive contributors are present for the selected analytical slice."
                       />
 
                       <AnalyticsRankedList
                         title="Lowest"
                         label="Contribution"
                         scale={contributorScale}
-                        rows={bottomPositionContributors.map((row) => ({
+                        rows={negativePositionContributors.map((row) => ({
                           key: `bottom-position-${row.position_id}`,
                           title: row.position_id,
                           subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
@@ -364,6 +369,7 @@ export default function PerformanceWorkspaceView({
                           magnitudePct: row.contribution_pct,
                           tone: "negative" as const,
                         }))}
+                        emptyMessage="No detractors are present for the selected analytical slice."
                       />
                     </div>
                   ) : (
