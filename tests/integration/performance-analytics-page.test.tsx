@@ -263,6 +263,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("MWR annualized 5.12%")).toBeInTheDocument();
     expect(screen.getAllByText("Global Balanced 60/40").length).toBeGreaterThan(0);
     expect(screen.getByText("Primary Contributor")).toBeInTheDocument();
+    expect(screen.getByText("Active Weights")).toBeInTheDocument();
+    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    expect(screen.getAllByText("Port 61.00% / Bmk 58.00%").length).toBeGreaterThan(0);
     const attributionLegend = screen.getByLabelText("Attribution effect legend");
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
     expect(within(attributionLegend).getByText("Selection")).toBeInTheDocument();

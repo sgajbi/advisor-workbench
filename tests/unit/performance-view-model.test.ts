@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import {
+  getActiveWeightRows,
   getBottomPositionContributionRows,
   getCoverageLabel,
   getPrimaryContributionRow,
+  getTopAttributionEffectRows,
   getTopPositionContributionRows,
   hasBenchmarkContext,
   hasDistinctGrossPerformance,
@@ -168,7 +170,46 @@ function buildWorkspace(overrides: Partial<WorkbenchPerformanceWorkspace> = {}):
         },
       ],
     },
-    attribution: null,
+    attribution: {
+      metric_basis: "NET",
+      model: "BF",
+      linking: "carino",
+      benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_return_source: "calculated",
+      active_return_pct: 0.5,
+      sum_of_effects_pct: 0.45,
+      residual_pct: 0.05,
+      levels: [
+        {
+          dimension: "asset_class",
+          total_effect_pct: 0.45,
+          rows: [
+            {
+              key_label: "Equity",
+              portfolio_weight_avg_pct: 55,
+              benchmark_weight_avg_pct: 48,
+              portfolio_return_pct: 7.8,
+              benchmark_return_pct: 6.9,
+              allocation_pct: 0.15,
+              selection_pct: 0.22,
+              interaction_pct: 0.03,
+              total_effect_pct: 0.4,
+            },
+            {
+              key_label: "Fixed Income",
+              portfolio_weight_avg_pct: 30,
+              benchmark_weight_avg_pct: 37,
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: 2.8,
+              allocation_pct: -0.08,
+              selection_pct: 0.02,
+              interaction_pct: 0.01,
+              total_effect_pct: -0.05,
+            },
+          ],
+        },
+      ],
+    },
     warnings: [],
     partial_failures: [],
     ...overrides,
@@ -177,7 +218,13 @@ function buildWorkspace(overrides: Partial<WorkbenchPerformanceWorkspace> = {}):
 
 describe("performance view model", () => {
   it("detects benchmark context only when benchmark data exists", () => {
-    expect(hasBenchmarkContext(buildWorkspace())).toBe(false);
+    expect(
+      hasBenchmarkContext(
+        buildWorkspace({
+          attribution: null,
+        })
+      )
+    ).toBe(false);
     expect(
       hasBenchmarkContext(
         buildWorkspace({
@@ -227,5 +274,14 @@ describe("performance view model", () => {
     expect(hasPositionContributionRanking(workspace)).toBe(true);
     expect(getTopPositionContributionRows(workspace)[0]?.position_id).toBe("AAPL");
     expect(getBottomPositionContributionRows(workspace)[0]?.position_id).toBe("TLT");
+  });
+
+  it("derives active weights and effect rankings from attribution rows", () => {
+    const workspace = buildWorkspace();
+    expect(getActiveWeightRows(workspace)[0]).toMatchObject({
+      key_label: "Equity",
+      active_weight_pct: 7,
+    });
+    expect(getTopAttributionEffectRows(workspace)[0]?.key_label).toBe("Equity");
   });
 });

@@ -2108,6 +2108,114 @@ a:hover {
   font-weight: 800;
 }
 
+.performance-analytic-duo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+
+.performance-mini-module {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem 0.85rem;
+  border: 1px solid rgba(52, 70, 95, 0.08);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 249, 252, 0.92));
+}
+
+.performance-mini-module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.performance-mini-module-header strong {
+  color: var(--brand-strong);
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+}
+
+.performance-mini-module-header span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.performance-comparative-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-comparative-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(150px, 1fr) 78px;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.performance-comparative-meta {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.performance-comparative-meta strong {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+}
+
+.performance-comparative-meta span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.performance-comparative-bar-track {
+  position: relative;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: rgba(34, 44, 59, 0.08);
+  overflow: hidden;
+}
+
+.performance-comparative-bar-axis {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 1px;
+  background: rgba(34, 44, 59, 0.18);
+}
+
+.performance-comparative-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+}
+
+.performance-comparative-bar-positive {
+  background: linear-gradient(90deg, #4f8cbe 0%, #6ea9da 100%);
+}
+
+.performance-comparative-bar-negative {
+  background: linear-gradient(90deg, #bf6d56 0%, #d88f7b 100%);
+}
+
+.performance-comparative-value {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: right;
+}
+
+.performance-chart-loading-state {
+  min-height: 12rem;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(52, 70, 95, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(250, 251, 253, 0.92), rgba(245, 247, 250, 0.9));
+}
+
 @media (max-width: 1320px) {
   .shell-topbar-main {
     align-items: flex-start;
@@ -2275,6 +2383,10 @@ a:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .performance-analytic-duo-grid {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 @media (max-width: 820px) {
@@ -2423,6 +2535,15 @@ a:hover {
 
   .performance-attribution-summary-strip {
     grid-template-columns: 1fr;
+  }
+
+  .performance-comparative-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .performance-comparative-bar-track {
+    width: 100%;
   }
 }
 

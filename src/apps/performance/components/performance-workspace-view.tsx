@@ -13,9 +13,11 @@ import {
   CONTRIBUTION_DIMENSION_OPTIONS,
 } from "../navigation";
 import {
+  getActiveWeightRows,
   getBottomPositionContributionRows,
   getBottomContributionRows,
   getTopPositionContributionRows,
+  getTopAttributionEffectRows,
   getPrimaryContributionRow,
   getTopContributionRows,
   isMoneyWeightedReturnSuspicious,
@@ -79,6 +81,8 @@ export default function PerformanceWorkspaceView({
   const bottomPositionContributors = workspace ? getBottomPositionContributionRows(workspace) : [];
   const topContributors = workspace ? getTopContributionRows(workspace) : [];
   const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
+  const activeWeightRows = workspace ? getActiveWeightRows(workspace) : [];
+  const topAttributionEffectRows = workspace ? getTopAttributionEffectRows(workspace) : [];
   const contributorScale = Math.max(
     0.01,
     ...(hasPositionRanking ? topPositionContributors : topContributors).map((row) =>
@@ -94,6 +98,14 @@ export default function PerformanceWorkspaceView({
     : undefined;
   const selectedPerformance =
     workspace && detailBasis === "GROSS" ? workspace.gross_performance : workspace?.net_performance;
+  const activeWeightScale = Math.max(
+    0.01,
+    ...activeWeightRows.map((row) => Math.abs(row.active_weight_pct))
+  );
+  const attributionEffectScale = Math.max(
+    0.01,
+    ...topAttributionEffectRows.map((row) => Math.abs(row.total_effect_pct))
+  );
 
   return (
     <WorkspaceLayout className="performance-layout">
@@ -409,6 +421,95 @@ export default function PerformanceWorkspaceView({
                     <div>
                       <span>Residual</span>
                       <strong>{formatPct(workspace.attribution.residual_pct)}</strong>
+                    </div>
+                  </div>
+                ) : null}
+                {hasAttribution ? (
+                  <div className="performance-analytic-duo-grid">
+                    <div className="performance-mini-module">
+                      <div className="performance-mini-module-header">
+                        <strong>Active Weights</strong>
+                        <span>Portfolio minus benchmark</span>
+                      </div>
+                      <div className="performance-comparative-list">
+                        {activeWeightRows.map((row) => (
+                          <div
+                            key={`active-weight-${row.key_label}`}
+                            className="performance-comparative-row"
+                          >
+                            <div className="performance-comparative-meta">
+                              <strong>{formatLabel(row.key_label)}</strong>
+                              <span>
+                                Port {formatPct(row.portfolio_weight_avg_pct)} / Bmk{" "}
+                                {formatPct(row.benchmark_weight_avg_pct)}
+                              </span>
+                            </div>
+                            <div className="performance-comparative-bar-track">
+                              <div className="performance-comparative-bar-axis" />
+                              <div
+                                className={`performance-comparative-bar ${
+                                  row.active_weight_pct >= 0
+                                    ? "performance-comparative-bar-positive"
+                                    : "performance-comparative-bar-negative"
+                                }`}
+                                style={{
+                                  width: `${(Math.abs(row.active_weight_pct) / activeWeightScale) * 50}%`,
+                                  marginLeft:
+                                    row.active_weight_pct >= 0
+                                      ? "50%"
+                                      : `${50 - (Math.abs(row.active_weight_pct) / activeWeightScale) * 50}%`,
+                                }}
+                              />
+                            </div>
+                            <div className="performance-comparative-value">
+                              {formatPct(row.active_weight_pct)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="performance-mini-module">
+                      <div className="performance-mini-module-header">
+                        <strong>Total Effect Ranking</strong>
+                        <span>Largest benchmark-relative effects</span>
+                      </div>
+                      <div className="performance-comparative-list">
+                        {topAttributionEffectRows.map((row) => (
+                          <div
+                            key={`effect-ranking-${row.key_label}`}
+                            className="performance-comparative-row"
+                          >
+                            <div className="performance-comparative-meta">
+                              <strong>{formatLabel(row.key_label)}</strong>
+                              <span>
+                                Alloc {formatCompactPct(row.allocation_pct)} / Select{" "}
+                                {formatCompactPct(row.selection_pct)}
+                              </span>
+                            </div>
+                            <div className="performance-comparative-bar-track">
+                              <div className="performance-comparative-bar-axis" />
+                              <div
+                                className={`performance-comparative-bar ${
+                                  row.total_effect_pct >= 0
+                                    ? "performance-comparative-bar-positive"
+                                    : "performance-comparative-bar-negative"
+                                }`}
+                                style={{
+                                  width: `${(Math.abs(row.total_effect_pct) / attributionEffectScale) * 50}%`,
+                                  marginLeft:
+                                    row.total_effect_pct >= 0
+                                      ? "50%"
+                                      : `${50 - (Math.abs(row.total_effect_pct) / attributionEffectScale) * 50}%`,
+                                }}
+                              />
+                            </div>
+                            <div className="performance-comparative-value">
+                              {formatPct(row.total_effect_pct)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : null}
