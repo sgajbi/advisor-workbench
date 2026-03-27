@@ -580,6 +580,7 @@ export default function PerformanceChartPanel({
             className="performance-chart-library-frame"
             role="img"
             aria-label={`${title} chart`}
+            style={{ position: "relative" }}
           >
             <ReactECharts
               option={chartOption}
@@ -588,6 +589,25 @@ export default function PerformanceChartPanel({
               notMerge
               lazyUpdate
             />
+            {isDetailsPending ? (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  px: 1.25,
+                  py: 0.5,
+                  borderRadius: 999,
+                  bgcolor: "rgba(255,255,255,0.92)",
+                  border: "1px solid rgba(31,39,51,0.08)",
+                  boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
+                }}
+              >
+                <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "text.secondary" }}>
+                  Refreshing analytical series
+                </Typography>
+              </Box>
+            ) : null}
           </div>
         </>
       ) : isDetailsPending ? (

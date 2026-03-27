@@ -51,6 +51,29 @@ export default function PerformanceWorkspaceClient({
   initialBenchmark,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
+  const initialSummaryKey = useMemo(
+    () =>
+      initialPortfolioId
+        ? buildSummaryCacheKey({
+            portfolioId: initialPortfolioId,
+            period: initialSummary?.period ?? initialPeriod,
+            detailBasis: initialSummary?.detail_basis ?? initialDetailBasis,
+            chartFrequency: initialSummary?.chart_frequency ?? initialChartFrequency,
+            benchmark: initialSummary?.benchmark_code ?? initialBenchmark,
+            reportStartDate: initialSummary?.report_start_date,
+            reportEndDate: initialSummary?.report_end_date,
+          })
+        : null,
+    [
+      initialBenchmark,
+      initialChartFrequency,
+      initialDetailBasis,
+      initialPeriod,
+      initialPortfolioId,
+      initialSummary,
+    ]
+  );
+
   const [summary, setSummary] = useState<WorkbenchPerformanceWorkspaceSummary | null>(
     initialSummary
   );
@@ -74,29 +97,6 @@ export default function PerformanceWorkspaceClient({
   );
   const requestSequenceRef = useRef(0);
   const initialDetailsRequestedRef = useRef(false);
-
-  const initialSummaryKey = useMemo(
-    () =>
-      initialPortfolioId
-        ? buildSummaryCacheKey({
-            portfolioId: initialPortfolioId,
-            period: initialSummary?.period ?? initialPeriod,
-            detailBasis: initialSummary?.detail_basis ?? initialDetailBasis,
-            chartFrequency: initialSummary?.chart_frequency ?? initialChartFrequency,
-            benchmark: initialSummary?.benchmark_code ?? initialBenchmark,
-            reportStartDate: initialSummary?.report_start_date,
-            reportEndDate: initialSummary?.report_end_date,
-          })
-        : null,
-    [
-      initialBenchmark,
-      initialChartFrequency,
-      initialDetailBasis,
-      initialPeriod,
-      initialPortfolioId,
-      initialSummary,
-    ]
-  );
 
   const initialDetailsKey = useMemo(
     () =>
@@ -124,6 +124,7 @@ export default function PerformanceWorkspaceClient({
       initialSummary,
     ]
   );
+  const [detailsKey, setDetailsKey] = useState<string | null>(initialDetailsKey ?? null);
 
   const summaryCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceSummary | null>>(
     initialSummaryKey ? new Map([[initialSummaryKey, initialSummary]]) : new Map()
@@ -139,7 +140,11 @@ export default function PerformanceWorkspaceClient({
     return assemblePerformanceWorkspace(summary, details);
   }, [details, summary]);
   const isUpdating = isSummaryUpdating || isDetailsUpdating;
-  const isDetailsPending = Boolean(summary) && !details && isDetailsUpdating;
+  const expectedDetailsKey = controls ? buildDetailsCacheKey(controls) : null;
+  const isDetailsPending =
+    Boolean(summary) &&
+    (isSummaryUpdating || isDetailsUpdating) &&
+    detailsKey !== expectedDetailsKey;
 
   useEffect(() => {
     if (!controls || !summary || details || initialDetailsRequestedRef.current) {
@@ -194,7 +199,10 @@ export default function PerformanceWorkspaceClient({
     });
 
     if (!shouldRefreshSummary(controls, nextControls)) {
-      setDetails(cachedDetails);
+      if (cachedDetails) {
+        setDetails(cachedDetails);
+        setDetailsKey(detailsKey);
+      }
       await fetchDetailsForControls(nextControls, {
         requestId,
         markLoading: true,
@@ -208,7 +216,10 @@ export default function PerformanceWorkspaceClient({
     if (cachedSummary) {
       setSummary(cachedSummary);
     }
-    setDetails(cachedDetails);
+    if (cachedDetails) {
+      setDetails(cachedDetails);
+      setDetailsKey(detailsKey);
+    }
     setIsSummaryUpdating(true);
 
     try {
@@ -280,6 +291,7 @@ export default function PerformanceWorkspaceClient({
     if (cachedDetails) {
       if (requestSequenceRef.current === options.requestId) {
         setDetails(cachedDetails);
+        setDetailsKey(detailsKey);
       }
       return;
     }
@@ -308,6 +320,7 @@ export default function PerformanceWorkspaceClient({
         return;
       }
       setDetails(resolvedDetails);
+      setDetailsKey(detailsKey);
       setControls((current) =>
         current
           ? {

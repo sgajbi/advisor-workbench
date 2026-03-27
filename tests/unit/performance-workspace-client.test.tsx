@@ -374,4 +374,85 @@ describe("PerformanceWorkspaceClient", () => {
     expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
     expect(replaceMock).toHaveBeenCalledTimes(1);
   });
+
+  it("preserves the previous analytical canvas while new details are loading", async () => {
+    let resolveThreeYearSummary:
+      | ((value: WorkbenchPerformanceWorkspaceSummary) => void)
+      | null = null;
+    let resolveThreeYearDetails:
+      | ((value: WorkbenchPerformanceWorkspaceDetails) => void)
+      | null = null;
+
+    const threeYearSummaryPromise = new Promise<WorkbenchPerformanceWorkspaceSummary>((resolve) => {
+      resolveThreeYearSummary = resolve;
+    });
+    const threeYearDetailsPromise = new Promise<WorkbenchPerformanceWorkspaceDetails>((resolve) => {
+      resolveThreeYearDetails = resolve;
+    });
+
+    getDetailsClientMock
+      .mockResolvedValueOnce(buildDetails())
+      .mockImplementationOnce(() => threeYearDetailsPromise);
+    getSummaryClientMock.mockImplementationOnce(() => threeYearSummaryPromise);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("period")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("true");
+    });
+
+    await act(async () => {
+      resolveThreeYearSummary?.(
+        buildSummary({
+          period: "3Y",
+          report_start_date: "2023-03-28",
+          net_performance: {
+            ...buildSummary().net_performance,
+            portfolio_return_pct: 18.4,
+          },
+        })
+      );
+      resolveThreeYearDetails?.(
+        buildDetails({
+          period: "3Y",
+          report_start_date: "2023-03-28",
+          net_chart: [
+            {
+              ...buildDetails().net_chart[0],
+              label: "2026-03",
+              cumulative_portfolio_return_pct: 18.4,
+            },
+          ],
+        })
+      );
+      await Promise.all([threeYearSummaryPromise, threeYearDetailsPromise]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("return")).toHaveTextContent("18.4");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+  });
 });
