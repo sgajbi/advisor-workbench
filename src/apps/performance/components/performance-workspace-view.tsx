@@ -28,6 +28,7 @@ import {
   hasUsableContribution,
 } from "../view-model";
 import PerformanceChartPanel from "./performance-chart-panel";
+import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
 
 export default function PerformanceWorkspaceView({
   workspace,
@@ -289,6 +290,15 @@ export default function PerformanceWorkspaceView({
             </WorkspaceGrid>
 
             <WorkspaceGrid className="performance-detail-grid">
+              <PerformanceMultiHorizonPanel
+                portfolioId={workspace.portfolio.portfolio_id}
+                detailBasis={detailBasis}
+                benchmark={workspace.benchmark_code ?? benchmark}
+                chartFrequency={chartFrequency}
+                contributionDimension={contributionDimension}
+                attributionDimension={attributionDimension}
+                benchmarkOptions={workspace.benchmark_options ?? []}
+              />
               <Panel className="performance-contributors-panel performance-detail-panel-compact">
                 <div className="performance-section-heading">
                   <h3>Top / Bottom Contributors</h3>

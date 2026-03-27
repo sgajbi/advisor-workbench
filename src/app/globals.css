@@ -2216,6 +2216,98 @@ a:hover {
   background: linear-gradient(180deg, rgba(250, 251, 253, 0.92), rgba(245, 247, 250, 0.9));
 }
 
+.performance-multi-horizon-panel {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.performance-mini-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.performance-mini-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.performance-mini-legend-item::before {
+  content: "";
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+}
+
+.performance-mini-legend-portfolio::before {
+  background: #da1e28;
+}
+
+.performance-mini-legend-benchmark::before {
+  background: #243246;
+}
+
+.performance-horizon-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  align-items: end;
+  min-height: 12rem;
+}
+
+.performance-horizon-bar-group {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+}
+
+.performance-horizon-bar-values {
+  display: grid;
+  gap: 0.12rem;
+  justify-items: center;
+}
+
+.performance-horizon-bar-values span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.performance-horizon-bar-track {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 7.75rem;
+  width: 100%;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(34, 44, 59, 0.12);
+}
+
+.performance-horizon-bar {
+  width: 1rem;
+  min-height: 2px;
+  border-radius: 6px 6px 0 0;
+}
+
+.performance-horizon-bar-portfolio {
+  background: linear-gradient(180deg, #da1e28 0%, #bd1820 100%);
+}
+
+.performance-horizon-bar-benchmark {
+  background: linear-gradient(180deg, #344762 0%, #243246 100%);
+}
+
+.performance-horizon-bar-group strong {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+}
+
 @media (max-width: 1320px) {
   .shell-topbar-main {
     align-items: flex-start;
@@ -2387,6 +2479,10 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .performance-horizon-bars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
 }
 
 @media (max-width: 820px) {
@@ -2544,6 +2640,10 @@ a:hover {
 
   .performance-comparative-bar-track {
     width: 100%;
+  }
+
+  .performance-horizon-bars {
+    grid-template-columns: 1fr;
   }
 }
 
