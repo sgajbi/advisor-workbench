@@ -1,6 +1,6 @@
 # RFC-0018: Performance Workspace Summary and Benchmark-Aware Presentation
 
-- Status: IN PROGRESS
+- Status: IMPLEMENTED
 - Date: 2026-03-27
 - Owners:
   - lotus-workbench maintainers
@@ -489,17 +489,19 @@ The RFC can be marked implemented only when:
    - heavier analytical panels should be able to split into dedicated APIs without redesigning the
      screen state model.
 
-## Remaining Gaps Before RFC Closure
+## Closure Note
 
-As of 2026-03-27, this RFC is materially advanced but not yet fully closed.
+As of 2026-03-27, the RFC acceptance criteria are met:
 
-The main remaining closure slice is:
+1. the gateway performance workstation no longer defaults to the old stitched path,
+2. the workbench benchmark selector is fed by real benchmark catalog data,
+3. two benchmarks can be selected live for the seeded flagship mandate,
+4. contribution and attribution surfaces render richer source-owned fields where available,
+5. the flagship seeded demo path covers a longer realistic history window,
+6. local bring-up and runtime verification documentation now matches the actual live stack,
+7. meaningful tests protect the gateway mappings, UI rendering paths, and demo workflow.
 
-1. verify the final demo-data and benchmark-switching workflow documentation against the actual
-   local bring-up path end to end.
-
-Until those are complete, the RFC should remain `IN PROGRESS` rather than being treated as fully
-implemented.
+The RFC can therefore be treated as `IMPLEMENTED`.
 
 Implemented in the current wave:
 
