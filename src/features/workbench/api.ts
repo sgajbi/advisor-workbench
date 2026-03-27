@@ -1,6 +1,8 @@
 import {
   WorkbenchAnalytics,
   WorkbenchOverview,
+  WorkbenchPerformanceWorkspaceDetails,
+  WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPerformanceWorkspace,
   WorkbenchPortfolio360,
   WorkbenchReportingSnapshot,
@@ -186,6 +188,58 @@ export async function getWorkbenchPerformanceWorkspaceClient(
     throw new Error(`Failed to fetch performance workspace (${response.status})`);
   }
   return (await response.json()) as WorkbenchPerformanceWorkspace;
+}
+
+export async function getWorkbenchPerformanceWorkspaceSummary(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspaceSummary> {
+  const query = buildPerformanceWorkspaceQuery(params);
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance/summary?${query}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace summary (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspaceSummary;
+}
+
+export async function getWorkbenchPerformanceWorkspaceDetails(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceWorkspaceDetails> {
+  const query = buildPerformanceWorkspaceQuery(params);
+  const response = await fetch(
+    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance/details?${query}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch performance workspace details (${response.status})`);
+  }
+  return (await response.json()) as WorkbenchPerformanceWorkspaceDetails;
 }
 
 export async function getReportingSnapshot(

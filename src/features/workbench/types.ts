@@ -277,6 +277,51 @@ export type WorkbenchPerformanceWorkspace = {
   partial_failures: WorkbenchOverview["partial_failures"];
 };
 
+export type WorkbenchPerformanceWorkspaceSummary = Pick<
+  WorkbenchPerformanceWorkspace,
+  | "correlation_id"
+  | "contract_version"
+  | "portfolio_id"
+  | "as_of_date"
+  | "period"
+  | "report_start_date"
+  | "report_end_date"
+  | "chart_frequency"
+  | "detail_basis"
+  | "benchmark_code"
+  | "benchmark_options"
+  | "portfolio"
+  | "overview"
+  | "net_performance"
+  | "gross_performance"
+  | "money_weighted_return"
+  | "warnings"
+  | "partial_failures"
+>;
+
+export type WorkbenchPerformanceWorkspaceDetails = Pick<
+  WorkbenchPerformanceWorkspace,
+  | "correlation_id"
+  | "contract_version"
+  | "portfolio_id"
+  | "as_of_date"
+  | "period"
+  | "report_start_date"
+  | "report_end_date"
+  | "chart_frequency"
+  | "contribution_dimension"
+  | "attribution_dimension"
+  | "detail_basis"
+  | "segment"
+  | "benchmark_code"
+  | "net_chart"
+  | "gross_chart"
+  | "contribution"
+  | "attribution"
+  | "warnings"
+  | "partial_failures"
+>;
+
 export type WorkbenchReportingSnapshot = {
   correlationId: string;
   contractVersion: string;
