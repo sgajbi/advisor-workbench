@@ -111,6 +111,7 @@ export default function PerformanceChartPanel({
   reportEndDate,
   onRequestChange,
   isUpdating = false,
+  isDetailsPending = false,
   id,
 }: {
   title: string;
@@ -128,6 +129,7 @@ export default function PerformanceChartPanel({
   reportEndDate: string;
   onRequestChange: (patch: PerformanceControlPatch) => void;
   isUpdating?: boolean;
+  isDetailsPending?: boolean;
   id?: string;
 }) {
   const resolvedReportDates = useMemo(
@@ -531,6 +533,10 @@ export default function PerformanceChartPanel({
             />
           </div>
         </>
+      ) : isDetailsPending ? (
+        <div className="performance-chart-loading-state">
+          <p className="muted">Loading analytical time series and benchmark comparison.</p>
+        </div>
       ) : (
         <p className="muted">Performance breakdown is not available for the selected period.</p>
       )}

@@ -37,6 +37,7 @@ export default function PerformanceWorkspaceView({
   benchmark,
   onRequestChange,
   isUpdating = false,
+  isDetailsPending = false,
 }: {
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;
@@ -57,6 +58,7 @@ export default function PerformanceWorkspaceView({
     reportEndDate?: string;
   }) => void;
   isUpdating?: boolean;
+  isDetailsPending?: boolean;
 }) {
   const hasBenchmark = workspace ? hasBenchmarkContext(workspace) : false;
   const contributionLevels = workspace?.contribution?.levels ?? [];
@@ -269,6 +271,7 @@ export default function PerformanceWorkspaceView({
                 reportEndDate={workspace.report_end_date}
                 onRequestChange={onRequestChange ?? (() => undefined)}
                 isUpdating={isUpdating}
+                isDetailsPending={isDetailsPending}
                 id="performance-trend"
               />
             </WorkspaceGrid>
@@ -350,6 +353,10 @@ export default function PerformanceWorkspaceView({
                       analytics contract.
                     </p>
                   )
+                ) : isDetailsPending ? (
+                  <p className="muted">
+                    Loading contributor ranking for the selected analytical slice.
+                  </p>
                 ) : (
                   <p className="muted">Contributor ranking is not available for the current selection.</p>
                 )}
@@ -531,6 +538,10 @@ export default function PerformanceWorkspaceView({
                       </div>
                     </div>
                   ))
+                ) : isDetailsPending ? (
+                  <p className="muted">
+                    Loading attribution effects and benchmark-relative decomposition.
+                  </p>
                 ) : (
                   <p className="muted">Attribution detail is not available for the current selection.</p>
                 )}
@@ -644,6 +655,10 @@ export default function PerformanceWorkspaceView({
                       );
                     })()
                   ))
+                ) : isDetailsPending ? (
+                  <p className="muted">
+                    Loading contribution detail for the selected segment and horizon.
+                  </p>
                 ) : (
                   <p className="muted">Contribution detail is not available for the current selection.</p>
                 )}

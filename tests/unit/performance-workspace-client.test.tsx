@@ -32,6 +32,7 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
     period,
     onRequestChange,
     isUpdating,
+    isDetailsPending,
   }: {
     workspace: WorkbenchPerformanceWorkspace | null;
     period: string;
@@ -46,6 +47,7 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
       reportEndDate?: string;
     }) => void;
     isUpdating?: boolean;
+    isDetailsPending?: boolean;
   }) => (
     <div>
       <div data-testid="period">{period}</div>
@@ -54,11 +56,18 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
       </div>
       <div data-testid="chart-points">{workspace?.net_chart.length ?? 0}</div>
       <div data-testid="updating">{String(Boolean(isUpdating))}</div>
+      <div data-testid="details-pending">{String(Boolean(isDetailsPending))}</div>
       <button type="button" onClick={() => onRequestChange?.({ period: "3Y" })}>
         Switch 3Y
       </button>
       <button type="button" onClick={() => onRequestChange?.({ period: "YTD" })}>
         Switch YTD
+      </button>
+      <button
+        type="button"
+        onClick={() => onRequestChange?.({ contributionDimension: "sector" })}
+      >
+        Switch Contribution Segment
       </button>
     </div>
   ),
@@ -324,5 +333,45 @@ describe("PerformanceWorkspaceClient", () => {
 
     expect(screen.getByTestId("period")).toHaveTextContent("YTD");
     expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+  });
+
+  it("refreshes only the details contract for analytic-only control changes", async () => {
+    getDetailsClientMock
+      .mockResolvedValueOnce(buildDetails())
+      .mockResolvedValueOnce(
+        buildDetails({
+          contribution_dimension: "sector",
+          segment: "sector",
+        })
+      );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Contribution Segment" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
+    expect(replaceMock).toHaveBeenCalledTimes(1);
   });
 });

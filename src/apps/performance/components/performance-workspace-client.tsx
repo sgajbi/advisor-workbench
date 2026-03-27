@@ -55,7 +55,8 @@ export default function PerformanceWorkspaceClient({
     initialSummary
   );
   const [details, setDetails] = useState<WorkbenchPerformanceWorkspaceDetails | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isSummaryUpdating, setIsSummaryUpdating] = useState(false);
+  const [isDetailsUpdating, setIsDetailsUpdating] = useState(false);
   const [controls, setControls] = useState<PerformanceControlState | null>(
     initialPortfolioId
       ? {
@@ -137,6 +138,8 @@ export default function PerformanceWorkspaceClient({
     }
     return assemblePerformanceWorkspace(summary, details);
   }, [details, summary]);
+  const isUpdating = isSummaryUpdating || isDetailsUpdating;
+  const isDetailsPending = Boolean(summary) && !details && isDetailsUpdating;
 
   useEffect(() => {
     if (!controls || !summary || details || initialDetailsRequestedRef.current) {
@@ -146,7 +149,7 @@ export default function PerformanceWorkspaceClient({
     initialDetailsRequestedRef.current = true;
     void fetchDetailsForControls(controls, {
       requestId: requestSequenceRef.current,
-      updateLoading: false,
+      markLoading: true,
     });
   }, [controls, details, summary]);
 
@@ -180,16 +183,8 @@ export default function PerformanceWorkspaceClient({
     }
 
     setControls(nextControls);
-    const summaryKey = buildSummaryCacheKey(nextControls);
     const detailsKey = buildDetailsCacheKey(nextControls);
-    const cachedSummary = summaryCacheRef.current.get(summaryKey) ?? null;
     const cachedDetails = detailsCacheRef.current.get(detailsKey) ?? null;
-
-    if (cachedSummary) {
-      setSummary(cachedSummary);
-    }
-    setDetails(cachedDetails);
-    setIsUpdating(true);
 
     const requestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestId;
@@ -197,6 +192,24 @@ export default function PerformanceWorkspaceClient({
     startTransition(() => {
       router.replace(buildPerformanceHref(nextControls), { scroll: false });
     });
+
+    if (!shouldRefreshSummary(controls, nextControls)) {
+      setDetails(cachedDetails);
+      await fetchDetailsForControls(nextControls, {
+        requestId,
+        markLoading: true,
+      });
+      return;
+    }
+
+    const summaryKey = buildSummaryCacheKey(nextControls);
+    const cachedSummary = summaryCacheRef.current.get(summaryKey) ?? null;
+
+    if (cachedSummary) {
+      setSummary(cachedSummary);
+    }
+    setDetails(cachedDetails);
+    setIsSummaryUpdating(true);
 
     try {
       const resolvedSummary =
@@ -244,7 +257,7 @@ export default function PerformanceWorkspaceClient({
         },
         {
           requestId,
-          updateLoading: true,
+          markLoading: true,
         }
       );
     } catch {
@@ -253,14 +266,14 @@ export default function PerformanceWorkspaceClient({
       }
     } finally {
       if (requestSequenceRef.current === requestId) {
-        setIsUpdating(false);
+        setIsSummaryUpdating(false);
       }
     }
   }
 
   async function fetchDetailsForControls(
     nextControls: PerformanceControlState,
-    options: { requestId: number; updateLoading: boolean }
+    options: { requestId: number; markLoading: boolean }
   ) {
     const detailsKey = buildDetailsCacheKey(nextControls);
     const cachedDetails = detailsCacheRef.current.get(detailsKey);
@@ -271,8 +284,8 @@ export default function PerformanceWorkspaceClient({
       return;
     }
 
-    if (options.updateLoading) {
-      setIsUpdating(true);
+    if (options.markLoading) {
+      setIsDetailsUpdating(true);
     }
 
     try {
@@ -314,8 +327,8 @@ export default function PerformanceWorkspaceClient({
         setDetails((currentDetails) => currentDetails);
       }
     } finally {
-      if (options.updateLoading && requestSequenceRef.current === options.requestId) {
-        setIsUpdating(false);
+      if (options.markLoading && requestSequenceRef.current === options.requestId) {
+        setIsDetailsUpdating(false);
       }
     }
   }
@@ -331,7 +344,21 @@ export default function PerformanceWorkspaceClient({
       benchmark={controls?.benchmark}
       onRequestChange={handleRequestChange}
       isUpdating={isUpdating}
+      isDetailsPending={isDetailsPending}
     />
+  );
+}
+
+function shouldRefreshSummary(
+  currentControls: PerformanceControlState,
+  nextControls: PerformanceControlState
+): boolean {
+  return (
+    currentControls.portfolioId !== nextControls.portfolioId ||
+    currentControls.period !== nextControls.period ||
+    currentControls.benchmark !== nextControls.benchmark ||
+    currentControls.reportStartDate !== nextControls.reportStartDate ||
+    currentControls.reportEndDate !== nextControls.reportEndDate
   );
 }
 
