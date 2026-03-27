@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Box, Divider, FormControl, MenuItem, Select, Stack, Typography } from "@mui/material";
 
 import {
@@ -73,8 +74,14 @@ export default function PerformanceWorkspaceView({
   isDetailsPending?: boolean;
 }) {
   const hasBenchmark = workspace ? hasBenchmarkContext(workspace) : false;
-  const contributionLevels = workspace?.contribution?.levels ?? [];
-  const attributionLevels = workspace?.attribution?.levels ?? [];
+  const contributionLevels = useMemo(
+    () => workspace?.contribution?.levels ?? [],
+    [workspace?.contribution?.levels]
+  );
+  const attributionLevels = useMemo(
+    () => workspace?.attribution?.levels ?? [],
+    [workspace?.attribution?.levels]
+  );
   const hasAttribution = workspace ? hasUsableAttribution(workspace) : false;
   const hasContribution = workspace ? hasUsableContribution(workspace) : false;
   const hasHistory = workspace ? hasMeaningfulHistory(workspace.net_chart) : false;
@@ -97,6 +104,20 @@ export default function PerformanceWorkspaceView({
   const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
   const relativeSegmentRows = workspace ? getRelativeSegmentRows(workspace) : [];
   const topAttributionEffectRows = workspace ? getTopAttributionEffectRows(workspace) : [];
+  const contributionLevelTotals = useMemo(
+    () =>
+      workspace
+        ? new Map(
+            contributionLevels.map((level) => [level.name, getContributionTotals(workspace, level)])
+          )
+        : new Map(),
+    [contributionLevels, workspace]
+  );
+  const attributionLevelTotals = useMemo(
+    () =>
+      new Map(attributionLevels.map((level) => [level.dimension, getAttributionTotals(level)])),
+    [attributionLevels]
+  );
   const contributorScale = Math.max(
     0.01,
     ...(hasPositionRanking ? positivePositionContributors : topContributors).map((row) =>
@@ -502,10 +523,11 @@ export default function PerformanceWorkspaceView({
                 </div>
                 {hasAttribution ? (
                   attributionLevels.map((level) => (
-                    <div
-                      key={`${level.dimension}-${level.total_effect_pct}`}
-                      className="performance-detail-block"
-                    >
+                    <div key={`${level.dimension}-${level.total_effect_pct}`} className="performance-detail-block">
+                      {(() => {
+                        const totals = attributionLevelTotals.get(level.dimension);
+                        return (
+                          <>
                       <div className="performance-level-heading">
                         <strong>{formatLabel(level.dimension)}</strong>
                       </div>
@@ -548,25 +570,29 @@ export default function PerformanceWorkspaceView({
                         }))}
                         footer={[
                           "Total",
-                          formatPct(getAttributionTotals(level).portfolioWeightAvgPct),
-                          formatPct(getAttributionTotals(level).benchmarkWeightAvgPct),
-                          formatPct(getAttributionTotals(level).portfolioReturnPct),
-                          formatPct(getAttributionTotals(level).benchmarkReturnPct),
+                          formatPct(totals?.portfolioWeightAvgPct),
+                          formatPct(totals?.benchmarkWeightAvgPct),
+                          NOT_ADDITIVE_CELL,
+                          NOT_ADDITIVE_CELL,
                           formatPct(
-                            level.allocation_total_pct ?? getAttributionTotals(level).allocationPct
+                            level.allocation_total_pct ?? totals?.allocationPct ?? null
                           ),
                           formatPct(
-                            level.selection_total_pct ?? getAttributionTotals(level).selectionPct
+                            level.selection_total_pct ?? totals?.selectionPct ?? null
                           ),
                           formatPct(
                             level.interaction_total_pct ??
-                              getAttributionTotals(level).interactionPct
+                              totals?.interactionPct ??
+                              null
                           ),
                           formatPct(
-                            getAttributionTotals(level).totalEffectPct ?? level.total_effect_pct
+                            totals?.totalEffectPct ?? level.total_effect_pct
                           ),
                         ]}
                       />
+                          </>
+                        );
+                      })()}
                     </div>
                   ))
                 ) : isDetailsPending ? (
@@ -606,6 +632,7 @@ export default function PerformanceWorkspaceView({
                 {hasContribution ? (
                   contributionLevels.map((level) => (
                     (() => {
+                      const totals = contributionLevelTotals.get(level.name) ?? null;
                       const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
                       return (
                         <div key={`${level.level}-${level.name}`} className="performance-detail-block">
@@ -644,14 +671,9 @@ export default function PerformanceWorkspaceView({
                             footer={[
                               "Total",
                               formatPct(
-                                getContributionTotals(workspace, level)?.portfolioContributionPct ??
-                                  level.total_contribution_pct
+                                totals?.portfolioContributionPct ?? level.total_contribution_pct
                               ),
-                              formatPct(
-                                level.total_weight_avg_pct ??
-                                  getContributionTotals(workspace, level)?.weightAvgPct ??
-                                  null
-                              ),
+                              formatPct(level.total_weight_avg_pct ?? totals?.weightAvgPct ?? null),
                               formatPct(
                                 level.total_portfolio_return_pct ??
                                   workspace.contribution?.total_portfolio_return_pct ??
@@ -659,14 +681,8 @@ export default function PerformanceWorkspaceView({
                               ),
                               ...(showLocalFxColumns
                                 ? [
-                                    formatPct(
-                                      getContributionTotals(workspace, level)
-                                        ?.localContributionPct ?? null
-                                    ),
-                                    formatPct(
-                                      getContributionTotals(workspace, level)?.fxContributionPct ??
-                                        null
-                                    ),
+                                    formatPct(totals?.localContributionPct ?? null),
+                                    formatPct(totals?.fxContributionPct ?? null),
                                   ]
                                 : []),
                             ]}
@@ -771,6 +787,8 @@ function getAttributionTotals(
     totalEffectPct: level.total_effect_pct ?? rows.reduce((sum, row) => sum + row.total_effect_pct, 0),
   };
 }
+
+const NOT_ADDITIVE_CELL = "—";
 
 function sumOptional(values: Array<number | null | undefined>): number | null {
   const numericValues = values.filter((value): value is number => value != null);

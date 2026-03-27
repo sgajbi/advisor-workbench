@@ -488,6 +488,21 @@ The RFC can be marked implemented only when:
    - heavier analytical panels should be able to split into dedicated APIs without redesigning the
      screen state model.
 
+## Remaining Gaps Before RFC Closure
+
+As of 2026-03-27, this RFC is materially advanced but not yet fully closed.
+
+The main remaining closure slices are:
+
+1. deliver attribution-over-time as a real benchmark-relative analytical module when the source
+   contract and gateway surface are ready,
+2. complete one final live-browser polish and responsive QA pass against the real runtime stack,
+3. verify the final demo-data and benchmark-switching workflow documentation against the actual
+   local bring-up path end to end.
+
+Until those are complete, the RFC should remain `IN PROGRESS` rather than being treated as fully
+implemented.
+
 ## Repository Impact
 
 Expected touched repositories:

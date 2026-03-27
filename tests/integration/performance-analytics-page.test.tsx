@@ -322,6 +322,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(screen.getByText("Wt 61.00% vs 58.00%")).toBeInTheDocument();
     expect(screen.getByText("Ret 7.40% vs 6.80%")).toBeInTheDocument();
+    const attributionTable = screen.getByLabelText("Asset Class attribution table");
+    expect(within(attributionTable).getAllByText("—")).toHaveLength(2);
     const attributionLegend = screen.getByLabelText("Attribution effect legend");
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
     expect(within(attributionLegend).getByText("Selection")).toBeInTheDocument();
