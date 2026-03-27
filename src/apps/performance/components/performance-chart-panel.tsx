@@ -3,8 +3,18 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
+import {
+  Box,
+  Button,
+  Chip,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 
-import { Panel } from "@/design-system";
+import { AnalyticsSectionHeader, AnalyticsStat, Panel } from "@/design-system";
 import type {
   PerformanceBenchmarkOptionView,
   PerformanceChartPoint,
@@ -367,157 +377,204 @@ export default function PerformanceChartPanel({
 
   return (
     <Panel id={id} className="performance-chart-stage">
-      <div className="performance-chart-toolbar">
-        <div className="performance-chart-toolbar-left">
-          <div className="performance-section-heading performance-chart-stage-heading">
-            <h3>{title}</h3>
-            <span>{explicitDateRange}</span>
-          </div>
-          <div className="performance-chart-inline-controls">
-            <div className="performance-chart-pill-group">
-              <span>Horizon</span>
-              <div className="performance-chart-pill-row">
-                {PERIOD_OPTIONS.map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    onClick={() =>
-                      updateSelection({
-                        period: option,
-                        reportStartDate: undefined,
-                        reportEndDate: undefined,
-                      })
-                    }
-                    className={`performance-control-option ${option === period ? "performance-control-option-active" : ""}`}
-                    disabled={isUpdating && option === period}
+      <Stack spacing={2.25}>
+        <Stack
+          direction={{ xs: "column", xl: "row" }}
+          spacing={2}
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", xl: "flex-start" }}
+        >
+          <Stack spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
+            <AnalyticsSectionHeader title={title} subtitle={explicitDateRange} />
+            <Stack spacing={1.25}>
+              <Stack direction={{ xs: "column", lg: "row" }} spacing={1.25} useFlexGap flexWrap="wrap">
+                <Box>
+                  <Typography sx={controlLabelSx}>Horizon</Typography>
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={period}
+                    aria-label="Horizon"
+                    sx={toggleGroupSx}
                   >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <form className="performance-chart-date-form" onSubmit={applyExplicitDates}>
-              <label className="performance-chart-select-group">
-                <span>From</span>
-                <input
-                  aria-label="From"
-                  type="date"
-                  value={fromDate}
-                  max={toDate || resolvedReportDates.endDate}
-                  onChange={(event) => setFromDate(event.currentTarget.value)}
-                />
-              </label>
-              <label className="performance-chart-select-group">
-                <span>To</span>
-                <input
-                  aria-label="To"
-                  type="date"
-                  value={toDate}
-                  min={fromDate}
-                  max={resolvedReportDates.endDate}
-                  onChange={(event) => setToDate(event.currentTarget.value)}
-                />
-              </label>
-              <button className="performance-chart-apply" type="submit">
-                {isUpdating ? "Updating..." : "Apply"}
-              </button>
-            </form>
-            <label className="performance-chart-select-group">
-              <span>Frequency</span>
-              <select
-                aria-label="Frequency"
-                value={chartFrequency}
-                onChange={(event) =>
-                  updateSelection({
-                    chartFrequency: event.currentTarget.value,
-                  })
-                }
-                disabled={isUpdating}
-              >
-                {CHART_FREQUENCY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="performance-chart-select-group">
-              <span>Compared To</span>
-              <select
-                aria-label="Compared To"
-                value={benchmark ?? ""}
-                onChange={(event) =>
-                  updateSelection({
-                    benchmark: event.currentTarget.value || undefined,
-                  })
-                }
-                disabled={isUpdating}
-              >
-                {resolvedBenchmarkOptions.map((option) => (
-                  <option key={option.benchmark_code} value={option.benchmark_code}>
-                    {option.benchmark_name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="performance-chart-pill-group">
-              <span>Basis</span>
-              <div className="performance-chart-pill-row">
-                {BASIS_OPTIONS.map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    onClick={() =>
-                      updateSelection({
-                        detailBasis: option,
-                      })
-                    }
-                    className={`performance-control-option ${option === detailBasis ? "performance-control-option-active" : ""}`}
-                    disabled={isUpdating && option === detailBasis}
+                    {PERIOD_OPTIONS.map((option) => (
+                      <ToggleButton
+                        key={option}
+                        value={option}
+                        onClick={() =>
+                          updateSelection({
+                            period: option,
+                            reportStartDate: undefined,
+                            reportEndDate: undefined,
+                          })
+                        }
+                        disabled={isUpdating && option === period}
+                      >
+                        {option}
+                      </ToggleButton>
+                    ))}
+                  </ToggleButtonGroup>
+                </Box>
+
+                <Box component="form" onSubmit={applyExplicitDates}>
+                  <Typography sx={controlLabelSx}>Explicit Dates</Typography>
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1} useFlexGap>
+                    <TextField
+                      size="small"
+                      type="date"
+                      value={fromDate}
+                      slotProps={{
+                        htmlInput: {
+                          "aria-label": "From",
+                          max: toDate || resolvedReportDates.endDate,
+                        },
+                      }}
+                      onChange={(event) => setFromDate(event.currentTarget.value)}
+                    />
+                    <TextField
+                      size="small"
+                      type="date"
+                      value={toDate}
+                      slotProps={{
+                        htmlInput: {
+                          "aria-label": "To",
+                          min: fromDate,
+                          max: resolvedReportDates.endDate,
+                        },
+                      }}
+                      onChange={(event) => setToDate(event.currentTarget.value)}
+                    />
+                    <Button type="submit" variant="contained" size="small" disableElevation>
+                      {isUpdating ? "Updating..." : "Apply"}
+                    </Button>
+                  </Stack>
+                </Box>
+              </Stack>
+
+              <Stack direction={{ xs: "column", lg: "row" }} spacing={1.25} useFlexGap flexWrap="wrap">
+                <TextField
+                  select
+                  size="small"
+                  label="Frequency"
+                  value={chartFrequency}
+                  onChange={(event) =>
+                    updateSelection({
+                      chartFrequency: event.target.value,
+                    })
+                  }
+                  disabled={isUpdating}
+                  sx={selectControlSx}
+                  SelectProps={{ native: true }}
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                    htmlInput: { "aria-label": "Frequency" },
+                  }}
+                >
+                  {CHART_FREQUENCY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  size="small"
+                  label="Compared To"
+                  value={benchmark ?? ""}
+                  onChange={(event) =>
+                    updateSelection({
+                      benchmark: event.target.value || undefined,
+                    })
+                  }
+                  disabled={isUpdating}
+                  sx={selectControlSx}
+                  SelectProps={{ native: true }}
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                    htmlInput: { "aria-label": "Compared To" },
+                  }}
+                >
+                  {resolvedBenchmarkOptions.map((option) => (
+                    <option key={option.benchmark_code} value={option.benchmark_code}>
+                      {option.benchmark_name}
+                    </option>
+                  ))}
+                </TextField>
+
+                <Box>
+                  <Typography sx={controlLabelSx}>Basis</Typography>
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={detailBasis}
+                    aria-label="Basis"
+                    sx={toggleGroupSx}
                   >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="performance-chart-toolbar-right">
-          <div className="performance-chart-chip performance-chart-chip-portfolio">
-            <span>Portfolio</span>
-            <strong>{formatPct(summary.portfolio_return_pct)}</strong>
-          </div>
-          <div className="performance-chart-chip performance-chart-chip-benchmark">
-            <span>{formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)}</span>
-            <strong>{hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "N/A"}</strong>
-          </div>
-          <div className="performance-chart-chip performance-chart-chip-active">
-            <span>Active</span>
-            <strong>{hasBenchmarkSeries ? formatPct(summary.active_return_pct) : "N/A"}</strong>
-          </div>
-        </div>
-      </div>
+                    {BASIS_OPTIONS.map((option) => (
+                      <ToggleButton
+                        key={option}
+                        value={option}
+                        onClick={() =>
+                          updateSelection({
+                            detailBasis: option,
+                          })
+                        }
+                        disabled={isUpdating && option === detailBasis}
+                      >
+                        {option}
+                      </ToggleButton>
+                    ))}
+                  </ToggleButtonGroup>
+                </Box>
+              </Stack>
+            </Stack>
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", sm: "row", xl: "column" }}
+            spacing={1}
+            sx={{ minWidth: { xl: 280 }, maxWidth: { xl: 320 } }}
+          >
+            <Chip
+              label={`Portfolio ${formatPct(summary.portfolio_return_pct)}`}
+              color="error"
+              variant="outlined"
+              sx={summaryChipSx}
+            />
+            <Chip
+              label={`${formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)} ${
+                hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "N/A"
+              }`}
+              variant="outlined"
+              sx={summaryChipSx}
+            />
+            <Chip
+              label={`Active ${hasBenchmarkSeries ? formatPct(summary.active_return_pct) : "N/A"}`}
+              variant="outlined"
+              sx={summaryChipSx}
+            />
+          </Stack>
+        </Stack>
 
       {points.length ? (
         <>
-          <div className="performance-chart-summary-band">
-            <div>
-              <span>Latest</span>
-              <strong>{formatPct(latestValue)}</strong>
-            </div>
-            <div>
-              <span>High</span>
-              <strong>{formatPct(highestValue)}</strong>
-            </div>
-            <div>
-              <span>Low</span>
-              <strong>{formatPct(lowestValue)}</strong>
-            </div>
-            <div>
-              <span>Observations</span>
-              <strong>{points.length}</strong>
-            </div>
-          </div>
+          <Box
+            className="performance-chart-summary-band"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "repeat(2, minmax(0, 1fr))",
+                md: "repeat(4, minmax(0, 1fr))",
+              },
+              gap: 1.25,
+            }}
+          >
+            <AnalyticsStat label="Latest" value={formatPct(latestValue)} />
+            <AnalyticsStat label="High" value={formatPct(highestValue)} />
+            <AnalyticsStat label="Low" value={formatPct(lowestValue)} />
+            <AnalyticsStat label="Observations" value={points.length} />
+          </Box>
 
           <div
             className="performance-chart-library-frame"
@@ -540,6 +597,57 @@ export default function PerformanceChartPanel({
       ) : (
         <p className="muted">Performance breakdown is not available for the selected period.</p>
       )}
+      </Stack>
     </Panel>
   );
 }
+
+const controlLabelSx = {
+  mb: 0.5,
+  fontSize: "0.6875rem",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "text.secondary",
+} as const;
+
+const toggleGroupSx = {
+  flexWrap: "wrap",
+  gap: 0.75,
+  "& .MuiToggleButtonGroup-grouped": {
+    borderRadius: "999px !important",
+    border: "1px solid rgba(31, 39, 51, 0.1) !important",
+    px: 1.3,
+    py: 0.6,
+    color: "text.secondary",
+    textTransform: "none",
+    fontWeight: 700,
+    fontSize: "0.8rem",
+  },
+  "& .Mui-selected": {
+    bgcolor: "#1f2733 !important",
+    color: "#fff !important",
+  },
+} as const;
+
+const selectControlSx = {
+  minWidth: { xs: "100%", sm: 200 },
+  "& .MuiInputBase-input": {
+    fontSize: "0.875rem",
+    fontWeight: 600,
+  },
+} as const;
+
+const summaryChipSx = {
+  justifyContent: "space-between",
+  borderRadius: "999px",
+  px: 1,
+  py: 2.2,
+  fontWeight: 700,
+  "& .MuiChip-label": {
+    display: "flex",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 1,
+  },
+} as const;

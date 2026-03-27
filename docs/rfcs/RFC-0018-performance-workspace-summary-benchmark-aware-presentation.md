@@ -179,6 +179,15 @@ The immediate pattern for this RFC is:
 2. `performance/details` for the lower analytical canvas,
 3. a dedicated `performance/horizon-comparison` module contract for compact comparative bars.
 
+The presentation layer should also move toward a stronger design-system-led implementation:
+
+1. prefer `MUI` layout and control primitives for analytical toolbars, segmented controls, form
+   fields, and dense workstation headers,
+2. keep `globals.css` focused on shell, responsive layout rails, and small visual bridges rather
+   than bespoke control behavior,
+3. evolve reusable design-system primitives for analytics screens instead of styling each module as
+   a one-off surface.
+
 The presentation target for the attribution canvas also includes a benchmark-relative segment
 matrix that surfaces, for each selected segment:
 

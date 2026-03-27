@@ -1,4 +1,8 @@
+import { Box, Divider, FormControl, MenuItem, Select, Stack, Typography } from "@mui/material";
+
 import {
+  AnalyticsSectionHeader,
+  AnalyticsStat,
   Panel,
   StatusChip,
   WorkspaceGrid,
@@ -118,10 +122,19 @@ export default function PerformanceWorkspaceView({
         ) : (
           <>
             <Panel id="performance-overview" className="performance-summary-stage">
-              <div className="performance-summary-stage-header">
-                <div className="performance-hero-title">
-                  <h2>{workspace.portfolio.portfolio_id}</h2>
-                  <div className="performance-observation-strip">
+              <Stack spacing={2}>
+                <Stack
+                  direction={{ xs: "column", xl: "row" }}
+                  spacing={2}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "stretch", xl: "flex-start" }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <AnalyticsSectionHeader
+                      title={workspace.portfolio.portfolio_id}
+                      subtitle="Benchmark-aware performance summary for first paint and mandate context"
+                    />
+                    <Box className="performance-observation-strip" sx={{ mt: 1 }}>
                     <StatusChip>As of {formatDate(workspace.as_of_date)}</StatusChip>
                     <StatusChip>{workspace.portfolio.base_currency}</StatusChip>
                     {hasHistory ? (
@@ -136,131 +149,151 @@ export default function PerformanceWorkspaceView({
                         {selectedBenchmarkCode ? "Benchmark unavailable" : "No benchmark assigned"}
                       </StatusChip>
                     )}
-                  </div>
-                </div>
-                <div className="performance-summary-stage-context">
-                  <div className="performance-context-block">
-                    <span>Benchmark</span>
-                    <strong>{selectedBenchmarkLabel ?? "Unassigned"}</strong>
-                  </div>
-                  <div className="performance-context-block">
-                    <span>Primary Contributor</span>
-                    <strong>{primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}</strong>
-                  </div>
-                </div>
-              </div>
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      minWidth: { xl: 320 },
+                      width: { xs: "100%", xl: "auto" },
+                      p: 2,
+                      borderRadius: 3,
+                      border: "1px solid rgba(31, 39, 51, 0.08)",
+                      background:
+                        "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(247,248,250,0.92) 100%)",
+                    }}
+                  >
+                    <Stack spacing={1.5}>
+                      <AnalyticsStat
+                        label="Benchmark"
+                        value={selectedBenchmarkLabel ?? "Unassigned"}
+                      />
+                      <Divider flexItem />
+                      <AnalyticsStat
+                        label="Primary Contributor"
+                        value={primaryDriver ? formatLabel(primaryDriver.key_label) : "N/A"}
+                      />
+                    </Stack>
+                  </Box>
+                </Stack>
 
-              <div className="performance-summary-grid">
-                <div className="performance-summary-card performance-summary-card-primary">
-                  <span>{detailBasis === "GROSS" ? "Gross Return" : "Net Return"}</span>
-                  <strong>{formatPct(selectedPerformance?.portfolio_return_pct ?? null)}</strong>
-                  <p>
-                    {hasBenchmark
-                      ? `Active ${formatCompactPct(selectedPerformance?.active_return_pct ?? null)} versus benchmark`
-                      : "Absolute performance for the selected mandate and horizon"}
-                  </p>
-                </div>
+                <Box
+                  className="performance-summary-grid"
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      lg: "minmax(240px, 1.15fr) repeat(3, minmax(0, 1fr))",
+                    },
+                    gap: 1.25,
+                  }}
+                >
+                  <AnalyticsStat
+                    label={detailBasis === "GROSS" ? "Gross Return" : "Net Return"}
+                    value={formatPct(selectedPerformance?.portfolio_return_pct ?? null)}
+                    support={
+                      hasBenchmark
+                        ? `Active ${formatCompactPct(selectedPerformance?.active_return_pct ?? null)} versus benchmark`
+                        : "Absolute performance for the selected mandate and horizon"
+                    }
+                    emphasize
+                  />
 
-                <div className="performance-summary-card">
-                  <span>Benchmark Comparison</span>
-                  <div className="performance-summary-metrics">
-                    <div>
-                      <label>Portfolio</label>
-                      <strong>{formatPct(selectedPerformance?.portfolio_return_pct ?? null)}</strong>
-                    </div>
-                    <div>
-                      <label>Benchmark</label>
-                      <strong>{formatPct(selectedPerformance?.benchmark_return_pct ?? null)}</strong>
-                    </div>
-                    <div>
-                      <label>Active</label>
-                      <strong>{formatPct(selectedPerformance?.active_return_pct ?? null)}</strong>
-                    </div>
-                    <div>
-                      <label>Annualized</label>
-                      <strong>{formatPct(selectedPerformance?.annualized_return_pct ?? null)}</strong>
-                    </div>
-                  </div>
-                </div>
+                  <Box className="performance-summary-card">
+                    <Typography component="span" sx={summaryLabelSx}>
+                      Benchmark Comparison
+                    </Typography>
+                    <Box className="performance-summary-metrics">
+                      <AnalyticsStat
+                        label="Portfolio"
+                        value={formatPct(selectedPerformance?.portfolio_return_pct ?? null)}
+                      />
+                      <AnalyticsStat
+                        label="Benchmark"
+                        value={formatPct(selectedPerformance?.benchmark_return_pct ?? null)}
+                      />
+                      <AnalyticsStat
+                        label="Active"
+                        value={formatPct(selectedPerformance?.active_return_pct ?? null)}
+                      />
+                      <AnalyticsStat
+                        label="Annualized"
+                        value={formatPct(selectedPerformance?.annualized_return_pct ?? null)}
+                      />
+                    </Box>
+                  </Box>
 
-                <div className="performance-summary-card">
-                  <span>Economic Context</span>
-                  <div className="performance-summary-metrics">
-                    <div>
-                      <label>Start MV</label>
-                      <strong>
-                        {formatCurrency(
+                  <Box className="performance-summary-card">
+                    <Typography component="span" sx={summaryLabelSx}>
+                      Economic Context
+                    </Typography>
+                    <Box className="performance-summary-metrics">
+                      <AnalyticsStat
+                        label="Start MV"
+                        value={formatCurrency(
                           selectedPerformance?.begin_market_value ?? null,
                           workspace.portfolio.base_currency
                         )}
-                      </strong>
-                    </div>
-                    <div>
-                      <label>End MV</label>
-                      <strong>
-                        {formatCurrency(
+                      />
+                      <AnalyticsStat
+                        label="End MV"
+                        value={formatCurrency(
                           selectedPerformance?.end_market_value ?? workspace.overview.market_value_base,
                           workspace.portfolio.base_currency
                         )}
-                      </strong>
-                    </div>
-                    <div>
-                      <label>Net Cash Flow</label>
-                      <strong>
-                        {formatCurrency(
+                      />
+                      <AnalyticsStat
+                        label="Net Cash Flow"
+                        value={formatCurrency(
                           selectedPerformance?.net_cash_flow ?? null,
                           workspace.portfolio.base_currency
                         )}
-                      </strong>
-                    </div>
-                    <div>
-                      <label>Cash Weight</label>
-                      <strong>{formatPct(workspace.overview.cash_weight_pct)}</strong>
-                    </div>
-                  </div>
-                </div>
+                      />
+                      <AnalyticsStat
+                        label="Cash Weight"
+                        value={formatPct(workspace.overview.cash_weight_pct)}
+                      />
+                    </Box>
+                  </Box>
 
-                <div className="performance-summary-card">
-                  <span>Mandate Context</span>
-                  <div className="performance-summary-metrics">
-                    <div>
-                      <label>Money-Weighted</label>
-                      <strong>
-                        {workspace.money_weighted_return
-                          ? formatPct(workspace.money_weighted_return.money_weighted_return_pct)
-                          : "N/A"}
-                      </strong>
-                    </div>
-                    <div>
-                      <label>Position Count</label>
-                      <strong>{workspace.overview.position_count}</strong>
-                    </div>
-                    <div>
-                      <label>Market Value</label>
-                      <strong>
-                        {formatCurrency(
+                  <Box className="performance-summary-card">
+                    <Typography component="span" sx={summaryLabelSx}>
+                      Mandate Context
+                    </Typography>
+                    <Box className="performance-summary-metrics">
+                      <AnalyticsStat
+                        label="Money-Weighted"
+                        value={
+                          workspace.money_weighted_return
+                            ? formatPct(workspace.money_weighted_return.money_weighted_return_pct)
+                            : "N/A"
+                        }
+                      />
+                      <AnalyticsStat
+                        label="Position Count"
+                        value={workspace.overview.position_count}
+                      />
+                      <AnalyticsStat
+                        label="Market Value"
+                        value={formatCurrency(
                           workspace.overview.market_value_base,
                           workspace.portfolio.base_currency
                         )}
-                      </strong>
-                    </div>
-                    <div>
-                      <label>Basis</label>
-                      <strong>{detailBasis}</strong>
-                    </div>
-                  </div>
-                  {hasMoneyWeightedReturn ? (
-                    <p className="performance-summary-footnote">
-                      {workspace.money_weighted_return?.annualized_return_pct != null
-                        ? `MWR annualized ${formatCompactPct(
-                            workspace.money_weighted_return.annualized_return_pct
-                          )}`
-                        : workspace.money_weighted_return?.method ?? "MWR"}
-                      {suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
+                      />
+                      <AnalyticsStat label="Basis" value={detailBasis} />
+                    </Box>
+                    {hasMoneyWeightedReturn ? (
+                      <Typography className="performance-summary-footnote">
+                        {workspace.money_weighted_return?.annualized_return_pct != null
+                          ? `MWR annualized ${formatCompactPct(
+                              workspace.money_weighted_return.annualized_return_pct
+                            )}`
+                          : workspace.money_weighted_return?.method ?? "MWR"}
+                        {suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                </Box>
+              </Stack>
             </Panel>
             <WorkspaceGrid className="performance-chart-grid">
               <PerformanceChartPanel
@@ -383,25 +416,27 @@ export default function PerformanceWorkspaceView({
                 <div className="performance-section-heading">
                   <h3>Attribution Detail</h3>
                   <div className="performance-section-heading-meta">
-                    <label className="performance-inline-select">
-                      <span>Segment</span>
-                      <select
+                    <FormControl size="small" sx={{ minWidth: 180 }}>
+                      <Typography component="label" sx={inlineControlLabelSx}>
+                        Segment
+                      </Typography>
+                      <Select
                         aria-label="Attribution Segment"
                         value={attributionDimension}
                         onChange={(event) =>
                           onRequestChange?.({
-                            attributionDimension: event.currentTarget.value,
+                            attributionDimension: event.target.value,
                           })
                         }
                         disabled={isUpdating}
                       >
                         {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
+                          <MenuItem key={option} value={option}>
                             {formatLabel(option)}
-                          </option>
+                          </MenuItem>
                         ))}
-                      </select>
-                    </label>
+                      </Select>
+                    </FormControl>
                     {workspace.attribution?.benchmark_id ? (
                       <span className="performance-section-benchmark">
                         Versus {formatLabel(workspace.attribution.benchmark_id)}
@@ -615,25 +650,27 @@ export default function PerformanceWorkspaceView({
               <Panel id="performance-drivers" className="performance-detail-panel-wide">
                 <div className="performance-section-heading">
                   <h3>Contribution Detail</h3>
-                  <label className="performance-inline-select">
-                    <span>Segment</span>
-                    <select
+                  <FormControl size="small" sx={{ minWidth: 180 }}>
+                    <Typography component="label" sx={inlineControlLabelSx}>
+                      Segment
+                    </Typography>
+                    <Select
                       aria-label="Contribution Segment"
                       value={contributionDimension}
                       onChange={(event) =>
                         onRequestChange?.({
-                          contributionDimension: event.currentTarget.value,
+                          contributionDimension: event.target.value,
                         })
                       }
                       disabled={isUpdating}
                     >
                       {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
+                        <MenuItem key={option} value={option}>
                           {formatLabel(option)}
-                        </option>
+                        </MenuItem>
                       ))}
-                    </select>
-                  </label>
+                    </Select>
+                  </FormControl>
                 </div>
                 {hasContribution ? (
                   contributionLevels.map((level) => (
@@ -824,3 +861,23 @@ function sumOptional(values: Array<number | null | undefined>): number | null {
   }
   return numericValues.reduce((sum, value) => sum + value, 0);
 }
+
+const summaryLabelSx = {
+  display: "block",
+  mb: 1,
+  fontSize: "0.6875rem",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "text.secondary",
+} as const;
+
+const inlineControlLabelSx = {
+  display: "block",
+  mb: 0.5,
+  fontSize: "0.6875rem",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "text.secondary",
+} as const;

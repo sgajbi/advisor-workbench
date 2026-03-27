@@ -113,6 +113,6 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Compared To")).toHaveDisplayValue("Global Growth 80/20");
-    expect(screen.getAllByText("Global Growth 80/20").length).toBeGreaterThan(1);
+    expect(screen.getByText("Global Growth 80/20")).toBeInTheDocument();
   });
 });
