@@ -176,7 +176,8 @@ Instead, the gateway should evolve toward:
 The immediate pattern for this RFC is:
 
 1. `performance/summary` for first paint,
-2. `performance/details` for the lower analytical canvas,
+2. `performance/details` for the lower analytical canvas, with server-provided first-paint detail
+   hydration so the primary chart stage does not flash empty on initial load,
 3. a dedicated `performance/horizon-comparison` module contract for compact comparative bars.
 
 The presentation layer should also move toward a stronger design-system-led implementation:
@@ -505,7 +506,12 @@ Implemented in the current wave:
 
 1. a dedicated `performance/attribution-trend` hybrid contract in `lotus-gateway`,
 2. a benchmark-relative `Attribution Over Time` module in `lotus-workbench` using real per-window
-   attribution effects rather than inferred summary data.
+   attribution effects rather than inferred summary data,
+3. first-paint performance rendering now seeds the workbench with both summary and details so the
+   main chart and analytical canvas do not wait for a post-mount fetch to become usable,
+4. the `performance/horizon-comparison` module now uses a lighter TWR-driven gateway path for
+   `MTD`, `QTD`, `YTD`, and `1Y`, which avoids overloading the heavier workspace-summary flow for a
+   compact comparative panel.
 
 ## Repository Impact
 

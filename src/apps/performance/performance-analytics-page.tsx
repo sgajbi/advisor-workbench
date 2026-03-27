@@ -1,4 +1,7 @@
-import { getWorkbenchPerformanceWorkspaceSummary } from "@/features/workbench/api";
+import {
+  getWorkbenchPerformanceWorkspaceDetails,
+  getWorkbenchPerformanceWorkspaceSummary,
+} from "@/features/workbench/api";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
@@ -63,20 +66,34 @@ export default async function PerformanceAnalyticsPage({
   const reportEndDate = resolvedSearch.reportEndDate?.trim() || undefined;
 
   let workspaceSummary = null;
+  let workspaceDetails = null;
   if (selectedPortfolioId) {
     try {
-      workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(selectedPortfolioId, {
-        period,
-        chartFrequency,
-        contributionDimension,
-        attributionDimension,
-        detailBasis,
-        benchmark,
-        reportStartDate,
-        reportEndDate,
-      });
+      [workspaceSummary, workspaceDetails] = await Promise.all([
+        getWorkbenchPerformanceWorkspaceSummary(selectedPortfolioId, {
+          period,
+          chartFrequency,
+          contributionDimension,
+          attributionDimension,
+          detailBasis,
+          benchmark,
+          reportStartDate,
+          reportEndDate,
+        }),
+        getWorkbenchPerformanceWorkspaceDetails(selectedPortfolioId, {
+          period,
+          chartFrequency,
+          contributionDimension,
+          attributionDimension,
+          detailBasis,
+          benchmark,
+          reportStartDate,
+          reportEndDate,
+        }),
+      ]);
     } catch {
       workspaceSummary = null;
+      workspaceDetails = null;
     }
   }
 
@@ -84,6 +101,7 @@ export default async function PerformanceAnalyticsPage({
     <main className="page-container">
       <PerformanceWorkspaceEntry
         initialSummary={workspaceSummary}
+        initialDetails={workspaceDetails}
         initialPortfolioId={selectedPortfolioId}
         initialPeriod={period}
         initialDetailBasis={detailBasis}

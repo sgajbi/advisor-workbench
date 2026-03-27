@@ -256,6 +256,30 @@ describe("PerformanceWorkspaceClient", () => {
     expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
   });
 
+  it("uses server-provided initial details without an immediate client refetch", async () => {
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+
+    expect(getDetailsClientMock).not.toHaveBeenCalled();
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+  });
+
   it("ignores stale responses when a newer interaction finishes later", async () => {
     let resolveThreeYearSummary:
       | ((value: WorkbenchPerformanceWorkspaceSummary) => void)

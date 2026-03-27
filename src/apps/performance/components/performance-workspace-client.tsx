@@ -19,6 +19,7 @@ import PerformanceWorkspaceView from "./performance-workspace-view";
 
 type PerformanceWorkspaceClientProps = {
   initialSummary: WorkbenchPerformanceWorkspaceSummary | null;
+  initialDetails?: WorkbenchPerformanceWorkspaceDetails | null;
   initialPortfolioId: string | null;
   initialPeriod: string;
   initialDetailBasis: string;
@@ -42,6 +43,7 @@ type PerformanceControlState = {
 
 export default function PerformanceWorkspaceClient({
   initialSummary,
+  initialDetails,
   initialPortfolioId,
   initialPeriod,
   initialDetailBasis,
@@ -77,7 +79,9 @@ export default function PerformanceWorkspaceClient({
   const [summary, setSummary] = useState<WorkbenchPerformanceWorkspaceSummary | null>(
     initialSummary
   );
-  const [details, setDetails] = useState<WorkbenchPerformanceWorkspaceDetails | null>(null);
+  const [details, setDetails] = useState<WorkbenchPerformanceWorkspaceDetails | null>(
+    initialDetails ?? null
+  );
   const [isSummaryUpdating, setIsSummaryUpdating] = useState(false);
   const [isDetailsUpdating, setIsDetailsUpdating] = useState(false);
   const [controls, setControls] = useState<PerformanceControlState | null>(
@@ -103,17 +107,28 @@ export default function PerformanceWorkspaceClient({
       initialPortfolioId
         ? buildDetailsCacheKey({
             portfolioId: initialPortfolioId,
-            period: initialSummary?.period ?? initialPeriod,
-            detailBasis: initialSummary?.detail_basis ?? initialDetailBasis,
-            contributionDimension: initialContributionDimension,
-            attributionDimension: initialAttributionDimension,
-            chartFrequency: initialSummary?.chart_frequency ?? initialChartFrequency,
-            benchmark: initialSummary?.benchmark_code ?? initialBenchmark,
-            reportStartDate: initialSummary?.report_start_date,
-            reportEndDate: initialSummary?.report_end_date,
+            period: initialDetails?.period ?? initialSummary?.period ?? initialPeriod,
+            detailBasis:
+              initialDetails?.detail_basis ?? initialSummary?.detail_basis ?? initialDetailBasis,
+            contributionDimension:
+              initialDetails?.contribution_dimension ?? initialContributionDimension,
+            attributionDimension:
+              initialDetails?.attribution_dimension ?? initialAttributionDimension,
+            chartFrequency:
+              initialDetails?.chart_frequency ??
+              initialSummary?.chart_frequency ??
+              initialChartFrequency,
+            benchmark:
+              initialDetails?.benchmark_code ??
+              initialSummary?.benchmark_code ??
+              initialBenchmark,
+            reportStartDate:
+              initialDetails?.report_start_date ?? initialSummary?.report_start_date,
+            reportEndDate: initialDetails?.report_end_date ?? initialSummary?.report_end_date,
           })
         : null,
     [
+      initialDetails,
       initialAttributionDimension,
       initialBenchmark,
       initialChartFrequency,
@@ -130,7 +145,7 @@ export default function PerformanceWorkspaceClient({
     initialSummaryKey ? new Map([[initialSummaryKey, initialSummary]]) : new Map()
   );
   const detailsCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceDetails | null>>(
-    initialDetailsKey ? new Map([[initialDetailsKey, null]]) : new Map()
+    initialDetailsKey ? new Map([[initialDetailsKey, initialDetails ?? null]]) : new Map()
   );
 
   const workspace = useMemo<WorkbenchPerformanceWorkspace | null>(() => {
@@ -139,7 +154,7 @@ export default function PerformanceWorkspaceClient({
     }
     return assemblePerformanceWorkspace(summary, details);
   }, [details, summary]);
-  const isUpdating = isSummaryUpdating || isDetailsUpdating;
+  const isUpdating = isSummaryUpdating;
   const expectedDetailsKey = controls ? buildDetailsCacheKey(controls) : null;
   const isDetailsPending =
     Boolean(summary) &&
