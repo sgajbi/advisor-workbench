@@ -493,10 +493,9 @@ The RFC can be marked implemented only when:
 
 As of 2026-03-27, this RFC is materially advanced but not yet fully closed.
 
-The main remaining closure slices are:
+The main remaining closure slice is:
 
-1. complete one final live-browser polish and responsive QA pass against the real runtime stack,
-2. verify the final demo-data and benchmark-switching workflow documentation against the actual
+1. verify the final demo-data and benchmark-switching workflow documentation against the actual
    local bring-up path end to end.
 
 Until those are complete, the RFC should remain `IN PROGRESS` rather than being treated as fully
@@ -511,7 +510,9 @@ Implemented in the current wave:
    main chart and analytical canvas do not wait for a post-mount fetch to become usable,
 4. the `performance/horizon-comparison` module now uses a lighter TWR-driven gateway path for
    `MTD`, `QTD`, `YTD`, and `1Y`, which avoids overloading the heavier workspace-summary flow for a
-   compact comparative panel.
+   compact comparative panel,
+5. a real browser-driven responsive polish pass has tightened the chart toolbar, mobile chart
+   footprint, and analytical module spacing across narrow viewports.
 
 ## Repository Impact
 
