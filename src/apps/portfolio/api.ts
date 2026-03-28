@@ -63,6 +63,11 @@ type PortfolioWorkflowResponse = {
   actions: NonNullable<PortfolioWorkspace["workflow_actions"]>;
 };
 
+type PortfolioInsightsResponse = {
+  insights: NonNullable<PortfolioWorkspace["insights"]>;
+  exception_summaries: NonNullable<PortfolioWorkspace["exception_summaries"]>;
+};
+
 type PortfolioProjectedCashflowResponse = {
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
 };
@@ -76,6 +81,8 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "income_summary"
   | "activity_summary"
   | "readiness_indicators"
+  | "exception_summaries"
+  | "insights"
   | "workflow_actions"
 >;
 
@@ -163,6 +170,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       allocationsResponse,
       positionsResponse,
       readinessResponse,
+      insightsResponse,
       workflowResponse,
       incomeResponse,
       activityResponse,
@@ -177,6 +185,10 @@ export async function getPortfolioWorkspaceSummaryDetails(
       ),
       fetch(
         `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`,
         { cache: "no-store" }
       ),
       fetch(
@@ -210,6 +222,9 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const readinessPayload = readinessResponse.ok
       ? ((await readinessResponse.json()) as PortfolioReadinessResponse)
       : null;
+    const insightsPayload = insightsResponse.ok
+      ? ((await insightsResponse.json()) as PortfolioInsightsResponse)
+      : null;
     const workflowPayload = workflowResponse.ok
       ? ((await workflowResponse.json()) as PortfolioWorkflowResponse)
       : null;
@@ -231,6 +246,8 @@ export async function getPortfolioWorkspaceSummaryDetails(
       income_summary: incomePayload,
       activity_summary: activityPayload,
       readiness_indicators: readinessPayload?.indicators ?? undefined,
+      exception_summaries: insightsPayload?.exception_summaries ?? undefined,
+      insights: insightsPayload?.insights ?? undefined,
       workflow_actions: workflowPayload?.actions ?? undefined,
     };
   } catch {

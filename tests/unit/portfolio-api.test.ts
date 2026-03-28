@@ -128,6 +128,29 @@ describe("portfolio api", () => {
         });
       }
 
+      if (url.includes("/insights")) {
+        return jsonResponse({
+          insights: [
+            {
+              key: "cash-above-target",
+              title: "Cash exceeds target allocation",
+              detail: "Available cash is elevated relative to invested assets.",
+              severity: "info",
+              href: "#portfolio-insights",
+            },
+          ],
+          exception_summaries: [
+            {
+              key: "pricing",
+              title: "Pricing coverage incomplete",
+              detail: "Some holdings lack complete valuation coverage.",
+              tone: "warn",
+              href: "#portfolio-attention",
+            },
+          ],
+        });
+      }
+
       if (url.includes("/workflow")) {
         return jsonResponse({
           actions: [
@@ -185,6 +208,8 @@ describe("portfolio api", () => {
     expect(details?.positions[0].market_value_local).toBe(147000);
     expect(details?.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);
     expect(details?.readiness_indicators?.[0].status).toBe("Ready");
+    expect(details?.insights?.[0].key).toBe("cash-above-target");
+    expect(details?.exception_summaries?.[0].key).toBe("pricing");
     expect(details?.workflow_actions?.[0].title).toBe("Review performance");
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));

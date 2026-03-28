@@ -134,8 +134,10 @@ export default function PortfolioWorkspaceView({
   const readinessIndicators = workspace
     ? workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace, context.viewMode)
     : [];
-  const exceptionSummaries = workspace ? buildPortfolioExceptionSummaries(workspace) : [];
-  const insights = workspace ? buildPortfolioInsights(workspace) : [];
+  const exceptionSummaries = workspace
+    ? workspace.exception_summaries ?? buildPortfolioExceptionSummaries(workspace)
+    : [];
+  const insights = workspace ? workspace.insights ?? buildPortfolioInsights(workspace) : [];
   const [dismissedInsightKeys, setDismissedInsightKeys] = useState<string[]>([]);
   const [sectionPreferences, setSectionPreferences] = useState<Record<string, boolean>>({});
   const isSummaryView = context.viewMode === "summary";
@@ -1529,7 +1531,15 @@ function buildMetricDrawer(
         subtitle: "Operational readiness across holdings, pricing, transactions, and reporting.",
         summaryItems: [
           { label: "Status", value: getBookReadinessStatus(workspace) },
-          { label: "Exceptions", value: String(buildPortfolioExceptionSummaries(workspace).length) },
+          {
+            label: "Exceptions",
+            value: String(
+              (
+                workspace.exception_summaries ??
+                buildPortfolioExceptionSummaries(workspace)
+              ).length
+            ),
+          },
           ...commonSummary,
         ],
         tabs: [

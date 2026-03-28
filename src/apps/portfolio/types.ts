@@ -291,6 +291,8 @@ export type PortfolioWorkspace = {
     };
   };
   readiness_indicators?: PortfolioReadinessIndicator[];
+  exception_summaries?: PortfolioExceptionSummary[];
+  insights?: PortfolioInsight[];
   operations?: {
     business_date?: string | null;
     latest_booked_transaction_date?: string | null;
