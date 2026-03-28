@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { StatusChip, WorkspaceHeader } from "@/design-system";
 
+import { getPortfolioWorkspaceDetails, mergePortfolioWorkspace } from "../api";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
   buildInitialPortfolioControls,
@@ -30,6 +31,8 @@ export default function PortfolioWorkspaceClient({
   const [controls, setControls] = useState<PortfolioWorkspaceControls>(
     buildInitialPortfolioControls(initialWorkspace)
   );
+  const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
+  const [detailsLoading, setDetailsLoading] = useState<boolean>(Boolean(selectedPortfolioId));
 
   useEffect(() => {
     const storedViewMode = window.localStorage.getItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY);
@@ -44,13 +47,47 @@ export default function PortfolioWorkspaceClient({
     window.localStorage.setItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY, controls.viewMode);
   }, [controls.viewMode]);
 
+  useEffect(() => {
+    setWorkspaceState(initialWorkspace);
+  }, [initialWorkspace]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDetails() {
+      if (!selectedPortfolioId || !initialWorkspace) {
+        setDetailsLoading(false);
+        return;
+      }
+
+      setDetailsLoading(true);
+      const details = await getPortfolioWorkspaceDetails(selectedPortfolioId);
+      if (cancelled) {
+        return;
+      }
+
+      if (details) {
+        setWorkspaceState((current) =>
+          current ? mergePortfolioWorkspace(current, details) : current
+        );
+      }
+      setDetailsLoading(false);
+    }
+
+    void loadDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialWorkspace, selectedPortfolioId]);
+
   const workspace = useMemo(
-    () => derivePortfolioWorkspace(initialWorkspace, controls),
-    [controls, initialWorkspace]
+    () => derivePortfolioWorkspace(workspaceState, controls),
+    [controls, workspaceState]
   );
   const context = useMemo(
-    () => buildPortfolioWorkspaceContext(initialWorkspace, controls),
-    [controls, initialWorkspace]
+    () => buildPortfolioWorkspaceContext(workspaceState, controls),
+    [controls, workspaceState]
   );
 
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
@@ -106,6 +143,7 @@ export default function PortfolioWorkspaceClient({
           selectedPortfolioId={selectedPortfolioId}
           workspace={workspace}
           context={context}
+          detailsLoading={detailsLoading}
         />
       )}
     </main>

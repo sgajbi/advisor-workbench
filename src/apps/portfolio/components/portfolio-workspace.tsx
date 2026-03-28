@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
 import {
   ActionLink,
   AnalyticsModule,
@@ -21,7 +25,12 @@ import {
   formatPct,
   formatQuantity,
 } from "../formatters";
-import type { PortfolioPositionView, PortfolioTransactionView, PortfolioWorkspace } from "../types";
+import type {
+  PortfolioAllocationSelection,
+  PortfolioPositionView,
+  PortfolioTransactionView,
+  PortfolioWorkspace,
+} from "../types";
 import {
   getCoverageWarningLabel,
   getEvidenceServiceLabel,
@@ -52,6 +61,7 @@ export default function PortfolioWorkspaceView({
   selectedPortfolioId,
   workspace,
   context,
+  detailsLoading,
 }: {
   portfolios: Array<{
     portfolio_id: string;
@@ -63,7 +73,11 @@ export default function PortfolioWorkspaceView({
   selectedPortfolioId: string | null;
   workspace: PortfolioWorkspace | null;
   context: PortfolioWorkspaceContext;
+  detailsLoading: boolean;
 }) {
+  const [selectedAllocation, setSelectedAllocation] = useState<PortfolioAllocationSelection | null>(
+    null
+  );
   const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
   const setupActions = workspace?.workflow_actions ?? (workspace ? buildPortfolioWorkflowActions(workspace) : []);
   const primaryWorkflowCue = orderedWorkflowCues.find((cue) => cue.key === "performance") ?? orderedWorkflowCues[0];
@@ -80,14 +94,21 @@ export default function PortfolioWorkspaceView({
   const showReadinessDetailGroup = isDetailedView;
   const showLiquidityModule = isDetailedView;
   const showPerformanceSnapshot = isDetailedView;
-  const showAllocationModule = Boolean(workspace?.allocation_views?.length) || !context.hideEmptyModules;
-  const showTopHoldingsModule = Boolean(workspace?.top_positions.length) || !context.hideEmptyModules;
-  const showIncomeModule = Boolean(workspace?.income_summary) || !context.hideEmptyModules;
-  const showActivityModule = Boolean(workspace?.activity_summary) || !context.hideEmptyModules;
+  const showAllocationModule =
+    !detailsLoading && (Boolean(workspace?.allocation_views?.length) || !context.hideEmptyModules);
+  const showTopHoldingsModule =
+    !detailsLoading && (Boolean(workspace?.top_positions.length) || !context.hideEmptyModules);
+  const showIncomeModule =
+    !detailsLoading && (Boolean(workspace?.income_summary) || !context.hideEmptyModules);
+  const showActivityModule =
+    !detailsLoading && (Boolean(workspace?.activity_summary) || !context.hideEmptyModules);
   const showChangeHighlights = isSummaryView && !showAttentionOnly && (showIncomeModule || showActivityModule);
-  const showDetailedHoldings = Boolean(workspace?.positions.length) || !context.hideEmptyModules;
-  const showDetailedTransactions = Boolean(workspace?.recent_transactions.length) || !context.hideEmptyModules;
-  const showProjectedCashflow = Boolean(workspace?.cashflow_outlook) || !context.hideEmptyModules;
+  const showDetailedHoldings =
+    !detailsLoading && (Boolean(workspace?.positions.length) || !context.hideEmptyModules);
+  const showDetailedTransactions =
+    !detailsLoading && (Boolean(workspace?.recent_transactions.length) || !context.hideEmptyModules);
+  const showProjectedCashflow =
+    !detailsLoading && (Boolean(workspace?.cashflow_outlook) || !context.hideEmptyModules);
   const incomeDisplayCurrency = getIncomeDisplayCurrency(
     workspace?.income_summary,
     context.selectedReportingCurrency,
@@ -98,6 +119,13 @@ export default function PortfolioWorkspaceView({
     context.selectedReportingCurrency,
     workspace?.portfolio.base_currency ?? "USD"
   );
+  const filteredPositions = useMemo(
+    () => (workspace ? filterPositionsByAllocation(workspace.positions, selectedAllocation) : []),
+    [workspace, selectedAllocation]
+  );
+  const holdingsFilterCopy = selectedAllocation
+    ? `Filtered by ${formatAllocationFilterLabel(selectedAllocation)}`
+    : null;
 
   return (
     <WorkspaceLayout>
@@ -248,6 +276,17 @@ export default function PortfolioWorkspaceView({
                 </a>
               ))}
             </div>
+
+            {detailsLoading ? (
+              <Panel className="portfolio-detail-loading-panel">
+                <div className="portfolio-card-header">
+                  <h3 className="portfolio-card-title">Loading portfolio detail</h3>
+                  <p className="portfolio-card-subtitle">
+                    Fetching holdings, allocation, income, activity, and ledger modules.
+                  </p>
+                </div>
+              </Panel>
+            ) : null}
 
             <nav className="portfolio-workspace-nav" aria-label="Portfolio workspace sections">
               <a href="#portfolio-summary">1. What is this portfolio?</a>
@@ -413,6 +452,8 @@ export default function PortfolioWorkspaceView({
                   <PortfolioAllocationPanel
                     allocationViews={workspace.allocation_views}
                     baseCurrency={workspace.portfolio.base_currency}
+                    selectedAllocation={selectedAllocation}
+                    onSelectionChange={setSelectedAllocation}
                   />
                 ) : (
                   <div className="portfolio-empty-state portfolio-empty-state-illustrated">
@@ -726,8 +767,8 @@ export default function PortfolioWorkspaceView({
                     <div>
                       <strong>Holdings</strong>
                       <span>
-                        {workspace.positions.length
-                          ? `${workspace.positions.length} holdings with valuation context`
+                        {filteredPositions.length
+                          ? `${filteredPositions.length} holdings with valuation context`
                           : "No holdings have been booked yet"}
                       </span>
                     </div>
@@ -738,23 +779,33 @@ export default function PortfolioWorkspaceView({
                   <div className="portfolio-disclosure-content">
                     <AnalyticsModule
                       title="Holdings"
-                      subtitle="Holdings inventory with valuation and weight context."
+                      subtitle={
+                        holdingsFilterCopy
+                          ? `Holdings inventory with valuation and weight context. ${holdingsFilterCopy}.`
+                          : "Holdings inventory with valuation and weight context."
+                      }
                     >
-              {workspace.positions.length ? (
+              {filteredPositions.length ? (
                 <AnalyticsTable
                   ariaLabel="Portfolio book"
                   columns={buildHoldingsColumns(context.columnMode)}
-                  rows={workspace.positions.map((position) => ({
+                  rows={filteredPositions.map((position) => ({
                     key: position.security_id,
                     cells: buildHoldingsCells(position, workspace.portfolio.base_currency, context.columnMode),
                   }))}
                 />
               ) : (
                 <div className="portfolio-empty-state">
-                  <strong>No holdings in this portfolio</strong>
-                  <p className="muted">The holdings inventory is empty.</p>
+                  <strong>{selectedAllocation ? "No holdings match the selected allocation" : "No holdings in this portfolio"}</strong>
                   <p className="muted">
-                    Add securities, cash funding, or subscriptions to populate the book.
+                    {selectedAllocation
+                      ? "The current holdings inventory does not contain positions for the selected allocation segment."
+                      : "The holdings inventory is empty."}
+                  </p>
+                  <p className="muted">
+                    {selectedAllocation
+                      ? "Clear the allocation filter or add positions in that segment to populate the book."
+                      : "Add securities, cash funding, or subscriptions to populate the book."}
                   </p>
                 </div>
               )}
@@ -1027,6 +1078,42 @@ function hasFlatCashflow(workspace: PortfolioWorkspace): boolean {
         point.net_cashflow_base === 0 && point.projected_cumulative_cashflow_base === 0
       )
   );
+}
+
+function filterPositionsByAllocation(
+  positions: PortfolioPositionView[],
+  selection: PortfolioAllocationSelection | null
+): PortfolioPositionView[] {
+  if (!selection) {
+    return positions;
+  }
+
+  return positions.filter((position) => {
+    switch (selection.dimension) {
+      case "asset_class":
+        return normalizeAllocationValue(position.asset_class) === normalizeAllocationValue(selection.bucket);
+      case "currency":
+        return normalizeAllocationValue(position.currency) === normalizeAllocationValue(selection.bucket);
+      case "sector":
+        return normalizeAllocationValue(position.sector) === normalizeAllocationValue(selection.bucket);
+      case "region":
+        return normalizeAllocationValue(position.country_of_risk) === normalizeAllocationValue(selection.bucket);
+      default:
+        return true;
+    }
+  });
+}
+
+function formatAllocationFilterLabel(selection: PortfolioAllocationSelection): string {
+  const dimensionLabel = selection.dimension
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+  return `${dimensionLabel}: ${selection.bucket}`;
+}
+
+function normalizeAllocationValue(value: string | null | undefined): string {
+  return (value ?? "").trim().toUpperCase();
 }
 
 function buildHoldingsColumns(columnMode: PortfolioWorkspaceContext["columnMode"]) {

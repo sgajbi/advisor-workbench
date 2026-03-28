@@ -1,4 +1,4 @@
-import { getPortfolioCatalog, getPortfolioWorkspace } from "./api";
+import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "./api";
 import PortfolioWorkspaceClient from "./components/portfolio-workspace-client";
 
 export default async function PortfolioExperiencePage({
@@ -13,7 +13,7 @@ export default async function PortfolioExperiencePage({
     portfolios[0]?.portfolio_id ??
     null;
   const workspace = selectedPortfolioId
-    ? await getPortfolioWorkspace(selectedPortfolioId)
+    ? await getPortfolioWorkspaceShell(selectedPortfolioId)
     : null;
 
   return (

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PortfolioFoundationPage from "../../src/app/portfolios/page";
@@ -17,14 +17,17 @@ describe("PortfolioFoundationPage", () => {
 
     expect(screen.getByRole("heading", { name: /^Portfolio$/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Global Balanced/i })).toBeInTheDocument();
-    expect(screen.getByText("Income Plus")).toBeInTheDocument();
     expect(screen.getAllByText("$1,250,000").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("$1,145,000").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("$105,000").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("12 holdings")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText("$14,750").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("2 booked events")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Income Plus")).toBeInTheDocument();
+      expect(screen.getAllByText("$14,750").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("2 booked events")).toBeInTheDocument();
+    });
     expect(screen.getByRole("link", { name: /Holdings Ready/i })).toHaveAttribute(
       "href",
       "#portfolio-insights"
@@ -50,6 +53,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText(/Cross-currency restatement pending source support/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Detailed" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Look-through" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
 
@@ -117,17 +122,26 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("Inflows")).toBeInTheDocument();
     expect(screen.getByText("2026-02-25")).toBeInTheDocument();
     expect(screen.getByText(/booked events in 1M/i)).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Currency" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Sector" })).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "Detailed" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
 
+    fireEvent.click(screen.getByRole("tab", { name: "Sector" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Government\s/ }));
+
+    expect(screen.getByText(/Filtered by Sector: Government/i)).toBeInTheDocument();
+    const holdingsTable = screen.getByLabelText("Portfolio book");
+    expect(within(holdingsTable).getByText("US Treasury 2030")).toBeInTheDocument();
+    expect(within(holdingsTable).queryByText("Apple Inc")).not.toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: "Summary" }));
 
     expect(window.localStorage.getItem("lotus:portfolio:view-mode")).toBe("summary");
     expect(screen.queryByRole("heading", { name: /What changed over time/i })).not.toBeInTheDocument();
-    expect(screen.queryByText("Technology")).not.toBeInTheDocument();
   });
 });
 
@@ -250,6 +264,40 @@ function buildPortfolioFetchStub() {
               },
             ],
           },
+          {
+            dimension: "currency",
+            buckets: [
+              {
+                bucket: "USD",
+                position_count: 9,
+                market_value_base: 925000,
+                weight_pct: 74,
+              },
+              {
+                bucket: "EUR",
+                position_count: 3,
+                market_value_base: 220000,
+                weight_pct: 17.6,
+              },
+            ],
+          },
+          {
+            dimension: "sector",
+            buckets: [
+              {
+                bucket: "Technology",
+                position_count: 4,
+                market_value_base: 525000,
+                weight_pct: 42,
+              },
+              {
+                bucket: "Government",
+                position_count: 5,
+                market_value_base: 320000,
+                weight_pct: 25.6,
+              },
+            ],
+          },
         ],
       });
     }
@@ -264,6 +312,14 @@ function buildPortfolioFetchStub() {
             quantity: 120,
             market_value_base: 250000,
             weight_pct: 20,
+          },
+          {
+            security_id: "FI_1",
+            instrument_name: "US Treasury 2030",
+            asset_class: "Fixed Income",
+            quantity: 80,
+            market_value_base: 180000,
+            weight_pct: 14.4,
           },
         ],
         positions: [
@@ -280,6 +336,20 @@ function buildPortfolioFetchStub() {
             market_value_base: 250000,
             unrealized_gain_loss_base: 50000,
             weight_pct: 20,
+          },
+          {
+            security_id: "FI_1",
+            instrument_name: "US Treasury 2030",
+            asset_class: "Fixed Income",
+            sector: "Government",
+            held_since_date: "2023-08-01",
+            currency: "USD",
+            quantity: 80,
+            cost_basis_base: 175000,
+            market_value_local: 180000,
+            market_value_base: 180000,
+            unrealized_gain_loss_base: 5000,
+            weight_pct: 14.4,
           },
         ],
       });

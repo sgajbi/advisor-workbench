@@ -29,6 +29,11 @@ export type PortfolioAllocationView = {
   }>;
 };
 
+export type PortfolioAllocationSelection = {
+  dimension: string;
+  bucket: string;
+};
+
 export type PortfolioTopPosition = {
   security_id: string;
   instrument_name: string;

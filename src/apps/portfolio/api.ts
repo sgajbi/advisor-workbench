@@ -60,9 +60,24 @@ type PortfolioWorkflowResponse = {
   actions: NonNullable<PortfolioWorkspace["workflow_actions"]>;
 };
 
+type PortfolioWorkspaceDetails = Pick<
+  PortfolioWorkspace,
+  | "allocations"
+  | "allocation_views"
+  | "cash_balances"
+  | "top_positions"
+  | "positions"
+  | "recent_transactions"
+  | "income_summary"
+  | "activity_summary"
+  | "cashflow_outlook"
+  | "readiness_indicators"
+  | "workflow_actions"
+>;
+
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
   try {
-    const response = await fetch(`${BFF_BASE_URL}/api/v1/portfolio/portfolios`, {
+    const response = await fetch(`${resolveBffBaseUrl()}/api/v1/portfolio/portfolios`, {
       cache: "no-store",
     });
     if (!response.ok) {
@@ -75,60 +90,100 @@ export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["i
   }
 }
 
-export async function getPortfolioWorkspace(
+export async function getPortfolioWorkspaceShell(
   portfolioId: string
 ): Promise<PortfolioWorkspace | null> {
   try {
-    const [
-      summaryResponse,
-      liquidityResponse,
-      allocationsResponse,
-      positionsResponse,
-      transactionsResponse,
-      incomeResponse,
-      activityResponse,
-      readinessResponse,
-      workflowResponse,
-    ] = await Promise.all([
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?limit=8`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${BFF_BASE_URL}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
-        { cache: "no-store" }
-      ),
-    ]);
+    const baseUrl = resolveBffBaseUrl();
+    const summaryResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
+      { cache: "no-store" }
+    );
+    if (!summaryResponse.ok) {
+      return null;
+    }
+
+    const summaryPayload =
+      (await summaryResponse.json()) as PortfolioWorkspaceSummaryResponse;
+
+    return {
+      as_of_date: summaryPayload.as_of_date,
+      portfolio: summaryPayload.portfolio,
+      profile: summaryPayload.profile,
+      summary: {
+        market_value_base: summaryPayload.summary.assets_under_management_base,
+        invested_market_value_base: summaryPayload.summary.invested_market_value_base,
+        total_cash_base: summaryPayload.summary.cash_market_value_base,
+        cash_weight_pct: summaryPayload.summary.cash_weight_pct,
+        position_count: summaryPayload.summary.position_count,
+        cash_balance_count: summaryPayload.summary.cash_balance_count,
+      },
+      allocations: [],
+      allocation_views: [],
+      cash_balances: [],
+      top_positions: [],
+      positions: [],
+      recent_transactions: [],
+      income_summary: null,
+      activity_summary: null,
+      cashflow_outlook: summaryPayload.cashflow_outlook,
+      performance: null,
+      rebalance: null,
+      readiness: {
+        has_positions: summaryPayload.summary.position_count > 0,
+        reporting: summaryPayload.reporting,
+      },
+      readiness_indicators: undefined,
+      workflow_cues: summaryPayload.workflow_cues,
+      workflow_actions: undefined,
+      warnings: summaryPayload.warnings,
+      partial_failures: summaryPayload.partial_failures,
+      operations: summaryPayload.operations ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getPortfolioWorkspaceDetails(
+  portfolioId: string
+): Promise<PortfolioWorkspaceDetails | null> {
+  try {
+    const baseUrl = resolveBffBaseUrl();
+    const liquidityResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
+      { cache: "no-store" }
+    );
+    const allocationsResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
+      { cache: "no-store" }
+    );
+    const positionsResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
+      { cache: "no-store" }
+    );
+    const transactionsResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?limit=8`,
+      { cache: "no-store" }
+    );
+    const readinessResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
+      { cache: "no-store" }
+    );
+    const workflowResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
+      { cache: "no-store" }
+    );
+    const incomeResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
+      { cache: "no-store" }
+    );
+    const activityResponse = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
+      { cache: "no-store" }
+    );
+
     if (
-      !summaryResponse.ok ||
       !liquidityResponse.ok ||
       !allocationsResponse.ok ||
       !positionsResponse.ok ||
@@ -137,8 +192,6 @@ export async function getPortfolioWorkspace(
       return null;
     }
 
-    const summaryPayload =
-      (await summaryResponse.json()) as PortfolioWorkspaceSummaryResponse;
     const liquidityPayload =
       (await liquidityResponse.json()) as PortfolioLiquidityResponse;
     const allocationsPayload =
@@ -165,17 +218,6 @@ export async function getPortfolioWorkspace(
       allocationsPayload.views[0];
 
     return {
-      as_of_date: summaryPayload.as_of_date,
-      portfolio: summaryPayload.portfolio,
-      profile: summaryPayload.profile,
-      summary: {
-        market_value_base: summaryPayload.summary.assets_under_management_base,
-        invested_market_value_base: summaryPayload.summary.invested_market_value_base,
-        total_cash_base: summaryPayload.summary.cash_market_value_base,
-        cash_weight_pct: summaryPayload.summary.cash_weight_pct,
-        position_count: summaryPayload.summary.position_count,
-        cash_balance_count: summaryPayload.summary.cash_balance_count,
-      },
       allocations: (allocationView?.buckets ?? []).map((bucket) => ({
         asset_class: bucket.bucket,
         position_count: bucket.position_count,
@@ -189,21 +231,30 @@ export async function getPortfolioWorkspace(
       recent_transactions: transactionsPayload.transactions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
-      cashflow_outlook: liquidityPayload.cashflow_outlook ?? summaryPayload.cashflow_outlook,
-      performance: null,
-      rebalance: null,
-      readiness: {
-        has_positions: summaryPayload.summary.position_count > 0,
-        reporting: summaryPayload.reporting,
-      },
+      cashflow_outlook: liquidityPayload.cashflow_outlook,
       readiness_indicators: readinessPayload?.indicators ?? undefined,
-      workflow_cues: summaryPayload.workflow_cues,
       workflow_actions: workflowPayload?.actions ?? undefined,
-      warnings: summaryPayload.warnings,
-      partial_failures: summaryPayload.partial_failures,
-      operations: summaryPayload.operations ?? null,
     };
   } catch {
     return null;
   }
+}
+
+export function mergePortfolioWorkspace(
+  workspace: PortfolioWorkspace,
+  details: PortfolioWorkspaceDetails
+): PortfolioWorkspace {
+  return {
+    ...workspace,
+    ...details,
+    cashflow_outlook: details.cashflow_outlook ?? workspace.cashflow_outlook,
+  };
+}
+
+function resolveBffBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return "/api/bff";
+  }
+
+  return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
 }
