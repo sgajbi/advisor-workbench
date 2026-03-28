@@ -4,6 +4,8 @@ export type PortfolioCatalogItem = {
   base_currency: string;
   client_id: string | null;
   booking_center_code: string | null;
+  portfolio_type?: string | null;
+  status?: string | null;
 };
 
 export type PortfolioCatalogResponse = {
@@ -15,6 +17,16 @@ export type PortfolioAllocationBucket = {
   position_count: number;
   market_value_base: number | null;
   weight_pct: number | null;
+};
+
+export type PortfolioAllocationView = {
+  dimension: string;
+  buckets: Array<{
+    bucket: string;
+    position_count: number;
+    market_value_base: number | null;
+    weight_pct: number | null;
+  }>;
 };
 
 export type PortfolioTopPosition = {
@@ -32,6 +44,25 @@ export type PortfolioWorkflowCue = {
   href: string;
 };
 
+export type PortfolioReadinessStatus = "Missing" | "Partial" | "Ready" | "Empty";
+
+export type PortfolioReadinessIndicator = {
+  key: "holdings" | "pricing" | "transactions" | "reporting";
+  label: string;
+  status: PortfolioReadinessStatus;
+  href: string;
+};
+
+export type PortfolioWorkflowAction = {
+  sequence: number;
+  title: string;
+  impact: string;
+  target: string;
+  href: string;
+  cta_label: string;
+  recommended: boolean;
+};
+
 export type PortfolioPositionView = {
   security_id: string;
   instrument_name: string;
@@ -42,10 +73,24 @@ export type PortfolioPositionView = {
   country_of_risk?: string | null;
   held_since_date?: string | null;
   quantity: number;
+  market_price?: number | null;
   cost_basis_base?: number | null;
+  cost_basis_local?: number | null;
   market_value_base: number | null;
+  market_value_local?: number | null;
+  unrealized_gain_loss_base?: number | null;
+  unrealized_gain_loss_local?: number | null;
   weight_pct: number | null;
   reprocessing_status?: string | null;
+};
+
+export type PortfolioCashBalance = {
+  security_id: string;
+  instrument_name: string;
+  currency?: string | null;
+  quantity: number;
+  market_value_base?: number | null;
+  weight_pct?: number | null;
 };
 
 export type PortfolioTransactionView = {
@@ -61,6 +106,65 @@ export type PortfolioTransactionView = {
   net_cost_base?: number | null;
   realized_gain_loss_base?: number | null;
   settlement_status?: string | null;
+  source_system?: string | null;
+  cash_entry_mode?: string | null;
+  economic_event_id?: string | null;
+  linked_transaction_group_id?: string | null;
+};
+
+export type PortfolioIncomePeriodSummary = {
+  gross: {
+    portfolio_currency_amount?: number | null;
+    reporting_currency_amount: number;
+    transaction_count: number;
+  };
+  withholding_tax: {
+    portfolio_currency_amount?: number | null;
+    reporting_currency_amount: number;
+    transaction_count: number;
+  };
+  other_deductions: {
+    portfolio_currency_amount?: number | null;
+    reporting_currency_amount: number;
+    transaction_count: number;
+  };
+  net: {
+    portfolio_currency_amount?: number | null;
+    reporting_currency_amount: number;
+    transaction_count: number;
+  };
+};
+
+export type PortfolioIncomeSummaryView = {
+  reporting_currency: string;
+  window_start_date: string;
+  window_end_date: string;
+  totals_requested_window: PortfolioIncomePeriodSummary;
+  totals_year_to_date: PortfolioIncomePeriodSummary;
+  income_types: Array<{
+    income_type: string;
+    requested_window: PortfolioIncomePeriodSummary;
+    year_to_date: PortfolioIncomePeriodSummary;
+  }>;
+};
+
+export type PortfolioActivitySummaryView = {
+  reporting_currency: string;
+  window_start_date: string;
+  window_end_date: string;
+  buckets: Array<{
+    bucket: string;
+    requested_window: {
+      portfolio_currency_amount?: number | null;
+      reporting_currency_amount: number;
+      transaction_count: number;
+    };
+    year_to_date: {
+      portfolio_currency_amount?: number | null;
+      reporting_currency_amount: number;
+      transaction_count: number;
+    };
+  }>;
 };
 
 export type PortfolioWorkspace = {
@@ -85,14 +189,20 @@ export type PortfolioWorkspace = {
   };
   summary: {
     market_value_base: number;
+    invested_market_value_base?: number;
     total_cash_base: number;
     cash_weight_pct: number;
     position_count: number;
+    cash_balance_count?: number;
   };
   allocations: PortfolioAllocationBucket[];
+  allocation_views?: PortfolioAllocationView[];
+  cash_balances?: PortfolioCashBalance[];
   top_positions: PortfolioTopPosition[];
   positions: PortfolioPositionView[];
   recent_transactions: PortfolioTransactionView[];
+  income_summary?: PortfolioIncomeSummaryView | null;
+  activity_summary?: PortfolioActivitySummaryView | null;
   cashflow_outlook: {
     as_of_date: string;
     range_end_date: string;
@@ -123,7 +233,20 @@ export type PortfolioWorkspace = {
       row_count: number;
     };
   };
+  readiness_indicators?: PortfolioReadinessIndicator[];
+  operations?: {
+    business_date?: string | null;
+    latest_booked_transaction_date?: string | null;
+    latest_booked_position_snapshot_date?: string | null;
+    publish_allowed?: boolean | null;
+    controls_blocking?: boolean | null;
+    active_reprocessing_keys?: number | null;
+    stale_reprocessing_keys?: number | null;
+    failed_valuation_jobs_within_window?: number | null;
+    failed_aggregation_jobs_within_window?: number | null;
+  } | null;
   workflow_cues: PortfolioWorkflowCue[];
+  workflow_actions?: PortfolioWorkflowAction[];
   warnings: string[];
   partial_failures: Array<{
     source_service: string;

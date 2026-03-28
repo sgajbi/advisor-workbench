@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
 
@@ -20,11 +21,13 @@ export default function AppSwitcherNav() {
   const { normalized } = usePlatformCapabilities();
   const navigation = normalized.navigation;
   const visibleApps = SHELL_APPS.filter((app) => app.visible !== false);
+  const pathname = usePathname();
 
   return (
     <nav className="shell-nav" aria-label="Application Switcher">
       {visibleApps.map((app) => {
         const enabled = isAppEnabled(app, navigation);
+        const isActive = pathname === app.href || pathname?.startsWith(`${app.href}/`);
         if (!enabled) {
           return (
             <span
@@ -42,8 +45,9 @@ export default function AppSwitcherNav() {
           <Link
             key={app.id}
             href={app.href}
-            className="shell-nav-link"
+            className={`shell-nav-link${isActive ? " shell-nav-link-active" : ""}`}
             title={app.description}
+            aria-current={isActive ? "page" : undefined}
           >
             {app.label}
           </Link>

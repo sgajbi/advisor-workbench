@@ -1,4 +1,6 @@
-import { Box, Stack, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 export default function AnalyticsModule({
   title,
@@ -15,14 +17,13 @@ export default function AnalyticsModule({
     <Box
       sx={{
         display: "grid",
-        gap: 1.25,
+        gap: 2,
         minWidth: 0,
-        p: 2,
-        borderRadius: 3,
-        border: "1px solid",
-        borderColor: "divider",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(249,250,252,0.94) 100%)",
+        p: 3,
+        borderRadius: "12px",
+        border: "1px solid #e5e7eb",
+        background: "#ffffff",
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.03)",
       }}
     >
       <Stack
@@ -37,9 +38,9 @@ export default function AnalyticsModule({
             component="h4"
             sx={{
               m: 0,
-              fontSize: "0.95rem",
-              fontWeight: 700,
-              lineHeight: 1.15,
+              fontSize: "1rem",
+              fontWeight: 650,
+              lineHeight: 1.25,
               color: "text.primary",
             }}
           >
@@ -49,9 +50,10 @@ export default function AnalyticsModule({
             <Typography
               component="div"
               sx={{
-                mt: 0.25,
+                mt: 0.5,
                 fontSize: "0.75rem",
-                lineHeight: 1.4,
+                fontWeight: 500,
+                lineHeight: 1.45,
                 color: "text.secondary",
               }}
             >

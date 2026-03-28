@@ -23,10 +23,10 @@ describe("portfolio workspace config", () => {
   });
 
   it("maps workflow cues into advisor-facing action labels", () => {
-    expect(getWorkflowActionLabel("performance")).toBe("Open Performance");
+    expect(getWorkflowActionLabel("performance")).toBe("Performance");
     expect(getWorkflowActionLabel("risk")).toBe("Review Suitability");
     expect(getWorkflowActionLabel("proposal")).toBe("Prepare Recommendation");
-    expect(getWorkflowActionLabel("unknown")).toBe("Open Performance");
+    expect(getWorkflowActionLabel("unknown")).toBe("Performance");
   });
 
   it("maps workflow cues into concise task labels", () => {
@@ -37,6 +37,12 @@ describe("portfolio workspace config", () => {
   });
 
   it("maps warnings and evidence services into advisor-facing labels", () => {
+    expect(getCoverageWarningLabel("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBe(
+      "Cash balances temporarily unavailable"
+    );
+    expect(getCoverageWarningLabel("PORTFOLIO_AUM_UNAVAILABLE")).toBe(
+      "Assets under management temporarily unavailable"
+    );
     expect(getCoverageWarningLabel("FOUNDATION_REPORTING_UNAVAILABLE")).toBe(
       "Reporting temporarily unavailable"
     );

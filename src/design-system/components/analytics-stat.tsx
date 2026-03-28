@@ -1,36 +1,40 @@
-import { Box, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
 export default function AnalyticsStat({
   label,
   value,
   support,
   emphasize = false,
+  definition,
+  valueTone = "neutral",
 }: {
   label: string;
   value: React.ReactNode;
   support?: React.ReactNode;
   emphasize?: boolean;
+  definition?: React.ReactNode;
+  valueTone?: "neutral" | "success" | "warn" | "danger";
 }) {
-  return (
+  const stat = (
     <Box
       sx={{
         display: "grid",
-        gap: 0.5,
+        gap: 1,
         minWidth: 0,
-        px: emphasize ? 2 : 0,
-        py: emphasize ? 1.75 : 0,
-        borderRadius: emphasize ? 3 : 0,
-        border: emphasize ? "1px solid rgba(31, 39, 51, 0.08)" : "none",
-        background: emphasize
-          ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(247,248,250,0.96) 100%)"
-          : "transparent",
+        px: emphasize ? 3 : 0,
+        py: emphasize ? 2 : 0,
+        borderRadius: emphasize ? "12px" : 0,
+        border: "none",
+        background: emphasize ? "#ffffff" : "transparent",
       }}
     >
       <Typography
         component="span"
         sx={{
-          fontSize: "0.6875rem",
-          fontWeight: 800,
+          fontSize: "0.75rem",
+          fontWeight: 500,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
           color: "text.secondary",
@@ -41,12 +45,13 @@ export default function AnalyticsStat({
       <Typography
         component="div"
         sx={{
-          fontSize: emphasize ? { xs: "2.2rem", md: "3rem" } : "1.125rem",
-          lineHeight: emphasize ? 0.94 : 1.2,
+          fontSize: emphasize ? { xs: "2.25rem", md: "2.5rem" } : "1.75rem",
+          lineHeight: emphasize ? 1.1 : 1.1,
           letterSpacing: emphasize ? "-0.05em" : "-0.02em",
-          fontWeight: emphasize ? 800 : 700,
-          color: "text.primary",
+          fontWeight: 700,
+          color: getAnalyticsStatTone(valueTone),
           minWidth: 0,
+          fontVariantNumeric: "tabular-nums",
         }}
       >
         {value}
@@ -55,8 +60,9 @@ export default function AnalyticsStat({
         <Typography
           component="div"
           sx={{
-            fontSize: "0.8125rem",
-            lineHeight: 1.45,
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            lineHeight: 1.6,
             color: "text.secondary",
           }}
         >
@@ -65,4 +71,29 @@ export default function AnalyticsStat({
       ) : null}
     </Box>
   );
+
+  if (!definition) {
+    return stat;
+  }
+
+  return (
+    <Tooltip title={definition} arrow>
+      <Box component="span" sx={{ display: "block", minWidth: 0 }}>
+        {stat}
+      </Box>
+    </Tooltip>
+  );
+}
+
+function getAnalyticsStatTone(tone: "neutral" | "success" | "warn" | "danger") {
+  switch (tone) {
+    case "success":
+      return "success.dark";
+    case "warn":
+      return "warning.dark";
+    case "danger":
+      return "error.dark";
+    default:
+      return "text.primary";
+  }
 }

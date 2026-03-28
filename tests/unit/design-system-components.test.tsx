@@ -1,9 +1,11 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
   ActionLink,
+  AnalyticsStat,
+  AnalyticsTable,
   DegradedStatePanel,
   MetricRow,
   Panel,
@@ -115,5 +117,45 @@ describe("design-system components", () => {
       "/portfolio"
     );
     expect(screen.getByRole("link", { name: "Open Portfolio" })).toHaveClass("nav-link");
+  });
+
+  it("renders analytics tables with aligned numeric columns and totals", () => {
+    render(
+      <AnalyticsTable
+        ariaLabel="Allocation summary"
+        columns={[
+          { key: "bucket", label: "Bucket" },
+          { key: "value", label: "Market Value", align: "right" },
+          { key: "weight", label: "Weight", align: "right" },
+        ]}
+        rows={[
+          { key: "row-1", cells: ["Equity", "$500,000", "62.5%"] },
+          { key: "row-2", cells: ["Cash", "$300,000", "37.5%"] },
+        ]}
+        footer={["Total", "$800,000", "100%"]}
+      />
+    );
+
+    expect(screen.getByRole("table", { name: "Allocation summary" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Market Value" })).toBeInTheDocument();
+    expect(screen.getByText("$800,000")).toBeInTheDocument();
+    expect(screen.getByText("100%")).toBeInTheDocument();
+  });
+
+  it("renders analytics stats with semantic tone and business tooltip", async () => {
+    render(
+      <AnalyticsStat
+        label="Book Readiness"
+        value="Partial"
+        support="1 active exception"
+        valueTone="warn"
+        definition="Operational readiness based on holdings coverage and reporting status."
+      />
+    );
+
+    fireEvent.mouseOver(screen.getByText("Book Readiness"));
+
+    expect(await screen.findByText(/operational readiness based on holdings coverage/i)).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
   });
 });

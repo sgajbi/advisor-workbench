@@ -1,4 +1,4 @@
-import { Panel, SectionLabel, WorkspaceRail, WorkspaceRailLink } from "@/design-system";
+import { Panel, WorkspaceRail, WorkspaceRailLink } from "@/design-system";
 
 import type { PortfolioCatalogItem } from "../types";
 
@@ -13,7 +13,7 @@ export default function PortfolioRail({
     <WorkspaceRail>
       <Panel className="portfolio-rail">
         <div className="portfolio-rail-header">
-          <SectionLabel>Relationship Book</SectionLabel>
+          <div className="portfolio-rail-kicker">Relationship Book</div>
           <h2>Client Portfolios</h2>
         </div>
         <div className="portfolio-rail-list">
@@ -22,7 +22,7 @@ export default function PortfolioRail({
               key={item.portfolio_id}
               href={`/portfolio?portfolioId=${encodeURIComponent(item.portfolio_id)}`}
               title={item.display_name}
-              meta={item.portfolio_id}
+              meta={item.display_name !== item.portfolio_id ? item.portfolio_id : undefined}
               detail={
                 <>
                   {item.base_currency}

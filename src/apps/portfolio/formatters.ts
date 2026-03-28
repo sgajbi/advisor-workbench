@@ -2,7 +2,7 @@ export function formatPct(value: number | null | undefined): string {
   if (typeof value !== "number") {
     return "N/A";
   }
-  return `${value.toFixed(2)}%`;
+  return `${formatCompactNumber(value, 2)}%`;
 }
 
 export function formatCurrency(
@@ -24,6 +24,7 @@ export function formatQuantity(value: number | null | undefined): string {
     return "N/A";
   }
   return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : undefined,
     maximumFractionDigits: 4,
   }).format(value);
 }
@@ -40,4 +41,11 @@ export function formatBooleanFlag(value: boolean | null | undefined): string {
     return "N/A";
   }
   return value ? "Yes" : "No";
+}
+
+function formatCompactNumber(value: number, maximumFractionDigits: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : undefined,
+    maximumFractionDigits,
+  }).format(value);
 }

@@ -24,4 +24,5 @@ Governance boundary:
 | RFC-0016 | Workbench Application Shell and Design-System Foundation | IMPLEMENTED | `docs/rfcs/RFC-0016-workbench-application-shell-and-design-system-foundation.md` |
 | RFC-0017 | Foundation App First-Production Surface | IMPLEMENTED | `docs/rfcs/RFC-0017-foundation-app-first-production-surface.md` |
 | RFC-0018 | Performance Workspace Summary and Benchmark-Aware Presentation | IMPLEMENTED | `docs/rfcs/RFC-0018-performance-workspace-summary-benchmark-aware-presentation.md` |
+| RFC-0019 | Modular Portfolio Book and Ledger Experience | PROPOSED | `docs/rfcs/RFC-0019-modular-portfolio-book-and-ledger-experience.md` |
 
