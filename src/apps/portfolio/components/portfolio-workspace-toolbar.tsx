@@ -4,9 +4,8 @@ import { useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import Divider from "@mui/material/Divider";
-import FormControlLabel from "@mui/material/FormControlLabel";
+import Chip from "@mui/material/Chip";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -14,23 +13,41 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
+import { FilterBar, PageToolbar } from "@/design-system";
+
+import { formatDate } from "../formatters";
 import type {
+  PortfolioFilterChip,
+  PortfolioFilterKey,
+  PortfolioFilterOptions,
   PortfolioWorkspaceContext,
   PortfolioWorkspaceControls,
   PortfolioViewMode,
 } from "../view-model";
-import { PORTFOLIO_TIME_WINDOW_OPTIONS } from "../view-model";
+import {
+  getActivePortfolioFilterCount,
+  PORTFOLIO_TIME_WINDOW_OPTIONS,
+} from "../view-model";
+import PortfolioModuleFilterPanel from "./portfolio-module-filter-panel";
 
 export default function PortfolioWorkspaceToolbar({
   controls,
   context,
+  filterOptions,
+  activeFilterChips,
   onControlsChange,
+  onFilterReset,
+  onFilterChipRemove,
   onExport,
   quickActions,
 }: {
   controls: PortfolioWorkspaceControls;
   context: PortfolioWorkspaceContext;
+  filterOptions: PortfolioFilterOptions;
+  activeFilterChips: PortfolioFilterChip[];
   onControlsChange: (patch: Partial<PortfolioWorkspaceControls>) => void;
+  onFilterReset: () => void;
+  onFilterChipRemove: (key: PortfolioFilterKey) => void;
   onExport: () => void;
   quickActions: Array<{ key: string; label: string; href: string }>;
 }) {
@@ -40,18 +57,19 @@ export default function PortfolioWorkspaceToolbar({
 
   const historicalContextCopy = useMemo(() => {
     if (!context.supportsHistoricalSnapshots) {
-      return `As of ${context.selectedAsOfDate}. Historical portfolio snapshots are not source-backed yet, so snapshot modules stay on the latest published state.`;
+      return `As of ${formatDate(context.selectedAsOfDate)}. Historical portfolio snapshots are not source-backed yet, so snapshot modules stay on the latest published state.`;
     }
 
     if (!context.hasHistoricalGap) {
-      return `As of ${context.selectedAsOfDate}. Snapshot-backed modules use the selected portfolio snapshot.`;
+      return `As of ${formatDate(context.selectedAsOfDate)}. Snapshot-backed modules use the selected portfolio snapshot.`;
     }
 
-    return `Context set to ${context.selectedAsOfDate}. Date-aware modules reflect the selected context; snapshot-backed modules continue to use the latest available portfolio state.`;
+    return `Context set to ${formatDate(context.selectedAsOfDate)}. Date-aware modules reflect the selected context; snapshot-backed modules continue to use the latest available portfolio state.`;
   }, [context.hasHistoricalGap, context.selectedAsOfDate, context.supportsHistoricalSnapshots]);
-
+  const activeFilterCount = getActivePortfolioFilterCount(controls);
+  const supportsCustomRange = controls.viewMode === "detailed";
   return (
-    <section className="portfolio-workspace-toolbar">
+    <PageToolbar className="portfolio-workspace-toolbar">
       <div className="portfolio-workspace-toolbar-row">
         <div className="portfolio-workspace-toolbar-field">
           <label htmlFor="portfolio-as-of-date">As of</label>
@@ -101,6 +119,7 @@ export default function PortfolioWorkspaceToolbar({
             exclusive
             size="small"
             value={controls.viewMode}
+            aria-label="Portfolio page view mode"
             onChange={(_event, nextValue: PortfolioViewMode | null) => {
               if (nextValue) {
                 onControlsChange({ viewMode: nextValue });
@@ -113,14 +132,16 @@ export default function PortfolioWorkspaceToolbar({
         </div>
 
         <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">
-          <label>Time Window</label>
-          <div className="portfolio-segmented-control">
+          <label>Period</label>
+          <div className="portfolio-segmented-control" role="tablist" aria-label="Portfolio period presets">
             {PORTFOLIO_TIME_WINDOW_OPTIONS.map((option) => {
               const active = controls.timeWindow === option;
               return (
                 <button
                   key={option}
                   type="button"
+                  role="tab"
+                  aria-selected={active}
                   className={
                     active
                       ? "portfolio-segmented-control-button portfolio-segmented-control-button-active"
@@ -135,22 +156,69 @@ export default function PortfolioWorkspaceToolbar({
           </div>
         </div>
 
+        {supportsCustomRange ? (
+          <>
+            <div className="portfolio-workspace-toolbar-field">
+              <label htmlFor="portfolio-custom-start-date">From</label>
+              <TextField
+                id="portfolio-custom-start-date"
+                type="date"
+                size="small"
+                value={controls.customStartDate}
+                onChange={(event) => onControlsChange({ customStartDate: event.target.value })}
+                inputProps={{ max: controls.customEndDate || context.selectedAsOfDate }}
+                helperText="Optional custom period start"
+              />
+            </div>
+
+            <div className="portfolio-workspace-toolbar-field">
+              <label htmlFor="portfolio-custom-end-date">To</label>
+              <TextField
+                id="portfolio-custom-end-date"
+                type="date"
+                size="small"
+                value={controls.customEndDate}
+                onChange={(event) => onControlsChange({ customEndDate: event.target.value })}
+                inputProps={{ max: context.selectedAsOfDate, min: controls.customStartDate || undefined }}
+                helperText="Optional custom period end"
+              />
+            </div>
+          </>
+        ) : null}
+
         <div className="portfolio-workspace-toolbar-actions">
-          <Button variant="outlined" size="small" onClick={(e) => setFiltersAnchor(e.currentTarget)}>
-            Filters
+          <Button
+            variant="outlined"
+            size="small"
+            aria-haspopup="menu"
+            aria-expanded={Boolean(filtersAnchor)}
+            aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
+            onClick={(e) => setFiltersAnchor(e.currentTarget)}
+          >
+            {activeFilterCount ? `Filters (${activeFilterCount})` : "Filters"}
           </Button>
           <Button
             variant="outlined"
             size="small"
+            aria-haspopup="menu"
+            aria-expanded={Boolean(columnsAnchor)}
+            aria-label="Columns"
             onClick={(e) => setColumnsAnchor(e.currentTarget)}
             disabled={controls.viewMode !== "detailed"}
           >
             Columns
           </Button>
-          <Button variant="outlined" size="small" onClick={onExport}>
+          <Button variant="outlined" size="small" aria-label="Export portfolio data" onClick={onExport}>
             Export
           </Button>
-          <Button variant="outlined" size="small" onClick={(e) => setActionsAnchor(e.currentTarget)}>
+          <Button
+            variant="outlined"
+            size="small"
+            aria-haspopup="menu"
+            aria-expanded={Boolean(actionsAnchor)}
+            aria-label="More actions"
+            onClick={(e) => setActionsAnchor(e.currentTarget)}
+          >
             More
           </Button>
         </div>
@@ -162,39 +230,59 @@ export default function PortfolioWorkspaceToolbar({
           View mode: <strong>{controls.viewMode === "summary" ? "Summary" : "Detailed"}</strong>
         </span>
         <span>
-          Window: <strong>{controls.timeWindow}</strong>
+          Period: <strong>{context.periodLabel}</strong>
+        </span>
+        <span>
+          Range:{" "}
+          <strong>
+            {formatDate(context.effectivePeriodStartDate)} to {formatDate(context.effectivePeriodEndDate)}
+          </strong>
         </span>
       </div>
+
+      {activeFilterChips.length ? (
+        <FilterBar className="portfolio-filter-chip-row">
+          {activeFilterChips.map((chip) => (
+            <Chip
+              key={chip.key}
+              label={`${chip.label}: ${chip.value}`}
+              size="small"
+              onDelete={() => onFilterChipRemove(chip.key)}
+            />
+          ))}
+          <Button size="small" variant="text" onClick={onFilterReset}>
+            Reset to default
+          </Button>
+        </FilterBar>
+      ) : null}
 
       <Menu
         anchorEl={filtersAnchor}
         open={Boolean(filtersAnchor)}
         onClose={() => setFiltersAnchor(null)}
       >
-        <Box sx={{ px: 1.5, py: 1 }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={controls.hideEmptyModules}
-                onChange={(event) =>
-                  onControlsChange({ hideEmptyModules: event.target.checked })
-                }
-              />
-            }
-            label="Hide empty modules"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={controls.focusExceptions}
-                onChange={(event) =>
-                  onControlsChange({ focusExceptions: event.target.checked })
-                }
-              />
-            }
-            label="Focus exceptions"
-          />
-        </Box>
+        <PortfolioModuleFilterPanel
+          controls={controls}
+          filterOptions={filterOptions}
+          availableFilters={[
+            "asOfDate",
+            "reportingCurrency",
+            "includeCash",
+            "assetClass",
+            "sector",
+            "region",
+            "positionStatus",
+            "transactionType",
+            "timeWindow",
+            "showOnlyNonZeroRows",
+            "showOnlyExceptions",
+          ]}
+          reportingCurrencies={context.currencyOptions}
+          onControlsChange={onControlsChange}
+          onReset={() => {
+            onFilterReset();
+          }}
+        />
       </Menu>
 
       <Menu
@@ -204,7 +292,7 @@ export default function PortfolioWorkspaceToolbar({
       >
         <MenuItem
           selected={controls.columnMode === "essential"}
-          onClick={() => {
+            onClick={() => {
             onControlsChange({ columnMode: "essential" });
             setColumnsAnchor(null);
           }}
@@ -213,7 +301,7 @@ export default function PortfolioWorkspaceToolbar({
         </MenuItem>
         <MenuItem
           selected={controls.columnMode === "expanded"}
-          onClick={() => {
+            onClick={() => {
             onControlsChange({ columnMode: "expanded" });
             setColumnsAnchor(null);
           }}
@@ -245,6 +333,6 @@ export default function PortfolioWorkspaceToolbar({
           </Stack>
         </Box>
       </Menu>
-    </section>
+    </PageToolbar>
   );
 }

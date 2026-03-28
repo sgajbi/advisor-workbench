@@ -39,16 +39,43 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tab", { name: "Currency" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Sector" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Look-through" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("tab", { name: "Currency" }));
     expect(screen.getByText("USD")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Donut" }));
-    fireEvent.click(screen.getByRole("button", { name: /^USD\s/ }));
+    fireEvent.click(screen.getByRole("tab", { name: "Donut" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "USD: 925,000 USD, 74.00%, 9 positions. Filter holdings.",
+      })
+    );
     expect(onSelectionChange).toHaveBeenCalledWith({
       dimension: "currency",
       bucket: "USD",
+    });
+  });
+
+  it("supports keyboard activation on donut chart segments", () => {
+    const onSelectionChange = vi.fn();
+
+    render(
+      <PortfolioAllocationPanel
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+
+    fireEvent.keyDown(
+      screen.getByLabelText("Equities: 58.00%. Select to filter holdings."),
+      { key: "Enter" }
+    );
+
+    expect(onSelectionChange).toHaveBeenCalledWith({
+      dimension: "asset_class",
+      bucket: "Equities",
     });
   });
 

@@ -1,0 +1,84 @@
+import React from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import PortfolioProjectedCashflowModule from "../../src/apps/portfolio/components/portfolio-projected-cashflow-module";
+
+const getPortfolioProjectedCashflow = vi.fn();
+
+vi.mock("../../src/apps/portfolio/api", () => ({
+  getPortfolioProjectedCashflow: (...args: unknown[]) => getPortfolioProjectedCashflow(...args),
+}));
+
+describe("PortfolioProjectedCashflowModule", () => {
+  afterEach(() => {
+    getPortfolioProjectedCashflow.mockReset();
+  });
+
+  it("cycles the cashflow horizon and refreshes the module from gateway", async () => {
+    getPortfolioProjectedCashflow.mockResolvedValue({
+      as_of_date: "2026-03-28",
+      range_end_date: "2026-04-27",
+      total_net_cashflow_base: 1250,
+      projection_days: 30,
+      include_projected: true,
+      upcoming_points: [
+        {
+          projection_date: "2026-03-29",
+          net_cashflow_base: 1250,
+          projected_cumulative_cashflow_base: 1250,
+        },
+      ],
+    });
+
+    render(
+      <PortfolioProjectedCashflowModule
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultExpanded={false}
+        initialCashflowOutlook={{
+          as_of_date: "2026-03-28",
+          range_end_date: "2026-04-07",
+          total_net_cashflow_base: 0,
+          projection_days: 10,
+          include_projected: true,
+          upcoming_points: [],
+        }}
+      />
+    );
+
+    expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Period" }));
+
+    await waitFor(() => {
+      expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+        asOfDate: "2026-03-28",
+        horizonDays: 30,
+        includeProjected: true,
+      });
+    });
+    expect(screen.getByText("Next 30 days in USD")).toBeInTheDocument();
+  });
+
+  it("shows an error state when projected cashflow cannot be loaded", async () => {
+    getPortfolioProjectedCashflow.mockResolvedValue(null);
+
+    render(
+      <PortfolioProjectedCashflowModule
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultExpanded={false}
+        initialCashflowOutlook={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Period" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Projected cashflow unavailable")).toBeInTheDocument();
+    });
+  });
+});

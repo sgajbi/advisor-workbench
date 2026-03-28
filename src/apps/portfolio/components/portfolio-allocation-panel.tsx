@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 
 import { formatCurrency, formatPct } from "../formatters";
 import type {
@@ -32,6 +32,16 @@ const ALLOCATION_COLORS = [
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
 type AllocationDimension = (typeof DIMENSIONS)[number]["key"];
+
+function handleInteractiveKeyPress(
+  event: KeyboardEvent<Element>,
+  onActivate: () => void
+) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    onActivate();
+  }
+}
 
 export default function PortfolioAllocationPanel({
   allocationViews,
@@ -105,13 +115,15 @@ export default function PortfolioAllocationPanel({
         </div>
 
         <div className="portfolio-allocation-toolbar-actions">
-          <div className="portfolio-segmented-control" aria-label="Allocation chart types">
+          <div className="portfolio-segmented-control" role="tablist" aria-label="Allocation chart types">
             {CHART_TYPES.map((option) => {
               const isActive = chartType === option.key;
               return (
                 <button
                   key={option.key}
                   type="button"
+                  role="tab"
+                  aria-selected={isActive}
                   className={
                     isActive
                       ? "portfolio-segmented-control-button portfolio-segmented-control-button-active"
@@ -130,6 +142,7 @@ export default function PortfolioAllocationPanel({
             className="portfolio-allocation-toggle"
             disabled
             aria-disabled="true"
+            aria-label="Look-through pending source support"
             title="Look-through pending source support"
           >
             Look-through
@@ -215,6 +228,8 @@ export default function PortfolioAllocationPanel({
                     <button
                       key={`${activeDimension}-${bucket.bucket}`}
                       type="button"
+                      aria-label={`${bucket.bucket}: ${formatCurrency(bucket.market_value_base, baseCurrency)}, ${formatPct(bucket.weight_pct)}, ${bucket.position_count} positions. Filter holdings.`}
+                      title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
                       className={
                         isSelected
                           ? "portfolio-allocation-ranked-row portfolio-allocation-ranked-row-selected"
@@ -276,7 +291,7 @@ function AllocationDonutChart({
   let cumulativeAngle = -90;
 
   return (
-    <div className="portfolio-allocation-chart" aria-label="Allocation donut chart">
+    <div className="portfolio-allocation-chart" role="img" aria-label="Allocation donut chart">
       <svg viewBox="0 0 220 220" className="portfolio-allocation-chart-svg">
         <circle cx="110" cy="110" r="58" className="portfolio-allocation-chart-track" />
         {buckets.map((bucket, index) => {
@@ -292,6 +307,9 @@ function AllocationDonutChart({
               key={bucket.bucket}
               d={path}
               fill={ALLOCATION_COLORS[index % ALLOCATION_COLORS.length]}
+              role="button"
+              tabIndex={0}
+              aria-label={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}. Select to filter holdings.`}
               className={
                 isSelected
                   ? "portfolio-allocation-chart-segment portfolio-allocation-chart-segment-selected"
@@ -302,7 +320,10 @@ function AllocationDonutChart({
               onMouseEnter={() => onHover(bucket.bucket)}
               onMouseLeave={() => onHover(null)}
               onClick={() => onSelect(bucket.bucket)}
-            />
+              onKeyDown={(event) => handleInteractiveKeyPress(event, () => onSelect(bucket.bucket))}
+            >
+              <title>{`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}</title>
+            </path>
           );
         })}
         <circle cx="110" cy="110" r="50" className="portfolio-allocation-chart-core" />
@@ -342,6 +363,8 @@ function AllocationBarChart({
           <button
             key={bucket.bucket}
             type="button"
+            aria-label={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}. Select to filter holdings.`}
+            title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
             className={
               isSelected
                 ? "portfolio-allocation-bar-row portfolio-allocation-bar-row-selected"
@@ -393,6 +416,8 @@ function AllocationTableChart({
           <button
             key={bucket.bucket}
             type="button"
+            aria-label={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}. Select to filter holdings.`}
+            title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
             className={
               isSelected
                 ? "portfolio-allocation-table-row portfolio-allocation-table-row-selected"

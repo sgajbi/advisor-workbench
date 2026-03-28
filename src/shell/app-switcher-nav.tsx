@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
+import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities/api";
 
 import { SHELL_APPS, type ShellApp } from "./app-registry";
 
@@ -18,8 +18,7 @@ function isAppEnabled(app: ShellApp, navigation: Record<string, boolean | undefi
 }
 
 export default function AppSwitcherNav() {
-  const { normalized } = usePlatformCapabilities();
-  const navigation = normalized.navigation;
+  const navigation = fallbackNormalizedCapabilities().navigation;
   const visibleApps = SHELL_APPS.filter((app) => app.visible !== false);
   const pathname = usePathname();
 

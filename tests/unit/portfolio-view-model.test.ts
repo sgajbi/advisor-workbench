@@ -2,8 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import {
+  buildPortfolioActiveFilterChips,
+  buildPortfolioExceptionSummaries,
+  buildPortfolioFilterOptions,
+  buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
   buildPortfolioWorkflowActions,
+  filterPositionsByDrilldown,
+  filterTransactionsByDrilldown,
+  getPositionsNeedingPricing,
+  getRelatedTransactionsForSecurity,
   buildInitialPortfolioControls,
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
@@ -16,6 +24,7 @@ import {
   getRequestedWindowActivityCount,
   getYearToDateActivityAmount,
   getYearToDateActivityCount,
+  resolveEffectivePeriod,
   resolveTimeWindowStartDate,
 } from "../../src/apps/portfolio/view-model";
 
@@ -199,16 +208,30 @@ function buildOperationalWorkspace(): PortfolioWorkspace {
 
 describe("portfolio view model", () => {
   it("resolves time windows against the selected as-of date", () => {
-    expect(resolveTimeWindowStartDate("2026-02-24", "1M", "2024-01-01")).toBe("2026-01-24");
+    expect(resolveTimeWindowStartDate("2026-02-24", "7D", "2024-01-01")).toBe("2026-02-17");
+    expect(resolveTimeWindowStartDate("2026-02-24", "30D", "2024-01-01")).toBe("2026-01-25");
+    expect(resolveTimeWindowStartDate("2026-02-24", "MTD", "2024-01-01")).toBe("2026-02-01");
+    expect(resolveTimeWindowStartDate("2026-05-24", "QTD", "2024-01-01")).toBe("2026-04-01");
     expect(resolveTimeWindowStartDate("2026-02-24", "YTD", "2024-01-01")).toBe("2026-01-01");
     expect(resolveTimeWindowStartDate("2026-02-24", "SI", "2024-01-01")).toBe("2024-01-01");
+  });
+
+  it("derives an effective custom period in detailed mode", () => {
+    expect(
+      resolveEffectivePeriod("2026-02-24", "30D", "2024-01-01", "2026-02-01", "2026-02-20")
+    ).toEqual({
+      startDate: "2026-02-01",
+      endDate: "2026-02-20",
+      isCustomRange: true,
+      label: "Custom",
+    });
   });
 
   it("filters transactions and forecast points to the selected context", () => {
     const workspace = buildWorkspace();
     const controls = {
       ...buildInitialPortfolioControls(workspace),
-      timeWindow: "1M" as const,
+      timeWindow: "30D" as const,
       asOfDate: "2026-02-24",
     };
 
@@ -218,6 +241,172 @@ describe("portfolio view model", () => {
     expect(derived?.recent_transactions[0].transaction_id).toBe("TX_RECENT");
     expect(derived?.cashflow_outlook?.upcoming_points).toHaveLength(1);
     expect(derived?.cashflow_outlook?.upcoming_points[0].projection_date).toBe("2026-02-25");
+  });
+
+  it("builds filter options and applies business filters to positions and transactions", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.positions = [
+      {
+        security_id: "EQ_1",
+        instrument_name: "Apple Inc",
+        asset_class: "Equities",
+        sector: "Technology",
+        country_of_risk: "United States",
+        quantity: 10,
+        market_value_base: 1800,
+        weight_pct: 0.14,
+      },
+      {
+        security_id: "FI_1",
+        instrument_name: "Gov Bond",
+        asset_class: "Fixed Income",
+        sector: "Government",
+        country_of_risk: "United States",
+        quantity: 4,
+        market_value_base: 0,
+        weight_pct: 0,
+      },
+    ];
+    workspace.top_positions = [
+      {
+        security_id: "EQ_1",
+        instrument_name: "Apple Inc",
+        asset_class: "Equities",
+        quantity: 10,
+        market_value_base: 1800,
+        weight_pct: 0.14,
+      },
+      {
+        security_id: "FI_1",
+        instrument_name: "Gov Bond",
+        asset_class: "Fixed Income",
+        quantity: 4,
+        market_value_base: 0,
+        weight_pct: 0,
+      },
+    ];
+    workspace.recent_transactions = [
+      {
+        transaction_id: "TX_BUY",
+        transaction_date: "2026-02-20T08:30:00Z",
+        transaction_type: "BUY",
+        security_id: "EQ_1",
+        instrument_id: "AAPL",
+        quantity: 10,
+        net_cost_base: 1800,
+      },
+      {
+        transaction_id: "TX_DIV",
+        transaction_date: "2026-02-21T08:30:00Z",
+        transaction_type: "DIVIDEND",
+        security_id: "EQ_1",
+        instrument_id: "AAPL",
+        quantity: 0,
+        gross_amount: 0,
+      },
+    ];
+
+    expect(buildPortfolioFilterOptions(workspace)).toEqual({
+      assetClasses: ["Equities", "Fixed Income"],
+      sectors: ["Government", "Technology"],
+      regions: ["United States"],
+      positionStatuses: ["ALL", "Active", "Unpriced", "Needs Attention"],
+      transactionTypes: ["BUY", "DIVIDEND"],
+    });
+
+    const derived = derivePortfolioWorkspace(workspace, {
+      ...buildInitialPortfolioControls(workspace),
+      assetClass: "Equities",
+      positionStatus: "Active",
+      transactionType: "BUY",
+      showOnlyNonZeroRows: true,
+    });
+
+    expect(derived?.positions).toHaveLength(1);
+    expect(derived?.positions[0].instrument_name).toBe("Apple Inc");
+    expect(derived?.recent_transactions).toHaveLength(1);
+    expect(derived?.recent_transactions[0].transaction_id).toBe("TX_BUY");
+  });
+
+  it("supports shared holdings and transaction drill-down filters", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.positions = [
+      {
+        security_id: "EQ_1",
+        instrument_name: "Apple Inc",
+        asset_class: "Equities",
+        sector: "Technology",
+        country_of_risk: "United States",
+        quantity: 10,
+        market_price: 180,
+        market_value_base: 1800,
+        weight_pct: 0.14,
+      },
+      {
+        security_id: "FI_1",
+        instrument_name: "Gov Bond",
+        asset_class: "Fixed Income",
+        sector: "Government",
+        country_of_risk: "United States",
+        quantity: 4,
+        market_price: null,
+        market_value_base: null,
+        weight_pct: 0,
+      },
+    ];
+    workspace.recent_transactions = [
+      {
+        transaction_id: "TX_FUND",
+        transaction_date: "2026-02-19T08:30:00Z",
+        transaction_type: "SUBSCRIPTION",
+        component_type: "CASH",
+        security_id: "CASH_USD",
+        instrument_id: "USD",
+        quantity: 1,
+        net_cost_base: 100000,
+      },
+      {
+        transaction_id: "TX_BUY",
+        transaction_date: "2026-02-20T08:30:00Z",
+        transaction_type: "BUY",
+        component_type: "TRADE",
+        security_id: "EQ_1",
+        instrument_id: "AAPL",
+        quantity: 10,
+        net_cost_base: -1800,
+      },
+    ];
+
+    expect(
+      filterPositionsByDrilldown(workspace.positions, {
+        kind: "allocation",
+        selection: { dimension: "sector", bucket: "Technology" },
+        label: "Filtered by Sector: Technology",
+      })
+    ).toHaveLength(1);
+    expect(
+      filterPositionsByDrilldown(workspace.positions, {
+        kind: "status",
+        status: "Unpriced",
+        label: "Filtered by pricing exception: Unpriced holdings",
+      })[0].instrument_name
+    ).toBe("Gov Bond");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "activity",
+        bucket: "INFLOWS",
+        label: "Filtered by activity: Inflows",
+      })
+    ).toHaveLength(1);
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "security",
+        security_id: "EQ_1",
+        label: "Filtered by security: Apple Inc",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(getRelatedTransactionsForSecurity(workspace, "EQ_1")).toHaveLength(1);
+    expect(getPositionsNeedingPricing(workspace)[0].security_id).toBe("FI_1");
   });
 
   it("builds a clamped context for unsupported historical snapshots", () => {
@@ -230,6 +419,9 @@ describe("portfolio view model", () => {
     expect(context.selectedAsOfDate).toBe("2026-02-24");
     expect(context.hasHistoricalGap).toBe(false);
     expect(context.currencyOptions).toEqual(["USD"]);
+    expect(context.periodLabel).toBe("30D");
+    expect(context.effectivePeriodStartDate).toBe("2026-01-25");
+    expect(context.effectivePeriodEndDate).toBe("2026-02-24");
     expect(context.supportsHistoricalSnapshots).toBe(false);
     expect(context.supportsReportingCurrencyRestatement).toBe(false);
   });
@@ -275,6 +467,9 @@ describe("portfolio view model", () => {
         recommended: false,
       },
     ]);
+
+    expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
+    expect(buildPortfolioInsights(workspace)).toEqual([]);
   });
 
   it("derives the empty-portfolio onboarding sequence", () => {
@@ -297,7 +492,42 @@ describe("portfolio view model", () => {
       "Missing",
       "Empty",
     ]);
+    expect(buildPortfolioExceptionSummaries(workspace).map((exception) => exception.title)).toEqual([
+      "Missing holdings",
+      "No priced positions",
+      "Empty transaction history",
+      "Reporting output unavailable",
+    ]);
+    expect(buildPortfolioInsights(workspace).map((insight) => insight.title)).toEqual([
+      "No holdings booked",
+      "No cash funding recorded",
+      "Pricing not yet published",
+      "Reporting cannot be generated yet",
+    ]);
     expect(getReadinessTone("Missing")).toBe("danger");
     expect(getReadinessTone("Empty")).toBe("warn");
+  });
+
+  it("builds active filter chips for removable business filters", () => {
+    const workspace = buildOperationalWorkspace();
+
+    expect(
+      buildPortfolioActiveFilterChips({
+        ...buildInitialPortfolioControls(workspace),
+        includeCash: false,
+        assetClass: "Equities",
+        transactionType: "BUY",
+        customStartDate: "2026-02-01",
+        customEndDate: "2026-02-20",
+        timeWindow: "YTD",
+        showOnlyExceptions: true,
+      })
+    ).toEqual([
+      { key: "includeCash", label: "Include Cash", value: "No" },
+      { key: "assetClass", label: "Asset Class", value: "Equities" },
+      { key: "transactionType", label: "Transaction Type", value: "BUY" },
+      { key: "showOnlyExceptions", label: "Focus", value: "Exceptions only" },
+      { key: "timeWindow", label: "Period", value: "2026-02-01 to 2026-02-20" },
+    ]);
   });
 });

@@ -9,6 +9,7 @@ export default function AnalyticsStat({
   emphasize = false,
   definition,
   valueTone = "neutral",
+  onClick,
 }: {
   label: string;
   value: React.ReactNode;
@@ -16,18 +17,30 @@ export default function AnalyticsStat({
   emphasize?: boolean;
   definition?: React.ReactNode;
   valueTone?: "neutral" | "success" | "warn" | "danger";
+  onClick?: () => void;
 }) {
+  const accessibleLabel = `${label}: ${typeof value === "string" || typeof value === "number" ? value : "Open detail"}`;
   const stat = (
     <Box
+      component={onClick ? "button" : "div"}
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={onClick ? "analytics-stat-interactive" : undefined}
+      aria-label={onClick ? accessibleLabel : undefined}
+      title={typeof definition === "string" ? definition : undefined}
       sx={{
         display: "grid",
         gap: 1,
         minWidth: 0,
+        minHeight: 44,
         px: emphasize ? 3 : 0,
         py: emphasize ? 2 : 0,
         borderRadius: emphasize ? "12px" : 0,
         border: "none",
         background: emphasize ? "#ffffff" : "transparent",
+        textAlign: "left",
+        cursor: onClick ? "pointer" : "default",
+        outline: "none",
       }}
     >
       <Typography

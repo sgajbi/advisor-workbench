@@ -34,6 +34,35 @@ export type PortfolioAllocationSelection = {
   bucket: string;
 };
 
+export type PortfolioTransactionDrilldownFilter =
+  | {
+      kind: "activity";
+      bucket: string;
+      label: string;
+    }
+  | {
+      kind: "security";
+      security_id: string;
+      label: string;
+    };
+
+export type PortfolioHoldingsDrilldownFilter =
+  | {
+      kind: "allocation";
+      selection: PortfolioAllocationSelection;
+      label: string;
+    }
+  | {
+      kind: "security";
+      security_id: string;
+      label: string;
+    }
+  | {
+      kind: "status";
+      status: "Unpriced";
+      label: string;
+    };
+
 export type PortfolioTopPosition = {
   security_id: string;
   instrument_name: string;
@@ -55,6 +84,22 @@ export type PortfolioReadinessIndicator = {
   key: "holdings" | "pricing" | "transactions" | "reporting";
   label: string;
   status: PortfolioReadinessStatus;
+  href: string;
+};
+
+export type PortfolioExceptionSummary = {
+  key: string;
+  title: string;
+  detail: string;
+  tone: "neutral" | "success" | "warn" | "danger";
+  href: string;
+};
+
+export type PortfolioInsight = {
+  key: string;
+  title: string;
+  detail: string;
+  severity: "info" | "warning" | "critical";
   href: string;
 };
 
@@ -102,6 +147,7 @@ export type PortfolioTransactionView = {
   transaction_id: string;
   transaction_date: string;
   transaction_type: string;
+  component_type?: string | null;
   security_id: string;
   instrument_id: string;
   quantity: number;
@@ -224,6 +270,12 @@ export type PortfolioWorkspace = {
   performance: {
     period: string;
     return_pct: number | null;
+    benchmark_return_pct?: number | null;
+    excess_return_pct?: number | null;
+    sparkline_points?: Array<{
+      label: string;
+      return_pct: number | null;
+    }> | null;
   } | null;
   rebalance: {
     status: string;

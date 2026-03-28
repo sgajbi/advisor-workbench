@@ -45,6 +45,9 @@ type PortfolioAllocationResponse = {
 };
 
 type PortfolioTransactionLedgerResponse = {
+  total?: number;
+  skip?: number;
+  limit?: number;
   transactions: PortfolioWorkspace["recent_transactions"];
 };
 
@@ -60,19 +63,25 @@ type PortfolioWorkflowResponse = {
   actions: NonNullable<PortfolioWorkspace["workflow_actions"]>;
 };
 
-type PortfolioWorkspaceDetails = Pick<
+type PortfolioProjectedCashflowResponse = {
+  cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
+};
+
+type PortfolioWorkspaceSummaryDetails = Pick<
   PortfolioWorkspace,
   | "allocations"
   | "allocation_views"
-  | "cash_balances"
   | "top_positions"
   | "positions"
-  | "recent_transactions"
   | "income_summary"
   | "activity_summary"
-  | "cashflow_outlook"
   | "readiness_indicators"
   | "workflow_actions"
+>;
+
+type PortfolioWorkspaceDetailedDetails = Pick<
+  PortfolioWorkspace,
+  "cash_balances" | "recent_transactions" | "cashflow_outlook"
 >;
 
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
@@ -145,61 +154,53 @@ export async function getPortfolioWorkspaceShell(
   }
 }
 
-export async function getPortfolioWorkspaceDetails(
+export async function getPortfolioWorkspaceSummaryDetails(
   portfolioId: string
-): Promise<PortfolioWorkspaceDetails | null> {
+): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
     const baseUrl = resolveBffBaseUrl();
-    const liquidityResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
-      { cache: "no-store" }
-    );
-    const allocationsResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
-      { cache: "no-store" }
-    );
-    const positionsResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
-      { cache: "no-store" }
-    );
-    const transactionsResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?limit=8`,
-      { cache: "no-store" }
-    );
-    const readinessResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
-      { cache: "no-store" }
-    );
-    const workflowResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
-      { cache: "no-store" }
-    );
-    const incomeResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
-      { cache: "no-store" }
-    );
-    const activityResponse = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
-      { cache: "no-store" }
-    );
+    const [
+      allocationsResponse,
+      positionsResponse,
+      readinessResponse,
+      workflowResponse,
+      incomeResponse,
+      activityResponse,
+    ] = await Promise.all([
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
+        { cache: "no-store" }
+      ),
+    ]);
 
-    if (
-      !liquidityResponse.ok ||
-      !allocationsResponse.ok ||
-      !positionsResponse.ok ||
-      !transactionsResponse.ok
-    ) {
+    if (!allocationsResponse.ok || !positionsResponse.ok) {
       return null;
     }
 
-    const liquidityPayload =
-      (await liquidityResponse.json()) as PortfolioLiquidityResponse;
     const allocationsPayload =
       (await allocationsResponse.json()) as PortfolioAllocationResponse;
     const positionsPayload =
       (await positionsResponse.json()) as PortfolioPositionsResponse;
-    const transactionsPayload =
-      (await transactionsResponse.json()) as PortfolioTransactionLedgerResponse;
     const incomePayload = incomeResponse.ok
       ? ((await incomeResponse.json()) as PortfolioIncomeSummaryResponse)
       : null;
@@ -225,13 +226,10 @@ export async function getPortfolioWorkspaceDetails(
         weight_pct: bucket.weight_pct,
       })),
       allocation_views: allocationsPayload.views,
-      cash_balances: liquidityPayload.cash_balances,
       top_positions: positionsPayload.top_positions,
       positions: positionsPayload.positions,
-      recent_transactions: transactionsPayload.transactions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
-      cashflow_outlook: liquidityPayload.cashflow_outlook,
       readiness_indicators: readinessPayload?.indicators ?? undefined,
       workflow_actions: workflowPayload?.actions ?? undefined,
     };
@@ -240,9 +238,124 @@ export async function getPortfolioWorkspaceDetails(
   }
 }
 
+export async function getPortfolioWorkspaceDetailedDetails(
+  portfolioId: string
+): Promise<PortfolioWorkspaceDetailedDetails | null> {
+  try {
+    const baseUrl = resolveBffBaseUrl();
+    const [liquidityResponse, transactionsResponse] = await Promise.all([
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
+        { cache: "no-store" }
+      ),
+      fetch(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?limit=200`,
+        { cache: "no-store" }
+      ),
+    ]);
+
+    if (!liquidityResponse.ok || !transactionsResponse.ok) {
+      return null;
+    }
+
+    const liquidityPayload =
+      (await liquidityResponse.json()) as PortfolioLiquidityResponse;
+    const transactionsPayload =
+      (await transactionsResponse.json()) as PortfolioTransactionLedgerResponse;
+
+    return {
+      cash_balances: liquidityPayload.cash_balances,
+      recent_transactions: transactionsPayload.transactions,
+      cashflow_outlook: liquidityPayload.cashflow_outlook,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getPortfolioTransactionLedger(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    startDate?: string;
+    endDate?: string;
+    transactionType?: string;
+    limit?: number;
+    skip?: number;
+  } = {}
+): Promise<PortfolioTransactionLedgerResponse | null> {
+  try {
+    const baseUrl = resolveBffBaseUrl();
+    const searchParams = new URLSearchParams();
+    searchParams.set("limit", String(params.limit ?? 200));
+    searchParams.set("skip", String(params.skip ?? 0));
+
+    if (params.asOfDate) {
+      searchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.startDate) {
+      searchParams.set("start_date", params.startDate);
+    }
+    if (params.endDate) {
+      searchParams.set("end_date", params.endDate);
+    }
+    if (params.transactionType && params.transactionType !== "ALL") {
+      searchParams.set("transaction_type", params.transactionType);
+    }
+
+    const response = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${searchParams.toString()}`,
+      { cache: "no-store" }
+    );
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as PortfolioTransactionLedgerResponse;
+  } catch {
+    return null;
+  }
+}
+
+export async function getPortfolioProjectedCashflow(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    horizonDays?: number;
+    includeProjected?: boolean;
+  } = {}
+): Promise<PortfolioWorkspace["cashflow_outlook"] | null> {
+  try {
+    const baseUrl = resolveBffBaseUrl();
+    const searchParams = new URLSearchParams();
+    if (params.asOfDate) {
+      searchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.horizonDays) {
+      searchParams.set("horizon_days", String(params.horizonDays));
+    }
+    if (params.includeProjected !== undefined) {
+      searchParams.set("include_projected", String(params.includeProjected));
+    }
+
+    const response = await fetch(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow?${searchParams.toString()}`,
+      { cache: "no-store" }
+    );
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as PortfolioProjectedCashflowResponse;
+    return payload.cashflow_outlook ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function mergePortfolioWorkspace(
   workspace: PortfolioWorkspace,
-  details: PortfolioWorkspaceDetails
+  details: Partial<PortfolioWorkspace>
 ): PortfolioWorkspace {
   return {
     ...workspace,

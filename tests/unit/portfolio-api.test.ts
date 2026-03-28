@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  getPortfolioWorkspaceDetails,
+  getPortfolioProjectedCashflow,
+  getPortfolioTransactionLedger,
+  getPortfolioWorkspaceDetailedDetails,
   getPortfolioWorkspaceShell,
+  getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
 } from "../../src/apps/portfolio/api";
 
@@ -69,7 +72,127 @@ describe("portfolio api", () => {
     expect(shell?.workflow_actions).toBeUndefined();
   });
 
-  it("loads detail modules and merges them into the shell workspace", async () => {
+  it("loads summary detail modules without fetching detailed ledger and liquidity slices", async () => {
+    const fetchSpy = vi.fn(async (input: string | URL) => {
+      const url = input.toString();
+
+      if (url.includes("/allocations")) {
+        return jsonResponse({
+          views: [
+            {
+              dimension: "asset_class",
+              buckets: [
+                {
+                  bucket: "Equities",
+                  position_count: 3,
+                  market_value_base: 349705,
+                  weight_pct: 34.92,
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      if (url.includes("/positions")) {
+        return jsonResponse({
+          top_positions: [
+            {
+              security_id: "EQ_US_AAPL_MANUAL_001",
+              instrument_name: "Apple Inc.",
+              asset_class: "Equities",
+              quantity: 700,
+              market_value_base: 147000,
+              weight_pct: 14.67,
+            },
+          ],
+          positions: [
+            {
+              security_id: "EQ_US_AAPL_MANUAL_001",
+              instrument_name: "Apple Inc.",
+              asset_class: "Equities",
+              quantity: 700,
+              market_value_base: 147000,
+              market_value_local: 147000,
+              weight_pct: 14.67,
+            },
+          ],
+        });
+      }
+
+      if (url.includes("/readiness")) {
+        return jsonResponse({
+          indicators: [
+            { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
+          ],
+        });
+      }
+
+      if (url.includes("/workflow")) {
+        return jsonResponse({
+          actions: [
+            {
+              sequence: 1,
+              title: "Review performance",
+              impact: "Review portfolio return.",
+              target: "Target: Performance workflow",
+              href: "/performance",
+              cta_label: "Performance",
+              recommended: true,
+            },
+          ],
+        });
+      }
+
+      if (url.includes("/income-summary")) {
+        return jsonResponse({
+          reporting_currency: "USD",
+          window_start_date: "2026-03-01",
+          window_end_date: "2026-03-28",
+          totals_requested_window: {
+            gross: { reporting_currency_amount: 350, transaction_count: 1 },
+            withholding_tax: { reporting_currency_amount: 0, transaction_count: 1 },
+            other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
+            net: { reporting_currency_amount: 350, transaction_count: 1 },
+          },
+          totals_year_to_date: {
+            gross: { reporting_currency_amount: 350, transaction_count: 1 },
+            withholding_tax: { reporting_currency_amount: 0, transaction_count: 1 },
+            other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
+            net: { reporting_currency_amount: 350, transaction_count: 1 },
+          },
+          income_types: [],
+        });
+      }
+
+      if (url.includes("/activity-summary")) {
+        return jsonResponse({
+          reporting_currency: "USD",
+          window_start_date: "2026-03-01",
+          window_end_date: "2026-03-28",
+          buckets: [],
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+
+    expect(details?.allocation_views?.[0].dimension).toBe("asset_class");
+    expect(details?.top_positions[0].market_value_base).toBe(147000);
+    expect(details?.positions[0].market_value_local).toBe(147000);
+    expect(details?.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);
+    expect(details?.readiness_indicators?.[0].status).toBe("Ready");
+    expect(details?.workflow_actions?.[0].title).toBe("Review performance");
+
+    const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
+    expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/transactions"))).toBe(false);
+  });
+
+  it("loads detailed ledger and liquidity slices only when detailed modules need them", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string | URL) => {
@@ -98,50 +221,6 @@ describe("portfolio api", () => {
           });
         }
 
-        if (url.includes("/allocations")) {
-          return jsonResponse({
-            views: [
-              {
-                dimension: "asset_class",
-                buckets: [
-                  {
-                    bucket: "Equities",
-                    position_count: 3,
-                    market_value_base: 349705,
-                    weight_pct: 34.92,
-                  },
-                ],
-              },
-            ],
-          });
-        }
-
-        if (url.includes("/positions")) {
-          return jsonResponse({
-            top_positions: [
-              {
-                security_id: "EQ_US_AAPL_MANUAL_001",
-                instrument_name: "Apple Inc.",
-                asset_class: "Equities",
-                quantity: 700,
-                market_value_base: 147000,
-                weight_pct: 14.67,
-              },
-            ],
-            positions: [
-              {
-                security_id: "EQ_US_AAPL_MANUAL_001",
-                instrument_name: "Apple Inc.",
-                asset_class: "Equities",
-                quantity: 700,
-                market_value_base: 147000,
-                market_value_local: 147000,
-                weight_pct: 14.67,
-              },
-            ],
-          });
-        }
-
         if (url.includes("/transactions")) {
           return jsonResponse({
             transactions: [
@@ -154,60 +233,6 @@ describe("portfolio api", () => {
                 quantity: 700,
               },
             ],
-          });
-        }
-
-        if (url.includes("/readiness")) {
-          return jsonResponse({
-            indicators: [
-              { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
-            ],
-          });
-        }
-
-        if (url.includes("/workflow")) {
-          return jsonResponse({
-            actions: [
-              {
-                sequence: 1,
-                title: "Review performance",
-                impact: "Review portfolio return.",
-                target: "Target: Performance workflow",
-                href: "/performance",
-                cta_label: "Performance",
-                recommended: true,
-              },
-            ],
-          });
-        }
-
-        if (url.includes("/income-summary")) {
-          return jsonResponse({
-            reporting_currency: "USD",
-            window_start_date: "2026-03-01",
-            window_end_date: "2026-03-28",
-            totals_requested_window: {
-              gross: { reporting_currency_amount: 350, transaction_count: 1 },
-              withholding_tax: { reporting_currency_amount: 0, transaction_count: 1 },
-              other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
-              net: { reporting_currency_amount: 350, transaction_count: 1 },
-            },
-            totals_year_to_date: {
-              gross: { reporting_currency_amount: 350, transaction_count: 1 },
-              withholding_tax: { reporting_currency_amount: 0, transaction_count: 1 },
-              other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
-              net: { reporting_currency_amount: 350, transaction_count: 1 },
-            },
-            income_types: [],
-          });
-        }
-
-        if (url.includes("/activity-summary")) {
-          return jsonResponse({
-            reporting_currency: "USD",
-            window_start_date: "2026-03-01",
-            window_end_date: "2026-03-28",
-            buckets: [],
           });
         }
 
@@ -260,16 +285,68 @@ describe("portfolio api", () => {
       partial_failures: [],
     };
 
-    const details = await getPortfolioWorkspaceDetails("MANUAL_PB_USD_001");
+    const details = await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001");
     const merged = mergePortfolioWorkspace(shell, details!);
 
-    expect(details?.allocation_views?.[0].dimension).toBe("asset_class");
-    expect(merged.top_positions[0].market_value_base).toBe(147000);
-    expect(merged.positions[0].market_value_local).toBe(147000);
     expect(merged.cash_balances?.[0].market_value_base).toBe(66122);
-    expect(merged.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);
-    expect(merged.readiness_indicators?.[0].status).toBe("Ready");
-    expect(merged.workflow_actions?.[0].title).toBe("Review performance");
+    expect(merged.recent_transactions[0].transaction_id).toBe("TX_1");
+  });
+
+  it("requests the transaction ledger with scoped filter parameters", async () => {
+    const fetchSpy = vi.fn(async () =>
+      jsonResponse({
+        total: 1,
+        skip: 0,
+        limit: 200,
+        transactions: [],
+      })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      transactionType: "BUY",
+      limit: 200,
+    });
+
+    expect(fetchSpy.mock.calls.length).toBe(1);
+    const requestUrl = String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "");
+    expect(requestUrl).toContain("/transactions?");
+    expect(requestUrl).toContain("as_of_date=2026-03-28");
+    expect(requestUrl).toContain("start_date=2026-03-01");
+    expect(requestUrl).toContain("end_date=2026-03-28");
+    expect(requestUrl).toContain("transaction_type=BUY");
+  });
+
+  it("requests projected cashflow with the selected horizon", async () => {
+    const fetchSpy = vi.fn(async () =>
+      jsonResponse({
+        cashflow_outlook: {
+          as_of_date: "2026-03-28",
+          range_end_date: "2026-04-27",
+          total_net_cashflow_base: 1250,
+          projection_days: 30,
+          include_projected: true,
+          upcoming_points: [],
+        },
+      })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const outlook = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 30,
+      includeProjected: true,
+    });
+
+    expect(outlook?.projection_days).toBe(30);
+    const requestUrl = String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "");
+    expect(requestUrl).toContain("/projected-cashflow?");
+    expect(requestUrl).toContain("as_of_date=2026-03-28");
+    expect(requestUrl).toContain("horizon_days=30");
+    expect(requestUrl).toContain("include_projected=true");
   });
 });
 

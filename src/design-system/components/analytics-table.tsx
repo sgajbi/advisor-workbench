@@ -16,6 +16,11 @@ type AnalyticsTableColumn = {
 type AnalyticsTableRow = {
   key: string;
   cells: React.ReactNode[];
+  className?: string;
+  ariaLabel?: string;
+  onClick?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 };
 
 export default function AnalyticsTable({
@@ -71,7 +76,38 @@ export default function AnalyticsTable({
         </TableHead>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.key} hover>
+            <TableRow
+              key={row.key}
+              hover
+              className={row.className}
+              onClick={row.onClick}
+              onMouseEnter={row.onMouseEnter}
+              onMouseLeave={row.onMouseLeave}
+              tabIndex={row.onClick ? 0 : undefined}
+              aria-label={row.ariaLabel}
+              onKeyDown={
+                row.onClick
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        row.onClick?.();
+                      }
+                    }
+                  : undefined
+              }
+              sx={
+                row.onClick
+                  ? {
+                      cursor: "pointer",
+                      "&:focus-visible": {
+                        outline: "2px solid",
+                        outlineColor: "rgba(49, 93, 138, 0.7)",
+                        outlineOffset: "-2px",
+                      },
+                    }
+                  : undefined
+              }
+            >
               {row.cells.map((cell, index) => (
                 <TableCell
                   key={`${row.key}-${columns[index]?.key ?? index}`}

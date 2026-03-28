@@ -1,0 +1,37 @@
+"use client";
+
+import { KpiStatTile } from "@/design-system";
+
+type HealthTile = {
+  key: string;
+  label: string;
+  value: React.ReactNode;
+  support?: React.ReactNode;
+  definition?: string;
+  tone?: "neutral" | "success" | "warn" | "danger";
+  onClick?: () => void;
+};
+
+export default function PortfolioHealthStrip({
+  tiles,
+}: {
+  tiles: HealthTile[];
+}) {
+  return (
+    <div className="portfolio-summary-band">
+      {tiles.map((tile) => (
+        <KpiStatTile
+          key={tile.key}
+          label={tile.label}
+          value={tile.value}
+          support={tile.support}
+          definition={tile.definition}
+          valueTone={tile.tone}
+          onClick={tile.onClick}
+        />
+      ))}
+    </div>
+  );
+}
+
+export type { HealthTile };
