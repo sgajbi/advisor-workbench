@@ -41,4 +41,20 @@ describe("WorkspaceCapabilityPanel", () => {
     ).toBeInTheDocument();
     expect(container.querySelector(".portfolio-empty-state")).not.toBeNull();
   });
+
+  it("forwards empty-state presentation options for centered illustrated states", () => {
+    const { container } = render(
+      <WorkspaceCapabilityPanel
+        capability={{ state: "unavailable", reason: "No allocation data is available." }}
+        partialTitle="Allocation is partially available"
+        unavailableTitle="No allocation data yet"
+        body="No allocation data is available."
+        illustration
+        centered
+      />
+    );
+
+    expect(container.querySelector(".portfolio-empty-state-illustrated")).not.toBeNull();
+    expect(container.querySelector(".portfolio-empty-state-centered")).not.toBeNull();
+  });
 });

@@ -10,6 +10,8 @@ export default function WorkspaceCapabilityPanel({
   body,
   hint,
   why,
+  illustration = false,
+  centered = false,
 }: {
   capability: WorkspaceCapability;
   partialTitle: string;
@@ -21,6 +23,8 @@ export default function WorkspaceCapabilityPanel({
     title?: string;
     label?: string;
   };
+  illustration?: boolean;
+  centered?: boolean;
 }) {
   if (capability.state === "partial") {
     return (
@@ -40,6 +44,8 @@ export default function WorkspaceCapabilityPanel({
       body={body}
       hint={hint}
       why={why}
+      illustration={illustration}
+      centered={centered}
     />
   );
 }
