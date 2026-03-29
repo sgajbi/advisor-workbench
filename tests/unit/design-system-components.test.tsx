@@ -6,6 +6,7 @@ import {
   ActionLink,
   ActionListCard,
   AnalyticsModule,
+  AnalyticsRankedList,
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
@@ -324,6 +325,32 @@ describe("design-system components", () => {
     expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
     expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
     expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();
+  });
+
+  it("renders ranked analytics content with shared summary visual typography classes", () => {
+    render(
+      <AnalyticsRankedList
+        title="Highest"
+        label="Contribution"
+        scale={1}
+        rows={[
+          {
+            key: "row-1",
+            title: "Apple Inc",
+            subtitle: "Avg. Weight 24.00%",
+            value: "1.55%",
+            magnitudePct: 1.55,
+            tone: "positive",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Highest")).toHaveClass("workbench-summary-visual-heading");
+    expect(screen.getByText("Contribution")).toHaveClass("workbench-summary-visual-meta");
+    expect(screen.getByText("Apple Inc")).toHaveClass("workbench-summary-visual-label");
+    expect(screen.getByText("Avg. Weight 24.00%")).toHaveClass("workbench-summary-visual-meta");
+    expect(screen.getByText("1.55%")).toHaveClass("workbench-summary-visual-value");
   });
 
   it("renders the shared neutral workbench page header with title, subtitle, and actions", () => {

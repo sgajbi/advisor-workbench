@@ -34,10 +34,16 @@ export default function AnalyticsRankedList({
           mb: 1,
         }}
       >
-        <Typography sx={{ fontSize: "0.95rem", fontWeight: 700, color: "text.primary" }}>
+        <Typography
+          className="workbench-summary-visual-heading"
+          sx={{ fontSize: "0.95rem", fontWeight: 700, color: "text.primary" }}
+        >
           {title}
         </Typography>
-        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "text.secondary" }}>
+        <Typography
+          className="workbench-summary-visual-meta"
+          sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "text.secondary" }}
+        >
           {label}
         </Typography>
       </Box>
@@ -59,11 +65,17 @@ export default function AnalyticsRankedList({
                   minWidth: 0,
                 }}
               >
-                <Typography sx={{ fontSize: "0.875rem", fontWeight: 700, color: "text.primary" }}>
+                <Typography
+                  className="workbench-summary-visual-label"
+                  sx={{ fontSize: "0.875rem", fontWeight: 700, color: "text.primary" }}
+                >
                   {row.title}
                 </Typography>
                 {row.subtitle ? (
-                  <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+                  <Typography
+                    className="workbench-summary-visual-meta"
+                    sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+                  >
                     {row.subtitle}
                   </Typography>
                 ) : null}
@@ -92,6 +104,7 @@ export default function AnalyticsRankedList({
               </Box>
 
               <Typography
+                className="workbench-summary-visual-value"
                 sx={{
                   fontSize: "0.875rem",
                   fontWeight: 700,

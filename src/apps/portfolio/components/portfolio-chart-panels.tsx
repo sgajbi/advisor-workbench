@@ -122,14 +122,16 @@ export function PortfolioTopHoldingsPanel({
                   }. Select to filter holdings.`}
                   title={buildTopHoldingTooltip(position, metric, baseCurrency)}
                 >
-                  <span className="portfolio-horizontal-bar-label">{position.instrument_name}</span>
+                  <span className="portfolio-horizontal-bar-label workbench-summary-visual-label">
+                    {position.instrument_name}
+                  </span>
                   <span className="portfolio-horizontal-bar-track">
                     <span
                       className="portfolio-horizontal-bar-fill"
                       style={{ width, backgroundColor: CHART_COLORS.accent }}
                     />
                   </span>
-                  <span className="portfolio-horizontal-bar-value">
+                  <span className="portfolio-horizontal-bar-value workbench-summary-visual-value">
                     {metric === "market_value"
                       ? formatCurrency(position.market_value_base, baseCurrency)
                       : formatPct(position.weight_pct)}
@@ -324,8 +326,10 @@ export function PortfolioActivityPanel({
               title={buildActivityTooltip(bucket.bucket, requestedAmount, ytdAmount, summary.reporting_currency)}
             >
               <div className="portfolio-flow-row-header">
-                <span className="portfolio-flow-row-label">{formatBucketLabel(bucket.bucket)}</span>
-                <span className="portfolio-flow-row-value">
+                <span className="portfolio-flow-row-label workbench-summary-visual-label">
+                  {formatBucketLabel(bucket.bucket)}
+                </span>
+                <span className="portfolio-flow-row-value workbench-summary-visual-value">
                   {formatCurrency(requestedAmount, summary.reporting_currency)}
                 </span>
               </div>
@@ -341,12 +345,12 @@ export function PortfolioActivityPanel({
                 />
               </div>
               {compact ? (
-                <div className="portfolio-flow-row-meta portfolio-flow-row-meta-compact">
+                <div className="portfolio-flow-row-meta portfolio-flow-row-meta-compact workbench-summary-visual-meta">
                   <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
                   <span>{bucket.requested_window.transaction_count} events</span>
                 </div>
               ) : (
-                <div className="portfolio-flow-row-meta">
+                <div className="portfolio-flow-row-meta workbench-summary-visual-meta">
                   <span>{requestedAmount < 0 ? "Window outflow" : "Window inflow"}</span>
                   <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
                   <span>{bucket.requested_window.transaction_count} txn</span>
@@ -419,8 +423,10 @@ export function PortfolioIncomePanel({
               title={buildIncomeTooltip(item, summary.reporting_currency)}
             >
               <div className="portfolio-income-row-header">
-                <span className="portfolio-income-row-label">{formatBucketLabel(item.income_type)}</span>
-                <span className="portfolio-income-row-value">
+                <span className="portfolio-income-row-label workbench-summary-visual-label">
+                  {formatBucketLabel(item.income_type)}
+                </span>
+                <span className="portfolio-income-row-value workbench-summary-visual-value">
                   {formatCurrency(netAmount, summary.reporting_currency)}
                 </span>
               </div>
@@ -436,12 +442,12 @@ export function PortfolioIncomePanel({
                 />
               </div>
               {compact ? (
-                <div className="portfolio-income-row-meta portfolio-income-row-meta-compact">
+                <div className="portfolio-income-row-meta portfolio-income-row-meta-compact workbench-summary-visual-meta">
                   <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
                   <span>{item.requested_window.net.transaction_count} events</span>
                 </div>
               ) : (
-                <div className="portfolio-income-row-meta">
+                <div className="portfolio-income-row-meta workbench-summary-visual-meta">
                   <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
                   <span>Deductions {formatCurrency(deductionsAmount, summary.reporting_currency)}</span>
                   <span>{item.requested_window.net.transaction_count} txn</span>

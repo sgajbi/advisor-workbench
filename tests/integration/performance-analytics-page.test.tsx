@@ -439,6 +439,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
     expect(document.querySelectorAll(".workbench-summary-visual-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
     expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-label")).toBeTruthy();
     expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByText("Attribution Over Time")).not.toBeInTheDocument();

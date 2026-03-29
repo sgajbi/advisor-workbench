@@ -162,6 +162,9 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(document.querySelectorAll(".workbench-summary-toolbar").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelectorAll(".workbench-summary-visual-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
     expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-label")).toBeTruthy();
     expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
