@@ -65,6 +65,17 @@ export type PerformanceSummaryHeaderSectionProps = Pick<
   | "suspiciousMoneyWeightedReturn"
 >;
 
+export type PerformanceSummaryContributorsSectionProps = Pick<
+  PerformanceSummaryModeProps,
+  | "workspace"
+  | "hasContribution"
+  | "hasPositionRanking"
+  | "contributorScale"
+  | "positivePositionContributors"
+  | "negativePositionContributors"
+  | "isDetailsPending"
+>;
+
 export type PerformanceAnalysisModeProps = PerformanceWorkspaceControls & {
   workspace: WorkbenchPerformanceWorkspace;
   hasAttribution: boolean;
