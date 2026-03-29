@@ -721,6 +721,66 @@ a:hover {
   padding: 20px;
 }
 
+.workstation-page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-block: 20px;
+  padding-inline: clamp(16px, 2vw, 28px);
+}
+
+.workstation-shell {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  align-items: start;
+  column-gap: 16px;
+  row-gap: 16px;
+}
+
+.workstation-shell-both {
+  grid-template-columns: clamp(180px, 16vw, 220px) minmax(0, 1fr) clamp(220px, 18vw, 260px);
+}
+
+.workstation-shell-rail-only {
+  grid-template-columns: clamp(180px, 16vw, 220px) minmax(0, 1fr);
+}
+
+.workstation-shell-side-only {
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 18vw, 260px);
+}
+
+.workstation-shell-main-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workstation-shell-rail,
+.workstation-shell-side,
+.workstation-shell-main {
+  min-width: 0;
+}
+
+.workstation-shell-rail {
+  width: 100%;
+  max-width: clamp(180px, 16vw, 220px);
+}
+
+.workstation-shell-side {
+  width: 100%;
+  max-width: clamp(220px, 18vw, 260px);
+}
+
+.workstation-shell-main {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+
+.workstation-shell-main > * {
+  width: 100%;
+  min-width: 0;
+}
+
 .page-header {
   margin-bottom: 0.5rem;
 }
@@ -4817,6 +4877,22 @@ a:hover {
     width: 240px;
     max-width: 240px;
   }
+
+  .workstation-shell-both {
+    grid-template-columns: 200px minmax(0, 1fr) 240px;
+  }
+
+  .workstation-shell-side-only {
+    grid-template-columns: minmax(0, 1fr) 240px;
+  }
+
+  .workstation-shell-rail {
+    max-width: 200px;
+  }
+
+  .workstation-shell-side {
+    max-width: 240px;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -4836,6 +4912,15 @@ a:hover {
     width: 100%;
     max-width: none;
     position: static;
+  }
+
+  .workstation-shell-both,
+  .workstation-shell-side-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workstation-shell-side {
+    max-width: none;
   }
 }
 
@@ -4874,6 +4959,25 @@ a:hover {
     grid-template-columns: 1fr;
     max-width: none;
     grid-column: auto;
+  }
+
+  .workstation-page {
+    padding-inline: 16px;
+  }
+
+  .workstation-shell,
+  .workstation-shell-both,
+  .workstation-shell-rail-only,
+  .workstation-shell-side-only,
+  .workstation-shell-main-only {
+    grid-template-columns: 1fr;
+    column-gap: 16px;
+    row-gap: 16px;
+  }
+
+  .workstation-shell-rail,
+  .workstation-shell-side {
+    max-width: none;
   }
 
   .workspace-grid,

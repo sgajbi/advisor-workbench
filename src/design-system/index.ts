@@ -26,6 +26,8 @@ export { default as Panel } from "./components/panel";
 export { default as SectionLabel } from "./components/section-label";
 export { default as StatusChip } from "./components/status-chip";
 export {
+  WorkstationPage,
+  WorkstationShell,
   WorkspaceGrid,
   WorkspaceLayout,
   WorkspaceMain,

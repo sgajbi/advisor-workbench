@@ -28,6 +28,8 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkstationPage,
+  WorkstationShell,
 } from "@/design-system";
 
 describe("design-system components", () => {
@@ -85,6 +87,24 @@ describe("design-system components", () => {
     expect(document.querySelector(".workspace-main")).toBeTruthy();
     expect(document.querySelector(".workspace-grid")).toBeTruthy();
     expect(document.querySelector(".workspace-side")).toBeTruthy();
+  });
+
+  it("renders the shared workstation shell with explicit slot structure", () => {
+    render(
+      <WorkstationPage>
+        <WorkstationShell
+          rail={<Panel>Workstation Rail</Panel>}
+          main={<Panel>Workstation Main</Panel>}
+          side={<Panel>Workstation Side</Panel>}
+        />
+      </WorkstationPage>
+    );
+
+    expect(document.querySelector(".workstation-page")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
   });
 
   it("renders degraded state and rail link primitives", () => {
