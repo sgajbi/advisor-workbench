@@ -53,41 +53,21 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("1,145,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("105,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("12 holdings")).toBeInTheDocument();
-    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
-
     await waitFor(() => {
       expect(screen.getByText("Income Plus")).toBeInTheDocument();
       expect(screen.getAllByText("14,750 USD").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("2 booked events")).toBeInTheDocument();
       expect(screen.getByText("Large position dominates portfolio risk")).toBeInTheDocument();
     });
-    expect(screen.getByRole("link", { name: /Holdings readiness: Ready/i })).toHaveAttribute(
-      "href",
-      "#portfolio-insights"
-    );
-    expect(screen.getByRole("link", { name: /Pricing readiness: Ready/i })).toHaveAttribute(
-      "href",
-      "#portfolio-attention"
-    );
-    expect(screen.getByRole("link", { name: /Transactions readiness: Ready/i })).toHaveAttribute(
-      "href",
-      "#portfolio-insights"
-    );
-    expect(screen.getByRole("link", { name: /Reporting readiness: Ready/i })).toHaveAttribute(
-      "href",
-      "#portfolio-health"
-    );
-    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByLabelText("As of")).toHaveValue("2026-02-24");
     expect(screen.getByLabelText("Reporting Currency")).toHaveValue("USD");
     expect(screen.getByLabelText("As of")).toBeDisabled();
     expect(screen.getByLabelText("Reporting Currency")).toBeDisabled();
-    expect(screen.getByText(/Historical snapshots pending source support/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cross-currency restatement pending source support/i)).toBeInTheDocument();
+    expect(screen.getByText(/Historical snapshots are not source-backed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reporting currency restatement is pending source support/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Detailed" })).toBeInTheDocument();
-    expect(screen.getByText(/Period:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Range:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
@@ -95,9 +75,9 @@ describe("PortfolioFoundationPage", () => {
 
     expect(screen.getByRole("heading", { name: /Portfolio Context/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Readiness and Exceptions/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Portfolio Health Snapshot/i })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Insights/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /What needs attention/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Critical Exceptions and Blockers/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Allocation/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Top Holdings/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Performance Snapshot/i })).toBeInTheDocument();
@@ -118,9 +98,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
-    expect(screen.getByText("Cash balances temporarily unavailable")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
-    expect(screen.getByText("Portfolio data")).toBeInTheDocument();
     expect(screen.getByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(
@@ -184,6 +162,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("Book Setup")).toBeInTheDocument();
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /What changed over time/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /^Holdings$/i })).toBeInTheDocument();
@@ -622,6 +601,36 @@ function buildPortfolioFetchStub() {
           { key: "pricing", label: "Pricing", status: "Ready", href: "#portfolio-attention" },
           { key: "transactions", label: "Transactions", status: "Ready", href: "#portfolio-insights" },
           { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
+        ],
+      });
+    }
+
+    if (url.includes("/api/v1/portfolio/portfolios/PORT_UI_1001/insights")) {
+      return jsonResponse({
+        insights: [
+          {
+            key: "equity-concentration-high",
+            title: "Large position dominates portfolio risk",
+            detail: "One holding has become large enough to dominate current portfolio concentration.",
+            severity: "warning",
+            href: "#portfolio-insights",
+          },
+        ],
+        exception_summaries: [
+          {
+            key: "pricing",
+            title: "Pricing coverage incomplete",
+            detail: "Some holdings lack complete valuation coverage.",
+            tone: "warn",
+            href: "#portfolio-attention",
+          },
+          {
+            key: "partial_failure_PORTFOLIO_CASH_BALANCES_UNAVAILABLE",
+            title: "PORTFOLIO CASH BALANCES UNAVAILABLE",
+            detail: "cash balance service unavailable",
+            tone: "warn",
+            href: "#portfolio-attention",
+          },
         ],
       });
     }

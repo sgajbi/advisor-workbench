@@ -57,17 +57,44 @@ export default function PortfolioWorkspaceToolbar({
 
   const historicalContextCopy = useMemo(() => {
     if (!context.supportsHistoricalSnapshots) {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Historical portfolio snapshots are not source-backed yet, so snapshot modules stay on the latest published state.`;
+      return `As of ${formatDate(context.selectedAsOfDate)}. Historical snapshots are not source-backed, so snapshot modules stay on the latest published state.`;
     }
 
     if (!context.hasHistoricalGap) {
       return `As of ${formatDate(context.selectedAsOfDate)}. Snapshot-backed modules use the selected portfolio snapshot.`;
     }
 
-    return `Context set to ${formatDate(context.selectedAsOfDate)}. Date-aware modules reflect the selected context; snapshot-backed modules continue to use the latest available portfolio state.`;
+    return `As of ${formatDate(context.selectedAsOfDate)}. Date-aware modules use the selected context; snapshot-backed modules continue to use the latest available state.`;
   }, [context.hasHistoricalGap, context.selectedAsOfDate, context.supportsHistoricalSnapshots]);
   const activeFilterCount = getActivePortfolioFilterCount(controls);
   const supportsCustomRange = controls.viewMode === "detailed";
+  const contextSegments = useMemo(() => {
+    const segments = [historicalContextCopy];
+
+    if (!context.supportsReportingCurrencyRestatement) {
+      segments.push("Reporting currency restatement is pending source support.");
+    }
+
+    if (supportsCustomRange) {
+      segments.push(
+        `Period ${context.periodLabel}: ${formatDate(context.effectivePeriodStartDate)} to ${formatDate(
+          context.effectivePeriodEndDate
+        )}.`
+      );
+    } else {
+      segments.push(`Period ${context.periodLabel}.`);
+    }
+
+    return segments;
+  }, [
+    context.effectivePeriodEndDate,
+    context.effectivePeriodStartDate,
+    context.periodLabel,
+    context.supportsReportingCurrencyRestatement,
+    historicalContextCopy,
+    supportsCustomRange,
+  ]);
+
   return (
     <PageToolbar className="portfolio-workspace-toolbar">
       <div className="portfolio-workspace-toolbar-row">
@@ -81,9 +108,6 @@ export default function PortfolioWorkspaceToolbar({
             onChange={(event) => onControlsChange({ asOfDate: event.target.value })}
             inputProps={{ max: context.selectedAsOfDate }}
             disabled={!context.supportsHistoricalSnapshots}
-            helperText={
-              context.supportsHistoricalSnapshots ? undefined : "Historical snapshots pending source support"
-            }
           />
         </div>
 
@@ -99,11 +123,6 @@ export default function PortfolioWorkspaceToolbar({
             }
             SelectProps={{ native: true }}
             disabled={!context.supportsReportingCurrencyRestatement}
-            helperText={
-              context.supportsReportingCurrencyRestatement
-                ? undefined
-                : "Cross-currency restatement pending source support"
-            }
           >
             {context.currencyOptions.map((option) => (
               <option key={option} value={option}>
@@ -167,7 +186,6 @@ export default function PortfolioWorkspaceToolbar({
                 value={controls.customStartDate}
                 onChange={(event) => onControlsChange({ customStartDate: event.target.value })}
                 inputProps={{ max: controls.customEndDate || context.selectedAsOfDate }}
-                helperText="Optional custom period start"
               />
             </div>
 
@@ -180,7 +198,6 @@ export default function PortfolioWorkspaceToolbar({
                 value={controls.customEndDate}
                 onChange={(event) => onControlsChange({ customEndDate: event.target.value })}
                 inputProps={{ max: context.selectedAsOfDate, min: controls.customStartDate || undefined }}
-                helperText="Optional custom period end"
               />
             </div>
           </>
@@ -190,6 +207,7 @@ export default function PortfolioWorkspaceToolbar({
           <Button
             variant="outlined"
             size="small"
+            className="portfolio-workspace-toolbar-action"
             aria-haspopup="menu"
             aria-expanded={Boolean(filtersAnchor)}
             aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
@@ -200,6 +218,7 @@ export default function PortfolioWorkspaceToolbar({
           <Button
             variant="outlined"
             size="small"
+            className="portfolio-workspace-toolbar-action"
             aria-haspopup="menu"
             aria-expanded={Boolean(columnsAnchor)}
             aria-label="Columns"
@@ -208,12 +227,19 @@ export default function PortfolioWorkspaceToolbar({
           >
             Columns
           </Button>
-          <Button variant="outlined" size="small" aria-label="Export portfolio data" onClick={onExport}>
+          <Button
+            variant="outlined"
+            size="small"
+            className="portfolio-workspace-toolbar-action"
+            aria-label="Export portfolio data"
+            onClick={onExport}
+          >
             Export
           </Button>
           <Button
             variant="outlined"
             size="small"
+            className="portfolio-workspace-toolbar-action"
             aria-haspopup="menu"
             aria-expanded={Boolean(actionsAnchor)}
             aria-label="More actions"
@@ -225,19 +251,9 @@ export default function PortfolioWorkspaceToolbar({
       </div>
 
       <div className="portfolio-workspace-toolbar-context">
-        <span>{historicalContextCopy}</span>
-        <span>
-          View mode: <strong>{controls.viewMode === "summary" ? "Summary" : "Detailed"}</strong>
-        </span>
-        <span>
-          Period: <strong>{context.periodLabel}</strong>
-        </span>
-        <span>
-          Range:{" "}
-          <strong>
-            {formatDate(context.effectivePeriodStartDate)} to {formatDate(context.effectivePeriodEndDate)}
-          </strong>
-        </span>
+        {contextSegments.map((segment) => (
+          <span key={segment}>{segment}</span>
+        ))}
       </div>
 
       {activeFilterChips.length ? (
