@@ -115,12 +115,15 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("button", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Detailed" })).toBeInTheDocument();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-      expect(
-        screen.getByRole("button", { name: "Look-through pending source support" })
-      ).toBeDisabled();
-    });
+    const regionTab = await screen.findByRole("tab", { name: "Region" }, { timeout: 5000 });
+    expect(regionTab).toBeDisabled();
+    expect(
+      await screen.findByRole(
+        "button",
+        { name: "Look-through pending source support" },
+        { timeout: 5000 }
+      )
+    ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export portfolio data" })).toBeInTheDocument();
 
@@ -251,14 +254,14 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /^Holdings$/i })).toBeInTheDocument();
-      expect(screen.getByText("As of 24 Feb 2026 in USD")).toBeInTheDocument();
-      expect(screen.getAllByRole("button", { name: /Columns/i }).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByRole("heading", { name: /^Transactions$/i })).toBeInTheDocument();
-      expect(screen.getByRole("heading", { name: /Projected Cashflow/i })).toBeInTheDocument();
-      expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("heading", { name: /^Holdings$/i }, { timeout: 5000 })
+    ).toBeInTheDocument();
+    expect(screen.getByText("As of 24 Feb 2026 in USD")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Columns/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("heading", { name: /^Transactions$/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Projected Cashflow/i })).toBeInTheDocument();
+    expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
     expect(screen.getByText("Performance not available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Why performance is unavailable" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Export/i }).length).toBeGreaterThanOrEqual(3);
