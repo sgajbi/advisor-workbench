@@ -51,6 +51,10 @@ export default function PortfolioWorkspaceClient({
   const [detailedDetailsLoaded, setDetailedDetailsLoaded] = useState(false);
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
   const detailedRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
+  const context = useMemo(
+    () => buildPortfolioWorkspaceContext(workspaceState, controls),
+    [controls, workspaceState]
+  );
 
   useEffect(() => {
     const storedViewMode = window.localStorage.getItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY);
@@ -114,22 +118,27 @@ export default function PortfolioWorkspaceClient({
     let cancelled = false;
 
     async function loadDetailedDetails() {
-      if (
-        !selectedPortfolioId ||
-        !workspaceState ||
-        controls.viewMode !== "detailed" ||
-        detailedDetailsLoaded
-      ) {
+      if (!selectedPortfolioId || !workspaceState || controls.viewMode !== "detailed") {
         return;
       }
 
       const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}`;
-      if (detailedRequestRef.current?.key === requestKey) {
+      const transactionWindowKey = `${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}`;
+      const scopedRequestKey = `${requestKey}:${transactionWindowKey}`;
+      if (
+        detailedRequestRef.current?.key === scopedRequestKey &&
+        detailedRequestRef.current?.status === "loaded"
+      ) {
         return;
       }
 
-      detailedRequestRef.current = { key: requestKey, status: "loading" };
-      const details = await getPortfolioWorkspaceDetailedDetailsOnce(requestKey, selectedPortfolioId);
+      detailedRequestRef.current = { key: scopedRequestKey, status: "loading" };
+      setDetailedDetailsLoaded(false);
+      const details = await getPortfolioWorkspaceDetailedDetailsOnce(scopedRequestKey, selectedPortfolioId, {
+        asOfDate: context.selectedAsOfDate,
+        startDate: context.effectivePeriodStartDate,
+        endDate: context.effectivePeriodEndDate,
+      });
       if (cancelled || !details) {
         return;
       }
@@ -137,7 +146,7 @@ export default function PortfolioWorkspaceClient({
       setWorkspaceState((current) =>
         current ? mergePortfolioWorkspace(current, details) : current
       );
-      detailedRequestRef.current = { key: requestKey, status: "loaded" };
+      detailedRequestRef.current = { key: scopedRequestKey, status: "loaded" };
       setDetailedDetailsLoaded(true);
     }
 
@@ -146,7 +155,15 @@ export default function PortfolioWorkspaceClient({
     return () => {
       cancelled = true;
     };
-  }, [controls.viewMode, detailedDetailsLoaded, selectedPortfolioId, workspaceState]);
+  }, [
+    context.effectivePeriodEndDate,
+    context.effectivePeriodStartDate,
+    context.selectedAsOfDate,
+    controls.viewMode,
+    detailedDetailsLoaded,
+    selectedPortfolioId,
+    workspaceState,
+  ]);
 
   const workspace = useMemo(
     () => derivePortfolioWorkspace(workspaceState, controls),
@@ -159,10 +176,6 @@ export default function PortfolioWorkspaceClient({
   const activeFilterChips = useMemo(
     () => buildPortfolioActiveFilterChips(controls),
     [controls]
-  );
-  const context = useMemo(
-    () => buildPortfolioWorkspaceContext(workspaceState, controls),
-    [controls, workspaceState]
   );
 
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
@@ -302,13 +315,21 @@ function getPortfolioWorkspaceSummaryDetailsOnce(requestKey: string, portfolioId
   return request;
 }
 
-function getPortfolioWorkspaceDetailedDetailsOnce(requestKey: string, portfolioId: string) {
+function getPortfolioWorkspaceDetailedDetailsOnce(
+  requestKey: string,
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+) {
   const existingRequest = detailedDetailsInflightRequests.get(requestKey);
   if (existingRequest) {
     return existingRequest;
   }
 
-  const request = getPortfolioWorkspaceDetailedDetails(portfolioId).finally(() => {
+  const request = getPortfolioWorkspaceDetailedDetails(portfolioId, params).finally(() => {
     detailedDetailsInflightRequests.delete(requestKey);
   });
   detailedDetailsInflightRequests.set(requestKey, request);

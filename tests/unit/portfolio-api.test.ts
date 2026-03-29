@@ -7,11 +7,13 @@ import {
   getPortfolioWorkspaceShell,
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
+  resetPortfolioApiRequestCache,
 } from "../../src/apps/portfolio/api";
 
 describe("portfolio api", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    resetPortfolioApiRequestCache();
   });
 
   it("builds a shell workspace without waiting for detail modules", async () => {
@@ -120,53 +122,6 @@ describe("portfolio api", () => {
         });
       }
 
-      if (url.includes("/readiness")) {
-        return jsonResponse({
-          indicators: [
-            { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
-          ],
-        });
-      }
-
-      if (url.includes("/insights")) {
-        return jsonResponse({
-          insights: [
-            {
-              key: "cash-above-target",
-              title: "Cash exceeds target allocation",
-              detail: "Available cash is elevated relative to invested assets.",
-              severity: "info",
-              href: "#portfolio-insights",
-            },
-          ],
-          exception_summaries: [
-            {
-              key: "pricing",
-              title: "Pricing coverage incomplete",
-              detail: "Some holdings lack complete valuation coverage.",
-              tone: "warn",
-              href: "#portfolio-attention",
-            },
-          ],
-        });
-      }
-
-      if (url.includes("/workflow")) {
-        return jsonResponse({
-          actions: [
-            {
-              sequence: 1,
-              title: "Review performance",
-              impact: "Review portfolio return.",
-              target: "Target: Performance workflow",
-              href: "/performance",
-              cta_label: "Performance",
-              recommended: true,
-            },
-          ],
-        });
-      }
-
       if (url.includes("/income-summary")) {
         return jsonResponse({
           reporting_currency: "USD",
@@ -207,14 +162,17 @@ describe("portfolio api", () => {
     expect(details?.top_positions[0].market_value_base).toBe(147000);
     expect(details?.positions[0].market_value_local).toBe(147000);
     expect(details?.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);
-    expect(details?.readiness_indicators?.[0].status).toBe("Ready");
-    expect(details?.insights?.[0].key).toBe("cash-above-target");
-    expect(details?.exception_summaries?.[0].key).toBe("pricing");
-    expect(details?.workflow_actions?.[0].title).toBe("Review performance");
+    expect(details?.readiness_indicators).toBeUndefined();
+    expect(details?.insights).toBeUndefined();
+    expect(details?.exception_summaries).toBeUndefined();
+    expect(details?.workflow_actions).toBeUndefined();
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/transactions"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
   });
 
   it("loads detailed ledger and liquidity slices only when detailed modules need them", async () => {
@@ -256,6 +214,53 @@ describe("portfolio api", () => {
                 security_id: "EQ_US_AAPL_MANUAL_001",
                 instrument_id: "EQ_US_AAPL_MANUAL_001",
                 quantity: 700,
+              },
+            ],
+          });
+        }
+
+        if (url.includes("/readiness")) {
+          return jsonResponse({
+            indicators: [
+              { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
+            ],
+          });
+        }
+
+        if (url.includes("/insights")) {
+          return jsonResponse({
+            insights: [
+              {
+                key: "cash-above-target",
+                title: "Cash exceeds target allocation",
+                detail: "Available cash is elevated relative to invested assets.",
+                severity: "info",
+                href: "#portfolio-insights",
+              },
+            ],
+            exception_summaries: [
+              {
+                key: "pricing",
+                title: "Pricing coverage incomplete",
+                detail: "Some holdings lack complete valuation coverage.",
+                tone: "warn",
+                href: "#portfolio-attention",
+              },
+            ],
+          });
+        }
+
+        if (url.includes("/workflow")) {
+          return jsonResponse({
+            actions: [
+              {
+                sequence: 1,
+                title: "Review performance",
+                impact: "Review portfolio return.",
+                target: "Target: Performance workflow",
+                href: "/performance",
+                cta_label: "Performance",
+                recommended: true,
               },
             ],
           });
@@ -310,11 +315,27 @@ describe("portfolio api", () => {
       partial_failures: [],
     };
 
-    const details = await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001");
+    const details = await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+    });
     const merged = mergePortfolioWorkspace(shell, details!);
 
     expect(merged.cash_balances?.[0].market_value_base).toBe(66122);
     expect(merged.recent_transactions[0].transaction_id).toBe("TX_1");
+    expect(merged.readiness_indicators?.[0].status).toBe("Ready");
+    expect(merged.insights?.[0].key).toBe("cash-above-target");
+    expect(merged.exception_summaries?.[0].key).toBe("pricing");
+    expect(merged.workflow_actions?.[0].title).toBe("Review performance");
+    const requestedUrls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
+      String(call[0])
+    );
+    const transactionRequestUrl = requestedUrls.find((url) => url.includes("/transactions?")) ?? "";
+    expect(transactionRequestUrl).toContain("limit=200");
+    expect(transactionRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(transactionRequestUrl).toContain("start_date=2026-03-01");
+    expect(transactionRequestUrl).toContain("end_date=2026-03-28");
   });
 
   it("requests the transaction ledger with scoped filter parameters", async () => {
@@ -343,6 +364,68 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("start_date=2026-03-01");
     expect(requestUrl).toContain("end_date=2026-03-28");
     expect(requestUrl).toContain("transaction_type=BUY");
+  });
+
+  it("reuses cached BFF responses for identical requests", async () => {
+    const fetchSpy = vi.fn(async (input: string | URL) => {
+      const url = input.toString();
+
+      if (url.includes("/transactions")) {
+        return jsonResponse({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [{ transaction_id: "TX_1" }],
+        });
+      }
+
+      if (url.includes("/allocations")) {
+        return jsonResponse({
+          views: [{ dimension: "asset_class", buckets: [] }],
+        });
+      }
+
+      if (url.includes("/positions")) {
+        return jsonResponse({
+          top_positions: [],
+          positions: [],
+        });
+      }
+
+      if (url.includes("/income-summary")) {
+        return jsonResponse(null);
+      }
+
+      if (url.includes("/activity-summary")) {
+        return jsonResponse(null);
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      limit: 200,
+    });
+    await getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      limit: 200,
+    });
+
+    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+
+    const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
+    expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
   });
 
   it("requests projected cashflow with the selected horizon", async () => {

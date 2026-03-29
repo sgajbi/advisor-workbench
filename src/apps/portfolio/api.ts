@@ -1,6 +1,8 @@
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "./types";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
+const portfolioApiResponseCache = new Map<string, unknown>();
+const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
 
 type PortfolioWorkspaceSummaryResponse = {
   as_of_date: string;
@@ -88,18 +90,23 @@ type PortfolioWorkspaceSummaryDetails = Pick<
 
 type PortfolioWorkspaceDetailedDetails = Pick<
   PortfolioWorkspace,
-  "cash_balances" | "recent_transactions" | "cashflow_outlook"
+  | "cash_balances"
+  | "recent_transactions"
+  | "cashflow_outlook"
+  | "readiness_indicators"
+  | "exception_summaries"
+  | "insights"
+  | "workflow_actions"
 >;
 
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
   try {
-    const response = await fetch(`${resolveBffBaseUrl()}/api/v1/portfolio/portfolios`, {
-      cache: "no-store",
-    });
-    if (!response.ok) {
+    const payload = await fetchBffJson<PortfolioCatalogResponse>(
+      `${resolveBffBaseUrl()}/api/v1/portfolio/portfolios`
+    );
+    if (!payload) {
       return [];
     }
-    const payload = (await response.json()) as PortfolioCatalogResponse;
     return payload.items ?? [];
   } catch {
     return [];
@@ -111,16 +118,13 @@ export async function getPortfolioWorkspaceShell(
 ): Promise<PortfolioWorkspace | null> {
   try {
     const baseUrl = resolveBffBaseUrl();
-    const summaryResponse = await fetch(
+    const summaryPayload = await fetchBffJson<PortfolioWorkspaceSummaryResponse>(
       `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
-      { cache: "no-store" }
+      { useCache: false }
     );
-    if (!summaryResponse.ok) {
+    if (!summaryPayload) {
       return null;
     }
-
-    const summaryPayload =
-      (await summaryResponse.json()) as PortfolioWorkspaceSummaryResponse;
 
     return {
       as_of_date: summaryPayload.as_of_date,
@@ -167,68 +171,28 @@ export async function getPortfolioWorkspaceSummaryDetails(
   try {
     const baseUrl = resolveBffBaseUrl();
     const [
-      allocationsResponse,
-      positionsResponse,
-      readinessResponse,
-      insightsResponse,
-      workflowResponse,
-      incomeResponse,
-      activityResponse,
+      allocationsPayload,
+      positionsPayload,
+      incomePayload,
+      activityPayload,
     ] = await Promise.all([
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
-        { cache: "no-store" }
+      fetchBffJson<PortfolioAllocationResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
       ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
-        { cache: "no-store" }
+      fetchBffJson<PortfolioPositionsResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
       ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
-        { cache: "no-store" }
+      fetchBffJson<PortfolioIncomeSummaryResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
       ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
-        { cache: "no-store" }
-      ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
-        { cache: "no-store" }
+      fetchBffJson<PortfolioActivitySummaryResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
       ),
     ]);
 
-    if (!allocationsResponse.ok || !positionsResponse.ok) {
+    if (!allocationsPayload || !positionsPayload) {
       return null;
     }
-
-    const allocationsPayload =
-      (await allocationsResponse.json()) as PortfolioAllocationResponse;
-    const positionsPayload =
-      (await positionsResponse.json()) as PortfolioPositionsResponse;
-    const incomePayload = incomeResponse.ok
-      ? ((await incomeResponse.json()) as PortfolioIncomeSummaryResponse)
-      : null;
-    const activityPayload = activityResponse.ok
-      ? ((await activityResponse.json()) as PortfolioActivitySummaryResponse)
-      : null;
-    const readinessPayload = readinessResponse.ok
-      ? ((await readinessResponse.json()) as PortfolioReadinessResponse)
-      : null;
-    const insightsPayload = insightsResponse.ok
-      ? ((await insightsResponse.json()) as PortfolioInsightsResponse)
-      : null;
-    const workflowPayload = workflowResponse.ok
-      ? ((await workflowResponse.json()) as PortfolioWorkflowResponse)
-      : null;
-
     const allocationView =
       allocationsPayload.views.find((view) => view.dimension === "asset_class") ??
       allocationsPayload.views[0];
@@ -245,10 +209,6 @@ export async function getPortfolioWorkspaceSummaryDetails(
       positions: positionsPayload.positions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
-      readiness_indicators: readinessPayload?.indicators ?? undefined,
-      exception_summaries: insightsPayload?.exception_summaries ?? undefined,
-      insights: insightsPayload?.insights ?? undefined,
-      workflow_actions: workflowPayload?.actions ?? undefined,
     };
   } catch {
     return null;
@@ -256,34 +216,62 @@ export async function getPortfolioWorkspaceSummaryDetails(
 }
 
 export async function getPortfolioWorkspaceDetailedDetails(
-  portfolioId: string
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    startDate?: string;
+    endDate?: string;
+  } = {}
 ): Promise<PortfolioWorkspaceDetailedDetails | null> {
   try {
     const baseUrl = resolveBffBaseUrl();
-    const [liquidityResponse, transactionsResponse] = await Promise.all([
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
-        { cache: "no-store" }
+    const transactionSearchParams = new URLSearchParams();
+    transactionSearchParams.set("limit", "200");
+    if (params.asOfDate) {
+      transactionSearchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.startDate) {
+      transactionSearchParams.set("start_date", params.startDate);
+    }
+    if (params.endDate) {
+      transactionSearchParams.set("end_date", params.endDate);
+    }
+    const [
+      liquidityPayload,
+      transactionsPayload,
+      readinessPayload,
+      insightsPayload,
+      workflowPayload,
+    ] = await Promise.all([
+      fetchBffJson<PortfolioLiquidityResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
       ),
-      fetch(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?limit=200`,
-        { cache: "no-store" }
+      fetchBffJson<PortfolioTransactionLedgerResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${transactionSearchParams.toString()}`
+      ),
+      fetchBffJson<PortfolioReadinessResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
+      ),
+      fetchBffJson<PortfolioInsightsResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
+      ),
+      fetchBffJson<PortfolioWorkflowResponse>(
+        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
       ),
     ]);
 
-    if (!liquidityResponse.ok || !transactionsResponse.ok) {
+    if (!liquidityPayload || !transactionsPayload) {
       return null;
     }
-
-    const liquidityPayload =
-      (await liquidityResponse.json()) as PortfolioLiquidityResponse;
-    const transactionsPayload =
-      (await transactionsResponse.json()) as PortfolioTransactionLedgerResponse;
 
     return {
       cash_balances: liquidityPayload.cash_balances,
       recent_transactions: transactionsPayload.transactions,
       cashflow_outlook: liquidityPayload.cashflow_outlook,
+      readiness_indicators: readinessPayload?.indicators ?? undefined,
+      exception_summaries: insightsPayload?.exception_summaries ?? undefined,
+      insights: insightsPayload?.insights ?? undefined,
+      workflow_actions: workflowPayload?.actions ?? undefined,
     };
   } catch {
     return null;
@@ -320,15 +308,9 @@ export async function getPortfolioTransactionLedger(
       searchParams.set("transaction_type", params.transactionType);
     }
 
-    const response = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${searchParams.toString()}`,
-      { cache: "no-store" }
+    return await fetchBffJson<PortfolioTransactionLedgerResponse>(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${searchParams.toString()}`
     );
-    if (!response.ok) {
-      return null;
-    }
-
-    return (await response.json()) as PortfolioTransactionLedgerResponse;
   } catch {
     return null;
   }
@@ -355,19 +337,21 @@ export async function getPortfolioProjectedCashflow(
       searchParams.set("include_projected", String(params.includeProjected));
     }
 
-    const response = await fetch(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow?${searchParams.toString()}`,
-      { cache: "no-store" }
+    const payload = await fetchBffJson<PortfolioProjectedCashflowResponse>(
+      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow?${searchParams.toString()}`
     );
-    if (!response.ok) {
+    if (!payload) {
       return null;
     }
-
-    const payload = (await response.json()) as PortfolioProjectedCashflowResponse;
     return payload.cashflow_outlook ?? null;
   } catch {
     return null;
   }
+}
+
+export function resetPortfolioApiRequestCache() {
+  portfolioApiResponseCache.clear();
+  portfolioApiInflightRequests.clear();
 }
 
 export function mergePortfolioWorkspace(
@@ -387,4 +371,49 @@ function resolveBffBaseUrl(): string {
   }
 
   return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
+}
+
+async function fetchBffJson<T>(
+  url: string,
+  options: {
+    useCache?: boolean;
+  } = {}
+): Promise<T | null> {
+  const useCache = options.useCache ?? true;
+
+  if (useCache && portfolioApiResponseCache.has(url)) {
+    return portfolioApiResponseCache.get(url) as T;
+  }
+
+  if (useCache) {
+    const existingRequest = portfolioApiInflightRequests.get(url);
+    if (existingRequest) {
+      return (await existingRequest) as T;
+    }
+  }
+
+  const request = (async () => {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as T;
+    if (useCache) {
+      portfolioApiResponseCache.set(url, payload);
+    }
+    return payload;
+  })();
+
+  if (useCache) {
+    portfolioApiInflightRequests.set(url, request);
+  }
+
+  try {
+    return await request;
+  } finally {
+    if (useCache) {
+      portfolioApiInflightRequests.delete(url);
+    }
+  }
 }
