@@ -49,10 +49,12 @@ describe("PortfolioFoundationPage", () => {
 
     expect(document.querySelector("main.workstation-page.portfolio-page")).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
+    expect(document.querySelector(".workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workstation-shell.workstation-shell-both.portfolio-layout")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-rail.portfolio-rail-shell")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main.portfolio-main")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-side.portfolio-side")).toBeTruthy();
+    expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(screen.getByRole("heading", { name: /^Portfolio$/i })).toBeInTheDocument();
     expect(document.querySelector(".workstation-shell-main .portfolio-hero")).toBeTruthy();
     const hero = screen.getByRole("heading", { name: /Global Balanced/i }).closest(".portfolio-hero");

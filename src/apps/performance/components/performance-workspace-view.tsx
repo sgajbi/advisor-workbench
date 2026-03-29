@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { LotusWorkstationHeader, Panel, WorkstationShell } from "@/design-system";
+import { Panel, WorkbenchPageHeader, WorkstationShell } from "@/design-system";
 
 import {
   getPerformanceWorkspacePresentation,
@@ -96,10 +96,9 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <>
-            <LotusWorkstationHeader
-              product="Lotus Performance"
+            <WorkbenchPageHeader
               title="Performance Workbench"
-              context="Benchmark-aware portfolio performance, attribution, and contribution analysis"
+              subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
               actions={<PerformanceWorkspaceModeSwitch value={mode} onChange={setMode} />}
             />
             {modePanel}

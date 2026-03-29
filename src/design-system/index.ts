@@ -9,7 +9,6 @@ export { default as DegradedStatePanel } from "./components/degraded-state-panel
 export { default as PageToolbar } from "./components/page-toolbar";
 export { default as ContextCard } from "./components/context-card";
 export { default as KpiStatTile } from "./components/kpi-stat-tile";
-export { default as LotusWorkstationHeader } from "./components/lotus-workstation-header";
 export { default as ReadinessIndicator } from "./components/readiness-indicator";
 export { default as InsightCallout } from "./components/insight-callout";
 export { default as ActionListCard } from "./components/action-list-card";
@@ -37,3 +36,4 @@ export {
 } from "./components/workspace-layout";
 export { default as WorkspaceRailLink } from "./components/workspace-rail-link";
 export { default as WorkspaceHeader } from "./components/workspace-header";
+export { default as WorkbenchPageHeader } from "./components/workbench-page-header";

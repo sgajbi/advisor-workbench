@@ -38,6 +38,9 @@
   --font-ui: "Public Sans", "Segoe UI", sans-serif;
   --font-display: "Public Sans", "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --workstation-shell-gap: 20px;
+  --workstation-rail-width: 280px;
+  --workstation-side-width: 320px;
   --text-2xs: 0.6875rem;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -160,58 +163,23 @@ a:hover {
   flex-shrink: 0;
 }
 
-.lotus-workstation-header {
+.workbench-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
-  padding: 0 0 0.1rem;
+  padding: 0.1rem 0 0.2rem;
 }
 
-.lotus-workstation-header-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.workbench-page-header-copy {
+  display: grid;
+  gap: 0.18rem;
   min-width: 0;
   flex: 1 1 auto;
 }
 
-.lotus-workstation-header-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  flex: 0 0 auto;
-  border-radius: 12px;
-  border: 1px solid rgba(54, 95, 139, 0.14);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 247, 250, 0.96) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 4px 12px rgba(34, 44, 59, 0.05);
-}
-
-.lotus-workstation-header-mark .lotus-mark {
-  width: 2rem;
-  height: 1.6rem;
-}
-
-.lotus-workstation-header-copy {
-  display: grid;
-  gap: 0.12rem;
-  min-width: 0;
-}
-
-.lotus-workstation-header-product {
-  font-size: var(--text-2xs);
-  font-weight: 800;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.lotus-workstation-header-title {
+.workbench-page-header-title {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(1.45rem, 1.6vw, 1.9rem);
@@ -221,7 +189,7 @@ a:hover {
   color: var(--brand-strong);
 }
 
-.lotus-workstation-header-context {
+.workbench-page-header-subtitle {
   margin: 0;
   max-width: 68ch;
   color: var(--text-muted);
@@ -229,11 +197,12 @@ a:hover {
   line-height: 1.35;
 }
 
-.lotus-workstation-header-actions {
+.workbench-page-header-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex: 0 0 auto;
+  min-width: 0;
 }
 
 .lotus-mark-core {
@@ -810,20 +779,20 @@ a:hover {
   width: 100%;
   min-width: 0;
   align-items: start;
-  column-gap: 16px;
-  row-gap: 16px;
+  column-gap: var(--workstation-shell-gap);
+  row-gap: var(--workstation-shell-gap);
 }
 
 .workstation-shell-both {
-  grid-template-columns: clamp(180px, 16vw, 220px) minmax(0, 1fr) clamp(220px, 18vw, 260px);
+  grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr) var(--workstation-side-width);
 }
 
 .workstation-shell-rail-only {
-  grid-template-columns: clamp(180px, 16vw, 220px) minmax(0, 1fr);
+  grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr);
 }
 
 .workstation-shell-side-only {
-  grid-template-columns: minmax(0, 1fr) clamp(220px, 18vw, 260px);
+  grid-template-columns: minmax(0, 1fr) var(--workstation-side-width);
 }
 
 .workstation-shell-main-only {
@@ -838,12 +807,12 @@ a:hover {
 
 .workstation-shell-rail {
   width: 100%;
-  max-width: clamp(180px, 16vw, 220px);
+  max-width: var(--workstation-rail-width);
 }
 
 .workstation-shell-side {
   width: 100%;
-  max-width: clamp(220px, 18vw, 260px);
+  max-width: var(--workstation-side-width);
 }
 
 .workstation-shell-main {
@@ -1158,7 +1127,7 @@ a:hover {
 
 .portfolio-rail-shell {
   width: 100%;
-  max-width: 220px;
+  max-width: none;
 }
 
 .portfolio-main {
@@ -1182,7 +1151,7 @@ a:hover {
   top: 4.8rem;
   align-self: start;
   width: 100%;
-  max-width: 260px;
+  max-width: none;
   min-width: 0;
 }
 
@@ -4994,27 +4963,17 @@ a:hover {
   }
 
   .workstation-shell-both {
-    grid-template-columns: 200px minmax(0, 1fr) 240px;
+    grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr) var(--workstation-side-width);
   }
 
   .workstation-shell-side-only {
-    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(0, 1fr) var(--workstation-side-width);
   }
 
-  .workstation-shell-rail {
-    max-width: 200px;
-  }
-
-  .workstation-shell-side {
-    max-width: 240px;
-  }
-
-  .portfolio-rail-shell {
-    max-width: 200px;
-  }
-
-  .portfolio-side {
-    max-width: 240px;
+  :root {
+    --workstation-shell-gap: 18px;
+    --workstation-rail-width: 240px;
+    --workstation-side-width: 280px;
   }
 }
 
@@ -5039,6 +4998,10 @@ a:hover {
 
   .workstation-shell-both,
   .workstation-shell-side-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workstation-shell-rail-only {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -5107,12 +5070,12 @@ a:hover {
     max-width: none;
   }
 
-  .lotus-workstation-header {
+  .workbench-page-header {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .lotus-workstation-header-actions {
+  .workbench-page-header-actions {
     justify-content: flex-start;
   }
 

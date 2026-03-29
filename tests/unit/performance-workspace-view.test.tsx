@@ -88,7 +88,8 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     expect(document.querySelector(".workspace-layout")).toBeFalsy();
-    expect(screen.getByText("Lotus Performance")).toBeInTheDocument();
+    expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
+    expect(document.querySelector(".workbench-page-header")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -96,7 +97,7 @@ describe("PerformanceWorkspaceView", () => {
       )
     ).toBeInTheDocument();
     expect(
-      document.querySelector(".lotus-workstation-header-actions [role='tablist']")
+      document.querySelector(".workbench-page-header-actions [role='tablist']")
     ).toBeTruthy();
     expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();

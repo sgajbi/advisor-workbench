@@ -13,7 +13,6 @@ import {
   FilterBar,
   InsightCallout,
   KpiStatTile,
-  LotusWorkstationHeader,
   ModuleStatePanel,
   MetricRow,
   PageToolbar,
@@ -29,6 +28,7 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkbenchPageHeader,
   WorkstationPage,
   WorkstationShell,
 } from "@/design-system";
@@ -304,26 +304,24 @@ describe("design-system components", () => {
     expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
   });
 
-  it("renders the shared Lotus workstation header with brand, title, context, and actions", () => {
+  it("renders the shared neutral workbench page header with title, subtitle, and actions", () => {
     render(
-      <LotusWorkstationHeader
-        product="Lotus Performance"
+      <WorkbenchPageHeader
         title="Performance Workbench"
-        context="Benchmark-aware portfolio performance, attribution, and contribution analysis"
+        subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
         actions={<button type="button">Header Action</button>}
       />
     );
 
-    expect(screen.getByText("Lotus Performance")).toHaveClass("lotus-workstation-header-product");
     expect(screen.getByRole("heading", { name: "Performance Workbench" })).toHaveClass(
-      "lotus-workstation-header-title"
+      "workbench-page-header-title"
     );
     expect(
       screen.getByText(
         "Benchmark-aware portfolio performance, attribution, and contribution analysis"
       )
-    ).toHaveClass("lotus-workstation-header-context");
+    ).toHaveClass("workbench-page-header-subtitle");
     expect(screen.getByRole("button", { name: "Header Action" })).toBeInTheDocument();
-    expect(document.querySelector(".lotus-workstation-header-mark .lotus-mark")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-header-actions")).toBeTruthy();
   });
 });

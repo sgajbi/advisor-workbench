@@ -15,9 +15,9 @@ import {
   Panel,
   SectionLabel,
   StatusChip,
+  WorkbenchPageHeader,
   WorkstationShell,
   WorkspaceGrid,
-  WorkspaceHeader,
 } from "@/design-system";
 
 import {
@@ -336,9 +336,10 @@ export default function PortfolioWorkspaceView({
         rail={<PortfolioRail portfolios={portfolios} selectedPortfolioId={selectedPortfolioId} />}
         main={
           <>
-            <WorkspaceHeader
+            <WorkbenchPageHeader
               title="Portfolio"
-              meta={
+              subtitle="Front-office portfolio context, readiness, and decision support"
+              actions={
                 <>
                   <StatusChip>{portfolios.length} portfolios</StatusChip>
                   <StatusChip tone={portfolios.length ? "success" : "warn"}>
