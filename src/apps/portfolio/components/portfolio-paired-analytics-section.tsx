@@ -5,8 +5,6 @@ import dynamic from "next/dynamic";
 import {
   AnalyticsTable,
   DeferredWorkbenchMount,
-  ModuleSkeleton,
-  WorkspaceCapabilityPanel,
   WorkspaceGrid,
 } from "@/design-system";
 import { isRenderableCapability } from "@/shell/workspace-capabilities";
@@ -26,6 +24,7 @@ import {
   getRequestedWindowActivityAmount,
   getRequestedWindowActivityCount,
 } from "../view-model";
+import PortfolioAnalyticsCapabilityBody from "./portfolio-analytics-capability-body";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
 
 const DeferredPortfolioIncomePanel = dynamic(
@@ -161,118 +160,105 @@ function renderIncomeModule({
   isDetailedView: boolean;
   incomeDisplayCurrency: string;
 }) {
-  if (detailsLoading) {
-    return <ModuleSkeleton chart rows={4} />;
-  }
-
-  if (capabilities.income.state === "supported" && workspace.income_summary) {
-    const summary = workspace.income_summary;
-    return (
-      <div className="portfolio-analytics-module-body" data-analytics-module="income">
-        <PortfolioAnalyticsSummaryRow
-          ariaLabel="Income overview"
-          stats={[
-            {
-              label: "Net income",
-              value: formatCurrency(
-                summary.totals_requested_window.net.reporting_currency_amount,
-                incomeDisplayCurrency
-              ),
-            },
-            {
-              label: "Gross income",
-              value: formatCurrency(
-                summary.totals_requested_window.gross.reporting_currency_amount,
-                incomeDisplayCurrency
-              ),
-            },
-            {
-              label: "Income events",
-              value: summary.totals_requested_window.net.transaction_count,
-            },
-          ]}
-        />
-        <DeferredWorkbenchMount
-          placeholder={
-            <ModuleSkeleton
-              chart
-              rows={2}
-            />
-          }
-        >
-          <DeferredPortfolioIncomePanel summary={summary} compact={!isDetailedView} />
-        </DeferredWorkbenchMount>
-        {isDetailedView ? (
-          <AnalyticsTable
-            ariaLabel="Income summary"
-            columns={[
-              { key: "category", label: "Income Type" },
-              { key: "windowNet", label: "Window Net", align: "right" },
-              { key: "ytdNet", label: "YTD Net", align: "right" },
-              { key: "windowGross", label: "Window Gross", align: "right" },
-              { key: "txns", label: "Window Events", align: "right" },
-            ]}
-            rows={[
-              {
-                key: "total",
-                cells: [
-                  "Total",
-                  formatCurrency(
-                    summary.totals_requested_window.net.reporting_currency_amount,
-                    incomeDisplayCurrency
-                  ),
-                  formatCurrency(
-                    summary.totals_year_to_date.net.reporting_currency_amount,
-                    incomeDisplayCurrency
-                  ),
-                  formatCurrency(
-                    summary.totals_requested_window.gross.reporting_currency_amount,
-                    incomeDisplayCurrency
-                  ),
-                  summary.totals_requested_window.net.transaction_count,
-                ],
-              },
-              ...summary.income_types.map((item) => ({
-                key: item.income_type,
-                cells: [
-                  formatIncomeTypeLabel(item.income_type),
-                  formatCurrency(
-                    item.requested_window.net.reporting_currency_amount,
-                    incomeDisplayCurrency
-                  ),
-                  formatCurrency(
-                    item.year_to_date.net.reporting_currency_amount,
-                    incomeDisplayCurrency
-                  ),
-                  formatCurrency(
-                    item.requested_window.gross.reporting_currency_amount,
-                    incomeDisplayCurrency
-                  ),
-                  item.requested_window.net.transaction_count,
-                ],
-              })),
-            ]}
-          />
-        ) : null}
-      </div>
-    );
-  }
-
   return (
-    <WorkspaceCapabilityPanel
+    <PortfolioAnalyticsCapabilityBody
       capability={capabilities.income}
+      detailsLoading={detailsLoading}
+      supportedData={workspace.income_summary}
       partialTitle="Income is not classified yet"
       unavailableTitle="No income activity"
       body={
         capabilities.income.reason ??
         "No income events have been recorded for the selected period."
       }
-      hint={
-        capabilities.income.state === "partial"
-          ? "Dividend, coupon, and income classifications need to be published before income composition can be shown."
-          : "Dividend and coupon events will populate income once they are booked."
-      }
-    />
+      partialHint="Dividend, coupon, and income classifications need to be published before income composition can be shown."
+      unavailableHint="Dividend and coupon events will populate income once they are booked."
+    >
+      {(summary) => (
+        <div className="portfolio-analytics-module-body" data-analytics-module="income">
+          <PortfolioAnalyticsSummaryRow
+            ariaLabel="Income overview"
+            stats={[
+              {
+                label: "Net income",
+                value: formatCurrency(
+                  summary.totals_requested_window.net.reporting_currency_amount,
+                  incomeDisplayCurrency
+                ),
+              },
+              {
+                label: "Gross income",
+                value: formatCurrency(
+                  summary.totals_requested_window.gross.reporting_currency_amount,
+                  incomeDisplayCurrency
+                ),
+              },
+              {
+                label: "Income events",
+                value: summary.totals_requested_window.net.transaction_count,
+              },
+            ]}
+          />
+          <DeferredWorkbenchMount
+            placeholder={<div className="module-skeleton module-skeleton-chart" />}
+          >
+            <DeferredPortfolioIncomePanel summary={summary} compact={!isDetailedView} />
+          </DeferredWorkbenchMount>
+          {isDetailedView ? (
+            <AnalyticsTable
+              ariaLabel="Income summary"
+              columns={[
+                { key: "category", label: "Income Type" },
+                { key: "windowNet", label: "Window Net", align: "right" },
+                { key: "ytdNet", label: "YTD Net", align: "right" },
+                { key: "windowGross", label: "Window Gross", align: "right" },
+                { key: "txns", label: "Window Events", align: "right" },
+              ]}
+              rows={[
+                {
+                  key: "total",
+                  cells: [
+                    "Total",
+                    formatCurrency(
+                      summary.totals_requested_window.net.reporting_currency_amount,
+                      incomeDisplayCurrency
+                    ),
+                    formatCurrency(
+                      summary.totals_year_to_date.net.reporting_currency_amount,
+                      incomeDisplayCurrency
+                    ),
+                    formatCurrency(
+                      summary.totals_requested_window.gross.reporting_currency_amount,
+                      incomeDisplayCurrency
+                    ),
+                    summary.totals_requested_window.net.transaction_count,
+                  ],
+                },
+                ...summary.income_types.map((item) => ({
+                  key: item.income_type,
+                  cells: [
+                    formatIncomeTypeLabel(item.income_type),
+                    formatCurrency(
+                      item.requested_window.net.reporting_currency_amount,
+                      incomeDisplayCurrency
+                    ),
+                    formatCurrency(
+                      item.year_to_date.net.reporting_currency_amount,
+                      incomeDisplayCurrency
+                    ),
+                    formatCurrency(
+                      item.requested_window.gross.reporting_currency_amount,
+                      incomeDisplayCurrency
+                    ),
+                    item.requested_window.net.transaction_count,
+                  ],
+                })),
+              ]}
+            />
+          ) : null}
+        </div>
+      )}
+    </PortfolioAnalyticsCapabilityBody>
   );
 }
 
@@ -293,101 +279,88 @@ function renderActivityModule({
   transactionDrilldown: PortfolioTransactionDrilldownFilter | null;
   onSelectActivityBucket: (bucket: string | null) => void;
 }) {
-  if (detailsLoading) {
-    return <ModuleSkeleton chart rows={4} />;
-  }
-
-  if (capabilities.activity.state === "supported" && workspace.activity_summary) {
-    const summary = workspace.activity_summary;
-    return (
-      <div className="portfolio-analytics-module-body" data-analytics-module="activity">
-        <PortfolioAnalyticsSummaryRow
-          ariaLabel="Activity overview"
-          stats={[
-            {
-              label: "Net flow",
-              value: formatCurrency(
-                getRequestedWindowActivityAmount(workspace),
-                activityDisplayCurrency
-              ),
-            },
-            {
-              label: "Total movement",
-              value: formatCurrency(
-                getActivityGrossMovement(summary),
-                activityDisplayCurrency
-              ),
-            },
-            {
-              label: "Activity events",
-              value: getRequestedWindowActivityCount(workspace),
-            },
-          ]}
-        />
-        <DeferredWorkbenchMount
-          placeholder={
-            <ModuleSkeleton
-              chart
-              rows={2}
-            />
-          }
-        >
-          <DeferredPortfolioActivityPanel
-            summary={summary}
-            compact={!isDetailedView}
-            selectedBucket={
-              transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null
-            }
-            onSelectionChange={onSelectActivityBucket}
-          />
-        </DeferredWorkbenchMount>
-        {isDetailedView ? (
-          <AnalyticsTable
-            ariaLabel="Activity summary"
-            columns={[
-              { key: "bucket", label: "Bucket" },
-              { key: "windowAmount", label: "Window Amount", align: "right" },
-              { key: "ytdAmount", label: "YTD Amount", align: "right" },
-              { key: "windowTxns", label: "Window Events", align: "right" },
-              { key: "ytdTxns", label: "YTD Events", align: "right" },
-            ]}
-            rows={summary.buckets.map((bucket) => ({
-              key: bucket.bucket,
-              cells: [
-                formatActivityBucketLabel(bucket.bucket),
-                formatCurrency(
-                  bucket.requested_window.reporting_currency_amount,
-                  activityDisplayCurrency
-                ),
-                formatCurrency(
-                  bucket.year_to_date.reporting_currency_amount,
-                  activityDisplayCurrency
-                ),
-                bucket.requested_window.transaction_count,
-                bucket.year_to_date.transaction_count,
-              ],
-            }))}
-          />
-        ) : null}
-      </div>
-    );
-  }
-
   return (
-    <WorkspaceCapabilityPanel
+    <PortfolioAnalyticsCapabilityBody
       capability={capabilities.activity}
+      detailsLoading={detailsLoading}
+      supportedData={workspace.activity_summary}
       partialTitle="Activity totals are incomplete"
       unavailableTitle="No client activity"
       body={
         capabilities.activity.reason ??
         "No funding, trading, or cash activity has been recorded in the selected period."
       }
-      hint={
-        capabilities.activity.state === "partial"
-          ? "Publish activity aggregation output to complete the client money movement view."
-          : "Funding and trade events will populate the activity view."
-      }
-    />
+      partialHint="Publish activity aggregation output to complete the client money movement view."
+      unavailableHint="Funding and trade events will populate the activity view."
+    >
+      {(summary) => (
+        <div className="portfolio-analytics-module-body" data-analytics-module="activity">
+          <PortfolioAnalyticsSummaryRow
+            ariaLabel="Activity overview"
+            stats={[
+              {
+                label: "Net flow",
+                value: formatCurrency(
+                  getRequestedWindowActivityAmount(workspace),
+                  activityDisplayCurrency
+                ),
+              },
+              {
+                label: "Total movement",
+                value: formatCurrency(
+                  getActivityGrossMovement(summary),
+                  activityDisplayCurrency
+                ),
+              },
+              {
+                label: "Activity events",
+                value: getRequestedWindowActivityCount(workspace),
+              },
+            ]}
+          />
+          <DeferredWorkbenchMount
+            placeholder={<div className="module-skeleton module-skeleton-chart" />}
+          >
+            <DeferredPortfolioActivityPanel
+              summary={summary}
+              compact={!isDetailedView}
+              selectedBucket={
+                transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null
+              }
+              onSelectionChange={onSelectActivityBucket}
+            />
+          </DeferredWorkbenchMount>
+          {isDetailedView ? (
+            <AnalyticsTable
+              ariaLabel="Activity summary"
+              columns={[
+                { key: "bucket", label: "Bucket" },
+                { key: "windowAmount", label: "Window Amount", align: "right" },
+                { key: "ytdAmount", label: "YTD Amount", align: "right" },
+                { key: "windowTxns", label: "Window Events", align: "right" },
+                { key: "ytdTxns", label: "YTD Events", align: "right" },
+              ]}
+              rows={summary.buckets.map((bucket) => ({
+                key: bucket.bucket,
+                cells: [
+                  formatActivityBucketLabel(bucket.bucket),
+                  formatCurrency(
+                    bucket.requested_window.reporting_currency_amount,
+                    activityDisplayCurrency
+                  ),
+                  formatCurrency(
+                    bucket.year_to_date.reporting_currency_amount,
+                    activityDisplayCurrency
+                  ),
+                  bucket.requested_window.transaction_count,
+                  bucket.year_to_date.transaction_count,
+                ],
+              }))}
+            />
+          ) : null}
+        </div>
+      )}
+    </PortfolioAnalyticsCapabilityBody>
   );
 }
 
