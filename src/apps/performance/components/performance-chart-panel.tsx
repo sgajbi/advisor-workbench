@@ -615,7 +615,17 @@ export default function PerformanceChartPanel({
           <p className="muted">Loading analytical time series and benchmark comparison.</p>
         </div>
       ) : (
-        <p className="muted">Performance breakdown is not available for the selected period.</p>
+        <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
+          <strong>Return series unavailable</strong>
+          <p>
+            The selected period does not currently have published performance observations for this
+            mandate.
+          </p>
+          <span>
+            Adjust the horizon or explicit dates once performance history is available for the
+            requested window.
+          </span>
+        </div>
       )}
       </Stack>
     </Panel>

@@ -115,4 +115,32 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Compared To")).toHaveDisplayValue("Global Growth 80/20");
     expect(screen.getByText("Global Growth 80/20")).toBeInTheDocument();
   });
+
+  it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
+    render(
+      <PerformanceChartPanel
+        title="Net Return Path"
+        points={[]}
+        summary={{
+          portfolio_return_pct: null,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        }}
+        portfolioId="DEMO_ADV_USD_001"
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+        onRequestChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+  });
 });

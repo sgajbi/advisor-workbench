@@ -95,6 +95,9 @@ describe("PerformanceWorkspaceView", () => {
         "Benchmark-aware portfolio performance, attribution, and contribution analysis"
       )
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".lotus-workstation-header-actions [role='tablist']")
+    ).toBeTruthy();
     expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();

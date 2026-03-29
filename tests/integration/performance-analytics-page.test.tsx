@@ -35,7 +35,10 @@ vi.mock("echarts-for-react", () => ({
   ),
 }));
 
-function installPerformancePageFetchMock() {
+function installPerformancePageFetchMock(options?: {
+  unassignedBenchmark?: boolean;
+  unavailableSummarySeries?: boolean;
+}) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: string | URL) => {
@@ -54,13 +57,13 @@ function installPerformancePageFetchMock() {
       if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
         return {
           ok: true,
-          json: async () => buildSummary("DEMO_ADV_USD_001"),
+          json: async () => buildSummary("DEMO_ADV_USD_001", options),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
         return {
           ok: true,
-          json: async () => buildDetails("DEMO_ADV_USD_001"),
+          json: async () => buildDetails("DEMO_ADV_USD_001", options),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
@@ -92,7 +95,10 @@ function installPerformancePageFetchMock() {
   );
 }
 
-function buildSummary(portfolioId: string) {
+function buildSummary(
+  portfolioId: string,
+  options?: { unassignedBenchmark?: boolean; unavailableSummarySeries?: boolean }
+) {
   return {
     correlation_id: "corr-performance",
     contract_version: "v1",
@@ -103,14 +109,16 @@ function buildSummary(portfolioId: string) {
     report_end_date: "2026-02-24",
     chart_frequency: "monthly",
     detail_basis: "NET",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    benchmark_options: [
-      {
-        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-        benchmark_name: "Global Balanced 60/40",
-        is_assigned: true,
-      },
-    ],
+    benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+    benchmark_options: options?.unassignedBenchmark
+      ? []
+      : [
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ],
     portfolio: {
       portfolio_id: portfolioId,
       client_id: "CIF_1001",
@@ -124,24 +132,28 @@ function buildSummary(portfolioId: string) {
     },
     net_performance: {
       metric_basis: "NET",
-      portfolio_return_pct: 5.42,
-      benchmark_return_pct: 4.91,
-      active_return_pct: 0.52,
-      annualized_return_pct: 5.42,
-      benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: "calculated",
+      portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.42,
+      benchmark_return_pct:
+        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 4.91,
+      active_return_pct:
+        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 0.52,
+      annualized_return_pct: options?.unavailableSummarySeries ? null : 5.42,
+      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
       begin_market_value: 1200000,
       end_market_value: 1250000,
       net_cash_flow: 42000,
     },
     gross_performance: {
       metric_basis: "GROSS",
-      portfolio_return_pct: 5.88,
-      benchmark_return_pct: 5.12,
-      active_return_pct: 0.76,
-      annualized_return_pct: 5.88,
-      benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: "calculated",
+      portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.88,
+      benchmark_return_pct:
+        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 5.12,
+      active_return_pct:
+        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 0.76,
+      annualized_return_pct: options?.unavailableSummarySeries ? null : 5.88,
+      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
       begin_market_value: 1200000,
       end_market_value: 1250000,
       net_cash_flow: 42000,
@@ -159,7 +171,10 @@ function buildSummary(portfolioId: string) {
   };
 }
 
-function buildDetails(portfolioId: string) {
+function buildDetails(
+  portfolioId: string,
+  options?: { unassignedBenchmark?: boolean; unavailableSummarySeries?: boolean }
+) {
   return {
     correlation_id: "corr-performance",
     contract_version: "v1",
@@ -173,21 +188,23 @@ function buildDetails(portfolioId: string) {
     attribution_dimension: "asset_class",
     detail_basis: "NET",
     segment: "asset_class",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    net_chart: [
-      {
-        label: "2026-01",
-        frequency: "monthly",
-        period_start: "2026-01-01",
-        period_end: "2026-01-31",
-        portfolio_return_pct: 2.2,
-        benchmark_return_pct: 1.9,
-        active_return_pct: 0.3,
-        cumulative_portfolio_return_pct: 2.2,
-        cumulative_benchmark_return_pct: 1.9,
-        cumulative_active_return_pct: 0.3,
-      },
-    ],
+    benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+    net_chart: options?.unavailableSummarySeries
+      ? []
+      : [
+          {
+            label: "2026-01",
+            frequency: "monthly",
+            period_start: "2026-01-01",
+            period_end: "2026-01-31",
+            portfolio_return_pct: 2.2,
+            benchmark_return_pct: 1.9,
+            active_return_pct: 0.3,
+            cumulative_portfolio_return_pct: 2.2,
+            cumulative_benchmark_return_pct: 1.9,
+            cumulative_active_return_pct: 0.3,
+          },
+        ],
     gross_chart: [
       {
         label: "2026-01",
@@ -245,8 +262,8 @@ function buildDetails(portfolioId: string) {
       metric_basis: "NET",
       model: "BF",
       linking: "carino",
-      benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: "calculated",
+      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
       active_return_pct: 0.52,
       sum_of_effects_pct: 0.5,
       residual_pct: 0.02,
@@ -455,6 +472,29 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
+  });
+
+  it("renders compact unavailable summary states when benchmark and return series are missing", async () => {
+    installPerformancePageFetchMock({
+      unassignedBenchmark: true,
+      unavailableSummarySeries: true,
+    });
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-summary-status-card .performance-summary-kpi-value")
+        ?.textContent
+    ).toBe("Unassigned");
+    expect(
+      screen.getByText("Assign a benchmark to enable relative analytics.")
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 
   it("passes a selected benchmark through to summary and details requests", async () => {
