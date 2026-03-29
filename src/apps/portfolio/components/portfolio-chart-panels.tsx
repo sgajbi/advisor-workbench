@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-import { AnalyticsTable } from "@/design-system";
-
 import {
   formatCurrency,
   formatDate,
@@ -140,39 +138,6 @@ export function PortfolioTopHoldingsPanel({
               );
             })}
           </div>
-        </div>
-        <div className="portfolio-chart-card portfolio-top-holdings-table-card">
-          <AnalyticsTable
-            ariaLabel="Top holdings table"
-            columns={[
-              { key: "dimension", label: "Dimension" },
-              { key: "marketValue", label: "Market Value", align: "right" },
-              { key: "weight", label: "Weight", align: "right" },
-              { key: "positions", label: "Positions", align: "right" },
-            ]}
-            rows={sortedPositions.map((position) => ({
-              key: position.security_id,
-              cells: [
-                position.instrument_name,
-                formatCurrency(position.market_value_base, baseCurrency),
-                formatPct(position.weight_pct),
-                1,
-              ],
-              ariaLabel: `${position.instrument_name}: ${formatCurrency(position.market_value_base, baseCurrency)}, ${formatPct(position.weight_pct)}`,
-              className:
-                selectedSecurityId === position.security_id
-                  ? "portfolio-table-row-selected"
-                  : hoveredSecurityId === position.security_id
-                    ? "portfolio-table-row-hovered"
-                    : undefined,
-              onMouseEnter: () => setHoveredSecurityId(position.security_id),
-              onMouseLeave: () => setHoveredSecurityId(null),
-              onClick: () =>
-                onSelectionChange(
-                  selectedSecurityId === position.security_id ? null : position.security_id
-                ),
-            }))}
-          />
         </div>
       </div>
     </div>

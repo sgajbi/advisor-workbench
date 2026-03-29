@@ -38,7 +38,7 @@ describe("portfolio chart panels", () => {
 
     expect(onSelectionChange).toHaveBeenCalledWith("EQ_1");
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
-    expect(screen.getByLabelText("Top holdings table")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Top holdings table")).not.toBeInTheDocument();
     expect(
       screen.getByRole("listitem", {
         name: /Apple Inc: 250,000 USD. Select to filter holdings./i,
