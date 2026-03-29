@@ -32,6 +32,7 @@ import {
   formatStatus,
 } from "../formatters";
 import type {
+  PortfolioAllocationSelection,
   PortfolioHoldingsDrilldownFilter,
   PortfolioPositionView,
   PortfolioTransactionDrilldownFilter,
@@ -342,912 +343,150 @@ export default function PortfolioWorkspaceView({
           </DegradedStatePanel>
         ) : (
           <>
-            <section id="portfolio-summary" className="portfolio-workspace-section">
-            <Panel className="portfolio-hero portfolio-book-hero">
-              <div className="portfolio-hero-content">
-                <SectionLabel>Portfolio Book</SectionLabel>
-                <h2>{workspace.portfolio.display_name}</h2>
-                <div className="portfolio-hero-meta">
-                  <span>{workspace.portfolio.base_currency}</span>
-                  {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
-                  {workspace.portfolio.booking_center_code ? (
-                    <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
-                  ) : null}
-                  {workspace.profile.status ? (
-                    <StatusChip className="portfolio-hero-status">
-                      {formatStatus(workspace.profile.status)}
-                    </StatusChip>
-                  ) : null}
-                </div>
-              </div>
-              <div className="portfolio-hero-actions portfolio-hero-toolbar">
-                {orderedWorkflowCues.map((cue) => (
-                  <ActionLink
-                    key={cue.key}
-                    href={cue.href}
-                    className={
-                      cue.key === primaryWorkflowCue?.key
-                        ? "portfolio-action-link portfolio-action-link-primary"
-                        : "portfolio-action-link portfolio-action-link-secondary"
-                    }
-                  >
-                    {cue.label}
-                  </ActionLink>
-                ))}
-              </div>
-            </Panel>
-
-            <PortfolioHealthStrip
-              tiles={[
-                {
-                  key: "aum",
-                  label: "AUM",
-                  value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
-                  definition:
-                    "Total portfolio market value in the portfolio base currency as of the selected date.",
-                  support: `As of ${formatDate(context.selectedAsOfDate)}`,
-                  onClick: () =>
-                    setDetailDrawer(
-                      buildMetricDrawer("aum", workspace, context, activityDisplayCurrency)
-                    ),
-                },
-                {
-                  key: "invested_assets",
-                  label: "Invested Assets",
-                  value: formatCurrency(
-                    workspace.summary.invested_market_value_base,
-                    workspace.portfolio.base_currency
-                  ),
-                  definition:
-                    "Market value currently invested in funded holdings, excluding operational cash inventory.",
-                  support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
-                  onClick: () =>
-                    setDetailDrawer(
-                      buildMetricDrawer("invested_assets", workspace, context, activityDisplayCurrency)
-                    ),
-                },
-                {
-                  key: "available_cash",
-                  label: "Available Cash",
-                  value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
-                  definition:
-                    "Available cash inventory in the portfolio base currency across published cash balances.",
-                  support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,
-                  onClick: () =>
-                    setDetailDrawer(
-                      buildMetricDrawer("available_cash", workspace, context, activityDisplayCurrency)
-                    ),
-                },
-                {
-                  key: "holdings",
-                  label: "Holdings",
-                  value: workspace.summary.position_count,
-                  definition: "Number of currently valued holdings in the portfolio book.",
-                  support: formatCount(workspace.summary.position_count, "holding"),
-                  onClick: () =>
-                    setDetailDrawer(
-                      buildMetricDrawer("holdings", workspace, context, activityDisplayCurrency)
-                    ),
-                },
-                {
-                  key: "net_flow_30d",
-                  label: "30D Net Flow",
-                  value: formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency),
-                  definition:
-                    "Net booked portfolio activity across the requested 30-day reporting window, including funding, fees, and other ledger movements.",
-                  support: `${getRequestedWindowActivityCount(workspace)} booked events`,
-                  tone: getNetFlowTone(workspace),
-                  onClick: () =>
-                    setDetailDrawer(
-                      buildMetricDrawer("net_flow_30d", workspace, context, activityDisplayCurrency)
-                    ),
-                },
-                {
-                  key: "book_readiness",
-                  label: "Book Readiness",
-                  value: getBookReadinessStatus(workspace),
-                  definition:
-                    "Operational readiness based on holdings coverage, reporting status, publish eligibility, and active blocking exceptions.",
-                  support: getBookReadinessSupport(workspace),
-                  tone: getBookReadinessTone(workspace),
-                  onClick: () =>
-                    setDetailDrawer(
-                      buildMetricDrawer("book_readiness", workspace, context, activityDisplayCurrency)
-                    ),
-                },
-              ]}
-            />
-
-            <PortfolioInsightsStrip
-              insights={[]}
+            <PortfolioSummaryHeaderSection
+              workspace={workspace}
+              context={context}
+              activityDisplayCurrency={activityDisplayCurrency}
+              orderedWorkflowCues={orderedWorkflowCues}
+              primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
               readinessIndicators={priorityReadinessIndicators}
-              onDismissInsight={() => undefined}
+              onOpenMetricDrawer={(metric) =>
+                setDetailDrawer(buildMetricDrawer(metric, workspace, context, activityDisplayCurrency))
+              }
             />
-            </section>
 
-            <section id="portfolio-attention" className="portfolio-workspace-section">
-              <div className="portfolio-section-header">
-                <h3>{workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}</h3>
-                <p className="portfolio-section-copy">
-                  {workspace.partial_failures.length
-                    ? "Unresolved issues affecting reporting, valuation, or operations."
-                    : "Current reporting and operational exception status."}
-                </p>
-              </div>
-            {workspace.partial_failures.length ? (
-              <AnalyticsModule
-                title="Data Coverage"
-                subtitle="Source exceptions affecting operational completeness."
-              >
-                <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
-                <div className="portfolio-guidance-list">
-                  {workspace.partial_failures.map((failure) => (
-                    <div
-                      key={`${failure.source_service}-${failure.error_code}`}
-                      className="portfolio-guidance-item"
-                    >
-                      <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
-                      <span className="portfolio-evidence-meta">{failure.error_code}</span>
-                      <p className="portfolio-evidence-copy">{failure.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </AnalyticsModule>
-            ) : (
-              <Panel>
-                <div className="portfolio-empty-state">
-                  <strong>No active exceptions</strong>
-                  <p className="muted">
-                    Reporting and operational checks are currently clear.
-                  </p>
-                </div>
-              </Panel>
-            )}
-            </section>
+            <PortfolioExceptionsSection workspace={workspace} />
 
-            {showHealthSection ? (
-            <section id="portfolio-health" className="portfolio-workspace-section">
-              <div className="portfolio-section-header">
-                <h3>Portfolio Health Snapshot</h3>
-                <p className="portfolio-section-copy">
-                  Readiness and coverage as of {formatDate(context.selectedAsOfDate)}.
-                </p>
-              </div>
-              <WorkspaceGrid className="portfolio-primary-grid">
-                {isDetailedView ? (
-                  <AnalyticsModule
-                    title="Mandate Overview"
-                    subtitle="Mandate fit, risk posture, and operating parameters."
-                  >
-                    <div className="portfolio-mandate-grid">
-                      <MetricRow label="Status" value={formatStatus(workspace.profile.status)} />
-                      <MetricRow
-                        label="Portfolio type"
-                        value={formatStatus(workspace.profile.portfolio_type)}
-                      />
-                      <MetricRow
-                        label="Risk profile"
-                        value={formatStatus(workspace.profile.risk_exposure)}
-                      />
-                      <MetricRow
-                        label="Investment horizon"
-                        value={formatStatus(workspace.profile.investment_time_horizon)}
-                      />
-                      <MetricRow
-                        label="Objective"
-                        value={workspace.profile.objective ?? "N/A"}
-                        className="portfolio-objective-row"
-                      />
-                      <MetricRow
-                        label="Leverage allowed"
-                        value={formatBooleanFlag(workspace.profile.is_leverage_allowed)}
-                      />
-                    </div>
-                  </AnalyticsModule>
-                ) : null}
+            <PortfolioHealthSection
+              workspace={workspace}
+              context={context}
+              showHealthSection={showHealthSection}
+            />
 
-                <AnalyticsModule
-                  title="Health and Coverage"
-                  subtitle="Readiness indicators, source coverage, and active exceptions."
-                >
-                  <div className="portfolio-mandate-grid">
-                    <MetricRow
-                      label="Holdings Coverage"
-                      value={workspace.readiness.has_positions ? "Ready" : "Pending"}
-                    />
-                      <MetricRow
-                        label="Reporting Status"
-                        value={formatStatus(workspace.readiness.reporting.status)}
-                      />
-                    <MetricRow
-                      label="Publishing Allowed"
-                      value={formatBooleanFlag(workspace.operations?.publish_allowed)}
-                    />
-                    <MetricRow
-                      label="Exceptions"
-                      value={workspace.partial_failures.length}
-                    />
-                  </div>
-                  {workspace.warnings.length ? (
-                    <div className="portfolio-warning-list">
-                      {workspace.warnings.map((warning) => (
-                        <StatusChip key={warning} tone="warn">
-                          {getCoverageWarningLabel(warning)}
-                        </StatusChip>
-                      ))}
-                    </div>
-                  ) : null}
-                </AnalyticsModule>
-              </WorkspaceGrid>
-            </section>
-            ) : null}
-
-            {showInsights ? (
-            <section className="portfolio-workspace-section">
-              <div className="portfolio-section-header">
-                <h3>Portfolio Insights</h3>
-                <p className="portfolio-section-copy">
-                  Allocation, concentration, liquidity, and recent activity.
-                </p>
-              </div>
-              <PortfolioInsightsStrip
-                insights={visibleInsights}
-                readinessIndicators={[]}
-                onDismissInsight={(key) =>
-                  setDismissedInsightKeys((current) => [...current, key])
+            <PortfolioInsightsSection
+              workspace={workspace}
+              context={context}
+              detailsLoading={detailsLoading}
+              showInsights={showInsights}
+              showLiquidityModule={showLiquidityModule}
+              showPerformanceSnapshot={showPerformanceSnapshot}
+              showAllocationModule={showAllocationModule}
+              showTopHoldingsModule={showTopHoldingsModule}
+              showIncomeModule={showIncomeModule}
+              showActivityModule={showActivityModule}
+              showChangeHighlights={showChangeHighlights}
+              incomeDisplayCurrency={incomeDisplayCurrency}
+              activityDisplayCurrency={activityDisplayCurrency}
+              visibleInsights={visibleInsights}
+              holdingsDrilldown={holdingsDrilldown}
+              filteredPositions={filteredPositions}
+              transactionDrilldown={transactionDrilldown}
+              onDismissInsight={(key) =>
+                setDismissedInsightKeys((current) => [...current, key])
+              }
+              onSelectAllocation={(selection) => {
+                setTransactionDrilldown(null);
+                setHoldingsDrilldown(
+                  selection
+                    ? {
+                        kind: "allocation",
+                        selection,
+                        label: `Filtered by ${buildAllocationDrilldownLabel(
+                          selection.dimension,
+                          selection.bucket
+                        )}`,
+                      }
+                    : null
+                );
+              }}
+              onSelectTopHolding={(securityId) => {
+                setTransactionDrilldown(null);
+                setHoldingsDrilldown(
+                  securityId
+                    ? {
+                        kind: "security",
+                        security_id: securityId,
+                        label: buildSecurityDrilldownLabel(
+                          workspace.top_positions.find((position) => position.security_id === securityId)
+                            ?.instrument_name ?? "Selected holding",
+                          "holdings"
+                        ),
+                      }
+                    : null
+                );
+              }}
+              onSelectActivityBucket={(bucket) => {
+                if (!bucket) {
+                  clearTransactionDrilldown();
+                  return;
                 }
-              />
-              {showLiquidityModule || showPerformanceSnapshot ? (
-                <WorkspaceGrid className="portfolio-primary-grid">
-                  {showLiquidityModule ? (
-                    <AnalyticsModule
-                      title="Liquidity and Projected Cash"
-                      subtitle={`As of ${formatDate(context.selectedAsOfDate)} with forecast cashflow over the active horizon.`}
-                    >
-                      <div className="portfolio-mandate-grid">
-                        <MetricRow
-                          label="Available Cash"
-                          value={formatCurrency(
-                            workspace.summary.total_cash_base,
-                            workspace.portfolio.base_currency
-                          )}
-                        />
-                        <MetricRow
-                          label="Cash Allocation"
-                          value={formatPct(workspace.summary.cash_weight_pct)}
-                        />
-                        <MetricRow
-                          label="Projected Net Flow"
-                          value={formatCurrency(
-                            workspace.cashflow_outlook?.total_net_cashflow_base,
-                            workspace.portfolio.base_currency
-                          )}
-                        />
-                        <MetricRow
-                          label="Forecast Horizon"
-                          value={
-                            workspace.cashflow_outlook
-                              ? `${workspace.cashflow_outlook.projection_days} days`
-                              : "N/A"
-                          }
-                        />
-                      </div>
-                    </AnalyticsModule>
-                  ) : null}
-                  {showPerformanceSnapshot ? (
-                    <PortfolioPerformanceSnapshotModule
-                      performance={workspace.performance}
-                      rebalance={workspace.rebalance}
-                      reportingRowCount={workspace.readiness.reporting.row_count}
-                      context={context}
-                      selectedPeriod={context.timeWindow}
-                      expanded={getSectionExpanded("performance-snapshot")}
-                      onToggle={() => toggleSection("performance-snapshot")}
-                    />
-                  ) : null}
-                </WorkspaceGrid>
-              ) : null}
-              <WorkspaceGrid className="portfolio-primary-grid">
-                {showAllocationModule ? (
-                <PortfolioCollapsibleModule
-                  title="Portfolio Allocation"
-                  subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
-                  expanded={getSectionExpanded("allocation")}
-                  onToggle={() => toggleSection("allocation")}
-                >
-                {detailsLoading ? (
-                  <ModuleSkeleton chart rows={4} />
-                ) : workspace.allocation_views?.length ? (
-                  <PortfolioAllocationPanel
-                    allocationViews={workspace.allocation_views}
-                    baseCurrency={workspace.portfolio.base_currency}
-                    selectedAllocation={
-                      holdingsDrilldown?.kind === "allocation" ? holdingsDrilldown.selection : null
-                    }
-                    onSelectionChange={(selection) => {
-                      setTransactionDrilldown(null);
-                      setHoldingsDrilldown(
-                        selection
-                          ? {
-                              kind: "allocation",
-                              selection,
-                              label: `Filtered by ${buildAllocationDrilldownLabel(
-                                selection.dimension,
-                                selection.bucket
-                              )}`,
-                            }
-                          : null
-                      );
-                    }}
-                  />
-                ) : workspace.summary.position_count ? (
-                  <ModuleStatePanel
-                    state="partial"
-                    title="Allocation is partially available"
-                    body="Holdings are present, but allocation views have not been generated from current valuations."
-                    hint="Publish current prices and valuation outputs to complete the composition view."
-                    why={{
-                      body:
-                        "Allocation requires valued holdings. Until positions have current prices and market values, composition buckets cannot be calculated reliably.",
-                      label: "Why allocation is partially available",
-                    }}
-                  />
-                ) : (
-                  <EmptyStatePanel
-                    title="No allocation data yet"
-                    body="Allocation becomes available once funded holdings are valued."
-                    hint="Book positions and publish prices to generate allocation views."
-                    why={{
-                      body:
-                        "Allocation requires funded holdings with current valuations. Empty or unvalued books cannot produce allocation views.",
-                      label: "Why allocation data is unavailable",
-                    }}
-                    illustration
-                  />
-                )}
-              </PortfolioCollapsibleModule>
-                ) : null}
+                openTransactionDrilldown({
+                  kind: "activity",
+                  bucket,
+                  label: buildActivityDrilldownLabel(bucket),
+                });
+              }}
+              getSectionExpanded={getSectionExpanded}
+              toggleSection={toggleSection}
+            />
 
-                {showTopHoldingsModule ? (
-                <PortfolioCollapsibleModule
-                  title="Top Holdings"
-                  subtitle={`Largest holdings by market value or weight as of ${formatDate(context.selectedAsOfDate)}.`}
-                  expanded={getSectionExpanded("top-holdings")}
-                  onToggle={() => toggleSection("top-holdings")}
-                >
-                {detailsLoading ? (
-                  <ModuleSkeleton chart rows={4} />
-                ) : workspace.top_positions.length ? (
-                  <PortfolioTopHoldingsPanel
-                    positions={
-                      holdingsDrilldown?.kind === "allocation"
-                        ? filteredPositions
-                            .slice()
-                            .sort(
-                              (left, right) =>
-                                (right.market_value_base ?? 0) - (left.market_value_base ?? 0)
-                            )
-                            .slice(0, 10)
-                            .map((position) => ({
-                              security_id: position.security_id,
-                              instrument_name: position.instrument_name,
-                              asset_class: position.asset_class,
-                              quantity: position.quantity,
-                              market_value_base: position.market_value_base,
-                              weight_pct: position.weight_pct,
-                            }))
-                        : workspace.top_positions
-                    }
-                    baseCurrency={workspace.portfolio.base_currency}
-                    selectedSecurityId={
-                      holdingsDrilldown?.kind === "security" ? holdingsDrilldown.security_id : null
-                    }
-                    onSelectionChange={(securityId) => {
-                      setTransactionDrilldown(null);
-                      setHoldingsDrilldown(
-                        securityId
-                          ? {
-                              kind: "security",
-                              security_id: securityId,
-                              label: buildSecurityDrilldownLabel(
-                                workspace.top_positions.find((position) => position.security_id === securityId)
-                                  ?.instrument_name ?? "Selected holding",
-                                "holdings"
-                              ),
-                            }
-                          : null
-                      );
-                    }}
-                  />
-                ) : workspace.summary.position_count ? (
-                  <ModuleStatePanel
-                    state="partial"
-                    title="Top holdings are not ranked yet"
-                    body="The book contains positions, but ranked concentration output is still unavailable."
-                    hint="Complete valuation and concentration calculations to populate the ranked view."
-                  />
-                ) : (
-                  <EmptyStatePanel
-                    title="No holdings yet"
-                    body="Holdings will appear once positions are funded and priced."
-                    hint="Add funding, book a trade, and publish pricing."
-                    why={{
-                      body:
-                        "Holdings require booked positions or funded balances. Until the book contains invested or funded inventory, there is nothing to rank.",
-                      label: "Why holdings are unavailable",
-                    }}
-                    illustration
-                    centered
-                  />
-                )}
-                </PortfolioCollapsibleModule>
-                ) : null}
-              </WorkspaceGrid>
-              {showChangeHighlights ? (
-                <WorkspaceGrid className="portfolio-primary-grid">
-                  {showIncomeModule ? (
-                    <PortfolioCollapsibleModule
-                      title="Income"
-                      subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
-                      expanded={getSectionExpanded("income")}
-                      onToggle={() => toggleSection("income")}
-                    >
-                      {detailsLoading ? (
-                        <ModuleSkeleton chart rows={4} />
-                      ) : workspace.income_summary ? (
-                        <>
-                      <div className="portfolio-chart-summary-grid">
-                        <MetricRow
-                          label="Window net"
-                          value={formatCurrency(
-                            workspace.income_summary.totals_requested_window.net.reporting_currency_amount,
-                            incomeDisplayCurrency
-                          )}
-                        />
-                        <MetricRow
-                          label="YTD net"
-                          value={formatCurrency(
-                            workspace.income_summary.totals_year_to_date.net.reporting_currency_amount,
-                            incomeDisplayCurrency
-                          )}
-                        />
-                        <MetricRow
-                          label="Window gross"
-                          value={formatCurrency(
-                            workspace.income_summary.totals_requested_window.gross.reporting_currency_amount,
-                            incomeDisplayCurrency
-                          )}
-                        />
-                        <MetricRow
-                          label="Transactions"
-                          value={workspace.income_summary.totals_requested_window.net.transaction_count}
-                        />
-                      </div>
-                      <PortfolioIncomePanel summary={workspace.income_summary} compact />
-                        </>
-                      ) : workspace.recent_transactions.length ? (
-                        <ModuleStatePanel
-                          state="partial"
-                          title="Income is not classified yet"
-                          body="Ledger activity exists, but no income summary is available for the selected period."
-                          hint="Dividend, coupon, and income classifications need to be published before income composition can be shown."
-                        />
-                      ) : (
-                        <EmptyStatePanel
-                          title="No income activity"
-                          body="No income events have been recorded for the selected period."
-                          hint="Dividend and coupon events will populate income once they are booked."
-                        />
-                      )}
-                    </PortfolioCollapsibleModule>
-                  ) : null}
+            <PortfolioChangesSection
+              workspace={workspace}
+              context={context}
+              showChanges={showChanges}
+              incomeDisplayCurrency={incomeDisplayCurrency}
+              activityDisplayCurrency={activityDisplayCurrency}
+              transactionDrilldown={transactionDrilldown}
+              isDetailedView={isDetailedView}
+              onSelectActivityBucket={(bucket) => {
+                if (!bucket) {
+                  clearTransactionDrilldown();
+                  return;
+                }
+                openTransactionDrilldown({
+                  kind: "activity",
+                  bucket,
+                  label: buildActivityDrilldownLabel(bucket),
+                });
+              }}
+              getSectionExpanded={getSectionExpanded}
+              toggleSection={toggleSection}
+            />
 
-                  {showActivityModule ? (
-                    <PortfolioCollapsibleModule
-                      title="Activity"
-                      subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
-                      expanded={getSectionExpanded("activity")}
-                      onToggle={() => toggleSection("activity")}
-                    >
-                      {detailsLoading ? (
-                        <ModuleSkeleton chart rows={4} />
-                      ) : workspace.activity_summary ? (
-                        <>
-                      <div className="portfolio-chart-summary-grid">
-                        <MetricRow
-                          label="Window amount"
-                          value={formatCurrency(
-                            getRequestedWindowActivityAmount(workspace),
-                            activityDisplayCurrency
-                          )}
-                        />
-                        <MetricRow
-                          label="YTD amount"
-                          value={formatCurrency(
-                            getYearToDateActivityAmount(workspace),
-                            activityDisplayCurrency
-                          )}
-                        />
-                        <MetricRow
-                          label="Window transactions"
-                          value={getRequestedWindowActivityCount(workspace)}
-                        />
-                        <MetricRow
-                          label="YTD transactions"
-                          value={getYearToDateActivityCount(workspace)}
-                        />
-                      </div>
-                      <PortfolioActivityPanel
-                        summary={workspace.activity_summary}
-                        compact
-                        selectedBucket={
-                          transactionDrilldown?.kind === "activity"
-                            ? transactionDrilldown.bucket
-                            : null
-                        }
-                        onSelectionChange={(bucket) => {
-                          if (!bucket) {
-                            clearTransactionDrilldown();
-                            return;
-                          }
-
-                          openTransactionDrilldown({
-                            kind: "activity",
-                            bucket,
-                            label: buildActivityDrilldownLabel(bucket),
-                          });
-                        }}
-                      />
-                        </>
-                      ) : workspace.recent_transactions.length ? (
-                        <ModuleStatePanel
-                          state="partial"
-                          title="Activity totals are incomplete"
-                          body="Transactions are present, but summarized activity buckets are not available for the selected period."
-                          hint="Publish activity aggregation output to complete the client activity view."
-                        />
-                      ) : (
-                        <EmptyStatePanel
-                          title="No client activity"
-                          body="No funding, trading, or cash activity has been recorded in the selected period."
-                          hint="Funding and trade events will populate the activity view."
-                        />
-                      )}
-                    </PortfolioCollapsibleModule>
-                  ) : null}
-                </WorkspaceGrid>
-              ) : null}
-            </section>
-            ) : null}
-
-            {showChanges ? (
-            <section id="portfolio-changes" className="portfolio-workspace-section">
-              <div className="portfolio-section-header">
-                <h3>What changed over time?</h3>
-                <p className="portfolio-section-copy">
-                  Income and activity for {formatPeriodContext(context)}.
-                </p>
-              </div>
-            {showIncomeModule || showActivityModule ? (
-              <WorkspaceGrid className="portfolio-primary-grid">
-                {showIncomeModule ? (
-                  <PortfolioCollapsibleModule
-                    title="Income"
-                    subtitle={
-                      workspace.income_summary
-                        ? `${incomeDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.income_summary.window_start_date)} to ${formatDate(workspace.income_summary.window_end_date)}.`
-                        : `${incomeDisplayCurrency} for ${formatPeriodContext(context)}.`
-                    }
-                    expanded={getSectionExpanded("income")}
-                    onToggle={() => toggleSection("income")}
-                  >
-                    {workspace.income_summary ? (
-                      <>
-                        <PortfolioIncomePanel summary={workspace.income_summary} />
-                        {isDetailedView ? (
-                          <AnalyticsTable
-                            ariaLabel="Income summary"
-                            columns={[
-                              { key: "category", label: "Income Type" },
-                              { key: "windowNet", label: "Window Net", align: "right" },
-                              { key: "ytdNet", label: "YTD Net", align: "right" },
-                              { key: "windowGross", label: "Window Gross", align: "right" },
-                              { key: "txns", label: "Window Txns", align: "right" },
-                            ]}
-                            rows={[
-                              {
-                                key: "total",
-                                cells: [
-                                  "Total",
-                                  formatCurrency(
-                                    workspace.income_summary.totals_requested_window.net.reporting_currency_amount,
-                                    incomeDisplayCurrency
-                                  ),
-                                  formatCurrency(
-                                    workspace.income_summary.totals_year_to_date.net.reporting_currency_amount,
-                                    incomeDisplayCurrency
-                                  ),
-                                  formatCurrency(
-                                    workspace.income_summary.totals_requested_window.gross.reporting_currency_amount,
-                                    incomeDisplayCurrency
-                                  ),
-                                  workspace.income_summary.totals_requested_window.net.transaction_count,
-                                ],
-                              },
-                              ...workspace.income_summary.income_types.map((item) => ({
-                                key: item.income_type,
-                                cells: [
-                                  formatIncomeTypeLabel(item.income_type),
-                                  formatCurrency(
-                                    item.requested_window.net.reporting_currency_amount,
-                                    incomeDisplayCurrency
-                                  ),
-                                  formatCurrency(
-                                    item.year_to_date.net.reporting_currency_amount,
-                                    incomeDisplayCurrency
-                                  ),
-                                  formatCurrency(
-                                    item.requested_window.gross.reporting_currency_amount,
-                                    incomeDisplayCurrency
-                                  ),
-                                  item.requested_window.net.transaction_count,
-                                ],
-                              })),
-                            ]}
-                          />
-                        ) : null}
-                      </>
-                    ) : (
-                      <ModuleStatePanel
-                        state="partial"
-                        title="Income detail unavailable"
-                        body="The detailed income table is not available for the selected period."
-                        hint="Income summary data is required before detailed composition can be shown."
-                      />
-                    )}
-                  </PortfolioCollapsibleModule>
-                ) : null}
-
-                {showActivityModule ? (
-                  <PortfolioCollapsibleModule
-                    title="Activity"
-                    subtitle={
-                      workspace.activity_summary
-                        ? `${activityDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.activity_summary.window_start_date)} to ${formatDate(workspace.activity_summary.window_end_date)}.`
-                        : `${activityDisplayCurrency} for ${formatPeriodContext(context)}.`
-                    }
-                    expanded={getSectionExpanded("activity")}
-                    onToggle={() => toggleSection("activity")}
-                  >
-                    {workspace.activity_summary ? (
-                      <>
-                        <PortfolioActivityPanel
-                          summary={workspace.activity_summary}
-                          selectedBucket={
-                            transactionDrilldown?.kind === "activity"
-                              ? transactionDrilldown.bucket
-                              : null
-                          }
-                          onSelectionChange={(bucket) => {
-                            if (!bucket) {
-                              clearTransactionDrilldown();
-                              return;
-                            }
-
-                            openTransactionDrilldown({
-                              kind: "activity",
-                              bucket,
-                              label: buildActivityDrilldownLabel(bucket),
-                            });
-                          }}
-                        />
-                        {isDetailedView ? (
-                          <AnalyticsTable
-                            ariaLabel="Activity summary"
-                            columns={[
-                              { key: "bucket", label: "Bucket" },
-                              { key: "windowAmount", label: "Window Amount", align: "right" },
-                              { key: "ytdAmount", label: "YTD Amount", align: "right" },
-                              { key: "windowTxns", label: "Window Txns", align: "right" },
-                              { key: "ytdTxns", label: "YTD Txns", align: "right" },
-                            ]}
-                            rows={workspace.activity_summary.buckets.map((bucket) => ({
-                              key: bucket.bucket,
-                              cells: [
-                                formatActivityBucketLabel(bucket.bucket),
-                                formatCurrency(
-                                  bucket.requested_window.reporting_currency_amount,
-                                  activityDisplayCurrency
-                                ),
-                                formatCurrency(
-                                  bucket.year_to_date.reporting_currency_amount,
-                                  activityDisplayCurrency
-                                ),
-                                bucket.requested_window.transaction_count,
-                                bucket.year_to_date.transaction_count,
-                              ],
-                            }))}
-                          />
-                        ) : null}
-                      </>
-                    ) : (
-                      <ModuleStatePanel
-                        state="partial"
-                        title="Activity detail unavailable"
-                        body="The detailed activity breakdown is not available for the selected period."
-                        hint="Activity aggregation output is required before detailed client movement can be shown."
-                      />
-                    )}
-                  </PortfolioCollapsibleModule>
-                ) : null}
-              </WorkspaceGrid>
-            ) : (
-              <Panel>
-                <div className="portfolio-empty-state">
-                  <strong>Change history is not available yet.</strong>
-                  <p className="muted">
-                    Income and activity trends will appear once recent ledger events fall inside
-                    the reporting window.
-                  </p>
-                </div>
-              </Panel>
-            )}
-            </section>
-            ) : null}
-
-            {showDrilldown ? (
-            <section id="portfolio-drilldown" className="portfolio-workspace-section">
-              <div className="portfolio-section-header">
-                <h3>Where can I drill down?</h3>
-                <p className="portfolio-section-copy">
-                  Holdings, transactions, and projected liquidity on demand.
-                </p>
-              </div>
-              <div className="portfolio-disclosure-stack">
-                <details
-                  className="portfolio-disclosure"
-                  open={getSectionExpanded("holdings")}
-                  onToggle={(event) => {
-                    const nextOpen = (event.currentTarget as HTMLDetailsElement).open;
-                    setSectionPreferences((current) => {
-                      if (typeof window !== "undefined") {
-                        window.localStorage.setItem(getPortfolioSectionStorageKey("holdings"), String(nextOpen));
-                      }
-                      return { ...current, holdings: nextOpen };
-                    });
-                  }}
-                >
-                  <summary>
-                    <div>
-                      <strong>Holdings</strong>
-                      <span>
-                        {filteredPositions.length
-                          ? `${formatCount(filteredPositions.length, "holding")} with valuation context`
-                          : "No holdings have been booked yet"}
-                      </span>
-                    </div>
-                    <span className="portfolio-disclosure-chevron" aria-hidden="true">
-                      ▾
-                    </span>
-                  </summary>
-                  <div className="portfolio-disclosure-content">
-                    <DataGridCard>
-                      <PortfolioHoldingsGrid
-                        portfolioId={workspace.portfolio.portfolio_id}
-                        positions={filteredPositions}
-                        baseCurrency={workspace.portfolio.base_currency}
-                        asOfDate={context.selectedAsOfDate}
-                        columnMode={context.columnMode}
-                        filterLabel={holdingsFilterCopy}
-                        onClearFilter={clearHoldingsDrilldown}
-                        onRowSelect={(row) =>
-                          setDetailDrawer(
-                            buildHoldingDrawer(
-                              row,
-                              workspace.portfolio.portfolio_id,
-                              workspace.portfolio.base_currency,
-                              getRelatedTransactionsForSecurity(workspace, row.securityId)
-                            )
-                          )
-                        }
-                      />
-                    </DataGridCard>
-                  </div>
-                </details>
-
-                <details
-                  className="portfolio-disclosure"
-                  open={getSectionExpanded("transactions")}
-                  onToggle={(event) => {
-                    const nextOpen = (event.currentTarget as HTMLDetailsElement).open;
-                    setSectionPreferences((current) => {
-                      if (typeof window !== "undefined") {
-                        window.localStorage.setItem(getPortfolioSectionStorageKey("transactions"), String(nextOpen));
-                      }
-                      return { ...current, transactions: nextOpen };
-                    });
-                  }}
-                >
-                  <summary>
-                    <div>
-                      <strong>Transactions</strong>
-                      <span>
-                        {workspace.recent_transactions.length
-                          ? `${workspace.recent_transactions.length} booked events in ${context.periodLabel}`
-                          : "No transactions have been booked yet"}
-                      </span>
-                    </div>
-                    <span className="portfolio-disclosure-chevron" aria-hidden="true">
-                      ▾
-                    </span>
-                  </summary>
-                  <div className="portfolio-disclosure-content">
-                    <DataGridCard>
-                      <PortfolioTransactionsGrid
-                        portfolioId={workspace.portfolio.portfolio_id}
-                        baseCurrency={workspace.portfolio.base_currency}
-                        asOfDate={context.selectedAsOfDate}
-                        defaultStartDate={context.effectivePeriodStartDate}
-                        defaultEndDate={context.effectivePeriodEndDate}
-                        initialTransactions={workspace.recent_transactions}
-                        suspendInitialFetch={detailsLoading}
-                        externalFilter={transactionDrilldown}
-                        onClearExternalFilter={clearTransactionDrilldown}
-                        onRowSelect={(row) =>
-                          setDetailDrawer(
-                            buildTransactionDrawer(
-                              row,
-                              workspace.portfolio.portfolio_id,
-                              workspace.portfolio.base_currency
-                            )
-                          )
-                        }
-                      />
-                    </DataGridCard>
-                  </div>
-                </details>
-
-                {showProjectedCashflow && workspace.cashflow_outlook ? (
-                  <details
-                    className="portfolio-disclosure"
-                    open={getSectionExpanded("projected-cashflow")}
-                    onToggle={(event) => {
-                      const nextOpen = (event.currentTarget as HTMLDetailsElement).open;
-                      setSectionPreferences((current) => {
-                        if (typeof window !== "undefined") {
-                          window.localStorage.setItem(
-                            getPortfolioSectionStorageKey("projected-cashflow"),
-                            String(nextOpen)
-                          );
-                        }
-                        return { ...current, "projected-cashflow": nextOpen };
-                      });
-                    }}
-                  >
-                    <summary>
-                      <div>
-                        <strong>Projected Cashflow</strong>
-                        <span>{`${workspace.cashflow_outlook.projection_days} day forward liquidity path`}</span>
-                      </div>
-                      <span className="portfolio-disclosure-chevron" aria-hidden="true">
-                        ▾
-                      </span>
-                    </summary>
-                    <div className="portfolio-disclosure-content">
-                      <PortfolioProjectedCashflowModule
-                        portfolioId={workspace.portfolio.portfolio_id}
-                        baseCurrency={workspace.portfolio.base_currency}
-                        asOfDate={context.selectedAsOfDate}
-                        initialCashflowOutlook={workspace.cashflow_outlook}
-                        defaultExpanded={isDetailedView}
-                        suspendInitialFetch={detailsLoading}
-                      />
-                    </div>
-                  </details>
-                ) : null}
-              </div>
-            </section>
-            ) : null}
+            <PortfolioDrilldownSection
+              workspace={workspace}
+              context={context}
+              detailsLoading={detailsLoading}
+              showDrilldown={showDrilldown}
+              showProjectedCashflow={showProjectedCashflow}
+              isDetailedView={isDetailedView}
+              filteredPositions={filteredPositions}
+              holdingsFilterCopy={holdingsFilterCopy}
+              transactionDrilldown={transactionDrilldown}
+              onClearHoldingsDrilldown={clearHoldingsDrilldown}
+              onClearTransactionDrilldown={clearTransactionDrilldown}
+              onSelectHoldingRow={(row) =>
+                setDetailDrawer(
+                  buildHoldingDrawer(
+                    row,
+                    workspace.portfolio.portfolio_id,
+                    workspace.portfolio.base_currency,
+                    getRelatedTransactionsForSecurity(workspace, row.securityId)
+                  )
+                )
+              }
+              onSelectTransactionRow={(row) =>
+                setDetailDrawer(
+                  buildTransactionDrawer(
+                    row,
+                    workspace.portfolio.portfolio_id,
+                    workspace.portfolio.base_currency
+                  )
+                )
+              }
+              getSectionExpanded={getSectionExpanded}
+              setSectionPreferences={setSectionPreferences}
+            />
           </>
         )}
       </WorkspaceMain>
@@ -1288,18 +527,876 @@ export default function PortfolioWorkspaceView({
         )}
       </WorkspaceSide>
 
-      <PortfolioDetailDrawer
-        open={Boolean(detailDrawer)}
-        kicker={detailDrawer?.kicker ?? ""}
-        title={detailDrawer?.title ?? ""}
-        subtitle={detailDrawer?.subtitle}
-        summaryItems={detailDrawer?.summaryItems ?? []}
-        tabs={detailDrawer?.tabs ?? []}
-        fullPageHref={detailDrawer?.fullPageHref ?? "#portfolio-summary"}
-        fullPageLabel={detailDrawer?.fullPageLabel ?? "Open"}
+      <PortfolioDetailDrawerController
+        detailDrawer={detailDrawer}
         onClose={() => setDetailDrawer(null)}
       />
     </WorkspaceLayout>
+  );
+}
+
+function PortfolioSummaryHeaderSection({
+  workspace,
+  context,
+  activityDisplayCurrency,
+  orderedWorkflowCues,
+  primaryWorkflowCueKey,
+  readinessIndicators,
+  onOpenMetricDrawer,
+}: {
+  workspace: PortfolioWorkspace;
+  context: PortfolioWorkspaceContext;
+  activityDisplayCurrency: string;
+  orderedWorkflowCues: Array<{ key: string; label: string; href: string }>;
+  primaryWorkflowCueKey: string | null;
+  readinessIndicators: ReturnType<typeof buildPortfolioReadinessIndicators>;
+  onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
+}) {
+  return (
+    <section id="portfolio-summary" className="portfolio-workspace-section">
+      <Panel className="portfolio-hero portfolio-book-hero">
+        <div className="portfolio-hero-content">
+          <SectionLabel>Portfolio Book</SectionLabel>
+          <h2>{workspace.portfolio.display_name}</h2>
+          <div className="portfolio-hero-meta">
+            <span>{workspace.portfolio.base_currency}</span>
+            {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
+            {workspace.portfolio.booking_center_code ? (
+              <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
+            ) : null}
+            {workspace.profile.status ? (
+              <StatusChip className="portfolio-hero-status">
+                {formatStatus(workspace.profile.status)}
+              </StatusChip>
+            ) : null}
+          </div>
+        </div>
+        <div className="portfolio-hero-actions portfolio-hero-toolbar">
+          {orderedWorkflowCues.map((cue) => (
+            <ActionLink
+              key={cue.key}
+              href={cue.href}
+              className={
+                cue.key === primaryWorkflowCueKey
+                  ? "portfolio-action-link portfolio-action-link-primary"
+                  : "portfolio-action-link portfolio-action-link-secondary"
+              }
+            >
+              {cue.label}
+            </ActionLink>
+          ))}
+        </div>
+      </Panel>
+
+      <PortfolioHealthStrip
+        tiles={[
+          {
+            key: "aum",
+            label: "AUM",
+            value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
+            definition:
+              "Total portfolio market value in the portfolio base currency as of the selected date.",
+            support: `As of ${formatDate(context.selectedAsOfDate)}`,
+            onClick: () => onOpenMetricDrawer("aum"),
+          },
+          {
+            key: "invested_assets",
+            label: "Invested Assets",
+            value: formatCurrency(
+              workspace.summary.invested_market_value_base,
+              workspace.portfolio.base_currency
+            ),
+            definition:
+              "Market value currently invested in funded holdings, excluding operational cash inventory.",
+            support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
+            onClick: () => onOpenMetricDrawer("invested_assets"),
+          },
+          {
+            key: "available_cash",
+            label: "Available Cash",
+            value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
+            definition:
+              "Available cash inventory in the portfolio base currency across published cash balances.",
+            support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,
+            onClick: () => onOpenMetricDrawer("available_cash"),
+          },
+          {
+            key: "holdings",
+            label: "Holdings",
+            value: workspace.summary.position_count,
+            definition: "Number of currently valued holdings in the portfolio book.",
+            support: formatCount(workspace.summary.position_count, "holding"),
+            onClick: () => onOpenMetricDrawer("holdings"),
+          },
+          {
+            key: "net_flow_30d",
+            label: "30D Net Flow",
+            value: formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency),
+            definition:
+              "Net booked portfolio activity across the requested 30-day reporting window, including funding, fees, and other ledger movements.",
+            support: `${getRequestedWindowActivityCount(workspace)} booked events`,
+            tone: getNetFlowTone(workspace),
+            onClick: () => onOpenMetricDrawer("net_flow_30d"),
+          },
+          {
+            key: "book_readiness",
+            label: "Book Readiness",
+            value: getBookReadinessStatus(workspace),
+            definition:
+              "Operational readiness based on holdings coverage, reporting status, publish eligibility, and active blocking exceptions.",
+            support: getBookReadinessSupport(workspace),
+            tone: getBookReadinessTone(workspace),
+            onClick: () => onOpenMetricDrawer("book_readiness"),
+          },
+        ]}
+      />
+
+      <PortfolioInsightsStrip
+        insights={[]}
+        readinessIndicators={readinessIndicators}
+        onDismissInsight={() => undefined}
+      />
+    </section>
+  );
+}
+
+function PortfolioExceptionsSection({ workspace }: { workspace: PortfolioWorkspace }) {
+  return (
+    <section id="portfolio-attention" className="portfolio-workspace-section">
+      <div className="portfolio-section-header">
+        <h3>{workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}</h3>
+        <p className="portfolio-section-copy">
+          {workspace.partial_failures.length
+            ? "Unresolved issues affecting reporting, valuation, or operations."
+            : "Current reporting and operational exception status."}
+        </p>
+      </div>
+      {workspace.partial_failures.length ? (
+        <AnalyticsModule
+          title="Data Coverage"
+          subtitle="Source exceptions affecting operational completeness."
+        >
+          <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
+          <div className="portfolio-guidance-list">
+            {workspace.partial_failures.map((failure) => (
+              <div
+                key={`${failure.source_service}-${failure.error_code}`}
+                className="portfolio-guidance-item"
+              >
+                <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
+                <span className="portfolio-evidence-meta">{failure.error_code}</span>
+                <p className="portfolio-evidence-copy">{failure.detail}</p>
+              </div>
+            ))}
+          </div>
+        </AnalyticsModule>
+      ) : (
+        <Panel>
+          <div className="portfolio-empty-state">
+            <strong>No active exceptions</strong>
+            <p className="muted">Reporting and operational checks are currently clear.</p>
+          </div>
+        </Panel>
+      )}
+    </section>
+  );
+}
+
+function PortfolioHealthSection({
+  workspace,
+  context,
+  showHealthSection,
+}: {
+  workspace: PortfolioWorkspace;
+  context: PortfolioWorkspaceContext;
+  showHealthSection: boolean;
+}) {
+  if (!showHealthSection) {
+    return null;
+  }
+
+  return (
+    <section id="portfolio-health" className="portfolio-workspace-section">
+      <div className="portfolio-section-header">
+        <h3>Portfolio Health Snapshot</h3>
+        <p className="portfolio-section-copy">
+          Readiness and coverage as of {formatDate(context.selectedAsOfDate)}.
+        </p>
+      </div>
+      <WorkspaceGrid className="portfolio-primary-grid">
+        <AnalyticsModule
+          title="Mandate Overview"
+          subtitle="Mandate fit, risk posture, and operating parameters."
+        >
+          <div className="portfolio-mandate-grid">
+            <MetricRow label="Status" value={formatStatus(workspace.profile.status)} />
+            <MetricRow
+              label="Portfolio type"
+              value={formatStatus(workspace.profile.portfolio_type)}
+            />
+            <MetricRow
+              label="Risk profile"
+              value={formatStatus(workspace.profile.risk_exposure)}
+            />
+            <MetricRow
+              label="Investment horizon"
+              value={formatStatus(workspace.profile.investment_time_horizon)}
+            />
+            <MetricRow
+              label="Objective"
+              value={workspace.profile.objective ?? "N/A"}
+              className="portfolio-objective-row"
+            />
+            <MetricRow
+              label="Leverage allowed"
+              value={formatBooleanFlag(workspace.profile.is_leverage_allowed)}
+            />
+          </div>
+        </AnalyticsModule>
+
+        <AnalyticsModule
+          title="Health and Coverage"
+          subtitle="Readiness indicators, source coverage, and active exceptions."
+        >
+          <div className="portfolio-mandate-grid">
+            <MetricRow
+              label="Holdings Coverage"
+              value={workspace.readiness.has_positions ? "Ready" : "Pending"}
+            />
+            <MetricRow
+              label="Reporting Status"
+              value={formatStatus(workspace.readiness.reporting.status)}
+            />
+            <MetricRow
+              label="Publishing Allowed"
+              value={formatBooleanFlag(workspace.operations?.publish_allowed)}
+            />
+            <MetricRow label="Exceptions" value={workspace.partial_failures.length} />
+          </div>
+          {workspace.warnings.length ? (
+            <div className="portfolio-warning-list">
+              {workspace.warnings.map((warning) => (
+                <StatusChip key={warning} tone="warn">
+                  {getCoverageWarningLabel(warning)}
+                </StatusChip>
+              ))}
+            </div>
+          ) : null}
+        </AnalyticsModule>
+      </WorkspaceGrid>
+    </section>
+  );
+}
+
+function PortfolioInsightsSection({
+  workspace,
+  context,
+  detailsLoading,
+  showInsights,
+  showLiquidityModule,
+  showPerformanceSnapshot,
+  showAllocationModule,
+  showTopHoldingsModule,
+  showIncomeModule,
+  showActivityModule,
+  showChangeHighlights,
+  incomeDisplayCurrency,
+  activityDisplayCurrency,
+  visibleInsights,
+  holdingsDrilldown,
+  filteredPositions,
+  transactionDrilldown,
+  onDismissInsight,
+  onSelectAllocation,
+  onSelectTopHolding,
+  onSelectActivityBucket,
+  getSectionExpanded,
+  toggleSection,
+}: {
+  workspace: PortfolioWorkspace;
+  context: PortfolioWorkspaceContext;
+  detailsLoading: boolean;
+  showInsights: boolean;
+  showLiquidityModule: boolean;
+  showPerformanceSnapshot: boolean;
+  showAllocationModule: boolean;
+  showTopHoldingsModule: boolean;
+  showIncomeModule: boolean;
+  showActivityModule: boolean;
+  showChangeHighlights: boolean;
+  incomeDisplayCurrency: string;
+  activityDisplayCurrency: string;
+  visibleInsights: ReturnType<typeof buildPortfolioInsights>;
+  holdingsDrilldown: PortfolioHoldingsDrilldownFilter | null;
+  filteredPositions: PortfolioWorkspace["positions"];
+  transactionDrilldown: PortfolioTransactionDrilldownFilter | null;
+  onDismissInsight: (key: string) => void;
+  onSelectAllocation: (selection: PortfolioAllocationSelection | null) => void;
+  onSelectTopHolding: (securityId: string | null) => void;
+  onSelectActivityBucket: (bucket: string | null) => void;
+  getSectionExpanded: (sectionKey: PortfolioCollapsibleSectionKey) => boolean;
+  toggleSection: (sectionKey: PortfolioCollapsibleSectionKey) => void;
+}) {
+  if (!showInsights) {
+    return null;
+  }
+
+  return (
+    <section className="portfolio-workspace-section">
+      <div className="portfolio-section-header">
+        <h3>Portfolio Insights</h3>
+        <p className="portfolio-section-copy">
+          Allocation, concentration, liquidity, and recent activity.
+        </p>
+      </div>
+      <PortfolioInsightsStrip
+        insights={visibleInsights}
+        readinessIndicators={[]}
+        onDismissInsight={onDismissInsight}
+      />
+      {showLiquidityModule || showPerformanceSnapshot ? (
+        <WorkspaceGrid className="portfolio-primary-grid">
+          {showLiquidityModule ? (
+            <AnalyticsModule
+              title="Liquidity and Projected Cash"
+              subtitle={`As of ${formatDate(context.selectedAsOfDate)} with forecast cashflow over the active horizon.`}
+            >
+              <div className="portfolio-mandate-grid">
+                <MetricRow
+                  label="Available Cash"
+                  value={formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency)}
+                />
+                <MetricRow
+                  label="Cash Allocation"
+                  value={formatPct(workspace.summary.cash_weight_pct)}
+                />
+                <MetricRow
+                  label="Projected Net Flow"
+                  value={formatCurrency(
+                    workspace.cashflow_outlook?.total_net_cashflow_base,
+                    workspace.portfolio.base_currency
+                  )}
+                />
+                <MetricRow
+                  label="Forecast Horizon"
+                  value={
+                    workspace.cashflow_outlook
+                      ? `${workspace.cashflow_outlook.projection_days} days`
+                      : "N/A"
+                  }
+                />
+              </div>
+            </AnalyticsModule>
+          ) : null}
+          {showPerformanceSnapshot ? (
+            <PortfolioPerformanceSnapshotModule
+              performance={workspace.performance}
+              rebalance={workspace.rebalance}
+              reportingRowCount={workspace.readiness.reporting.row_count}
+              context={context}
+              selectedPeriod={context.timeWindow}
+              expanded={getSectionExpanded("performance-snapshot")}
+              onToggle={() => toggleSection("performance-snapshot")}
+            />
+          ) : null}
+        </WorkspaceGrid>
+      ) : null}
+      <WorkspaceGrid className="portfolio-primary-grid">
+        {showAllocationModule ? (
+          <PortfolioCollapsibleModule
+            title="Portfolio Allocation"
+            subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
+            expanded={getSectionExpanded("allocation")}
+            onToggle={() => toggleSection("allocation")}
+          >
+            {detailsLoading ? (
+              <ModuleSkeleton chart rows={4} />
+            ) : workspace.allocation_views?.length ? (
+              <PortfolioAllocationPanel
+                allocationViews={workspace.allocation_views}
+                baseCurrency={workspace.portfolio.base_currency}
+                selectedAllocation={
+                  holdingsDrilldown?.kind === "allocation" ? holdingsDrilldown.selection : null
+                }
+                onSelectionChange={onSelectAllocation}
+              />
+            ) : workspace.summary.position_count ? (
+              <ModuleStatePanel
+                state="partial"
+                title="Allocation is partially available"
+                body="Holdings are present, but allocation views have not been generated from current valuations."
+                hint="Publish current prices and valuation outputs to complete the composition view."
+                why={{
+                  body:
+                    "Allocation requires valued holdings. Until positions have current prices and market values, composition buckets cannot be calculated reliably.",
+                  label: "Why allocation is partially available",
+                }}
+              />
+            ) : (
+              <EmptyStatePanel
+                title="No allocation data yet"
+                body="Allocation becomes available once funded holdings are valued."
+                hint="Book positions and publish prices to generate allocation views."
+                why={{
+                  body:
+                    "Allocation requires funded holdings with current valuations. Empty or unvalued books cannot produce allocation views.",
+                  label: "Why allocation data is unavailable",
+                }}
+                illustration
+              />
+            )}
+          </PortfolioCollapsibleModule>
+        ) : null}
+
+        {showTopHoldingsModule ? (
+          <PortfolioCollapsibleModule
+            title="Top Holdings"
+            subtitle={`Largest holdings by market value or weight as of ${formatDate(context.selectedAsOfDate)}.`}
+            expanded={getSectionExpanded("top-holdings")}
+            onToggle={() => toggleSection("top-holdings")}
+          >
+            {detailsLoading ? (
+              <ModuleSkeleton chart rows={4} />
+            ) : workspace.top_positions.length ? (
+              <PortfolioTopHoldingsPanel
+                positions={
+                  holdingsDrilldown?.kind === "allocation"
+                    ? filteredPositions
+                        .slice()
+                        .sort((left, right) => (right.market_value_base ?? 0) - (left.market_value_base ?? 0))
+                        .slice(0, 10)
+                        .map((position) => ({
+                          security_id: position.security_id,
+                          instrument_name: position.instrument_name,
+                          asset_class: position.asset_class,
+                          quantity: position.quantity,
+                          market_value_base: position.market_value_base,
+                          weight_pct: position.weight_pct,
+                        }))
+                    : workspace.top_positions
+                }
+                baseCurrency={workspace.portfolio.base_currency}
+                selectedSecurityId={
+                  holdingsDrilldown?.kind === "security" ? holdingsDrilldown.security_id : null
+                }
+                onSelectionChange={onSelectTopHolding}
+              />
+            ) : workspace.summary.position_count ? (
+              <ModuleStatePanel
+                state="partial"
+                title="Top holdings are not ranked yet"
+                body="The book contains positions, but ranked concentration output is still unavailable."
+                hint="Complete valuation and concentration calculations to populate the ranked view."
+              />
+            ) : (
+              <EmptyStatePanel
+                title="No holdings yet"
+                body="Holdings will appear once positions are funded and priced."
+                hint="Add funding, book a trade, and publish pricing."
+                why={{
+                  body:
+                    "Holdings require booked positions or funded balances. Until the book contains invested or funded inventory, there is nothing to rank.",
+                  label: "Why holdings are unavailable",
+                }}
+                illustration
+                centered
+              />
+            )}
+          </PortfolioCollapsibleModule>
+        ) : null}
+      </WorkspaceGrid>
+      {showChangeHighlights ? (
+        <WorkspaceGrid className="portfolio-primary-grid">
+          {showIncomeModule ? (
+            <PortfolioCollapsibleModule
+              title="Income"
+              subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
+              expanded={getSectionExpanded("income")}
+              onToggle={() => toggleSection("income")}
+            >
+              {detailsLoading ? (
+                <ModuleSkeleton chart rows={4} />
+              ) : workspace.income_summary ? (
+                <>
+                  <div className="portfolio-chart-summary-grid">
+                    <MetricRow label="Window net" value={formatCurrency(workspace.income_summary.totals_requested_window.net.reporting_currency_amount, incomeDisplayCurrency)} />
+                    <MetricRow label="YTD net" value={formatCurrency(workspace.income_summary.totals_year_to_date.net.reporting_currency_amount, incomeDisplayCurrency)} />
+                    <MetricRow label="Window gross" value={formatCurrency(workspace.income_summary.totals_requested_window.gross.reporting_currency_amount, incomeDisplayCurrency)} />
+                    <MetricRow label="Transactions" value={workspace.income_summary.totals_requested_window.net.transaction_count} />
+                  </div>
+                  <PortfolioIncomePanel summary={workspace.income_summary} compact />
+                </>
+              ) : workspace.recent_transactions.length ? (
+                <ModuleStatePanel
+                  state="partial"
+                  title="Income is not classified yet"
+                  body="Ledger activity exists, but no income summary is available for the selected period."
+                  hint="Dividend, coupon, and income classifications need to be published before income composition can be shown."
+                />
+              ) : (
+                <EmptyStatePanel
+                  title="No income activity"
+                  body="No income events have been recorded for the selected period."
+                  hint="Dividend and coupon events will populate income once they are booked."
+                />
+              )}
+            </PortfolioCollapsibleModule>
+          ) : null}
+
+          {showActivityModule ? (
+            <PortfolioCollapsibleModule
+              title="Activity"
+              subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
+              expanded={getSectionExpanded("activity")}
+              onToggle={() => toggleSection("activity")}
+            >
+              {detailsLoading ? (
+                <ModuleSkeleton chart rows={4} />
+              ) : workspace.activity_summary ? (
+                <>
+                  <div className="portfolio-chart-summary-grid">
+                    <MetricRow label="Window amount" value={formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency)} />
+                    <MetricRow label="YTD amount" value={formatCurrency(getYearToDateActivityAmount(workspace), activityDisplayCurrency)} />
+                    <MetricRow label="Window transactions" value={getRequestedWindowActivityCount(workspace)} />
+                    <MetricRow label="YTD transactions" value={getYearToDateActivityCount(workspace)} />
+                  </div>
+                  <PortfolioActivityPanel
+                    summary={workspace.activity_summary}
+                    compact
+                    selectedBucket={transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null}
+                    onSelectionChange={onSelectActivityBucket}
+                  />
+                </>
+              ) : workspace.recent_transactions.length ? (
+                <ModuleStatePanel
+                  state="partial"
+                  title="Activity totals are incomplete"
+                  body="Transactions are present, but summarized activity buckets are not available for the selected period."
+                  hint="Publish activity aggregation output to complete the client activity view."
+                />
+              ) : (
+                <EmptyStatePanel
+                  title="No client activity"
+                  body="No funding, trading, or cash activity has been recorded in the selected period."
+                  hint="Funding and trade events will populate the activity view."
+                />
+              )}
+            </PortfolioCollapsibleModule>
+          ) : null}
+        </WorkspaceGrid>
+      ) : null}
+    </section>
+  );
+}
+
+function PortfolioChangesSection({
+  workspace,
+  context,
+  showChanges,
+  incomeDisplayCurrency,
+  activityDisplayCurrency,
+  transactionDrilldown,
+  isDetailedView,
+  onSelectActivityBucket,
+  getSectionExpanded,
+  toggleSection,
+}: {
+  workspace: PortfolioWorkspace;
+  context: PortfolioWorkspaceContext;
+  showChanges: boolean;
+  incomeDisplayCurrency: string;
+  activityDisplayCurrency: string;
+  transactionDrilldown: PortfolioTransactionDrilldownFilter | null;
+  isDetailedView: boolean;
+  onSelectActivityBucket: (bucket: string | null) => void;
+  getSectionExpanded: (sectionKey: PortfolioCollapsibleSectionKey) => boolean;
+  toggleSection: (sectionKey: PortfolioCollapsibleSectionKey) => void;
+}) {
+  if (!showChanges) {
+    return null;
+  }
+
+  const hasChangeModules = Boolean(workspace.income_summary || workspace.activity_summary);
+
+  return (
+    <section id="portfolio-changes" className="portfolio-workspace-section">
+      <div className="portfolio-section-header">
+        <h3>What changed over time?</h3>
+        <p className="portfolio-section-copy">
+          Income and activity for {formatPeriodContext(context)}.
+        </p>
+      </div>
+      {hasChangeModules ? (
+        <WorkspaceGrid className="portfolio-primary-grid">
+          {workspace.income_summary ? (
+            <PortfolioCollapsibleModule
+              title="Income"
+              subtitle={`${incomeDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.income_summary.window_start_date)} to ${formatDate(workspace.income_summary.window_end_date)}.`}
+              expanded={getSectionExpanded("income")}
+              onToggle={() => toggleSection("income")}
+            >
+              <>
+                <PortfolioIncomePanel summary={workspace.income_summary} />
+                {isDetailedView ? (
+                  <AnalyticsTable
+                    ariaLabel="Income summary"
+                    columns={[
+                      { key: "category", label: "Income Type" },
+                      { key: "windowNet", label: "Window Net", align: "right" },
+                      { key: "ytdNet", label: "YTD Net", align: "right" },
+                      { key: "windowGross", label: "Window Gross", align: "right" },
+                      { key: "txns", label: "Window Txns", align: "right" },
+                    ]}
+                    rows={[
+                      {
+                        key: "total",
+                        cells: [
+                          "Total",
+                          formatCurrency(workspace.income_summary.totals_requested_window.net.reporting_currency_amount, incomeDisplayCurrency),
+                          formatCurrency(workspace.income_summary.totals_year_to_date.net.reporting_currency_amount, incomeDisplayCurrency),
+                          formatCurrency(workspace.income_summary.totals_requested_window.gross.reporting_currency_amount, incomeDisplayCurrency),
+                          workspace.income_summary.totals_requested_window.net.transaction_count,
+                        ],
+                      },
+                      ...workspace.income_summary.income_types.map((item) => ({
+                        key: item.income_type,
+                        cells: [
+                          formatIncomeTypeLabel(item.income_type),
+                          formatCurrency(item.requested_window.net.reporting_currency_amount, incomeDisplayCurrency),
+                          formatCurrency(item.year_to_date.net.reporting_currency_amount, incomeDisplayCurrency),
+                          formatCurrency(item.requested_window.gross.reporting_currency_amount, incomeDisplayCurrency),
+                          item.requested_window.net.transaction_count,
+                        ],
+                      })),
+                    ]}
+                  />
+                ) : null}
+              </>
+            </PortfolioCollapsibleModule>
+          ) : null}
+          {workspace.activity_summary ? (
+            <PortfolioCollapsibleModule
+              title="Activity"
+              subtitle={`${activityDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.activity_summary.window_start_date)} to ${formatDate(workspace.activity_summary.window_end_date)}.`}
+              expanded={getSectionExpanded("activity")}
+              onToggle={() => toggleSection("activity")}
+            >
+              <>
+                <PortfolioActivityPanel
+                  summary={workspace.activity_summary}
+                  selectedBucket={transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null}
+                  onSelectionChange={onSelectActivityBucket}
+                />
+                {isDetailedView ? (
+                  <AnalyticsTable
+                    ariaLabel="Activity summary"
+                    columns={[
+                      { key: "bucket", label: "Bucket" },
+                      { key: "windowAmount", label: "Window Amount", align: "right" },
+                      { key: "ytdAmount", label: "YTD Amount", align: "right" },
+                      { key: "windowTxns", label: "Window Txns", align: "right" },
+                      { key: "ytdTxns", label: "YTD Txns", align: "right" },
+                    ]}
+                    rows={workspace.activity_summary.buckets.map((bucket) => ({
+                      key: bucket.bucket,
+                      cells: [
+                        formatActivityBucketLabel(bucket.bucket),
+                        formatCurrency(bucket.requested_window.reporting_currency_amount, activityDisplayCurrency),
+                        formatCurrency(bucket.year_to_date.reporting_currency_amount, activityDisplayCurrency),
+                        bucket.requested_window.transaction_count,
+                        bucket.year_to_date.transaction_count,
+                      ],
+                    }))}
+                  />
+                ) : null}
+              </>
+            </PortfolioCollapsibleModule>
+          ) : null}
+        </WorkspaceGrid>
+      ) : (
+        <Panel>
+          <div className="portfolio-empty-state">
+            <strong>Change history is not available yet.</strong>
+            <p className="muted">
+              Income and activity trends will appear once recent ledger events fall inside the reporting window.
+            </p>
+          </div>
+        </Panel>
+      )}
+    </section>
+  );
+}
+
+function PortfolioDrilldownSection({
+  workspace,
+  context,
+  detailsLoading,
+  showDrilldown,
+  showProjectedCashflow,
+  isDetailedView,
+  filteredPositions,
+  holdingsFilterCopy,
+  transactionDrilldown,
+  onClearHoldingsDrilldown,
+  onClearTransactionDrilldown,
+  onSelectHoldingRow,
+  onSelectTransactionRow,
+  getSectionExpanded,
+  setSectionPreferences,
+}: {
+  workspace: PortfolioWorkspace;
+  context: PortfolioWorkspaceContext;
+  detailsLoading: boolean;
+  showDrilldown: boolean;
+  showProjectedCashflow: boolean;
+  isDetailedView: boolean;
+  filteredPositions: PortfolioWorkspace["positions"];
+  holdingsFilterCopy: string | null;
+  transactionDrilldown: PortfolioTransactionDrilldownFilter | null;
+  onClearHoldingsDrilldown: () => void;
+  onClearTransactionDrilldown: () => void;
+  onSelectHoldingRow: (row: HoldingsRow) => void;
+  onSelectTransactionRow: (row: TransactionRow) => void;
+  getSectionExpanded: (sectionKey: PortfolioCollapsibleSectionKey) => boolean;
+  setSectionPreferences: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+}) {
+  if (!showDrilldown) {
+    return null;
+  }
+
+  const persistOpenState = (sectionKey: PortfolioCollapsibleSectionKey, nextOpen: boolean) => {
+    setSectionPreferences((current) => {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(getPortfolioSectionStorageKey(sectionKey), String(nextOpen));
+      }
+      return { ...current, [sectionKey]: nextOpen };
+    });
+  };
+
+  return (
+    <section id="portfolio-drilldown" className="portfolio-workspace-section">
+      <div className="portfolio-section-header">
+        <h3>Where can I drill down?</h3>
+        <p className="portfolio-section-copy">Holdings, transactions, and projected liquidity on demand.</p>
+      </div>
+      <div className="portfolio-disclosure-stack">
+        <details
+          className="portfolio-disclosure"
+          open={getSectionExpanded("holdings")}
+          onToggle={(event) => persistOpenState("holdings", (event.currentTarget as HTMLDetailsElement).open)}
+        >
+          <summary>
+            <div>
+              <strong>Holdings</strong>
+              <span>
+                {filteredPositions.length
+                  ? `${formatCount(filteredPositions.length, "holding")} with valuation context`
+                  : "No holdings have been booked yet"}
+              </span>
+            </div>
+            <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div className="portfolio-disclosure-content">
+            <DataGridCard>
+              <PortfolioHoldingsGrid
+                portfolioId={workspace.portfolio.portfolio_id}
+                positions={filteredPositions}
+                baseCurrency={workspace.portfolio.base_currency}
+                asOfDate={context.selectedAsOfDate}
+                columnMode={context.columnMode}
+                filterLabel={holdingsFilterCopy}
+                onClearFilter={onClearHoldingsDrilldown}
+                onRowSelect={onSelectHoldingRow}
+              />
+            </DataGridCard>
+          </div>
+        </details>
+
+        <details
+          className="portfolio-disclosure"
+          open={getSectionExpanded("transactions")}
+          onToggle={(event) => persistOpenState("transactions", (event.currentTarget as HTMLDetailsElement).open)}
+        >
+          <summary>
+            <div>
+              <strong>Transactions</strong>
+              <span>
+                {workspace.recent_transactions.length
+                  ? `${workspace.recent_transactions.length} booked events in ${context.periodLabel}`
+                  : "No transactions have been booked yet"}
+              </span>
+            </div>
+            <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div className="portfolio-disclosure-content">
+            <DataGridCard>
+              <PortfolioTransactionsGrid
+                portfolioId={workspace.portfolio.portfolio_id}
+                baseCurrency={workspace.portfolio.base_currency}
+                asOfDate={context.selectedAsOfDate}
+                defaultStartDate={context.effectivePeriodStartDate}
+                defaultEndDate={context.effectivePeriodEndDate}
+                initialTransactions={workspace.recent_transactions}
+                suspendInitialFetch={detailsLoading}
+                externalFilter={transactionDrilldown}
+                onClearExternalFilter={onClearTransactionDrilldown}
+                onRowSelect={onSelectTransactionRow}
+              />
+            </DataGridCard>
+          </div>
+        </details>
+
+        {showProjectedCashflow && workspace.cashflow_outlook ? (
+          <details
+            className="portfolio-disclosure"
+            open={getSectionExpanded("projected-cashflow")}
+            onToggle={(event) =>
+              persistOpenState("projected-cashflow", (event.currentTarget as HTMLDetailsElement).open)
+            }
+          >
+            <summary>
+              <div>
+                <strong>Projected Cashflow</strong>
+                <span>{`${workspace.cashflow_outlook.projection_days} day forward liquidity path`}</span>
+              </div>
+              <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
+            </summary>
+            <div className="portfolio-disclosure-content">
+              <PortfolioProjectedCashflowModule
+                portfolioId={workspace.portfolio.portfolio_id}
+                baseCurrency={workspace.portfolio.base_currency}
+                asOfDate={context.selectedAsOfDate}
+                initialCashflowOutlook={workspace.cashflow_outlook}
+                defaultExpanded={isDetailedView}
+                suspendInitialFetch={detailsLoading}
+              />
+            </div>
+          </details>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function PortfolioDetailDrawerController({
+  detailDrawer,
+  onClose,
+}: {
+  detailDrawer: PortfolioDetailDrawerState | null;
+  onClose: () => void;
+}) {
+  return (
+    <PortfolioDetailDrawer
+      open={Boolean(detailDrawer)}
+      kicker={detailDrawer?.kicker ?? ""}
+      title={detailDrawer?.title ?? ""}
+      subtitle={detailDrawer?.subtitle}
+      summaryItems={detailDrawer?.summaryItems ?? []}
+      tabs={detailDrawer?.tabs ?? []}
+      fullPageHref={detailDrawer?.fullPageHref ?? "#portfolio-summary"}
+      fullPageLabel={detailDrawer?.fullPageLabel ?? "Open"}
+      onClose={onClose}
+    />
   );
 }
 
