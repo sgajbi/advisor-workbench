@@ -603,12 +603,6 @@ a:hover {
   }
 }
 
-@media (min-width: 1560px) {
-  .portfolio-top-holdings-body {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
-  }
-}
-
 @media (max-width: 960px) {
   .portfolio-chart-module-body {
     grid-template-columns: 1fr;
