@@ -716,9 +716,9 @@ a:hover {
 
 .page-container {
   width: 100%;
-  max-width: 1760px;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 .page-header {
@@ -971,23 +971,23 @@ a:hover {
 .workspace-layout,
 .portfolio-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 300px;
-  column-gap: 20px;
-  row-gap: 20px;
+  grid-template-columns: 220px minmax(0, 1fr) 260px;
+  column-gap: 16px;
+  row-gap: 16px;
   align-items: start;
 }
 
 .workspace-layout-compact,
 .portfolio-layout-empty {
-  grid-template-columns: 260px minmax(0, 1fr) 300px;
-  column-gap: 20px;
-  row-gap: 20px;
+  grid-template-columns: 220px minmax(0, 1fr) 260px;
+  column-gap: 16px;
+  row-gap: 16px;
 }
 
 .workspace-main,
 .portfolio-main {
   display: grid;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
   min-width: 0;
 }
@@ -995,13 +995,31 @@ a:hover {
 .workspace-side,
 .portfolio-side {
   display: grid;
-  gap: 20px;
+  gap: 16px;
   position: sticky;
   top: 4.8rem;
   align-self: start;
-  width: 300px;
-  max-width: 300px;
+  width: 260px;
+  max-width: 260px;
   min-width: 0;
+}
+
+.workspace-rail,
+.portfolio-rail {
+  width: 100%;
+  max-width: 220px;
+}
+
+@media (min-width: 1680px) {
+  .workspace-layout,
+  .portfolio-layout {
+    grid-template-columns: 220px minmax(900px, 1fr) 260px;
+  }
+
+  .workspace-layout-compact,
+  .portfolio-layout-empty {
+    grid-template-columns: 220px minmax(900px, 1fr) 260px;
+  }
 }
 
 .workspace-main > *,
@@ -4786,22 +4804,22 @@ a:hover {
 @media (max-width: 1400px) {
   .workspace-layout,
   .portfolio-layout {
-    grid-template-columns: 240px minmax(0, 1fr) 280px;
+    grid-template-columns: 220px minmax(0, 1fr) 240px;
   }
 
   .workspace-layout-compact,
   .portfolio-layout-empty {
-    grid-template-columns: 240px minmax(0, 1fr) 280px;
+    grid-template-columns: 220px minmax(0, 1fr) 240px;
   }
 
   .workspace-side,
   .portfolio-side {
-    width: 280px;
-    max-width: 280px;
+    width: 240px;
+    max-width: 240px;
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1200px) {
   .workspace-layout,
   .portfolio-layout {
     grid-template-columns: 220px minmax(0, 1fr);
@@ -4821,7 +4839,7 @@ a:hover {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4839,13 +4857,14 @@ a:hover {
   .workspace-layout-compact,
   .portfolio-layout-empty {
     grid-template-columns: 1fr;
-    column-gap: 20px;
-    row-gap: 20px;
+    column-gap: 16px;
+    row-gap: 16px;
   }
 
   .workspace-rail,
   .portfolio-rail {
     position: static;
+    max-width: none;
   }
 
   .workspace-side,
@@ -4854,6 +4873,7 @@ a:hover {
     width: 100%;
     grid-template-columns: 1fr;
     max-width: none;
+    grid-column: auto;
   }
 
   .workspace-grid,
