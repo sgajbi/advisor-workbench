@@ -13,8 +13,26 @@ export default function PortfolioInsightsStrip({
   readinessIndicators: PortfolioReadinessIndicator[];
   onDismissInsight: (key: string) => void;
 }) {
+  if (!insights.length && !readinessIndicators.length) {
+    return null;
+  }
+
   return (
     <>
+      {readinessIndicators.length ? (
+        <div className="portfolio-readiness-strip" aria-label="Portfolio readiness indicators">
+          {readinessIndicators.map((indicator) => (
+            <ReadinessIndicator
+              key={indicator.key}
+              label={indicator.label}
+              status={indicator.status}
+              tone={mapIndicatorTone(indicator.status)}
+              href={indicator.href}
+            />
+          ))}
+        </div>
+      ) : null}
+
       {insights.length ? (
         <div className="portfolio-insight-strip" aria-label="Portfolio insights">
           {insights.map((insight) => (
@@ -29,18 +47,6 @@ export default function PortfolioInsightsStrip({
           ))}
         </div>
       ) : null}
-
-      <div className="portfolio-readiness-strip" aria-label="Portfolio readiness indicators">
-        {readinessIndicators.map((indicator) => (
-          <ReadinessIndicator
-            key={indicator.key}
-            label={indicator.label}
-            status={indicator.status}
-            tone={mapIndicatorTone(indicator.status)}
-            href={indicator.href}
-          />
-        ))}
-      </div>
     </>
   );
 }
