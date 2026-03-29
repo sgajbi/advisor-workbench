@@ -377,6 +377,20 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
   });
 
+  it("renders performance content inside the workstation shell main region", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const mainShell = document.querySelector(".workstation-shell-main");
+    expect(mainShell).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
+    expect(mainShell).toContainElement(screen.getByText("Multi-Horizon Returns"));
+    expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
+    expect(mainShell?.querySelector(".performance-chart-stage")).toBeTruthy();
+    expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
+  });
+
   it("shows summary modules by default and hides analysis modules", async () => {
     installPerformancePageFetchMock();
 

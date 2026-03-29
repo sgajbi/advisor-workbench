@@ -3140,11 +3140,16 @@ a:hover {
 
 .performance-layout {
   grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: none;
 }
 
 .performance-main {
-  gap: 0.6rem;
+  gap: 1rem;
   grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
+  align-content: start;
 }
 
 .performance-side {
@@ -3310,6 +3315,8 @@ a:hover {
   gap: 1rem;
   padding: 0.95rem 1rem 1rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 248, 250, 0.97) 100%);
+  width: 100%;
+  max-width: none;
 }
 
 .performance-summary-stage-header {
@@ -3433,7 +3440,9 @@ a:hover {
 .performance-chart-grid,
 .performance-detail-grid {
   align-items: start;
-  gap: 0.75rem;
+  gap: 1rem;
+  width: 100%;
+  max-width: none;
 }
 
 .performance-overview-band {
@@ -3547,7 +3556,7 @@ a:hover {
 }
 
 .performance-detail-grid {
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .performance-chart-panel,
@@ -3555,11 +3564,15 @@ a:hover {
 .performance-measurement-panel {
   display: grid;
   gap: 0.7rem;
+  width: 100%;
+  max-width: none;
 }
 
 .performance-detail-panel-compact,
 .performance-detail-panel-wide {
   align-self: stretch;
+  width: 100%;
+  max-width: none;
 }
 
 .performance-detail-panel-wide {
@@ -3872,6 +3885,8 @@ a:hover {
   padding: 0.9rem 0.95rem 1rem;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 248, 250, 0.96) 100%);
+  width: 100%;
+  max-width: none;
 }
 
 .performance-chart-toolbar {
@@ -4084,6 +4099,7 @@ a:hover {
 
 .performance-chart-library-frame {
   width: 100%;
+  max-width: none;
   min-height: 28.75rem;
   border-radius: 24px;
   border: 1px solid rgba(34, 44, 59, 0.08);
