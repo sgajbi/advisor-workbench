@@ -91,11 +91,13 @@ export type PortfolioFilterOptions = {
   transactionTypes: string[];
 };
 
+const DEFAULT_PORTFOLIO_AS_OF_DATE = "2000-01-01";
+
 export function buildInitialPortfolioControls(
   workspace: PortfolioWorkspace | null
 ): PortfolioWorkspaceControls {
   return {
-    asOfDate: workspace?.as_of_date ?? new Date().toISOString().slice(0, 10),
+    asOfDate: workspace?.as_of_date ?? DEFAULT_PORTFOLIO_AS_OF_DATE,
     reportingCurrency: getPortfolioCurrencyOptions(workspace)[0] ?? "USD",
     viewMode: "summary",
     timeWindow: "30D",

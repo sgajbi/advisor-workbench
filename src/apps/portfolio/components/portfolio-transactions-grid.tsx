@@ -13,6 +13,7 @@ import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
 import { EmptyStatePanel, ModuleSkeleton, ModuleStatePanel } from "@/design-system";
+import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
@@ -22,6 +23,8 @@ import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
+
+ensureAgGridModulesRegistered();
 
 type PortfolioTransactionsGridProps = {
   portfolioId: string;
@@ -344,6 +347,7 @@ export default function PortfolioTransactionsGrid({
           <AgGridReact<TransactionRow>
             rowData={rowData}
             columnDefs={columnDefs}
+            theme="legacy"
             defaultColDef={DEFAULT_GRID_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"

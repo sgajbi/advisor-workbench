@@ -12,6 +12,7 @@ import MenuItem from "@mui/material/MenuItem";
 import * as XLSX from "xlsx";
 
 import { EmptyStatePanel, ModuleStatePanel } from "@/design-system";
+import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
@@ -19,6 +20,8 @@ import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
+
+ensureAgGridModulesRegistered();
 
 type HoldingsColumnKey =
   | "instrument"
@@ -299,6 +302,7 @@ export default function PortfolioHoldingsGrid({
           <AgGridReact<HoldingsRow>
             rowData={rowData}
             columnDefs={columnDefs}
+            theme="legacy"
             defaultColDef={DEFAULT_GRID_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"
@@ -376,8 +380,10 @@ const DEFAULT_GRID_COLUMN_DEF: ColDef = {
 function buildHoldingsColumn(
   config: ColDef<HoldingsRow> & { key: HoldingsColumnKey }
 ): ColDef<HoldingsRow> {
+  const columnConfig = { ...config };
+  delete (columnConfig as { key?: HoldingsColumnKey }).key;
   return {
-    ...config,
+    ...columnConfig,
     tooltipValueGetter: (params) => String(params.value ?? ""),
   };
 }
