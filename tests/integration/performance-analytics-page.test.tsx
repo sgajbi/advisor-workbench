@@ -375,6 +375,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector("main.workstation-page.performance-page")).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
     expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
+    expect(screen.getByText("Lotus Performance")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Benchmark-aware portfolio performance, attribution, and contribution analysis"
+      )
+    ).toBeInTheDocument();
+    expect(document.querySelector(".lotus-workstation-header-mark .lotus-mark")).toBeTruthy();
   });
 
   it("renders performance content inside the workstation shell main region", async () => {

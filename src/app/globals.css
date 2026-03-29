@@ -160,6 +160,82 @@ a:hover {
   flex-shrink: 0;
 }
 
+.lotus-workstation-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 0.15rem 0 0.35rem;
+}
+
+.lotus-workstation-header-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.lotus-workstation-header-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.35rem;
+  height: 3.35rem;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  border: 1px solid rgba(54, 95, 139, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 247, 250, 0.96) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 6px 16px rgba(34, 44, 59, 0.06);
+}
+
+.lotus-workstation-header-mark .lotus-mark {
+  width: 2.25rem;
+  height: 1.8rem;
+}
+
+.lotus-workstation-header-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.lotus-workstation-header-product {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lotus-workstation-header-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 2vw, 2.15rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--brand-strong);
+}
+
+.lotus-workstation-header-context {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.lotus-workstation-header-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
 .lotus-mark-core {
   fill: url(#lotusPetalGradient);
 }
@@ -4994,6 +5070,15 @@ a:hover {
   .workstation-shell-rail,
   .workstation-shell-side {
     max-width: none;
+  }
+
+  .lotus-workstation-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lotus-workstation-header-actions {
+    justify-content: flex-start;
   }
 
   .workspace-grid,

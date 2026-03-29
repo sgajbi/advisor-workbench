@@ -13,6 +13,7 @@ import {
   FilterBar,
   InsightCallout,
   KpiStatTile,
+  LotusWorkstationHeader,
   ModuleStatePanel,
   MetricRow,
   PageToolbar,
@@ -301,5 +302,28 @@ describe("design-system components", () => {
     expect(screen.getByText("Ready")).toHaveClass("kpi-stat-value");
     expect(screen.getByText("0 active exceptions")).toHaveClass("kpi-stat-support");
     expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
+  });
+
+  it("renders the shared Lotus workstation header with brand, title, context, and actions", () => {
+    render(
+      <LotusWorkstationHeader
+        product="Lotus Performance"
+        title="Performance Workbench"
+        context="Benchmark-aware portfolio performance, attribution, and contribution analysis"
+        actions={<button type="button">Header Action</button>}
+      />
+    );
+
+    expect(screen.getByText("Lotus Performance")).toHaveClass("lotus-workstation-header-product");
+    expect(screen.getByRole("heading", { name: "Performance Workbench" })).toHaveClass(
+      "lotus-workstation-header-title"
+    );
+    expect(
+      screen.getByText(
+        "Benchmark-aware portfolio performance, attribution, and contribution analysis"
+      )
+    ).toHaveClass("lotus-workstation-header-context");
+    expect(screen.getByRole("button", { name: "Header Action" })).toBeInTheDocument();
+    expect(document.querySelector(".lotus-workstation-header-mark .lotus-mark")).toBeTruthy();
   });
 });
