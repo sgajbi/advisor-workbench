@@ -264,10 +264,12 @@ export function PortfolioActivityPanel({
   summary,
   selectedBucket,
   onSelectionChange,
+  compact = false,
 }: {
   summary: PortfolioActivitySummaryView;
   selectedBucket?: string | null;
   onSelectionChange?: (bucket: string | null) => void;
+  compact?: boolean;
 }) {
   const [hoveredBucket, setHoveredBucket] = useState<string | null>(null);
   const maxAmount = Math.max(
@@ -276,8 +278,12 @@ export function PortfolioActivityPanel({
   );
 
   return (
-    <div className="portfolio-chart-card">
-      <div className="portfolio-flow-chart" aria-label="Activity chart" role="list">
+    <div className={compact ? "portfolio-chart-card portfolio-chart-card-compact" : "portfolio-chart-card"}>
+      <div
+        className={compact ? "portfolio-flow-chart portfolio-flow-chart-compact" : "portfolio-flow-chart"}
+        aria-label="Activity chart"
+        role="list"
+      >
         {summary.buckets.map((bucket) => {
           const requestedAmount = bucket.requested_window.reporting_currency_amount;
           const ytdAmount = bucket.year_to_date.reporting_currency_amount;
@@ -295,9 +301,15 @@ export function PortfolioActivityPanel({
               aria-label={`${buildActivityTooltip(bucket.bucket, requestedAmount, ytdAmount, summary.reporting_currency).replaceAll("\n", ". ")} Select to filter transactions.`}
               className={
                 selected
-                  ? "portfolio-stacked-bar-group portfolio-stacked-bar-group-selected"
+                  ? compact
+                    ? "portfolio-stacked-bar-group portfolio-stacked-bar-group-compact portfolio-stacked-bar-group-selected"
+                    : "portfolio-stacked-bar-group portfolio-stacked-bar-group-selected"
                   : hovered
-                  ? "portfolio-stacked-bar-group portfolio-stacked-bar-group-hovered"
+                  ? compact
+                    ? "portfolio-stacked-bar-group portfolio-stacked-bar-group-compact portfolio-stacked-bar-group-hovered"
+                    : "portfolio-stacked-bar-group portfolio-stacked-bar-group-hovered"
+                  : compact
+                  ? "portfolio-stacked-bar-group portfolio-stacked-bar-group-compact"
                   : "portfolio-stacked-bar-group"
               }
               onMouseEnter={() => setHoveredBucket(bucket.bucket)}
@@ -322,11 +334,18 @@ export function PortfolioActivityPanel({
                   }
                 />
               </div>
-              <div className="portfolio-flow-row-meta">
-                <span>{requestedAmount < 0 ? "Window outflow" : "Window inflow"}</span>
-                <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
-                <span>{bucket.requested_window.transaction_count} txn</span>
-              </div>
+              {compact ? (
+                <div className="portfolio-flow-row-meta portfolio-flow-row-meta-compact">
+                  <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
+                  <span>{bucket.requested_window.transaction_count} txn</span>
+                </div>
+              ) : (
+                <div className="portfolio-flow-row-meta">
+                  <span>{requestedAmount < 0 ? "Window outflow" : "Window inflow"}</span>
+                  <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
+                  <span>{bucket.requested_window.transaction_count} txn</span>
+                </div>
+              )}
             </button>
           );
         })}
@@ -337,8 +356,10 @@ export function PortfolioActivityPanel({
 
 export function PortfolioIncomePanel({
   summary,
+  compact = false,
 }: {
   summary: PortfolioIncomeSummaryView;
+  compact?: boolean;
 }) {
   const [hoveredType, setHoveredType] = useState<string | null>(null);
   const maxAmount = Math.max(
@@ -351,8 +372,12 @@ export function PortfolioIncomePanel({
   );
 
   return (
-    <div className="portfolio-chart-card">
-      <div className="portfolio-income-chart" aria-label="Income chart" role="list">
+    <div className={compact ? "portfolio-chart-card portfolio-chart-card-compact" : "portfolio-chart-card"}>
+      <div
+        className={compact ? "portfolio-income-chart portfolio-income-chart-compact" : "portfolio-income-chart"}
+        aria-label="Income chart"
+        role="list"
+      >
         {summary.income_types.map((item) => {
           const hovered = hoveredType === item.income_type;
           const grossAmount = item.requested_window.gross.reporting_currency_amount;
@@ -370,7 +395,11 @@ export function PortfolioIncomePanel({
               aria-label={buildIncomeTooltip(item, summary.reporting_currency).replaceAll("\n", ". ")}
               className={
                 hovered
-                  ? "portfolio-grouped-bar-group portfolio-grouped-bar-group-hovered"
+                  ? compact
+                    ? "portfolio-grouped-bar-group portfolio-grouped-bar-group-compact portfolio-grouped-bar-group-hovered"
+                    : "portfolio-grouped-bar-group portfolio-grouped-bar-group-hovered"
+                  : compact
+                  ? "portfolio-grouped-bar-group portfolio-grouped-bar-group-compact"
                   : "portfolio-grouped-bar-group"
               }
               onMouseEnter={() => setHoveredType(item.income_type)}
@@ -394,11 +423,18 @@ export function PortfolioIncomePanel({
                   style={{ width: netWidth, backgroundColor: CHART_COLORS.accent }}
                 />
               </div>
-              <div className="portfolio-income-row-meta">
-                <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
-                <span>Deductions {formatCurrency(deductionsAmount, summary.reporting_currency)}</span>
-                <span>{item.requested_window.net.transaction_count} txn</span>
-              </div>
+              {compact ? (
+                <div className="portfolio-income-row-meta portfolio-income-row-meta-compact">
+                  <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
+                  <span>{item.requested_window.net.transaction_count} txn</span>
+                </div>
+              ) : (
+                <div className="portfolio-income-row-meta">
+                  <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
+                  <span>Deductions {formatCurrency(deductionsAmount, summary.reporting_currency)}</span>
+                  <span>{item.requested_window.net.transaction_count} txn</span>
+                </div>
+              )}
             </div>
           );
         })}

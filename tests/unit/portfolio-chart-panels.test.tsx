@@ -123,6 +123,71 @@ describe("portfolio chart panels", () => {
     );
     expect(onActivitySelectionChange).toHaveBeenCalledWith("INFLOWS");
   });
+
+  it("renders compact activity and income panels for summary mode", () => {
+    render(
+      <>
+        <PortfolioActivityPanel
+          compact
+          selectedBucket={null}
+          summary={{
+            reporting_currency: "USD",
+            window_start_date: "2026-01-01",
+            window_end_date: "2026-01-31",
+            buckets: [
+              {
+                bucket: "INFLOWS",
+                requested_window: { reporting_currency_amount: 1000, transaction_count: 1 },
+                year_to_date: { reporting_currency_amount: 2500, transaction_count: 2 },
+              },
+            ],
+          }}
+        />
+        <PortfolioIncomePanel
+          compact
+          summary={{
+            reporting_currency: "USD",
+            window_start_date: "2026-01-01",
+            window_end_date: "2026-01-31",
+            totals_requested_window: {
+              gross: { reporting_currency_amount: 2500, transaction_count: 1 },
+              withholding_tax: { reporting_currency_amount: 200, transaction_count: 1 },
+              other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
+              net: { reporting_currency_amount: 2300, transaction_count: 1 },
+            },
+            totals_year_to_date: {
+              gross: { reporting_currency_amount: 2500, transaction_count: 1 },
+              withholding_tax: { reporting_currency_amount: 200, transaction_count: 1 },
+              other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
+              net: { reporting_currency_amount: 2300, transaction_count: 1 },
+            },
+            income_types: [
+              {
+                income_type: "DIVIDEND",
+                requested_window: {
+                  gross: { reporting_currency_amount: 2500, transaction_count: 1 },
+                  withholding_tax: { reporting_currency_amount: 200, transaction_count: 1 },
+                  other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
+                  net: { reporting_currency_amount: 2300, transaction_count: 1 },
+                },
+                year_to_date: {
+                  gross: { reporting_currency_amount: 2500, transaction_count: 1 },
+                  withholding_tax: { reporting_currency_amount: 200, transaction_count: 1 },
+                  other_deductions: { reporting_currency_amount: 0, transaction_count: 1 },
+                  net: { reporting_currency_amount: 2300, transaction_count: 1 },
+                },
+              },
+            ],
+          }}
+        />
+      </>
+    );
+
+    expect(screen.getByText("YTD 2,500 USD")).toBeInTheDocument();
+    expect(screen.queryByText("Window inflow")).not.toBeInTheDocument();
+    expect(screen.getByText("Gross 2,500 USD")).toBeInTheDocument();
+    expect(screen.queryByText("Deductions 200 USD")).not.toBeInTheDocument();
+  });
 });
 
 function buildWorkspace(): PortfolioWorkspace {

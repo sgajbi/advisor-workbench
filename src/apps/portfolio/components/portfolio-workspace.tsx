@@ -823,7 +823,7 @@ export default function PortfolioWorkspaceView({
                           value={workspace.income_summary.totals_requested_window.net.transaction_count}
                         />
                       </div>
-                      <PortfolioIncomePanel summary={workspace.income_summary} />
+                      <PortfolioIncomePanel summary={workspace.income_summary} compact />
                         </>
                       ) : workspace.recent_transactions.length ? (
                         <ModuleStatePanel
@@ -879,6 +879,7 @@ export default function PortfolioWorkspaceView({
                       </div>
                       <PortfolioActivityPanel
                         summary={workspace.activity_summary}
+                        compact
                         selectedBucket={
                           transactionDrilldown?.kind === "activity"
                             ? transactionDrilldown.bucket
