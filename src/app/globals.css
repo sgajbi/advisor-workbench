@@ -2400,6 +2400,41 @@ a:hover {
   font-weight: 600;
 }
 
+.portfolio-client-shell-placeholder {
+  display: grid;
+  gap: 20px;
+}
+
+.portfolio-workspace-toolbar-placeholder {
+  pointer-events: none;
+}
+
+.portfolio-workspace-toolbar-field-placeholder {
+  min-width: 160px;
+}
+
+.portfolio-toolbar-placeholder-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.portfolio-toolbar-placeholder-control {
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f5f7fa;
+}
+
+.portfolio-toolbar-placeholder-control-wide {
+  width: 120px;
+}
+
+.portfolio-toolbar-placeholder-control-period {
+  width: 320px;
+}
+
 .portfolio-workspace-toolbar-action {
   min-height: 36px;
   padding: 0.35rem 0.7rem;

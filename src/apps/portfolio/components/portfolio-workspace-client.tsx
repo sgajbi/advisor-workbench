@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { StatusChip, WorkspaceHeader } from "@/design-system";
+import { ModuleSkeleton, StatusChip, WorkspaceHeader } from "@/design-system";
 
 import {
   getPortfolioWorkspaceDetailedDetails,
@@ -49,12 +49,17 @@ export default function PortfolioWorkspaceClient({
   const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
   const [summaryDetailsLoading, setSummaryDetailsLoading] = useState<boolean>(Boolean(selectedPortfolioId));
   const [detailedDetailsLoaded, setDetailedDetailsLoaded] = useState(false);
+  const [interactiveReady, setInteractiveReady] = useState(false);
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
   const detailedRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState]
   );
+
+  useEffect(() => {
+    setInteractiveReady(true);
+  }, []);
 
   useEffect(() => {
     const storedViewMode = window.localStorage.getItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY);
@@ -242,7 +247,34 @@ export default function PortfolioWorkspaceClient({
         }
       />
 
-      {portfolios.length ? (
+      {!interactiveReady ? (
+        <div className="portfolio-client-shell-placeholder" aria-hidden="true">
+          <section className="portfolio-workspace-toolbar portfolio-workspace-toolbar-placeholder">
+            <div className="portfolio-workspace-toolbar-row">
+              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                <span className="portfolio-toolbar-placeholder-label">As of</span>
+                <div className="portfolio-toolbar-placeholder-control" />
+              </div>
+              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                <span className="portfolio-toolbar-placeholder-label">Reporting Currency</span>
+                <div className="portfolio-toolbar-placeholder-control" />
+              </div>
+              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                <span className="portfolio-toolbar-placeholder-label">View</span>
+                <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-wide" />
+              </div>
+              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                <span className="portfolio-toolbar-placeholder-label">Period</span>
+                <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-period" />
+              </div>
+            </div>
+            <div className="portfolio-workspace-toolbar-context">
+              <span>Loading portfolio controls…</span>
+            </div>
+          </section>
+          <ModuleSkeleton chart rows={6} />
+        </div>
+      ) : portfolios.length ? (
         <PortfolioWorkspaceToolbar
           controls={controls}
           context={context}
