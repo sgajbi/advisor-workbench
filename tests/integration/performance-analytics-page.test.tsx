@@ -482,11 +482,14 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
 
-    expect(await screen.findByText("Evidence and Calculation Context")).toBeInTheDocument();
+    expect(await screen.findByText("Evidence unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(
-        /execution status, lineage artifacts, and calculation evidence/i
+        /execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract/i
       )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/not exposed by the current gateway contract/i)
     ).toBeInTheDocument();
     expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
