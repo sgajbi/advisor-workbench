@@ -191,6 +191,9 @@ describe("PerformanceSummaryMode", () => {
 
     expect(document.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     expect(screen.getByTestId("summary-header")).toHaveTextContent("Model 60/40");
+    expect(screen.getByText("Loading return path")).toBeInTheDocument();
+    expect(screen.getByText("Loading horizons")).toBeInTheDocument();
+    expect(screen.getByText("Loading contributors")).toBeInTheDocument();
     expect(screen.queryByTestId("chart-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();

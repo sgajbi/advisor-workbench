@@ -127,12 +127,15 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    expect(screen.getByText("Loading analysis")).toBeInTheDocument();
+    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+    expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Evidence Mode Panel")).toBeInTheDocument();
     });

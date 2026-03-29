@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PortfolioPairedAnalyticsSection from "../../src/apps/portfolio/components/portfolio-paired-analytics-section";
@@ -26,6 +26,15 @@ vi.mock("next/dynamic", () => ({
       return Component ? React.createElement(Component, props) : null;
     };
   },
+}));
+
+vi.mock("../../src/apps/portfolio/components/portfolio-chart-panels", () => ({
+  PortfolioIncomePanel: ({ compact }: { compact?: boolean }) => (
+    <div data-testid="portfolio-income-panel">{compact ? "compact" : "detailed"}</div>
+  ),
+  PortfolioActivityPanel: ({ compact }: { compact?: boolean }) => (
+    <div data-testid="portfolio-activity-panel">{compact ? "compact" : "detailed"}</div>
+  ),
 }));
 
 function buildWorkspace(): PortfolioWorkspace {
@@ -199,6 +208,14 @@ describe("PortfolioPairedAnalyticsSection", () => {
     expect(screen.getByLabelText("Activity overview")).toBeInTheDocument();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("portfolio-income-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("portfolio-activity-panel")).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".module-skeleton")).toHaveLength(2);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("portfolio-income-panel")).toHaveTextContent("compact");
+      expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    });
   });
 
   it("renders detailed support tables when the paired module is opened in detailed mode", async () => {
@@ -221,6 +238,10 @@ describe("PortfolioPairedAnalyticsSection", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Recent Flows" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("portfolio-income-panel")).toHaveTextContent("detailed");
+      expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    });
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
   });

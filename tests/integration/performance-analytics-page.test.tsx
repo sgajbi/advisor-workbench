@@ -417,12 +417,12 @@ describe("PerformanceAnalyticsPage", () => {
     await waitFor(() => {
       expect(mainShell).toContainElement(screen.getByText("Multi-Horizon Returns"));
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+      expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     expect(mainShell?.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")).toBeTruthy();
-    expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 
@@ -509,8 +509,10 @@ describe("PerformanceAnalyticsPage", () => {
       screen.getByText("Assign a benchmark to enable relative analytics.")
     ).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
-    expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+      expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    });
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });

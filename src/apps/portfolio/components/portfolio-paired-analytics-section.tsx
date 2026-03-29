@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 
 import {
   AnalyticsTable,
+  DeferredWorkbenchMount,
   EmptyStatePanel,
   ModuleSkeleton,
   ModuleStatePanel,
@@ -192,7 +193,16 @@ function renderIncomeModule({
             },
           ]}
         />
-        <DeferredPortfolioIncomePanel summary={summary} compact={!isDetailedView} />
+        <DeferredWorkbenchMount
+          placeholder={
+            <ModuleSkeleton
+              chart
+              rows={2}
+            />
+          }
+        >
+          <DeferredPortfolioIncomePanel summary={summary} compact={!isDetailedView} />
+        </DeferredWorkbenchMount>
         {isDetailedView ? (
           <AnalyticsTable
             ariaLabel="Income summary"
@@ -315,14 +325,23 @@ function renderActivityModule({
             },
           ]}
         />
-        <DeferredPortfolioActivityPanel
-          summary={summary}
-          compact={!isDetailedView}
-          selectedBucket={
-            transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null
+        <DeferredWorkbenchMount
+          placeholder={
+            <ModuleSkeleton
+              chart
+              rows={2}
+            />
           }
-          onSelectionChange={onSelectActivityBucket}
-        />
+        >
+          <DeferredPortfolioActivityPanel
+            summary={summary}
+            compact={!isDetailedView}
+            selectedBucket={
+              transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null
+            }
+            onSelectionChange={onSelectActivityBucket}
+          />
+        </DeferredWorkbenchMount>
         {isDetailedView ? (
           <AnalyticsTable
             ariaLabel="Activity summary"

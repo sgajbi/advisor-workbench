@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import {
+  DeferredWorkbenchMount,
   DeferredModulePlaceholder,
   Panel,
   WorkbenchPageHeader,
@@ -95,16 +96,34 @@ export default function PerformanceWorkspaceView({
       negativePositionContributors={presentation?.negativePositionContributors ?? []}
     />
   ) : mode === "analysis" ? (
-    <DeferredPerformanceAnalysisMode
-      workspace={workspace}
-      {...controls}
-      capabilities={capabilities!}
-      relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
-      topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
-      attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
-    />
+    <DeferredWorkbenchMount
+      placeholder={
+        <DeferredModulePlaceholder
+          title="Loading analysis"
+          message="Attribution and contribution detail are loading on demand."
+        />
+      }
+    >
+      <DeferredPerformanceAnalysisMode
+        workspace={workspace}
+        {...controls}
+        capabilities={capabilities!}
+        relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
+        topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
+        attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
+      />
+    </DeferredWorkbenchMount>
   ) : (
-    <DeferredPerformanceEvidenceMode capability={capabilities!.evidence} />
+    <DeferredWorkbenchMount
+      placeholder={
+        <DeferredModulePlaceholder
+          title="Loading evidence"
+          message="Evidence context is loading on demand."
+        />
+      }
+    >
+      <DeferredPerformanceEvidenceMode capability={capabilities!.evidence} />
+    </DeferredWorkbenchMount>
   );
 
   return (
