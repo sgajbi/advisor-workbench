@@ -1,13 +1,25 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
   ActionLink,
+  ActionListCard,
+  AnalyticsStat,
+  AnalyticsTable,
+  ContextCard,
   DegradedStatePanel,
+  EmptyStatePanel,
+  FilterBar,
+  InsightCallout,
+  KpiStatTile,
+  ModuleStatePanel,
   MetricRow,
+  PageToolbar,
   Panel,
+  ReadinessIndicator,
   SectionLabel,
+  SectionHeader,
   StatusChip,
   WorkspaceGrid,
   WorkspaceHeader,
@@ -115,5 +127,159 @@ describe("design-system components", () => {
       "/portfolio"
     );
     expect(screen.getByRole("link", { name: "Open Portfolio" })).toHaveClass("nav-link");
+  });
+
+  it("renders analytics tables with aligned numeric columns and totals", () => {
+    render(
+      <AnalyticsTable
+        ariaLabel="Allocation summary"
+        columns={[
+          { key: "bucket", label: "Bucket" },
+          { key: "value", label: "Market Value", align: "right" },
+          { key: "weight", label: "Weight", align: "right" },
+        ]}
+        rows={[
+          { key: "row-1", cells: ["Equity", "$500,000", "62.5%"] },
+          { key: "row-2", cells: ["Cash", "$300,000", "37.5%"] },
+        ]}
+        footer={["Total", "$800,000", "100%"]}
+      />
+    );
+
+    expect(screen.getByRole("table", { name: "Allocation summary" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Market Value" })).toBeInTheDocument();
+    expect(screen.getByText("$800,000")).toBeInTheDocument();
+    expect(screen.getByText("100%")).toBeInTheDocument();
+  });
+
+  it("supports keyboard activation for interactive analytics table rows", () => {
+    const onClick = vi.fn();
+
+    render(
+      <AnalyticsTable
+        ariaLabel="Interactive allocation summary"
+        columns={[
+          { key: "bucket", label: "Bucket" },
+          { key: "value", label: "Market Value", align: "right" },
+        ]}
+        rows={[
+          {
+            key: "row-1",
+            cells: ["Equity", "500,000 USD"],
+            ariaLabel: "Equity row",
+            onClick,
+          },
+        ]}
+      />
+    );
+
+    fireEvent.keyDown(screen.getByLabelText("Equity row"), { key: "Enter" });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders analytics stats with semantic tone and business tooltip", async () => {
+    const onClick = vi.fn();
+
+    render(
+      <AnalyticsStat
+        label="Book Readiness"
+        value="Partial"
+        support="1 active exception"
+        valueTone="warn"
+        definition="Operational readiness based on holdings coverage and reporting status."
+        onClick={onClick}
+      />
+    );
+
+    fireEvent.mouseOver(screen.getByText("Book Readiness"));
+    fireEvent.click(screen.getByRole("button"));
+
+    expect(await screen.findByText(/operational readiness based on holdings coverage/i)).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(onClick).toHaveBeenCalled();
+  });
+
+  it("renders modular page primitives for toolbar, section header, callouts, and context", () => {
+    render(
+      <>
+        <PageToolbar>
+          <FilterBar>
+            <button type="button">Filters</button>
+          </FilterBar>
+        </PageToolbar>
+        <SectionHeader title="Holdings" subtitle="As of 28 Mar 2026 in USD" actions={<button type="button">Export</button>} />
+        <KpiStatTile label="AUM" value="1,250,000 USD" support="As of 28 Mar 2026" />
+        <ReadinessIndicator label="Pricing" status="Partial" tone="warn" href="#pricing" />
+        <InsightCallout title="Pricing not yet published" detail="Current holdings are not fully valued." severity="warning" href="#portfolio-attention" />
+        <EmptyStatePanel
+          title="No holdings yet"
+          body="The holdings inventory is empty."
+          hint="Book a trade to populate the book."
+          why={{ body: "Holdings require booked positions or funded balances." }}
+        />
+        <ModuleStatePanel
+          state="partial"
+          title="Partial data"
+          body="Some values are available."
+          hint="Pricing is still missing for one holding."
+          why={{ body: "Allocation requires valued holdings." }}
+        />
+        <ContextCard
+          title="Portfolio Context"
+          subtitle="Executive identity and book setup details."
+          groups={[
+            {
+              key: "identity",
+              title: "Identity",
+              facts: [{ label: "Portfolio", value: "PORT_1" }],
+            },
+          ]}
+        />
+        <ActionListCard
+          title="Next Actions"
+          subtitle="Recommended workflow sequence."
+          items={[
+            {
+              key: "fund",
+              sequence: 1,
+              title: "Fund portfolio",
+              impact: "Cash is required before trades can settle.",
+              target: "Target: Operations",
+              href: "/workbench",
+              ctaLabel: "Fund",
+              recommended: true,
+            },
+          ]}
+        />
+      </>
+    );
+
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Holdings" })).toBeInTheDocument();
+    expect(screen.getByText("Pricing not yet published")).toBeInTheDocument();
+    expect(screen.getByText("Partial data")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Context")).toBeInTheDocument();
+    expect(screen.getByText("Fund portfolio")).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: "Why this section is unavailable" }).length
+    ).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("toolbar", { name: "Page controls" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Pricing readiness: Partial. Open related section.")).toBeInTheDocument();
+  });
+
+  it("renders KPI tiles with explicit label, value, and support classes", () => {
+    render(
+      <KpiStatTile
+        label="Book Readiness"
+        value="Ready"
+        support="0 active exceptions"
+        valueTone="success"
+      />
+    );
+
+    expect(screen.getByText("Book Readiness")).toHaveClass("kpi-stat-label");
+    expect(screen.getByText("Ready")).toHaveClass("kpi-stat-value");
+    expect(screen.getByText("0 active exceptions")).toHaveClass("kpi-stat-support");
+    expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
   });
 });

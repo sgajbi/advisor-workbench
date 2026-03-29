@@ -11,7 +11,14 @@ export default function StatusChip({
   tone?: StatusTone;
   className?: string;
 }) {
+  const label = typeof children === "string" ? children : undefined;
   return (
-    <span className={cx("status-chip", tone !== "default" && tone, className)}>{children}</span>
+    <span
+      className={cx("status-chip", tone !== "default" && tone, className)}
+      aria-label={label ? `Status ${label}` : undefined}
+      title={label}
+    >
+      {children}
+    </span>
   );
 }

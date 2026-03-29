@@ -1,8 +1,5 @@
-import { StatusChip, WorkspaceHeader } from "@/design-system";
-
-import { getPortfolioCatalog, getPortfolioWorkspace } from "./api";
-import PortfolioUnavailableWorkspace from "./components/portfolio-unavailable-workspace";
-import PortfolioWorkspaceView from "./components/portfolio-workspace";
+import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "./api";
+import PortfolioWorkspaceClient from "./components/portfolio-workspace-client";
 
 export default async function PortfolioExperiencePage({
   searchParams,
@@ -16,32 +13,14 @@ export default async function PortfolioExperiencePage({
     portfolios[0]?.portfolio_id ??
     null;
   const workspace = selectedPortfolioId
-    ? await getPortfolioWorkspace(selectedPortfolioId)
+    ? await getPortfolioWorkspaceShell(selectedPortfolioId)
     : null;
 
   return (
-    <main className="page-container">
-      <WorkspaceHeader
-        title="Portfolio"
-        meta={
-          <>
-            <StatusChip>{portfolios.length} portfolios</StatusChip>
-            <StatusChip tone={portfolios.length ? "success" : "warn"}>
-              {portfolios.length ? "Catalog live" : "Catalog unavailable"}
-            </StatusChip>
-          </>
-        }
-      />
-
-      {!portfolios.length ? (
-        <PortfolioUnavailableWorkspace />
-      ) : (
-        <PortfolioWorkspaceView
-          portfolios={portfolios}
-          selectedPortfolioId={selectedPortfolioId}
-          workspace={workspace}
-        />
-      )}
-    </main>
+    <PortfolioWorkspaceClient
+      portfolios={portfolios}
+      selectedPortfolioId={selectedPortfolioId}
+      initialWorkspace={workspace}
+    />
   );
 }

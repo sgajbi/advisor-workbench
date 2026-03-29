@@ -20,9 +20,9 @@ export default function WorkspaceRailLink({
       href={href}
       className={cx("portfolio-rail-item", active && "portfolio-rail-item-active")}
     >
-      <strong>{title}</strong>
+      <strong className="portfolio-rail-item-title">{title}</strong>
       {meta ? <span>{meta}</span> : null}
-      {detail ? <span>{detail}</span> : null}
+      {detail ? <span className="portfolio-rail-item-detail">{detail}</span> : null}
     </Link>
   );
 }

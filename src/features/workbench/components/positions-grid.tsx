@@ -4,9 +4,12 @@ import { useMemo } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef } from "ag-grid-community";
 import { Paper, Typography } from "@mui/material";
+import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+
+ensureAgGridModulesRegistered();
 
 type Props = {
   count: number;
@@ -41,7 +44,7 @@ export default function PositionsGrid(props: Props) {
         Position count: {props.count}
       </Typography>
       <div className="ag-theme-alpine" style={{ height: 280, width: "100%" }}>
-        <AgGridReact rowData={rows} columnDefs={columns} domLayout="normal" />
+        <AgGridReact rowData={rows} columnDefs={columns} theme="legacy" domLayout="normal" />
       </div>
     </Paper>
   );

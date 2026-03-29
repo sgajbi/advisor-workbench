@@ -1,4 +1,6 @@
-import { Box, Stack, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 export default function AnalyticsModule({
   title,
@@ -6,7 +8,7 @@ export default function AnalyticsModule({
   actions,
   children,
 }: {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
   children: React.ReactNode;
@@ -15,52 +17,57 @@ export default function AnalyticsModule({
     <Box
       sx={{
         display: "grid",
-        gap: 1.25,
+        gap: 2,
         minWidth: 0,
-        p: 2,
-        borderRadius: 3,
-        border: "1px solid",
-        borderColor: "divider",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(249,250,252,0.94) 100%)",
+        p: { xs: 2.5, md: 3 },
+        borderRadius: "12px",
+        border: "1px solid #e5e7eb",
+        background: "#ffffff",
+        boxShadow: "none",
       }}
     >
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={1}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        useFlexGap
-      >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            component="h4"
-            sx={{
-              m: 0,
-              fontSize: "0.95rem",
-              fontWeight: 700,
-              lineHeight: 1.15,
-              color: "text.primary",
-            }}
-          >
-            {title}
-          </Typography>
-          {subtitle ? (
-            <Typography
-              component="div"
-              sx={{
-                mt: 0.25,
-                fontSize: "0.75rem",
-                lineHeight: 1.4,
-                color: "text.secondary",
-              }}
-            >
-              {subtitle}
-            </Typography>
-          ) : null}
-        </Box>
-        {actions ? <Box sx={{ minWidth: 0 }}>{actions}</Box> : null}
-      </Stack>
+      {title || subtitle || actions ? (
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "flex-start" }}
+          useFlexGap
+        >
+          <Box sx={{ minWidth: 0 }}>
+            {title ? (
+              <Typography
+                component="h4"
+                sx={{
+                  m: 0,
+                  fontSize: "1rem",
+                  fontWeight: 650,
+                  lineHeight: 1.25,
+                  color: "text.primary",
+                }}
+              >
+                {title}
+              </Typography>
+            ) : null}
+            {subtitle ? (
+              <Typography
+                component="div"
+                sx={{
+                  mt: 0.5,
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
+                  lineHeight: 1.4,
+                  color: "text.secondary",
+                  maxWidth: "36ch",
+                }}
+              >
+                {subtitle}
+              </Typography>
+            ) : null}
+          </Box>
+          {actions ? <Box sx={{ minWidth: 0 }}>{actions}</Box> : null}
+        </Stack>
+      ) : null}
       {children}
     </Box>
   );

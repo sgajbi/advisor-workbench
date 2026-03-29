@@ -26,7 +26,7 @@ export function getWorkflowActionLabel(key: string): string {
     case "risk":
       return "Review Suitability";
     default:
-      return "Open Performance";
+      return "Performance";
   }
 }
 
@@ -43,6 +43,14 @@ export function getWorkflowTaskLabel(key: string): string {
 
 export function getCoverageWarningLabel(warning: string): string {
   switch (warning) {
+    case "PORTFOLIO_AUM_UNAVAILABLE":
+      return "Assets under management temporarily unavailable";
+    case "PORTFOLIO_CASH_BALANCES_UNAVAILABLE":
+      return "Cash balances temporarily unavailable";
+    case "PORTFOLIO_CASHFLOW_UNAVAILABLE":
+      return "Cashflow outlook temporarily unavailable";
+    case "PORTFOLIO_SUPPORT_OVERVIEW_UNAVAILABLE":
+      return "Operational readiness temporarily unavailable";
     case "FOUNDATION_PERFORMANCE_UNAVAILABLE":
       return "Performance temporarily unavailable";
     case "FOUNDATION_REBALANCE_UNAVAILABLE":
