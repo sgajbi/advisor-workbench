@@ -89,8 +89,8 @@ export function PortfolioTopHoldingsPanel({
           </button>
         </div>
       </div>
-      <div className="portfolio-chart-module-body">
-        <div className="portfolio-chart-card">
+      <div className="portfolio-chart-module-body portfolio-top-holdings-body">
+        <div className="portfolio-chart-card portfolio-top-holdings-list-card">
           <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
             {sortedPositions.map((position) => {
               const metricValue =
@@ -141,7 +141,7 @@ export function PortfolioTopHoldingsPanel({
             })}
           </div>
         </div>
-        <div className="portfolio-chart-card">
+        <div className="portfolio-chart-card portfolio-top-holdings-table-card">
           <AnalyticsTable
             ariaLabel="Top holdings table"
             columns={[
@@ -187,30 +187,83 @@ export function PortfolioProjectedCashflowPanel({
   baseCurrency: string;
 }) {
   const points = cashflowOutlook.upcoming_points;
-  const values = points.flatMap((point) => [
-    point.net_cashflow_base,
-    point.projected_cumulative_cashflow_base,
-  ]);
-  const minValue = Math.min(...values, 0);
-  const maxValue = Math.max(...values, 0);
+  const cumulativeValues = points.map((point) => point.projected_cumulative_cashflow_base);
+  const flowValues = points.map((point) => point.net_cashflow_base);
+  const minValue = Math.min(...cumulativeValues, 0);
+  const maxValue = Math.max(...cumulativeValues, 0);
   const range = Math.max(maxValue - minValue, 1);
+  const maxFlow = Math.max(...flowValues.map((value) => Math.abs(value)), 1);
+  const finalCumulative =
+    points[points.length - 1]?.projected_cumulative_cashflow_base ?? cashflowOutlook.total_net_cashflow_base;
+  const positiveFlowCount = flowValues.filter((value) => value > 0).length;
+  const negativeFlowCount = flowValues.filter((value) => value < 0).length;
   const chartPoints = points.map((point, index) => {
-    const x = points.length === 1 ? 24 : 24 + (index / (points.length - 1)) * 272;
-    const y = 156 - (((point.projected_cumulative_cashflow_base - minValue) / range) * 124 + 16);
+    const x = points.length === 1 ? 28 : 28 + (index / (points.length - 1)) * 264;
+    const y = 172 - (((point.projected_cumulative_cashflow_base - minValue) / range) * 112 + 24);
     return { x: roundSvg(x), y: roundSvg(y), point };
   });
   const areaPath = buildAreaPath(chartPoints);
   const linePath = buildLinePath(chartPoints);
+  const zeroLineY = roundSvg(172 - (((0 - minValue) / range) * 112 + 24));
 
   return (
     <div className="portfolio-chart-card">
-      <div className="portfolio-timeseries-chart">
+      <div className="portfolio-cashflow-summary-strip" aria-label="Projected cashflow summary">
+        <div className="portfolio-cashflow-summary-stat">
+          <span>Net Flow</span>
+          <strong>{formatCurrency(cashflowOutlook.total_net_cashflow_base, baseCurrency)}</strong>
+        </div>
+        <div className="portfolio-cashflow-summary-stat">
+          <span>End Horizon</span>
+          <strong>{formatCurrency(finalCumulative, baseCurrency)}</strong>
+        </div>
+        <div className="portfolio-cashflow-summary-stat">
+          <span>Forecast Mix</span>
+          <strong>{`${positiveFlowCount} in / ${negativeFlowCount} out`}</strong>
+        </div>
+      </div>
+      <div className="portfolio-cashflow-chart">
         <svg
-          viewBox="0 0 320 180"
+          viewBox="0 0 320 196"
           className="portfolio-timeseries-chart-svg"
           role="img"
           aria-label={`Projected cashflow chart in ${baseCurrency}`}
         >
+          <line
+            x1="24"
+            x2="296"
+            y1={zeroLineY}
+            y2={zeroLineY}
+            className="portfolio-cashflow-zero-line"
+          />
+          {points.map((point, index) => {
+            const x = points.length === 1 ? 28 : 28 + (index / (points.length - 1)) * 264;
+            const width = points.length === 1 ? 28 : Math.max(12, 188 / points.length);
+            const height = (Math.abs(point.net_cashflow_base) / maxFlow) * 46;
+            const y =
+              point.net_cashflow_base >= 0 ? zeroLineY - height : zeroLineY;
+            return (
+              <g key={`flow-${point.projection_date}`}>
+                <rect
+                  x={roundSvg(x - width / 2)}
+                  y={roundSvg(y)}
+                  width={roundSvg(width)}
+                  height={roundSvg(Math.max(height, 2))}
+                  rx="4"
+                  className={
+                    point.net_cashflow_base >= 0
+                      ? "portfolio-cashflow-flow-bar portfolio-cashflow-flow-bar-positive"
+                      : "portfolio-cashflow-flow-bar portfolio-cashflow-flow-bar-negative"
+                  }
+                >
+                  <title>{`${formatDate(point.projection_date)}: net flow ${formatCurrency(
+                    point.net_cashflow_base,
+                    baseCurrency
+                  )}`}</title>
+                </rect>
+              </g>
+            );
+          })}
           <path d={areaPath} className="portfolio-timeseries-chart-area" />
           <path d={linePath} className="portfolio-timeseries-chart-line" />
           {chartPoints.map(({ x, y, point }) => (
@@ -230,9 +283,12 @@ export function PortfolioProjectedCashflowPanel({
           ))}
         </svg>
       </div>
-      <div className="portfolio-timeseries-axis">
+      <div className="portfolio-cashflow-axis-grid">
         {points.map((point) => (
-          <span key={point.projection_date}>{formatDate(point.projection_date)}</span>
+          <div key={point.projection_date} className="portfolio-cashflow-axis-item">
+            <span>{formatDate(point.projection_date)}</span>
+            <strong>{formatCurrency(point.net_cashflow_base, baseCurrency)}</strong>
+          </div>
         ))}
       </div>
     </div>
@@ -250,23 +306,22 @@ export function PortfolioActivityPanel({
 }) {
   const [hoveredBucket, setHoveredBucket] = useState<string | null>(null);
   const maxAmount = Math.max(
-    ...summary.buckets.map((bucket) =>
-      Math.max(
-        Math.abs(bucket.requested_window.reporting_currency_amount),
-        Math.abs(bucket.year_to_date.reporting_currency_amount)
-      )
-    ),
+    ...summary.buckets.map((bucket) => Math.abs(bucket.requested_window.reporting_currency_amount)),
     1
   );
 
   return (
     <div className="portfolio-chart-card">
-      <div className="portfolio-stacked-bar-chart" aria-label="Activity chart" role="list">
+      <div className="portfolio-flow-chart" aria-label="Activity chart" role="list">
         {summary.buckets.map((bucket) => {
           const requestedAmount = bucket.requested_window.reporting_currency_amount;
           const ytdAmount = bucket.year_to_date.reporting_currency_amount;
           const selected = selectedBucket === bucket.bucket;
           const hovered = hoveredBucket === bucket.bucket;
+          const magnitude = Math.abs(requestedAmount);
+          const width = `${(magnitude / maxAmount) * 100}%`;
+          const direction = requestedAmount < 0 ? "negative" : "positive";
+
           return (
             <button
               key={bucket.bucket}
@@ -285,42 +340,27 @@ export function PortfolioActivityPanel({
               onClick={() => onSelectionChange?.(selected ? null : bucket.bucket)}
               title={buildActivityTooltip(bucket.bucket, requestedAmount, ytdAmount, summary.reporting_currency)}
             >
-              <span className="portfolio-stacked-bar-group-label">
-                {formatBucketLabel(bucket.bucket)}
-              </span>
-              <div className="portfolio-stacked-bar-columns">
-                <div className="portfolio-stacked-bar-column">
-                  <span className="portfolio-stacked-bar-column-label">Window</span>
-                  <span className="portfolio-stacked-bar-track">
-                    <span
-                      className={
-                        requestedAmount >= 0
-                          ? "portfolio-stacked-bar-fill portfolio-stacked-bar-fill-positive"
-                          : "portfolio-stacked-bar-fill portfolio-stacked-bar-fill-negative"
-                      }
-                      style={{ height: `${(Math.abs(requestedAmount) / maxAmount) * 100}%` }}
-                    />
-                  </span>
-                  <span className="portfolio-stacked-bar-value">
-                    {formatCurrency(requestedAmount, summary.reporting_currency)}
-                  </span>
-                </div>
-                <div className="portfolio-stacked-bar-column">
-                  <span className="portfolio-stacked-bar-column-label">YTD</span>
-                  <span className="portfolio-stacked-bar-track">
-                    <span
-                      className={
-                        ytdAmount >= 0
-                          ? "portfolio-stacked-bar-fill portfolio-stacked-bar-fill-positive"
-                          : "portfolio-stacked-bar-fill portfolio-stacked-bar-fill-negative"
-                      }
-                      style={{ height: `${(Math.abs(ytdAmount) / maxAmount) * 100}%` }}
-                    />
-                  </span>
-                  <span className="portfolio-stacked-bar-value">
-                    {formatCurrency(ytdAmount, summary.reporting_currency)}
-                  </span>
-                </div>
+              <div className="portfolio-flow-row-header">
+                <span className="portfolio-flow-row-label">{formatBucketLabel(bucket.bucket)}</span>
+                <span className="portfolio-flow-row-value">
+                  {formatCurrency(requestedAmount, summary.reporting_currency)}
+                </span>
+              </div>
+              <div className="portfolio-flow-row-chart" aria-hidden="true">
+                <span className="portfolio-flow-row-axis" />
+                <span
+                  className={`portfolio-flow-row-bar portfolio-flow-row-bar-${direction}`}
+                  style={
+                    requestedAmount < 0
+                      ? { width, left: `calc(50% - ${width})` }
+                      : { width, left: "50%" }
+                  }
+                />
+              </div>
+              <div className="portfolio-flow-row-meta">
+                <span>{requestedAmount < 0 ? "Window outflow" : "Window inflow"}</span>
+                <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
+                <span>{bucket.requested_window.transaction_count} txn</span>
               </div>
             </button>
           );
@@ -347,9 +387,17 @@ export function PortfolioIncomePanel({
 
   return (
     <div className="portfolio-chart-card">
-      <div className="portfolio-grouped-bar-chart" aria-label="Income chart" role="list">
+      <div className="portfolio-income-chart" aria-label="Income chart" role="list">
         {summary.income_types.map((item) => {
           const hovered = hoveredType === item.income_type;
+          const grossAmount = item.requested_window.gross.reporting_currency_amount;
+          const netAmount = item.requested_window.net.reporting_currency_amount;
+          const deductionsAmount =
+            item.requested_window.withholding_tax.reporting_currency_amount +
+            item.requested_window.other_deductions.reporting_currency_amount;
+          const grossWidth = `${(grossAmount / maxAmount) * 100}%`;
+          const netWidth = `${(netAmount / maxAmount) * 100}%`;
+
           return (
             <div
               key={item.income_type}
@@ -364,40 +412,27 @@ export function PortfolioIncomePanel({
               onMouseLeave={() => setHoveredType(null)}
               title={buildIncomeTooltip(item, summary.reporting_currency)}
             >
-              <span className="portfolio-grouped-bar-group-label">
-                {formatBucketLabel(item.income_type)}
-              </span>
-              <div className="portfolio-grouped-bar-columns">
-                <div className="portfolio-grouped-bar-column">
-                  <span className="portfolio-grouped-bar-column-label">Gross</span>
-                  <span className="portfolio-grouped-bar-track">
-                    <span
-                      className="portfolio-grouped-bar-fill"
-                      style={{
-                        height: `${(item.requested_window.gross.reporting_currency_amount / maxAmount) * 100}%`,
-                        backgroundColor: CHART_COLORS.accentSoft,
-                      }}
-                    />
-                  </span>
-                  <span className="portfolio-grouped-bar-value">
-                    {formatCurrency(item.requested_window.gross.reporting_currency_amount, summary.reporting_currency)}
-                  </span>
-                </div>
-                <div className="portfolio-grouped-bar-column">
-                  <span className="portfolio-grouped-bar-column-label">Net</span>
-                  <span className="portfolio-grouped-bar-track">
-                    <span
-                      className="portfolio-grouped-bar-fill"
-                      style={{
-                        height: `${(item.requested_window.net.reporting_currency_amount / maxAmount) * 100}%`,
-                        backgroundColor: CHART_COLORS.accent,
-                      }}
-                    />
-                  </span>
-                  <span className="portfolio-grouped-bar-value">
-                    {formatCurrency(item.requested_window.net.reporting_currency_amount, summary.reporting_currency)}
-                  </span>
-                </div>
+              <div className="portfolio-income-row-header">
+                <span className="portfolio-income-row-label">{formatBucketLabel(item.income_type)}</span>
+                <span className="portfolio-income-row-value">
+                  {formatCurrency(netAmount, summary.reporting_currency)}
+                </span>
+              </div>
+              <div className="portfolio-income-row-chart" aria-hidden="true">
+                <span className="portfolio-income-row-track" />
+                <span
+                  className="portfolio-income-row-bar portfolio-income-row-bar-gross"
+                  style={{ width: grossWidth, backgroundColor: CHART_COLORS.accentMuted }}
+                />
+                <span
+                  className="portfolio-income-row-bar portfolio-income-row-bar-net"
+                  style={{ width: netWidth, backgroundColor: CHART_COLORS.accent }}
+                />
+              </div>
+              <div className="portfolio-income-row-meta">
+                <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
+                <span>Deductions {formatCurrency(deductionsAmount, summary.reporting_currency)}</span>
+                <span>{item.requested_window.net.transaction_count} txn</span>
               </div>
             </div>
           );
