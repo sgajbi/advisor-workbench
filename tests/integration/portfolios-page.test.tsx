@@ -423,11 +423,35 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByLabelText("Portfolio transactions grid")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();
   }, 30000);
+
+  it("renders partial summary modules intentionally when portfolio support is incomplete", async () => {
+    stubPortfolioApis({
+      allocations: {
+        views: [],
+      },
+      positions: {
+        top_positions: [],
+        positions: [],
+      },
+    });
+
+    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Allocation is partially available")).toBeInTheDocument();
+    expect(screen.getByText("Top holdings are not ranked yet")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Allocation donut chart")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
+  }, 30000);
 });
 
 type PortfolioFetchOverrides = {
   workspace?: Record<string, unknown>;
   liquidity?: Record<string, unknown>;
+  allocations?: Record<string, unknown>;
   positions?: Record<string, unknown>;
   transactions?: Record<string, unknown>;
 };
@@ -590,6 +614,7 @@ function buildPortfolioFetchStub(overrides: PortfolioFetchOverrides = {}) {
             ],
           },
         ],
+        ...overrides.allocations,
       });
     }
 

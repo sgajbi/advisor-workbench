@@ -9,10 +9,8 @@ import {
   DataGridCard,
   DeferredModulePlaceholder,
   DegradedStatePanel,
-  EmptyStatePanel,
   MetricRow,
   ModuleSkeleton,
-  ModuleStatePanel,
   Panel,
   SectionLabel,
   StatusChip,
@@ -69,6 +67,7 @@ import {
   getYearToDateActivityAmount,
 } from "../view-model";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
+import PortfolioCapabilityState from "./portfolio-capability-state";
 import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-section";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
@@ -1003,33 +1002,29 @@ function PortfolioInsightsSection({
                 }
                 onSelectionChange={onSelectAllocation}
               />
-            ) : workspace.summary.position_count ? (
-              <ModuleStatePanel
-                state="partial"
-                title="Allocation is partially available"
-                body={
-                  capabilities.allocation.reason ??
-                  "Holdings are present, but allocation views have not been generated from current valuations."
-                }
-                hint="Publish current prices and valuation outputs to complete the composition view."
-                why={{
-                  body:
-                    "Allocation requires valued holdings. Until positions have current prices and market values, composition buckets cannot be calculated reliably.",
-                  label: "Why allocation is partially available",
-                }}
-              />
             ) : (
-              <EmptyStatePanel
-                title="No allocation data yet"
+              <PortfolioCapabilityState
+                capability={capabilities.allocation}
+                partialTitle="Allocation is partially available"
+                unavailableTitle="No allocation data yet"
                 body={
                   capabilities.allocation.reason ??
                   "Allocation becomes available once funded holdings are valued."
                 }
-                hint="Book positions and publish prices to generate allocation views."
+                hint={
+                  capabilities.allocation.state === "partial"
+                    ? "Publish current prices and valuation outputs to complete the composition view."
+                    : "Book positions and publish prices to generate allocation views."
+                }
                 why={{
                   body:
-                    "Allocation requires funded holdings with current valuations. Empty or unvalued books cannot produce allocation views.",
-                  label: "Why allocation data is unavailable",
+                    capabilities.allocation.state === "partial"
+                      ? "Allocation requires valued holdings. Until positions have current prices and market values, composition buckets cannot be calculated reliably."
+                      : "Allocation requires funded holdings with current valuations. Empty or unvalued books cannot produce allocation views.",
+                  label:
+                    capabilities.allocation.state === "partial"
+                      ? "Why allocation is partially available"
+                      : "Why allocation data is unavailable",
                 }}
                 illustration
               />
@@ -1072,29 +1067,29 @@ function PortfolioInsightsSection({
                 }
                 onSelectionChange={onSelectTopHolding}
               />
-            ) : workspace.summary.position_count ? (
-              <ModuleStatePanel
-                state="partial"
-                title="Top holdings are not ranked yet"
-                body={
-                  capabilities.topHoldings.reason ??
-                  "The book contains positions, but ranked concentration output is still unavailable."
-                }
-                hint="Complete valuation and concentration calculations to populate the ranked view."
-              />
             ) : (
-              <EmptyStatePanel
-                title="No holdings yet"
+              <PortfolioCapabilityState
+                capability={capabilities.topHoldings}
+                partialTitle="Top holdings are not ranked yet"
+                unavailableTitle="No holdings yet"
                 body={
                   capabilities.topHoldings.reason ??
                   "Holdings will appear once positions are funded and priced."
                 }
-                hint="Add funding, book a trade, and publish pricing."
-                why={{
-                  body:
-                    "Holdings require booked positions or funded balances. Until the book contains invested or funded inventory, there is nothing to rank.",
-                  label: "Why holdings are unavailable",
-                }}
+                hint={
+                  capabilities.topHoldings.state === "partial"
+                    ? "Complete valuation and concentration calculations to populate the ranked view."
+                    : "Add funding, book a trade, and publish pricing."
+                }
+                why={
+                  capabilities.topHoldings.state === "partial"
+                    ? undefined
+                    : {
+                        body:
+                          "Holdings require booked positions or funded balances. Until the book contains invested or funded inventory, there is nothing to rank.",
+                        label: "Why holdings are unavailable",
+                      }
+                }
                 illustration
                 centered
               />
