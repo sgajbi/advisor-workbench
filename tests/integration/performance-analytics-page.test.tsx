@@ -439,7 +439,13 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
-    expect(document.querySelectorAll(".workbench-summary-visual-card").length).toBeGreaterThanOrEqual(3);
+    const contributorsModule = screen
+      .getByText("Top / Bottom Contributors")
+      .closest(".performance-summary-module-card");
+    expect(contributorsModule).toBeTruthy();
+    expect(
+      contributorsModule?.querySelectorAll(".workbench-summary-visual-card").length
+    ).toBe(2);
     expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
