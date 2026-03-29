@@ -43,7 +43,7 @@
   --workbench-card-padding-compact: 20px;
   --workbench-title-gap: 4px;
   --workbench-metric-strip-gap: 8px;
-  --workbench-rail-width: 336px;
+  --workbench-rail-width: 340px;
   --workbench-rail-card-padding: 20px;
   --workbench-text-compact: 0.75rem;
   --workbench-text-compact-strong: 0.8125rem;
@@ -260,6 +260,7 @@ a:hover {
 
 .workbench-rail-card {
   padding: var(--workbench-rail-card-padding);
+  align-content: start;
 }
 
 .workbench-rail-card .portfolio-side-card-title {
@@ -273,6 +274,21 @@ a:hover {
   font-size: 0.71875rem;
   line-height: 1.35;
   color: var(--text-muted);
+  max-width: 30ch;
+}
+
+.workbench-rail-card .portfolio-card-header {
+  margin-bottom: 0.625rem;
+}
+
+.workbench-rail-card .portfolio-workflow-actions {
+  justify-content: flex-end;
+  min-width: 5.5rem;
+}
+
+.workbench-rail-card .portfolio-workflow-cta,
+.workbench-rail-card .portfolio-context-copy {
+  justify-self: flex-end;
 }
 
 .workbench-page-header-actions {
@@ -969,6 +985,14 @@ a:hover {
   max-width: var(--workstation-side-width);
 }
 
+.workstation-shell-side.workstation-shell-side-comfortable {
+  max-width: var(--workbench-rail-width);
+}
+
+.workstation-shell-both.workstation-shell-side-density-comfortable {
+  grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr) var(--workbench-rail-width);
+}
+
 .workstation-shell-main {
   display: grid;
   gap: 16px;
@@ -1417,7 +1441,7 @@ a:hover {
 
 .portfolio-context-row {
   display: grid;
-  gap: 0.1875rem;
+  gap: 0.125rem;
 }
 
 .portfolio-context-row dt {
@@ -1432,18 +1456,18 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem 0.5rem;
   margin: 0;
   font-size: 0.875rem;
   font-weight: 650;
-  line-height: 1.45;
+  line-height: 1.4;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .portfolio-context-copy {
   min-height: 1.5rem;
-  padding: 0 0.5rem;
+  padding: 0 0.4375rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 8px;
   background: #f8fafc;
@@ -1934,6 +1958,7 @@ a:hover {
   align-items: start;
   gap: var(--space-2);
   padding: 0.625rem 0;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .portfolio-actions-card .portfolio-workflow-item-recommended {
@@ -1952,7 +1977,7 @@ a:hover {
 }
 
 .portfolio-actions-card .portfolio-evidence-copy {
-  max-width: 24ch;
+  max-width: 26ch;
   font-size: 0.75rem;
   line-height: 1.4;
 }
@@ -2365,10 +2390,18 @@ a:hover {
   cursor: pointer;
 }
 
+.portfolio-readiness-card .portfolio-card-header {
+  margin-bottom: 0.625rem;
+}
+
+.portfolio-readiness-card .portfolio-card-subtitle {
+  max-width: 28ch;
+}
+
 .portfolio-readiness-exception strong {
   font-size: 0.875rem;
   font-weight: 650;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--text);
 }
 
@@ -5214,6 +5247,10 @@ a:hover {
     --workstation-side-width: 300px;
   }
 
+  :root {
+    --workbench-rail-width: 300px;
+  }
+
   .workspace-layout {
     grid-template-columns: 220px minmax(0, 1fr) 240px;
   }
@@ -5238,6 +5275,10 @@ a:hover {
 
   .workstation-shell-both {
     grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr) var(--workstation-side-width);
+  }
+
+  .workstation-shell-both.workstation-shell-side-density-comfortable {
+    grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr) var(--workbench-rail-width);
   }
 
   .workstation-shell-side-only {

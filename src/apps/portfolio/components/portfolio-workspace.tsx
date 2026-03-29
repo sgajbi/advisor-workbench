@@ -393,6 +393,7 @@ export default function PortfolioWorkspaceView({
   return (
     <>
       <WorkstationShell
+        sideDensity="comfortable"
         className="portfolio-layout"
         railClassName="portfolio-rail-shell"
         mainClassName="portfolio-main"

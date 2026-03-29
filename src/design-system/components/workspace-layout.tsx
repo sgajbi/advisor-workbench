@@ -70,6 +70,7 @@ export function WorkstationShell({
   rail,
   main,
   side,
+  sideDensity = "default",
   className,
   mainClassName,
   railClassName,
@@ -78,6 +79,7 @@ export function WorkstationShell({
   rail?: React.ReactNode;
   main: React.ReactNode;
   side?: React.ReactNode;
+  sideDensity?: "default" | "comfortable";
   className?: string;
   mainClassName?: string;
   railClassName?: string;
@@ -93,10 +95,27 @@ export function WorkstationShell({
           : "workstation-shell-main-only";
 
   return (
-    <section className={cx("workstation-shell", layoutClassName, className)}>
+    <section
+      className={cx(
+        "workstation-shell",
+        layoutClassName,
+        sideDensity === "comfortable" && "workstation-shell-side-density-comfortable",
+        className
+      )}
+    >
       {rail ? <aside className={cx("workstation-shell-rail", railClassName)}>{rail}</aside> : null}
       <div className={cx("workstation-shell-main", mainClassName)}>{main}</div>
-      {side ? <aside className={cx("workstation-shell-side", sideClassName)}>{side}</aside> : null}
+      {side ? (
+        <aside
+          className={cx(
+            "workstation-shell-side",
+            sideDensity === "comfortable" && "workstation-shell-side-comfortable",
+            sideClassName
+          )}
+        >
+          {side}
+        </aside>
+      ) : null}
     </section>
   );
 }

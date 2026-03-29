@@ -95,6 +95,7 @@ describe("design-system components", () => {
     render(
       <WorkstationPage>
         <WorkstationShell
+          sideDensity="comfortable"
           rail={<Panel>Workstation Rail</Panel>}
           main={<Panel>Workstation Main</Panel>}
           side={<Panel>Workstation Side</Panel>}
@@ -107,6 +108,8 @@ describe("design-system components", () => {
     expect(document.querySelector(".workstation-shell-rail")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side-density-comfortable")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side-comfortable")).toBeTruthy();
   });
 
   it("renders degraded state and rail link primitives", () => {
