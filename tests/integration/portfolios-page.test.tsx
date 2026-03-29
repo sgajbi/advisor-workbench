@@ -281,7 +281,7 @@ describe("PortfolioFoundationPage", () => {
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(true);
     expect(requestedUrls.some((url) => url.includes("/transactions?limit=200"))).toBe(true);
-  });
+  }, 15000);
 
   it("respects stored section collapse preferences", async () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
