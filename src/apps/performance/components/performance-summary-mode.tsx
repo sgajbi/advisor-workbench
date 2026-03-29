@@ -83,7 +83,7 @@ export default function PerformanceSummaryMode({
         suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
       />
 
-      <WorkspaceGrid className="performance-chart-grid">
+      <WorkspaceGrid className="performance-chart-grid workbench-summary-region">
         <DeferredPerformanceChartPanel
           title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
           points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
@@ -106,7 +106,7 @@ export default function PerformanceSummaryMode({
         />
       </WorkspaceGrid>
 
-      <WorkspaceGrid className="performance-detail-grid">
+      <WorkspaceGrid className="performance-detail-grid workbench-summary-region">
         <DeferredPerformanceMultiHorizonPanel
           portfolioId={workspace.portfolio.portfolio_id}
           detailBasis={detailBasis}

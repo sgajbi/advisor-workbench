@@ -90,7 +90,7 @@ export default function PortfolioPairedAnalyticsSection({
   }
 
   const content = (
-    <WorkspaceGrid className="portfolio-primary-grid portfolio-paired-analytics-grid">
+    <WorkspaceGrid className="portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region">
       {showIncomeModule ? (
         <PortfolioCollapsibleModule
           className="portfolio-summary-module-card"

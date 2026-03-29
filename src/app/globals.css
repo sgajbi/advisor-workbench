@@ -316,6 +316,11 @@ a:hover {
   background: #fbfcfd;
 }
 
+.workbench-summary-region {
+  align-items: start;
+  gap: var(--workbench-section-gap);
+}
+
 .workbench-summary-visual-heading {
   font-size: 0.9375rem;
   font-weight: 700;

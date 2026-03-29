@@ -189,6 +189,7 @@ describe("PerformanceSummaryMode", () => {
       />
     );
 
+    expect(document.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     expect(screen.getByTestId("summary-header")).toHaveTextContent("Model 60/40");
     expect(screen.queryByTestId("chart-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();

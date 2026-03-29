@@ -420,6 +420,7 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
+    expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     expect(mainShell?.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();

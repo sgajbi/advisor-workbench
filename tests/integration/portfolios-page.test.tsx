@@ -155,6 +155,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
     expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
+    expect(document.querySelector(".portfolio-paired-analytics-grid.workbench-summary-region")).toBeTruthy();
     expect(document.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-summary-module-card").length).toBeGreaterThanOrEqual(5);
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(5);

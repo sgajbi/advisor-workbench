@@ -107,6 +107,11 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(screen.getByText("Highest")).toBeInTheDocument();
     expect(screen.getByText("Lowest")).toBeInTheDocument();
+    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
+    expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
     expect(screen.getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByText("TLT")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
