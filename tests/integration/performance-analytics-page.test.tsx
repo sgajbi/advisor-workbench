@@ -366,11 +366,23 @@ describe("PerformanceAnalyticsPage", () => {
     vi.unstubAllGlobals();
   });
 
+  it("uses the shared full-width workstation shell instead of a centered page container", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(document.querySelector("main.workstation-page.performance-page")).toBeTruthy();
+    expect(document.querySelector(".page-container")).toBeFalsy();
+    expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
+  });
+
   it("shows summary modules by default and hides analysis modules", async () => {
     installPerformancePageFetchMock();
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
+    expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();

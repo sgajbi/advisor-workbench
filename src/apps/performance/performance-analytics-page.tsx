@@ -2,6 +2,7 @@ import {
   getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummary,
 } from "@/features/workbench/api";
+import { WorkstationPage } from "@/design-system";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
@@ -98,7 +99,7 @@ export default async function PerformanceAnalyticsPage({
   }
 
   return (
-    <main className="page-container">
+    <WorkstationPage className="performance-page">
       <PerformanceWorkspaceEntry
         initialSummary={workspaceSummary}
         initialDetails={workspaceDetails}
@@ -110,6 +111,6 @@ export default async function PerformanceAnalyticsPage({
         initialChartFrequency={chartFrequency}
         initialBenchmark={benchmark}
       />
-    </main>
+    </WorkstationPage>
   );
 }

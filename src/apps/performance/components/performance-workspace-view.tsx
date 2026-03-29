@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Panel, WorkspaceLayout, WorkspaceMain } from "@/design-system";
+import { Panel, WorkstationShell } from "@/design-system";
 
 import {
   getPerformanceWorkspacePresentation,
@@ -83,9 +83,11 @@ export default function PerformanceWorkspaceView({
   );
 
   return (
-    <WorkspaceLayout className="performance-layout">
-      <WorkspaceMain className="performance-main">
-        {!workspace ? (
+    <WorkstationShell
+      className="performance-layout"
+      mainClassName="performance-main"
+      main={
+        !workspace ? (
           <Panel className="degraded-state-panel">
             <h2>Performance data unavailable</h2>
             <p className="error-text">
@@ -97,8 +99,8 @@ export default function PerformanceWorkspaceView({
             <PerformanceWorkspaceModeSwitch value={mode} onChange={setMode} />
             {modePanel}
           </>
-        )}
-      </WorkspaceMain>
-    </WorkspaceLayout>
+        )
+      }
+    />
   );
 }

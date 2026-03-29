@@ -85,6 +85,9 @@ describe("PerformanceWorkspaceView", () => {
       />
     );
 
+    expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workspace-layout")).toBeFalsy();
     expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
