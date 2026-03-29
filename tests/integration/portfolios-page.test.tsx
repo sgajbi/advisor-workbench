@@ -157,7 +157,9 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
     expect(document.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-summary-module-card").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(5);
     expect(document.querySelectorAll(".workbench-summary-card.workbench-summary-card-compact").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-label")).toBeTruthy();
     expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();

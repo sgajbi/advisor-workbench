@@ -145,6 +145,11 @@ describe("PerformanceSummaryHeaderSection", () => {
   it("renders the first-paint performance summary context and mandate stats", () => {
     render(<PerformanceSummaryHeaderSection {...buildProps()} />);
 
+    expect(
+      document.querySelector(
+        ".performance-summary-stage.workbench-summary-panel.workbench-summary-module-card"
+      )
+    ).toBeTruthy();
     expect(screen.getByRole("heading", { name: "PF_1001" })).toBeInTheDocument();
     expect(screen.getByText("Benchmark")).toBeInTheDocument();
     expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
@@ -194,6 +199,11 @@ describe("PerformanceSummaryHeaderSection", () => {
       />
     );
 
+    expect(
+      document.querySelector(
+        ".performance-summary-stage .performance-summary-status-card.workbench-summary-metric-card"
+      )
+    ).toBeTruthy();
     expect(screen.getByText("Unassigned")).toBeInTheDocument();
     expect(
       screen.getByText("Assign a benchmark to enable relative analytics.")

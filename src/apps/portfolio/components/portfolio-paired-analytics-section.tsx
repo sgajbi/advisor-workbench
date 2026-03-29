@@ -381,7 +381,10 @@ function PortfolioAnalyticsSummaryRow({
   ariaLabel: string;
 }) {
   return (
-    <div className="portfolio-analytics-summary-row" aria-label={ariaLabel}>
+    <div
+      className="portfolio-analytics-summary-row workbench-summary-metric-strip"
+      aria-label={ariaLabel}
+    >
       {stats.map((stat) => (
         <div
           key={stat.label}

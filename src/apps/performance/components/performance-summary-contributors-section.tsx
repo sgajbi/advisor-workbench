@@ -15,7 +15,7 @@ export default function PerformanceSummaryContributorsSection({
 
   return (
     <AnalyticsModule
-      className="workbench-summary-card-compact"
+      className="workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
       compact
       title="Top / Bottom Contributors"
       subtitle={`${workspace.period} position ranking`}

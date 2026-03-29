@@ -397,6 +397,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact.performance-summary-stage")).toBeTruthy();
+    expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -419,6 +420,7 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
+    expect(mainShell?.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 
@@ -434,6 +436,7 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
+    expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
     expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-label")).toBeTruthy();
     expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByText("Attribution Over Time")).not.toBeInTheDocument();

@@ -98,6 +98,8 @@ export default function PerformanceMultiHorizonPanel({
 
   return (
     <AnalyticsModule
+      className="workbench-summary-module-card performance-summary-module-card"
+      compact
       title="Multi-Horizon Returns"
       subtitle={`${detailBasis} basis comparative view`}
       actions={

@@ -72,6 +72,14 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
+    expect(
+      document.querySelector(
+        ".performance-chart-stage.workbench-summary-panel.workbench-summary-module-card"
+      )
+    ).toBeTruthy();
+    expect(
+      document.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")
+    ).toBeTruthy();
     expect(screen.getByText("2026-01-01 - 2026-02-28")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");

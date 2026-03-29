@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { AnalyticsSectionHeader, AnalyticsStat, Panel } from "@/design-system";
+import { AnalyticsSectionHeader, Panel } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
@@ -381,7 +381,7 @@ export default function PerformanceChartPanel({
   return (
     <Panel
       id={id}
-      className="performance-chart-stage workbench-summary-card workbench-summary-card-compact"
+      className="performance-chart-stage workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
     >
       <Stack spacing={2.25}>
         <Stack
@@ -566,7 +566,7 @@ export default function PerformanceChartPanel({
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
           <Box
-            className="performance-chart-summary-band"
+            className="performance-chart-summary-band workbench-summary-metric-strip"
             sx={{
               display: "grid",
               gridTemplateColumns: {
@@ -576,14 +576,14 @@ export default function PerformanceChartPanel({
               gap: 1.25,
             }}
           >
-            <AnalyticsStat label="Latest" value={formatPct(latestValue)} />
-            <AnalyticsStat label="High" value={formatPct(highestValue)} />
-            <AnalyticsStat label="Low" value={formatPct(lowestValue)} />
-            <AnalyticsStat label="Observations" value={points.length} />
+            {renderSummaryMetric("Latest", formatPct(latestValue))}
+            {renderSummaryMetric("High", formatPct(highestValue))}
+            {renderSummaryMetric("Low", formatPct(lowestValue))}
+            {renderSummaryMetric("Observations", points.length)}
           </Box>
 
           <div
-            className="performance-chart-library-frame"
+            className="performance-chart-library-frame workbench-summary-visual"
             role="img"
             aria-label={`${title} chart`}
             style={{ position: "relative" }}
@@ -635,6 +635,15 @@ export default function PerformanceChartPanel({
       )}
       </Stack>
     </Panel>
+  );
+}
+
+function renderSummaryMetric(label: string, value: React.ReactNode) {
+  return (
+    <div className="performance-chart-summary-stat workbench-summary-metric-card">
+      <span className="workbench-summary-metric-label">{label}</span>
+      <strong className="workbench-summary-metric-value">{value}</strong>
+    </div>
   );
 }
 

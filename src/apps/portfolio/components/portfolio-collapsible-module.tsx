@@ -22,7 +22,11 @@ export default function PortfolioCollapsibleModule({
 }) {
   return (
     <AnalyticsModule
-      className={cx(compact && "workbench-summary-card-compact", className)}
+      className={cx(
+        compact && "workbench-summary-card-compact",
+        compact && "workbench-summary-module-card",
+        className
+      )}
       compact={compact}
       title={title}
       subtitle={subtitle}

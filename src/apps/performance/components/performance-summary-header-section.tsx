@@ -161,7 +161,7 @@ export default function PerformanceSummaryHeaderSection({
   return (
     <Panel
       id="performance-overview"
-      className="performance-summary-stage workbench-summary-card workbench-summary-card-compact"
+      className="performance-summary-stage workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card"
     >
       <Stack spacing={1.5}>
         <div className="performance-summary-topline">

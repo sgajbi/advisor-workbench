@@ -40,7 +40,7 @@ export default function PortfolioPerformanceSnapshotModule({
 
   return (
     <AnalyticsModule
-      className="portfolio-summary-module-card portfolio-performance-summary-card"
+      className="portfolio-summary-module-card workbench-summary-module-card portfolio-performance-summary-card"
       compact={compact}
       title="Performance Snapshot"
       subtitle={`Selected period ${selectedPeriod} as of ${formatDate(
