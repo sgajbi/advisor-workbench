@@ -285,4 +285,35 @@ describe("PortfolioPairedAnalyticsSection", () => {
     expect(document.querySelector(".module-state-panel-partial")).toBeTruthy();
     expect(document.querySelector(".portfolio-empty-state")).toBeTruthy();
   });
+
+  it("suppresses paired analytics entirely when capabilities are hidden", () => {
+    const { container } = render(
+      <PortfolioPairedAnalyticsSection
+        workspace={buildWorkspace()}
+        context={{ ...context, hideEmptyModules: true }}
+        capabilities={buildCapabilities({
+          income: {
+            state: "hidden",
+            reason: "Hidden because empty portfolio modules are suppressed.",
+          },
+          activity: {
+            state: "hidden",
+            reason: "Hidden because empty portfolio modules are suppressed.",
+          },
+        })}
+        detailsLoading={false}
+        isDetailedView={false}
+        incomeDisplayCurrency="USD"
+        activityDisplayCurrency="USD"
+        transactionDrilldown={null}
+        onSelectActivityBucket={vi.fn()}
+        getSectionExpanded={() => true}
+        toggleSection={vi.fn()}
+      />
+    );
+
+    expect(container.firstChild).toBeNull();
+    expect(screen.queryByRole("heading", { name: /^Income$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^Activity$/i })).not.toBeInTheDocument();
+  });
 });

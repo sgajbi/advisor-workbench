@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { AnalyticsModule, AnalyticsTable, ModuleSkeleton, ModuleStatePanel } from "@/design-system";
+import {
+  AnalyticsModule,
+  AnalyticsTable,
+  ModuleSkeleton,
+  WorkspaceStatusPanel,
+} from "@/design-system";
 
 import { getPortfolioProjectedCashflow } from "../api";
 import { formatCurrency, formatDate } from "../formatters";
@@ -174,7 +179,7 @@ export default function PortfolioProjectedCashflowModule({
             baseCurrency={baseCurrency}
           />
           {hasFlatCashflow(cashflowOutlook) ? (
-            <ModuleStatePanel
+            <WorkspaceStatusPanel
               state="partial"
               title="Flat projected cashflow"
               body="Projected cash movements are flat across the current forecast horizon."
@@ -201,7 +206,7 @@ export default function PortfolioProjectedCashflowModule({
           ) : null}
         </>
       ) : (
-        <ModuleStatePanel
+        <WorkspaceStatusPanel
           state={loadError ? "error" : "empty"}
           title={loadError ? "Projected cashflow unavailable" : "No projected cashflow"}
           body={

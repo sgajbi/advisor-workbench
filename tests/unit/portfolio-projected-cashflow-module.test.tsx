@@ -80,6 +80,35 @@ describe("PortfolioProjectedCashflowModule", () => {
     await waitFor(() => {
       expect(screen.getByText("Projected cashflow unavailable")).toBeInTheDocument();
     });
+    expect(document.querySelector(".module-state-panel-error")).toBeTruthy();
+  });
+
+  it("renders flat projected cashflow through the shared status-panel contract", () => {
+    render(
+      <PortfolioProjectedCashflowModule
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultExpanded={false}
+        initialCashflowOutlook={{
+          as_of_date: "2026-03-28",
+          range_end_date: "2026-04-07",
+          total_net_cashflow_base: 0,
+          projection_days: 10,
+          include_projected: true,
+          upcoming_points: [
+            {
+              projection_date: "2026-03-29",
+              net_cashflow_base: 0,
+              projected_cumulative_cashflow_base: 0,
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByText("Flat projected cashflow")).toBeInTheDocument();
+    expect(document.querySelector(".module-state-panel-partial")).toBeTruthy();
   });
 
   it("does not fetch projected cashflow while parent detailed data is still loading", async () => {
