@@ -42,7 +42,6 @@ type PortfolioTransactionsGridProps = {
 export type TransactionRow = {
   transactionId: string;
   tradeDate: string;
-  settleDate: string;
   type: string;
   instrument: string;
   quantity: number;
@@ -163,7 +162,6 @@ export default function PortfolioTransactionsGrid({
       filteredTransactions.map((transaction) => ({
         transactionId: transaction.transaction_id,
         tradeDate: transaction.transaction_date,
-        settleDate: "—",
         type: formatStatus(transaction.transaction_type),
         instrument: transaction.instrument_id,
         quantity: transaction.quantity,
@@ -184,12 +182,6 @@ export default function PortfolioTransactionsGrid({
         pinned: "left",
         minWidth: 130,
         valueFormatter: ({ value }) => formatDate(value),
-      }),
-      buildTransactionColumn({
-        field: "settleDate",
-        headerName: "Settle Date",
-        pinned: "left",
-        minWidth: 130,
       }),
       buildTransactionColumn({
         field: "type",
@@ -336,9 +328,9 @@ export default function PortfolioTransactionsGrid({
         <>
           <ModuleStatePanel
             state="partial"
-            title="Settlement detail is limited"
-            body="Transaction activity is available, but settlement dates are not yet exposed from the source contract."
-            hint="Use trade date, status, and amount for current operational review."
+            title="Transaction lifecycle detail is limited"
+            body="Trade activity is available, but the current contract does not expose settlement dates."
+            hint="Use trade date, status, and amount for current operational review until settlement fields are added upstream."
           />
         <div
           className={`ag-theme-quartz portfolio-data-grid ${showExpandedColumns ? "portfolio-data-grid-dense" : ""}`}
@@ -417,7 +409,6 @@ function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<Transact
 function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
   const exportRows = rows.map((row) => ({
     "Trade Date": formatDate(row.tradeDate),
-    "Settle Date": row.settleDate,
     Type: row.type,
     Instrument: row.instrument,
     Quantity: row.quantity,

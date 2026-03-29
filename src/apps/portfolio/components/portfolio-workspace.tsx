@@ -1820,9 +1820,9 @@ function buildTransactionDrawer(
         label: "Lifecycle",
         content: renderDrawerDefinitionList([
             ["Trade Date", formatDate(row.tradeDate)],
-            ["Settle Date", row.settleDate],
             ["Status", formatStatus(row.status)],
             ["Component Type", row.componentType ? formatStatus(row.componentType) : "N/A"],
+            ["Settlement Date", "Not exposed by the current source contract"],
             ["Base Amount", formatCurrency(row.amount, baseCurrency)],
           ]),
       },

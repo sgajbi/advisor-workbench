@@ -331,9 +331,10 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
     const transactionsGrid = screen.getByLabelText("Portfolio transactions grid");
+    expect(within(transactionsGrid).queryByText("Settle Date")).not.toBeInTheDocument();
     fireEvent.click(
       within(transactionsGrid).getByRole("button", {
-        name: /20 Feb 2026 \| — \| BUY \| AAPL/i,
+        name: /20 Feb 2026 \| Buy \| AAPL/i,
       })
     );
     await waitFor(() => {

@@ -163,6 +163,11 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
+    expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
+    expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not expose settlement dates/i)
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /20 Mar 2026/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
@@ -214,7 +219,7 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("Filtered by security: Apple Inc.")).toBeInTheDocument();
     expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /18 Mar 2026 \| — \| Buy \| MSFT/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /18 Mar 2026 \| Buy \| MSFT/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
