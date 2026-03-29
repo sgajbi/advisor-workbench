@@ -8,16 +8,11 @@ import {
 } from "../view-model";
 import PerformanceAnalysisMode from "./performance-analysis-mode";
 import PerformanceEvidenceMode from "./performance-evidence-mode";
+import PerformanceWorkspaceModeSwitch, {
+  type PerformanceWorkspaceMode,
+} from "./performance-workspace-mode-switch";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import { getBenchmarkLabel } from "./performance-workspace-view-helpers";
-
-export type PerformanceWorkspaceMode = "summary" | "analysis" | "evidence";
-
-const WORKSPACE_MODES: Array<{ key: PerformanceWorkspaceMode; label: string }> = [
-  { key: "summary", label: "Summary" },
-  { key: "analysis", label: "Analysis" },
-  { key: "evidence", label: "Evidence" },
-];
 
 export default function PerformanceWorkspaceView({
   workspace,
@@ -122,25 +117,7 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <>
-            <div className="portfolio-segmented-control" role="tablist" aria-label="Performance workspace mode">
-              {WORKSPACE_MODES.map((option) => {
-                const isActive = option.key === mode;
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    className={`portfolio-segmented-control-button${
-                      isActive ? " portfolio-segmented-control-button-active" : ""
-                    }`}
-                    onClick={() => setMode(option.key)}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
+            <PerformanceWorkspaceModeSwitch value={mode} onChange={setMode} />
             {modePanel}
           </>
         )}
