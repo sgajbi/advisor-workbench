@@ -2,6 +2,27 @@ import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("next/dynamic", () => ({
+  default: (loader: () => Promise<unknown>) => {
+    const React = require("react");
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const [Component, setComponent] = React.useState(
+        null as React.ComponentType<Record<string, unknown>> | null
+      );
+      React.useEffect(() => {
+        loader().then((mod: unknown) => {
+          const resolved =
+            typeof mod === "function"
+              ? (mod as React.ComponentType<Record<string, unknown>>)
+              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          setComponent(() => resolved ?? null);
+        });
+      }, []);
+      return Component ? React.createElement(Component, props) : null;
+    };
+  },
+}));
+
 vi.mock("ag-grid-react", () => ({
   AgGridReact: ({ rowData = [], columnDefs = [], onRowClicked }: any) => {
     const visibleColumns = columnDefs.filter((column: any) => !column.hide);
@@ -85,8 +106,12 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("button", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Detailed" })).toBeInTheDocument();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: "Look-through pending source support" })
+      ).toBeDisabled();
+    });
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export portfolio data" })).toBeInTheDocument();
 
@@ -109,7 +134,15 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("heading", { name: /^Holdings$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Transactions$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Projected Cashflow/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio holdings grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio transactions grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();
 
+    await waitFor(() => {
+      expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
+      expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
+      expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    });
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
@@ -182,12 +215,14 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /What changed over time/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /^Holdings$/i })).toBeInTheDocument();
-    expect(screen.getByText("As of 24 Feb 2026 in USD")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /Columns/i }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("heading", { name: /^Transactions$/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Projected Cashflow/i })).toBeInTheDocument();
-    expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /^Holdings$/i })).toBeInTheDocument();
+      expect(screen.getByText("As of 24 Feb 2026 in USD")).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: /Columns/i }).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByRole("heading", { name: /^Transactions$/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Projected Cashflow/i })).toBeInTheDocument();
+      expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
+    });
     expect(screen.getByText("Performance not available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Why performance is unavailable" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Export/i }).length).toBeGreaterThanOrEqual(3);

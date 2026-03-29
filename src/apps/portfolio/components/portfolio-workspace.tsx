@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
@@ -7,6 +8,7 @@ import {
   AnalyticsModule,
   AnalyticsTable,
   DataGridCard,
+  DeferredModulePlaceholder,
   DegradedStatePanel,
   EmptyStatePanel,
   MetricRow,
@@ -68,24 +70,105 @@ import {
   getYearToDateActivityAmount,
   getYearToDateActivityCount,
 } from "../view-model";
-import PortfolioAllocationPanel from "./portfolio-allocation-panel";
-import PortfolioDetailDrawer from "./portfolio-detail-drawer";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
-import {
-  PortfolioActivityPanel,
-  PortfolioIncomePanel,
-  PortfolioTopHoldingsPanel,
-} from "./portfolio-chart-panels";
-import PortfolioHoldingsGrid, { type HoldingsRow } from "./portfolio-holdings-grid";
-import PortfolioProjectedCashflowModule from "./portfolio-projected-cashflow-module";
+import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
 import PortfolioRail from "./portfolio-rail";
-import PortfolioTransactionsGrid, { type TransactionRow } from "./portfolio-transactions-grid";
+import type { TransactionRow } from "./portfolio-transactions-grid";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
 import PortfolioContextModule from "../modules/portfolio-context/portfolio-context-module";
 import PortfolioHealthStrip from "../modules/portfolio-health/portfolio-health-strip";
 import PortfolioInsightsStrip from "../modules/portfolio-insights/portfolio-insights-strip";
 import PortfolioReadinessModule from "../modules/portfolio-readiness/portfolio-readiness-module";
+
+// Workbench discipline:
+// first paint stays limited to framing, hero, KPI, exceptions, and side-rail summary cards.
+// Heavy analytical modules and drill-down surfaces load after first paint or when the user opens them.
+const DeferredPortfolioAllocationPanel = dynamic(() => import("./portfolio-allocation-panel"), {
+  ssr: false,
+  loading: () => (
+    <DeferredModulePlaceholder
+      title="Loading allocation"
+      message="Allocation analytics are loading after first paint."
+    />
+  ),
+});
+
+const DeferredPortfolioTopHoldingsPanel = dynamic(
+  () => import("./portfolio-chart-panels").then((module) => module.PortfolioTopHoldingsPanel),
+  {
+    ssr: false,
+    loading: () => (
+      <DeferredModulePlaceholder
+        title="Loading top holdings"
+        message="Holdings concentration is loading after first paint."
+      />
+    ),
+  }
+);
+
+const DeferredPortfolioIncomePanel = dynamic(
+  () => import("./portfolio-chart-panels").then((module) => module.PortfolioIncomePanel),
+  {
+    ssr: false,
+    loading: () => (
+      <DeferredModulePlaceholder
+        title="Loading income"
+        message="Income composition is loading after first paint."
+      />
+    ),
+  }
+);
+
+const DeferredPortfolioActivityPanel = dynamic(
+  () => import("./portfolio-chart-panels").then((module) => module.PortfolioActivityPanel),
+  {
+    ssr: false,
+    loading: () => (
+      <DeferredModulePlaceholder
+        title="Loading activity"
+        message="Activity composition is loading after first paint."
+      />
+    ),
+  }
+);
+
+const DeferredPortfolioHoldingsGrid = dynamic(() => import("./portfolio-holdings-grid"), {
+  ssr: false,
+  loading: () => (
+    <DeferredModulePlaceholder
+      title="Loading holdings"
+      message="Holdings drill-down loads when the section is opened."
+    />
+  ),
+});
+
+const DeferredPortfolioTransactionsGrid = dynamic(() => import("./portfolio-transactions-grid"), {
+  ssr: false,
+  loading: () => (
+    <DeferredModulePlaceholder
+      title="Loading transactions"
+      message="Transaction drill-down loads when the section is opened."
+    />
+  ),
+});
+
+const DeferredPortfolioProjectedCashflowModule = dynamic(
+  () => import("./portfolio-projected-cashflow-module"),
+  {
+    ssr: false,
+    loading: () => (
+      <DeferredModulePlaceholder
+        title="Loading projected cashflow"
+        message="Projected liquidity is loading when the section is opened."
+      />
+    ),
+  }
+);
+
+const DeferredPortfolioDetailDrawer = dynamic(() => import("./portfolio-detail-drawer"), {
+  ssr: false,
+});
 
 type PortfolioDetailDrawerState = {
   kicker: string;
@@ -932,7 +1015,7 @@ function PortfolioInsightsSection({
             {detailsLoading ? (
               <ModuleSkeleton chart rows={4} />
             ) : workspace.allocation_views?.length ? (
-              <PortfolioAllocationPanel
+              <DeferredPortfolioAllocationPanel
                 allocationViews={workspace.allocation_views}
                 baseCurrency={workspace.portfolio.base_currency}
                 selectedAllocation={
@@ -978,7 +1061,7 @@ function PortfolioInsightsSection({
             {detailsLoading ? (
               <ModuleSkeleton chart rows={4} />
             ) : workspace.top_positions.length ? (
-              <PortfolioTopHoldingsPanel
+              <DeferredPortfolioTopHoldingsPanel
                 positions={
                   holdingsDrilldown?.kind === "allocation"
                     ? filteredPositions
@@ -1044,7 +1127,7 @@ function PortfolioInsightsSection({
                     <MetricRow label="Window gross" value={formatCurrency(workspace.income_summary.totals_requested_window.gross.reporting_currency_amount, incomeDisplayCurrency)} />
                     <MetricRow label="Transactions" value={workspace.income_summary.totals_requested_window.net.transaction_count} />
                   </div>
-                  <PortfolioIncomePanel summary={workspace.income_summary} compact />
+                  <DeferredPortfolioIncomePanel summary={workspace.income_summary} compact />
                 </>
               ) : workspace.recent_transactions.length ? (
                 <ModuleStatePanel
@@ -1080,7 +1163,7 @@ function PortfolioInsightsSection({
                     <MetricRow label="Window transactions" value={getRequestedWindowActivityCount(workspace)} />
                     <MetricRow label="YTD transactions" value={getYearToDateActivityCount(workspace)} />
                   </div>
-                  <PortfolioActivityPanel
+                  <DeferredPortfolioActivityPanel
                     summary={workspace.activity_summary}
                     compact
                     selectedBucket={transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null}
@@ -1156,7 +1239,7 @@ function PortfolioChangesSection({
               onToggle={() => toggleSection("income")}
             >
               <>
-                <PortfolioIncomePanel summary={workspace.income_summary} />
+                <DeferredPortfolioIncomePanel summary={workspace.income_summary} />
                 {isDetailedView ? (
                   <AnalyticsTable
                     ariaLabel="Income summary"
@@ -1202,7 +1285,7 @@ function PortfolioChangesSection({
               onToggle={() => toggleSection("activity")}
             >
               <>
-                <PortfolioActivityPanel
+                <DeferredPortfolioActivityPanel
                   summary={workspace.activity_summary}
                   selectedBucket={transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null}
                   onSelectionChange={onSelectActivityBucket}
@@ -1284,6 +1367,10 @@ function PortfolioDrilldownSection({
     return null;
   }
 
+  const holdingsExpanded = getSectionExpanded("holdings");
+  const transactionsExpanded = getSectionExpanded("transactions");
+  const projectedCashflowExpanded = getSectionExpanded("projected-cashflow");
+
   const persistOpenState = (sectionKey: PortfolioCollapsibleSectionKey, nextOpen: boolean) => {
     setSectionPreferences((current) => {
       if (typeof window !== "undefined") {
@@ -1302,7 +1389,7 @@ function PortfolioDrilldownSection({
       <div className="portfolio-disclosure-stack">
         <details
           className="portfolio-disclosure"
-          open={getSectionExpanded("holdings")}
+          open={holdingsExpanded}
           onToggle={(event) => persistOpenState("holdings", (event.currentTarget as HTMLDetailsElement).open)}
         >
           <summary>
@@ -1317,24 +1404,26 @@ function PortfolioDrilldownSection({
             <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
           </summary>
           <div className="portfolio-disclosure-content">
-            <DataGridCard>
-              <PortfolioHoldingsGrid
-                portfolioId={workspace.portfolio.portfolio_id}
-                positions={filteredPositions}
-                baseCurrency={workspace.portfolio.base_currency}
-                asOfDate={context.selectedAsOfDate}
-                columnMode={context.columnMode}
-                filterLabel={holdingsFilterCopy}
-                onClearFilter={onClearHoldingsDrilldown}
-                onRowSelect={onSelectHoldingRow}
-              />
-            </DataGridCard>
+            {holdingsExpanded ? (
+              <DataGridCard>
+                <DeferredPortfolioHoldingsGrid
+                  portfolioId={workspace.portfolio.portfolio_id}
+                  positions={filteredPositions}
+                  baseCurrency={workspace.portfolio.base_currency}
+                  asOfDate={context.selectedAsOfDate}
+                  columnMode={context.columnMode}
+                  filterLabel={holdingsFilterCopy}
+                  onClearFilter={onClearHoldingsDrilldown}
+                  onRowSelect={onSelectHoldingRow}
+                />
+              </DataGridCard>
+            ) : null}
           </div>
         </details>
 
         <details
           className="portfolio-disclosure"
-          open={getSectionExpanded("transactions")}
+          open={transactionsExpanded}
           onToggle={(event) => persistOpenState("transactions", (event.currentTarget as HTMLDetailsElement).open)}
         >
           <summary>
@@ -1349,27 +1438,29 @@ function PortfolioDrilldownSection({
             <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
           </summary>
           <div className="portfolio-disclosure-content">
-            <DataGridCard>
-              <PortfolioTransactionsGrid
-                portfolioId={workspace.portfolio.portfolio_id}
-                baseCurrency={workspace.portfolio.base_currency}
-                asOfDate={context.selectedAsOfDate}
-                defaultStartDate={context.effectivePeriodStartDate}
-                defaultEndDate={context.effectivePeriodEndDate}
-                initialTransactions={workspace.recent_transactions}
-                suspendInitialFetch={detailsLoading}
-                externalFilter={transactionDrilldown}
-                onClearExternalFilter={onClearTransactionDrilldown}
-                onRowSelect={onSelectTransactionRow}
-              />
-            </DataGridCard>
+            {transactionsExpanded ? (
+              <DataGridCard>
+                <DeferredPortfolioTransactionsGrid
+                  portfolioId={workspace.portfolio.portfolio_id}
+                  baseCurrency={workspace.portfolio.base_currency}
+                  asOfDate={context.selectedAsOfDate}
+                  defaultStartDate={context.effectivePeriodStartDate}
+                  defaultEndDate={context.effectivePeriodEndDate}
+                  initialTransactions={workspace.recent_transactions}
+                  suspendInitialFetch={detailsLoading}
+                  externalFilter={transactionDrilldown}
+                  onClearExternalFilter={onClearTransactionDrilldown}
+                  onRowSelect={onSelectTransactionRow}
+                />
+              </DataGridCard>
+            ) : null}
           </div>
         </details>
 
         {showProjectedCashflow && workspace.cashflow_outlook ? (
           <details
             className="portfolio-disclosure"
-            open={getSectionExpanded("projected-cashflow")}
+            open={projectedCashflowExpanded}
             onToggle={(event) =>
               persistOpenState("projected-cashflow", (event.currentTarget as HTMLDetailsElement).open)
             }
@@ -1382,14 +1473,16 @@ function PortfolioDrilldownSection({
               <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
             </summary>
             <div className="portfolio-disclosure-content">
-              <PortfolioProjectedCashflowModule
-                portfolioId={workspace.portfolio.portfolio_id}
-                baseCurrency={workspace.portfolio.base_currency}
-                asOfDate={context.selectedAsOfDate}
-                initialCashflowOutlook={workspace.cashflow_outlook}
-                defaultExpanded={isDetailedView}
-                suspendInitialFetch={detailsLoading}
-              />
+              {projectedCashflowExpanded ? (
+                <DeferredPortfolioProjectedCashflowModule
+                  portfolioId={workspace.portfolio.portfolio_id}
+                  baseCurrency={workspace.portfolio.base_currency}
+                  asOfDate={context.selectedAsOfDate}
+                  initialCashflowOutlook={workspace.cashflow_outlook}
+                  defaultExpanded={isDetailedView}
+                  suspendInitialFetch={detailsLoading}
+                />
+              ) : null}
             </div>
           </details>
         ) : null}
@@ -1405,16 +1498,20 @@ function PortfolioDetailDrawerController({
   detailDrawer: PortfolioDetailDrawerState | null;
   onClose: () => void;
 }) {
+  if (!detailDrawer) {
+    return null;
+  }
+
   return (
-    <PortfolioDetailDrawer
-      open={Boolean(detailDrawer)}
-      kicker={detailDrawer?.kicker ?? ""}
-      title={detailDrawer?.title ?? ""}
-      subtitle={detailDrawer?.subtitle}
-      summaryItems={detailDrawer?.summaryItems ?? []}
-      tabs={detailDrawer?.tabs ?? []}
-      fullPageHref={detailDrawer?.fullPageHref ?? "#portfolio-summary"}
-      fullPageLabel={detailDrawer?.fullPageLabel ?? "Open"}
+    <DeferredPortfolioDetailDrawer
+      open
+      kicker={detailDrawer.kicker}
+      title={detailDrawer.title}
+      subtitle={detailDrawer.subtitle}
+      summaryItems={detailDrawer.summaryItems}
+      tabs={detailDrawer.tabs}
+      fullPageHref={detailDrawer.fullPageHref}
+      fullPageLabel={detailDrawer.fullPageLabel}
       onClose={onClose}
     />
   );
