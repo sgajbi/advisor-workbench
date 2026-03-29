@@ -72,6 +72,7 @@ import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
 import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-section";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
+import PortfolioDrilldownDisclosure from "./portfolio-drilldown-disclosure";
 import PortfolioRail from "./portfolio-rail";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
@@ -1206,8 +1207,6 @@ function PortfolioDrilldownSection({
     return null;
   }
 
-  const showProjectedCashflow = isRenderableCapability(capabilities.projectedCashflow);
-
   const holdingsExpanded = getSectionExpanded("holdings");
   const transactionsExpanded = getSectionExpanded("transactions");
   const projectedCashflowExpanded = getSectionExpanded("projected-cashflow");
@@ -1228,105 +1227,113 @@ function PortfolioDrilldownSection({
         <p className="portfolio-section-copy">Holdings, transactions, and projected liquidity on demand.</p>
       </div>
       <div className="portfolio-disclosure-stack">
-        <details
-          className="portfolio-disclosure"
-          open={holdingsExpanded}
-          onToggle={(event) => persistOpenState("holdings", (event.currentTarget as HTMLDetailsElement).open)}
+        <PortfolioDrilldownDisclosure
+          title="Holdings"
+          summary={
+            capabilities.holdingsDrilldown.state === "supported"
+              ? filteredPositions.length
+                ? `${formatCount(filteredPositions.length, "holding")} with valuation context`
+                : "No holdings have been booked yet"
+              : capabilities.holdingsDrilldown.reason ?? "Holdings drill-down is unavailable."
+          }
+          expanded={holdingsExpanded}
+          onToggle={(nextOpen) => persistOpenState("holdings", nextOpen)}
+          capability={capabilities.holdingsDrilldown}
+          partialTitle="Holdings drill-down is partially available"
+          unavailableTitle="Holdings drill-down unavailable"
+          body={
+            capabilities.holdingsDrilldown.reason ??
+            "Detailed holdings rows are not available in the current portfolio contract."
+          }
+          hint="Publish detailed position rows to support holdings drill-down."
+          why={{
+            body:
+              "Holdings drill-down requires detailed position rows with identifiers, valuation context, and filters. Summary counts alone are not enough for a usable grid.",
+            label: "Why holdings drill-down is unavailable",
+          }}
         >
-          <summary>
-            <div>
-              <strong>Holdings</strong>
-              <span>
-                {filteredPositions.length
-                  ? `${formatCount(filteredPositions.length, "holding")} with valuation context`
-                  : "No holdings have been booked yet"}
-              </span>
-            </div>
-            <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
-          </summary>
-          <div className="portfolio-disclosure-content">
-            {holdingsExpanded ? (
-              <DataGridCard>
-                <DeferredPortfolioHoldingsGrid
-                  portfolioId={workspace.portfolio.portfolio_id}
-                  positions={filteredPositions}
-                  baseCurrency={workspace.portfolio.base_currency}
-                  asOfDate={context.selectedAsOfDate}
-                  columnMode={context.columnMode}
-                  filterLabel={holdingsFilterCopy}
-                  onClearFilter={onClearHoldingsDrilldown}
-                  onRowSelect={onSelectHoldingRow}
-                />
-              </DataGridCard>
-            ) : null}
-          </div>
-        </details>
+          <DataGridCard>
+            <DeferredPortfolioHoldingsGrid
+              portfolioId={workspace.portfolio.portfolio_id}
+              positions={filteredPositions}
+              baseCurrency={workspace.portfolio.base_currency}
+              asOfDate={context.selectedAsOfDate}
+              columnMode={context.columnMode}
+              filterLabel={holdingsFilterCopy}
+              onClearFilter={onClearHoldingsDrilldown}
+              onRowSelect={onSelectHoldingRow}
+            />
+          </DataGridCard>
+        </PortfolioDrilldownDisclosure>
 
-        <details
-          className="portfolio-disclosure"
-          open={transactionsExpanded}
-          onToggle={(event) => persistOpenState("transactions", (event.currentTarget as HTMLDetailsElement).open)}
+        <PortfolioDrilldownDisclosure
+          title="Transactions"
+          summary={
+            capabilities.transactionsDrilldown.state === "supported"
+              ? workspace.recent_transactions.length
+                ? `${workspace.recent_transactions.length} booked events in ${context.periodLabel}`
+                : "No transactions have been booked yet"
+              : capabilities.transactionsDrilldown.reason ?? "Transactions drill-down is unavailable."
+          }
+          expanded={transactionsExpanded}
+          onToggle={(nextOpen) => persistOpenState("transactions", nextOpen)}
+          capability={capabilities.transactionsDrilldown}
+          partialTitle="Transactions drill-down is partially available"
+          unavailableTitle="Transactions drill-down unavailable"
+          body={
+            capabilities.transactionsDrilldown.reason ??
+            "Detailed transaction rows are not available in the current portfolio contract."
+          }
+          hint="Use the current reporting window or publish detailed ledger rows to support transaction drill-down."
         >
-          <summary>
-            <div>
-              <strong>Transactions</strong>
-              <span>
-                {workspace.recent_transactions.length
-                  ? `${workspace.recent_transactions.length} booked events in ${context.periodLabel}`
-                  : "No transactions have been booked yet"}
-              </span>
-            </div>
-            <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
-          </summary>
-          <div className="portfolio-disclosure-content">
-            {transactionsExpanded ? (
-              <DataGridCard>
-                <DeferredPortfolioTransactionsGrid
-                  portfolioId={workspace.portfolio.portfolio_id}
-                  baseCurrency={workspace.portfolio.base_currency}
-                  asOfDate={context.selectedAsOfDate}
-                  defaultStartDate={context.effectivePeriodStartDate}
-                  defaultEndDate={context.effectivePeriodEndDate}
-                  initialTransactions={workspace.recent_transactions}
-                  suspendInitialFetch={detailsLoading}
-                  externalFilter={transactionDrilldown}
-                  onClearExternalFilter={onClearTransactionDrilldown}
-                  onRowSelect={onSelectTransactionRow}
-                />
-              </DataGridCard>
-            ) : null}
-          </div>
-        </details>
+          <DataGridCard>
+            <DeferredPortfolioTransactionsGrid
+              portfolioId={workspace.portfolio.portfolio_id}
+              baseCurrency={workspace.portfolio.base_currency}
+              asOfDate={context.selectedAsOfDate}
+              defaultStartDate={context.effectivePeriodStartDate}
+              defaultEndDate={context.effectivePeriodEndDate}
+              initialTransactions={workspace.recent_transactions}
+              suspendInitialFetch={detailsLoading}
+              externalFilter={transactionDrilldown}
+              onClearExternalFilter={onClearTransactionDrilldown}
+              onRowSelect={onSelectTransactionRow}
+            />
+          </DataGridCard>
+        </PortfolioDrilldownDisclosure>
 
-        {showProjectedCashflow && workspace.cashflow_outlook ? (
-          <details
-            className="portfolio-disclosure"
-            open={projectedCashflowExpanded}
-            onToggle={(event) =>
-              persistOpenState("projected-cashflow", (event.currentTarget as HTMLDetailsElement).open)
-            }
-          >
-            <summary>
-              <div>
-                <strong>Projected Cashflow</strong>
-                <span>{`${workspace.cashflow_outlook.projection_days} day forward liquidity path`}</span>
-              </div>
-              <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
-            </summary>
-            <div className="portfolio-disclosure-content">
-              {projectedCashflowExpanded ? (
-                <DeferredPortfolioProjectedCashflowModule
-                  portfolioId={workspace.portfolio.portfolio_id}
-                  baseCurrency={workspace.portfolio.base_currency}
-                  asOfDate={context.selectedAsOfDate}
-                  initialCashflowOutlook={workspace.cashflow_outlook}
-                  defaultExpanded={isDetailedView}
-                  suspendInitialFetch={detailsLoading}
-                />
-              ) : null}
-            </div>
-          </details>
-        ) : null}
+        <PortfolioDrilldownDisclosure
+          title="Projected Cashflow"
+          summary={
+            capabilities.projectedCashflow.state === "supported" && workspace.cashflow_outlook
+              ? `${workspace.cashflow_outlook.projection_days} day forward liquidity path`
+              : capabilities.projectedCashflow.reason ?? "Projected cashflow is unavailable."
+          }
+          expanded={projectedCashflowExpanded}
+          onToggle={(nextOpen) => persistOpenState("projected-cashflow", nextOpen)}
+          capability={capabilities.projectedCashflow}
+          partialTitle="Projected cashflow is partially available"
+          unavailableTitle="Projected cashflow unavailable"
+          body={
+            capabilities.projectedCashflow.reason ??
+            "A projected liquidity path is not available in the current portfolio contract."
+          }
+          hint="Publish forward cashflow projections to support projected liquidity review."
+          why={{
+            body:
+              "Projected cashflow requires forward-looking cashflow points from the liquidity contract. Without those points, the UI should not imply a reliable liquidity forecast.",
+            label: "Why projected cashflow is unavailable",
+          }}
+        >
+          <DeferredPortfolioProjectedCashflowModule
+            portfolioId={workspace.portfolio.portfolio_id}
+            baseCurrency={workspace.portfolio.base_currency}
+            asOfDate={context.selectedAsOfDate}
+            initialCashflowOutlook={workspace.cashflow_outlook}
+            defaultExpanded={isDetailedView}
+            suspendInitialFetch={detailsLoading}
+          />
+        </PortfolioDrilldownDisclosure>
       </div>
     </section>
   );

@@ -56,9 +56,11 @@ vi.mock("ag-grid-react", () => ({
 }));
 
 import PortfolioFoundationPage from "../../src/app/portfolios/page";
+import { resetPortfolioApiRequestCache } from "../../src/apps/portfolio/api";
 
 describe("PortfolioFoundationPage", () => {
   afterEach(() => {
+    resetPortfolioApiRequestCache();
     window.localStorage.clear();
     vi.unstubAllGlobals();
   });
@@ -380,15 +382,63 @@ describe("PortfolioFoundationPage", () => {
     });
     expect(screen.getAllByText("Holdings").length).toBeGreaterThan(0);
   }, 30000);
+
+  it("renders unavailable drilldown panels intentionally when detailed support is missing", async () => {
+    window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
+    stubPortfolioApis({
+      workspace: {
+        summary: {
+          assets_under_management_base: 105000,
+          invested_market_value_base: 0,
+          cash_market_value_base: 105000,
+          cash_weight_pct: 100,
+          position_count: 0,
+          cash_balance_count: 1,
+        },
+        cashflow_outlook: null,
+      },
+      positions: {
+        top_positions: [],
+        positions: [],
+      },
+      transactions: {
+        transactions: [],
+      },
+      liquidity: {
+        cash_balances: [],
+        cashflow_outlook: null,
+      },
+    });
+
+    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
+    });
+
+    const drilldownSection = document.getElementById("portfolio-drilldown");
+    expect(drilldownSection).toBeTruthy();
+    expect(drilldownSection?.querySelectorAll(".portfolio-disclosure")).toHaveLength(3);
+    expect(screen.queryByLabelText("Portfolio holdings grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio transactions grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();
+  }, 30000);
 });
 
-function stubPortfolioApis() {
-  const fetchSpy = buildPortfolioFetchStub();
+type PortfolioFetchOverrides = {
+  workspace?: Record<string, unknown>;
+  liquidity?: Record<string, unknown>;
+  positions?: Record<string, unknown>;
+  transactions?: Record<string, unknown>;
+};
+
+function stubPortfolioApis(overrides: PortfolioFetchOverrides = {}) {
+  const fetchSpy = buildPortfolioFetchStub(overrides);
   vi.stubGlobal("fetch", fetchSpy);
   return fetchSpy;
 }
 
-function buildPortfolioFetchStub() {
+function buildPortfolioFetchStub(overrides: PortfolioFetchOverrides = {}) {
   return vi.fn(async (input: string | URL) => {
     const url = input.toString();
 
@@ -451,6 +501,7 @@ function buildPortfolioFetchStub() {
             detail: "cash balance service unavailable",
           },
         ],
+        ...overrides.workspace,
       });
     }
 
@@ -480,6 +531,7 @@ function buildPortfolioFetchStub() {
             },
           ],
         },
+        ...overrides.liquidity,
       });
     }
 
@@ -591,6 +643,7 @@ function buildPortfolioFetchStub() {
             weight_pct: 14.4,
           },
         ],
+        ...overrides.positions,
       });
     }
 
@@ -612,6 +665,7 @@ function buildPortfolioFetchStub() {
             settlement_status: "SETTLED",
           },
         ],
+        ...overrides.transactions,
       });
     }
 
