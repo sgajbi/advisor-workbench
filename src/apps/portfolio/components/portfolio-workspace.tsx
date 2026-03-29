@@ -6,7 +6,6 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   ActionLink,
   AnalyticsModule,
-  AnalyticsTable,
   DataGridCard,
   DeferredModulePlaceholder,
   DegradedStatePanel,
@@ -68,9 +67,9 @@ import {
   getRequestedWindowActivityAmount,
   getRequestedWindowActivityCount,
   getYearToDateActivityAmount,
-  getYearToDateActivityCount,
 } from "../view-model";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
+import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-section";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
 import PortfolioRail from "./portfolio-rail";
@@ -107,32 +106,6 @@ const DeferredPortfolioTopHoldingsPanel = dynamic(
       <DeferredModulePlaceholder
         title="Loading top holdings"
         message="Holdings concentration is loading after first paint."
-      />
-    ),
-  }
-);
-
-const DeferredPortfolioIncomePanel = dynamic(
-  () => import("./portfolio-chart-panels").then((module) => module.PortfolioIncomePanel),
-  {
-    ssr: false,
-    loading: () => (
-      <DeferredModulePlaceholder
-        title="Loading income"
-        message="Income composition is loading after first paint."
-      />
-    ),
-  }
-);
-
-const DeferredPortfolioActivityPanel = dynamic(
-  () => import("./portfolio-chart-panels").then((module) => module.PortfolioActivityPanel),
-  {
-    ssr: false,
-    loading: () => (
-      <DeferredModulePlaceholder
-        title="Loading activity"
-        message="Activity composition is loading after first paint."
       />
     ),
   }
@@ -539,6 +512,7 @@ export default function PortfolioWorkspaceView({
                 <PortfolioChangesSection
                   workspace={workspace}
                   context={context}
+                  capabilities={capabilities!}
                   showChanges={showChanges}
                   incomeDisplayCurrency={incomeDisplayCurrency}
                   activityDisplayCurrency={activityDisplayCurrency}
@@ -943,9 +917,6 @@ function PortfolioInsightsSection({
   const showPerformanceSnapshot = isRenderableCapability(capabilities.performanceSnapshot);
   const showAllocationModule = isRenderableCapability(capabilities.allocation);
   const showTopHoldingsModule = isRenderableCapability(capabilities.topHoldings);
-  const showIncomeModule = isRenderableCapability(capabilities.income);
-  const showActivityModule = isRenderableCapability(capabilities.activity);
-
   return (
     <section className="portfolio-workspace-section">
       <div className="portfolio-section-header">
@@ -1124,96 +1095,19 @@ function PortfolioInsightsSection({
         ) : null}
       </WorkspaceGrid>
       {showChangeHighlights ? (
-        <WorkspaceGrid className="portfolio-primary-grid">
-          {showIncomeModule ? (
-            <PortfolioCollapsibleModule
-              title="Income"
-              subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
-              expanded={getSectionExpanded("income")}
-              onToggle={() => toggleSection("income")}
-            >
-              {detailsLoading ? (
-                <ModuleSkeleton chart rows={4} />
-              ) : workspace.income_summary ? (
-                <>
-                  <div className="portfolio-chart-summary-grid">
-                    <MetricRow label="Window net" value={formatCurrency(workspace.income_summary.totals_requested_window.net.reporting_currency_amount, incomeDisplayCurrency)} />
-                    <MetricRow label="YTD net" value={formatCurrency(workspace.income_summary.totals_year_to_date.net.reporting_currency_amount, incomeDisplayCurrency)} />
-                    <MetricRow label="Window gross" value={formatCurrency(workspace.income_summary.totals_requested_window.gross.reporting_currency_amount, incomeDisplayCurrency)} />
-                    <MetricRow label="Transactions" value={workspace.income_summary.totals_requested_window.net.transaction_count} />
-                  </div>
-                  <DeferredPortfolioIncomePanel summary={workspace.income_summary} compact />
-                </>
-              ) : workspace.recent_transactions.length ? (
-                <ModuleStatePanel
-                  state="partial"
-                  title="Income is not classified yet"
-                  body={
-                    capabilities.income.reason ??
-                    "Ledger activity exists, but no income summary is available for the selected period."
-                  }
-                  hint="Dividend, coupon, and income classifications need to be published before income composition can be shown."
-                />
-              ) : (
-                <EmptyStatePanel
-                  title="No income activity"
-                  body={
-                    capabilities.income.reason ??
-                    "No income events have been recorded for the selected period."
-                  }
-                  hint="Dividend and coupon events will populate income once they are booked."
-                />
-              )}
-            </PortfolioCollapsibleModule>
-          ) : null}
-
-          {showActivityModule ? (
-            <PortfolioCollapsibleModule
-              title="Activity"
-              subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
-              expanded={getSectionExpanded("activity")}
-              onToggle={() => toggleSection("activity")}
-            >
-              {detailsLoading ? (
-                <ModuleSkeleton chart rows={4} />
-              ) : workspace.activity_summary ? (
-                <>
-                  <div className="portfolio-chart-summary-grid">
-                    <MetricRow label="Window amount" value={formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency)} />
-                    <MetricRow label="YTD amount" value={formatCurrency(getYearToDateActivityAmount(workspace), activityDisplayCurrency)} />
-                    <MetricRow label="Window transactions" value={getRequestedWindowActivityCount(workspace)} />
-                    <MetricRow label="YTD transactions" value={getYearToDateActivityCount(workspace)} />
-                  </div>
-                  <DeferredPortfolioActivityPanel
-                    summary={workspace.activity_summary}
-                    compact
-                    selectedBucket={transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null}
-                    onSelectionChange={onSelectActivityBucket}
-                  />
-                </>
-              ) : workspace.recent_transactions.length ? (
-                <ModuleStatePanel
-                  state="partial"
-                  title="Activity totals are incomplete"
-                  body={
-                    capabilities.activity.reason ??
-                    "Transactions are present, but summarized activity buckets are not available for the selected period."
-                  }
-                  hint="Publish activity aggregation output to complete the client activity view."
-                />
-              ) : (
-                <EmptyStatePanel
-                  title="No client activity"
-                  body={
-                    capabilities.activity.reason ??
-                    "No funding, trading, or cash activity has been recorded in the selected period."
-                  }
-                  hint="Funding and trade events will populate the activity view."
-                />
-              )}
-            </PortfolioCollapsibleModule>
-          ) : null}
-        </WorkspaceGrid>
+        <PortfolioPairedAnalyticsSection
+          workspace={workspace}
+          context={context}
+          capabilities={capabilities!}
+          detailsLoading={detailsLoading}
+          isDetailedView={false}
+          incomeDisplayCurrency={incomeDisplayCurrency}
+          activityDisplayCurrency={activityDisplayCurrency}
+          transactionDrilldown={transactionDrilldown}
+          onSelectActivityBucket={onSelectActivityBucket}
+          getSectionExpanded={getSectionExpanded}
+          toggleSection={toggleSection}
+        />
       ) : null}
     </section>
   );
@@ -1222,6 +1116,7 @@ function PortfolioInsightsSection({
 function PortfolioChangesSection({
   workspace,
   context,
+  capabilities,
   showChanges,
   incomeDisplayCurrency,
   activityDisplayCurrency,
@@ -1233,6 +1128,7 @@ function PortfolioChangesSection({
 }: {
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
+  capabilities: PortfolioWorkspaceCapabilities;
   showChanges: boolean;
   incomeDisplayCurrency: string;
   activityDisplayCurrency: string;
@@ -1246,114 +1142,23 @@ function PortfolioChangesSection({
     return null;
   }
 
-  const hasChangeModules = Boolean(workspace.income_summary || workspace.activity_summary);
-
   return (
-    <section id="portfolio-changes" className="portfolio-workspace-section">
-      <div className="portfolio-section-header">
-        <h3>What changed over time?</h3>
-        <p className="portfolio-section-copy">
-          Income and activity for {formatPeriodContext(context)}.
-        </p>
-      </div>
-      {hasChangeModules ? (
-        <WorkspaceGrid className="portfolio-primary-grid">
-          {workspace.income_summary ? (
-            <PortfolioCollapsibleModule
-              title="Income"
-              subtitle={`${incomeDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.income_summary.window_start_date)} to ${formatDate(workspace.income_summary.window_end_date)}.`}
-              expanded={getSectionExpanded("income")}
-              onToggle={() => toggleSection("income")}
-            >
-              <>
-                <DeferredPortfolioIncomePanel summary={workspace.income_summary} />
-                {isDetailedView ? (
-                  <AnalyticsTable
-                    ariaLabel="Income summary"
-                    columns={[
-                      { key: "category", label: "Income Type" },
-                      { key: "windowNet", label: "Window Net", align: "right" },
-                      { key: "ytdNet", label: "YTD Net", align: "right" },
-                      { key: "windowGross", label: "Window Gross", align: "right" },
-                      { key: "txns", label: "Window Txns", align: "right" },
-                    ]}
-                    rows={[
-                      {
-                        key: "total",
-                        cells: [
-                          "Total",
-                          formatCurrency(workspace.income_summary.totals_requested_window.net.reporting_currency_amount, incomeDisplayCurrency),
-                          formatCurrency(workspace.income_summary.totals_year_to_date.net.reporting_currency_amount, incomeDisplayCurrency),
-                          formatCurrency(workspace.income_summary.totals_requested_window.gross.reporting_currency_amount, incomeDisplayCurrency),
-                          workspace.income_summary.totals_requested_window.net.transaction_count,
-                        ],
-                      },
-                      ...workspace.income_summary.income_types.map((item) => ({
-                        key: item.income_type,
-                        cells: [
-                          formatIncomeTypeLabel(item.income_type),
-                          formatCurrency(item.requested_window.net.reporting_currency_amount, incomeDisplayCurrency),
-                          formatCurrency(item.year_to_date.net.reporting_currency_amount, incomeDisplayCurrency),
-                          formatCurrency(item.requested_window.gross.reporting_currency_amount, incomeDisplayCurrency),
-                          item.requested_window.net.transaction_count,
-                        ],
-                      })),
-                    ]}
-                  />
-                ) : null}
-              </>
-            </PortfolioCollapsibleModule>
-          ) : null}
-          {workspace.activity_summary ? (
-            <PortfolioCollapsibleModule
-              title="Activity"
-              subtitle={`${activityDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.activity_summary.window_start_date)} to ${formatDate(workspace.activity_summary.window_end_date)}.`}
-              expanded={getSectionExpanded("activity")}
-              onToggle={() => toggleSection("activity")}
-            >
-              <>
-                <DeferredPortfolioActivityPanel
-                  summary={workspace.activity_summary}
-                  selectedBucket={transactionDrilldown?.kind === "activity" ? transactionDrilldown.bucket : null}
-                  onSelectionChange={onSelectActivityBucket}
-                />
-                {isDetailedView ? (
-                  <AnalyticsTable
-                    ariaLabel="Activity summary"
-                    columns={[
-                      { key: "bucket", label: "Bucket" },
-                      { key: "windowAmount", label: "Window Amount", align: "right" },
-                      { key: "ytdAmount", label: "YTD Amount", align: "right" },
-                      { key: "windowTxns", label: "Window Txns", align: "right" },
-                      { key: "ytdTxns", label: "YTD Txns", align: "right" },
-                    ]}
-                    rows={workspace.activity_summary.buckets.map((bucket) => ({
-                      key: bucket.bucket,
-                      cells: [
-                        formatActivityBucketLabel(bucket.bucket),
-                        formatCurrency(bucket.requested_window.reporting_currency_amount, activityDisplayCurrency),
-                        formatCurrency(bucket.year_to_date.reporting_currency_amount, activityDisplayCurrency),
-                        bucket.requested_window.transaction_count,
-                        bucket.year_to_date.transaction_count,
-                      ],
-                    }))}
-                  />
-                ) : null}
-              </>
-            </PortfolioCollapsibleModule>
-          ) : null}
-        </WorkspaceGrid>
-      ) : (
-        <Panel>
-          <div className="portfolio-empty-state">
-            <strong>Change history is not available yet.</strong>
-            <p className="muted">
-              Income and activity trends will appear once recent ledger events fall inside the reporting window.
-            </p>
-          </div>
-        </Panel>
-      )}
-    </section>
+    <PortfolioPairedAnalyticsSection
+      workspace={workspace}
+      context={context}
+      capabilities={capabilities}
+      detailsLoading={false}
+      isDetailedView={isDetailedView}
+      incomeDisplayCurrency={incomeDisplayCurrency}
+      activityDisplayCurrency={activityDisplayCurrency}
+      transactionDrilldown={transactionDrilldown}
+      onSelectActivityBucket={onSelectActivityBucket}
+      getSectionExpanded={getSectionExpanded}
+      toggleSection={toggleSection}
+      sectionId="portfolio-changes"
+      title="Recent Flows"
+      subtitle={`Income and client activity for ${formatPeriodContext(context)}.`}
+    />
   );
 }
 
@@ -2089,10 +1894,6 @@ function renderDrawerParagraphs(paragraphs: string[]): ReactNode {
       ))}
     </div>
   );
-}
-
-function formatIncomeTypeLabel(value: string): string {
-  return formatLabel(value.toLowerCase());
 }
 
 function formatActivityBucketLabel(value: string): string {

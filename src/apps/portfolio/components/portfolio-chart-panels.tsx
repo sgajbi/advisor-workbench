@@ -278,7 +278,13 @@ export function PortfolioActivityPanel({
   );
 
   return (
-    <div className={compact ? "portfolio-chart-card portfolio-chart-card-compact" : "portfolio-chart-card"}>
+    <div
+      className={
+        compact
+          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
+          : "portfolio-chart-card portfolio-chart-card-analytic"
+      }
+    >
       <div
         className={compact ? "portfolio-flow-chart portfolio-flow-chart-compact" : "portfolio-flow-chart"}
         aria-label="Activity chart"
@@ -372,7 +378,13 @@ export function PortfolioIncomePanel({
   );
 
   return (
-    <div className={compact ? "portfolio-chart-card portfolio-chart-card-compact" : "portfolio-chart-card"}>
+    <div
+      className={
+        compact
+          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
+          : "portfolio-chart-card portfolio-chart-card-analytic"
+      }
+    >
       <div
         className={compact ? "portfolio-income-chart portfolio-income-chart-compact" : "portfolio-income-chart"}
         aria-label="Income chart"

@@ -129,7 +129,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Next Actions/i })).toBeInTheDocument();
 
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /What changed over time/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Where can I drill down/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Holdings$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Transactions$/i })).not.toBeInTheDocument();
@@ -146,6 +146,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
+    expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
@@ -203,7 +205,7 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /What changed over time/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("heading", { name: /Portfolio Context/i })).toBeInTheDocument();
@@ -213,7 +215,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /What changed over time/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /^Holdings$/i })).toBeInTheDocument();
@@ -231,6 +233,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("Inflows").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
     expect(screen.getAllByText("25 Feb 2026").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/booked events in 30D/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
@@ -320,7 +323,7 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Summary" }));
 
     expect(window.localStorage.getItem("lotus:portfolio:view-mode")).toBe("summary");
-    expect(screen.queryByRole("heading", { name: /What changed over time/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(true);
