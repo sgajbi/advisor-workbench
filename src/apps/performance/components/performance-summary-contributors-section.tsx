@@ -14,7 +14,12 @@ export default function PerformanceSummaryContributorsSection({
   const rankingState = capabilities.contributionRanking.state;
 
   return (
-    <AnalyticsModule title="Top / Bottom Contributors" subtitle={`${workspace.period} position ranking`}>
+    <AnalyticsModule
+      className="workbench-summary-card-compact"
+      compact
+      title="Top / Bottom Contributors"
+      subtitle={`${workspace.period} position ranking`}
+    >
       {rankingState === "supported" ? (
           <div className="performance-contributors-grid">
             <AnalyticsRankedList

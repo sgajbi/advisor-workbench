@@ -152,10 +152,17 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
     expect(document.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-summary-module-card").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll(".workbench-summary-card.workbench-summary-card-compact").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-label")).toBeTruthy();
+    expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(document.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
     expect(document.querySelector(".portfolio-allocation-panel-compact .portfolio-allocation-ranked")).toBeFalsy();
+    expect(document.querySelectorAll(".workbench-rail-card")).toHaveLength(3);
+    expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeTruthy();
     expect(document.querySelector(".portfolio-actions-card .portfolio-workflow-item")).toBeTruthy();
     expect(
       document.querySelector(".portfolio-actions-card .portfolio-workflow-actions .portfolio-workflow-cta")

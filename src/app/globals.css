@@ -38,6 +38,16 @@
   --font-ui: "Public Sans", "Segoe UI", sans-serif;
   --font-display: "Public Sans", "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --workbench-section-gap: 16px;
+  --workbench-card-padding: 24px;
+  --workbench-card-padding-compact: 20px;
+  --workbench-title-gap: 4px;
+  --workbench-metric-strip-gap: 8px;
+  --workbench-rail-width: 336px;
+  --workbench-rail-card-padding: 20px;
+  --workbench-text-compact: 0.75rem;
+  --workbench-text-compact-strong: 0.8125rem;
+  --workbench-summary-title-size: 1rem;
   --workstation-shell-gap: 20px;
   --workstation-rail-width: 280px;
   --workstation-side-width: 320px;
@@ -197,6 +207,74 @@ a:hover {
   line-height: 1.35;
 }
 
+.workbench-summary-card {
+  min-width: 0;
+}
+
+.workbench-summary-card .workbench-summary-card-header {
+  min-width: 0;
+}
+
+.workbench-summary-card .workbench-summary-card-title {
+  font-size: var(--workbench-summary-title-size);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--brand-strong);
+}
+
+.workbench-summary-card .workbench-summary-card-subtitle {
+  font-size: var(--workbench-text-compact-strong);
+  line-height: 1.4;
+  color: var(--text-muted);
+  max-width: 40ch;
+}
+
+.workbench-summary-card-compact .workbench-summary-card-subtitle {
+  max-width: 34ch;
+}
+
+.workbench-summary-metric-card {
+  min-width: 0;
+}
+
+.workbench-summary-metric-label {
+  font-size: var(--workbench-text-compact);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.workbench-summary-metric-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.workbench-summary-metric-support {
+  font-size: var(--workbench-text-compact);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.workbench-rail-card {
+  padding: var(--workbench-rail-card-padding);
+}
+
+.workbench-rail-card .portfolio-side-card-title {
+  font-size: var(--workbench-summary-title-size);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--brand-strong);
+}
+
+.workbench-rail-card .portfolio-card-subtitle {
+  font-size: 0.71875rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
 .workbench-page-header-actions {
   display: flex;
   align-items: center;
@@ -346,7 +424,7 @@ a:hover {
 .portfolio-analytics-summary-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--workbench-metric-strip-gap);
   align-items: start;
 }
 
@@ -359,18 +437,18 @@ a:hover {
 }
 
 .portfolio-analytics-summary-stat span {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  line-height: 1.3;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  line-height: inherit;
 }
 
 .portfolio-analytics-summary-stat strong {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.25;
-  font-variant-numeric: tabular-nums;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  line-height: inherit;
+  font-variant-numeric: inherit;
 }
 
 .portfolio-chart-module {
@@ -1210,7 +1288,7 @@ a:hover {
 
 .portfolio-layout {
   --workstation-rail-width: 288px;
-  --workstation-side-width: 336px;
+  --workstation-side-width: var(--workbench-rail-width);
   width: 100%;
   max-width: none;
 }
@@ -1276,13 +1354,13 @@ a:hover {
 
 .portfolio-card-header {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--workbench-title-gap);
   margin-bottom: var(--space-4);
 }
 
 .portfolio-card-subtitle {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--workbench-text-compact);
   font-weight: 500;
   line-height: 1.45;
   color: var(--text-muted);
@@ -1291,7 +1369,7 @@ a:hover {
 
 .portfolio-side-card-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--workbench-summary-title-size);
   font-weight: 650;
   line-height: 1.3;
   color: var(--text);
@@ -2901,7 +2979,7 @@ a:hover {
 
 .portfolio-workspace-section {
   display: grid;
-  gap: 16px;
+  gap: var(--workbench-section-gap);
   width: 100%;
   min-width: 0;
 }
@@ -2922,16 +3000,16 @@ a:hover {
 
 .portfolio-section-header h3 {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 650;
   line-height: 1.3;
-  color: var(--text);
+  color: var(--brand-strong);
 }
 
 .portfolio-section-copy {
   margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.35;
+  font-size: var(--workbench-text-compact-strong);
+  line-height: 1.4;
   color: var(--text-muted);
   max-width: 42ch;
   white-space: nowrap;
@@ -3631,19 +3709,19 @@ a:hover {
 }
 
 .performance-summary-kpi-label {
-  font-size: var(--text-2xs);
-  font-weight: 800;
+  font-size: inherit;
+  font-weight: inherit;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: inherit;
 }
 
 .performance-summary-kpi-value {
-  color: var(--brand-strong);
-  font-size: 1.05rem;
-  line-height: 1.15;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  font-variant-numeric: inherit;
 }
 
 .performance-summary-kpi-card-primary .performance-summary-kpi-value {
@@ -3659,9 +3737,9 @@ a:hover {
 }
 
 .performance-summary-kpi-support {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  line-height: 1.38;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .performance-chart-grid,

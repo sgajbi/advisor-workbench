@@ -159,7 +159,10 @@ export default function PerformanceSummaryHeaderSection({
   ];
 
   return (
-    <Panel id="performance-overview" className="performance-summary-stage">
+    <Panel
+      id="performance-overview"
+      className="performance-summary-stage workbench-summary-card workbench-summary-card-compact"
+    >
       <Stack spacing={1.5}>
         <div className="performance-summary-topline">
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -181,10 +184,10 @@ export default function PerformanceSummaryHeaderSection({
             </div>
           </Box>
 
-          <div className="performance-summary-status-card performance-summary-status-card-secondary">
-            <span className="performance-summary-kpi-label">Benchmark</span>
-            <strong className="performance-summary-kpi-value">{benchmarkValue}</strong>
-            <span className="performance-summary-kpi-support">{benchmarkHint}</span>
+          <div className="performance-summary-status-card performance-summary-status-card-secondary workbench-summary-metric-card">
+            <span className="performance-summary-kpi-label workbench-summary-metric-label">Benchmark</span>
+            <strong className="performance-summary-kpi-value workbench-summary-metric-value">{benchmarkValue}</strong>
+            <span className="performance-summary-kpi-support workbench-summary-metric-support">{benchmarkHint}</span>
           </div>
         </div>
 
@@ -213,16 +216,17 @@ function renderMetricCard(card: SummaryMetricCard) {
       key={card.label}
       className={[
         "performance-summary-kpi-card",
+        "workbench-summary-metric-card",
         card.emphasize ? "performance-summary-kpi-card-primary" : "",
         card.unavailable ? "performance-summary-kpi-card-unavailable" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <span className="performance-summary-kpi-label">{card.label}</span>
-      <strong className="performance-summary-kpi-value">{card.value}</strong>
+      <span className="performance-summary-kpi-label workbench-summary-metric-label">{card.label}</span>
+      <strong className="performance-summary-kpi-value workbench-summary-metric-value">{card.value}</strong>
       {card.support ? (
-        <span className="performance-summary-kpi-support">{card.support}</span>
+        <span className="performance-summary-kpi-support workbench-summary-metric-support">{card.support}</span>
       ) : null}
     </div>
   );

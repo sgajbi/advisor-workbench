@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   ActionLink,
   ActionListCard,
+  AnalyticsModule,
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
@@ -302,6 +303,24 @@ describe("design-system components", () => {
     expect(screen.getByText("Ready")).toHaveClass("kpi-stat-value");
     expect(screen.getByText("0 active exceptions")).toHaveClass("kpi-stat-support");
     expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
+  });
+
+  it("renders analytics modules with the shared workbench summary-card contract", () => {
+    render(
+      <AnalyticsModule
+        compact
+        title="Shared Summary"
+        subtitle="Shared subtitle"
+        actions={<button type="button">Module Action</button>}
+      >
+        <div>Body</div>
+      </AnalyticsModule>
+    );
+
+    expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact")).toBeTruthy();
+    expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
+    expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
+    expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();
   });
 
   it("renders the shared neutral workbench page header with title, subtitle, and actions", () => {

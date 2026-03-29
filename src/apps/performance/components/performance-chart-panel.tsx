@@ -379,7 +379,10 @@ export default function PerformanceChartPanel({
   }
 
   return (
-    <Panel id={id} className="performance-chart-stage">
+    <Panel
+      id={id}
+      className="performance-chart-stage workbench-summary-card workbench-summary-card-compact"
+    >
       <Stack spacing={2.25}>
         <Stack
           direction={{ xs: "column", xl: "row" }}

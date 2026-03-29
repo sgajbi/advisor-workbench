@@ -21,7 +21,11 @@ export default function AnalyticsModule({
 }) {
   return (
     <Box
-      className={cx(className)}
+      className={cx(
+        "workbench-summary-card",
+        compact && "workbench-summary-card-compact",
+        className
+      )}
       sx={{
         display: "grid",
         gap: compact ? 1.5 : 2,
@@ -41,9 +45,10 @@ export default function AnalyticsModule({
           alignItems={{ xs: "flex-start", sm: "flex-start" }}
           useFlexGap
         >
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0 }} className="workbench-summary-card-header">
             {title ? (
               <Typography
+                className="workbench-summary-card-title"
                 component="h4"
                 sx={{
                   m: 0,
@@ -58,6 +63,7 @@ export default function AnalyticsModule({
             ) : null}
             {subtitle ? (
               <Typography
+                className="workbench-summary-card-subtitle"
                 component="div"
                 sx={{
                   mt: compact ? 0.25 : 0.5,

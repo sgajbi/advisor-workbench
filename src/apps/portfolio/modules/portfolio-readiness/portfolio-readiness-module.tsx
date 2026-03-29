@@ -34,7 +34,7 @@ export default function PortfolioReadinessModule({
   onOpenException: (exception: PortfolioExceptionSummary) => void;
 }) {
   return (
-    <Panel className="portfolio-side-card">
+    <Panel className="portfolio-side-card workbench-rail-card portfolio-readiness-card">
       <div className="portfolio-card-header">
         <div className="portfolio-empty-state-header">
           <h3 className="portfolio-side-card-title">Readiness and Exceptions</h3>

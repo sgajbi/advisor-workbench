@@ -10,7 +10,7 @@ export default function PortfolioActionsModule({
   actions: PortfolioWorkflowAction[];
 }) {
   return (
-    <Panel className="portfolio-side-card portfolio-actions-card">
+    <Panel className="portfolio-side-card workbench-rail-card portfolio-actions-card">
       <ActionListCard
         title="Next Actions"
         subtitle="Recommended front-office follow-up for this book."
