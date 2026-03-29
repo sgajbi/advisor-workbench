@@ -419,6 +419,15 @@ describe("PortfolioFoundationPage", () => {
     const drilldownSection = document.getElementById("portfolio-drilldown");
     expect(drilldownSection).toBeTruthy();
     expect(drilldownSection?.querySelectorAll(".portfolio-disclosure")).toHaveLength(3);
+    const liquidityHeading = screen.getByRole("heading", { name: /Liquidity and Projected Cash/i });
+    expect(liquidityHeading).toBeInTheDocument();
+    expect(screen.getAllByText("Projected cashflow unavailable").length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.getAllByText("No projected cashflow outlook is available in the current contract.").length
+    ).toBeGreaterThanOrEqual(2);
+    const liquidityModule = liquidityHeading.closest(".workbench-summary-card");
+    expect(liquidityModule).toBeTruthy();
+    expect(within(liquidityModule as HTMLElement).queryByText("N/A")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Portfolio holdings grid")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Portfolio transactions grid")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();

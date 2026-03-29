@@ -72,6 +72,7 @@ import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-sectio
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
 import PortfolioDrilldownDisclosure from "./portfolio-drilldown-disclosure";
+import PortfolioLiquiditySummaryModule from "./portfolio-liquidity-summary-module";
 import PortfolioRail from "./portfolio-rail";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
@@ -935,36 +936,14 @@ function PortfolioInsightsSection({
       {showLiquidityModule || showPerformanceSnapshot ? (
         <WorkspaceGrid className="portfolio-primary-grid">
           {showLiquidityModule ? (
-            <AnalyticsModule
-              title="Liquidity and Projected Cash"
-              subtitle={`As of ${formatDate(context.selectedAsOfDate)} with forecast cashflow over the active horizon.`}
-            >
-              <div className="portfolio-mandate-grid">
-                <MetricRow
-                  label="Available Cash"
-                  value={formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency)}
-                />
-                <MetricRow
-                  label="Cash Allocation"
-                  value={formatPct(workspace.summary.cash_weight_pct)}
-                />
-                <MetricRow
-                  label="Projected Net Flow"
-                  value={formatCurrency(
-                    workspace.cashflow_outlook?.total_net_cashflow_base,
-                    workspace.portfolio.base_currency
-                  )}
-                />
-                <MetricRow
-                  label="Forecast Horizon"
-                  value={
-                    workspace.cashflow_outlook
-                      ? `${workspace.cashflow_outlook.projection_days} days`
-                      : "N/A"
-                  }
-                />
-              </div>
-            </AnalyticsModule>
+            <PortfolioLiquiditySummaryModule
+              capability={capabilities.projectedCashflow}
+              cashflowOutlook={workspace.cashflow_outlook}
+              totalCashBase={workspace.summary.total_cash_base}
+              cashWeightPct={workspace.summary.cash_weight_pct}
+              baseCurrency={workspace.portfolio.base_currency}
+              asOfDate={context.selectedAsOfDate}
+            />
           ) : null}
           {showPerformanceSnapshot ? (
             <PortfolioPerformanceSnapshotModule
