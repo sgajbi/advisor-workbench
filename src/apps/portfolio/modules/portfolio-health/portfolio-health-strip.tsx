@@ -20,15 +20,16 @@ export default function PortfolioHealthStrip({
   return (
     <div className="portfolio-summary-band">
       {tiles.map((tile) => (
-        <KpiStatTile
-          key={tile.key}
-          label={tile.label}
-          value={tile.value}
-          support={tile.support}
-          definition={tile.definition}
-          valueTone={tile.tone}
-          onClick={tile.onClick}
-        />
+        <div key={tile.key} className="portfolio-summary-band-item">
+          <KpiStatTile
+            label={tile.label}
+            value={tile.value}
+            support={tile.support}
+            definition={tile.definition}
+            valueTone={tile.tone}
+            onClick={tile.onClick}
+          />
+        </div>
       ))}
     </div>
   );
