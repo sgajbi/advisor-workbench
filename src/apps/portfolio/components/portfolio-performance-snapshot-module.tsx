@@ -2,7 +2,7 @@
 
 import Button from "@mui/material/Button";
 
-import { AnalyticsModule, MetricRow, ModuleStatePanel } from "@/design-system";
+import { AnalyticsModule, MetricRow, WorkspaceCapabilityPanel } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import { formatDate, formatPct } from "../formatters";
@@ -71,9 +71,10 @@ export default function PortfolioPerformanceSnapshotModule({
             <MetricRow label="Period Selector" value="Uses page period context" />
           </div>
         ) : (
-          <ModuleStatePanel
-            state={capability.state === "partial" ? "partial" : "empty"}
-            title="Performance not available yet"
+          <WorkspaceCapabilityPanel
+            capability={capability}
+            partialTitle="Performance not available yet"
+            unavailableTitle="Performance not available yet"
             body={
               capability.reason ??
               "Performance analytics are not available for this portfolio context."

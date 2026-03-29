@@ -282,5 +282,7 @@ describe("PortfolioPairedAnalyticsSection", () => {
     expect(
       screen.getByText("No activity summary is available in the current reporting window.")
     ).toBeInTheDocument();
+    expect(document.querySelector(".module-state-panel-partial")).toBeTruthy();
+    expect(document.querySelector(".portfolio-empty-state")).toBeTruthy();
   });
 });

@@ -5,9 +5,8 @@ import dynamic from "next/dynamic";
 import {
   AnalyticsTable,
   DeferredWorkbenchMount,
-  EmptyStatePanel,
   ModuleSkeleton,
-  ModuleStatePanel,
+  WorkspaceCapabilityPanel,
   WorkspaceGrid,
 } from "@/design-system";
 import { isRenderableCapability } from "@/shell/workspace-capabilities";
@@ -260,8 +259,8 @@ function renderIncomeModule({
   }
 
   return (
-    <PortfolioAnalyticsStatePanel
-      capabilityState={capabilities.income.state}
+    <WorkspaceCapabilityPanel
+      capability={capabilities.income}
       partialTitle="Income is not classified yet"
       unavailableTitle="No income activity"
       body={
@@ -375,8 +374,8 @@ function renderActivityModule({
   }
 
   return (
-    <PortfolioAnalyticsStatePanel
-      capabilityState={capabilities.activity.state}
+    <WorkspaceCapabilityPanel
+      capability={capabilities.activity}
       partialTitle="Activity totals are incomplete"
       unavailableTitle="No client activity"
       body={
@@ -415,26 +414,6 @@ function PortfolioAnalyticsSummaryRow({
       ))}
     </div>
   );
-}
-
-function PortfolioAnalyticsStatePanel({
-  capabilityState,
-  partialTitle,
-  unavailableTitle,
-  body,
-  hint,
-}: {
-  capabilityState: PortfolioWorkspaceCapabilities["income"]["state"];
-  partialTitle: string;
-  unavailableTitle: string;
-  body: string;
-  hint: string;
-}) {
-  if (capabilityState === "partial") {
-    return <ModuleStatePanel state="partial" title={partialTitle} body={body} hint={hint} />;
-  }
-
-  return <EmptyStatePanel title={unavailableTitle} body={body} hint={hint} />;
 }
 
 function getActivityGrossMovement(summary: PortfolioActivitySummaryView): number {
