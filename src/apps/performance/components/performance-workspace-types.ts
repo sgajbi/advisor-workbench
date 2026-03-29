@@ -85,6 +85,19 @@ export type PerformanceAnalysisModeProps = PerformanceWorkspaceControls & {
   attributionEffectScale: number;
 };
 
+export type PerformanceAnalysisAttributionSectionProps = Pick<
+  PerformanceAnalysisModeProps,
+  | "workspace"
+  | "attributionDimension"
+  | "onRequestChange"
+  | "isUpdating"
+  | "isDetailsPending"
+  | "hasAttribution"
+  | "relativeSegmentRows"
+  | "topAttributionEffectRows"
+  | "attributionEffectScale"
+>;
+
 export type PerformanceWorkspaceViewProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;
