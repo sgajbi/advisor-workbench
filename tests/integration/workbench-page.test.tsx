@@ -141,5 +141,102 @@ describe("WorkbenchPage", () => {
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);
   });
+
+  it("falls back to the degraded route shell when the portfolio overview cannot be loaded", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("upstream offline");
+      })
+    );
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_404" }),
+        searchParams: Promise.resolve({}),
+      })
+    );
+
+    expect(screen.getByRole("heading", { name: "Advisor Workbench" })).toBeInTheDocument();
+    expect(screen.getByText(/Unable to load workbench overview for PF_404/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Proposal Workspace" })).toHaveAttribute(
+      "href",
+      "/proposals"
+    );
+    expect(screen.getByRole("link", { name: "Open Portfolio Intake" })).toHaveAttribute(
+      "href",
+      "/intake"
+    );
+  });
+
+  it("shows degraded analytics and reporting messaging when secondary services are unavailable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/workbench/PF_2001/portfolio-360")) {
+          return {
+            ok: true,
+            json: async () => ({
+              correlation_id: "corr_1",
+              contract_version: "v1",
+              as_of_date: "2026-02-24",
+              portfolio: {
+                portfolio_id: "PF_2001",
+                client_id: "CL_2001",
+                base_currency: "USD",
+                booking_center_code: "SG",
+              },
+              overview: {
+                market_value_base: 0,
+                cash_weight_pct: 0,
+                position_count: 0,
+              },
+              performance_snapshot: null,
+              rebalance_snapshot: null,
+              current_positions: [],
+              projected_positions: [],
+              projected_summary: null,
+              active_session_id: null,
+              warnings: [],
+              partial_failures: [],
+            }),
+          } as Response;
+        }
+
+        if (url.includes("/api/v1/workbench/PF_2001/analytics?")) {
+          throw new Error("analytics unavailable");
+        }
+
+        if (url.includes("/api/v1/reports/PF_2001/snapshot?asOfDate=2026-02-24")) {
+          throw new Error("reporting unavailable");
+        }
+
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_2001" }),
+        searchParams: Promise.resolve({
+          period: "QTD",
+          groupBy: "SECURITY",
+          benchmark: "BMK_QTD",
+          preset: "ANALYTICS",
+        }),
+      })
+    );
+
+    expect(screen.getByText(/Valuation is not available for this portfolio yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Backend analytics endpoint is unavailable\. Portfolio analytics panels will populate once the API is online\./i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Reporting service is unavailable\. This panel will populate when reporting aggregation is online\./i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/No current positions available in snapshot\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Create and update a sandbox session to see projected holdings\./i)).toBeInTheDocument();
+  });
 });
 
