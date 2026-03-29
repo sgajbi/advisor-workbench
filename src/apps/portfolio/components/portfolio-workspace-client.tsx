@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { StatusChip, WorkspaceHeader } from "@/design-system";
 
@@ -25,6 +25,14 @@ import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
 
 const PORTFOLIO_VIEW_MODE_STORAGE_KEY = "lotus:portfolio:view-mode";
+const summaryDetailsInflightRequests = new Map<
+  string,
+  ReturnType<typeof getPortfolioWorkspaceSummaryDetails>
+>();
+const detailedDetailsInflightRequests = new Map<
+  string,
+  ReturnType<typeof getPortfolioWorkspaceDetailedDetails>
+>();
 
 export default function PortfolioWorkspaceClient({
   portfolios,
@@ -41,6 +49,8 @@ export default function PortfolioWorkspaceClient({
   const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
   const [summaryDetailsLoading, setSummaryDetailsLoading] = useState<boolean>(Boolean(selectedPortfolioId));
   const [detailedDetailsLoaded, setDetailedDetailsLoaded] = useState(false);
+  const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
+  const detailedRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
 
   useEffect(() => {
     const storedViewMode = window.localStorage.getItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY);
@@ -59,6 +69,8 @@ export default function PortfolioWorkspaceClient({
     setWorkspaceState(initialWorkspace);
     setSummaryDetailsLoading(Boolean(initialWorkspace && selectedPortfolioId));
     setDetailedDetailsLoaded(false);
+    summaryRequestRef.current = null;
+    detailedRequestRef.current = null;
   }, [initialWorkspace, selectedPortfolioId]);
 
   useEffect(() => {
@@ -70,8 +82,14 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
+      const requestKey = `${selectedPortfolioId}:${initialWorkspace.as_of_date}`;
+      if (summaryRequestRef.current?.key === requestKey) {
+        return;
+      }
+
+      summaryRequestRef.current = { key: requestKey, status: "loading" };
       setSummaryDetailsLoading(true);
-      const details = await getPortfolioWorkspaceSummaryDetails(selectedPortfolioId);
+      const details = await getPortfolioWorkspaceSummaryDetailsOnce(requestKey, selectedPortfolioId);
       if (cancelled) {
         return;
       }
@@ -81,6 +99,7 @@ export default function PortfolioWorkspaceClient({
           current ? mergePortfolioWorkspace(current, details) : current
         );
       }
+      summaryRequestRef.current = { key: requestKey, status: "loaded" };
       setSummaryDetailsLoading(false);
     }
 
@@ -104,7 +123,13 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      const details = await getPortfolioWorkspaceDetailedDetails(selectedPortfolioId);
+      const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}`;
+      if (detailedRequestRef.current?.key === requestKey) {
+        return;
+      }
+
+      detailedRequestRef.current = { key: requestKey, status: "loading" };
+      const details = await getPortfolioWorkspaceDetailedDetailsOnce(requestKey, selectedPortfolioId);
       if (cancelled || !details) {
         return;
       }
@@ -112,6 +137,7 @@ export default function PortfolioWorkspaceClient({
       setWorkspaceState((current) =>
         current ? mergePortfolioWorkspace(current, details) : current
       );
+      detailedRequestRef.current = { key: requestKey, status: "loaded" };
       setDetailedDetailsLoaded(true);
     }
 
@@ -225,7 +251,10 @@ export default function PortfolioWorkspaceClient({
           selectedPortfolioId={selectedPortfolioId}
           workspace={workspace}
           context={context}
-          detailsLoading={summaryDetailsLoading}
+          detailsLoading={
+            summaryDetailsLoading ||
+            (controls.viewMode === "detailed" && !detailedDetailsLoaded)
+          }
         />
       )}
     </main>
@@ -258,4 +287,30 @@ function applyPortfolioControlPatch(
   }
 
   return next;
+}
+
+function getPortfolioWorkspaceSummaryDetailsOnce(requestKey: string, portfolioId: string) {
+  const existingRequest = summaryDetailsInflightRequests.get(requestKey);
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const request = getPortfolioWorkspaceSummaryDetails(portfolioId).finally(() => {
+    summaryDetailsInflightRequests.delete(requestKey);
+  });
+  summaryDetailsInflightRequests.set(requestKey, request);
+  return request;
+}
+
+function getPortfolioWorkspaceDetailedDetailsOnce(requestKey: string, portfolioId: string) {
+  const existingRequest = detailedDetailsInflightRequests.get(requestKey);
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const request = getPortfolioWorkspaceDetailedDetails(portfolioId).finally(() => {
+    detailedDetailsInflightRequests.delete(requestKey);
+  });
+  detailedDetailsInflightRequests.set(requestKey, request);
+  return request;
 }

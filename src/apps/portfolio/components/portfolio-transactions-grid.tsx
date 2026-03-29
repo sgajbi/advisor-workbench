@@ -30,6 +30,7 @@ type PortfolioTransactionsGridProps = {
   defaultStartDate: string;
   defaultEndDate: string;
   initialTransactions: PortfolioTransactionView[];
+  suspendInitialFetch?: boolean;
   externalFilter?: PortfolioTransactionDrilldownFilter | null;
   onClearExternalFilter?: () => void;
   onRowSelect?: (row: TransactionRow) => void;
@@ -56,6 +57,7 @@ export default function PortfolioTransactionsGrid({
   defaultStartDate,
   defaultEndDate,
   initialTransactions,
+  suspendInitialFetch = false,
   externalFilter,
   onClearExternalFilter,
   onRowSelect,
@@ -78,6 +80,12 @@ export default function PortfolioTransactionsGrid({
     let cancelled = false;
 
     async function loadTransactions() {
+      if (suspendInitialFetch && !initialTransactions.length) {
+        setLoading(true);
+        setLoadError(false);
+        return;
+      }
+
       const shouldUseInitialTransactions =
         transactionType === "ALL" &&
         startDate === defaultStartDate &&
@@ -125,6 +133,7 @@ export default function PortfolioTransactionsGrid({
     initialTransactions,
     portfolioId,
     startDate,
+    suspendInitialFetch,
     transactionType,
   ]);
 

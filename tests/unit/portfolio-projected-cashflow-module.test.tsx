@@ -81,4 +81,21 @@ describe("PortfolioProjectedCashflowModule", () => {
       expect(screen.getByText("Projected cashflow unavailable")).toBeInTheDocument();
     });
   });
+
+  it("does not fetch projected cashflow while parent detailed data is still loading", async () => {
+    render(
+      <PortfolioProjectedCashflowModule
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultExpanded={false}
+        initialCashflowOutlook={null}
+        suspendInitialFetch
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Projected Cashflow" })).toBeInTheDocument();
+    await waitFor(() => expect(getPortfolioProjectedCashflow).not.toHaveBeenCalled());
+    expect(getPortfolioProjectedCashflow).not.toHaveBeenCalled();
+  });
 });

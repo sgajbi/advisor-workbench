@@ -176,6 +176,10 @@ export default function PortfolioWorkspaceView({
   );
   const holdingsFilterCopy = holdingsDrilldown?.label ?? null;
   const visibleInsights = insights.filter((insight) => !dismissedInsightKeys.includes(insight.key));
+  const priorityReadinessIndicators = readinessIndicators.filter(
+    (indicator) => indicator.status !== "Ready"
+  );
+  const showHealthSection = isDetailedView;
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -457,27 +461,56 @@ export default function PortfolioWorkspaceView({
             />
 
             <PortfolioInsightsStrip
-              insights={visibleInsights}
-              readinessIndicators={readinessIndicators}
-              onDismissInsight={(key) =>
-                setDismissedInsightKeys((current) => [...current, key])
-              }
+              insights={[]}
+              readinessIndicators={priorityReadinessIndicators}
+              onDismissInsight={() => undefined}
             />
-
-            <nav className="portfolio-workspace-nav" aria-label="Portfolio workspace sections">
-              <a href="#portfolio-summary">1. What is this portfolio?</a>
-              <a href="#portfolio-health">2. Is it healthy, investable, reportable?</a>
-              {showChanges ? <a href="#portfolio-changes">3. What changed over time?</a> : null}
-              <a href="#portfolio-attention">4. What needs attention?</a>
-              {showDrilldown ? <a href="#portfolio-drilldown">5. Where can I drill down?</a> : null}
-            </nav>
             </section>
 
+            <section id="portfolio-attention" className="portfolio-workspace-section">
+              <div className="portfolio-section-header">
+                <h3>Critical Exceptions and Blockers</h3>
+                <p className="portfolio-section-copy">
+                  The unresolved issues that still block reporting, valuation, or operational use.
+                </p>
+              </div>
+            {workspace.partial_failures.length ? (
+              <AnalyticsModule
+                title="Data Coverage"
+                subtitle="Source-level exceptions affecting operational completeness."
+              >
+                <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
+                <div className="portfolio-guidance-list">
+                  {workspace.partial_failures.map((failure) => (
+                    <div
+                      key={`${failure.source_service}-${failure.error_code}`}
+                      className="portfolio-guidance-item"
+                    >
+                      <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
+                      <span className="portfolio-evidence-meta">{failure.error_code}</span>
+                      <p className="portfolio-evidence-copy">{failure.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </AnalyticsModule>
+            ) : (
+              <Panel>
+                <div className="portfolio-empty-state">
+                  <strong>No active exceptions require attention.</strong>
+                  <p className="muted">
+                    Coverage and reporting checks are currently clear for this portfolio.
+                  </p>
+                </div>
+              </Panel>
+            )}
+            </section>
+
+            {showHealthSection ? (
             <section id="portfolio-health" className="portfolio-workspace-section">
               <div className="portfolio-section-header">
                 <h3>Portfolio Health Snapshot</h3>
                 <p className="portfolio-section-copy">
-                  Investability, readiness, and missing data as of {formatDate(context.selectedAsOfDate)}.
+                  Supporting readiness, mandate, and coverage detail as of {formatDate(context.selectedAsOfDate)}.
                 </p>
               </div>
               <WorkspaceGrid className="portfolio-primary-grid">
@@ -547,6 +580,7 @@ export default function PortfolioWorkspaceView({
                 </AnalyticsModule>
               </WorkspaceGrid>
             </section>
+            ) : null}
 
             {showInsights ? (
             <section className="portfolio-workspace-section">
@@ -556,6 +590,13 @@ export default function PortfolioWorkspaceView({
                   Allocation, concentration, liquidity, and recent activity at a glance.
                 </p>
               </div>
+              <PortfolioInsightsStrip
+                insights={visibleInsights}
+                readinessIndicators={[]}
+                onDismissInsight={(key) =>
+                  setDismissedInsightKeys((current) => [...current, key])
+                }
+              />
               {showLiquidityModule || showPerformanceSnapshot ? (
                 <WorkspaceGrid className="portfolio-primary-grid">
                   {showLiquidityModule ? (
@@ -1049,44 +1090,6 @@ export default function PortfolioWorkspaceView({
             </section>
             ) : null}
 
-            <section id="portfolio-attention" className="portfolio-workspace-section">
-              <div className="portfolio-section-header">
-                <h3>What needs attention?</h3>
-                <p className="portfolio-section-copy">
-                  Source exceptions and readiness gaps that still need follow-up.
-                </p>
-              </div>
-            {workspace.partial_failures.length ? (
-              <AnalyticsModule
-                title="Data Coverage"
-                subtitle="Source-level exceptions affecting reporting completeness."
-              >
-                <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
-                <div className="portfolio-guidance-list">
-                  {workspace.partial_failures.map((failure) => (
-                    <div
-                      key={`${failure.source_service}-${failure.error_code}`}
-                      className="portfolio-guidance-item"
-                    >
-                      <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
-                      <span className="portfolio-evidence-meta">{failure.error_code}</span>
-                      <p className="portfolio-evidence-copy">{failure.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </AnalyticsModule>
-            ) : (
-              <Panel>
-                <div className="portfolio-empty-state">
-                  <strong>No active exceptions require attention.</strong>
-                  <p className="muted">
-                    Coverage and reporting checks are currently clear for this portfolio.
-                  </p>
-                </div>
-              </Panel>
-            )}
-            </section>
-
             {showDrilldown ? (
             <section id="portfolio-drilldown" className="portfolio-workspace-section">
               <div className="portfolio-section-header">
@@ -1182,6 +1185,7 @@ export default function PortfolioWorkspaceView({
                         defaultStartDate={context.effectivePeriodStartDate}
                         defaultEndDate={context.effectivePeriodEndDate}
                         initialTransactions={workspace.recent_transactions}
+                        suspendInitialFetch={detailsLoading}
                         externalFilter={transactionDrilldown}
                         onClearExternalFilter={clearTransactionDrilldown}
                         onRowSelect={(row) =>
@@ -1231,6 +1235,7 @@ export default function PortfolioWorkspaceView({
                         asOfDate={context.selectedAsOfDate}
                         initialCashflowOutlook={workspace.cashflow_outlook}
                         defaultExpanded={isDetailedView}
+                        suspendInitialFetch={detailsLoading}
                       />
                     </div>
                   </details>

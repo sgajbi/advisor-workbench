@@ -231,9 +231,8 @@ describe("portfolio data grids", () => {
       />
     );
 
-    const emptyState = screen.getByText("No holdings in this portfolio").closest("div");
-    expect(emptyState).not.toBeNull();
-    expect(within(emptyState as HTMLElement).getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
+    expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
   });
 
   it("shows a partial state when some holdings are unpriced", () => {
@@ -281,5 +280,26 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Transaction history unavailable")).toBeInTheDocument();
     });
+  });
+
+  it("does not fetch the default transaction ledger while parent detailed data is still loading", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialTransactions={[]}
+        suspendInitialFetch
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Transactions" })).toBeInTheDocument();
+    await waitFor(() => expect(fetchMock).not.toHaveBeenCalled());
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

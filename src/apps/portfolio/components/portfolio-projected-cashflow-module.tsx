@@ -18,12 +18,14 @@ export default function PortfolioProjectedCashflowModule({
   asOfDate,
   initialCashflowOutlook,
   defaultExpanded,
+  suspendInitialFetch = false,
 }: {
   portfolioId: string;
   baseCurrency: string;
   asOfDate: string;
   initialCashflowOutlook: PortfolioWorkspace["cashflow_outlook"];
   defaultExpanded: boolean;
+  suspendInitialFetch?: boolean;
 }) {
   const initialHorizonDays = initialCashflowOutlook?.projection_days ?? CASHFLOW_HORIZON_PRESETS[0];
   const [selectedHorizonDays, setSelectedHorizonDays] = useState(initialHorizonDays);
@@ -47,6 +49,12 @@ export default function PortfolioProjectedCashflowModule({
     let cancelled = false;
 
     async function loadProjectedCashflow() {
+      if (suspendInitialFetch && !initialCashflowOutlook) {
+        setLoading(true);
+        setLoadError(false);
+        return;
+      }
+
       const shouldUseInitialOutlook =
         Boolean(initialCashflowOutlook) && selectedHorizonDays === initialHorizonDays;
       if (shouldUseInitialOutlook) {
@@ -79,7 +87,14 @@ export default function PortfolioProjectedCashflowModule({
     return () => {
       cancelled = true;
     };
-  }, [asOfDate, initialCashflowOutlook, initialHorizonDays, portfolioId, selectedHorizonDays]);
+  }, [
+    asOfDate,
+    initialCashflowOutlook,
+    initialHorizonDays,
+    portfolioId,
+    selectedHorizonDays,
+    suspendInitialFetch,
+  ]);
 
   const subtitle = useMemo(
     () => `Next ${selectedHorizonDays} days in ${baseCurrency}`,
