@@ -2,14 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import {
+  getBottomContributionRows,
   getActiveWeightRows,
   getBottomPositionContributionRows,
   getCoverageLabel,
   getNegativePositionContributionRows,
+  getPerformanceWorkspacePresentation,
   getPrimaryContributionRow,
   getPositivePositionContributionRows,
   getRelativeSegmentRows,
   getTopAttributionEffectRows,
+  getTopContributionRows,
   getTopPositionContributionRows,
   hasBenchmarkContext,
   hasDistinctGrossPerformance,
@@ -312,5 +315,51 @@ describe("performance view model", () => {
       active_return_pct: 0.9,
     });
     expect(getTopAttributionEffectRows(workspace)[0]?.key_label).toBe("Equity");
+  });
+
+  it("builds a consolidated workspace presentation for summary and analysis modes", () => {
+    const workspace = buildWorkspace();
+    const presentation = getPerformanceWorkspacePresentation(workspace);
+
+    expect(presentation).toMatchObject({
+      hasBenchmark: true,
+      hasAttribution: true,
+      hasContribution: true,
+      hasHistory: true,
+      hasPositionRanking: true,
+      hasMoneyWeightedReturn: true,
+      suspiciousMoneyWeightedReturn: false,
+      contributorScale: 1.5,
+      attributionEffectScale: 0.4,
+    });
+    expect(presentation.primaryDriver?.key_label).toBe(getPrimaryContributionRow(workspace)?.key_label);
+    expect(presentation.positivePositionContributors).toEqual(
+      getPositivePositionContributionRows(workspace)
+    );
+    expect(presentation.negativePositionContributors).toEqual(
+      getNegativePositionContributionRows(workspace)
+    );
+    expect(presentation.topContributors).toEqual(getTopContributionRows(workspace));
+    expect(presentation.bottomContributors).toEqual(getBottomContributionRows(workspace));
+    expect(presentation.relativeSegmentRows).toEqual(getRelativeSegmentRows(workspace));
+    expect(presentation.topAttributionEffectRows).toEqual(getTopAttributionEffectRows(workspace));
+  });
+
+  it("falls back to contribution-row ranking scale when no position ranking exists", () => {
+    const workspace = buildWorkspace({
+      contribution: {
+        ...buildWorkspace().contribution!,
+        position_rows: [],
+      },
+    });
+
+    const presentation = getPerformanceWorkspacePresentation(workspace);
+
+    expect(presentation.hasPositionRanking).toBe(false);
+    expect(presentation.positivePositionContributors).toEqual([]);
+    expect(presentation.negativePositionContributors).toEqual([]);
+    expect(presentation.topContributors).toEqual(getTopContributionRows(workspace));
+    expect(presentation.bottomContributors).toEqual(getBottomContributionRows(workspace));
+    expect(presentation.contributorScale).toBe(3.5);
   });
 });

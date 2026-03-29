@@ -248,3 +248,79 @@ export function getCoverageLabel(workspace: WorkbenchPerformanceWorkspace): stri
   }
   return "Low coverage";
 }
+
+export type PerformanceWorkspacePresentation = {
+  hasBenchmark: boolean;
+  hasAttribution: boolean;
+  hasContribution: boolean;
+  hasHistory: boolean;
+  primaryDriver: ContributionRowView | null;
+  hasPositionRanking: boolean;
+  hasMoneyWeightedReturn: boolean;
+  suspiciousMoneyWeightedReturn: boolean;
+  positivePositionContributors: ContributionPositionView[];
+  negativePositionContributors: ContributionPositionView[];
+  topContributors: ContributionRowView[];
+  bottomContributors: ContributionRowView[];
+  relativeSegmentRows: Array<
+    AttributionRowView & {
+      active_weight_pct: number;
+      active_return_pct: number;
+    }
+  >;
+  topAttributionEffectRows: AttributionRowView[];
+  contributorScale: number;
+  attributionEffectScale: number;
+};
+
+export function getPerformanceWorkspacePresentation(
+  workspace: WorkbenchPerformanceWorkspace
+): PerformanceWorkspacePresentation {
+  const hasBenchmark = hasBenchmarkContext(workspace);
+  const hasAttribution = hasUsableAttribution(workspace);
+  const hasContribution = hasUsableContribution(workspace);
+  const hasHistory = hasMeaningfulHistory(workspace.net_chart);
+  const primaryDriver = getPrimaryContributionRow(workspace);
+  const hasPositionRanking = hasPositionContributionRanking(workspace);
+  const hasMoneyWeightedReturn = Boolean(
+    workspace.money_weighted_return?.money_weighted_return_pct !== null &&
+      workspace.money_weighted_return?.money_weighted_return_pct !== undefined
+  );
+  const suspiciousMoneyWeightedReturn = isMoneyWeightedReturnSuspicious(workspace);
+  const positivePositionContributors = getPositivePositionContributionRows(workspace);
+  const negativePositionContributors = getNegativePositionContributionRows(workspace);
+  const topContributors = getTopContributionRows(workspace);
+  const bottomContributors = getBottomContributionRows(workspace);
+  const relativeSegmentRows = getRelativeSegmentRows(workspace);
+  const topAttributionEffectRows = getTopAttributionEffectRows(workspace);
+  const contributorRows = hasPositionRanking
+    ? [...positivePositionContributors, ...negativePositionContributors]
+    : [...topContributors, ...bottomContributors];
+  const contributorScale = Math.max(
+    0.01,
+    ...contributorRows.map((row) => Math.abs(row.contribution_pct))
+  );
+  const attributionEffectScale = Math.max(
+    0.01,
+    ...topAttributionEffectRows.map((row) => Math.abs(row.total_effect_pct))
+  );
+
+  return {
+    hasBenchmark,
+    hasAttribution,
+    hasContribution,
+    hasHistory,
+    primaryDriver,
+    hasPositionRanking,
+    hasMoneyWeightedReturn,
+    suspiciousMoneyWeightedReturn,
+    positivePositionContributors,
+    negativePositionContributors,
+    topContributors,
+    bottomContributors,
+    relativeSegmentRows,
+    topAttributionEffectRows,
+    contributorScale,
+    attributionEffectScale,
+  };
+}

@@ -4,19 +4,7 @@ import { Panel, WorkspaceLayout, WorkspaceMain } from "@/design-system";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import {
-  getBottomContributionRows,
-  getNegativePositionContributionRows,
-  getPositivePositionContributionRows,
-  getPrimaryContributionRow,
-  getRelativeSegmentRows,
-  getTopAttributionEffectRows,
-  getTopContributionRows,
-  hasBenchmarkContext,
-  hasMeaningfulHistory,
-  hasPositionContributionRanking,
-  hasUsableAttribution,
-  hasUsableContribution,
-  isMoneyWeightedReturnSuspicious,
+  getPerformanceWorkspacePresentation,
 } from "../view-model";
 import PerformanceAnalysisMode from "./performance-analysis-mode";
 import PerformanceEvidenceMode from "./performance-evidence-mode";
@@ -66,48 +54,13 @@ export default function PerformanceWorkspaceView({
 }) {
   const [mode, setMode] = useState<PerformanceWorkspaceMode>("summary");
 
-  const hasBenchmark = workspace ? hasBenchmarkContext(workspace) : false;
-  const hasAttribution = workspace ? hasUsableAttribution(workspace) : false;
-  const hasContribution = workspace ? hasUsableContribution(workspace) : false;
-  const hasHistory = workspace ? hasMeaningfulHistory(workspace.net_chart) : false;
-  const primaryDriver = workspace ? getPrimaryContributionRow(workspace) : null;
-  const hasPositionRanking = workspace ? hasPositionContributionRanking(workspace) : false;
-  const hasMoneyWeightedReturn = Boolean(
-    workspace?.money_weighted_return?.money_weighted_return_pct !== null &&
-      workspace?.money_weighted_return?.money_weighted_return_pct !== undefined
-  );
-  const suspiciousMoneyWeightedReturn = workspace
-    ? isMoneyWeightedReturnSuspicious(workspace)
-    : false;
-  const positivePositionContributors = workspace
-    ? getPositivePositionContributionRows(workspace)
-    : [];
-  const negativePositionContributors = workspace
-    ? getNegativePositionContributionRows(workspace)
-    : [];
-  const topContributors = workspace ? getTopContributionRows(workspace) : [];
-  const bottomContributors = workspace ? getBottomContributionRows(workspace) : [];
-  const relativeSegmentRows = workspace ? getRelativeSegmentRows(workspace) : [];
-  const topAttributionEffectRows = workspace ? getTopAttributionEffectRows(workspace) : [];
-  const contributorScale = Math.max(
-    0.01,
-    ...(hasPositionRanking ? positivePositionContributors : topContributors).map((row) =>
-      Math.abs(row.contribution_pct)
-    ),
-    ...(hasPositionRanking ? negativePositionContributors : bottomContributors).map((row) =>
-      Math.abs(row.contribution_pct)
-    )
-  );
+  const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
     : undefined;
   const selectedPerformance =
     workspace && detailBasis === "GROSS" ? workspace.gross_performance : workspace?.net_performance;
-  const attributionEffectScale = Math.max(
-    0.01,
-    ...topAttributionEffectRows.map((row) => Math.abs(row.total_effect_pct))
-  );
 
   const modePanel = !workspace ? null : mode === "summary" ? (
     <PerformanceSummaryMode
@@ -121,19 +74,19 @@ export default function PerformanceWorkspaceView({
       onRequestChange={onRequestChange}
       isUpdating={isUpdating}
       isDetailsPending={isDetailsPending}
-      hasBenchmark={hasBenchmark}
-      hasHistory={hasHistory}
+      hasBenchmark={presentation?.hasBenchmark ?? false}
+      hasHistory={presentation?.hasHistory ?? false}
       selectedBenchmarkCode={selectedBenchmarkCode}
       selectedBenchmarkLabel={selectedBenchmarkLabel}
       selectedPerformance={selectedPerformance}
-      primaryDriver={primaryDriver}
-      hasMoneyWeightedReturn={hasMoneyWeightedReturn}
-      suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
-      hasContribution={hasContribution}
-      hasPositionRanking={hasPositionRanking}
-      contributorScale={contributorScale}
-      positivePositionContributors={positivePositionContributors}
-      negativePositionContributors={negativePositionContributors}
+      primaryDriver={presentation?.primaryDriver ?? null}
+      hasMoneyWeightedReturn={presentation?.hasMoneyWeightedReturn ?? false}
+      suspiciousMoneyWeightedReturn={presentation?.suspiciousMoneyWeightedReturn ?? false}
+      hasContribution={presentation?.hasContribution ?? false}
+      hasPositionRanking={presentation?.hasPositionRanking ?? false}
+      contributorScale={presentation?.contributorScale ?? 0.01}
+      positivePositionContributors={presentation?.positivePositionContributors ?? []}
+      negativePositionContributors={presentation?.negativePositionContributors ?? []}
     />
   ) : mode === "analysis" ? (
     <PerformanceAnalysisMode
@@ -147,11 +100,11 @@ export default function PerformanceWorkspaceView({
       onRequestChange={onRequestChange}
       isUpdating={isUpdating}
       isDetailsPending={isDetailsPending}
-      hasAttribution={hasAttribution}
-      hasContribution={hasContribution}
-      relativeSegmentRows={relativeSegmentRows}
-      topAttributionEffectRows={topAttributionEffectRows}
-      attributionEffectScale={attributionEffectScale}
+      hasAttribution={presentation?.hasAttribution ?? false}
+      hasContribution={presentation?.hasContribution ?? false}
+      relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
+      topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
+      attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
     />
   ) : (
     <PerformanceEvidenceMode />
