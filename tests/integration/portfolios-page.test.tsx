@@ -93,11 +93,11 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("heading", { name: /^Transactions$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Projected Cashflow/i })).not.toBeInTheDocument();
 
-    expect(screen.getByText("Window net")).toBeInTheDocument();
-    expect(screen.getByText("Window amount")).toBeInTheDocument();
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
     expect(screen.getByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
@@ -177,6 +177,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByRole("button", { name: /Expand/i }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Dividend").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Inflows").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
+    expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
     expect(screen.getAllByText("25 Feb 2026").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/booked events in 30D/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();

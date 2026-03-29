@@ -942,57 +942,59 @@ export default function PortfolioWorkspaceView({
                   >
                     {workspace.income_summary ? (
                       <>
-                    <PortfolioIncomePanel summary={workspace.income_summary} />
-                    <AnalyticsTable
-                      ariaLabel="Income summary"
-                      columns={[
-                        { key: "category", label: "Income Type" },
-                        { key: "windowNet", label: "Window Net", align: "right" },
-                        { key: "ytdNet", label: "YTD Net", align: "right" },
-                        { key: "windowGross", label: "Window Gross", align: "right" },
-                        { key: "txns", label: "Window Txns", align: "right" },
-                      ]}
-                      rows={[
-                        {
-                          key: "total",
-                          cells: [
-                            "Total",
-                            formatCurrency(
-                              workspace.income_summary.totals_requested_window.net.reporting_currency_amount,
-                              incomeDisplayCurrency
-                            ),
-                            formatCurrency(
-                              workspace.income_summary.totals_year_to_date.net.reporting_currency_amount,
-                              incomeDisplayCurrency
-                            ),
-                            formatCurrency(
-                              workspace.income_summary.totals_requested_window.gross.reporting_currency_amount,
-                              incomeDisplayCurrency
-                            ),
-                            workspace.income_summary.totals_requested_window.net.transaction_count,
-                          ],
-                        },
-                        ...workspace.income_summary.income_types.map((item) => ({
-                          key: item.income_type,
-                          cells: [
-                            formatIncomeTypeLabel(item.income_type),
-                            formatCurrency(
-                              item.requested_window.net.reporting_currency_amount,
-                              incomeDisplayCurrency
-                            ),
-                            formatCurrency(
-                              item.year_to_date.net.reporting_currency_amount,
-                              incomeDisplayCurrency
-                            ),
-                            formatCurrency(
-                              item.requested_window.gross.reporting_currency_amount,
-                              incomeDisplayCurrency
-                            ),
-                            item.requested_window.net.transaction_count,
-                          ],
-                        })),
-                      ]}
-                    />
+                        <PortfolioIncomePanel summary={workspace.income_summary} />
+                        {isDetailedView ? (
+                          <AnalyticsTable
+                            ariaLabel="Income summary"
+                            columns={[
+                              { key: "category", label: "Income Type" },
+                              { key: "windowNet", label: "Window Net", align: "right" },
+                              { key: "ytdNet", label: "YTD Net", align: "right" },
+                              { key: "windowGross", label: "Window Gross", align: "right" },
+                              { key: "txns", label: "Window Txns", align: "right" },
+                            ]}
+                            rows={[
+                              {
+                                key: "total",
+                                cells: [
+                                  "Total",
+                                  formatCurrency(
+                                    workspace.income_summary.totals_requested_window.net.reporting_currency_amount,
+                                    incomeDisplayCurrency
+                                  ),
+                                  formatCurrency(
+                                    workspace.income_summary.totals_year_to_date.net.reporting_currency_amount,
+                                    incomeDisplayCurrency
+                                  ),
+                                  formatCurrency(
+                                    workspace.income_summary.totals_requested_window.gross.reporting_currency_amount,
+                                    incomeDisplayCurrency
+                                  ),
+                                  workspace.income_summary.totals_requested_window.net.transaction_count,
+                                ],
+                              },
+                              ...workspace.income_summary.income_types.map((item) => ({
+                                key: item.income_type,
+                                cells: [
+                                  formatIncomeTypeLabel(item.income_type),
+                                  formatCurrency(
+                                    item.requested_window.net.reporting_currency_amount,
+                                    incomeDisplayCurrency
+                                  ),
+                                  formatCurrency(
+                                    item.year_to_date.net.reporting_currency_amount,
+                                    incomeDisplayCurrency
+                                  ),
+                                  formatCurrency(
+                                    item.requested_window.gross.reporting_currency_amount,
+                                    incomeDisplayCurrency
+                                  ),
+                                  item.requested_window.net.transaction_count,
+                                ],
+                              })),
+                            ]}
+                          />
+                        ) : null}
                       </>
                     ) : (
                       <ModuleStatePanel
@@ -1018,52 +1020,54 @@ export default function PortfolioWorkspaceView({
                   >
                     {workspace.activity_summary ? (
                       <>
-                    <PortfolioActivityPanel
-                      summary={workspace.activity_summary}
-                      selectedBucket={
-                        transactionDrilldown?.kind === "activity"
-                          ? transactionDrilldown.bucket
-                          : null
-                      }
-                      onSelectionChange={(bucket) => {
-                        if (!bucket) {
-                          clearTransactionDrilldown();
-                          return;
-                        }
+                        <PortfolioActivityPanel
+                          summary={workspace.activity_summary}
+                          selectedBucket={
+                            transactionDrilldown?.kind === "activity"
+                              ? transactionDrilldown.bucket
+                              : null
+                          }
+                          onSelectionChange={(bucket) => {
+                            if (!bucket) {
+                              clearTransactionDrilldown();
+                              return;
+                            }
 
-                        openTransactionDrilldown({
-                          kind: "activity",
-                          bucket,
-                          label: buildActivityDrilldownLabel(bucket),
-                        });
-                      }}
-                    />
-                    <AnalyticsTable
-                      ariaLabel="Activity summary"
-                      columns={[
-                        { key: "bucket", label: "Bucket" },
-                        { key: "windowAmount", label: "Window Amount", align: "right" },
-                        { key: "ytdAmount", label: "YTD Amount", align: "right" },
-                        { key: "windowTxns", label: "Window Txns", align: "right" },
-                        { key: "ytdTxns", label: "YTD Txns", align: "right" },
-                      ]}
-                      rows={workspace.activity_summary.buckets.map((bucket) => ({
-                        key: bucket.bucket,
-                        cells: [
-                          formatActivityBucketLabel(bucket.bucket),
-                          formatCurrency(
-                            bucket.requested_window.reporting_currency_amount,
-                            activityDisplayCurrency
-                          ),
-                          formatCurrency(
-                            bucket.year_to_date.reporting_currency_amount,
-                            activityDisplayCurrency
-                          ),
-                          bucket.requested_window.transaction_count,
-                          bucket.year_to_date.transaction_count,
-                        ],
-                      }))}
-                    />
+                            openTransactionDrilldown({
+                              kind: "activity",
+                              bucket,
+                              label: buildActivityDrilldownLabel(bucket),
+                            });
+                          }}
+                        />
+                        {isDetailedView ? (
+                          <AnalyticsTable
+                            ariaLabel="Activity summary"
+                            columns={[
+                              { key: "bucket", label: "Bucket" },
+                              { key: "windowAmount", label: "Window Amount", align: "right" },
+                              { key: "ytdAmount", label: "YTD Amount", align: "right" },
+                              { key: "windowTxns", label: "Window Txns", align: "right" },
+                              { key: "ytdTxns", label: "YTD Txns", align: "right" },
+                            ]}
+                            rows={workspace.activity_summary.buckets.map((bucket) => ({
+                              key: bucket.bucket,
+                              cells: [
+                                formatActivityBucketLabel(bucket.bucket),
+                                formatCurrency(
+                                  bucket.requested_window.reporting_currency_amount,
+                                  activityDisplayCurrency
+                                ),
+                                formatCurrency(
+                                  bucket.year_to_date.reporting_currency_amount,
+                                  activityDisplayCurrency
+                                ),
+                                bucket.requested_window.transaction_count,
+                                bucket.year_to_date.transaction_count,
+                              ],
+                            }))}
+                          />
+                        ) : null}
                       </>
                     ) : (
                       <ModuleStatePanel
