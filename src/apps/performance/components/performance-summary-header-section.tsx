@@ -4,6 +4,7 @@ import { AnalyticsSectionHeader, Panel, StatusChip } from "@/design-system";
 import { isSupportedCapability } from "@/shell/workspace-capabilities";
 
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
+import PerformanceSummaryMetricCard from "./performance-summary-metric-card";
 import type { PerformanceSummaryHeaderSectionProps } from "./performance-workspace-types";
 
 type SummaryMetricCard = {
@@ -184,22 +185,26 @@ export default function PerformanceSummaryHeaderSection({
             </div>
           </Box>
 
-          <div className="performance-summary-status-card performance-summary-status-card-secondary workbench-summary-metric-card">
-            <span className="performance-summary-kpi-label workbench-summary-metric-label">Benchmark</span>
-            <strong className="performance-summary-kpi-value workbench-summary-metric-value">{benchmarkValue}</strong>
-            <span className="performance-summary-kpi-support workbench-summary-metric-support">{benchmarkHint}</span>
-          </div>
+          <PerformanceSummaryMetricCard
+            label="Benchmark"
+            value={benchmarkValue}
+            support={benchmarkHint}
+            unavailable={!hasBenchmark}
+            className="performance-summary-status-card performance-summary-status-card-secondary"
+          />
         </div>
 
         <div className="performance-summary-kpi-grid" aria-label="Performance summary metrics">
-          {renderMetricCard(primaryReturnCard)}
-          {renderMetricCard(benchmarkCard)}
-          {renderMetricCard(activeCard)}
-          {renderMetricCard(moneyWeightedCard)}
+          <PerformanceSummaryMetricCard {...primaryReturnCard} />
+          <PerformanceSummaryMetricCard {...benchmarkCard} />
+          <PerformanceSummaryMetricCard {...activeCard} />
+          <PerformanceSummaryMetricCard {...moneyWeightedCard} />
         </div>
 
         <div className="performance-summary-context-grid">
-          {contextCards.map((card) => renderMetricCard(card))}
+          {contextCards.map((card) => (
+            <PerformanceSummaryMetricCard key={card.label} {...card} />
+          ))}
         </div>
       </Stack>
     </Panel>
@@ -208,26 +213,4 @@ export default function PerformanceSummaryHeaderSection({
 
 function buildMetricCard(card: SummaryMetricCard): SummaryMetricCard {
   return card;
-}
-
-function renderMetricCard(card: SummaryMetricCard) {
-  return (
-    <div
-      key={card.label}
-      className={[
-        "performance-summary-kpi-card",
-        "workbench-summary-metric-card",
-        card.emphasize ? "performance-summary-kpi-card-primary" : "",
-        card.unavailable ? "performance-summary-kpi-card-unavailable" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <span className="performance-summary-kpi-label workbench-summary-metric-label">{card.label}</span>
-      <strong className="performance-summary-kpi-value workbench-summary-metric-value">{card.value}</strong>
-      {card.support ? (
-        <span className="performance-summary-kpi-support workbench-summary-metric-support">{card.support}</span>
-      ) : null}
-    </div>
-  );
 }

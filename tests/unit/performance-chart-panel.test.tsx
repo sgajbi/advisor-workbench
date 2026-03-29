@@ -169,7 +169,46 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
     expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Published return observations are not available for the selected horizon."
+      )
+    ).toBeInTheDocument();
     expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+  });
+
+  it("renders a partial capability notice when return observations are incomplete", () => {
+    render(
+      <PerformanceChartPanel
+        title="Net Return Path"
+        points={[]}
+        summary={{
+          portfolio_return_pct: null,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        }}
+        portfolioId="DEMO_ADV_USD_001"
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+        capabilities={{
+          ...supportedCapabilities,
+          returnPath: {
+            state: "partial",
+            reason: "Return observations are only partially published for the selected horizon.",
+          },
+        }}
+        onRequestChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Return series is partial")).toBeInTheDocument();
+    expect(screen.getByText("Return observations are only partially published for the selected horizon.")).toBeInTheDocument();
+    expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
   });
 });

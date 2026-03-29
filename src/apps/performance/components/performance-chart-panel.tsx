@@ -23,6 +23,7 @@ import type {
 
 import { formatDate, formatPct } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
+import PerformanceCapabilityNotice from "./performance-capability-notice";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -622,15 +623,16 @@ export default function PerformanceChartPanel({
         </div>
       ) : (
         <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
-          <strong>Return series unavailable</strong>
-          <p>
-            {capabilities.returnPath.reason ??
-              "The selected period does not currently have published performance observations for this mandate."}
-          </p>
-          <span>
-            Adjust the horizon or explicit dates once performance history is available for the
-            requested window.
-          </span>
+          <PerformanceCapabilityNotice
+            capability={capabilities.returnPath}
+            partialTitle="Return series is partial"
+            unavailableTitle="Return series unavailable"
+            body={
+              capabilities.returnPath.reason ??
+              "The selected period does not currently have published performance observations for this mandate."
+            }
+            hint="Adjust the horizon or explicit dates once performance history is available for the requested window."
+          />
         </div>
       )}
       </Stack>

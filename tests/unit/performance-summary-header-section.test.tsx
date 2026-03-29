@@ -211,5 +211,8 @@ describe("PerformanceSummaryHeaderSection", () => {
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(4);
     expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-summary-status-card.performance-summary-kpi-card-unavailable")
+    ).toBeTruthy();
   });
 });
