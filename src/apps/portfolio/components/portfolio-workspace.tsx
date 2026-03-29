@@ -467,15 +467,17 @@ export default function PortfolioWorkspaceView({
 
             <section id="portfolio-attention" className="portfolio-workspace-section">
               <div className="portfolio-section-header">
-                <h3>Critical Exceptions and Blockers</h3>
+                <h3>{workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}</h3>
                 <p className="portfolio-section-copy">
-                  The unresolved issues that still block reporting, valuation, or operational use.
+                  {workspace.partial_failures.length
+                    ? "Unresolved issues affecting reporting, valuation, or operations."
+                    : "Current reporting and operational exception status."}
                 </p>
               </div>
             {workspace.partial_failures.length ? (
               <AnalyticsModule
                 title="Data Coverage"
-                subtitle="Source-level exceptions affecting operational completeness."
+                subtitle="Source exceptions affecting operational completeness."
               >
                 <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
                 <div className="portfolio-guidance-list">
@@ -494,9 +496,9 @@ export default function PortfolioWorkspaceView({
             ) : (
               <Panel>
                 <div className="portfolio-empty-state">
-                  <strong>No active exceptions require attention.</strong>
+                  <strong>No active exceptions</strong>
                   <p className="muted">
-                    Coverage and reporting checks are currently clear for this portfolio.
+                    Reporting and operational checks are currently clear.
                   </p>
                 </div>
               </Panel>
@@ -508,7 +510,7 @@ export default function PortfolioWorkspaceView({
               <div className="portfolio-section-header">
                 <h3>Portfolio Health Snapshot</h3>
                 <p className="portfolio-section-copy">
-                  Supporting readiness, mandate, and coverage detail as of {formatDate(context.selectedAsOfDate)}.
+                  Readiness and coverage as of {formatDate(context.selectedAsOfDate)}.
                 </p>
               </div>
               <WorkspaceGrid className="portfolio-primary-grid">
@@ -585,7 +587,7 @@ export default function PortfolioWorkspaceView({
               <div className="portfolio-section-header">
                 <h3>Portfolio Insights</h3>
                 <p className="portfolio-section-copy">
-                  Allocation, concentration, liquidity, and recent activity at a glance.
+                  Allocation, concentration, liquidity, and recent activity.
                 </p>
               </div>
               <PortfolioInsightsStrip
@@ -786,7 +788,7 @@ export default function PortfolioWorkspaceView({
                   {showIncomeModule ? (
                     <PortfolioCollapsibleModule
                       title="Income"
-                      subtitle={`Key income totals in ${incomeDisplayCurrency} for ${formatPeriodContext(context)}.`}
+                      subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
                       expanded={getSectionExpanded("income")}
                       onToggle={() => toggleSection("income")}
                     >
@@ -843,7 +845,7 @@ export default function PortfolioWorkspaceView({
                   {showActivityModule ? (
                     <PortfolioCollapsibleModule
                       title="Activity"
-                      subtitle={`Key booked activity in ${activityDisplayCurrency} for ${formatPeriodContext(context)}.`}
+                      subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
                       expanded={getSectionExpanded("activity")}
                       onToggle={() => toggleSection("activity")}
                     >
@@ -923,7 +925,7 @@ export default function PortfolioWorkspaceView({
               <div className="portfolio-section-header">
                 <h3>What changed over time?</h3>
                 <p className="portfolio-section-copy">
-                  Income, activity, and movement patterns for {formatPeriodContext(context)}.
+                  Income and activity for {formatPeriodContext(context)}.
                 </p>
               </div>
             {showIncomeModule || showActivityModule ? (
@@ -933,8 +935,8 @@ export default function PortfolioWorkspaceView({
                     title="Income"
                     subtitle={
                       workspace.income_summary
-                        ? `Shown in ${incomeDisplayCurrency} for ${formatPeriodContext(context)}. Source window ${formatDate(workspace.income_summary.window_start_date)} to ${formatDate(workspace.income_summary.window_end_date)}.`
-                        : `Shown in ${incomeDisplayCurrency} for ${formatPeriodContext(context)}.`
+                        ? `${incomeDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.income_summary.window_start_date)} to ${formatDate(workspace.income_summary.window_end_date)}.`
+                        : `${incomeDisplayCurrency} for ${formatPeriodContext(context)}.`
                     }
                     expanded={getSectionExpanded("income")}
                     onToggle={() => toggleSection("income")}
@@ -1011,8 +1013,8 @@ export default function PortfolioWorkspaceView({
                     title="Activity"
                     subtitle={
                       workspace.activity_summary
-                        ? `Shown in ${activityDisplayCurrency} for ${formatPeriodContext(context)}. Source window ${formatDate(workspace.activity_summary.window_start_date)} to ${formatDate(workspace.activity_summary.window_end_date)}.`
-                        : `Shown in ${activityDisplayCurrency} for ${formatPeriodContext(context)}.`
+                        ? `${activityDisplayCurrency} for ${formatPeriodContext(context)}. Source ${formatDate(workspace.activity_summary.window_start_date)} to ${formatDate(workspace.activity_summary.window_end_date)}.`
+                        : `${activityDisplayCurrency} for ${formatPeriodContext(context)}.`
                     }
                     expanded={getSectionExpanded("activity")}
                     onToggle={() => toggleSection("activity")}
@@ -1098,7 +1100,7 @@ export default function PortfolioWorkspaceView({
               <div className="portfolio-section-header">
                 <h3>Where can I drill down?</h3>
                 <p className="portfolio-section-copy">
-                  Open holdings, ledger history, and projected liquidity only when needed.
+                  Holdings, transactions, and projected liquidity on demand.
                 </p>
               </div>
               <div className="portfolio-disclosure-stack">
