@@ -22,6 +22,7 @@ import {
 } from "@/design-system";
 
 import {
+  formatBookingCenter,
   formatBooleanFlag,
   formatCount,
   formatCurrency,
@@ -346,14 +347,11 @@ export default function PortfolioWorkspaceView({
               <div className="portfolio-hero-content">
                 <SectionLabel>Portfolio Book</SectionLabel>
                 <h2>{workspace.portfolio.display_name}</h2>
-                <p className="portfolio-section-copy">
-                  Book identity and status for rapid front-office orientation.
-                </p>
                 <div className="portfolio-hero-meta">
                   <span>{workspace.portfolio.base_currency}</span>
                   {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
                   {workspace.portfolio.booking_center_code ? (
-                    <span>{workspace.portfolio.booking_center_code}</span>
+                    <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
                   ) : null}
                   {workspace.profile.status ? (
                     <StatusChip className="portfolio-hero-status">

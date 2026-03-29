@@ -48,7 +48,15 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: /^Portfolio$/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Global Balanced/i })).toBeInTheDocument();
+    const hero = screen.getByRole("heading", { name: /Global Balanced/i }).closest(".portfolio-hero");
+    expect(hero).toBeTruthy();
+    expect(within(hero as HTMLElement).getByText("USD")).toBeInTheDocument();
+    expect(within(hero as HTMLElement).getByText("CIF_1001")).toBeInTheDocument();
+    expect(within(hero as HTMLElement).getByText("Singapore")).toBeInTheDocument();
+    expect(within(hero as HTMLElement).getByText("Active")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Book identity and status for rapid front-office orientation.")
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("1,250,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("1,145,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("105,000 USD").length).toBeGreaterThanOrEqual(1);
