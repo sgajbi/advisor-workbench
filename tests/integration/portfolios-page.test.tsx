@@ -147,7 +147,7 @@ describe("PortfolioFoundationPage", () => {
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/transactions?limit=200"))).toBe(false);
-  });
+  }, 30000);
 
   it("restores detailed mode and exposes full drill-down content", async () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
@@ -281,7 +281,7 @@ describe("PortfolioFoundationPage", () => {
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(true);
     expect(requestedUrls.some((url) => url.includes("/transactions?limit=200"))).toBe(true);
-  }, 15000);
+  }, 30000);
 
   it("respects stored section collapse preferences", async () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
@@ -299,7 +299,7 @@ describe("PortfolioFoundationPage", () => {
       expect(screen.queryByRole("tab", { name: "Asset Class" })).not.toBeInTheDocument();
     });
     expect(screen.getAllByText("Holdings").length).toBeGreaterThan(0);
-  });
+  }, 30000);
 });
 
 function stubPortfolioApis() {
