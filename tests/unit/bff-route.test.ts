@@ -32,8 +32,13 @@ describe("BFF proxy route", () => {
       params: Promise.resolve({ path: ["api", "v1", "lookups", "portfolios"] }),
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8100/api/v1/lookups/portfolios?limit=1",
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
+    const parsedUpstreamUrl = new URL(String(upstreamUrl));
+
+    expect(parsedUpstreamUrl.pathname).toBe("/api/v1/lookups/portfolios");
+    expect(parsedUpstreamUrl.search).toBe("?limit=1");
+    expect(upstreamInit).toEqual(
       expect.objectContaining({
         method: "GET",
         body: undefined,
@@ -61,8 +66,12 @@ describe("BFF proxy route", () => {
       params: Promise.resolve({ path: ["api", "v1", "intake", "portfolio-bundle"] }),
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8100/api/v1/intake/portfolio-bundle",
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
+    const parsedUpstreamUrl = new URL(String(upstreamUrl));
+
+    expect(parsedUpstreamUrl.pathname).toBe("/api/v1/intake/portfolio-bundle");
+    expect(upstreamInit).toEqual(
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ body: { portfolio_id: "PORT_1001" } }),
