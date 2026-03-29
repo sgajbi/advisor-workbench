@@ -1,12 +1,16 @@
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
-import { Panel, WorkbenchPageHeader, WorkstationShell } from "@/design-system";
+import {
+  DeferredModulePlaceholder,
+  Panel,
+  WorkbenchPageHeader,
+  WorkstationShell,
+} from "@/design-system";
 
 import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
-import PerformanceAnalysisMode from "./performance-analysis-mode";
-import PerformanceEvidenceMode from "./performance-evidence-mode";
 import PerformanceWorkspaceModeSwitch, {
   type PerformanceWorkspaceMode,
 } from "./performance-workspace-mode-switch";
@@ -16,6 +20,29 @@ import type {
   PerformanceWorkspaceViewProps,
 } from "./performance-workspace-types";
 import { getBenchmarkLabel } from "./performance-workspace-view-helpers";
+
+// Workbench discipline:
+// - summary header and compact KPI/status content are first paint
+// - analysis and evidence content are deferred until the user selects those modes
+const DeferredPerformanceAnalysisMode = dynamic(() => import("./performance-analysis-mode"), {
+  ssr: false,
+  loading: () => (
+    <DeferredModulePlaceholder
+      title="Loading analysis"
+      message="Attribution and contribution detail are loading on demand."
+    />
+  ),
+});
+
+const DeferredPerformanceEvidenceMode = dynamic(() => import("./performance-evidence-mode"), {
+  ssr: false,
+  loading: () => (
+    <DeferredModulePlaceholder
+      title="Loading evidence"
+      message="Evidence context is loading on demand."
+    />
+  ),
+});
 
 export default function PerformanceWorkspaceView({
   workspace,
@@ -69,7 +96,7 @@ export default function PerformanceWorkspaceView({
       negativePositionContributors={presentation?.negativePositionContributors ?? []}
     />
   ) : mode === "analysis" ? (
-    <PerformanceAnalysisMode
+    <DeferredPerformanceAnalysisMode
       workspace={workspace}
       {...controls}
       hasAttribution={presentation?.hasAttribution ?? false}
@@ -79,7 +106,7 @@ export default function PerformanceWorkspaceView({
       attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
     />
   ) : (
-    <PerformanceEvidenceMode />
+    <DeferredPerformanceEvidenceMode />
   );
 
   return (

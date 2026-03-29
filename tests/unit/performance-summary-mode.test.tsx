@@ -1,9 +1,30 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import PerformanceSummaryMode from "../../src/apps/performance/components/performance-summary-mode";
+
+vi.mock("next/dynamic", () => ({
+  default: (loader: () => Promise<unknown>) => {
+    const React = require("react");
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const [Component, setComponent] = React.useState(
+        null as React.ComponentType<Record<string, unknown>> | null
+      );
+      React.useEffect(() => {
+        loader().then((mod: unknown) => {
+          const resolved =
+            typeof mod === "function"
+              ? (mod as React.ComponentType<Record<string, unknown>>)
+              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          setComponent(() => resolved ?? null);
+        });
+      }, []);
+      return Component ? React.createElement(Component, props) : null;
+    };
+  },
+}));
 
 vi.mock("../../src/apps/performance/components/performance-chart-panel", () => ({
   default: ({ title, id }: { title: string; id?: string }) => (
@@ -113,7 +134,7 @@ function buildWorkspace(): WorkbenchPerformanceWorkspace {
 }
 
 describe("PerformanceSummaryMode", () => {
-  it("wires the summary-only modules for the selected basis and contributor inputs", () => {
+  it("wires deferred summary modules for the selected basis and contributor inputs", async () => {
     render(
       <PerformanceSummaryMode
         workspace={buildWorkspace()}
@@ -160,8 +181,16 @@ describe("PerformanceSummaryMode", () => {
     );
 
     expect(screen.getByTestId("summary-header")).toHaveTextContent("Model 60/40");
-    expect(screen.getByTestId("chart-panel")).toHaveTextContent("Gross Return Path:performance-trend");
-    expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent("PF_1001:GROSS:BMK_1");
-    expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
+    expect(screen.queryByTestId("chart-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-panel")).toHaveTextContent(
+        "Gross Return Path:performance-trend"
+      );
+      expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent("PF_1001:GROSS:BMK_1");
+      expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
+    });
   });
 });

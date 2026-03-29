@@ -6,6 +6,7 @@ export { default as AnalyticsSectionHeader } from "./components/analytics-sectio
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
+export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as PageToolbar } from "./components/page-toolbar";
 export { default as ContextCard } from "./components/context-card";
 export { default as KpiStatTile } from "./components/kpi-stat-tile";

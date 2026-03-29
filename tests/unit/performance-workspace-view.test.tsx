@@ -1,9 +1,30 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import PerformanceWorkspaceView from "../../src/apps/performance/components/performance-workspace-view";
+
+vi.mock("next/dynamic", () => ({
+  default: (loader: () => Promise<unknown>) => {
+    const React = require("react");
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const [Component, setComponent] = React.useState(
+        null as React.ComponentType<Record<string, unknown>> | null
+      );
+      React.useEffect(() => {
+        loader().then((mod: unknown) => {
+          const resolved =
+            typeof mod === "function"
+              ? (mod as React.ComponentType<Record<string, unknown>>)
+              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          setComponent(() => resolved ?? null);
+        });
+      }, []);
+      return Component ? React.createElement(Component, props) : null;
+    };
+  },
+}));
 
 vi.mock("../../src/apps/performance/components/performance-summary-mode", () => ({
   default: () => <div>Summary Mode Panel</div>,
@@ -73,7 +94,7 @@ function buildWorkspace(): WorkbenchPerformanceWorkspace {
 }
 
 describe("PerformanceWorkspaceView", () => {
-  it("switches between summary, analysis, and evidence modes", () => {
+  it("switches between summary, analysis, and evidence modes", async () => {
     render(
       <PerformanceWorkspaceView
         workspace={buildWorkspace()}
@@ -99,16 +120,22 @@ describe("PerformanceWorkspaceView", () => {
     expect(
       document.querySelector(".workbench-page-header-actions [role='tablist']")
     ).toBeTruthy();
-    expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
+    });
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
-    expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
+    });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
-    expect(screen.getByText("Evidence Mode Panel")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Evidence Mode Panel")).toBeInTheDocument();
+    });
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
   });
 });

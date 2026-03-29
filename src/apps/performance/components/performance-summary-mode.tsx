@@ -1,12 +1,51 @@
+import dynamic from "next/dynamic";
+
 import {
+  DeferredModulePlaceholder,
   WorkspaceGrid,
 } from "@/design-system";
 
-import PerformanceChartPanel from "./performance-chart-panel";
-import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
-import PerformanceSummaryContributorsSection from "./performance-summary-contributors-section";
 import PerformanceSummaryHeaderSection from "./performance-summary-header-section";
 import type { PerformanceSummaryModeProps } from "./performance-workspace-types";
+
+// Workbench discipline:
+// first paint keeps the header and compact summary region light.
+// Heavy charting and secondary analytics modules load immediately after first paint.
+const DeferredPerformanceChartPanel = dynamic(() => import("./performance-chart-panel"), {
+  ssr: false,
+  loading: () => (
+    <DeferredModulePlaceholder
+      title="Loading return path"
+      message="Return path is loading after first paint."
+    />
+  ),
+});
+
+const DeferredPerformanceMultiHorizonPanel = dynamic(
+  () => import("./performance-multi-horizon-panel"),
+  {
+    ssr: false,
+    loading: () => (
+      <DeferredModulePlaceholder
+        title="Loading horizons"
+        message="Horizon comparisons are loading after first paint."
+      />
+    ),
+  }
+);
+
+const DeferredPerformanceSummaryContributorsSection = dynamic(
+  () => import("./performance-summary-contributors-section"),
+  {
+    ssr: false,
+    loading: () => (
+      <DeferredModulePlaceholder
+        title="Loading contributors"
+        message="Contributor ranking is loading after first paint."
+      />
+    ),
+  }
+);
 
 export default function PerformanceSummaryMode({
   workspace,
@@ -49,7 +88,7 @@ export default function PerformanceSummaryMode({
       />
 
       <WorkspaceGrid className="performance-chart-grid">
-        <PerformanceChartPanel
+        <DeferredPerformanceChartPanel
           title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
           points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
           summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
@@ -71,14 +110,14 @@ export default function PerformanceSummaryMode({
       </WorkspaceGrid>
 
       <WorkspaceGrid className="performance-detail-grid">
-        <PerformanceMultiHorizonPanel
+        <DeferredPerformanceMultiHorizonPanel
           portfolioId={workspace.portfolio.portfolio_id}
           detailBasis={detailBasis}
           benchmark={workspace.benchmark_code ?? benchmark}
           chartFrequency={chartFrequency}
           benchmarkOptions={workspace.benchmark_options ?? []}
         />
-        <PerformanceSummaryContributorsSection
+        <DeferredPerformanceSummaryContributorsSection
           workspace={workspace}
           hasContribution={hasContribution}
           hasPositionRanking={hasPositionRanking}

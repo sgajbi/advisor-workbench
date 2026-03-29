@@ -19,8 +19,10 @@ vi.mock("next/dynamic", () => ({
       );
       React.useEffect(() => {
         loader().then((mod: unknown) => {
-          const resolved = (mod as { default?: React.ComponentType<Record<string, unknown>> })
-            .default;
+          const resolved =
+            typeof mod === "function"
+              ? (mod as React.ComponentType<Record<string, unknown>>)
+              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
           setComponent(() => resolved ?? null);
         });
       }, []);
@@ -410,9 +412,11 @@ describe("PerformanceAnalyticsPage", () => {
     const mainShell = document.querySelector(".workstation-shell-main");
     expect(mainShell).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
-    expect(mainShell).toContainElement(screen.getByText("Multi-Horizon Returns"));
+    await waitFor(() => {
+      expect(mainShell).toContainElement(screen.getByText("Multi-Horizon Returns"));
+      expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
-    expect(mainShell?.querySelector(".performance-chart-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 

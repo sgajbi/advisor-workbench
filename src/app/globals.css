@@ -205,6 +205,27 @@ a:hover {
   min-width: 0;
 }
 
+.deferred-module-placeholder {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.deferred-module-placeholder strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.deferred-module-placeholder span {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
 .lotus-mark-core {
   fill: url(#lotusPetalGradient);
 }
