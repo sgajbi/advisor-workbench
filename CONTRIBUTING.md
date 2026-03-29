@@ -23,7 +23,8 @@ This repository follows a docs-with-code rule: every implementation change must 
 - Tests added/updated for the behavior change.
 - `make check` passes locally.
 - `make test-e2e` passes for UI changes that affect routed user journeys.
-- Coverage thresholds in `vitest.config.ts` remain green for the protected frontend surface.
+- Coverage thresholds in `vitest.config.ts` remain green for the real frontend application surface
+  across `src/app`, `src/apps`, `src/design-system`, `src/features`, and `src/shell`.
 - Required docs are updated in the same PR.
 - PR template checklist is fully completed.
 

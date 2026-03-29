@@ -74,9 +74,22 @@ Current enforced coverage thresholds in `vitest.config.ts`:
 - functions: `99`
 - branches: `95`
 
-The current protected coverage surface is intentionally explicit and limited to core route entrypoints,
-shell composition, and shared design-system primitives that already have meaningful tests. Future UI
-refactors are expected to expand that protected surface rather than dilute the gate.
+Coverage is enforced against the real application surface, not a hand-picked subset. The Vitest
+coverage include set spans:
+
+- `src/app/**/*.ts`
+- `src/app/**/*.tsx`
+- `src/apps/**/*.ts`
+- `src/apps/**/*.tsx`
+- `src/design-system/**/*.ts`
+- `src/design-system/**/*.tsx`
+- `src/features/**/*.ts`
+- `src/features/**/*.tsx`
+- `src/shell/**/*.ts`
+- `src/shell/**/*.tsx`
+
+Future refactors in the app shell, product routes, portfolio workspace, design system, and feature
+modules are expected to keep this broader gate green rather than narrow the protected surface.
 
 Local commands:
 
