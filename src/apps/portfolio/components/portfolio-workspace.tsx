@@ -15,10 +15,9 @@ import {
   Panel,
   SectionLabel,
   StatusChip,
+  WorkstationShell,
   WorkspaceGrid,
-  WorkspaceLayout,
-  WorkspaceMain,
-  WorkspaceSide,
+  WorkspaceHeader,
 } from "@/design-system";
 
 import {
@@ -111,6 +110,7 @@ export default function PortfolioWorkspaceView({
   workspace,
   context,
   detailsLoading,
+  toolbar,
 }: {
   portfolios: Array<{
     portfolio_id: string;
@@ -123,6 +123,7 @@ export default function PortfolioWorkspaceView({
   workspace: PortfolioWorkspace | null;
   context: PortfolioWorkspaceContext;
   detailsLoading: boolean;
+  toolbar?: ReactNode;
 }) {
   const [holdingsDrilldown, setHoldingsDrilldown] =
     useState<PortfolioHoldingsDrilldownFilter | null>(null);
@@ -326,212 +327,230 @@ export default function PortfolioWorkspaceView({
   };
 
   return (
-    <WorkspaceLayout>
-      <PortfolioRail portfolios={portfolios} selectedPortfolioId={selectedPortfolioId} />
-
-      <WorkspaceMain>
-        {!workspace ? (
-          <DegradedStatePanel
-            title="Portfolio context unavailable"
-            status="Workspace unavailable"
-            actions={[
-              { href: "/performance", label: "Performance" },
-              { href: "/recommendations", label: "Open Recommendations" },
-            ]}
-          >
-            <p className="error-text">We could not load the selected portfolio briefing.</p>
-          </DegradedStatePanel>
-        ) : (
+    <>
+      <WorkstationShell
+        className="portfolio-layout"
+        railClassName="portfolio-rail-shell"
+        mainClassName="portfolio-main"
+        sideClassName="portfolio-side"
+        rail={<PortfolioRail portfolios={portfolios} selectedPortfolioId={selectedPortfolioId} />}
+        main={
           <>
-            <PortfolioSummaryHeaderSection
-              workspace={workspace}
-              context={context}
-              activityDisplayCurrency={activityDisplayCurrency}
-              orderedWorkflowCues={orderedWorkflowCues}
-              primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
-              readinessIndicators={priorityReadinessIndicators}
-              onOpenMetricDrawer={(metric) =>
-                setDetailDrawer(buildMetricDrawer(metric, workspace, context, activityDisplayCurrency))
+            <WorkspaceHeader
+              title="Portfolio"
+              meta={
+                <>
+                  <StatusChip>{portfolios.length} portfolios</StatusChip>
+                  <StatusChip tone={portfolios.length ? "success" : "warn"}>
+                    {portfolios.length ? "Catalog live" : "Catalog unavailable"}
+                  </StatusChip>
+                </>
               }
             />
+            {toolbar}
+            {!workspace ? (
+              <DegradedStatePanel
+                title="Portfolio context unavailable"
+                status="Workspace unavailable"
+                actions={[
+                  { href: "/performance", label: "Performance" },
+                  { href: "/recommendations", label: "Open Recommendations" },
+                ]}
+              >
+                <p className="error-text">We could not load the selected portfolio briefing.</p>
+              </DegradedStatePanel>
+            ) : (
+              <>
+                <PortfolioSummaryHeaderSection
+                  workspace={workspace}
+                  context={context}
+                  activityDisplayCurrency={activityDisplayCurrency}
+                  orderedWorkflowCues={orderedWorkflowCues}
+                  primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
+                  readinessIndicators={priorityReadinessIndicators}
+                  onOpenMetricDrawer={(metric) =>
+                    setDetailDrawer(buildMetricDrawer(metric, workspace, context, activityDisplayCurrency))
+                  }
+                />
 
-            <PortfolioExceptionsSection workspace={workspace} />
+                <PortfolioExceptionsSection workspace={workspace} />
 
-            <PortfolioHealthSection
-              workspace={workspace}
-              context={context}
-              showHealthSection={showHealthSection}
-            />
+                <PortfolioHealthSection
+                  workspace={workspace}
+                  context={context}
+                  showHealthSection={showHealthSection}
+                />
 
-            <PortfolioInsightsSection
-              workspace={workspace}
-              context={context}
-              detailsLoading={detailsLoading}
-              showInsights={showInsights}
-              showLiquidityModule={showLiquidityModule}
-              showPerformanceSnapshot={showPerformanceSnapshot}
-              showAllocationModule={showAllocationModule}
-              showTopHoldingsModule={showTopHoldingsModule}
-              showIncomeModule={showIncomeModule}
-              showActivityModule={showActivityModule}
-              showChangeHighlights={showChangeHighlights}
-              incomeDisplayCurrency={incomeDisplayCurrency}
-              activityDisplayCurrency={activityDisplayCurrency}
-              visibleInsights={visibleInsights}
-              holdingsDrilldown={holdingsDrilldown}
-              filteredPositions={filteredPositions}
-              transactionDrilldown={transactionDrilldown}
-              onDismissInsight={(key) =>
-                setDismissedInsightKeys((current) => [...current, key])
-              }
-              onSelectAllocation={(selection) => {
-                setTransactionDrilldown(null);
-                setHoldingsDrilldown(
-                  selection
-                    ? {
-                        kind: "allocation",
-                        selection,
-                        label: `Filtered by ${buildAllocationDrilldownLabel(
-                          selection.dimension,
-                          selection.bucket
-                        )}`,
-                      }
-                    : null
-                );
-              }}
-              onSelectTopHolding={(securityId) => {
-                setTransactionDrilldown(null);
-                setHoldingsDrilldown(
-                  securityId
-                    ? {
-                        kind: "security",
-                        security_id: securityId,
-                        label: buildSecurityDrilldownLabel(
-                          workspace.top_positions.find((position) => position.security_id === securityId)
-                            ?.instrument_name ?? "Selected holding",
-                          "holdings"
-                        ),
-                      }
-                    : null
-                );
-              }}
-              onSelectActivityBucket={(bucket) => {
-                if (!bucket) {
-                  clearTransactionDrilldown();
-                  return;
-                }
-                openTransactionDrilldown({
-                  kind: "activity",
-                  bucket,
-                  label: buildActivityDrilldownLabel(bucket),
-                });
-              }}
-              getSectionExpanded={getSectionExpanded}
-              toggleSection={toggleSection}
-            />
+                <PortfolioInsightsSection
+                  workspace={workspace}
+                  context={context}
+                  detailsLoading={detailsLoading}
+                  showInsights={showInsights}
+                  showLiquidityModule={showLiquidityModule}
+                  showPerformanceSnapshot={showPerformanceSnapshot}
+                  showAllocationModule={showAllocationModule}
+                  showTopHoldingsModule={showTopHoldingsModule}
+                  showIncomeModule={showIncomeModule}
+                  showActivityModule={showActivityModule}
+                  showChangeHighlights={showChangeHighlights}
+                  incomeDisplayCurrency={incomeDisplayCurrency}
+                  activityDisplayCurrency={activityDisplayCurrency}
+                  visibleInsights={visibleInsights}
+                  holdingsDrilldown={holdingsDrilldown}
+                  filteredPositions={filteredPositions}
+                  transactionDrilldown={transactionDrilldown}
+                  onDismissInsight={(key) =>
+                    setDismissedInsightKeys((current) => [...current, key])
+                  }
+                  onSelectAllocation={(selection) => {
+                    setTransactionDrilldown(null);
+                    setHoldingsDrilldown(
+                      selection
+                        ? {
+                            kind: "allocation",
+                            selection,
+                            label: `Filtered by ${buildAllocationDrilldownLabel(
+                              selection.dimension,
+                              selection.bucket
+                            )}`,
+                          }
+                        : null
+                    );
+                  }}
+                  onSelectTopHolding={(securityId) => {
+                    setTransactionDrilldown(null);
+                    setHoldingsDrilldown(
+                      securityId
+                        ? {
+                            kind: "security",
+                            security_id: securityId,
+                            label: buildSecurityDrilldownLabel(
+                              workspace.top_positions.find((position) => position.security_id === securityId)
+                                ?.instrument_name ?? "Selected holding",
+                              "holdings"
+                            ),
+                          }
+                        : null
+                    );
+                  }}
+                  onSelectActivityBucket={(bucket) => {
+                    if (!bucket) {
+                      clearTransactionDrilldown();
+                      return;
+                    }
+                    openTransactionDrilldown({
+                      kind: "activity",
+                      bucket,
+                      label: buildActivityDrilldownLabel(bucket),
+                    });
+                  }}
+                  getSectionExpanded={getSectionExpanded}
+                  toggleSection={toggleSection}
+                />
 
-            <PortfolioChangesSection
-              workspace={workspace}
-              context={context}
-              showChanges={showChanges}
-              incomeDisplayCurrency={incomeDisplayCurrency}
-              activityDisplayCurrency={activityDisplayCurrency}
-              transactionDrilldown={transactionDrilldown}
-              isDetailedView={isDetailedView}
-              onSelectActivityBucket={(bucket) => {
-                if (!bucket) {
-                  clearTransactionDrilldown();
-                  return;
-                }
-                openTransactionDrilldown({
-                  kind: "activity",
-                  bucket,
-                  label: buildActivityDrilldownLabel(bucket),
-                });
-              }}
-              getSectionExpanded={getSectionExpanded}
-              toggleSection={toggleSection}
-            />
+                <PortfolioChangesSection
+                  workspace={workspace}
+                  context={context}
+                  showChanges={showChanges}
+                  incomeDisplayCurrency={incomeDisplayCurrency}
+                  activityDisplayCurrency={activityDisplayCurrency}
+                  transactionDrilldown={transactionDrilldown}
+                  isDetailedView={isDetailedView}
+                  onSelectActivityBucket={(bucket) => {
+                    if (!bucket) {
+                      clearTransactionDrilldown();
+                      return;
+                    }
+                    openTransactionDrilldown({
+                      kind: "activity",
+                      bucket,
+                      label: buildActivityDrilldownLabel(bucket),
+                    });
+                  }}
+                  getSectionExpanded={getSectionExpanded}
+                  toggleSection={toggleSection}
+                />
 
-            <PortfolioDrilldownSection
-              workspace={workspace}
-              context={context}
-              detailsLoading={detailsLoading}
-              showDrilldown={showDrilldown}
-              showProjectedCashflow={showProjectedCashflow}
-              isDetailedView={isDetailedView}
-              filteredPositions={filteredPositions}
-              holdingsFilterCopy={holdingsFilterCopy}
-              transactionDrilldown={transactionDrilldown}
-              onClearHoldingsDrilldown={clearHoldingsDrilldown}
-              onClearTransactionDrilldown={clearTransactionDrilldown}
-              onSelectHoldingRow={(row) =>
-                setDetailDrawer(
-                  buildHoldingDrawer(
-                    row,
-                    workspace.portfolio.portfolio_id,
-                    workspace.portfolio.base_currency,
-                    getRelatedTransactionsForSecurity(workspace, row.securityId)
-                  )
-                )
-              }
-              onSelectTransactionRow={(row) =>
-                setDetailDrawer(
-                  buildTransactionDrawer(
-                    row,
-                    workspace.portfolio.portfolio_id,
-                    workspace.portfolio.base_currency
-                  )
-                )
-              }
-              getSectionExpanded={getSectionExpanded}
-              setSectionPreferences={setSectionPreferences}
-            />
+                <PortfolioDrilldownSection
+                  workspace={workspace}
+                  context={context}
+                  detailsLoading={detailsLoading}
+                  showDrilldown={showDrilldown}
+                  showProjectedCashflow={showProjectedCashflow}
+                  isDetailedView={isDetailedView}
+                  filteredPositions={filteredPositions}
+                  holdingsFilterCopy={holdingsFilterCopy}
+                  transactionDrilldown={transactionDrilldown}
+                  onClearHoldingsDrilldown={clearHoldingsDrilldown}
+                  onClearTransactionDrilldown={clearTransactionDrilldown}
+                  onSelectHoldingRow={(row) =>
+                    setDetailDrawer(
+                      buildHoldingDrawer(
+                        row,
+                        workspace.portfolio.portfolio_id,
+                        workspace.portfolio.base_currency,
+                        getRelatedTransactionsForSecurity(workspace, row.securityId)
+                      )
+                    )
+                  }
+                  onSelectTransactionRow={(row) =>
+                    setDetailDrawer(
+                      buildTransactionDrawer(
+                        row,
+                        workspace.portfolio.portfolio_id,
+                        workspace.portfolio.base_currency
+                      )
+                    )
+                  }
+                  getSectionExpanded={getSectionExpanded}
+                  setSectionPreferences={setSectionPreferences}
+                />
+              </>
+            )}
           </>
-        )}
-      </WorkspaceMain>
+        }
+        side={
+          workspace ? (
+            <>
+              <PortfolioContextModule
+                workspace={workspace}
+                context={context}
+                copiedField={copiedContextField}
+                onCopy={copyContextValue}
+              />
 
-      <WorkspaceSide>
-        {workspace ? (
-          <>
-            <PortfolioContextModule
-              workspace={workspace}
-              context={context}
-              copiedField={copiedContextField}
-              onCopy={copyContextValue}
-            />
+              <PortfolioReadinessModule
+                exceptions={exceptionSummaries}
+                workspace={workspace}
+                showDetailFootnote={showReadinessDetailGroup}
+                onOpenException={handleOpenException}
+              />
 
-            <PortfolioReadinessModule
-              exceptions={exceptionSummaries}
-              workspace={workspace}
-              showDetailFootnote={showReadinessDetailGroup}
-              onOpenException={handleOpenException}
-            />
-
-            <PortfolioActionsModule actions={setupActions} />
-          </>
-        ) : (
-          <Panel className="portfolio-side-card">
-            <div className="portfolio-card-header">
-              <h3 className="portfolio-side-card-title">Available Work Areas</h3>
-              <p className="portfolio-card-subtitle">
-                Open adjacent portfolio workflows while the main briefing is unavailable.
-              </p>
-            </div>
-            <div className="toolbar">
-              <ActionLink href="/recommendations">Open Recommendations</ActionLink>
-              <ActionLink href="/performance">Performance</ActionLink>
-              <ActionLink href="/workbench">Open Operations</ActionLink>
-            </div>
-          </Panel>
-        )}
-      </WorkspaceSide>
+              <PortfolioActionsModule actions={setupActions} />
+            </>
+          ) : (
+            <Panel className="portfolio-side-card">
+              <div className="portfolio-card-header">
+                <h3 className="portfolio-side-card-title">Available Work Areas</h3>
+                <p className="portfolio-card-subtitle">
+                  Open adjacent portfolio workflows while the main briefing is unavailable.
+                </p>
+              </div>
+              <div className="toolbar">
+                <ActionLink href="/recommendations">Open Recommendations</ActionLink>
+                <ActionLink href="/performance">Performance</ActionLink>
+                <ActionLink href="/workbench">Open Operations</ActionLink>
+              </div>
+            </Panel>
+          )
+        }
+      />
 
       <PortfolioDetailDrawerController
         detailDrawer={detailDrawer}
         onClose={() => setDetailDrawer(null)}
       />
-    </WorkspaceLayout>
+    </>
   );
 }
 

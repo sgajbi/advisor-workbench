@@ -1146,6 +1146,46 @@ a:hover {
   max-width: 220px;
 }
 
+.portfolio-page {
+  width: 100%;
+  max-width: none;
+}
+
+.portfolio-layout {
+  width: 100%;
+  max-width: none;
+}
+
+.portfolio-rail-shell {
+  width: 100%;
+  max-width: 220px;
+}
+
+.portfolio-main {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.portfolio-main > * {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.portfolio-side {
+  display: grid;
+  gap: 16px;
+  position: sticky;
+  top: 4.8rem;
+  align-self: start;
+  width: 100%;
+  max-width: 260px;
+  min-width: 0;
+}
+
 @media (min-width: 1680px) {
   .workspace-layout,
   .portfolio-layout {
@@ -4968,6 +5008,14 @@ a:hover {
   .workstation-shell-side {
     max-width: 240px;
   }
+
+  .portfolio-rail-shell {
+    max-width: 200px;
+  }
+
+  .portfolio-side {
+    max-width: 240px;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -4995,6 +5043,10 @@ a:hover {
   }
 
   .workstation-shell-side {
+    max-width: none;
+  }
+
+  .portfolio-side {
     max-width: none;
   }
 }

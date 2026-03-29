@@ -5,19 +5,20 @@ import {
   Panel,
   SectionLabel,
   StatusChip,
+  WorkstationShell,
   WorkspaceGrid,
-  WorkspaceLayout,
-  WorkspaceMain,
-  WorkspaceRail,
-  WorkspaceSide,
 } from "@/design-system";
 
 import { FALLBACK_WORK_AREAS } from "../workspace-config";
 
 export default function PortfolioUnavailableWorkspace() {
   return (
-    <WorkspaceLayout compact>
-      <WorkspaceRail>
+    <WorkstationShell
+      className="portfolio-layout-empty"
+      railClassName="portfolio-rail-shell"
+      mainClassName="portfolio-main"
+      sideClassName="portfolio-side"
+      rail={
         <Panel className="portfolio-rail">
           <div className="portfolio-rail-header">
             <SectionLabel>Book</SectionLabel>
@@ -30,32 +31,32 @@ export default function PortfolioUnavailableWorkspace() {
             </div>
           </div>
         </Panel>
-      </WorkspaceRail>
+      }
+      main={
+        <>
+          <DegradedStatePanel
+            label="Workspace"
+            title="Portfolio unavailable"
+            status="Core feed unavailable"
+          />
 
-      <WorkspaceMain>
-        <DegradedStatePanel
-          label="Workspace"
-          title="Portfolio unavailable"
-          status="Core feed unavailable"
-        />
-
-        <WorkspaceGrid className="portfolio-action-grid">
-          {FALLBACK_WORK_AREAS.map((area) => (
-            <Panel key={area.href} className="portfolio-action-card">
-              <div className="portfolio-action-header">
-                <h3>{area.title}</h3>
-                <StatusChip tone="success">{area.value}</StatusChip>
-              </div>
-              <p className="muted">{area.note}</p>
-              <div className="toolbar">
-                <ActionLink href={area.href}>Open {area.title}</ActionLink>
-              </div>
-            </Panel>
-          ))}
-        </WorkspaceGrid>
-      </WorkspaceMain>
-
-      <WorkspaceSide>
+          <WorkspaceGrid className="portfolio-action-grid">
+            {FALLBACK_WORK_AREAS.map((area) => (
+              <Panel key={area.href} className="portfolio-action-card">
+                <div className="portfolio-action-header">
+                  <h3>{area.title}</h3>
+                  <StatusChip tone="success">{area.value}</StatusChip>
+                </div>
+                <p className="muted">{area.note}</p>
+                <div className="toolbar">
+                  <ActionLink href={area.href}>Open {area.title}</ActionLink>
+                </div>
+              </Panel>
+            ))}
+          </WorkspaceGrid>
+        </>
+      }
+      side={
         <Panel className="portfolio-side-card">
           <h3>Service State</h3>
           <MetricRow label="Portfolio catalog" value="Unavailable" />
@@ -63,7 +64,7 @@ export default function PortfolioUnavailableWorkspace() {
           <MetricRow label="Recommendations" value="Available" />
           <MetricRow label="Operations" value="Available" />
         </Panel>
-      </WorkspaceSide>
-    </WorkspaceLayout>
+      }
+    />
   );
 }
