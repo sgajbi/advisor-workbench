@@ -23,11 +23,13 @@ export default function PerformanceAnalysisAttributionSection({
   onRequestChange,
   isUpdating,
   isDetailsPending,
-  hasAttribution,
+  capabilities,
   relativeSegmentRows,
   topAttributionEffectRows,
   attributionEffectScale,
 }: PerformanceAnalysisAttributionSectionProps) {
+  const hasAttribution = capabilities.attributionDetail.state === "supported";
+
   return (
     <Panel id="performance-attribution" className="performance-detail-panel-compact">
       <div className="performance-section-heading">
@@ -202,7 +204,10 @@ export default function PerformanceAnalysisAttributionSection({
       ) : isDetailsPending ? (
         <p className="muted">Loading attribution effects and benchmark-relative decomposition.</p>
       ) : (
-        <p className="muted">Attribution detail is not available for the current selection.</p>
+        <p className="muted">
+          {capabilities.attributionDetail.reason ??
+            "Attribution detail is not available for the current selection."}
+        </p>
       )}
     </Panel>
   );

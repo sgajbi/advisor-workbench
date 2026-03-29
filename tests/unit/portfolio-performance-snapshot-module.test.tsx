@@ -8,6 +8,10 @@ describe("portfolio performance snapshot module", () => {
   it("renders a collapsed unavailable placeholder in summary mode", () => {
     render(
       <PortfolioPerformanceSnapshotModule
+        capability={{
+          state: "unavailable",
+          reason: "Requires valuation history, cashflow history, and a selected reporting period.",
+        }}
         performance={null}
         rebalance={null}
         reportingRowCount={0}
@@ -46,6 +50,7 @@ describe("portfolio performance snapshot module", () => {
 
     render(
       <PortfolioPerformanceSnapshotModule
+        capability={{ state: "supported" }}
         performance={{
           period: "YTD",
           return_pct: 5.12,

@@ -2,8 +2,20 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildProps(
   overrides: Partial<PerformanceSummaryContributorsSectionProps> = {}
@@ -61,8 +73,7 @@ function buildProps(
       warnings: [],
       partial_failures: [],
     },
-    hasContribution: true,
-    hasPositionRanking: true,
+    capabilities: supportedCapabilities,
     contributorScale: 1.5,
     positivePositionContributors: [
       {
@@ -106,8 +117,13 @@ describe("PerformanceSummaryContributorsSection", () => {
     render(
       <PerformanceSummaryContributorsSection
         {...buildProps({
-          hasContribution: false,
-          hasPositionRanking: false,
+          capabilities: {
+            ...supportedCapabilities,
+            contributionRanking: {
+              state: "unavailable",
+              reason: "Contributor ranking is not available for the current selection.",
+            },
+          },
           positivePositionContributors: [],
           negativePositionContributors: [],
         })}

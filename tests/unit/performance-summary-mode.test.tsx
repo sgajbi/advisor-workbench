@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import PerformanceSummaryMode from "../../src/apps/performance/components/performance-summary-mode";
 
@@ -71,6 +72,17 @@ vi.mock("../../src/apps/performance/components/performance-summary-contributors-
     </div>
   ),
 }));
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildWorkspace(): WorkbenchPerformanceWorkspace {
   return {
@@ -144,16 +156,13 @@ describe("PerformanceSummaryMode", () => {
         attributionDimension="asset_class"
         chartFrequency="monthly"
         benchmark="BMK_OVERRIDE"
-        hasBenchmark
-        hasHistory
+        capabilities={supportedCapabilities}
         selectedBenchmarkCode="BMK_1"
         selectedBenchmarkLabel="Model 60/40"
         selectedPerformance={buildWorkspace().gross_performance}
         primaryDriver={null}
         hasMoneyWeightedReturn={false}
         suspiciousMoneyWeightedReturn={false}
-        hasContribution
-        hasPositionRanking
         contributorScale={1}
         positivePositionContributors={[
           {

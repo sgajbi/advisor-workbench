@@ -2,8 +2,20 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceSummaryHeaderSection from "../../src/apps/performance/components/performance-summary-header-section";
 import type { PerformanceSummaryHeaderSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildProps(
   overrides: Partial<PerformanceSummaryHeaderSectionProps> = {}
@@ -100,8 +112,7 @@ function buildProps(
       partial_failures: [],
     },
     detailBasis: "NET",
-    hasBenchmark: true,
-    hasHistory: true,
+    capabilities: supportedCapabilities,
     selectedBenchmarkCode: "BMK_1",
     selectedBenchmarkLabel: "Global Balanced 60/40",
     selectedPerformance: {
@@ -149,8 +160,14 @@ describe("PerformanceSummaryHeaderSection", () => {
     render(
       <PerformanceSummaryHeaderSection
         {...buildProps({
-          hasBenchmark: false,
-          hasHistory: false,
+          capabilities: {
+            ...supportedCapabilities,
+            returnPath: { state: "unavailable", reason: "Return observations unavailable." },
+            benchmarkComparison: {
+              state: "unavailable",
+              reason: "No benchmark is assigned to this mandate.",
+            },
+          },
           selectedBenchmarkCode: undefined,
           selectedBenchmarkLabel: null,
           selectedPerformance: {
@@ -182,9 +199,7 @@ describe("PerformanceSummaryHeaderSection", () => {
       screen.getByText("Assign a benchmark to enable relative analytics.")
     ).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(4);
-    expect(
-      screen.getByText("Requires an assigned benchmark and published benchmark returns.")
-    ).toBeInTheDocument();
+    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 });

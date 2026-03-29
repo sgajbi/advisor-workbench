@@ -58,16 +58,13 @@ export default function PerformanceSummaryMode({
   onRequestChange,
   isUpdating,
   isDetailsPending,
-  hasBenchmark,
-  hasHistory,
+  capabilities,
   selectedBenchmarkCode,
   selectedBenchmarkLabel,
   selectedPerformance,
   primaryDriver,
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
-  hasContribution,
-  hasPositionRanking,
   contributorScale,
   positivePositionContributors,
   negativePositionContributors,
@@ -77,8 +74,7 @@ export default function PerformanceSummaryMode({
       <PerformanceSummaryHeaderSection
         workspace={workspace}
         detailBasis={detailBasis}
-        hasBenchmark={hasBenchmark}
-        hasHistory={hasHistory}
+        capabilities={capabilities}
         selectedBenchmarkCode={selectedBenchmarkCode}
         selectedBenchmarkLabel={selectedBenchmarkLabel}
         selectedPerformance={selectedPerformance}
@@ -102,6 +98,7 @@ export default function PerformanceSummaryMode({
           benchmarkOptions={workspace.benchmark_options ?? []}
           reportStartDate={workspace.report_start_date}
           reportEndDate={workspace.report_end_date}
+          capabilities={capabilities}
           onRequestChange={onRequestChange ?? (() => undefined)}
           isUpdating={isUpdating}
           isDetailsPending={isDetailsPending}
@@ -119,8 +116,7 @@ export default function PerformanceSummaryMode({
         />
         <DeferredPerformanceSummaryContributorsSection
           workspace={workspace}
-          hasContribution={hasContribution}
-          hasPositionRanking={hasPositionRanking}
+          capabilities={capabilities}
           contributorScale={contributorScale}
           positivePositionContributors={positivePositionContributors}
           negativePositionContributors={negativePositionContributors}

@@ -3,12 +3,14 @@
 import Button from "@mui/material/Button";
 
 import { AnalyticsModule, MetricRow, ModuleStatePanel } from "@/design-system";
+import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
 
 type PerformanceSnapshotProps = {
+  capability: WorkspaceCapability;
   performance: PortfolioWorkspace["performance"];
   rebalance: PortfolioWorkspace["rebalance"];
   reportingRowCount: number;
@@ -24,6 +26,7 @@ type PerformanceSnapshotProps = {
  * while reserving API shape for future benchmark/excess/sparkline support.
  */
 export default function PortfolioPerformanceSnapshotModule({
+  capability,
   performance,
   rebalance,
   reportingRowCount,
@@ -32,7 +35,7 @@ export default function PortfolioPerformanceSnapshotModule({
   onToggle,
   selectedPeriod,
 }: PerformanceSnapshotProps) {
-  const hasPerformance = Boolean(performance);
+  const hasPerformance = capability.state === "supported" && Boolean(performance);
 
   return (
     <AnalyticsModule
@@ -66,9 +69,12 @@ export default function PortfolioPerformanceSnapshotModule({
           </div>
         ) : (
           <ModuleStatePanel
-            state="partial"
+            state={capability.state === "partial" ? "partial" : "empty"}
             title="Performance not available yet"
-            body="Performance analytics are not available for this portfolio context."
+            body={
+              capability.reason ??
+              "Performance analytics are not available for this portfolio context."
+            }
             hint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
             why={{
               body:
@@ -92,7 +98,8 @@ export default function PortfolioPerformanceSnapshotModule({
             <>
               <span className="portfolio-performance-snapshot-kpi">Unavailable</span>
               <span className="portfolio-performance-snapshot-copy">
-                Requires valuation history, cashflow history, and a selected reporting period.
+                {capability.reason ??
+                  "Requires valuation history, cashflow history, and a selected reporting period."}
               </span>
             </>
           )}

@@ -5,17 +5,17 @@ import type { PerformanceSummaryContributorsSectionProps } from "./performance-w
 
 export default function PerformanceSummaryContributorsSection({
   workspace,
-  hasContribution,
-  hasPositionRanking,
+  capabilities,
   contributorScale,
   positivePositionContributors,
   negativePositionContributors,
   isDetailsPending,
 }: PerformanceSummaryContributorsSectionProps) {
+  const rankingState = capabilities.contributionRanking.state;
+
   return (
     <AnalyticsModule title="Top / Bottom Contributors" subtitle={`${workspace.period} position ranking`}>
-      {hasContribution ? (
-        hasPositionRanking ? (
+      {rankingState === "supported" ? (
           <div className="performance-contributors-grid">
             <AnalyticsRankedList
               title="Highest"
@@ -46,16 +46,13 @@ export default function PerformanceSummaryContributorsSection({
               emptyMessage="No detractors are present for the selected analytical slice."
             />
           </div>
-        ) : (
-          <p className="muted">
-            Position-level contributor ranking is not available from the current analytics
-            contract.
-          </p>
-        )
       ) : isDetailsPending ? (
         <p className="muted">Loading contributor ranking for the selected analytical slice.</p>
       ) : (
-        <p className="muted">Contributor ranking is not available for the current selection.</p>
+        <p className="muted">
+          {capabilities.contributionRanking.reason ??
+            "Contributor ranking is not available for the current selection."}
+        </p>
       )}
     </AnalyticsModule>
   );

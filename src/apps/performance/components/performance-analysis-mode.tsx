@@ -30,8 +30,7 @@ export default function PerformanceAnalysisMode({
   onRequestChange,
   isUpdating,
   isDetailsPending,
-  hasAttribution,
-  hasContribution,
+  capabilities,
   relativeSegmentRows,
   topAttributionEffectRows,
   attributionEffectScale,
@@ -54,7 +53,7 @@ export default function PerformanceAnalysisMode({
         onRequestChange={onRequestChange}
         isUpdating={isUpdating}
         isDetailsPending={isDetailsPending}
-        hasAttribution={hasAttribution}
+        capabilities={capabilities}
         relativeSegmentRows={relativeSegmentRows}
         topAttributionEffectRows={topAttributionEffectRows}
         attributionEffectScale={attributionEffectScale}
@@ -85,7 +84,7 @@ export default function PerformanceAnalysisMode({
             </Select>
           </FormControl>
         </div>
-        {hasContribution ? (
+        {capabilities.contributionDetail.state === "supported" ? (
           workspace.contribution?.levels.map((level) => {
             const totals = getContributionTotals(workspace, level) ?? null;
             const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
@@ -146,7 +145,7 @@ export default function PerformanceAnalysisMode({
         ) : isDetailsPending ? (
           <p className="muted">Loading contribution detail for the selected segment and horizon.</p>
         ) : (
-          <p className="muted">Contribution detail is not available for the current selection.</p>
+          <p className="muted">{capabilities.contributionDetail.reason}</p>
         )}
       </Panel>
     </WorkspaceGrid>

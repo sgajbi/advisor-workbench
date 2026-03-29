@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 
 import { AnalyticsSectionHeader, AnalyticsStat, Panel } from "@/design-system";
+import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
   PerformanceChartPoint,
@@ -119,6 +120,7 @@ export default function PerformanceChartPanel({
   benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
+  capabilities,
   onRequestChange,
   isUpdating = false,
   isDetailsPending = false,
@@ -137,6 +139,7 @@ export default function PerformanceChartPanel({
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate: string;
   reportEndDate: string;
+  capabilities: PerformanceWorkspaceCapabilities;
   onRequestChange: (patch: PerformanceControlPatch) => void;
   isUpdating?: boolean;
   isDetailsPending?: boolean;
@@ -557,7 +560,7 @@ export default function PerformanceChartPanel({
           </Stack>
         </Stack>
 
-      {points.length ? (
+      {capabilities.returnPath.state === "supported" && points.length ? (
         <>
           <Box
             className="performance-chart-summary-band"
@@ -618,8 +621,8 @@ export default function PerformanceChartPanel({
         <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
           <strong>Return series unavailable</strong>
           <p>
-            The selected period does not currently have published performance observations for this
-            mandate.
+            {capabilities.returnPath.reason ??
+              "The selected period does not currently have published performance observations for this mandate."}
           </p>
           <span>
             Adjust the horizon or explicit dates once performance history is available for the

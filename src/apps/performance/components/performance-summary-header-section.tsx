@@ -1,6 +1,7 @@
 import { Box, Stack } from "@mui/material";
 
 import { AnalyticsSectionHeader, Panel, StatusChip } from "@/design-system";
+import { isSupportedCapability } from "@/shell/workspace-capabilities";
 
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import type { PerformanceSummaryHeaderSectionProps } from "./performance-workspace-types";
@@ -16,8 +17,7 @@ type SummaryMetricCard = {
 export default function PerformanceSummaryHeaderSection({
   workspace,
   detailBasis,
-  hasBenchmark,
-  hasHistory,
+  capabilities,
   selectedBenchmarkCode,
   selectedBenchmarkLabel,
   selectedPerformance,
@@ -25,10 +25,15 @@ export default function PerformanceSummaryHeaderSection({
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
 }: PerformanceSummaryHeaderSectionProps) {
+  const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
+  const hasHistory = isSupportedCapability(capabilities.returnPath);
   const benchmarkValue = hasBenchmark ? selectedBenchmarkLabel ?? "Assigned" : "Unassigned";
-  const benchmarkHint = hasBenchmark
-    ? "Relative analytics are active for this mandate."
-    : "Assign a benchmark to enable relative analytics.";
+  const benchmarkHint =
+    capabilities.benchmarkComparison.state === "supported"
+      ? "Relative analytics are active for this mandate."
+      : capabilities.benchmarkComparison.state === "partial"
+        ? capabilities.benchmarkComparison.reason ?? "Benchmark-relative analytics are partially available."
+        : "Assign a benchmark to enable relative analytics.";
 
   const primaryReturnCard = buildMetricCard({
     label: detailBasis === "GROSS" ? "Gross Return" : "Net Return",
@@ -37,9 +42,10 @@ export default function PerformanceSummaryHeaderSection({
       selectedPerformance?.portfolio_return_pct !== undefined
         ? formatPct(selectedPerformance.portfolio_return_pct)
         : "Unavailable",
-    support: hasBenchmark
-      ? `Active ${formatCompactPct(selectedPerformance?.active_return_pct ?? null)} versus benchmark`
-      : "Absolute performance for the selected mandate and horizon.",
+    support:
+      capabilities.benchmarkComparison.state === "supported"
+        ? `Active ${formatCompactPct(selectedPerformance?.active_return_pct ?? null)} versus benchmark`
+        : "Absolute performance for the selected mandate and horizon.",
     emphasize: true,
     unavailable:
       selectedPerformance?.portfolio_return_pct === null ||
@@ -49,16 +55,16 @@ export default function PerformanceSummaryHeaderSection({
   const benchmarkCard = buildMetricCard({
     label: "Benchmark Return",
     value:
-      hasBenchmark &&
+      capabilities.benchmarkComparison.state === "supported" &&
       selectedPerformance?.benchmark_return_pct !== null &&
       selectedPerformance?.benchmark_return_pct !== undefined
         ? formatPct(selectedPerformance.benchmark_return_pct)
         : "Unavailable",
-    support: hasBenchmark
-      ? "Benchmark comparison for the selected period."
-      : "No benchmark is assigned to this mandate.",
+    support:
+      capabilities.benchmarkComparison.reason ??
+      "Benchmark comparison for the selected period.",
     unavailable:
-      !hasBenchmark ||
+      capabilities.benchmarkComparison.state !== "supported" ||
       selectedPerformance?.benchmark_return_pct === null ||
       selectedPerformance?.benchmark_return_pct === undefined,
   });
@@ -66,16 +72,18 @@ export default function PerformanceSummaryHeaderSection({
   const activeCard = buildMetricCard({
     label: "Active Return",
     value:
-      hasBenchmark &&
+      capabilities.benchmarkComparison.state === "supported" &&
       selectedPerformance?.active_return_pct !== null &&
       selectedPerformance?.active_return_pct !== undefined
         ? formatPct(selectedPerformance.active_return_pct)
         : "Unavailable",
-    support: hasBenchmark
-      ? "Relative portfolio performance versus the assigned benchmark."
-      : "Requires an assigned benchmark and published benchmark returns.",
+    support:
+      capabilities.benchmarkComparison.state === "supported"
+        ? "Relative portfolio performance versus the assigned benchmark."
+        : capabilities.benchmarkComparison.reason ??
+          "Requires an assigned benchmark and published benchmark returns.",
     unavailable:
-      !hasBenchmark ||
+      capabilities.benchmarkComparison.state !== "supported" ||
       selectedPerformance?.active_return_pct === null ||
       selectedPerformance?.active_return_pct === undefined,
   });

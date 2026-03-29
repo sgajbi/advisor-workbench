@@ -80,6 +80,11 @@ import PortfolioContextModule from "../modules/portfolio-context/portfolio-conte
 import PortfolioHealthStrip from "../modules/portfolio-health/portfolio-health-strip";
 import PortfolioInsightsStrip from "../modules/portfolio-insights/portfolio-insights-strip";
 import PortfolioReadinessModule from "../modules/portfolio-readiness/portfolio-readiness-module";
+import {
+  getPortfolioWorkspaceCapabilities,
+  type PortfolioWorkspaceCapabilities,
+} from "../capabilities";
+import { isRenderableCapability } from "@/shell/workspace-capabilities";
 
 // Workbench discipline:
 // first paint stays limited to framing, hero, KPI, exceptions, and side-rail summary cards.
@@ -234,18 +239,21 @@ export default function PortfolioWorkspaceView({
   const showDrilldown = isDetailedView && !showAttentionOnly;
   const showReadinessDetailGroup = isDetailedView;
   const showLiquidityModule = isDetailedView;
-  const showPerformanceSnapshot = true;
-  const showAllocationModule =
-    detailsLoading || Boolean(workspace?.allocation_views?.length) || !context.hideEmptyModules;
-  const showTopHoldingsModule =
-    detailsLoading || Boolean(workspace?.top_positions.length) || !context.hideEmptyModules;
-  const showIncomeModule =
-    detailsLoading || Boolean(workspace?.income_summary) || !context.hideEmptyModules;
-  const showActivityModule =
-    detailsLoading || Boolean(workspace?.activity_summary) || !context.hideEmptyModules;
-  const showChangeHighlights = isSummaryView && !showAttentionOnly && (showIncomeModule || showActivityModule);
-  const showProjectedCashflow =
-    detailsLoading || Boolean(workspace?.cashflow_outlook) || !context.hideEmptyModules;
+  const capabilities = workspace
+    ? getPortfolioWorkspaceCapabilities(workspace, {
+        viewMode: context.viewMode,
+        hideEmptyModules: context.hideEmptyModules,
+      })
+    : null;
+  const showChangeHighlights =
+    isSummaryView &&
+    !showAttentionOnly &&
+    (detailsLoading ||
+      Boolean(
+        capabilities &&
+          (isRenderableCapability(capabilities.income) ||
+            isRenderableCapability(capabilities.activity))
+      ));
   const incomeDisplayCurrency = getIncomeDisplayCurrency(
     workspace?.income_summary,
     context.selectedReportingCurrency,
@@ -468,14 +476,10 @@ export default function PortfolioWorkspaceView({
                 <PortfolioInsightsSection
                   workspace={workspace}
                   context={context}
+                  capabilities={capabilities!}
                   detailsLoading={detailsLoading}
                   showInsights={showInsights}
                   showLiquidityModule={showLiquidityModule}
-                  showPerformanceSnapshot={showPerformanceSnapshot}
-                  showAllocationModule={showAllocationModule}
-                  showTopHoldingsModule={showTopHoldingsModule}
-                  showIncomeModule={showIncomeModule}
-                  showActivityModule={showActivityModule}
                   showChangeHighlights={showChangeHighlights}
                   incomeDisplayCurrency={incomeDisplayCurrency}
                   activityDisplayCurrency={activityDisplayCurrency}
@@ -558,9 +562,9 @@ export default function PortfolioWorkspaceView({
                 <PortfolioDrilldownSection
                   workspace={workspace}
                   context={context}
+                  capabilities={capabilities!}
                   detailsLoading={detailsLoading}
                   showDrilldown={showDrilldown}
-                  showProjectedCashflow={showProjectedCashflow}
                   isDetailedView={isDetailedView}
                   filteredPositions={filteredPositions}
                   holdingsFilterCopy={holdingsFilterCopy}
@@ -894,14 +898,10 @@ function PortfolioHealthSection({
 function PortfolioInsightsSection({
   workspace,
   context,
+  capabilities,
   detailsLoading,
   showInsights,
   showLiquidityModule,
-  showPerformanceSnapshot,
-  showAllocationModule,
-  showTopHoldingsModule,
-  showIncomeModule,
-  showActivityModule,
   showChangeHighlights,
   incomeDisplayCurrency,
   activityDisplayCurrency,
@@ -918,14 +918,10 @@ function PortfolioInsightsSection({
 }: {
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
+  capabilities: PortfolioWorkspaceCapabilities;
   detailsLoading: boolean;
   showInsights: boolean;
   showLiquidityModule: boolean;
-  showPerformanceSnapshot: boolean;
-  showAllocationModule: boolean;
-  showTopHoldingsModule: boolean;
-  showIncomeModule: boolean;
-  showActivityModule: boolean;
   showChangeHighlights: boolean;
   incomeDisplayCurrency: string;
   activityDisplayCurrency: string;
@@ -943,6 +939,12 @@ function PortfolioInsightsSection({
   if (!showInsights) {
     return null;
   }
+
+  const showPerformanceSnapshot = isRenderableCapability(capabilities.performanceSnapshot);
+  const showAllocationModule = isRenderableCapability(capabilities.allocation);
+  const showTopHoldingsModule = isRenderableCapability(capabilities.topHoldings);
+  const showIncomeModule = isRenderableCapability(capabilities.income);
+  const showActivityModule = isRenderableCapability(capabilities.activity);
 
   return (
     <section className="portfolio-workspace-section">
@@ -993,6 +995,7 @@ function PortfolioInsightsSection({
           ) : null}
           {showPerformanceSnapshot ? (
             <PortfolioPerformanceSnapshotModule
+              capability={capabilities.performanceSnapshot}
               performance={workspace.performance}
               rebalance={workspace.rebalance}
               reportingRowCount={workspace.readiness.reporting.row_count}
@@ -1027,7 +1030,10 @@ function PortfolioInsightsSection({
               <ModuleStatePanel
                 state="partial"
                 title="Allocation is partially available"
-                body="Holdings are present, but allocation views have not been generated from current valuations."
+                body={
+                  capabilities.allocation.reason ??
+                  "Holdings are present, but allocation views have not been generated from current valuations."
+                }
                 hint="Publish current prices and valuation outputs to complete the composition view."
                 why={{
                   body:
@@ -1038,7 +1044,10 @@ function PortfolioInsightsSection({
             ) : (
               <EmptyStatePanel
                 title="No allocation data yet"
-                body="Allocation becomes available once funded holdings are valued."
+                body={
+                  capabilities.allocation.reason ??
+                  "Allocation becomes available once funded holdings are valued."
+                }
                 hint="Book positions and publish prices to generate allocation views."
                 why={{
                   body:
@@ -1088,13 +1097,19 @@ function PortfolioInsightsSection({
               <ModuleStatePanel
                 state="partial"
                 title="Top holdings are not ranked yet"
-                body="The book contains positions, but ranked concentration output is still unavailable."
+                body={
+                  capabilities.topHoldings.reason ??
+                  "The book contains positions, but ranked concentration output is still unavailable."
+                }
                 hint="Complete valuation and concentration calculations to populate the ranked view."
               />
             ) : (
               <EmptyStatePanel
                 title="No holdings yet"
-                body="Holdings will appear once positions are funded and priced."
+                body={
+                  capabilities.topHoldings.reason ??
+                  "Holdings will appear once positions are funded and priced."
+                }
                 hint="Add funding, book a trade, and publish pricing."
                 why={{
                   body:
@@ -1133,13 +1148,19 @@ function PortfolioInsightsSection({
                 <ModuleStatePanel
                   state="partial"
                   title="Income is not classified yet"
-                  body="Ledger activity exists, but no income summary is available for the selected period."
+                  body={
+                    capabilities.income.reason ??
+                    "Ledger activity exists, but no income summary is available for the selected period."
+                  }
                   hint="Dividend, coupon, and income classifications need to be published before income composition can be shown."
                 />
               ) : (
                 <EmptyStatePanel
                   title="No income activity"
-                  body="No income events have been recorded for the selected period."
+                  body={
+                    capabilities.income.reason ??
+                    "No income events have been recorded for the selected period."
+                  }
                   hint="Dividend and coupon events will populate income once they are booked."
                 />
               )}
@@ -1174,13 +1195,19 @@ function PortfolioInsightsSection({
                 <ModuleStatePanel
                   state="partial"
                   title="Activity totals are incomplete"
-                  body="Transactions are present, but summarized activity buckets are not available for the selected period."
+                  body={
+                    capabilities.activity.reason ??
+                    "Transactions are present, but summarized activity buckets are not available for the selected period."
+                  }
                   hint="Publish activity aggregation output to complete the client activity view."
                 />
               ) : (
                 <EmptyStatePanel
                   title="No client activity"
-                  body="No funding, trading, or cash activity has been recorded in the selected period."
+                  body={
+                    capabilities.activity.reason ??
+                    "No funding, trading, or cash activity has been recorded in the selected period."
+                  }
                   hint="Funding and trade events will populate the activity view."
                 />
               )}
@@ -1333,9 +1360,9 @@ function PortfolioChangesSection({
 function PortfolioDrilldownSection({
   workspace,
   context,
+  capabilities,
   detailsLoading,
   showDrilldown,
-  showProjectedCashflow,
   isDetailedView,
   filteredPositions,
   holdingsFilterCopy,
@@ -1349,9 +1376,9 @@ function PortfolioDrilldownSection({
 }: {
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
+  capabilities: PortfolioWorkspaceCapabilities;
   detailsLoading: boolean;
   showDrilldown: boolean;
-  showProjectedCashflow: boolean;
   isDetailedView: boolean;
   filteredPositions: PortfolioWorkspace["positions"];
   holdingsFilterCopy: string | null;
@@ -1366,6 +1393,8 @@ function PortfolioDrilldownSection({
   if (!showDrilldown) {
     return null;
   }
+
+  const showProjectedCashflow = isRenderableCapability(capabilities.projectedCashflow);
 
   const holdingsExpanded = getSectionExpanded("holdings");
   const transactionsExpanded = getSectionExpanded("transactions");

@@ -8,6 +8,7 @@ import {
   WorkstationShell,
 } from "@/design-system";
 
+import { getPerformanceWorkspaceCapabilities } from "../capabilities";
 import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
@@ -59,6 +60,7 @@ export default function PerformanceWorkspaceView({
   const [mode, setMode] = useState<PerformanceWorkspaceMode>("summary");
 
   const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
+  const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -81,16 +83,13 @@ export default function PerformanceWorkspaceView({
     <PerformanceSummaryMode
       workspace={workspace}
       {...controls}
-      hasBenchmark={presentation?.hasBenchmark ?? false}
-      hasHistory={presentation?.hasHistory ?? false}
+      capabilities={capabilities!}
       selectedBenchmarkCode={selectedBenchmarkCode}
       selectedBenchmarkLabel={selectedBenchmarkLabel}
       selectedPerformance={selectedPerformance}
       primaryDriver={presentation?.primaryDriver ?? null}
       hasMoneyWeightedReturn={presentation?.hasMoneyWeightedReturn ?? false}
       suspiciousMoneyWeightedReturn={presentation?.suspiciousMoneyWeightedReturn ?? false}
-      hasContribution={presentation?.hasContribution ?? false}
-      hasPositionRanking={presentation?.hasPositionRanking ?? false}
       contributorScale={presentation?.contributorScale ?? 0.01}
       positivePositionContributors={presentation?.positivePositionContributors ?? []}
       negativePositionContributors={presentation?.negativePositionContributors ?? []}
@@ -99,14 +98,13 @@ export default function PerformanceWorkspaceView({
     <DeferredPerformanceAnalysisMode
       workspace={workspace}
       {...controls}
-      hasAttribution={presentation?.hasAttribution ?? false}
-      hasContribution={presentation?.hasContribution ?? false}
+      capabilities={capabilities!}
       relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
       topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
       attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
     />
   ) : (
-    <DeferredPerformanceEvidenceMode />
+    <DeferredPerformanceEvidenceMode capability={capabilities!.evidence} />
   );
 
   return (

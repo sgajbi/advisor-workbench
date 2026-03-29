@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
+import { getPerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import {
   getBottomContributionRows,
   getActiveWeightRows,
@@ -361,5 +362,37 @@ describe("performance view model", () => {
     expect(presentation.topContributors).toEqual(getTopContributionRows(workspace));
     expect(presentation.bottomContributors).toEqual(getBottomContributionRows(workspace));
     expect(presentation.contributorScale).toBe(3.5);
+  });
+
+  it("builds explicit performance workspace capabilities for supported, partial, and unavailable features", () => {
+    const supportedCapabilities = getPerformanceWorkspaceCapabilities(buildWorkspace());
+
+    expect(supportedCapabilities.summaryKpis.state).toBe("supported");
+    expect(supportedCapabilities.returnPath.state).toBe("supported");
+    expect(supportedCapabilities.benchmarkComparison.state).toBe("partial");
+    expect(supportedCapabilities.multiHorizonReturns.state).toBe("supported");
+    expect(supportedCapabilities.contributionRanking.state).toBe("supported");
+    expect(supportedCapabilities.attributionDetail.state).toBe("supported");
+    expect(supportedCapabilities.contributionDetail.state).toBe("supported");
+    expect(supportedCapabilities.evidence.state).toBe("unavailable");
+
+    const partialCapabilities = getPerformanceWorkspaceCapabilities(
+      buildWorkspace({
+        net_chart: [buildWorkspace().net_chart[0]],
+        contribution: {
+          ...buildWorkspace().contribution!,
+          position_rows: [],
+        },
+        net_performance: {
+          ...buildWorkspace().net_performance,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        },
+      })
+    );
+
+    expect(partialCapabilities.returnPath.state).toBe("supported");
+    expect(partialCapabilities.benchmarkComparison.state).toBe("partial");
+    expect(partialCapabilities.contributionRanking.state).toBe("partial");
   });
 });

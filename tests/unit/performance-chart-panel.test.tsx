@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceChartPanel from "../../src/apps/performance/components/performance-chart-panel";
 
 vi.mock("echarts-for-react", () => ({
@@ -9,6 +10,17 @@ vi.mock("echarts-for-react", () => ({
     <div data-testid="performance-echart" style={style} />
   ),
 }));
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 describe("PerformanceChartPanel", () => {
   it("falls back to chart point dates when report dates are missing", () => {
@@ -55,6 +67,7 @@ describe("PerformanceChartPanel", () => {
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         reportStartDate=""
         reportEndDate=""
+        capabilities={supportedCapabilities}
         onRequestChange={vi.fn()}
       />
     );
@@ -108,6 +121,7 @@ describe("PerformanceChartPanel", () => {
         ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
+        capabilities={supportedCapabilities}
         onRequestChange={vi.fn()}
       />
     );
@@ -134,6 +148,13 @@ describe("PerformanceChartPanel", () => {
         chartFrequency="monthly"
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
+        capabilities={{
+          ...supportedCapabilities,
+          returnPath: {
+            state: "unavailable",
+            reason: "Published return observations are not available for the selected horizon.",
+          },
+        }}
         onRequestChange={vi.fn()}
       />
     );
