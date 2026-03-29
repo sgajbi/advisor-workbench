@@ -472,10 +472,31 @@ describe("portfolio view model", () => {
     expect(buildPortfolioInsights(workspace)).toEqual([]);
   });
 
+  it("does not raise false funding or transaction exceptions when summary evidence exists", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.cash_balances = [];
+    workspace.recent_transactions = [];
+
+    expect(buildPortfolioReadinessIndicators(workspace, "summary")).toEqual([
+      { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
+      { key: "pricing", label: "Pricing", status: "Ready", href: "#portfolio-attention" },
+      { key: "transactions", label: "Transactions", status: "Ready", href: "#portfolio-insights" },
+      { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
+    ]);
+
+    expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
+    expect(buildPortfolioInsights(workspace)).toEqual([]);
+  });
+
   it("derives the empty-portfolio onboarding sequence", () => {
     const workspace = buildWorkspace();
     workspace.recent_transactions = [];
     workspace.summary.position_count = 0;
+    workspace.summary.cash_balance_count = 0;
+    workspace.summary.total_cash_base = 0;
+    workspace.summary.cash_weight_pct = 0;
+    workspace.cash_balances = [];
+    workspace.activity_summary = null;
     workspace.readiness.reporting.status = "EMPTY";
     workspace.readiness.reporting.row_count = 0;
 

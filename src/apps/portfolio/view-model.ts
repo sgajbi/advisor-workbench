@@ -673,7 +673,7 @@ export function buildPortfolioInsights(workspace: PortfolioWorkspace): Portfolio
     });
   }
 
-  if ((workspace.cash_balances?.length ?? 0) === 0) {
+  if (!hasCashFundingEvidence(workspace)) {
     insights.push({
       key: "no-cash-funding",
       title: "No cash funding recorded",
@@ -1035,7 +1035,11 @@ function getPricingReadinessStatus(workspace: PortfolioWorkspace): PortfolioRead
 }
 
 function getTransactionsReadinessStatus(workspace: PortfolioWorkspace): PortfolioReadinessStatus {
-  if (workspace.recent_transactions.length > 0) {
+  if (
+    workspace.recent_transactions.length > 0 ||
+    getRequestedWindowActivityCount(workspace) > 0 ||
+    getYearToDateActivityCount(workspace) > 0
+  ) {
     return "Ready";
   }
 
@@ -1062,6 +1066,29 @@ function getReportingReadinessStatus(workspace: PortfolioWorkspace): PortfolioRe
   }
 
   return "Missing";
+}
+
+function hasCashFundingEvidence(workspace: PortfolioWorkspace): boolean {
+  if ((workspace.cash_balances?.length ?? 0) > 0) {
+    return true;
+  }
+
+  if ((workspace.summary.cash_balance_count ?? 0) > 0) {
+    return true;
+  }
+
+  if ((workspace.summary.total_cash_base ?? 0) > 0) {
+    return true;
+  }
+
+  const inflowBucket = workspace.activity_summary?.buckets.find(
+    (bucket) => bucket.bucket.toUpperCase() === "INFLOWS"
+  );
+  if ((inflowBucket?.requested_window.transaction_count ?? 0) > 0) {
+    return true;
+  }
+
+  return (inflowBucket?.requested_window.reporting_currency_amount ?? 0) > 0;
 }
 
 function isReportingReady(status: string): boolean {
