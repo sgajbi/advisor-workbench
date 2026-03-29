@@ -135,8 +135,28 @@ describe("PerformanceSummaryContributorsSection", () => {
       />
     );
 
-    expect(
-      screen.getByText("Contributor ranking is not available for the current selection.")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Contributor ranking unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Contributor ranking is not available for the current selection.")).toBeInTheDocument();
+  });
+
+  it("renders a partial-state panel when only aggregate contributor support exists", () => {
+    render(
+      <PerformanceSummaryContributorsSection
+        {...buildProps({
+          capabilities: {
+            ...supportedCapabilities,
+            contributionRanking: {
+              state: "partial",
+              reason: "Contribution exists, but only aggregate rows are available.",
+            },
+          },
+          positivePositionContributors: [],
+          negativePositionContributors: [],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
   });
 });

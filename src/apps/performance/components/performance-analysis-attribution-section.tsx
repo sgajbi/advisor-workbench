@@ -9,6 +9,7 @@ import {
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
+import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import {
@@ -204,10 +205,16 @@ export default function PerformanceAnalysisAttributionSection({
       ) : isDetailsPending ? (
         <p className="muted">Loading attribution effects and benchmark-relative decomposition.</p>
       ) : (
-        <p className="muted">
-          {capabilities.attributionDetail.reason ??
-            "Attribution detail is not available for the current selection."}
-        </p>
+        <PerformanceCapabilityNotice
+          capability={capabilities.attributionDetail}
+          partialTitle="Attribution detail is partial"
+          unavailableTitle="Attribution detail unavailable"
+          body={
+            capabilities.attributionDetail.reason ??
+            "Attribution detail is not available for the current selection."
+          }
+          hint="Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
+        />
       )}
     </Panel>
   );

@@ -18,6 +18,7 @@ import {
   inlineControlLabelSx,
   shouldShowContributionLocalFx,
 } from "./performance-workspace-view-helpers";
+import PerformanceCapabilityNotice from "./performance-capability-notice";
 
 export default function PerformanceAnalysisMode({
   workspace,
@@ -145,7 +146,16 @@ export default function PerformanceAnalysisMode({
         ) : isDetailsPending ? (
           <p className="muted">Loading contribution detail for the selected segment and horizon.</p>
         ) : (
-          <p className="muted">{capabilities.contributionDetail.reason}</p>
+          <PerformanceCapabilityNotice
+            capability={capabilities.contributionDetail}
+            partialTitle="Contribution detail is partial"
+            unavailableTitle="Contribution detail unavailable"
+            body={
+              capabilities.contributionDetail.reason ??
+              "Contribution detail is not available for the current selection."
+            }
+            hint="Contribution detail requires source-backed contribution levels for the selected segment and horizon."
+          />
         )}
       </Panel>
     </WorkspaceGrid>

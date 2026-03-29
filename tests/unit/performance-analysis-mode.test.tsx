@@ -172,4 +172,36 @@ describe("PerformanceAnalysisMode", () => {
       screen.getByText("Loading contribution detail for the selected segment and horizon.")
     ).toBeInTheDocument();
   });
+
+  it("renders a shared capability notice when contribution detail is unavailable", () => {
+    render(
+      <PerformanceAnalysisMode
+        workspace={{ ...buildWorkspace(), contribution: null }}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark="BMK_1"
+        capabilities={{
+          ...supportedCapabilities,
+          contributionDetail: {
+            state: "unavailable",
+            reason: "Contribution detail is not available for the current selection.",
+          },
+          attributionDetail: {
+            state: "supported",
+          },
+        }}
+        relativeSegmentRows={[]}
+        topAttributionEffectRows={[]}
+        attributionEffectScale={0.01}
+        isUpdating={false}
+        isDetailsPending={false}
+      />
+    );
+
+    expect(screen.getByText("Contribution detail unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Contribution detail is not available for the current selection.")).toBeInTheDocument();
+  });
 });

@@ -175,8 +175,28 @@ describe("PerformanceAnalysisAttributionSection", () => {
       />
     );
 
-    expect(
-      screen.getByText("Attribution detail is not available for the current selection.")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Attribution detail is not available for the current selection.")).toBeInTheDocument();
+  });
+
+  it("renders a partial-state panel when attribution coverage is incomplete", () => {
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({
+          capabilities: {
+            ...supportedCapabilities,
+            attributionDetail: {
+              state: "partial",
+              reason: "Benchmark-relative attribution is incomplete for the current selection.",
+            },
+          },
+          relativeSegmentRows: [],
+          topAttributionEffectRows: [],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")).toBeInTheDocument();
   });
 });

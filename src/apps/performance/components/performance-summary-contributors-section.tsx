@@ -5,6 +5,7 @@ import {
 } from "@/design-system";
 
 import { formatPct } from "../formatters";
+import PerformanceCapabilityNotice from "./performance-capability-notice";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
 
 export default function PerformanceSummaryContributorsSection({
@@ -62,10 +63,16 @@ export default function PerformanceSummaryContributorsSection({
       ) : isDetailsPending ? (
         <p className="muted">Loading contributor ranking for the selected analytical slice.</p>
       ) : (
-        <p className="muted">
-          {capabilities.contributionRanking.reason ??
-            "Contributor ranking is not available for the current selection."}
-        </p>
+        <PerformanceCapabilityNotice
+          capability={capabilities.contributionRanking}
+          partialTitle="Contributor ranking is partial"
+          unavailableTitle="Contributor ranking unavailable"
+          body={
+            capabilities.contributionRanking.reason ??
+            "Contributor ranking is not available for the current selection."
+          }
+          hint="Position-level contribution ranking needs source-backed contribution detail for the selected slice."
+        />
       )}
     </AnalyticsModule>
   );
