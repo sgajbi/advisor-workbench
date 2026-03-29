@@ -93,6 +93,8 @@ export default function PortfolioPairedAnalyticsSection({
     <WorkspaceGrid className="portfolio-primary-grid portfolio-paired-analytics-grid">
       {showIncomeModule ? (
         <PortfolioCollapsibleModule
+          className="portfolio-summary-module-card"
+          compact={!isDetailedView}
           title="Income"
           subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
           expanded={getSectionExpanded("income")}
@@ -110,6 +112,8 @@ export default function PortfolioPairedAnalyticsSection({
 
       {showActivityModule ? (
         <PortfolioCollapsibleModule
+          className="portfolio-summary-module-card"
+          compact={!isDetailedView}
           title="Activity"
           subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
           expanded={getSectionExpanded("activity")}

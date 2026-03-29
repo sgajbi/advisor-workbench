@@ -2,24 +2,31 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
+import { cx } from "../utils/cx";
+
 export default function AnalyticsModule({
   title,
   subtitle,
   actions,
   children,
+  className,
+  compact = false,
 }: {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
   children: React.ReactNode;
+  className?: string;
+  compact?: boolean;
 }) {
   return (
     <Box
+      className={cx(className)}
       sx={{
         display: "grid",
-        gap: 2,
+        gap: compact ? 1.5 : 2,
         minWidth: 0,
-        p: { xs: 2.5, md: 3 },
+        p: compact ? { xs: 2.25, md: 2.5 } : { xs: 2.5, md: 3 },
         borderRadius: "12px",
         border: "1px solid #e5e7eb",
         background: "#ffffff",
@@ -53,7 +60,7 @@ export default function AnalyticsModule({
               <Typography
                 component="div"
                 sx={{
-                  mt: 0.5,
+                  mt: compact ? 0.25 : 0.5,
                   fontSize: "0.75rem",
                   fontWeight: 500,
                   lineHeight: 1.4,

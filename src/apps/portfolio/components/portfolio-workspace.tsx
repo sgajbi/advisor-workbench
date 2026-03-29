@@ -914,6 +914,7 @@ function PortfolioInsightsSection({
     return null;
   }
 
+  const isSummaryView = context.viewMode === "summary";
   const showPerformanceSnapshot = isRenderableCapability(capabilities.performanceSnapshot);
   const showAllocationModule = isRenderableCapability(capabilities.allocation);
   const showTopHoldingsModule = isRenderableCapability(capabilities.topHoldings);
@@ -979,19 +980,22 @@ function PortfolioInsightsSection({
         </WorkspaceGrid>
       ) : null}
       <WorkspaceGrid className="portfolio-primary-grid">
-        {showAllocationModule ? (
-          <PortfolioCollapsibleModule
-            title="Portfolio Allocation"
-            subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
-            expanded={getSectionExpanded("allocation")}
-            onToggle={() => toggleSection("allocation")}
-          >
+          {showAllocationModule ? (
+            <PortfolioCollapsibleModule
+              className="portfolio-summary-module-card"
+              compact={isSummaryView}
+              title="Portfolio Allocation"
+              subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
+              expanded={getSectionExpanded("allocation")}
+              onToggle={() => toggleSection("allocation")}
+            >
             {detailsLoading ? (
               <ModuleSkeleton chart rows={4} />
             ) : workspace.allocation_views?.length ? (
               <DeferredPortfolioAllocationPanel
                 allocationViews={workspace.allocation_views}
                 baseCurrency={workspace.portfolio.base_currency}
+                compact={isSummaryView}
                 selectedAllocation={
                   holdingsDrilldown?.kind === "allocation" ? holdingsDrilldown.selection : null
                 }
@@ -1033,6 +1037,8 @@ function PortfolioInsightsSection({
 
         {showTopHoldingsModule ? (
           <PortfolioCollapsibleModule
+            className="portfolio-summary-module-card"
+            compact={isSummaryView}
             title="Top Holdings"
             subtitle={`Largest holdings by market value or weight as of ${formatDate(context.selectedAsOfDate)}.`}
             expanded={getSectionExpanded("top-holdings")}

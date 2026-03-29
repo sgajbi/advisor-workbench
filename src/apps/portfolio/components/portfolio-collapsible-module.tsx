@@ -8,15 +8,21 @@ export default function PortfolioCollapsibleModule({
   expanded,
   onToggle,
   children,
+  className,
+  compact = false,
 }: {
   title: string;
   subtitle: string;
   expanded: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  className?: string;
+  compact?: boolean;
 }) {
   return (
     <AnalyticsModule
+      className={className}
+      compact={compact}
       title={title}
       subtitle={subtitle}
       actions={

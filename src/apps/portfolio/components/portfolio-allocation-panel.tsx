@@ -46,11 +46,13 @@ function handleInteractiveKeyPress(
 export default function PortfolioAllocationPanel({
   allocationViews,
   baseCurrency,
+  compact = false,
   selectedAllocation,
   onSelectionChange,
 }: {
   allocationViews: PortfolioAllocationView[];
   baseCurrency: string;
+  compact?: boolean;
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
 }) {
@@ -82,7 +84,13 @@ export default function PortfolioAllocationPanel({
     selectedAllocation?.dimension === activeDimension ? selectedAllocation.bucket : null;
 
   return (
-    <div className="portfolio-allocation-panel">
+    <div
+      className={
+        compact
+          ? "portfolio-allocation-panel portfolio-allocation-panel-compact"
+          : "portfolio-allocation-panel"
+      }
+    >
       <div className="portfolio-allocation-toolbar">
         <div className="portfolio-segmented-control" role="tablist" aria-label="Allocation dimensions">
           {DIMENSIONS.map((dimension) => {
@@ -206,7 +214,8 @@ export default function PortfolioAllocationPanel({
           )}
         </div>
 
-        <div className="portfolio-allocation-ranked">
+        {!compact ? (
+          <div className="portfolio-allocation-ranked">
           <div className="portfolio-allocation-ranked-header">
             <span>Dimension</span>
             <span>Market Value</span>
@@ -267,7 +276,8 @@ export default function PortfolioAllocationPanel({
               <p className="muted">Book positions and publish prices to generate allocation views.</p>
             </div>
           )}
-        </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

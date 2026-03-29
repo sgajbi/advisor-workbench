@@ -18,8 +18,8 @@ export default function PortfolioActionsModule({
           key: `${action.title}-${index}`,
           sequence: action.sequence || index + 1,
           title: action.title,
-          impact: action.impact,
-          target: action.target,
+          impact: toCompactReason(action.impact),
+          target: undefined,
           href: action.href,
           ctaLabel: action.cta_label,
           recommended: action.recommended,
@@ -27,4 +27,13 @@ export default function PortfolioActionsModule({
       />
     </Panel>
   );
+}
+
+function toCompactReason(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const firstSentence = value.split(".")[0]?.trim();
+  return firstSentence ? `${firstSentence}.` : value;
 }

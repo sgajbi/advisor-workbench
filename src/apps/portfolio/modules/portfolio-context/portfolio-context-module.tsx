@@ -18,7 +18,7 @@ export default function PortfolioContextModule({
   onCopy: (key: string, value: string | null | undefined) => void;
 }) {
   return (
-    <Panel className="portfolio-side-card">
+    <Panel className="portfolio-side-card portfolio-context-card">
       <ContextCard
         title="Portfolio Context"
         subtitle="Identity and book setup at the current page context."

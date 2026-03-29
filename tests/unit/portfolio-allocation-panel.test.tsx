@@ -93,4 +93,20 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
     expect(screen.getAllByText("No allocation data yet")).toHaveLength(2);
   });
+
+  it("uses a visual-only compact summary layout when requested", () => {
+    const { container } = render(
+      <PortfolioAllocationPanel
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        compact
+        selectedAllocation={null}
+        onSelectionChange={() => {}}
+      />
+    );
+
+    expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
+    expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
+    expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();
+  });
 });

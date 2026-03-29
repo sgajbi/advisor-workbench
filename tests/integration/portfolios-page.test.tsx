@@ -151,8 +151,11 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
     expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
     expect(document.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
+    expect(document.querySelectorAll(".portfolio-summary-module-card").length).toBeGreaterThanOrEqual(5);
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
+    expect(document.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
+    expect(document.querySelector(".portfolio-allocation-panel-compact .portfolio-allocation-ranked")).toBeFalsy();
     expect(document.querySelector(".portfolio-actions-card .portfolio-workflow-item")).toBeTruthy();
     expect(
       document.querySelector(".portfolio-actions-card .portfolio-workflow-actions .portfolio-workflow-cta")
@@ -168,7 +171,7 @@ describe("PortfolioFoundationPage", () => {
     expect(
       screen.getByText(/review portfolio return, benchmark context, and contribution/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/target: performance workflow for this portfolio/i)).toBeInTheDocument();
+    expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[1]).toHaveAttribute(
       "href",
       "/ignored"

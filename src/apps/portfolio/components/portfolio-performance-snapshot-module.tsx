@@ -36,9 +36,12 @@ export default function PortfolioPerformanceSnapshotModule({
   selectedPeriod,
 }: PerformanceSnapshotProps) {
   const hasPerformance = capability.state === "supported" && Boolean(performance);
+  const compact = context.viewMode === "summary";
 
   return (
     <AnalyticsModule
+      className="portfolio-summary-module-card portfolio-performance-summary-card"
+      compact={compact}
       title="Performance Snapshot"
       subtitle={`Selected period ${selectedPeriod} as of ${formatDate(
         context.selectedAsOfDate
