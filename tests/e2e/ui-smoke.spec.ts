@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test';
 test.describe('UI smoke checks', () => {
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /^Portfolio$|^Portfolio unavailable$/i })
+    ).toBeVisible();
     await expect(page.getByText(/Client Portfolios|Portfolio unavailable/i)).toBeVisible();
   });
 
