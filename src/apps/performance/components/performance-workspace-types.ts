@@ -51,6 +51,20 @@ export type PerformanceSummaryModeProps = PerformanceWorkspaceControls & {
   negativePositionContributors: ContributionPositionView[];
 };
 
+export type PerformanceSummaryHeaderSectionProps = Pick<
+  PerformanceSummaryModeProps,
+  | "workspace"
+  | "detailBasis"
+  | "hasBenchmark"
+  | "hasHistory"
+  | "selectedBenchmarkCode"
+  | "selectedBenchmarkLabel"
+  | "selectedPerformance"
+  | "primaryDriver"
+  | "hasMoneyWeightedReturn"
+  | "suspiciousMoneyWeightedReturn"
+>;
+
 export type PerformanceAnalysisModeProps = PerformanceWorkspaceControls & {
   workspace: WorkbenchPerformanceWorkspace;
   hasAttribution: boolean;
