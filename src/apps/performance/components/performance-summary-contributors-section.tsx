@@ -1,4 +1,8 @@
-import { AnalyticsModule, AnalyticsRankedList } from "@/design-system";
+import {
+  AnalyticsModule,
+  AnalyticsRankedList,
+  WorkbenchSummaryVisualCard,
+} from "@/design-system";
 
 import { formatPct } from "../formatters";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
@@ -22,7 +26,7 @@ export default function PerformanceSummaryContributorsSection({
     >
       {rankingState === "supported" ? (
           <div className="performance-contributors-grid">
-            <div className="workbench-summary-visual-card">
+            <WorkbenchSummaryVisualCard>
               <AnalyticsRankedList
                 title="Highest"
                 label="Contribution"
@@ -37,8 +41,8 @@ export default function PerformanceSummaryContributorsSection({
                 }))}
                 emptyMessage="No positive contributors are present for the selected analytical slice."
               />
-            </div>
-            <div className="workbench-summary-visual-card">
+            </WorkbenchSummaryVisualCard>
+            <WorkbenchSummaryVisualCard>
               <AnalyticsRankedList
                 title="Lowest"
                 label="Contribution"
@@ -53,7 +57,7 @@ export default function PerformanceSummaryContributorsSection({
                 }))}
                 emptyMessage="No detractors are present for the selected analytical slice."
               />
-            </div>
+            </WorkbenchSummaryVisualCard>
           </div>
       ) : isDetailsPending ? (
         <p className="muted">Loading contributor ranking for the selected analytical slice.</p>

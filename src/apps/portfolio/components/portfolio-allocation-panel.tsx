@@ -2,6 +2,11 @@
 
 import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 
+import {
+  WorkbenchSummaryToolbar,
+  WorkbenchSummaryVisualCard,
+} from "@/design-system";
+
 import { formatCurrency, formatPct } from "../formatters";
 import type {
   PortfolioAllocationSelection,
@@ -91,7 +96,7 @@ export default function PortfolioAllocationPanel({
           : "portfolio-allocation-panel"
       }
     >
-      <div className="portfolio-allocation-toolbar workbench-summary-toolbar">
+      <WorkbenchSummaryToolbar className="portfolio-allocation-toolbar">
         <div className="portfolio-segmented-control" role="tablist" aria-label="Allocation dimensions">
           {DIMENSIONS.map((dimension) => {
             const isAvailable = viewsByDimension.has(dimension.key);
@@ -156,10 +161,10 @@ export default function PortfolioAllocationPanel({
             Look-through
           </button>
         </div>
-      </div>
+      </WorkbenchSummaryToolbar>
 
       <div className="portfolio-allocation-body">
-        <div className="portfolio-allocation-chart-card workbench-summary-visual-card">
+        <WorkbenchSummaryVisualCard className="portfolio-allocation-chart-card">
           {buckets.length ? (
             <>
               {chartType === "donut" ? (
@@ -212,7 +217,7 @@ export default function PortfolioAllocationPanel({
           ) : (
             <AllocationEmptyState dimensionLabel={formatDimensionLabel(activeDimension)} />
           )}
-        </div>
+        </WorkbenchSummaryVisualCard>
 
         {!compact ? (
           <div className="portfolio-allocation-ranked">

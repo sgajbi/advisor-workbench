@@ -31,6 +31,13 @@ import {
   WorkspaceRailLink,
   WorkspaceSide,
   WorkbenchPageHeader,
+  WorkbenchSummaryToolbar,
+  WorkbenchSummaryVisualCard,
+  WorkbenchSummaryVisualHeading,
+  WorkbenchSummaryVisualLabel,
+  WorkbenchSummaryVisualMeta,
+  WorkbenchSummaryVisualTrack,
+  WorkbenchSummaryVisualValue,
   WorkstationPage,
   WorkstationShell,
 } from "@/design-system";
@@ -351,6 +358,33 @@ describe("design-system components", () => {
     expect(screen.getByText("Apple Inc")).toHaveClass("workbench-summary-visual-label");
     expect(screen.getByText("Avg. Weight 24.00%")).toHaveClass("workbench-summary-visual-meta");
     expect(screen.getByText("1.55%")).toHaveClass("workbench-summary-visual-value");
+  });
+
+  it("renders reusable workbench summary visual primitives with the shared class contract", () => {
+    render(
+      <>
+        <WorkbenchSummaryToolbar>
+          <span>Toolbar Item</span>
+        </WorkbenchSummaryToolbar>
+        <WorkbenchSummaryVisualCard>
+          <WorkbenchSummaryVisualHeading>Visual Heading</WorkbenchSummaryVisualHeading>
+          <WorkbenchSummaryVisualLabel>Visual Label</WorkbenchSummaryVisualLabel>
+          <WorkbenchSummaryVisualMeta>Visual Meta</WorkbenchSummaryVisualMeta>
+          <WorkbenchSummaryVisualTrack className="custom-track">
+            <span>Track Body</span>
+          </WorkbenchSummaryVisualTrack>
+          <WorkbenchSummaryVisualValue>123</WorkbenchSummaryVisualValue>
+        </WorkbenchSummaryVisualCard>
+      </>
+    );
+
+    expect(document.querySelector(".workbench-summary-toolbar")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-card")).toBeTruthy();
+    expect(screen.getByText("Visual Heading")).toHaveClass("workbench-summary-visual-heading");
+    expect(screen.getByText("Visual Label")).toHaveClass("workbench-summary-visual-label");
+    expect(screen.getByText("Visual Meta")).toHaveClass("workbench-summary-visual-meta");
+    expect(screen.getByText("123")).toHaveClass("workbench-summary-visual-value");
+    expect(document.querySelector(".custom-track")).toBeTruthy();
   });
 
   it("renders the shared neutral workbench page header with title, subtitle, and actions", () => {

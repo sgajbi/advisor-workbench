@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Typography } from "@mui/material";
 
-import { AnalyticsModule } from "@/design-system";
+import {
+  AnalyticsModule,
+  WorkbenchSummaryToolbar,
+  WorkbenchSummaryVisualCard,
+  WorkbenchSummaryVisualMeta,
+  WorkbenchSummaryVisualValue,
+} from "@/design-system";
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
   PerformanceBenchmarkOptionView,
@@ -121,26 +127,26 @@ export default function PerformanceMultiHorizonPanel({
         <p className="muted">Loading comparative horizon summaries.</p>
       ) : rows && rows.length > 0 ? (
         <>
-          <div className="performance-mini-legend workbench-summary-toolbar">
+          <WorkbenchSummaryToolbar className="performance-mini-legend">
             <span className="performance-mini-legend-item performance-mini-legend-portfolio">
               Portfolio
             </span>
             <span className="performance-mini-legend-item performance-mini-legend-benchmark">
               {benchmarkLabel}
             </span>
-          </div>
+          </WorkbenchSummaryToolbar>
           <div
             className="performance-horizon-bars workbench-summary-visual-grid"
             aria-label="Multi-horizon returns"
           >
             {rows.map((row) => (
-              <div
+              <WorkbenchSummaryVisualCard
                 key={row.period}
                 className="performance-horizon-bar-group workbench-summary-visual-card"
               >
                 <div className="performance-horizon-bar-values">
-                  <span>{formatPct(row.portfolio_return_pct)}</span>
-                  <span>{formatPct(row.benchmark_return_pct)}</span>
+                  <WorkbenchSummaryVisualMeta>{formatPct(row.portfolio_return_pct)}</WorkbenchSummaryVisualMeta>
+                  <WorkbenchSummaryVisualMeta>{formatPct(row.benchmark_return_pct)}</WorkbenchSummaryVisualMeta>
                 </div>
                 <div className="performance-horizon-bar-track">
                   <div
@@ -156,8 +162,8 @@ export default function PerformanceMultiHorizonPanel({
                     }}
                   />
                 </div>
-                <strong>{row.period}</strong>
-              </div>
+                <WorkbenchSummaryVisualValue>{row.period}</WorkbenchSummaryVisualValue>
+              </WorkbenchSummaryVisualCard>
             ))}
           </div>
         </>
