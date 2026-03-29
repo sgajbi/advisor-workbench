@@ -1,9 +1,9 @@
-name: Advisor Workbench Pipeline
+name: Advisor Workbench Quality Gate
 
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -21,23 +21,66 @@ jobs:
       - uses: actions/checkout@v4
       - uses: reviewdog/action-actionlint@v1
 
-  check:
-    name: Lint, Typecheck, Test, Build
+  quality-gate:
+    name: Lint, Typecheck, Coverage, Build
     needs: [workflow-lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
+          cache: "npm"
       - name: Install
         run: make install
-      - name: Check
-        run: make check
+      - name: Lint
+        run: make lint
+      - name: Typecheck
+        run: make typecheck
+      - name: Coverage Gate
+        run: make test-coverage
+      - name: Build
+        run: make build
+      - name: Upload Coverage Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage
+          if-no-files-found: error
+
+  e2e-smoke:
+    name: Playwright Smoke
+    needs: [quality-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install
+        run: make install
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Build App
+        run: npm run build
+      - name: Run Playwright Smoke
+        run: make test-e2e
+      - name: Upload Playwright Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
 
   docker-build:
     name: Validate Docker Build
-    needs: [check]
+    needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,11 +89,11 @@ jobs:
 
   ci-local-docker:
     name: CI Local Docker Parity
-    needs: [check]
+    needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Dockerized local CI parity
+      - name: Dockerized Local CI Parity
         run: make ci-local-docker
       - name: Cleanup
         if: always()

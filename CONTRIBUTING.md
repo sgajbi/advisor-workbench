@@ -22,6 +22,8 @@ This repository follows a docs-with-code rule: every implementation change must 
 
 - Tests added/updated for the behavior change.
 - `make check` passes locally.
+- `make test-e2e` passes for UI changes that affect routed user journeys.
+- Coverage thresholds in `vitest.config.ts` remain green for the protected frontend surface.
 - Required docs are updated in the same PR.
 - PR template checklist is fully completed.
 
@@ -29,6 +31,7 @@ This repository follows a docs-with-code rule: every implementation change must 
 
 - Target branch: `main` via pull request only.
 - Required status checks must pass.
+- CI quality gate covers lint, typecheck, Vitest coverage, production build, and Playwright smoke.
 - Linear history is enforced.
 - Auto-merge is enabled for CI-passing PRs.
 

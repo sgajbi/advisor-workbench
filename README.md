@@ -57,6 +57,37 @@ Open `http://localhost:3000`.
 
 Set `BFF_BASE_URL` to point to `lotus-gateway`.
 
+## Quality Gate
+
+Frontend changes are expected to pass a hard CI gate before merge.
+
+Required layers:
+
+- unit and integration tests through Vitest coverage
+- Playwright smoke checks against a built Next.js app
+- lint, typecheck, and production build validation
+
+Current enforced coverage thresholds in `vitest.config.ts`:
+
+- lines: `99`
+- statements: `99`
+- functions: `99`
+- branches: `95`
+
+The current protected coverage surface is intentionally explicit and limited to core route entrypoints,
+shell composition, and shared design-system primitives that already have meaningful tests. Future UI
+refactors are expected to expand that protected surface rather than dilute the gate.
+
+Local commands:
+
+```bash
+make test-coverage
+make test-e2e
+make check
+```
+
+CI must pass before merge.
+
 ## Live Performance Demo
 
 The current flagship demo path is the benchmark-aware performance workstation:
