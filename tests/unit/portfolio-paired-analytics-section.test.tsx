@@ -193,6 +193,7 @@ describe("PortfolioPairedAnalyticsSection", () => {
 
     expect(container.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
     expect(container.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
+    expect(container.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(container.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
     expect(screen.getByLabelText("Income overview")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity overview")).toBeInTheDocument();

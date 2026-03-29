@@ -59,7 +59,7 @@ export function PortfolioTopHoldingsPanel({
 
   return (
     <div className="portfolio-chart-module">
-      <div className="portfolio-chart-module-toolbar">
+      <div className="portfolio-chart-module-toolbar workbench-summary-toolbar">
         <div className="portfolio-chart-toggle-group" aria-label="Top holdings metric">
           <button
             type="button"
@@ -88,7 +88,7 @@ export function PortfolioTopHoldingsPanel({
         </div>
       </div>
       <div className="portfolio-chart-module-body portfolio-top-holdings-body">
-        <div className="portfolio-chart-card portfolio-top-holdings-list-card">
+        <div className="portfolio-chart-card portfolio-top-holdings-list-card workbench-summary-visual-card">
           <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
             {sortedPositions.map((position) => {
               const metricValue =
@@ -281,8 +281,8 @@ export function PortfolioActivityPanel({
     <div
       className={
         compact
-          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
-          : "portfolio-chart-card portfolio-chart-card-analytic"
+          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact workbench-summary-visual-card"
+          : "portfolio-chart-card portfolio-chart-card-analytic workbench-summary-visual-card"
       }
     >
       <div
@@ -381,8 +381,8 @@ export function PortfolioIncomePanel({
     <div
       className={
         compact
-          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
-          : "portfolio-chart-card portfolio-chart-card-analytic"
+          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact workbench-summary-visual-card"
+          : "portfolio-chart-card portfolio-chart-card-analytic workbench-summary-visual-card"
       }
     >
       <div

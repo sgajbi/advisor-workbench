@@ -121,7 +121,7 @@ export default function PerformanceMultiHorizonPanel({
         <p className="muted">Loading comparative horizon summaries.</p>
       ) : rows && rows.length > 0 ? (
         <>
-          <div className="performance-mini-legend">
+          <div className="performance-mini-legend workbench-summary-toolbar">
             <span className="performance-mini-legend-item performance-mini-legend-portfolio">
               Portfolio
             </span>
@@ -129,9 +129,15 @@ export default function PerformanceMultiHorizonPanel({
               {benchmarkLabel}
             </span>
           </div>
-          <div className="performance-horizon-bars" aria-label="Multi-horizon returns">
+          <div
+            className="performance-horizon-bars workbench-summary-visual-grid"
+            aria-label="Multi-horizon returns"
+          >
             {rows.map((row) => (
-              <div key={row.period} className="performance-horizon-bar-group">
+              <div
+                key={row.period}
+                className="performance-horizon-bar-group workbench-summary-visual-card"
+              >
                 <div className="performance-horizon-bar-values">
                   <span>{formatPct(row.portfolio_return_pct)}</span>
                   <span>{formatPct(row.benchmark_return_pct)}</span>

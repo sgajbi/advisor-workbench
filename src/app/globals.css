@@ -291,6 +291,26 @@ a:hover {
   min-width: 0;
 }
 
+.workbench-summary-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+}
+
+.workbench-summary-visual-grid {
+  display: grid;
+  gap: var(--workbench-metric-strip-gap);
+}
+
+.workbench-summary-visual-card {
+  min-width: 0;
+  border: 1px solid rgba(34, 44, 59, 0.07);
+  border-radius: 12px;
+  background: #fbfcfd;
+}
+
 .workbench-rail-card {
   padding: var(--workbench-rail-card-padding);
   align-content: start;
@@ -504,11 +524,7 @@ a:hover {
 }
 
 .portfolio-chart-module-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.625rem;
-  align-items: center;
+  min-width: 0;
 }
 
 .portfolio-chart-toggle-group {
@@ -546,6 +562,7 @@ a:hover {
   gap: 0.75rem;
   min-width: 0;
   overflow: hidden;
+  padding: 0.875rem;
 }
 
 .portfolio-chart-card-analytic {
@@ -3207,12 +3224,8 @@ a:hover {
     gap: 0.75rem;
   }
 
-  .portfolio-allocation-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+.portfolio-allocation-toolbar {
+    min-width: 0;
   }
 
   .portfolio-allocation-toolbar-actions {
@@ -3266,7 +3279,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     min-height: 20rem;
-    padding: 1rem;
+    padding: 0.875rem;
   }
 
   .portfolio-allocation-panel-compact .portfolio-allocation-chart-card {
@@ -3949,9 +3962,7 @@ a:hover {
 }
 
 .performance-contributors-grid {
-  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
 }
 
 .performance-ranked-list {
@@ -5117,10 +5128,7 @@ a:hover {
 }
 
 .performance-mini-legend {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  align-items: center;
+  min-width: 0;
 }
 
 .performance-mini-legend-item {
@@ -5148,7 +5156,6 @@ a:hover {
 }
 
 .performance-horizon-bars {
-  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--workbench-metric-strip-gap);
   align-items: flex-end;
@@ -5159,6 +5166,7 @@ a:hover {
   display: grid;
   gap: 0.45rem;
   justify-items: center;
+  padding: 0.75rem;
 }
 
 .performance-horizon-bar-values {

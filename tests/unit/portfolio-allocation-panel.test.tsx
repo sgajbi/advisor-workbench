@@ -106,6 +106,10 @@ describe("PortfolioAllocationPanel", () => {
     );
 
     expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
+    expect(container.querySelector(".portfolio-allocation-toolbar.workbench-summary-toolbar")).toBeTruthy();
+    expect(
+      container.querySelector(".portfolio-allocation-chart-card.workbench-summary-visual-card")
+    ).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
     expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();
   });

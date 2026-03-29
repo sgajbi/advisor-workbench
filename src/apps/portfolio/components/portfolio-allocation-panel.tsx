@@ -91,7 +91,7 @@ export default function PortfolioAllocationPanel({
           : "portfolio-allocation-panel"
       }
     >
-      <div className="portfolio-allocation-toolbar">
+      <div className="portfolio-allocation-toolbar workbench-summary-toolbar">
         <div className="portfolio-segmented-control" role="tablist" aria-label="Allocation dimensions">
           {DIMENSIONS.map((dimension) => {
             const isAvailable = viewsByDimension.has(dimension.key);
@@ -159,7 +159,7 @@ export default function PortfolioAllocationPanel({
       </div>
 
       <div className="portfolio-allocation-body">
-        <div className="portfolio-allocation-chart-card">
+        <div className="portfolio-allocation-chart-card workbench-summary-visual-card">
           {buckets.length ? (
             <>
               {chartType === "donut" ? (
