@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import { Panel, WorkspaceLayout, WorkspaceMain } from "@/design-system";
-import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import {
   getPerformanceWorkspacePresentation,
@@ -12,6 +11,10 @@ import PerformanceWorkspaceModeSwitch, {
   type PerformanceWorkspaceMode,
 } from "./performance-workspace-mode-switch";
 import PerformanceSummaryMode from "./performance-summary-mode";
+import type {
+  PerformanceWorkspaceControls,
+  PerformanceWorkspaceViewProps,
+} from "./performance-workspace-types";
 import { getBenchmarkLabel } from "./performance-workspace-view-helpers";
 
 export default function PerformanceWorkspaceView({
@@ -25,28 +28,7 @@ export default function PerformanceWorkspaceView({
   onRequestChange,
   isUpdating = false,
   isDetailsPending = false,
-}: {
-  workspace: WorkbenchPerformanceWorkspace | null;
-  period: string;
-  detailBasis: string;
-  contributionDimension: string;
-  attributionDimension: string;
-  chartFrequency: string;
-  benchmark?: string;
-  onRequestChange?: (patch: {
-    portfolioId?: string;
-    period?: string;
-    detailBasis?: string;
-    contributionDimension?: string;
-    attributionDimension?: string;
-    chartFrequency?: string;
-    benchmark?: string;
-    reportStartDate?: string;
-    reportEndDate?: string;
-  }) => void;
-  isUpdating?: boolean;
-  isDetailsPending?: boolean;
-}) {
+}: PerformanceWorkspaceViewProps) {
   const [mode, setMode] = useState<PerformanceWorkspaceMode>("summary");
 
   const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
@@ -56,19 +38,22 @@ export default function PerformanceWorkspaceView({
     : undefined;
   const selectedPerformance =
     workspace && detailBasis === "GROSS" ? workspace.gross_performance : workspace?.net_performance;
+  const controls: PerformanceWorkspaceControls = {
+    period,
+    detailBasis,
+    contributionDimension,
+    attributionDimension,
+    chartFrequency,
+    benchmark,
+    onRequestChange,
+    isUpdating,
+    isDetailsPending,
+  };
 
   const modePanel = !workspace ? null : mode === "summary" ? (
     <PerformanceSummaryMode
       workspace={workspace}
-      period={period}
-      detailBasis={detailBasis}
-      contributionDimension={contributionDimension}
-      attributionDimension={attributionDimension}
-      chartFrequency={chartFrequency}
-      benchmark={benchmark}
-      onRequestChange={onRequestChange}
-      isUpdating={isUpdating}
-      isDetailsPending={isDetailsPending}
+      {...controls}
       hasBenchmark={presentation?.hasBenchmark ?? false}
       hasHistory={presentation?.hasHistory ?? false}
       selectedBenchmarkCode={selectedBenchmarkCode}
@@ -86,15 +71,7 @@ export default function PerformanceWorkspaceView({
   ) : mode === "analysis" ? (
     <PerformanceAnalysisMode
       workspace={workspace}
-      period={period}
-      detailBasis={detailBasis}
-      contributionDimension={contributionDimension}
-      attributionDimension={attributionDimension}
-      chartFrequency={chartFrequency}
-      benchmark={benchmark}
-      onRequestChange={onRequestChange}
-      isUpdating={isUpdating}
-      isDetailsPending={isDetailsPending}
+      {...controls}
       hasAttribution={presentation?.hasAttribution ?? false}
       hasContribution={presentation?.hasContribution ?? false}
       relativeSegmentRows={presentation?.relativeSegmentRows ?? []}

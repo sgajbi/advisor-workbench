@@ -9,24 +9,12 @@ import {
   StatusChip,
   WorkspaceGrid,
 } from "@/design-system";
-import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import { formatCompactPct, formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import PerformanceChartPanel from "./performance-chart-panel";
 import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
+import type { PerformanceSummaryModeProps } from "./performance-workspace-types";
 import { summaryLabelSx } from "./performance-workspace-view-helpers";
-
-type ContributionRow = {
-  position_id: string;
-  weight_avg_pct: number | null;
-  contribution_pct: number;
-};
-
-type GenericContributionRow = {
-  key_label: string;
-  weight_avg_pct: number | null;
-  contribution_pct: number;
-};
 
 export default function PerformanceSummaryMode({
   workspace,
@@ -52,40 +40,7 @@ export default function PerformanceSummaryMode({
   contributorScale,
   positivePositionContributors,
   negativePositionContributors,
-}: {
-  workspace: WorkbenchPerformanceWorkspace;
-  period: string;
-  detailBasis: string;
-  contributionDimension: string;
-  attributionDimension: string;
-  chartFrequency: string;
-  benchmark?: string;
-  onRequestChange?: (patch: {
-    period?: string;
-    detailBasis?: string;
-    contributionDimension?: string;
-    attributionDimension?: string;
-    chartFrequency?: string;
-    benchmark?: string;
-    reportStartDate?: string;
-    reportEndDate?: string;
-  }) => void;
-  isUpdating: boolean;
-  isDetailsPending: boolean;
-  hasBenchmark: boolean;
-  hasHistory: boolean;
-  selectedBenchmarkCode?: string;
-  selectedBenchmarkLabel?: string | null;
-  selectedPerformance: WorkbenchPerformanceWorkspace["net_performance"] | WorkbenchPerformanceWorkspace["gross_performance"] | undefined;
-  primaryDriver: GenericContributionRow | null;
-  hasMoneyWeightedReturn: boolean;
-  suspiciousMoneyWeightedReturn: boolean;
-  hasContribution: boolean;
-  hasPositionRanking: boolean;
-  contributorScale: number;
-  positivePositionContributors: ContributionRow[];
-  negativePositionContributors: ContributionRow[];
-}) {
+}: PerformanceSummaryModeProps) {
   return (
     <>
       <Panel id="performance-overview" className="performance-summary-stage">

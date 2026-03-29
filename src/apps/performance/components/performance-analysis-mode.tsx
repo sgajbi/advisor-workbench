@@ -7,16 +7,15 @@ import {
   Panel,
   WorkspaceGrid,
 } from "@/design-system";
-import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
 import {
   ATTRIBUTION_DIMENSION_OPTIONS,
   CONTRIBUTION_DIMENSION_OPTIONS,
 } from "../navigation";
-import { getRelativeSegmentRows, getTopAttributionEffectRows } from "../view-model";
 import PerformanceAttributionTrendPanel from "./performance-attribution-trend-panel";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
+import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import {
   getAttributionTotals,
   getContributionTotals,
@@ -41,32 +40,7 @@ export default function PerformanceAnalysisMode({
   relativeSegmentRows,
   topAttributionEffectRows,
   attributionEffectScale,
-}: {
-  workspace: WorkbenchPerformanceWorkspace;
-  period: string;
-  detailBasis: string;
-  contributionDimension: string;
-  attributionDimension: string;
-  chartFrequency: string;
-  benchmark?: string;
-  onRequestChange?: (patch: {
-    period?: string;
-    detailBasis?: string;
-    contributionDimension?: string;
-    attributionDimension?: string;
-    chartFrequency?: string;
-    benchmark?: string;
-    reportStartDate?: string;
-    reportEndDate?: string;
-  }) => void;
-  isUpdating: boolean;
-  isDetailsPending: boolean;
-  hasAttribution: boolean;
-  hasContribution: boolean;
-  relativeSegmentRows: ReturnType<typeof getRelativeSegmentRows>;
-  topAttributionEffectRows: ReturnType<typeof getTopAttributionEffectRows>;
-  attributionEffectScale: number;
-}) {
+}: PerformanceAnalysisModeProps) {
   return (
     <WorkspaceGrid className="performance-detail-grid">
       <PerformanceAttributionTrendPanel
