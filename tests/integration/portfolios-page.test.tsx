@@ -74,7 +74,9 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".workstation-shell.workstation-shell-both.portfolio-layout")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-rail.portfolio-rail-shell")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main.portfolio-main")).toBeTruthy();
-    expect(document.querySelector(".workstation-shell-side.portfolio-side")).toBeTruthy();
+    expect(
+      document.querySelector(".workstation-shell-side.portfolio-side.portfolio-side-wide")
+    ).toBeTruthy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(screen.getByRole("heading", { name: /^Portfolio$/i })).toBeInTheDocument();
     expect(document.querySelector(".workstation-shell-main .portfolio-hero")).toBeTruthy();
@@ -148,8 +150,13 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
     expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
+    expect(document.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
+    expect(document.querySelector(".portfolio-actions-card .portfolio-workflow-item")).toBeTruthy();
+    expect(
+      document.querySelector(".portfolio-actions-card .portfolio-workflow-actions .portfolio-workflow-cta")
+    ).toBeTruthy();
     expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
     expect(screen.getByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);

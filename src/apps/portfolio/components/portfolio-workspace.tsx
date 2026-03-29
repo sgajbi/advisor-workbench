@@ -396,7 +396,7 @@ export default function PortfolioWorkspaceView({
         className="portfolio-layout"
         railClassName="portfolio-rail-shell"
         mainClassName="portfolio-main"
-        sideClassName="portfolio-side"
+        sideClassName="portfolio-side portfolio-side-wide"
         rail={<PortfolioRail portfolios={portfolios} selectedPortfolioId={selectedPortfolioId} />}
         main={
           <>

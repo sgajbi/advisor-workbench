@@ -343,7 +343,7 @@ export function PortfolioActivityPanel({
               {compact ? (
                 <div className="portfolio-flow-row-meta portfolio-flow-row-meta-compact">
                   <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
-                  <span>{bucket.requested_window.transaction_count} txn</span>
+                  <span>{bucket.requested_window.transaction_count} events</span>
                 </div>
               ) : (
                 <div className="portfolio-flow-row-meta">
@@ -438,7 +438,7 @@ export function PortfolioIncomePanel({
               {compact ? (
                 <div className="portfolio-income-row-meta portfolio-income-row-meta-compact">
                   <span>Gross {formatCurrency(grossAmount, summary.reporting_currency)}</span>
-                  <span>{item.requested_window.net.transaction_count} txn</span>
+                  <span>{item.requested_window.net.transaction_count} events</span>
                 </div>
               ) : (
                 <div className="portfolio-income-row-meta">
