@@ -242,6 +242,68 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 
+  it("keeps the assigned benchmark visible when relative comparison is partial", () => {
+    render(
+      <PerformanceChartPanel
+        title="Net Return Path"
+        points={[
+          {
+            label: "2026-03",
+            frequency: "monthly",
+            period_start: "2026-03-01",
+            period_end: "2026-03-27",
+            portfolio_return_pct: 1.4,
+            benchmark_return_pct: null,
+            active_return_pct: null,
+            cumulative_portfolio_return_pct: 6.2,
+            cumulative_benchmark_return_pct: null,
+            cumulative_active_return_pct: null,
+          },
+        ]}
+        summary={{
+          portfolio_return_pct: 6.2,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        }}
+        portfolioId="DEMO_ADV_USD_001"
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        benchmarkOptions={[
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ]}
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+        capabilities={{
+          ...supportedCapabilities,
+          benchmarkComparison: {
+            state: "partial",
+            reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+          },
+        }}
+        onRequestChange={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Compared against Global Balanced 60/40"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Active return Unavailable"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Relative context Partial"
+    );
+  });
+
   it("renders a partial capability notice when return observations are incomplete", () => {
     render(
       <PerformanceChartPanel

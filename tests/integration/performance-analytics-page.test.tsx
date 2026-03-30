@@ -40,6 +40,9 @@ vi.mock("echarts-for-react", () => ({
 function installPerformancePageFetchMock(options?: {
   unassignedBenchmark?: boolean;
   unavailableSummarySeries?: boolean;
+  partialBenchmarkComparison?: boolean;
+  aggregateContributionOnly?: boolean;
+  unavailableAttribution?: boolean;
 }) {
   vi.stubGlobal(
     "fetch",
@@ -99,7 +102,11 @@ function installPerformancePageFetchMock(options?: {
 
 function buildSummary(
   portfolioId: string,
-  options?: { unassignedBenchmark?: boolean; unavailableSummarySeries?: boolean }
+  options?: {
+    unassignedBenchmark?: boolean;
+    unavailableSummarySeries?: boolean;
+    partialBenchmarkComparison?: boolean;
+  }
 ) {
   return {
     correlation_id: "corr-performance",
@@ -136,9 +143,17 @@ function buildSummary(
       metric_basis: "NET",
       portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.42,
       benchmark_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 4.91,
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 4.91,
       active_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 0.52,
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 0.52,
       annualized_return_pct: options?.unavailableSummarySeries ? null : 5.42,
       benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
       benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
@@ -150,9 +165,17 @@ function buildSummary(
       metric_basis: "GROSS",
       portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.88,
       benchmark_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 5.12,
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 5.12,
       active_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 0.76,
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 0.76,
       annualized_return_pct: options?.unavailableSummarySeries ? null : 5.88,
       benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
       benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
@@ -175,7 +198,13 @@ function buildSummary(
 
 function buildDetails(
   portfolioId: string,
-  options?: { unassignedBenchmark?: boolean; unavailableSummarySeries?: boolean }
+  options?: {
+    unassignedBenchmark?: boolean;
+    unavailableSummarySeries?: boolean;
+    partialBenchmarkComparison?: boolean;
+    aggregateContributionOnly?: boolean;
+    unavailableAttribution?: boolean;
+  }
 ) {
   return {
     correlation_id: "corr-performance",
@@ -200,11 +229,11 @@ function buildDetails(
             period_start: "2026-01-01",
             period_end: "2026-01-31",
             portfolio_return_pct: 2.2,
-            benchmark_return_pct: 1.9,
-            active_return_pct: 0.3,
+            benchmark_return_pct: options?.partialBenchmarkComparison ? null : 1.9,
+            active_return_pct: options?.partialBenchmarkComparison ? null : 0.3,
             cumulative_portfolio_return_pct: 2.2,
-            cumulative_benchmark_return_pct: 1.9,
-            cumulative_active_return_pct: 0.3,
+            cumulative_benchmark_return_pct: options?.partialBenchmarkComparison ? null : 1.9,
+            cumulative_active_return_pct: options?.partialBenchmarkComparison ? null : 0.3,
           },
         ],
     gross_chart: [
@@ -229,16 +258,18 @@ function buildDetails(
       coverage_mv_pct: 98.7,
       portfolio_local_contribution_pct: 4.8,
       portfolio_fx_contribution_pct: 0.62,
-      position_rows: [
-        {
-          position_id: "AAPL",
-          contribution_pct: 1.55,
-          weight_avg_pct: 24.1,
-          total_return_pct: 8.2,
-          local_contribution_pct: 1.18,
-          fx_contribution_pct: 0.37,
-        },
-      ],
+      position_rows: options?.aggregateContributionOnly
+        ? []
+        : [
+            {
+              position_id: "AAPL",
+              contribution_pct: 1.55,
+              weight_avg_pct: 24.1,
+              total_return_pct: 8.2,
+              local_contribution_pct: 1.18,
+              fx_contribution_pct: 0.37,
+            },
+          ],
       levels: [
         {
           level: 1,
@@ -260,38 +291,40 @@ function buildDetails(
         },
       ],
     },
-    attribution: {
-      metric_basis: "NET",
-      model: "BF",
-      linking: "carino",
-      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
-      active_return_pct: 0.52,
-      sum_of_effects_pct: 0.5,
-      residual_pct: 0.02,
-      levels: [
-        {
-          dimension: "asset_class",
-          allocation_total_pct: 0.18,
-          selection_total_pct: 0.24,
-          interaction_total_pct: 0.03,
-          total_effect_pct: 0.45,
-          rows: [
+    attribution: options?.unavailableAttribution
+      ? null
+      : {
+          metric_basis: "NET",
+          model: "BF",
+          linking: "carino",
+          benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
+          active_return_pct: 0.52,
+          sum_of_effects_pct: 0.5,
+          residual_pct: 0.02,
+          levels: [
             {
-              key_label: "Equity",
-              portfolio_weight_avg_pct: 61,
-              benchmark_weight_avg_pct: 58,
-              portfolio_return_pct: 7.4,
-              benchmark_return_pct: 6.8,
-              allocation_pct: 0.18,
-              selection_pct: 0.24,
-              interaction_pct: 0.03,
+              dimension: "asset_class",
+              allocation_total_pct: 0.18,
+              selection_total_pct: 0.24,
+              interaction_total_pct: 0.03,
               total_effect_pct: 0.45,
+              rows: [
+                {
+                  key_label: "Equity",
+                  portfolio_weight_avg_pct: 61,
+                  benchmark_weight_avg_pct: 58,
+                  portfolio_return_pct: 7.4,
+                  benchmark_return_pct: 6.8,
+                  allocation_pct: 0.18,
+                  selection_pct: 0.24,
+                  interaction_pct: 0.03,
+                  total_effect_pct: 0.45,
+                },
+              ],
             },
           ],
         },
-      ],
-    },
     warnings: [],
     partial_failures: [],
   };
@@ -551,6 +584,49 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+  });
+
+  it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
+    installPerformancePageFetchMock({
+      partialBenchmarkComparison: true,
+    });
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("A benchmark is assigned, but benchmark-relative returns are incomplete.")
+    ).toHaveLength(2);
+    expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Compared against Global Balanced 60/40"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Active return Unavailable"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Relative context Partial"
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
+  });
+
+  it("renders a contributor-ranking partial state when only aggregate contribution rows are available", async () => {
+    installPerformancePageFetchMock({
+      aggregateContributionOnly: true,
+    });
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByText("Top contributors and detractors")).toBeInTheDocument();
+    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect(
+      screen.getByText("Contribution exists, but only aggregate rows are available.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
   it("passes a selected benchmark through to summary and details requests", async () => {

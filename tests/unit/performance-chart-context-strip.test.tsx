@@ -12,6 +12,7 @@ describe("PerformanceChartContextStrip", () => {
         benchmarkLabel="Global Balanced 60/40"
         benchmarkAssigned
         activeReturn="0.80%"
+        relativeContextStatus="available"
       />
     );
 
@@ -29,6 +30,7 @@ describe("PerformanceChartContextStrip", () => {
         benchmarkLabel="Benchmark"
         benchmarkAssigned={false}
         activeReturn="Unavailable"
+        relativeContextStatus="unavailable"
       />
     );
 
@@ -36,5 +38,22 @@ describe("PerformanceChartContextStrip", () => {
     expect(context).toHaveTextContent("Compared against Unassigned");
     expect(context).toHaveTextContent("Active return Unavailable");
     expect(context).toHaveTextContent("Relative context Unavailable");
+  });
+
+  it("keeps the assigned benchmark visible when relative comparison is partial", () => {
+    render(
+      <PerformanceChartContextStrip
+        period="YTD"
+        benchmarkLabel="Global Balanced 60/40"
+        benchmarkAssigned
+        activeReturn="Unavailable"
+        relativeContextStatus="partial"
+      />
+    );
+
+    const context = screen.getByRole("group", { name: "Return path context" });
+    expect(context).toHaveTextContent("Compared against Global Balanced 60/40");
+    expect(context).toHaveTextContent("Active return Unavailable");
+    expect(context).toHaveTextContent("Relative context Partial");
   });
 });

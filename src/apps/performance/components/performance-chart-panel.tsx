@@ -162,7 +162,6 @@ export default function PerformanceChartPanel({
     (point) =>
       point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
   );
-  const benchmarkUnavailable = capabilities.benchmarkComparison.state !== "supported";
   const resolvedBenchmarkOptions = useMemo(() => {
     if (benchmarkOptions.length > 0) {
       return benchmarkOptions;
@@ -178,6 +177,8 @@ export default function PerformanceChartPanel({
       } satisfies PerformanceBenchmarkOptionView,
     ];
   }, [benchmark, benchmarkOptions]);
+  const benchmarkAssigned =
+    Boolean(benchmark) || resolvedBenchmarkOptions.some((option) => option.is_assigned);
 
   const chartOption = useMemo(() => {
     const categories = points.map((point) => point.label);
@@ -354,9 +355,16 @@ export default function PerformanceChartPanel({
       : "Date range unavailable";
   const benchmarkLabel = formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions);
   const activeReturnValue =
-    benchmarkUnavailable || summary.active_return_pct === null || summary.active_return_pct === undefined
+    !benchmarkAssigned || summary.active_return_pct === null || summary.active_return_pct === undefined
       ? "Unavailable"
       : formatPct(summary.active_return_pct);
+  const relativeContextStatus = !benchmarkAssigned
+    ? "unavailable"
+    : capabilities.benchmarkComparison.state === "supported"
+      ? "available"
+      : capabilities.benchmarkComparison.state === "partial"
+        ? "partial"
+        : "unavailable";
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -548,15 +556,16 @@ export default function PerformanceChartPanel({
             <PerformanceChartContextStrip
               period={period}
               benchmarkLabel={benchmarkLabel}
-              benchmarkAssigned={!benchmarkUnavailable}
+              benchmarkAssigned={benchmarkAssigned}
               activeReturn={activeReturnValue}
+              relativeContextStatus={relativeContextStatus}
             />
           </Box>
         </Stack>
 
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
-          {benchmarkUnavailable ? (
+          {!benchmarkAssigned ? (
             <div className="performance-chart-benchmark-state">
               <strong>Benchmark unassigned</strong>
               <span>

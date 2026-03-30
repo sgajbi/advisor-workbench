@@ -5,6 +5,7 @@ type PerformanceChartContextStripProps = {
   benchmarkLabel: string;
   benchmarkAssigned: boolean;
   activeReturn: string;
+  relativeContextStatus: "available" | "partial" | "unavailable";
 };
 
 export default function PerformanceChartContextStrip({
@@ -12,7 +13,11 @@ export default function PerformanceChartContextStrip({
   benchmarkLabel,
   benchmarkAssigned,
   activeReturn,
+  relativeContextStatus,
 }: PerformanceChartContextStripProps) {
+  const relativeContextLabel =
+    relativeContextStatus.charAt(0).toUpperCase() + relativeContextStatus.slice(1);
+
   return (
     <WorkbenchSummaryToolbar
       className="performance-chart-context-strip"
@@ -29,7 +34,7 @@ export default function PerformanceChartContextStrip({
         Active return <strong>{activeReturn}</strong>
       </span>
       <span className="performance-chart-context-item">
-        Relative context <strong>{benchmarkAssigned ? "Available" : "Unavailable"}</strong>
+        Relative context <strong>{relativeContextLabel}</strong>
       </span>
     </WorkbenchSummaryToolbar>
   );
