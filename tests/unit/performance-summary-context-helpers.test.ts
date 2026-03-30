@@ -16,6 +16,7 @@ describe("performance summary context helpers", () => {
         portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
         benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
@@ -26,6 +27,7 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
+      benchmarkSourceLabel: "Calculated",
       activeReturnValue: "0.52%",
       relativeContextStatus: "available",
       benchmarkStateBody: null,
@@ -46,6 +48,7 @@ describe("performance summary context helpers", () => {
         portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
         benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
@@ -56,6 +59,7 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
+      benchmarkSourceLabel: "Calculated",
       activeReturnValue: "Unavailable",
       relativeContextStatus: "partial",
       benchmarkStateBody: null,
@@ -80,6 +84,7 @@ describe("performance summary context helpers", () => {
         portfolio_return_pct: 6.2,
         benchmark_return_pct: null,
         active_return_pct: null,
+        benchmark_return_source: null,
       },
       points: [
         {
@@ -104,6 +109,7 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: false,
       benchmarkLabel: "Benchmark",
+      benchmarkSourceLabel: null,
       activeReturnValue: "Unavailable",
       relativeContextStatus: "unavailable",
       benchmarkStateBody: "No benchmark is assigned to this mandate.",

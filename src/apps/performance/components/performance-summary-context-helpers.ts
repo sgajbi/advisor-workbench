@@ -18,6 +18,7 @@ export type PerformanceReturnPathMetric = {
 export type PerformanceReturnPathPresentation = {
   benchmarkAssigned: boolean;
   benchmarkLabel: string;
+  benchmarkSourceLabel: string | null;
   activeReturnValue: string;
   relativeContextStatus: PerformanceChartContextStatus;
   benchmarkStateBody: string | null;
@@ -35,6 +36,7 @@ export function getPerformanceReturnPathPresentation({
     portfolio_return_pct: number | null;
     benchmark_return_pct: number | null;
     active_return_pct: number | null;
+    benchmark_return_source?: string | null;
   };
   points: PerformanceChartPoint[];
   benchmark?: string;
@@ -59,6 +61,7 @@ export function getPerformanceReturnPathPresentation({
   return {
     benchmarkAssigned,
     benchmarkLabel,
+    benchmarkSourceLabel: formatBenchmarkSourceLabel(summary.benchmark_return_source),
     activeReturnValue,
     relativeContextStatus,
     benchmarkStateBody: benchmarkAssigned
@@ -104,4 +107,25 @@ function formatBenchmarkLabel(
     benchmarkOptions.find((option) => option.benchmark_code === benchmark)?.benchmark_name ??
     benchmark
   );
+}
+
+function formatBenchmarkSourceLabel(source?: string | null) {
+  if (!source) {
+    return null;
+  }
+
+  switch (source.trim().toLowerCase()) {
+    case "calculated":
+      return "Calculated";
+    case "published":
+      return "Published";
+    case "vendor":
+      return "Vendor";
+    default:
+      return source
+        .split(/[_\s-]+/)
+        .filter(Boolean)
+        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+        .join(" ");
+  }
 }

@@ -45,6 +45,7 @@ type ComparativeSummary = {
   portfolio_return_pct: number | null;
   benchmark_return_pct: number | null;
   active_return_pct: number | null;
+  benchmark_return_source?: string | null;
 };
 
 const CHART_COLORS = {
@@ -379,6 +380,7 @@ export default function PerformanceChartPanel({
           period={period}
           detailBasis={detailBasis}
           benchmarkLabel={returnPathPresentation.benchmarkLabel}
+          benchmarkSourceLabel={returnPathPresentation.benchmarkSourceLabel}
           benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
           activeReturn={returnPathPresentation.activeReturnValue}
           relativeContextStatus={returnPathPresentation.relativeContextStatus}

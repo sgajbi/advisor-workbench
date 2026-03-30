@@ -4,6 +4,7 @@ type PerformanceChartContextStripProps = {
   period: string;
   detailBasis: string;
   benchmarkLabel: string;
+  benchmarkSourceLabel: string | null;
   benchmarkAssigned: boolean;
   activeReturn: string;
   relativeContextStatus: "available" | "partial" | "unavailable";
@@ -13,6 +14,7 @@ export default function PerformanceChartContextStrip({
   period,
   detailBasis,
   benchmarkLabel,
+  benchmarkSourceLabel,
   benchmarkAssigned,
   activeReturn,
   relativeContextStatus,
@@ -29,7 +31,11 @@ export default function PerformanceChartContextStrip({
         {
           key: "benchmark",
           label: "Benchmark line",
-          value: benchmarkAssigned ? benchmarkLabel : "Unassigned",
+          value: benchmarkAssigned
+            ? benchmarkSourceLabel
+              ? `${benchmarkLabel} • ${benchmarkSourceLabel}`
+              : benchmarkLabel
+            : "Unassigned",
         },
         {
           key: "active",

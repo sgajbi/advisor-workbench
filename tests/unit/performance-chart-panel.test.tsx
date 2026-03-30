@@ -29,7 +29,10 @@ function buildChartProps(
   return {
     title: "Net Return Path",
     points: returnPath.points,
-    summary: returnPath.summary,
+    summary: {
+      ...returnPath.summary,
+      benchmark_return_source: workspace.net_performance.benchmark_return_source,
+    },
     portfolioId: workspace.portfolio_id,
     period: workspace.period,
     detailBasis: workspace.detail_basis,
@@ -81,6 +84,7 @@ describe("PerformanceChartPanel", () => {
             portfolio_return_pct: 3.3,
             benchmark_return_pct: 2.5,
             active_return_pct: 0.8,
+            benchmark_return_source: "calculated",
           },
           benchmark: "BMK_GLOBAL_BALANCED_60_40",
           reportStartDate: "",
@@ -114,7 +118,7 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Portfolio line Portfolio")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Balanced 60/40")
+      compactPattern("Benchmark line Global Balanced 60/40 • Calculated")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Active context 0.80% • Available")
@@ -149,6 +153,7 @@ describe("PerformanceChartPanel", () => {
             portfolio_return_pct: 6.2,
             benchmark_return_pct: 5.8,
             active_return_pct: 0.4,
+            benchmark_return_source: "calculated",
           },
           benchmark: "BMK_GLOBAL_GROWTH_80_20",
           benchmarkOptions: [
@@ -229,6 +234,7 @@ describe("PerformanceChartPanel", () => {
           summary: {
             ...returnPath.summary,
             portfolio_return_pct: 6.2,
+            benchmark_return_source: null,
           },
           benchmark: returnPath.benchmark,
           benchmarkOptions: returnPath.benchmarkOptions,
@@ -277,6 +283,7 @@ describe("PerformanceChartPanel", () => {
           summary: {
             ...returnPath.summary,
             portfolio_return_pct: 6.2,
+            benchmark_return_source: "calculated",
           },
           benchmark: returnPath.benchmark,
           benchmarkOptions: returnPath.benchmarkOptions,
