@@ -6,10 +6,12 @@ test.describe('UI smoke checks', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page.getByRole('heading', { name: /^Performance Workbench$/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /^Performance Workbench$/i })
+    ).toBeVisible({ timeout: 15000 });
     await expect(
       page.getByRole('tablist', { name: /^Performance workspace mode$/i })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15000 });
   }
 
   async function openDetailedPortfolio(page: import('@playwright/test').Page) {
@@ -154,12 +156,13 @@ test.describe('UI smoke checks', () => {
     await page.setViewportSize({ width: 1800, height: 1400 });
     await openPerformanceWorkbench(page);
 
-    await expect(page.getByText('Portfolio Return')).toBeVisible();
-    await expect(page.getByText('Benchmark Return')).toBeVisible();
-    await expect(page.getByText('Active Return')).toBeVisible();
-    await expect(page.getByText('Money-Weighted Return')).toBeVisible();
-    await expect(page.getByText('Basis', { exact: true })).toBeVisible();
-    await expect(page.getByText('Period', { exact: true })).toBeVisible();
+    const executiveStrip = page.getByLabel('Executive return strip');
+    await expect(executiveStrip.getByText('Portfolio Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Active Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Basis', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Period', { exact: true })).toBeVisible();
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
@@ -208,5 +211,54 @@ test.describe('UI smoke checks', () => {
       timeout: 15000,
     });
     await expect(page.locator('.performance-evidence-module')).toBeVisible();
+  });
+
+  test('performance analysis degraded state stays compact and intentional', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    await analysisTab.click();
+    await expect(analysisTab).toHaveAttribute('aria-selected', 'true');
+
+    const analysisStage = page.locator('.performance-analysis-stage');
+    await expect(analysisStage).toBeVisible({ timeout: 15000 });
+
+    await expect(
+      page.getByRole('heading', { name: /^Attribution Over Time$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Attribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Contribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+
+    const statePanels = page.locator('.performance-analysis-state-panel');
+    await expect(statePanels).toHaveCount(3);
+
+    const statePanelMetrics = await statePanels.evaluateAll((elements) =>
+      elements.map((element) => ({
+        height: element.getBoundingClientRect().height,
+        width: element.getBoundingClientRect().width,
+      }))
+    );
+    expect(statePanelMetrics.every((panel) => panel.height <= 240)).toBeTruthy();
+    expect(statePanelMetrics.every((panel) => panel.width >= 400)).toBeTruthy();
+
+    await expect(page.getByText('Loading attribution trend')).toBeVisible();
+    await expect(page.getByText('Attribution detail unavailable')).toBeVisible();
+    await expect(page.getByText('Contribution detail unavailable')).toBeVisible();
+    await expect(page.locator('.performance-analysis-table')).toHaveCount(0);
+
+    const trendShell = page.locator('.performance-analysis-trend-shell');
+    await expect(trendShell).toBeVisible();
+    const trendMetrics = await trendShell.evaluate((element) => ({
+      height: element.getBoundingClientRect().height,
+      width: element.getBoundingClientRect().width,
+    }));
+    expect(trendMetrics.height).toBeLessThanOrEqual(640);
+    expect(trendMetrics.width).toBeGreaterThan(800);
   });
 });
