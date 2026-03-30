@@ -1,11 +1,12 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { EChartsOption } from "echarts";
 
 import PerformanceChartPanel from "../../src/apps/performance/components/performance-chart-panel";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
+  buildPerformanceCapabilities,
   buildPerformanceReturnPathScenarioData,
   buildPartialBenchmarkPerformanceScenario,
   buildSupportedPerformanceScenario,
@@ -378,5 +379,26 @@ describe("PerformanceChartPanel", () => {
       screen.getByText("Return observations are only partially published for the selected horizon.")
     ).toBeInTheDocument();
     expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
+  });
+
+  it("disables frequency options that are outside the backend capability contract", () => {
+    render(
+      <PerformanceChartPanel
+        {...buildChartProps({
+          capabilities: buildPerformanceCapabilities({
+            returnPath: {
+              state: "supported",
+              supportedFrequencies: ["monthly"],
+            },
+          }),
+        })}
+      />
+    );
+
+    const frequencySelect = screen.getByLabelText("Frequency") as HTMLSelectElement;
+    const monthlyOption = within(frequencySelect).getByRole("option", { name: "Monthly" });
+    const quarterlyOption = within(frequencySelect).getByRole("option", { name: "Quarterly" });
+    expect(monthlyOption).not.toBeDisabled();
+    expect(quarterlyOption).toBeDisabled();
   });
 });

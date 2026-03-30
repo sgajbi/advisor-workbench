@@ -27,6 +27,7 @@ import type {
 import { formatDate } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
+import { isCapabilityOptionSupported } from "./performance-capability-options";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 
@@ -583,7 +584,17 @@ export default function PerformanceChartPanel({
               }}
             >
               {CHART_FREQUENCY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
+                <option
+                  key={option.value}
+                  value={option.value}
+                  disabled={
+                    !isCapabilityOptionSupported(
+                      capabilities.returnPath,
+                      "frequency",
+                      option.value
+                    )
+                  }
+                >
                   {option.label}
                 </option>
               ))}

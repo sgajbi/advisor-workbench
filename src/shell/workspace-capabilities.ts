@@ -11,6 +11,8 @@ export type WorkspaceCapability = {
   fallbackAvailable?: boolean;
   earliestAvailableDate?: string;
   latestAvailableDate?: string;
+  supportedDimensions?: string[];
+  supportedFrequencies?: string[];
 };
 
 export function supported(reason?: string): WorkspaceCapability {

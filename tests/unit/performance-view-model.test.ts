@@ -401,12 +401,29 @@ describe("performance view model", () => {
       buildWorkspace({
         capabilities: {
           summary_kpis: { state: "supported", reason: "Summary supported." },
-          return_path: { state: "unavailable", reason: "No published return history." },
+          return_path: {
+            state: "unavailable",
+            reason: "No published return history.",
+            supported_frequencies: ["monthly", "quarterly"],
+          },
           benchmark_comparison: { state: "partial", reason: "Benchmark-relative returns incomplete." },
           multi_horizon_returns: { state: "supported", reason: "Horizon comparison available." },
-          contribution_ranking: { state: "partial", reason: "Only aggregate contribution rows are available." },
-          attribution_detail: { state: "unavailable", reason: "Attribution detail unavailable." },
-          contribution_detail: { state: "partial", reason: "Contribution detail is aggregate-only." },
+          contribution_ranking: {
+            state: "partial",
+            reason: "Only aggregate contribution rows are available.",
+            supported_dimensions: ["asset_class", "sector", "country"],
+          },
+          attribution_detail: {
+            state: "unavailable",
+            reason: "Attribution detail unavailable.",
+            supported_dimensions: ["asset_class", "sector", "country", "currency"],
+            supported_frequencies: ["monthly", "quarterly"],
+          },
+          contribution_detail: {
+            state: "partial",
+            reason: "Contribution detail is aggregate-only.",
+            supported_dimensions: ["asset_class", "sector", "country"],
+          },
           evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
         },
       })
@@ -428,5 +445,20 @@ describe("performance view model", () => {
       state: "unavailable",
       reason: "Attribution detail unavailable.",
     });
+    expect(capabilities.contributionRanking.supportedDimensions).toEqual([
+      "asset_class",
+      "sector",
+      "country",
+    ]);
+    expect(capabilities.attributionDetail.supportedDimensions).toEqual([
+      "asset_class",
+      "sector",
+      "country",
+      "currency",
+    ]);
+    expect(capabilities.attributionDetail.supportedFrequencies).toEqual([
+      "monthly",
+      "quarterly",
+    ]);
   });
 });

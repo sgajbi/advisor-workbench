@@ -13,6 +13,7 @@ import {
   inlineControlLabelSx,
   shouldShowContributionLocalFx,
 } from "./performance-workspace-view-helpers";
+import { isCapabilityOptionSupported } from "./performance-capability-options";
 
 type PerformanceAnalysisContributionSectionProps = Pick<
   PerformanceAnalysisModeProps,
@@ -49,7 +50,13 @@ export default function PerformanceAnalysisContributionSection({
           disabled={isUpdating}
         >
           {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-            <MenuItem key={option} value={option}>
+            <MenuItem
+              key={option}
+              value={option}
+              disabled={
+                !isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
+              }
+            >
               {formatLabel(option)}
             </MenuItem>
           ))}

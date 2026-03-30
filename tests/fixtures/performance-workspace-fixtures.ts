@@ -51,10 +51,23 @@ export function buildPerformanceCapabilities(
       earliestAvailableDate: "2026-01-01",
       latestAvailableDate: "2026-02-24",
     },
-    multiHorizonReturns: { state: "supported" },
-    contributionRanking: { state: "supported" },
-    attributionDetail: { state: "supported" },
-    contributionDetail: { state: "supported" },
+    multiHorizonReturns: {
+      state: "supported",
+      supportedFrequencies: ["monthly", "quarterly"],
+    },
+    contributionRanking: {
+      state: "supported",
+      supportedDimensions: ["asset_class", "sector", "country"],
+    },
+    attributionDetail: {
+      state: "supported",
+      supportedDimensions: ["asset_class", "sector", "country", "currency"],
+      supportedFrequencies: ["monthly", "quarterly"],
+    },
+    contributionDetail: {
+      state: "supported",
+      supportedDimensions: ["asset_class", "sector", "country"],
+    },
     evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
     ...overrides,
   };
@@ -70,6 +83,8 @@ function toContractCapabilities(
     fallback_available: capability.fallbackAvailable,
     earliest_available_date: capability.earliestAvailableDate,
     latest_available_date: capability.latestAvailableDate,
+    supported_dimensions: capability.supportedDimensions,
+    supported_frequencies: capability.supportedFrequencies,
   });
 
   return {

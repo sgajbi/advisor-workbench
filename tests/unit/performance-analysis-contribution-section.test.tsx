@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import PerformanceAnalysisContributionSection from "../../src/apps/performance/components/performance-analysis-contribution-section";
@@ -85,5 +85,36 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
     ).toBeTruthy();
+  });
+
+  it("disables contribution segment options that are outside the backend capability contract", () => {
+    render(
+      <PerformanceAnalysisContributionSection
+        workspace={buildWorkspace()}
+        contributionDimension="asset_class"
+        onRequestChange={undefined}
+        isUpdating={false}
+        isDetailsPending={false}
+        capabilities={buildPerformanceCapabilities({
+          contributionDetail: {
+            state: "supported",
+            supportedDimensions: ["asset_class", "country"],
+          },
+        })}
+      />
+    );
+
+    fireEvent.mouseDown(screen.getByRole("combobox"));
+    const options = within(screen.getByRole("listbox")).getAllByRole("option");
+    expect(options.find((option) => option.textContent === "Asset Class")).not.toHaveAttribute(
+      "aria-disabled"
+    );
+    expect(options.find((option) => option.textContent === "Country")).not.toHaveAttribute(
+      "aria-disabled"
+    );
+    expect(options.find((option) => option.textContent === "Sector")).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
   });
 });

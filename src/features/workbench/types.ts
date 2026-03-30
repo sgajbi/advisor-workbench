@@ -244,6 +244,8 @@ export type PerformanceModuleCapability = {
   fallback_available?: boolean | null;
   earliest_available_date?: string | null;
   latest_available_date?: string | null;
+  supported_dimensions?: string[] | null;
+  supported_frequencies?: string[] | null;
 };
 
 export type WorkbenchPerformanceCapabilities = {

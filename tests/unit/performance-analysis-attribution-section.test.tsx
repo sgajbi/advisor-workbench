@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalysisAttributionSection from "../../src/apps/performance/components/performance-analysis-attribution-section";
@@ -125,5 +125,38 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
+  });
+
+  it("disables attribution segment options that are outside the backend capability contract", () => {
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({
+          capabilities: buildPerformanceCapabilities({
+            attributionDetail: {
+              state: "supported",
+              supportedDimensions: ["asset_class", "country"],
+              supportedFrequencies: ["monthly"],
+            },
+          }),
+        })}
+      />
+    );
+
+    fireEvent.mouseDown(screen.getByRole("combobox"));
+    const options = within(screen.getByRole("listbox")).getAllByRole("option");
+    expect(options.find((option) => option.textContent === "Asset Class")).not.toHaveAttribute(
+      "aria-disabled"
+    );
+    expect(options.find((option) => option.textContent === "Country")).not.toHaveAttribute(
+      "aria-disabled"
+    );
+    expect(options.find((option) => option.textContent === "Sector")).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
+    expect(options.find((option) => option.textContent === "Currency")).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
   });
 });

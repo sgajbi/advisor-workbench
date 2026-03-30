@@ -22,6 +22,7 @@ import {
   NOT_ADDITIVE_CELL,
 } from "./performance-workspace-view-helpers";
 import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
+import { isCapabilityOptionSupported } from "./performance-capability-options";
 
 export default function PerformanceAnalysisAttributionSection({
   workspace,
@@ -59,7 +60,13 @@ export default function PerformanceAnalysisAttributionSection({
           disabled={isUpdating}
         >
           {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-            <MenuItem key={option} value={option}>
+            <MenuItem
+              key={option}
+              value={option}
+              disabled={
+                !isCapabilityOptionSupported(capabilities.attributionDetail, "dimension", option)
+              }
+            >
               {formatLabel(option)}
             </MenuItem>
           ))}

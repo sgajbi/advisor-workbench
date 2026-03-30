@@ -38,6 +38,8 @@ function mapBackendCapability(
       fallbackAvailable: capability.fallback_available ?? undefined,
       earliestAvailableDate: capability.earliest_available_date ?? undefined,
       latestAvailableDate: capability.latest_available_date ?? undefined,
+      supportedDimensions: capability.supported_dimensions ?? undefined,
+      supportedFrequencies: capability.supported_frequencies ?? undefined,
     };
   }
   if (capability.state === "partial") {
@@ -47,6 +49,8 @@ function mapBackendCapability(
       fallbackAvailable: capability.fallback_available ?? undefined,
       earliestAvailableDate: capability.earliest_available_date ?? undefined,
       latestAvailableDate: capability.latest_available_date ?? undefined,
+      supportedDimensions: capability.supported_dimensions ?? undefined,
+      supportedFrequencies: capability.supported_frequencies ?? undefined,
     };
   }
   return {
@@ -55,6 +59,8 @@ function mapBackendCapability(
     fallbackAvailable: capability.fallback_available ?? undefined,
     earliestAvailableDate: capability.earliest_available_date ?? undefined,
     latestAvailableDate: capability.latest_available_date ?? undefined,
+    supportedDimensions: capability.supported_dimensions ?? undefined,
+    supportedFrequencies: capability.supported_frequencies ?? undefined,
   };
 }
 
