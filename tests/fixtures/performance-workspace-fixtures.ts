@@ -458,6 +458,34 @@ export function buildSupportedEvidencePerformanceScenario() {
   });
 }
 
+export function buildCombinedPartialPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    fixtureOptions: {
+      partialBenchmarkComparison: true,
+      aggregateContributionOnly: true,
+      unavailableAttribution: true,
+    },
+    capabilityOverrides: {
+      benchmarkComparison: {
+        state: "partial",
+        reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+      },
+      contributionRanking: {
+        state: "partial",
+        reason: "Contribution exists, but only aggregate rows are available.",
+      },
+      contributionDetail: {
+        state: "partial",
+        reason: "Contribution exists, but only aggregate rows are available.",
+      },
+      attributionDetail: {
+        state: "unavailable",
+        reason: "Attribution detail is not available for the current selection.",
+      },
+    },
+  });
+}
+
 export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
   return {
     correlation_id: "corr-performance",

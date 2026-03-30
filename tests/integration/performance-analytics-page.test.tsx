@@ -6,6 +6,7 @@ import PerformanceAnalyticsPage from "../../src/apps/performance/performance-ana
 import {
   buildAggregateContributionPerformanceScenario,
   buildBenchmarkUnassignedPerformanceScenario,
+  buildCombinedPartialPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
   type PerformancePresentationScenario,
@@ -328,6 +329,20 @@ describe("PerformanceAnalyticsPage", () => {
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
       absentTexts: ["AAPL"],
+    },
+    {
+      name: "combined benchmark, attribution, and contributor support gaps",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      executiveExpectations: ["Global Balanced 60/40"],
+      trustExpectations: [
+        "Partial",
+        "Unavailable",
+        "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+        "Attribution detail is not available for the current selection.",
+      ],
+      deferredExpectations: ["Contributor ranking is partial"],
+      contextExpectations: ["Relative context Partial", "Active return Unavailable"],
+      absentTexts: ["Benchmark unassigned", "AAPL"],
     },
   ])(
     "renders a contract-backed summary supportability matrix for $name",
