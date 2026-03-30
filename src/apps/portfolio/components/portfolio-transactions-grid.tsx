@@ -12,7 +12,7 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { ModuleSkeleton } from "@/design-system";
+import { WorkbenchLoadingState } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
@@ -324,7 +324,11 @@ export default function PortfolioTransactionsGrid({
       ) : null}
 
       {loading && !rowData.length ? (
-        <ModuleSkeleton rows={5} />
+        <WorkbenchLoadingState
+          title="Loading transactions"
+          message="Transaction ledger detail is loading for the selected window."
+          rows={5}
+        />
       ) : rowData.length ? (
         <>
           <PortfolioDetailGridState

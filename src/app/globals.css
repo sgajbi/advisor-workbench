@@ -3179,6 +3179,28 @@ a:hover {
   width: 320px;
 }
 
+.workbench-loading-state {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.workbench-loading-state-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.workbench-loading-state-copy strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.workbench-loading-state-copy span {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
 .portfolio-workspace-toolbar-action {
   min-height: 36px;
   padding: 0.35rem 0.7rem;

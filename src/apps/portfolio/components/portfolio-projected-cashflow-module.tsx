@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AnalyticsModule,
   AnalyticsTable,
-  ModuleSkeleton,
+  WorkbenchLoadingState,
   WorkspaceStatusPanel,
 } from "@/design-system";
 
@@ -171,7 +171,12 @@ export default function PortfolioProjectedCashflowModule({
       /> 
 
       {loading && !cashflowOutlook ? (
-        <ModuleSkeleton chart rows={3} />
+        <WorkbenchLoadingState
+          title="Loading projected cashflow"
+          message="Projected liquidity is loading for the selected horizon."
+          chart
+          rows={3}
+        />
       ) : cashflowOutlook ? (
         <>
           <PortfolioProjectedCashflowPanel

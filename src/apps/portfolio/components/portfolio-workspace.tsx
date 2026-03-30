@@ -10,10 +10,10 @@ import {
   DeferredModulePlaceholder,
   DegradedStatePanel,
   MetricRow,
-  ModuleSkeleton,
   Panel,
   SectionLabel,
   StatusChip,
+  WorkbenchLoadingState,
   WorkbenchPageFrame,
   WorkbenchRailCard,
   WorkbenchSectionStack,
@@ -971,13 +971,18 @@ function PortfolioInsightsSection({
             <PortfolioCollapsibleModule
               className="portfolio-summary-module-card"
               compact={isSummaryView}
-              title="Portfolio Allocation"
-              subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
-              expanded={getSectionExpanded("allocation")}
-              onToggle={() => toggleSection("allocation")}
-            >
+            title="Portfolio Allocation"
+            subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
+            expanded={getSectionExpanded("allocation")}
+            onToggle={() => toggleSection("allocation")}
+          >
             {detailsLoading ? (
-              <ModuleSkeleton chart rows={4} />
+              <WorkbenchLoadingState
+                title="Loading allocation"
+                message="Allocation analytics are loading for the selected portfolio context."
+                chart
+                rows={4}
+              />
             ) : workspace.allocation_views?.length ? (
               <DeferredPortfolioAllocationPanel
                 allocationViews={workspace.allocation_views}
@@ -1028,7 +1033,12 @@ function PortfolioInsightsSection({
             onToggle={() => toggleSection("top-holdings")}
           >
             {detailsLoading ? (
-              <ModuleSkeleton chart rows={4} />
+              <WorkbenchLoadingState
+                title="Loading top holdings"
+                message="Holdings concentration is loading for the selected portfolio context."
+                chart
+                rows={4}
+              />
             ) : workspace.top_positions.length ? (
               <DeferredPortfolioTopHoldingsPanel
                 positions={

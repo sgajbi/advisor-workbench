@@ -307,6 +307,10 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Transactions" })).toBeInTheDocument();
+    expect(screen.getByText("Loading transactions")).toBeInTheDocument();
+    expect(
+      screen.getByText("Transaction ledger detail is loading for the selected window.")
+    ).toBeInTheDocument();
     await waitFor(() => expect(fetchMock).not.toHaveBeenCalled());
     expect(fetchMock).not.toHaveBeenCalled();
   });

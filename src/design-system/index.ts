@@ -59,6 +59,7 @@ export { default as WorkbenchStatusStrip } from "./components/workbench-status-s
 export type { WorkbenchStatusStripItem } from "./components/workbench-status-strip";
 export { default as WorkbenchSummaryMetricStrip } from "./components/workbench-summary-metric-strip";
 export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-summary-metric-strip";
+export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
 export { default as WorkbenchToolbarPlaceholder } from "./components/workbench-toolbar-placeholder";
 export type { WorkbenchToolbarPlaceholderField } from "./components/workbench-toolbar-placeholder";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";

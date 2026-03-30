@@ -35,6 +35,7 @@ import {
   WorkbenchSegmentedControl,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
+  WorkbenchLoadingState,
   WorkbenchRailCard,
   WorkbenchStatusRow,
   WorkbenchSectionStack,
@@ -646,6 +647,24 @@ describe("design-system components", () => {
     expect(document.querySelector(".workbench-toolbar-placeholder-control-wide")).toBeTruthy();
     expect(document.querySelector(".workbench-toolbar-placeholder-control-period")).toBeTruthy();
     expect(screen.getByText("Loading workspace controls…")).toBeInTheDocument();
+  });
+
+  it("renders the shared workbench loading state with explicit copy and skeleton", () => {
+    render(
+      <WorkbenchLoadingState
+        title="Loading transactions"
+        message="Transaction ledger detail is loading for the selected window."
+        rows={5}
+      />
+    );
+
+    const loadingState = screen.getByRole("status");
+    expect(loadingState).toHaveClass("workbench-loading-state");
+    expect(within(loadingState).getByText("Loading transactions")).toBeInTheDocument();
+    expect(
+      within(loadingState).getByText("Transaction ledger detail is loading for the selected window.")
+    ).toBeInTheDocument();
+    expect(loadingState.querySelector(".module-skeleton")).toBeTruthy();
   });
 
   it("can defer content without rendering a duplicate wrapper header", async () => {

@@ -124,6 +124,10 @@ describe("PortfolioProjectedCashflowModule", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Projected Cashflow" })).toBeInTheDocument();
+    expect(screen.getByText("Loading projected cashflow")).toBeInTheDocument();
+    expect(
+      screen.getByText("Projected liquidity is loading for the selected horizon.")
+    ).toBeInTheDocument();
     await waitFor(() => expect(getPortfolioProjectedCashflow).not.toHaveBeenCalled());
     expect(getPortfolioProjectedCashflow).not.toHaveBeenCalled();
   });

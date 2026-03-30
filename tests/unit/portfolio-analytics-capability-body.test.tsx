@@ -21,6 +21,11 @@ describe("PortfolioAnalyticsCapabilityBody", () => {
       </PortfolioAnalyticsCapabilityBody>
     );
 
+    expect(screen.getByText("Loading analytics")).toBeInTheDocument();
+    expect(
+      screen.getByText("Analytical detail is loading for the selected portfolio context.")
+    ).toBeInTheDocument();
+    expect(container.querySelector(".workbench-loading-state")).not.toBeNull();
     expect(container.querySelector(".module-skeleton")).not.toBeNull();
     expect(screen.queryByText("Supported content")).not.toBeInTheDocument();
   });
