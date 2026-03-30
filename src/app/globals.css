@@ -13,6 +13,10 @@
   --brand-soft: #eef3f8;
   --brand-accent: #a9b7c7;
   --brand-highlight: #57799d;
+  --analytic-positive: #4f6f8f;
+  --analytic-positive-soft: #6f89a3;
+  --analytic-negative: #8a6757;
+  --analytic-negative-soft: #ab8675;
   --warn-bg: #fff6e8;
   --warn-border: #dfb15e;
   --warn-text: #8a5b11;
@@ -422,11 +426,19 @@ a:hover {
 }
 
 .workbench-ranked-bar-fill-positive {
-  background: linear-gradient(90deg, #5e8165 0%, #7f9a82 100%);
+  background: linear-gradient(
+    90deg,
+    var(--analytic-positive) 0%,
+    var(--analytic-positive-soft) 100%
+  );
 }
 
 .workbench-ranked-bar-fill-negative {
-  background: linear-gradient(90deg, #8e625f 0%, #b1827e 100%);
+  background: linear-gradient(
+    90deg,
+    var(--analytic-negative) 0%,
+    var(--analytic-negative-soft) 100%
+  );
 }
 
 .workbench-ranked-bar-value {
