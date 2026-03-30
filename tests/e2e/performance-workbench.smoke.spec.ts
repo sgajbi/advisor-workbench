@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import {
   expectActiveTab,
   measureElement,
+  measureTableFrame,
   parseServerTimingDuration,
   parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
@@ -206,6 +207,58 @@ test.describe('Performance workbench smoke', () => {
     const trendMetrics = await measureElement(trendShell);
     expect(trendMetrics.height).toBeLessThanOrEqual(640);
     expect(trendMetrics.width).toBeGreaterThan(800);
+  });
+
+  test('analysis contribution module renders live position detail cleanly', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await page.goto(
+      '/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=QTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_PB_GLOBAL_BALANCED_60_40',
+      { waitUntil: 'domcontentloaded' }
+    );
+
+    await expect(
+      page.getByRole('heading', { name: /^Performance Workbench$/i })
+    ).toBeVisible({ timeout: 15000 });
+
+    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    await analysisTab.click();
+    await expectActiveTab(page, /^Analysis$/i);
+
+    const contributionModule = page.locator('#performance-drivers');
+    await expect(contributionModule).toBeVisible({ timeout: 15000 });
+    await expect(
+      contributionModule.getByRole('heading', { name: /^Contribution Detail$/i })
+    ).toBeVisible();
+    await expect(contributionModule.getByText('Top Positions')).toBeVisible();
+    await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
+    await expect(contributionModule.getByLabel('Asset Class contribution table')).toBeVisible();
+    await expect(contributionModule.getByText('AAPL US')).toBeVisible();
+    await expect(contributionModule.getByText('BLK ALLOC')).toBeVisible();
+    await expect(contributionModule.getByText('Equity')).toBeVisible();
+    await expect(contributionModule.getByText('Fund')).toBeVisible();
+
+    const positionHeaders = await contributionModule
+      .locator('table[aria-label="Position contribution table"] thead th')
+      .allTextContents();
+    expect(positionHeaders).toEqual(['Position', 'Contribution', 'Avg. Weight', 'FX']);
+
+    const positionFrame = await measureTableFrame(
+      contributionModule.locator('.performance-analysis-level-section').filter({ hasText: 'Top Positions' }).locator('.analytics-table-frame')
+    );
+    expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
+
+    const aggregateFrame = await measureTableFrame(
+      contributionModule
+        .locator('.performance-analysis-level-section')
+        .filter({ hasText: 'Asset Class' })
+        .locator('.analytics-table-frame')
+    );
+    expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
+
+    const moduleMetrics = await measureElement(contributionModule);
+    expect(moduleMetrics.width).toBeGreaterThan(1000);
+    expect(moduleMetrics.height).toBeLessThan(1200);
   });
 
   test('evidence mode uses the shared unavailable state shell intentionally', async ({ page }) => {
