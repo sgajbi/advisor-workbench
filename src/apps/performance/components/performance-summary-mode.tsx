@@ -137,6 +137,7 @@ export default function PerformanceSummaryMode({
           >
             <DeferredPerformanceMultiHorizonPanel
               portfolioId={workspace.portfolio.portfolio_id}
+              period={period}
               detailBasis={detailBasis}
               benchmark={workspace.benchmark_code ?? benchmark}
               chartFrequency={chartFrequency}

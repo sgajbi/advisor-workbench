@@ -1,3 +1,5 @@
+import type { ComponentPropsWithoutRef } from "react";
+
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -6,11 +8,13 @@ import { cx } from "../utils/cx";
 export function WorkbenchSummaryToolbar({
   children,
   className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <div className={cx("workbench-summary-toolbar", className)}>{children}</div>;
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div className={cx("workbench-summary-toolbar", className)} {...props}>
+      {children}
+    </div>
+  );
 }
 
 export function WorkbenchSummaryVisualCard({

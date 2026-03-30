@@ -20,12 +20,14 @@ import { formatLabel, formatPct } from "../formatters";
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
+  period,
   detailBasis,
   benchmark,
   chartFrequency,
   benchmarkOptions = [],
 }: {
   portfolioId: string;
+  period: string;
   detailBasis: string;
   benchmark?: string;
   chartFrequency: string;
@@ -101,13 +103,19 @@ export default function PerformanceMultiHorizonPanel({
       Math.abs(row.benchmark_return_pct ?? 0),
     ])
   );
+  const selectedPeriodRow =
+    rows?.find((row) => row.period === period) ?? rows?.find((row) => row.period === "YTD") ?? rows?.[0];
+  const selectedActiveReturn =
+    selectedPeriodRow?.active_return_pct === null || selectedPeriodRow?.active_return_pct === undefined
+      ? "Unavailable"
+      : formatPct(selectedPeriodRow.active_return_pct);
 
   return (
     <AnalyticsModule
       className="workbench-summary-module-card performance-summary-module-card"
       compact
-      title="Multi-Horizon Returns"
-      subtitle={`${detailBasis} basis comparative view`}
+      title="Horizon comparison"
+      subtitle={`Portfolio vs ${benchmarkLabel}`}
       actions={
         <Typography
           component="span"
@@ -127,6 +135,17 @@ export default function PerformanceMultiHorizonPanel({
         <p className="muted">Loading comparative horizon summaries.</p>
       ) : rows && rows.length > 0 ? (
         <>
+          <WorkbenchSummaryToolbar role="group" aria-label="Horizon comparison context">
+            <span className="performance-mini-legend-item">
+              Selected period <strong>{period}</strong>
+            </span>
+            <span className="performance-mini-legend-item">
+              Active return <strong>{selectedActiveReturn}</strong>
+            </span>
+            <span className="performance-mini-legend-item">
+              Compared against <strong>{benchmarkLabel}</strong>
+            </span>
+          </WorkbenchSummaryToolbar>
           <WorkbenchSummaryToolbar className="performance-mini-legend">
             <span className="performance-mini-legend-item performance-mini-legend-portfolio">
               Portfolio

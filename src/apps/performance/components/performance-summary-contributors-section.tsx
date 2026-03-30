@@ -22,14 +22,14 @@ export default function PerformanceSummaryContributorsSection({
     <AnalyticsModule
       className="workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
       compact
-      title="Top / Bottom Contributors"
+      title="Top contributors and detractors"
       subtitle={`${workspace.period} position ranking`}
     >
       {rankingState === "supported" ? (
           <div className="performance-contributors-grid">
             <WorkbenchSummaryVisualCard>
               <AnalyticsRankedList
-                title="Highest"
+                title="Top contributors"
                 label="Contribution"
                 scale={contributorScale}
                 rows={positivePositionContributors.map((row) => ({
@@ -45,7 +45,7 @@ export default function PerformanceSummaryContributorsSection({
             </WorkbenchSummaryVisualCard>
             <WorkbenchSummaryVisualCard>
               <AnalyticsRankedList
-                title="Lowest"
+                title="Top detractors"
                 label="Contribution"
                 scale={contributorScale}
                 rows={negativePositionContributors.map((row) => ({

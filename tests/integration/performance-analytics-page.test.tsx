@@ -421,9 +421,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(mainShell).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
     await waitFor(() => {
-      expect(mainShell).toContainElement(screen.getByText("Multi-Horizon Returns"));
+      expect(mainShell).toContainElement(screen.getByText("Horizon comparison"));
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
+      expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
+        "Active return 0.51%"
+      );
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
@@ -452,11 +455,11 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Benchmark")).toBeInTheDocument();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
-    expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
-    expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
+    expect(await screen.findByText("Horizon comparison")).toBeInTheDocument();
+    expect(screen.getByText("Top contributors and detractors")).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
     const contributorsModule = screen
-      .getByText("Top / Bottom Contributors")
+      .getByText("Top contributors and detractors")
       .closest(".performance-summary-module-card");
     expect(contributorsModule).toBeTruthy();
     expect(
@@ -496,9 +499,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
-    expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
+    expect(screen.queryByText("Top contributors and detractors")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Multi-Horizon Returns")).not.toBeInTheDocument();
+    expect(screen.queryByText("Horizon comparison")).not.toBeInTheDocument();
 
     const attributionTable = screen.getByLabelText("Asset Class attribution table");
     expect(within(attributionTable).getAllByText("—")).toHaveLength(2);
@@ -524,7 +527,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       screen.getByText(/not exposed by the current gateway contract/i)
     ).toBeInTheDocument();
-    expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
+    expect(screen.queryByText("Top contributors and detractors")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
   });
 

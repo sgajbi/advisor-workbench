@@ -39,15 +39,17 @@ vi.mock("../../src/apps/performance/components/performance-chart-panel", () => (
 vi.mock("../../src/apps/performance/components/performance-multi-horizon-panel", () => ({
   default: ({
     portfolioId,
+    period,
     detailBasis,
     benchmark,
   }: {
     portfolioId: string;
+    period: string;
     detailBasis: string;
     benchmark?: string;
   }) => (
     <div data-testid="multi-horizon-panel">
-      {portfolioId}:{detailBasis}:{benchmark ?? "none"}
+      {portfolioId}:{period}:{detailBasis}:{benchmark ?? "none"}
     </div>
   ),
 }));
@@ -212,7 +214,7 @@ describe("PerformanceSummaryMode", () => {
       );
       expect(screen.getByText("How did this compare across horizons?")).toBeInTheDocument();
       expect(screen.getByText("What drove the result?")).toBeInTheDocument();
-      expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent("PF_1001:GROSS:BMK_1");
+      expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent("PF_1001:YTD:GROSS:BMK_1");
       expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
     });
   });
