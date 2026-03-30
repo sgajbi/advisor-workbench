@@ -41,8 +41,16 @@ export function buildPerformanceCapabilities(
 ): PerformanceWorkspaceCapabilities {
   return {
     summaryKpis: { state: "supported" },
-    returnPath: { state: "supported" },
-    benchmarkComparison: { state: "supported" },
+    returnPath: {
+      state: "supported",
+      earliestAvailableDate: "2026-01-01",
+      latestAvailableDate: "2026-02-24",
+    },
+    benchmarkComparison: {
+      state: "supported",
+      earliestAvailableDate: "2026-01-01",
+      latestAvailableDate: "2026-02-24",
+    },
     multiHorizonReturns: { state: "supported" },
     contributionRanking: { state: "supported" },
     attributionDetail: { state: "supported" },
@@ -55,15 +63,24 @@ export function buildPerformanceCapabilities(
 function toContractCapabilities(
   capabilities: PerformanceWorkspaceCapabilities
 ): WorkbenchPerformanceCapabilities {
+  const mapCapability = (capability: PerformanceWorkspaceCapabilities[keyof PerformanceWorkspaceCapabilities]) => ({
+    state: capability.state,
+    reason: capability.reason,
+    coverage_level: capability.coverageLevel,
+    fallback_available: capability.fallbackAvailable,
+    earliest_available_date: capability.earliestAvailableDate,
+    latest_available_date: capability.latestAvailableDate,
+  });
+
   return {
-    summary_kpis: capabilities.summaryKpis,
-    return_path: capabilities.returnPath,
-    benchmark_comparison: capabilities.benchmarkComparison,
-    multi_horizon_returns: capabilities.multiHorizonReturns,
-    contribution_ranking: capabilities.contributionRanking,
-    attribution_detail: capabilities.attributionDetail,
-    contribution_detail: capabilities.contributionDetail,
-    evidence: capabilities.evidence,
+    summary_kpis: mapCapability(capabilities.summaryKpis),
+    return_path: mapCapability(capabilities.returnPath),
+    benchmark_comparison: mapCapability(capabilities.benchmarkComparison),
+    multi_horizon_returns: mapCapability(capabilities.multiHorizonReturns),
+    contribution_ranking: mapCapability(capabilities.contributionRanking),
+    attribution_detail: mapCapability(capabilities.attributionDetail),
+    contribution_detail: mapCapability(capabilities.contributionDetail),
+    evidence: mapCapability(capabilities.evidence),
   };
 }
 
@@ -89,6 +106,8 @@ function deriveFixtureCapabilities(
             benchmarkComparison: {
               state: "partial",
               reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+              earliestAvailableDate: "2026-01-01",
+              latestAvailableDate: "2026-02-24",
             },
           }
         : {}),
@@ -97,10 +116,14 @@ function deriveFixtureCapabilities(
             contributionRanking: {
               state: "partial",
               reason: "Contribution exists, but only aggregate rows are available.",
+              coverageLevel: "aggregate",
+              fallbackAvailable: true,
             },
             contributionDetail: {
               state: "partial",
               reason: "Contribution exists, but only aggregate rows are available.",
+              coverageLevel: "aggregate",
+              fallbackAvailable: true,
             },
           }
         : {}),

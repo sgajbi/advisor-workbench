@@ -240,6 +240,10 @@ export type PerformanceBenchmarkOptionView = {
 export type PerformanceModuleCapability = {
   state: "supported" | "partial" | "unavailable" | "hidden";
   reason?: string | null;
+  coverage_level?: string | null;
+  fallback_available?: boolean | null;
+  earliest_available_date?: string | null;
+  latest_available_date?: string | null;
 };
 
 export type WorkbenchPerformanceCapabilities = {

@@ -7,6 +7,10 @@ export type WorkspaceCapabilityState =
 export type WorkspaceCapability = {
   state: WorkspaceCapabilityState;
   reason?: string;
+  coverageLevel?: string;
+  fallbackAvailable?: boolean;
+  earliestAvailableDate?: string;
+  latestAvailableDate?: string;
 };
 
 export function supported(reason?: string): WorkspaceCapability {

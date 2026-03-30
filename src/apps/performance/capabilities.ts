@@ -32,12 +32,30 @@ function mapBackendCapability(
     return null;
   }
   if (capability.state === "supported") {
-    return supported(capability.reason ?? "Supported by the current performance contract.");
+    return {
+      ...supported(capability.reason ?? "Supported by the current performance contract."),
+      coverageLevel: capability.coverage_level ?? undefined,
+      fallbackAvailable: capability.fallback_available ?? undefined,
+      earliestAvailableDate: capability.earliest_available_date ?? undefined,
+      latestAvailableDate: capability.latest_available_date ?? undefined,
+    };
   }
   if (capability.state === "partial") {
-    return partial(capability.reason ?? "Available with partial coverage.");
+    return {
+      ...partial(capability.reason ?? "Available with partial coverage."),
+      coverageLevel: capability.coverage_level ?? undefined,
+      fallbackAvailable: capability.fallback_available ?? undefined,
+      earliestAvailableDate: capability.earliest_available_date ?? undefined,
+      latestAvailableDate: capability.latest_available_date ?? undefined,
+    };
   }
-  return unavailable(capability.reason ?? "Unavailable for the current selection.");
+  return {
+    ...unavailable(capability.reason ?? "Unavailable for the current selection."),
+    coverageLevel: capability.coverage_level ?? undefined,
+    fallbackAvailable: capability.fallback_available ?? undefined,
+    earliestAvailableDate: capability.earliest_available_date ?? undefined,
+    latestAvailableDate: capability.latest_available_date ?? undefined,
+  };
 }
 
 export function getPerformanceWorkspaceCapabilities(

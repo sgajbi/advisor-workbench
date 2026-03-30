@@ -107,6 +107,8 @@ describe("performance first-paint helper contracts", () => {
         contributionDetail: {
           state: "partial",
           reason: "Contribution exists, but only aggregate rows are available.",
+          coverageLevel: "aggregate",
+          fallbackAvailable: true,
         },
       },
     });
@@ -118,12 +120,12 @@ describe("performance first-paint helper contracts", () => {
     expect(presentation.items.find((item) => item.label === "Benchmark")).toMatchObject({
       value: "Assigned",
       tone: "default",
-      support: "Benchmark context ready",
+      support: "Benchmark context through 24 Feb 2026",
     });
     expect(presentation.items.find((item) => item.label === "Contribution")).toMatchObject({
       value: "Partial",
       tone: "warn",
-      support: "Only aggregate contribution available",
+      support: "Aggregate fallback ready",
     });
     expect(presentation.items.find((item) => item.label === "Evidence")).toMatchObject({
       value: "Pending",
@@ -178,6 +180,13 @@ describe("performance first-paint helper contracts", () => {
     expect(
       presentation.trust.items.find((item) => item.label === "Return History")
     ).toMatchObject(expectedHistory);
+    if (expectedHistory.value === "Ready") {
+      expect(
+        presentation.trust.items.find((item) => item.label === "Return History")
+      ).toMatchObject({
+        support: "Published through 24 Feb 2026",
+      });
+    }
     expect(
       presentation.trust.items.find((item) => item.label === "Attribution")
     ).toMatchObject(expectedAttribution);

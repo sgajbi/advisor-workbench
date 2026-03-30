@@ -334,15 +334,21 @@ function getFirstPaintCapabilitySupport(
   switch (label) {
     case "Benchmark":
       if (capability.state === "supported") {
-        return "Benchmark context ready";
+        return capability.latestAvailableDate
+          ? `Benchmark context through ${formatDate(capability.latestAvailableDate)}`
+          : "Benchmark context ready";
       }
       if (capability.state === "partial") {
-        return "Relative returns incomplete";
+        return capability.latestAvailableDate
+          ? `Relative returns incomplete through ${formatDate(capability.latestAvailableDate)}`
+          : "Relative returns incomplete";
       }
       return "Benchmark not assigned";
     case "Return History":
       if (capability.state === "supported") {
-        return "Published observations ready";
+        return capability.latestAvailableDate
+          ? `Published through ${formatDate(capability.latestAvailableDate)}`
+          : "Published observations ready";
       }
       if (capability.state === "partial") {
         return "Observations only partly published";
@@ -350,10 +356,14 @@ function getFirstPaintCapabilitySupport(
       return "Published observations unavailable";
     case "Contribution":
       if (capability.state === "supported") {
-        return "Position-level contribution ready";
+        return capability.coverageLevel === "position"
+          ? "Position-level contribution ready"
+          : "Contribution detail ready";
       }
       if (capability.state === "partial") {
-        return "Only aggregate contribution available";
+        return capability.fallbackAvailable
+          ? "Aggregate fallback ready"
+          : "Only aggregate contribution available";
       }
       return "Contribution detail unavailable";
     case "Attribution":

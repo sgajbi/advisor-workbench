@@ -27,7 +27,18 @@ export function formatDate(value: string | null | undefined): string {
   if (!value) {
     return "N/A";
   }
-  return value;
+  const normalized = value.includes("T") ? value : `${value}T00:00:00Z`;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-SG", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(parsed);
 }
 
 export function formatLabel(value: string): string {
