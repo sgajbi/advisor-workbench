@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import {
   expectActiveTab,
   measureElement,
+  parseServerTimingDuration,
 } from './workbench-smoke-helpers';
 
 async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
@@ -9,8 +10,20 @@ async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
     waitUntil: 'domcontentloaded',
   });
 
+  const workbenchHeading = page.getByRole('heading', { name: /^Performance Workbench$/i });
+  const unavailableHeading = page.getByRole('heading', {
+    name: /^Performance data unavailable$/i,
+  });
+
+  if (
+    (await workbenchHeading.count()) === 0 &&
+    (await unavailableHeading.count()) > 0
+  ) {
+    await page.reload({ waitUntil: 'domcontentloaded' });
+  }
+
   await expect(
-    page.getByRole('heading', { name: /^Performance Workbench$/i })
+    workbenchHeading
   ).toBeVisible({ timeout: 15000 });
   await expect(
     page.getByRole('tablist', { name: /^Performance workspace mode$/i })
@@ -18,6 +31,55 @@ async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
 }
 
 test.describe('Performance workbench smoke', () => {
+  test('split performance endpoints expose server timing to the live browser', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    const endpointResults = await page.evaluate(async () => {
+      const fetchWithTiming = async (path: string) => {
+        const response = await fetch(path, { cache: 'no-store' });
+        return {
+          status: response.status,
+          serverTiming: response.headers.get('server-timing'),
+        };
+      };
+
+      return {
+        summary: await fetchWithTiming(
+          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+        ),
+        details: await fetchWithTiming(
+          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+        ),
+        horizon: await fetchWithTiming(
+          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly'
+        ),
+        attribution: await fetchWithTiming(
+          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/attribution-trend?period=EXPLICIT&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+        ),
+      };
+    });
+
+    expect(endpointResults.summary.status).toBe(200);
+    expect(endpointResults.details.status).toBe(200);
+    expect(endpointResults.horizon.status).toBe(200);
+    expect(endpointResults.attribution.status).toBe(200);
+
+    expect(parseServerTimingDuration(endpointResults.summary.serverTiming)).toBeGreaterThanOrEqual(
+      0
+    );
+    expect(parseServerTimingDuration(endpointResults.details.serverTiming)).toBeGreaterThanOrEqual(
+      0
+    );
+    expect(parseServerTimingDuration(endpointResults.horizon.serverTiming)).toBeGreaterThanOrEqual(
+      0
+    );
+    expect(
+      parseServerTimingDuration(endpointResults.attribution.serverTiming)
+    ).toBeGreaterThanOrEqual(0);
+  });
+
   test('summary keeps first paint and then mounts deferred analytics by mode', async ({ page }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });

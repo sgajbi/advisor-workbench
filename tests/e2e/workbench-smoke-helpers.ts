@@ -47,3 +47,14 @@ export async function measureAgGridViewport(locator: Locator) {
     };
   });
 }
+
+export function parseServerTimingDuration(header: string | null) {
+  if (!header) {
+    return null;
+  }
+  const match = header.match(/(?:^|,)\s*app;dur=([0-9]+(?:\.[0-9]+)?)/i);
+  if (!match) {
+    return null;
+  }
+  return Number(match[1]);
+}
