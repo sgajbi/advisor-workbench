@@ -4,9 +4,9 @@ import {
   WorkbenchSummaryVisualCard,
 } from "@/design-system";
 
-import { formatPct } from "../formatters";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
+import { getPerformanceContributorsPresentation } from "./performance-summary-driver-helpers";
 
 export default function PerformanceSummaryContributorsSection({
   workspace,
@@ -16,30 +16,30 @@ export default function PerformanceSummaryContributorsSection({
   negativePositionContributors,
   isDetailsPending,
 }: PerformanceSummaryContributorsSectionProps) {
-  const rankingState = capabilities.contributionRanking.state;
+  const presentation = getPerformanceContributorsPresentation({
+    workspace,
+    capabilities,
+    contributorScale,
+    positivePositionContributors,
+    negativePositionContributors,
+    isDetailsPending,
+  });
 
   return (
     <AnalyticsModule
       className="workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
       compact
-      title="Top contributors and detractors"
-      subtitle={`${workspace.period} position ranking`}
+      title={presentation.title}
+      subtitle={presentation.subtitle}
     >
-      {rankingState === "supported" ? (
+      {presentation.mode === "supported" ? (
           <div className="performance-contributors-grid">
             <WorkbenchSummaryVisualCard>
               <AnalyticsRankedList
                 title="Top contributors"
                 label="Contribution"
                 scale={contributorScale}
-                rows={positivePositionContributors.map((row) => ({
-                  key: `top-position-${row.position_id}`,
-                  title: row.position_id,
-                  subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
-                  value: formatPct(row.contribution_pct),
-                  magnitudePct: row.contribution_pct,
-                  tone: "positive" as const,
-                }))}
+                rows={presentation.positiveRows}
                 emptyMessage="No positive contributors are present for the selected analytical slice."
               />
             </WorkbenchSummaryVisualCard>
@@ -48,30 +48,20 @@ export default function PerformanceSummaryContributorsSection({
                 title="Top detractors"
                 label="Contribution"
                 scale={contributorScale}
-                rows={negativePositionContributors.map((row) => ({
-                  key: `bottom-position-${row.position_id}`,
-                  title: row.position_id,
-                  subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
-                  value: formatPct(row.contribution_pct),
-                  magnitudePct: row.contribution_pct,
-                  tone: "negative" as const,
-                }))}
+                rows={presentation.negativeRows}
                 emptyMessage="No detractors are present for the selected analytical slice."
               />
             </WorkbenchSummaryVisualCard>
           </div>
-      ) : isDetailsPending ? (
-        <p className="muted">Loading contributor ranking for the selected analytical slice.</p>
+      ) : presentation.mode === "loading" ? (
+        <p className="muted">{presentation.body}</p>
       ) : (
         <PerformanceCapabilityNotice
           capability={capabilities.contributionRanking}
-          partialTitle="Contributor ranking is partial"
-          unavailableTitle="Contributor ranking unavailable"
-          body={
-            capabilities.contributionRanking.reason ??
-            "Contributor ranking is not available for the current selection."
-          }
-          hint="Position-level contribution ranking needs source-backed contribution detail for the selected slice."
+          partialTitle={presentation.noticeTitle}
+          unavailableTitle={presentation.noticeTitle}
+          body={presentation.noticeBody}
+          hint={presentation.hint}
         />
       )}
     </AnalyticsModule>

@@ -17,6 +17,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
+import { getPerformanceHorizonContextPresentation } from "./performance-summary-driver-helpers";
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
@@ -105,10 +106,11 @@ export default function PerformanceMultiHorizonPanel({
   );
   const selectedPeriodRow =
     rows?.find((row) => row.period === period) ?? rows?.find((row) => row.period === "YTD") ?? rows?.[0];
-  const selectedActiveReturn =
-    selectedPeriodRow?.active_return_pct === null || selectedPeriodRow?.active_return_pct === undefined
-      ? "Unavailable"
-      : formatPct(selectedPeriodRow.active_return_pct);
+  const context = getPerformanceHorizonContextPresentation({
+    period,
+    benchmarkLabel,
+    selectedPeriodRow,
+  });
 
   return (
     <AnalyticsModule
@@ -137,13 +139,13 @@ export default function PerformanceMultiHorizonPanel({
         <>
           <WorkbenchSummaryToolbar role="group" aria-label="Horizon comparison context">
             <span className="performance-mini-legend-item">
-              Selected period <strong>{period}</strong>
+              Selected period <strong>{context.selectedPeriodLabel}</strong>
             </span>
             <span className="performance-mini-legend-item">
-              Active return <strong>{selectedActiveReturn}</strong>
+              Active return <strong>{context.activeReturnLabel}</strong>
             </span>
             <span className="performance-mini-legend-item">
-              Compared against <strong>{benchmarkLabel}</strong>
+              Compared against <strong>{context.benchmarkLabel}</strong>
             </span>
           </WorkbenchSummaryToolbar>
           <WorkbenchSummaryToolbar className="performance-mini-legend">
