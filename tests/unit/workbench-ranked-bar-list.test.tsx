@@ -38,4 +38,24 @@ describe("WorkbenchRankedBarList", () => {
     expect(document.querySelector(".workbench-ranked-bar-fill-positive")).toBeTruthy();
     expect(document.querySelector(".workbench-ranked-bar-fill-negative")).toBeTruthy();
   });
+
+  it("renders rows without a header when title and label are omitted", () => {
+    render(
+      <WorkbenchRankedBarList
+        scale={1}
+        rows={[
+          {
+            key: "equity",
+            title: "Equity",
+            value: "0.45%",
+            magnitudePct: 0.45,
+            tone: "positive",
+          },
+        ]}
+      />
+    );
+
+    expect(document.querySelectorAll(".workbench-ranked-bar-row")).toHaveLength(1);
+    expect(document.querySelector(".workbench-ranked-bar-list-header")).toBeFalsy();
+  });
 });

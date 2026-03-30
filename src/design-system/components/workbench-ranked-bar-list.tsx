@@ -27,8 +27,8 @@ export default function WorkbenchRankedBarList({
   emptyMessage = "No ranked items are available for this analytical slice.",
   className,
 }: {
-  title: string;
-  label: string;
+  title?: string;
+  label?: string;
   rows: WorkbenchRankedBarRow[];
   scale: number;
   emptyMessage?: string;
@@ -36,10 +36,12 @@ export default function WorkbenchRankedBarList({
 }) {
   return (
     <Box className={cx("workbench-ranked-bar-list", className)}>
-      <Box className="workbench-ranked-bar-list-header">
-        <WorkbenchSummaryVisualHeading>{title}</WorkbenchSummaryVisualHeading>
-        <WorkbenchSummaryVisualMeta>{label}</WorkbenchSummaryVisualMeta>
-      </Box>
+      {title || label ? (
+        <Box className="workbench-ranked-bar-list-header">
+          {title ? <WorkbenchSummaryVisualHeading>{title}</WorkbenchSummaryVisualHeading> : null}
+          {label ? <WorkbenchSummaryVisualMeta>{label}</WorkbenchSummaryVisualMeta> : null}
+        </Box>
+      ) : null}
 
       {rows.length ? (
         <Box className="workbench-ranked-bar-list-body">

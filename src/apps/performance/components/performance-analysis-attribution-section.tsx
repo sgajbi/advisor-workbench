@@ -4,12 +4,14 @@ import {
   AnalyticsEffectStrip,
   AnalyticsTable,
   WorkbenchChartShell,
+  WorkbenchRankedBarList,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
-import { formatCompactPct, formatLabel, formatPct } from "../formatters";
+import { formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
+import { getAttributionRankingRows } from "./performance-analysis-view-helpers";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
@@ -109,42 +111,12 @@ export default function PerformanceAnalysisAttributionSection({
             subtitle="Largest benchmark-relative effects"
             className="performance-analysis-mini-module"
           >
-            <div className="performance-comparative-list">
-              {topAttributionEffectRows.map((row) => (
-                <div
-                  key={`effect-ranking-${row.key_label}`}
-                  className="performance-comparative-row"
-                >
-                  <div className="performance-comparative-meta">
-                    <strong>{formatLabel(row.key_label)}</strong>
-                    <span>
-                      Alloc {formatCompactPct(row.allocation_pct)} / Select{" "}
-                      {formatCompactPct(row.selection_pct)}
-                    </span>
-                  </div>
-                  <div className="performance-comparative-bar-track">
-                    <div className="performance-comparative-bar-axis" />
-                    <div
-                      className={`performance-comparative-bar ${
-                        row.total_effect_pct >= 0
-                          ? "performance-comparative-bar-positive"
-                          : "performance-comparative-bar-negative"
-                      }`}
-                      style={{
-                        width: `${(Math.abs(row.total_effect_pct) / attributionEffectScale) * 50}%`,
-                        marginLeft:
-                          row.total_effect_pct >= 0
-                            ? "50%"
-                            : `${50 - (Math.abs(row.total_effect_pct) / attributionEffectScale) * 50}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="performance-comparative-value">
-                    {formatPct(row.total_effect_pct)}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <WorkbenchRankedBarList
+              label="Benchmark-relative total effect"
+              rows={getAttributionRankingRows(topAttributionEffectRows)}
+              scale={attributionEffectScale}
+              emptyMessage="No benchmark-relative effect ranking is available for this selection."
+            />
           </WorkbenchChartShell>
         </div>
       ) : null}

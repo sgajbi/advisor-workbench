@@ -5561,70 +5561,6 @@ a:hover {
   text-align: right;
 }
 
-.performance-comparative-list {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.performance-comparative-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(150px, 1fr) 78px;
-  gap: 0.65rem;
-  align-items: center;
-}
-
-.performance-comparative-meta {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.performance-comparative-meta strong {
-  color: var(--brand-strong);
-  font-size: var(--text-sm);
-}
-
-.performance-comparative-meta span {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-}
-
-.performance-comparative-bar-track {
-  position: relative;
-  height: 0.72rem;
-  border-radius: 999px;
-  background: rgba(34, 44, 59, 0.08);
-  overflow: hidden;
-}
-
-.performance-comparative-bar-axis {
-  position: absolute;
-  inset: 0 auto 0 50%;
-  width: 1px;
-  background: rgba(34, 44, 59, 0.18);
-}
-
-.performance-comparative-bar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: 999px;
-}
-
-.performance-comparative-bar-positive {
-  background: linear-gradient(90deg, #4f8cbe 0%, #6ea9da 100%);
-}
-
-.performance-comparative-bar-negative {
-  background: linear-gradient(90deg, #bf6d56 0%, #d88f7b 100%);
-}
-
-.performance-comparative-value {
-  color: var(--brand-strong);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-align: right;
-}
-
 .performance-chart-loading-state {
   min-height: 5.25rem;
   display: grid;
@@ -6235,18 +6171,9 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-comparative-row {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
   .performance-relative-effect {
     justify-items: start;
     text-align: left;
-  }
-
-  .performance-comparative-bar-track {
-    width: 100%;
   }
 
   .performance-horizon-bars {

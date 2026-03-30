@@ -70,6 +70,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
     expect(screen.getAllByText("BMK GLOBAL BALANCED 60 40").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
