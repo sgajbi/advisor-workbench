@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceMultiHorizonPanel from "../../src/apps/performance/components/performance-multi-horizon-panel";
@@ -81,14 +81,18 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByText("NET")).toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
-    expect(screen.getByText("Begin MV")).toBeInTheDocument();
-    expect(screen.getByText("Net Flow")).toBeInTheDocument();
-    expect(screen.getByText("Gross")).toBeInTheDocument();
-    expect(screen.getByText("Cum Active")).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
-    expect(screen.getAllByText("$450,000")).toHaveLength(2);
-    expect(screen.getAllByText("$22,500")).toHaveLength(2);
-    expect(screen.getByText("5.88%")).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
+    const horizonTable = screen.getByLabelText("Multi-horizon return table");
+    expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Fee Drag")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(horizonTable).getAllByText("$450,000")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("$22,500")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("5.88%").length).toBeGreaterThan(0);
+    expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("MTD")).toHaveLength(2);
     expect(screen.getAllByText("QTD")).toHaveLength(2);
     expect(screen.getAllByText("YTD")).toHaveLength(3);
@@ -96,16 +100,29 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
-    expect(screen.queryByText("Begin MV")).not.toBeInTheDocument();
-    expect(screen.queryByText("Net Flow")).not.toBeInTheDocument();
-    expect(screen.getByText("Benchmark")).toBeInTheDocument();
-    expect(screen.getByText("Ann. Net")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Begin MV")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net Flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
-    expect(screen.getByText("Begin MV")).toBeInTheDocument();
-    expect(screen.getByText("Net Flow")).toBeInTheDocument();
-    expect(screen.queryByText("Benchmark")).not.toBeInTheDocument();
-    expect(screen.queryByText("Cum Active")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Benchmark")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cum Active")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Net" }));
+    expect(within(horizonTable).getByText("Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Gross")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
+    expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Ann. Gross")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });
 

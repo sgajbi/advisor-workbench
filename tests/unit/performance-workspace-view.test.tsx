@@ -90,16 +90,50 @@ describe("PerformanceWorkspaceView", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
-    await waitFor(() => {
-      expect(screen.getByText("Evidence Mode Panel")).toBeInTheDocument();
-    });
+    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
+      "Evidence unavailable"
+    );
+  });
 
-    expect(evidenceModeMock).toHaveBeenCalled();
-    expect(evidenceModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
-      capability: {
-        state: "unavailable",
-      },
+  it("disables unavailable evidence mode instead of mounting a dead panel", async () => {
+    const scenario = buildUnavailableEvidencePerformanceScenario();
+
+    render(
+      <PerformanceWorkspaceView
+        workspace={scenario.workspace}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
+    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
+    expect(evidenceModeMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps analysis available when there is at least partial analytical coverage", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    render(
+      <PerformanceWorkspaceView
+        workspace={scenario.workspace}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+      />
+    );
+
+    expect(screen.getByRole("tab", { name: "Analysis" })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    await waitFor(() => {
+      expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
   });
 
@@ -134,6 +168,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
       "workbench-segmented-control-button-active"
     );
@@ -165,16 +200,9 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByText("Evidence Mode Panel")).toBeInTheDocument();
-    });
-    expect(evidenceModeMock).toHaveBeenCalled();
-    expect(evidenceModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
-      capability: {
-        state: "unavailable",
-      },
-    });
-    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
+    expect(evidenceModeMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
   });
 });

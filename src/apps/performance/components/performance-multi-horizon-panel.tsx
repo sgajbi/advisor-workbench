@@ -23,6 +23,7 @@ import PerformanceSummaryDriverModule from "./performance-summary-driver-module"
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
 type HorizonTableView = "combined" | "returns" | "economics";
+type HorizonBasisView = "both" | "net" | "gross";
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
@@ -42,6 +43,7 @@ export default function PerformanceMultiHorizonPanel({
   const [comparison, setComparison] = useState<WorkbenchPerformanceHorizonComparison | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [tableView, setTableView] = useState<HorizonTableView>("combined");
+  const [basisView, setBasisView] = useState<HorizonBasisView>("both");
   const requestIdRef = useRef(0);
   const cacheRef = useRef<Map<string, WorkbenchPerformanceHorizonComparison>>(new Map());
 
@@ -132,13 +134,29 @@ export default function PerformanceMultiHorizonPanel({
       { key: "period", label: "Period" },
       { key: "window", label: "Window" },
     ];
+    const basisColumns =
+      basisView === "net"
+        ? [
+            { key: "netReturn", label: "Net", align: "right" as const },
+            { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
+          ]
+        : basisView === "gross"
+          ? [
+              { key: "grossReturn", label: "Gross", align: "right" as const },
+              { key: "annualizedGross", label: "Ann. Gross", align: "right" as const },
+            ]
+          : [
+              { key: "netReturn", label: "Net", align: "right" as const },
+              { key: "grossReturn", label: "Gross", align: "right" as const },
+              { key: "feeDrag", label: "Fee Drag", align: "right" as const },
+              { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
+              { key: "annualizedGross", label: "Ann. Gross", align: "right" as const },
+            ];
     const returnColumns = [
-      { key: "netReturn", label: "Net", align: "right" as const },
-      { key: "grossReturn", label: "Gross", align: "right" as const },
+      ...basisColumns,
       { key: "benchmarkReturn", label: "Benchmark", align: "right" as const },
       { key: "activeReturn", label: "Active", align: "right" as const },
       { key: "cumulativeActive", label: "Cum Active", align: "right" as const },
-      { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
     ];
     const economicsColumns = [
       { key: "beginMv", label: "Begin MV", align: "right" as const },
@@ -168,10 +186,20 @@ export default function PerformanceMultiHorizonPanel({
           fees: formatCurrency(row.fees, reportingCurrency),
           netReturn: formatPct(row.net_return_pct ?? row.portfolio_return_pct),
           grossReturn: formatPct(row.gross_return_pct),
+          feeDrag:
+            row.gross_return_pct !== null &&
+            row.gross_return_pct !== undefined &&
+            (row.net_return_pct ?? row.portfolio_return_pct) !== null &&
+            (row.net_return_pct ?? row.portfolio_return_pct) !== undefined
+              ? formatPct(
+                  row.gross_return_pct - (row.net_return_pct ?? row.portfolio_return_pct ?? 0)
+                )
+              : "N/A",
           benchmarkReturn: formatPct(row.benchmark_return_pct),
           activeReturn: formatPct(row.active_return_pct),
           cumulativeActive: formatPct(row.cumulative_active_return_pct),
           annualizedNet: formatPct(row.annualized_net_return_pct ?? row.annualized_return_pct),
+          annualizedGross: formatPct(row.annualized_gross_return_pct),
         };
 
         return {
@@ -185,7 +213,7 @@ export default function PerformanceMultiHorizonPanel({
         };
       }),
     };
-  }, [presentation.selectedPeriodLabel, reportingCurrency, rows, tableView]);
+  }, [basisView, presentation.selectedPeriodLabel, reportingCurrency, rows, tableView]);
 
   return (
     <PerformanceSummaryDriverModule
@@ -250,6 +278,17 @@ export default function PerformanceMultiHorizonPanel({
                 { key: "combined", label: "Combined" },
                 { key: "returns", label: "Returns" },
                 { key: "economics", label: "Economics" },
+              ]}
+            />
+            <WorkbenchSegmentedControl
+              ariaLabel="Horizon basis view"
+              className="performance-horizon-basis-view"
+              value={basisView}
+              onChange={setBasisView}
+              options={[
+                { key: "both", label: "Both" },
+                { key: "net", label: "Net" },
+                { key: "gross", label: "Gross" },
               ]}
             />
           </WorkbenchSummaryToolbar>

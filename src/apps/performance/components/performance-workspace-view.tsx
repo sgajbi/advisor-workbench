@@ -145,7 +145,13 @@ export default function PerformanceWorkspaceView({
             bodyClassName="performance-page-frame-body"
             title="Performance Workbench"
             subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
-            actions={<PerformanceWorkspaceModeSwitch value={mode} onChange={setMode} />}
+            actions={
+              <PerformanceWorkspaceModeSwitch
+                value={mode}
+                onChange={setMode}
+                capabilities={capabilities}
+              />
+            }
           >
             <WorkbenchSectionStack className="performance-page-sections">
               {modePanel}

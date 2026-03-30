@@ -128,6 +128,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
+      expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Return path view mode" })).toBeInTheDocument();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
         compactPattern("Active return 0.51%")
@@ -219,7 +220,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
-    expect(screen.queryByText("Evidence unavailable")).not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
+      "Evidence unavailable"
+    );
   });
 
   it("shows analysis modules and hides summary-only modules when analysis mode is selected", async () => {
@@ -325,31 +328,22 @@ describe("PerformanceAnalyticsPage", () => {
     }
   );
 
-  it("renders an evidence placeholder when evidence mode is selected", async () => {
+  it("disables evidence mode and keeps the page on the current supported surface", async () => {
     installPerformancePageFetchMock();
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
+    const evidenceTab = await screen.findByRole("tab", { name: "Evidence" });
+    expect(evidenceTab).toBeDisabled();
+    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
+      "Evidence unavailable"
+    );
+    fireEvent.click(evidenceTab);
 
-    expect(await screen.findByText("Evidence unavailable")).toBeInTheDocument();
-    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
-    expect(document.querySelector(".performance-evidence-module")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-state-panel")).toHaveLength(1);
-    expect(document.querySelector(".performance-evidence-status-strip")).toBeFalsy();
-    expect(
-      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
-    ).toBeTruthy();
-    expect(
-      screen.getByText(
-        /execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract/i
-      )
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/not exposed by the current gateway contract/i)
-    ).toBeInTheDocument();
-    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
-    expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
+    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeFalsy();
+    expect(document.querySelector(".performance-evidence-module")).toBeFalsy();
+    expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
+    expect(screen.queryByText("Evidence unavailable")).toBeInTheDocument();
   });
 
   it.each<PerformanceWorkspaceScenarioMatrix>([
@@ -421,11 +415,13 @@ describe("PerformanceAnalyticsPage", () => {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+      const evidenceTab = screen.getByRole("tab", { name: "Evidence" });
+      expect(evidenceTab).toBeDisabled();
       for (const text of evidenceExpectations) {
         await expectTextPresent(text);
       }
-      expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
+      fireEvent.click(evidenceTab);
+      expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeFalsy();
     }
   );
 
