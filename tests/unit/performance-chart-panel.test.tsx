@@ -93,6 +93,10 @@ describe("PerformanceChartPanel", () => {
     expect(
       document.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")
     ).toBeTruthy();
+    expect(
+      document.querySelector(".performance-chart-control-band.workbench-summary-toolbar")
+    ).toBeTruthy();
+    expect(document.querySelectorAll(".performance-chart-control-card")).toHaveLength(5);
     expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();

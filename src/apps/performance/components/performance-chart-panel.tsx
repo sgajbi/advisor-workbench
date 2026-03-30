@@ -371,132 +371,160 @@ export default function PerformanceChartPanel({
       className="performance-chart-stage workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
     >
       <Stack spacing={2.25}>
-        <Stack
-          direction={{ xs: "column", xl: "row" }}
-          spacing={2}
-          justifyContent="space-between"
-          alignItems={{ xs: "stretch", xl: "flex-start" }}
-        >
-          <Stack spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
-            <AnalyticsSectionHeader title={title} subtitle={explicitDateRange} />
-            <Stack spacing={1.25}>
-              <Stack direction={{ xs: "column", lg: "row" }} spacing={1.25} useFlexGap flexWrap="wrap">
-                <Box>
-                  <Typography sx={controlLabelSx}>Horizon</Typography>
-                  <ToggleButtonGroup
-                    exclusive
-                    size="small"
-                    value={period}
-                    aria-label="Horizon"
-                    sx={toggleGroupSx}
-                  >
-                    {PERIOD_OPTIONS.map((option) => (
-                      <ToggleButton
-                        key={option}
-                        value={option}
-                        onClick={() =>
-                          updateSelection({
-                            period: option,
-                            reportStartDate: undefined,
-                            reportEndDate: undefined,
-                          })
-                        }
-                        disabled={isUpdating && option === period}
-                      >
-                        {option}
-                      </ToggleButton>
-                    ))}
-                  </ToggleButtonGroup>
-                </Box>
+        <Stack spacing={1.5}>
+          <Stack
+            direction={{ xs: "column", xl: "row" }}
+            spacing={1.5}
+            justifyContent="space-between"
+            alignItems={{ xs: "stretch", xl: "flex-start" }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <AnalyticsSectionHeader title={title} subtitle={explicitDateRange} />
+            </Box>
 
-                <Box component="form" onSubmit={applyExplicitDates}>
-                  <Typography sx={controlLabelSx}>Explicit Dates</Typography>
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1} useFlexGap>
-                    <TextField
-                      size="small"
-                      type="date"
-                      value={fromDate}
-                      slotProps={{
-                        htmlInput: {
-                          "aria-label": "From",
-                          max: toDate || resolvedReportDates.endDate,
-                        },
-                      }}
-                      onChange={(event) => setFromDate(event.currentTarget.value)}
-                    />
-                    <TextField
-                      size="small"
-                      type="date"
-                      value={toDate}
-                      slotProps={{
-                        htmlInput: {
-                          "aria-label": "To",
-                          min: fromDate,
-                          max: resolvedReportDates.endDate,
-                        },
-                      }}
-                      onChange={(event) => setToDate(event.currentTarget.value)}
-                    />
-                    <Button type="submit" variant="contained" size="small" disableElevation>
-                      {isUpdating ? "Updating..." : "Apply"}
-                    </Button>
-                  </Stack>
-                </Box>
+            <Box sx={{ minWidth: { xl: 360 }, maxWidth: { xl: 520 }, width: "100%" }}>
+              <PerformanceChartContextStrip
+                period={period}
+                detailBasis={detailBasis}
+                benchmarkLabel={returnPathPresentation.benchmarkLabel}
+                benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
+                activeReturn={returnPathPresentation.activeReturnValue}
+                relativeContextStatus={returnPathPresentation.relativeContextStatus}
+              />
+            </Box>
+          </Stack>
+
+          <div className="performance-chart-control-band workbench-summary-toolbar">
+            <div className="performance-chart-control-card">
+              <Typography sx={controlLabelSx}>Horizon</Typography>
+              <div className="performance-chart-toggle-wrap">
+                <ToggleButtonGroup
+                  exclusive
+                  size="small"
+                  value={period}
+                  aria-label="Horizon"
+                  sx={toggleGroupSx}
+                >
+                  {PERIOD_OPTIONS.map((option) => (
+                    <ToggleButton
+                      key={option}
+                      value={option}
+                      onClick={() =>
+                        updateSelection({
+                          period: option,
+                          reportStartDate: undefined,
+                          reportEndDate: undefined,
+                        })
+                      }
+                      disabled={isUpdating && option === period}
+                    >
+                      {option}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </div>
+            </div>
+
+            <div className="performance-chart-control-card performance-chart-control-card-dates">
+              <Typography sx={controlLabelSx}>Explicit Dates</Typography>
+              <Stack
+                component="form"
+                className="performance-chart-date-stack"
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1}
+                useFlexGap
+                onSubmit={applyExplicitDates}
+              >
+                <TextField
+                  size="small"
+                  type="date"
+                  value={fromDate}
+                  slotProps={{
+                    htmlInput: {
+                      "aria-label": "From",
+                      max: toDate || resolvedReportDates.endDate,
+                    },
+                  }}
+                  onChange={(event) => setFromDate(event.currentTarget.value)}
+                />
+                <TextField
+                  size="small"
+                  type="date"
+                  value={toDate}
+                  slotProps={{
+                    htmlInput: {
+                      "aria-label": "To",
+                      min: fromDate,
+                      max: resolvedReportDates.endDate,
+                    },
+                  }}
+                  onChange={(event) => setToDate(event.currentTarget.value)}
+                />
+                <Button type="submit" variant="contained" size="small" disableElevation>
+                  {isUpdating ? "Updating..." : "Apply"}
+                </Button>
               </Stack>
+            </div>
 
-              <Stack direction={{ xs: "column", lg: "row" }} spacing={1.25} useFlexGap flexWrap="wrap">
-                <TextField
-                  select
-                  size="small"
-                  label="Frequency"
-                  value={chartFrequency}
-                  onChange={(event) =>
-                    updateSelection({
-                      chartFrequency: event.target.value,
-                    })
-                  }
-                  disabled={isUpdating}
-                  sx={selectControlSx}
-                  SelectProps={{ native: true }}
-                  slotProps={{
-                    inputLabel: { shrink: true },
-                    htmlInput: { "aria-label": "Frequency" },
-                  }}
-                >
-                  {CHART_FREQUENCY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </TextField>
+            <div className="performance-chart-control-card">
+              <Typography sx={controlLabelSx}>Frequency</Typography>
+              <TextField
+                select
+                size="small"
+                label="Frequency"
+                value={chartFrequency}
+                onChange={(event) =>
+                  updateSelection({
+                    chartFrequency: event.target.value,
+                  })
+                }
+                disabled={isUpdating}
+                sx={selectControlSx}
+                SelectProps={{ native: true }}
+                slotProps={{
+                  inputLabel: { shrink: true },
+                  htmlInput: { "aria-label": "Frequency" },
+                }}
+              >
+                {CHART_FREQUENCY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </TextField>
+            </div>
 
-                <TextField
-                  select
-                  size="small"
-                  label="Compared To"
-                  value={benchmark ?? ""}
-                  onChange={(event) =>
-                    updateSelection({
-                      benchmark: event.target.value || undefined,
-                    })
-                  }
-                  disabled={isUpdating}
-                  sx={selectControlSx}
-                  SelectProps={{ native: true }}
-                  slotProps={{
-                    inputLabel: { shrink: true },
-                    htmlInput: { "aria-label": "Compared To" },
-                  }}
-                >
-                  {resolvedBenchmarkOptions.map((option) => (
-                    <option key={option.benchmark_code} value={option.benchmark_code}>
-                      {option.benchmark_name}
-                    </option>
-                  ))}
-                </TextField>
+            <div className="performance-chart-control-card">
+              <Typography sx={controlLabelSx}>Compared To</Typography>
+              <TextField
+                select
+                size="small"
+                label="Compared To"
+                value={benchmark ?? ""}
+                onChange={(event) =>
+                  updateSelection({
+                    benchmark: event.target.value || undefined,
+                  })
+                }
+                disabled={isUpdating}
+                sx={selectControlSx}
+                SelectProps={{ native: true }}
+                slotProps={{
+                  inputLabel: { shrink: true },
+                  htmlInput: { "aria-label": "Compared To" },
+                }}
+              >
+                {resolvedBenchmarkOptions.map((option) => (
+                  <option key={option.benchmark_code} value={option.benchmark_code}>
+                    {option.benchmark_name}
+                  </option>
+                ))}
+              </TextField>
+            </div>
 
-                <Box>
-                  <Typography sx={controlLabelSx}>Basis</Typography>
+            <div className="performance-chart-control-card performance-chart-control-card-basis">
+              <Typography sx={controlLabelSx}>Basis</Typography>
+              <div className="performance-chart-toggle-wrap">
                   <ToggleButtonGroup
                     exclusive
                     size="small"
@@ -519,21 +547,9 @@ export default function PerformanceChartPanel({
                       </ToggleButton>
                     ))}
                   </ToggleButtonGroup>
-                </Box>
-              </Stack>
-            </Stack>
-          </Stack>
-
-          <Box sx={{ minWidth: { xl: 280 }, maxWidth: { xl: 360 }, width: "100%" }}>
-            <PerformanceChartContextStrip
-              period={period}
-              detailBasis={detailBasis}
-              benchmarkLabel={returnPathPresentation.benchmarkLabel}
-              benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
-              activeReturn={returnPathPresentation.activeReturnValue}
-              relativeContextStatus={returnPathPresentation.relativeContextStatus}
-            />
-          </Box>
+              </div>
+            </div>
+          </div>
         </Stack>
 
       {capabilities.returnPath.state === "supported" && points.length ? (
@@ -641,7 +657,7 @@ function renderSummaryMetric(
 }
 
 const controlLabelSx = {
-  mb: 0.5,
+  mb: 0.15,
   fontSize: "0.6875rem",
   fontWeight: 800,
   letterSpacing: "0.08em",
@@ -651,16 +667,18 @@ const controlLabelSx = {
 
 const toggleGroupSx = {
   flexWrap: "wrap",
-  gap: 0.75,
+  gap: 0.5,
   "& .MuiToggleButtonGroup-grouped": {
-    borderRadius: "999px !important",
+    borderRadius: "8px !important",
     border: "1px solid rgba(31, 39, 51, 0.1) !important",
-    px: 1.3,
-    py: 0.6,
+    px: 1.05,
+    py: 0.45,
     color: "text.secondary",
     textTransform: "none",
     fontWeight: 700,
-    fontSize: "0.8rem",
+    fontSize: "0.78rem",
+    minHeight: 34,
+    backgroundColor: "#ffffff",
   },
   "& .Mui-selected": {
     bgcolor: "#1f2733 !important",
@@ -669,10 +687,14 @@ const toggleGroupSx = {
 } as const;
 
 const selectControlSx = {
-  minWidth: { xs: "100%", sm: 200 },
+  minWidth: { xs: "100%", sm: 140 },
   "& .MuiInputBase-input": {
-    fontSize: "0.875rem",
+    fontSize: "0.8125rem",
     fontWeight: 600,
+  },
+  "& .MuiInputLabel-root": {
+    fontSize: "0.75rem",
+    fontWeight: 700,
   },
 } as const;
 
