@@ -63,6 +63,9 @@
   --workbench-analytic-chip-size: 0.6875rem;
   --workbench-analytic-support-size: 0.71875rem;
   --workbench-analytic-context-value-size: 0.78125rem;
+  --workbench-analytic-subtitle-size: 0.78125rem;
+  --workbench-analytic-heading-size: 0.875rem;
+  --workbench-analytic-fallback-size: 0.75rem;
   --workstation-shell-gap: 20px;
   --workstation-rail-width: 280px;
   --workstation-side-width: 320px;
@@ -275,7 +278,7 @@ a:hover {
 }
 
 .workbench-summary-card .workbench-summary-card-subtitle {
-  font-size: 0.8125rem;
+  font-size: var(--workbench-analytic-subtitle-size);
   line-height: 1.45;
   color: #5f6b7b;
   max-width: 40ch;
@@ -308,7 +311,7 @@ a:hover {
 }
 
 .workbench-summary-metric-label {
-  font-size: 0.71875rem;
+  font-size: var(--workbench-analytic-support-size);
   font-weight: 800;
   line-height: 1.3;
   color: var(--text-muted);
@@ -325,7 +328,7 @@ a:hover {
 }
 
 .workbench-summary-metric-support {
-  font-size: 0.78125rem;
+  font-size: var(--workbench-analytic-context-value-size);
   line-height: 1.42;
   color: var(--text-muted);
 }
@@ -4343,7 +4346,7 @@ a:hover {
 }
 
 .performance-summary-driver-module .workbench-summary-card-subtitle {
-  font-size: 0.78125rem;
+  font-size: var(--workbench-analytic-subtitle-size);
   line-height: 1.4;
   color: #5f6b7b;
 }
@@ -4354,7 +4357,7 @@ a:hover {
   display: grid;
   align-content: center;
   padding: 0.2rem 0;
-  font-size: 0.78125rem;
+  font-size: var(--workbench-analytic-context-value-size);
   line-height: 1.35;
 }
 
@@ -4371,7 +4374,7 @@ a:hover {
 
 .performance-capability-notice .module-state-panel strong,
 .performance-capability-notice .empty-state-panel strong {
-  font-size: 0.875rem;
+  font-size: var(--workbench-analytic-heading-size);
   line-height: 1.25;
 }
 
@@ -4379,7 +4382,7 @@ a:hover {
 .performance-capability-notice .module-state-panel span,
 .performance-capability-notice .empty-state-panel p,
 .performance-capability-notice .empty-state-panel span {
-  font-size: 0.75rem;
+  font-size: var(--workbench-analytic-fallback-size);
   line-height: 1.38;
 }
 
@@ -4924,13 +4927,13 @@ a:hover {
 }
 
 .performance-chart-benchmark-state strong {
-  font-size: 0.875rem;
+  font-size: var(--workbench-analytic-heading-size);
   line-height: 1.25;
   color: var(--brand-strong);
 }
 
 .performance-chart-benchmark-state span {
-  font-size: 0.78125rem;
+  font-size: var(--workbench-analytic-context-value-size);
   line-height: 1.45;
   color: var(--text-muted);
 }
@@ -5005,7 +5008,7 @@ a:hover {
 }
 
 .performance-chart-unavailable strong {
-  font-size: 0.875rem;
+  font-size: var(--workbench-analytic-heading-size);
   line-height: 1.2;
   color: var(--brand-strong);
 }
@@ -5013,7 +5016,7 @@ a:hover {
 .performance-chart-unavailable p,
 .performance-chart-unavailable span {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--workbench-analytic-fallback-size);
   line-height: 1.38;
   color: var(--text-muted);
 }
