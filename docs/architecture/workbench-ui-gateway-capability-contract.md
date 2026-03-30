@@ -156,6 +156,33 @@ These items still need an explicit governance decision rather than silent drift:
   - UI remains explicit that these are pending source support
   - do not fake support from client-side transforms
 
+## Measured Performance latency baseline
+
+Local browser-side timing against the active BFF routes now provides a concrete baseline for the
+Performance hot path. Three-run averages collected on 2026-03-30 were:
+
+- `summary`
+  - total `app`: `3896.95ms`
+  - dominant phase: `perf-summary=2566.71ms`
+- `details`
+  - total `app`: `3547.88ms`
+  - dominant phase: `perf-summary=2516.66ms`
+- `horizon-comparison`
+  - total `app`: `5064.89ms`
+  - dominant phase: `perf-horizon=3437.31ms`
+- `attribution-trend`
+  - total `app`: `4123.56ms`
+  - dominant phase: `perf-attribution=3147.84ms`
+
+Interpretation:
+
+- Gateway overhead is visible but no longer dominant after the recent benchmark-catalog and
+  overview-fanout reductions.
+- The next material latency wins should come from upstream analytics workloads, especially the
+  summary, horizon-comparison, and attribution computations.
+- Future optimization work should be measured against these phase timings rather than inferred from
+  code inspection alone.
+
 ## Ownership boundaries
 
 Backend ownership:
