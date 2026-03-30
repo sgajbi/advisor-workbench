@@ -1,6 +1,6 @@
 import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 
-import { AnalyticsTable, Panel } from "@/design-system";
+import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
 import { formatLabel, formatPct } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
@@ -30,32 +30,38 @@ export default function PerformanceAnalysisContributionSection({
   isDetailsPending,
   capabilities,
 }: PerformanceAnalysisContributionSectionProps) {
+  const actions = (
+    <FormControl size="small" sx={{ minWidth: 180 }}>
+      <Typography component="label" sx={inlineControlLabelSx}>
+        Segment
+      </Typography>
+      <Select
+        aria-label="Contribution Segment"
+        value={contributionDimension}
+        onChange={(event) =>
+          onRequestChange?.({
+            contributionDimension: event.target.value,
+          })
+        }
+        disabled={isUpdating}
+      >
+        {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+          <MenuItem key={option} value={option}>
+            {formatLabel(option)}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+
   return (
-    <Panel id="performance-drivers" className="performance-detail-panel-wide">
-      <div className="performance-section-heading">
-        <h3>Contribution Detail</h3>
-        <FormControl size="small" sx={{ minWidth: 180 }}>
-          <Typography component="label" sx={inlineControlLabelSx}>
-            Segment
-          </Typography>
-          <Select
-            aria-label="Contribution Segment"
-            value={contributionDimension}
-            onChange={(event) =>
-              onRequestChange?.({
-                contributionDimension: event.target.value,
-              })
-            }
-            disabled={isUpdating}
-          >
-            {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {formatLabel(option)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </div>
+    <WorkbenchDataGridFrame
+      id="performance-drivers"
+      title="Contribution Detail"
+      subtitle="Position and segment contribution detail for the selected horizon."
+      actions={actions}
+      className="performance-detail-panel-wide performance-analysis-module"
+    >
       {capabilities.contributionDetail.state === "supported" ? (
         workspace.contribution?.levels.map((level) => {
           const totals = getContributionTotals(workspace, level) ?? null;
@@ -128,6 +134,6 @@ export default function PerformanceAnalysisContributionSection({
           hint="Contribution detail requires source-backed contribution levels for the selected segment and horizon."
         />
       )}
-    </Panel>
+    </WorkbenchDataGridFrame>
   );
 }

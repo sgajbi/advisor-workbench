@@ -3,6 +3,7 @@ import AnalyticsModule from "./analytics-module";
 import { cx } from "../utils/cx";
 
 export default function WorkbenchDataGridFrame({
+  id,
   title,
   subtitle,
   actions,
@@ -11,6 +12,7 @@ export default function WorkbenchDataGridFrame({
   children,
   className,
 }: {
+  id?: string;
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
@@ -21,6 +23,7 @@ export default function WorkbenchDataGridFrame({
 }) {
   return (
     <AnalyticsModule
+      id={id}
       compact
       title={title}
       subtitle={subtitle}

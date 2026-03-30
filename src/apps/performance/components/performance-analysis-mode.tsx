@@ -22,7 +22,7 @@ export default function PerformanceAnalysisMode({
   attributionEffectScale,
 }: PerformanceAnalysisModeProps) {
   return (
-    <WorkspaceGrid className="performance-detail-grid">
+    <WorkspaceGrid className="performance-detail-grid performance-analysis-stage">
       <PerformanceAttributionTrendPanel
         portfolioId={workspace.portfolio.portfolio_id}
         period={period}

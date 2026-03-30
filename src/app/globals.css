@@ -4328,6 +4328,29 @@ a:hover {
   min-width: 0;
 }
 
+.performance-analysis-stage {
+  align-items: start;
+}
+
+.performance-analysis-module {
+  height: 100%;
+}
+
+.performance-analysis-toolbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.performance-analysis-metric-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.performance-analysis-mini-module {
+  height: 100%;
+}
+
 .performance-summary-driver-module .workbench-summary-card-subtitle {
   max-width: 38ch;
 }

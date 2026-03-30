@@ -210,6 +210,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+    expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
+    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();

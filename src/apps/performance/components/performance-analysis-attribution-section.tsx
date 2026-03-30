@@ -2,9 +2,9 @@ import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 
 import {
   AnalyticsEffectStrip,
-  AnalyticsModule,
   AnalyticsTable,
-  Panel,
+  WorkbenchChartShell,
+  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
@@ -30,65 +30,84 @@ export default function PerformanceAnalysisAttributionSection({
   attributionEffectScale,
 }: PerformanceAnalysisAttributionSectionProps) {
   const hasAttribution = capabilities.attributionDetail.state === "supported";
+  const actions = (
+    <div className="performance-analysis-toolbar">
+      <FormControl size="small" sx={{ minWidth: 180 }}>
+        <Typography component="label" sx={inlineControlLabelSx}>
+          Segment
+        </Typography>
+        <Select
+          aria-label="Attribution Segment"
+          value={attributionDimension}
+          onChange={(event) =>
+            onRequestChange?.({
+              attributionDimension: event.target.value,
+            })
+          }
+          disabled={isUpdating}
+        >
+          {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {formatLabel(option)}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      {workspace.attribution?.benchmark_id ? (
+        <span className="performance-section-benchmark">
+          Versus {formatLabel(workspace.attribution.benchmark_id)}
+        </span>
+      ) : null}
+    </div>
+  );
+
+  const metricItems = workspace.attribution?.benchmark_id
+    ? [
+        {
+          label: "Benchmark",
+          value: formatLabel(workspace.attribution.benchmark_id),
+        },
+        {
+          label: "Active Return",
+          value: formatPct(workspace.attribution.active_return_pct),
+        },
+        {
+          label: "Effects Sum",
+          value: formatPct(workspace.attribution.sum_of_effects_pct),
+        },
+        {
+          label: "Residual",
+          value: formatPct(workspace.attribution.residual_pct),
+        },
+      ]
+    : [];
 
   return (
-    <Panel id="performance-attribution" className="performance-detail-panel-compact">
-      <div className="performance-section-heading">
-        <h3>Attribution Detail</h3>
-        <div className="performance-section-heading-meta">
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <Typography component="label" sx={inlineControlLabelSx}>
-              Segment
-            </Typography>
-            <Select
-              aria-label="Attribution Segment"
-              value={attributionDimension}
-              onChange={(event) =>
-                onRequestChange?.({
-                  attributionDimension: event.target.value,
-                })
-              }
-              disabled={isUpdating}
-            >
-              {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {formatLabel(option)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {workspace.attribution?.benchmark_id ? (
-            <span className="performance-section-benchmark">
-              Versus {formatLabel(workspace.attribution.benchmark_id)}
-            </span>
-          ) : null}
-        </div>
-      </div>
-      {workspace.attribution?.benchmark_id ? (
-        <div className="performance-attribution-summary-strip">
-          <div>
-            <span>Benchmark</span>
-            <strong>{formatLabel(workspace.attribution.benchmark_id)}</strong>
-          </div>
-          <div>
-            <span>Active Return</span>
-            <strong>{formatPct(workspace.attribution.active_return_pct)}</strong>
-          </div>
-          <div>
-            <span>Effects Sum</span>
-            <strong>{formatPct(workspace.attribution.sum_of_effects_pct)}</strong>
-          </div>
-          <div>
-            <span>Residual</span>
-            <strong>{formatPct(workspace.attribution.residual_pct)}</strong>
-          </div>
-        </div>
-      ) : null}
+    <WorkbenchChartShell
+      id="performance-attribution"
+      title="Attribution Detail"
+      subtitle="Benchmark-relative decomposition across allocation, selection, and interaction effects."
+      actions={actions}
+      metricStrip={
+        metricItems.length ? (
+          <WorkbenchSummaryMetricStrip
+            className="performance-analysis-metric-strip"
+            ariaLabel="Attribution summary strip"
+            items={metricItems}
+          />
+        ) : undefined
+      }
+      className="performance-detail-panel-compact performance-analysis-module"
+    >
       {hasAttribution ? (
         <div className="performance-analytic-duo-grid">
           <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
 
-          <AnalyticsModule title="Total Effect Ranking" subtitle="Largest benchmark-relative effects">
+          <WorkbenchChartShell
+            title="Total Effect Ranking"
+            subtitle="Largest benchmark-relative effects"
+            className="performance-analysis-mini-module"
+          >
             <div className="performance-comparative-list">
               {topAttributionEffectRows.map((row) => (
                 <div
@@ -125,7 +144,7 @@ export default function PerformanceAnalysisAttributionSection({
                 </div>
               ))}
             </div>
-          </AnalyticsModule>
+          </WorkbenchChartShell>
         </div>
       ) : null}
       <div className="performance-effect-legend" aria-label="Attribution effect legend">
@@ -216,6 +235,6 @@ export default function PerformanceAnalysisAttributionSection({
           hint="Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
         />
       )}
-    </Panel>
+    </WorkbenchChartShell>
   );
 }

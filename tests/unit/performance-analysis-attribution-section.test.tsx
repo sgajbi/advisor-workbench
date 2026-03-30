@@ -66,6 +66,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
 
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
+    expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
+    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(screen.getAllByText("BMK GLOBAL BALANCED 60 40").length).toBeGreaterThan(0);
@@ -88,7 +90,9 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
 
     expect(screen.getByText("Attribution detail unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Attribution detail is not available for the current selection.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Attribution detail is not available for the current selection.")
+    ).toBeInTheDocument();
   });
 
   it("renders a partial-state panel when attribution coverage is incomplete", () => {
@@ -105,6 +109,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
 
     expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")
+    ).toBeInTheDocument();
   });
 });
