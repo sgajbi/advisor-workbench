@@ -101,13 +101,16 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Selected period YTD"
+      "Portfolio line Portfolio"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Compared against Global Balanced 60/40"
+      "Benchmark line Global Balanced 60/40"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Active return 0.80%"
+      "Active context 0.80% • Available"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Window / basis YTD • Net"
     );
     expect(screen.getByText("2026-01-01 - 2026-02-28")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
@@ -156,7 +159,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.getByLabelText("Compared To")).toHaveDisplayValue("Global Growth 80/20");
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Compared against Global Growth 80/20"
+      "Benchmark line Global Growth 80/20"
     );
   });
 
@@ -232,10 +235,10 @@ describe("PerformanceChartPanel", () => {
     expect(benchmarkState).toHaveTextContent("Benchmark unassigned");
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Compared against Unassigned"
+      "Benchmark line Unassigned"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Relative context Unavailable"
+      "Active context Unavailable • Unavailable"
     );
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
@@ -274,13 +277,10 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Compared against Global Balanced 60/40"
+      "Benchmark line Global Balanced 60/40"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Active return Unavailable"
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Relative context Partial"
+      "Active context Unavailable • Partial"
     );
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);

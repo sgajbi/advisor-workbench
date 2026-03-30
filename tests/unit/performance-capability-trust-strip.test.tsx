@@ -26,5 +26,7 @@ describe("PerformanceCapabilityTrustStrip", () => {
     expect(screen.getByText("Partial")).toBeInTheDocument();
     expect(screen.getByText("Evidence")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(document.querySelectorAll(".performance-trust-item")).toHaveLength(5);
+    expect(document.querySelectorAll(".performance-trust-item .status-chip")).toHaveLength(5);
   });
 });

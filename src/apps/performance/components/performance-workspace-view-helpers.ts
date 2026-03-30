@@ -114,6 +114,7 @@ type SummaryMetricCard = {
   support?: string;
   emphasize?: boolean;
   unavailable?: boolean;
+  priority?: "primary" | "comparison" | "supporting" | "utility";
 };
 
 export type PerformanceExecutiveReturnPresentation = {
@@ -187,9 +188,10 @@ export function getPerformanceExecutiveReturnPresentation({
       buildMetricCard({
         label: "Portfolio Return",
         value: formatPctValue(selectedPerformance?.portfolio_return_pct),
-        support: "Performance over the selected period.",
+        support: "Selected portfolio performance",
         emphasize: true,
         unavailable: selectedPerformance?.portfolio_return_pct == null,
+        priority: "primary",
       }),
       buildMetricCard({
         label: "Benchmark Return",
@@ -198,8 +200,9 @@ export function getPerformanceExecutiveReturnPresentation({
             ? formatPctValue(selectedPerformance.benchmark_return_pct)
             : "Unavailable",
         support:
-          capabilities.benchmarkComparison.reason ?? "Benchmark-relative return for the selected period.",
+          capabilities.benchmarkComparison.reason ?? "Assigned benchmark result",
         unavailable: !hasBenchmark || selectedPerformance?.benchmark_return_pct == null,
+        priority: "comparison",
       }),
       buildMetricCard({
         label: "Active Return",
@@ -208,9 +211,10 @@ export function getPerformanceExecutiveReturnPresentation({
             ? formatPctValue(selectedPerformance.active_return_pct)
             : "Unavailable",
         support: hasBenchmark
-          ? "Portfolio return minus benchmark return."
-          : capabilities.benchmarkComparison.reason ?? "Requires an assigned benchmark.",
+          ? "Portfolio versus benchmark"
+          : capabilities.benchmarkComparison.reason ?? "Requires an assigned benchmark",
         unavailable: !hasBenchmark || selectedPerformance?.active_return_pct == null,
+        priority: "comparison",
       }),
       buildMetricCard({
         label: "Money-Weighted Return",
@@ -223,19 +227,22 @@ export function getPerformanceExecutiveReturnPresentation({
             ? `Annualized ${formatCompactPctValue(workspace.money_weighted_return.annualized_return_pct)}${
                 suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""
               }`
-            : workspace.money_weighted_return?.method ?? "Cash-flow aware return."
-          : "Requires cash-flow history across the selected period.",
+            : workspace.money_weighted_return?.method ?? "Cash-flow aware return"
+          : "Requires cash-flow history",
         unavailable: workspace.money_weighted_return?.money_weighted_return_pct == null,
+        priority: "supporting",
       }),
       buildMetricCard({
         label: "Basis",
         value: detailBasis === "GROSS" ? "Gross" : "Net",
-        support: "Selected measurement basis.",
+        support: "Measurement basis",
+        priority: "utility",
       }),
       buildMetricCard({
         label: "Period",
         value: workspace.period,
         support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
+        priority: "utility",
       }),
     ],
   };

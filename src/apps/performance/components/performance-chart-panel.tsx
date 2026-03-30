@@ -527,6 +527,7 @@ export default function PerformanceChartPanel({
           <Box sx={{ minWidth: { xl: 280 }, maxWidth: { xl: 360 }, width: "100%" }}>
             <PerformanceChartContextStrip
               period={period}
+              detailBasis={detailBasis}
               benchmarkLabel={returnPathPresentation.benchmarkLabel}
               benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
               activeReturn={returnPathPresentation.activeReturnValue}

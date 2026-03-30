@@ -115,7 +115,7 @@ export default function PerformanceSummaryMode({
         </WorkbenchDeferredSection>
       </WorkspaceGrid>
 
-      <WorkspaceGrid className="performance-detail-grid workbench-summary-region">
+      <WorkspaceGrid className="performance-detail-grid performance-secondary-zone workbench-summary-region">
         <WorkbenchDeferredSection
           className="performance-summary-driver-section"
           title="How did this compare across horizons?"

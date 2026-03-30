@@ -42,6 +42,8 @@ describe("PerformanceSummaryHeaderSection", () => {
     expect(screen.getByText("Period")).toBeInTheDocument();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
+    expect(document.querySelector(".performance-summary-kpi-card-primary")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-trust-item")).toHaveLength(5);
     expect(screen.queryByRole("group", { name: "Performance summary observations" })).not.toBeInTheDocument();
   });
 

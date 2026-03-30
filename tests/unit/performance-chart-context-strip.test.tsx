@@ -9,6 +9,7 @@ describe("PerformanceChartContextStrip", () => {
     render(
       <PerformanceChartContextStrip
         period="YTD"
+        detailBasis="NET"
         benchmarkLabel="Global Balanced 60/40"
         benchmarkAssigned
         activeReturn="0.80%"
@@ -17,16 +18,17 @@ describe("PerformanceChartContextStrip", () => {
     );
 
     const context = screen.getByRole("group", { name: "Return path context" });
-    expect(context).toHaveTextContent("Selected period YTD");
-    expect(context).toHaveTextContent("Compared against Global Balanced 60/40");
-    expect(context).toHaveTextContent("Active return 0.80%");
-    expect(context).toHaveTextContent("Relative context Available");
+    expect(context).toHaveTextContent("Portfolio line Portfolio");
+    expect(context).toHaveTextContent("Benchmark line Global Balanced 60/40");
+    expect(context).toHaveTextContent("Active context 0.80% • Available");
+    expect(context).toHaveTextContent("Window / basis YTD • Net");
   });
 
   it("renders an honest unavailable relative context when no benchmark is assigned", () => {
     render(
       <PerformanceChartContextStrip
         period="YTD"
+        detailBasis="NET"
         benchmarkLabel="Benchmark"
         benchmarkAssigned={false}
         activeReturn="Unavailable"
@@ -35,15 +37,16 @@ describe("PerformanceChartContextStrip", () => {
     );
 
     const context = screen.getByRole("group", { name: "Return path context" });
-    expect(context).toHaveTextContent("Compared against Unassigned");
-    expect(context).toHaveTextContent("Active return Unavailable");
-    expect(context).toHaveTextContent("Relative context Unavailable");
+    expect(context).toHaveTextContent("Benchmark line Unassigned");
+    expect(context).toHaveTextContent("Active context Unavailable • Unavailable");
+    expect(context).toHaveTextContent("Window / basis YTD • Net");
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {
     render(
       <PerformanceChartContextStrip
         period="YTD"
+        detailBasis="GROSS"
         benchmarkLabel="Global Balanced 60/40"
         benchmarkAssigned
         activeReturn="Unavailable"
@@ -52,8 +55,8 @@ describe("PerformanceChartContextStrip", () => {
     );
 
     const context = screen.getByRole("group", { name: "Return path context" });
-    expect(context).toHaveTextContent("Compared against Global Balanced 60/40");
-    expect(context).toHaveTextContent("Active return Unavailable");
-    expect(context).toHaveTextContent("Relative context Partial");
+    expect(context).toHaveTextContent("Benchmark line Global Balanced 60/40");
+    expect(context).toHaveTextContent("Active context Unavailable • Partial");
+    expect(context).toHaveTextContent("Window / basis YTD • Gross");
   });
 });

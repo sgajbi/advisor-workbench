@@ -3807,6 +3807,7 @@ a:hover {
 .performance-summary-stage {
   width: 100%;
   max-width: none;
+  gap: 0.75rem;
 }
 
 .performance-summary-intro {
@@ -3828,19 +3829,20 @@ a:hover {
 .performance-executive-strip-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .performance-trust-strip-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .performance-trust-item {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.25rem;
   min-width: 0;
+  padding: 0.125rem 0;
 }
 
 .performance-trust-item-label {
@@ -3854,18 +3856,23 @@ a:hover {
 
 .performance-trust-item-body {
   display: grid;
-  gap: 0.28rem;
+  gap: 0.22rem;
   align-items: start;
 }
 
 .performance-trust-item-chip {
   justify-self: start;
+  border-radius: 8px;
+  padding: 0.1875rem 0.4375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
 }
 
 .performance-trust-item-support {
-  font-size: 0.75rem;
-  line-height: 1.4;
+  font-size: 0.6875rem;
+  line-height: 1.35;
   color: var(--text-muted);
+  max-width: 24ch;
 }
 
 .performance-summary-kpi-grid,
@@ -3889,8 +3896,16 @@ a:hover {
   min-width: 0;
 }
 
+.performance-summary-kpi-card {
+  min-height: 0;
+  align-content: start;
+  background: #f7f9fb;
+}
+
 .performance-summary-kpi-card-primary {
-  background: #ffffff;
+  grid-column: span 2;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+  border-color: rgba(23, 32, 43, 0.08);
 }
 
 .performance-summary-kpi-card-unavailable,
@@ -3914,10 +3929,41 @@ a:hover {
   font-variant-numeric: inherit;
 }
 
+.performance-summary-kpi-card-comparison,
+.performance-summary-kpi-card-supporting {
+  background: #fbfcfd;
+}
+
+.performance-summary-kpi-card-utility {
+  padding-inline: 0.72rem;
+  background: #ffffff;
+}
+
+.performance-summary-kpi-card-utility .performance-summary-kpi-value {
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.performance-summary-kpi-card-utility .performance-summary-kpi-support {
+  font-size: 0.71875rem;
+  line-height: 1.3;
+}
+
 .performance-summary-kpi-card-primary .performance-summary-kpi-value {
   font-size: clamp(1.85rem, 2.5vw, 2.45rem);
   line-height: 0.98;
   letter-spacing: -0.045em;
+}
+
+.performance-summary-kpi-card-comparison .performance-summary-kpi-value {
+  font-size: 1.35rem;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.performance-summary-kpi-card-supporting .performance-summary-kpi-value {
+  font-size: 1.12rem;
+  line-height: 1.08;
 }
 
 .performance-summary-kpi-card-unavailable .performance-summary-kpi-value,
@@ -3930,6 +3976,7 @@ a:hover {
   color: inherit;
   font-size: inherit;
   line-height: inherit;
+  max-width: 24ch;
 }
 
 .performance-chart-grid,
@@ -4062,6 +4109,29 @@ a:hover {
   max-width: 38ch;
 }
 
+.performance-summary-driver-module {
+  gap: 0.875rem;
+}
+
+.performance-summary-driver-module .workbench-summary-card-header {
+  align-items: start;
+}
+
+.performance-summary-driver-module .workbench-summary-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.performance-summary-driver-module .workbench-summary-card-subtitle {
+  font-size: 0.78125rem;
+  line-height: 1.4;
+  color: #5f6b7b;
+}
+
+.performance-secondary-zone > * {
+  height: 100%;
+}
+
 .performance-detail-grid {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
@@ -4095,6 +4165,12 @@ a:hover {
 
 .performance-contributors-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.performance-contributors-grid > .workbench-summary-visual-card,
+.performance-horizon-bars > .workbench-summary-visual-card {
+  height: 100%;
 }
 
 .performance-ranked-list {
@@ -4387,6 +4463,9 @@ a:hover {
 .performance-chart-stage {
   width: 100%;
   max-width: none;
+  gap: 1rem;
+  border-color: rgba(23, 32, 43, 0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
 }
 
 .performance-chart-toolbar {
@@ -4535,6 +4614,7 @@ a:hover {
 
 .performance-chart-summary-band {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.625rem;
 }
 
 .performance-chart-context-strip {
@@ -4546,10 +4626,10 @@ a:hover {
 .performance-chart-context-item {
   display: grid;
   gap: 0.12rem;
-  padding: 0.72rem 0.85rem;
+  padding: 0.75rem 0.85rem;
   border: 1px solid rgba(34, 44, 59, 0.07);
   border-radius: 10px;
-  background: rgba(248, 250, 252, 0.96);
+  background: #f8fafc;
   color: var(--text-muted);
   font-size: 0.71875rem;
   font-weight: 800;
@@ -4560,20 +4640,21 @@ a:hover {
 
 .performance-chart-context-item strong {
   color: var(--brand-strong);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 750;
   letter-spacing: 0;
   text-transform: none;
   font-variant-numeric: tabular-nums;
+  line-height: 1.35;
 }
 
 .performance-chart-benchmark-state {
   display: grid;
   gap: 0.28rem;
-  padding: 0.78rem 0.9rem;
+  padding: 0.75rem 0.9rem;
   border: 1px solid rgba(34, 44, 59, 0.08);
   border-radius: 10px;
-  background: rgba(248, 250, 252, 0.9);
+  background: #f8fafc;
 }
 
 .performance-chart-benchmark-state strong {
@@ -4590,6 +4671,7 @@ a:hover {
 
 .performance-chart-summary-stat {
   min-height: 0;
+  background: #ffffff;
 }
 
 .performance-chart-canvas-wrap {
@@ -4632,20 +4714,20 @@ a:hover {
   max-width: none;
   min-height: 26rem;
   border-radius: 16px;
-  border: 1px solid rgba(34, 44, 59, 0.08);
-  background: #fbfcfd;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  background: #ffffff;
   overflow: hidden;
 }
 
 .performance-chart-unavailable {
   display: grid;
   gap: 0.28rem;
-  min-height: 8.25rem;
+  min-height: 6.5rem;
   align-content: center;
-  padding: 0.9rem 1rem;
-  border: 1px dashed rgba(52, 70, 95, 0.18);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(250, 251, 253, 0.92), rgba(245, 247, 250, 0.9));
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(217, 224, 231, 0.92);
+  border-radius: 12px;
+  background: #f8fafc;
 }
 
 .performance-chart-unavailable strong {
@@ -6020,6 +6102,10 @@ a:hover {
   .performance-executive-strip-grid,
   .performance-trust-strip-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .performance-summary-kpi-card-primary {
+    grid-column: auto;
   }
 
   .shell-brand {

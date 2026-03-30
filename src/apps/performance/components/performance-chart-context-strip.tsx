@@ -2,6 +2,7 @@ import { WorkbenchSummaryToolbar } from "@/design-system";
 
 type PerformanceChartContextStripProps = {
   period: string;
+  detailBasis: string;
   benchmarkLabel: string;
   benchmarkAssigned: boolean;
   activeReturn: string;
@@ -10,6 +11,7 @@ type PerformanceChartContextStripProps = {
 
 export default function PerformanceChartContextStrip({
   period,
+  detailBasis,
   benchmarkLabel,
   benchmarkAssigned,
   activeReturn,
@@ -25,16 +27,16 @@ export default function PerformanceChartContextStrip({
       aria-label="Return path context"
     >
       <span className="performance-chart-context-item">
-        Selected period <strong>{period}</strong>
+        Portfolio line <strong>Portfolio</strong>
       </span>
       <span className="performance-chart-context-item">
-        Compared against <strong>{benchmarkAssigned ? benchmarkLabel : "Unassigned"}</strong>
+        Benchmark line <strong>{benchmarkAssigned ? benchmarkLabel : "Unassigned"}</strong>
       </span>
       <span className="performance-chart-context-item">
-        Active return <strong>{activeReturn}</strong>
+        Active context <strong>{`${activeReturn} • ${relativeContextLabel}`}</strong>
       </span>
       <span className="performance-chart-context-item">
-        Relative context <strong>{relativeContextLabel}</strong>
+        Window / basis <strong>{`${period} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`}</strong>
       </span>
     </WorkbenchSummaryToolbar>
   );

@@ -141,11 +141,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Basis")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Period")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Benchmark")).not.toBeInTheDocument();
+    expect(executiveStrip.querySelector(".performance-summary-kpi-card-primary")).toBeTruthy();
+    expect(executiveStrip.querySelectorAll(".performance-summary-kpi-card-comparison")).toHaveLength(2);
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("How did this compare across horizons?")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("What drove the result?").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".performance-summary-driver-module")).toHaveLength(2);
     const contributorsModule =
       screen
         .getAllByText("What drove the result?")
@@ -264,6 +267,7 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBeInTheDocument();
     expect(within(trustStrip).getByText("Evidence")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Pending")).toBeInTheDocument();
+    expect(trustStrip.querySelectorAll(".performance-trust-item .status-chip")).toHaveLength(5);
   });
 
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
@@ -277,13 +281,10 @@ describe("PerformanceAnalyticsPage", () => {
       screen.getAllByText("A benchmark is assigned, but benchmark-relative returns are incomplete.")
     ).toHaveLength(2);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Compared against Global Balanced 60/40"
+      "Benchmark line Global Balanced 60/40"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Active return Unavailable"
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Relative context Partial"
+      "Active context Unavailable • Partial"
     );
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
@@ -357,7 +358,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Partial",
         "A benchmark is assigned, but benchmark-relative returns are incomplete.",
       ],
-      contextExpectations: ["Relative context Partial", "Compared against Global Balanced 60/40"],
+      contextExpectations: ["Active context Unavailable • Partial", "Benchmark line Global Balanced 60/40"],
       horizonExpectations: [
         "Active return Unavailable",
         "Compared against Global Balanced 60/40",
@@ -384,7 +385,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Attribution detail is not available for the current selection.",
       ],
       deferredExpectations: ["Contributor ranking is partial"],
-      contextExpectations: ["Relative context Partial", "Active return Unavailable"],
+      contextExpectations: ["Active context Unavailable • Partial"],
       horizonExpectations: ["Active return Unavailable", "Compared against Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },
