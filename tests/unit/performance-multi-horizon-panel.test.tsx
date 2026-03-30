@@ -217,4 +217,29 @@ describe("PerformanceMultiHorizonPanel", () => {
       compactPattern("Compared against Benchmark")
     );
   });
+
+  it("shows a normalization notice when the horizon endpoint adjusts an unsupported frequency", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        chart_frequency: "monthly",
+        requested_chart_frequency_supported: false,
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="weekly"
+      />
+    );
+
+    const notice = await screen.findByRole("status", {
+      name: "Horizon comparison normalization",
+    });
+    expect(notice).toHaveTextContent("Selection adjusted");
+    expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
+  });
 });

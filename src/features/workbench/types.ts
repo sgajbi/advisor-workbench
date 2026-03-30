@@ -288,6 +288,8 @@ export type WorkbenchPerformanceHorizonComparison = {
   as_of_date: string;
   reporting_currency?: string | null;
   detail_basis: string;
+  chart_frequency: string;
+  requested_chart_frequency_supported?: boolean;
   benchmark_code: string | null;
   benchmark_options: PerformanceBenchmarkOptionView[];
   rows: PerformanceHorizonComparisonRow[];
@@ -320,6 +322,8 @@ export type WorkbenchPerformanceAttributionTrend = {
   chart_frequency: string;
   detail_basis: string;
   attribution_dimension: string;
+  requested_chart_frequency_supported?: boolean;
+  requested_attribution_dimension_supported?: boolean;
   benchmark_code: string | null;
   rows: PerformanceAttributionTrendRow[];
   warnings: string[];

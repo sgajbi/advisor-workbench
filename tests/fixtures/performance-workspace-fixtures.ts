@@ -662,6 +662,8 @@ export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
     as_of_date: "2026-02-24",
     reporting_currency: "USD",
     detail_basis: "NET",
+    chart_frequency: "monthly",
+    requested_chart_frequency_supported: true,
     benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
     benchmark_options: [
       {
@@ -808,6 +810,8 @@ export function buildPerformanceAttributionTrend(portfolioId = "PF_1001") {
     chart_frequency: "monthly",
     detail_basis: "NET",
     attribution_dimension: "asset_class",
+    requested_chart_frequency_supported: true,
+    requested_attribution_dimension_supported: true,
     benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
     rows: [
       {

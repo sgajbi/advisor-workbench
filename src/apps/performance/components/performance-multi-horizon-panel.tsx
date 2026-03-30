@@ -18,7 +18,7 @@ import type {
   WorkbenchPerformanceHorizonComparison,
 } from "@/features/workbench/types";
 
-import { formatCurrency, formatDate, formatPct } from "../formatters";
+import { formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
@@ -88,6 +88,8 @@ export default function PerformanceMultiHorizonPanel({
           as_of_date: "",
           reporting_currency: null,
           detail_basis: detailBasis,
+          chart_frequency: chartFrequency,
+          requested_chart_frequency_supported: true,
           benchmark_code: benchmark ?? null,
           benchmark_options: benchmarkOptions,
           rows: [],
@@ -109,6 +111,15 @@ export default function PerformanceMultiHorizonPanel({
   ]);
   const rows = comparison?.rows ?? null;
   const reportingCurrency = comparison?.reporting_currency ?? "USD";
+  const normalizationNotice =
+    comparison?.requested_chart_frequency_supported === false
+      ? {
+          title: "Selection adjusted",
+          message: `Unsupported frequency was replaced with ${formatLabel(
+            comparison.chart_frequency
+          )}.`,
+        }
+      : null;
   const resolvedBenchmarkOptions = comparison?.benchmark_options?.length
     ? comparison.benchmark_options
     : benchmarkOptions;
@@ -240,6 +251,20 @@ export default function PerformanceMultiHorizonPanel({
         <p className="muted">{presentation.loadingBody}</p>
       ) : rows && rows.length > 0 ? (
         <>
+          {normalizationNotice ? (
+            <div
+              className="performance-control-normalization-note"
+              role="status"
+              aria-label="Horizon comparison normalization"
+            >
+              <p className="performance-control-normalization-note-title">
+                {normalizationNotice.title}
+              </p>
+              <p className="performance-control-normalization-note-message">
+                {normalizationNotice.message}
+              </p>
+            </div>
+          ) : null}
           <WorkbenchChartContextRow
             className="performance-horizon-context-row"
             itemClassName="performance-mini-legend-item"

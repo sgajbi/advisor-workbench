@@ -137,4 +137,62 @@ describe("PerformanceAttributionTrendPanel", () => {
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
     ).toBeTruthy();
   });
+
+  it("shows a normalization notice when the trend endpoint adjusts unsupported controls", async () => {
+    getTrendMock.mockResolvedValue({
+      correlation_id: "corr-performance",
+      contract_version: "v1",
+      portfolio_id: "PF_1001",
+      as_of_date: "2026-03-27",
+      period: "YTD",
+      report_start_date: "2026-01-01",
+      report_end_date: "2026-03-27",
+      chart_frequency: "monthly",
+      detail_basis: "NET",
+      attribution_dimension: "asset_class",
+      requested_chart_frequency_supported: false,
+      requested_attribution_dimension_supported: false,
+      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+      rows: [
+        {
+          period_label: "2026-01",
+          period_start: "2026-01-01",
+          period_end: "2026-01-31",
+          frequency: "monthly",
+          allocation_pct: 0.12,
+          selection_pct: 0.08,
+          interaction_pct: 0.02,
+          total_effect_pct: 0.22,
+          cumulative_total_effect_pct: 0.22,
+          active_return_pct: 0.22,
+          residual_pct: 0,
+        },
+      ],
+      warnings: [
+        "PERFORMANCE_ATTRIBUTION_TREND_CHART_FREQUENCY_NORMALIZED",
+        "PERFORMANCE_ATTRIBUTION_TREND_DIMENSION_NORMALIZED",
+      ],
+      partial_failures: [],
+    });
+
+    render(
+      <PerformanceAttributionTrendPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        chartFrequency="weekly"
+        attributionDimension="issuer"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+      />
+    );
+
+    const notice = await screen.findByRole("status", {
+      name: "Attribution trend normalization",
+    });
+    expect(notice).toHaveTextContent("Selection adjusted");
+    expect(notice).toHaveTextContent("frequency reset to Monthly");
+    expect(notice).toHaveTextContent("segment reset to Asset Class");
+  });
 });

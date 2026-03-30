@@ -10,9 +10,11 @@ import {
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
-import type { PerformanceAttributionTrendRow } from "@/features/workbench/types";
+import type {
+  WorkbenchPerformanceAttributionTrend,
+} from "@/features/workbench/types";
 
-import { formatPct } from "../formatters";
+import { formatLabel, formatPct } from "../formatters";
 import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
 type Props = {
@@ -43,10 +45,10 @@ export default function PerformanceAttributionTrendPanel({
   reportStartDate,
   reportEndDate,
 }: Props) {
-  const [rows, setRows] = useState<PerformanceAttributionTrendRow[] | null>(null);
+  const [trend, setTrend] = useState<WorkbenchPerformanceAttributionTrend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const requestIdRef = useRef(0);
-  const cacheRef = useRef<Map<string, PerformanceAttributionTrendRow[]>>(new Map());
+  const cacheRef = useRef<Map<string, WorkbenchPerformanceAttributionTrend>>(new Map());
 
   useEffect(() => {
     const cacheKey = JSON.stringify({
@@ -61,7 +63,7 @@ export default function PerformanceAttributionTrendPanel({
     });
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {
-      setRows(cached);
+      setTrend(cached);
       setIsLoading(false);
       return;
     }
@@ -83,14 +85,31 @@ export default function PerformanceAttributionTrendPanel({
         if (requestIdRef.current !== requestId) {
           return;
         }
-        cacheRef.current.set(cacheKey, result.rows);
-        setRows(result.rows);
+        cacheRef.current.set(cacheKey, result);
+        setTrend(result);
       })
       .catch(() => {
         if (requestIdRef.current !== requestId) {
           return;
         }
-        setRows([]);
+        setTrend({
+          correlation_id: "",
+          contract_version: "v1",
+          portfolio_id: portfolioId,
+          as_of_date: "",
+          period,
+          report_start_date: reportStartDate ?? "",
+          report_end_date: reportEndDate ?? "",
+          chart_frequency: chartFrequency,
+          detail_basis: detailBasis,
+          attribution_dimension: attributionDimension,
+          requested_chart_frequency_supported: true,
+          requested_attribution_dimension_supported: true,
+          benchmark_code: benchmark ?? null,
+          rows: [],
+          warnings: [],
+          partial_failures: [],
+        });
       })
       .finally(() => {
         if (requestIdRef.current === requestId) {
@@ -107,6 +126,7 @@ export default function PerformanceAttributionTrendPanel({
     reportEndDate,
     reportStartDate,
   ]);
+  const rows = trend?.rows ?? null;
 
   const chartOption = useMemo<EChartsOption | null>(() => {
     if (!rows || rows.length === 0) {
@@ -208,6 +228,17 @@ export default function PerformanceAttributionTrendPanel({
   }, [rows]);
 
   const latestRow = rows?.at(-1) ?? null;
+  const normalizationMessages: string[] = [];
+  if (trend?.requested_chart_frequency_supported === false) {
+    normalizationMessages.push(
+      `frequency reset to ${formatLabel(trend.chart_frequency)}`
+    );
+  }
+  if (trend?.requested_attribution_dimension_supported === false) {
+    normalizationMessages.push(
+      `segment reset to ${formatLabel(trend.attribution_dimension)}`
+    );
+  }
 
   return (
     <WorkbenchChartShell
@@ -216,7 +247,7 @@ export default function PerformanceAttributionTrendPanel({
       className="performance-analysis-module performance-analysis-trend-shell"
       actions={
         <span className="performance-analysis-shell-action">
-          {chartFrequency}
+          {trend?.chart_frequency ?? chartFrequency}
         </span>
       }
       contextRow={
@@ -241,7 +272,7 @@ export default function PerformanceAttributionTrendPanel({
             },
             {
               label: "Segment",
-              value: attributionDimension,
+              value: trend?.attribution_dimension ?? attributionDimension,
             },
           ]}
         />
@@ -269,6 +300,18 @@ export default function PerformanceAttributionTrendPanel({
         ) : undefined
       }
     >
+      {normalizationMessages.length > 0 ? (
+        <div
+          className="performance-control-normalization-note"
+          role="status"
+          aria-label="Attribution trend normalization"
+        >
+          <p className="performance-control-normalization-note-title">Selection adjusted</p>
+          <p className="performance-control-normalization-note-message">
+            Unsupported controls were replaced with supported defaults: {normalizationMessages.join(" • ")}.
+          </p>
+        </div>
+      ) : null}
       {isLoading ? (
         <PerformanceAnalysisStatePanel
           state="loading"
