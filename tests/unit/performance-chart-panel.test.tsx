@@ -95,6 +95,13 @@ describe("PerformanceChartPanel", () => {
     expect(
       document.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")
     ).toBeTruthy();
+    expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
+    expect(screen.getByText("Active Return")).toBeInTheDocument();
+    expect(screen.getByText("Observations")).toBeInTheDocument();
+    expect(screen.queryByText("Latest")).not.toBeInTheDocument();
+    expect(screen.queryByText("High")).not.toBeInTheDocument();
+    expect(screen.queryByText("Low")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       "Selected period YTD"
     );
@@ -284,6 +291,8 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       "Relative context Partial"
     );
+    expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
   });
 
   it("renders a partial capability notice when return observations are incomplete", () => {

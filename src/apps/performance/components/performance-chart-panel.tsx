@@ -20,10 +20,11 @@ import type {
   PerformanceChartPoint,
 } from "@/features/workbench/types";
 
-import { formatDate, formatPct } from "../formatters";
+import { formatDate } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
+import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -72,19 +73,6 @@ function buildPercentAxisBounds(values: Array<number | null | undefined>) {
     min: Math.floor((rawMin - padding) * 10) / 10,
     max: Math.ceil((rawMax + padding) * 10) / 10,
   };
-}
-
-function formatBenchmarkLabel(
-  benchmark?: string,
-  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
-) {
-  if (!benchmark) {
-    return "Benchmark";
-  }
-  return (
-    benchmarkOptions.find((option) => option.benchmark_code === benchmark)?.benchmark_name ??
-    benchmark
-  );
 }
 
 function resolveReportDates(
@@ -177,8 +165,13 @@ export default function PerformanceChartPanel({
       } satisfies PerformanceBenchmarkOptionView,
     ];
   }, [benchmark, benchmarkOptions]);
-  const benchmarkAssigned =
-    Boolean(benchmark) || resolvedBenchmarkOptions.some((option) => option.is_assigned);
+  const returnPathPresentation = getPerformanceReturnPathPresentation({
+    summary,
+    points,
+    benchmark,
+    benchmarkOptions: resolvedBenchmarkOptions,
+    capabilities,
+  });
 
   const chartOption = useMemo(() => {
     const categories = points.map((point) => point.label);
@@ -224,9 +217,7 @@ export default function PerformanceChartPanel({
         },
         data: [
           "Portfolio Return",
-          ...(hasBenchmarkSeries
-            ? [formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)]
-            : []),
+          ...(hasBenchmarkSeries ? [returnPathPresentation.benchmarkLabel] : []),
           "Portfolio Period",
           ...(hasBenchmarkSeries ? ["Benchmark Period"] : []),
         ],
@@ -325,7 +316,7 @@ export default function PerformanceChartPanel({
         ...(hasBenchmarkSeries
           ? [
               {
-                name: formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions),
+                name: returnPathPresentation.benchmarkLabel,
                 type: "line" as const,
                 data: benchmarkCumulative,
                 smooth: true,
@@ -340,31 +331,12 @@ export default function PerformanceChartPanel({
           : []),
       ],
     } satisfies EChartsOption;
-  }, [benchmark, hasBenchmarkSeries, points, resolvedBenchmarkOptions]);
+  }, [hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
 
-  const latest = points.at(-1);
-  const periodicPortfolioValues = points
-    .map((point) => toNumeric(point.portfolio_return_pct))
-    .filter((value): value is number => value !== null);
-  const latestValue = latest?.portfolio_return_pct ?? summary.portfolio_return_pct;
-  const highestValue = periodicPortfolioValues.length ? Math.max(...periodicPortfolioValues) : null;
-  const lowestValue = periodicPortfolioValues.length ? Math.min(...periodicPortfolioValues) : null;
   const explicitDateRange =
     resolvedReportDates.startDate && resolvedReportDates.endDate
       ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
       : "Date range unavailable";
-  const benchmarkLabel = formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions);
-  const activeReturnValue =
-    !benchmarkAssigned || summary.active_return_pct === null || summary.active_return_pct === undefined
-      ? "Unavailable"
-      : formatPct(summary.active_return_pct);
-  const relativeContextStatus = !benchmarkAssigned
-    ? "unavailable"
-    : capabilities.benchmarkComparison.state === "supported"
-      ? "available"
-      : capabilities.benchmarkComparison.state === "partial"
-        ? "partial"
-        : "unavailable";
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -555,23 +527,20 @@ export default function PerformanceChartPanel({
           <Box sx={{ minWidth: { xl: 280 }, maxWidth: { xl: 360 }, width: "100%" }}>
             <PerformanceChartContextStrip
               period={period}
-              benchmarkLabel={benchmarkLabel}
-              benchmarkAssigned={benchmarkAssigned}
-              activeReturn={activeReturnValue}
-              relativeContextStatus={relativeContextStatus}
+              benchmarkLabel={returnPathPresentation.benchmarkLabel}
+              benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
+              activeReturn={returnPathPresentation.activeReturnValue}
+              relativeContextStatus={returnPathPresentation.relativeContextStatus}
             />
           </Box>
         </Stack>
 
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
-          {!benchmarkAssigned ? (
+          {returnPathPresentation.benchmarkStateBody ? (
             <div className="performance-chart-benchmark-state">
               <strong>Benchmark unassigned</strong>
-              <span>
-                {capabilities.benchmarkComparison.reason ??
-                  "Assign a benchmark to enable relative comparison and active return context."}
-              </span>
+              <span>{returnPathPresentation.benchmarkStateBody}</span>
             </div>
           ) : null}
           <Box
@@ -585,10 +554,9 @@ export default function PerformanceChartPanel({
               gap: 1.25,
             }}
           >
-            {renderSummaryMetric("Latest", formatPct(latestValue))}
-            {renderSummaryMetric("High", formatPct(highestValue))}
-            {renderSummaryMetric("Low", formatPct(lowestValue))}
-            {renderSummaryMetric("Observations", points.length)}
+            {returnPathPresentation.metrics.map((metric) =>
+              renderSummaryMetric(metric.label, metric.value, metric.unavailable, metric.label)
+            )}
           </Box>
 
           <div
@@ -648,9 +616,23 @@ export default function PerformanceChartPanel({
   );
 }
 
-function renderSummaryMetric(label: string, value: React.ReactNode) {
+function renderSummaryMetric(
+  label: string,
+  value: React.ReactNode,
+  unavailable = false,
+  key?: string
+) {
   return (
-    <div className="performance-chart-summary-stat workbench-summary-metric-card">
+    <div
+      key={key ?? label}
+      className={[
+        "performance-chart-summary-stat",
+        "workbench-summary-metric-card",
+        unavailable ? "performance-chart-summary-stat-unavailable" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <span className="workbench-summary-metric-label">{label}</span>
       <strong className="workbench-summary-metric-value">{value}</strong>
     </div>

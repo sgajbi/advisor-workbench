@@ -110,7 +110,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
-    expect(mainShell?.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")).toBeTruthy();
+    const chartSummaryBand = mainShell?.querySelector(
+      ".performance-chart-summary-band.workbench-summary-metric-strip"
+    );
+    expect(chartSummaryBand).toBeTruthy();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Active Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Observations")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 
