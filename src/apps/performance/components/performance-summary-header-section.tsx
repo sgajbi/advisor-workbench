@@ -5,9 +5,7 @@ import PerformanceCapabilityTrustStrip from "./performance-capability-trust-stri
 import PerformanceExecutiveReturnStrip from "./performance-executive-return-strip";
 import type { PerformanceSummaryHeaderSectionProps } from "./performance-workspace-types";
 import {
-  getPerformanceExecutiveReturnPresentation,
-  getPerformanceSummaryHeaderPresentation,
-  getPerformanceTrustStripPresentation,
+  getPerformanceSummaryFirstPaintPresentation,
 } from "./performance-workspace-view-helpers";
 
 export default function PerformanceSummaryHeaderSection({
@@ -20,7 +18,7 @@ export default function PerformanceSummaryHeaderSection({
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
 }: PerformanceSummaryHeaderSectionProps) {
-  const presentation = getPerformanceSummaryHeaderPresentation({
+  const presentation = getPerformanceSummaryFirstPaintPresentation({
     workspace,
     detailBasis,
     capabilities,
@@ -30,14 +28,6 @@ export default function PerformanceSummaryHeaderSection({
     hasMoneyWeightedReturn,
     suspiciousMoneyWeightedReturn,
   });
-  const executiveStrip = getPerformanceExecutiveReturnPresentation({
-    workspace,
-    detailBasis,
-    selectedPerformance,
-    selectedBenchmarkLabel,
-    capabilities,
-  });
-  const trustStrip = getPerformanceTrustStripPresentation({ capabilities });
 
   return (
     <Stack spacing={1.5} id="performance-overview" className="performance-summary-stage">
@@ -50,12 +40,12 @@ export default function PerformanceSummaryHeaderSection({
           <WorkbenchStatusRow
             label="Performance summary observations"
             className="performance-observation-strip"
-            items={presentation.observationItems}
+            items={presentation.header.observationItems}
           />
         </Stack>
       </Panel>
-      <PerformanceExecutiveReturnStrip presentation={executiveStrip} />
-      <PerformanceCapabilityTrustStrip presentation={trustStrip} />
+      <PerformanceExecutiveReturnStrip presentation={presentation.executive} />
+      <PerformanceCapabilityTrustStrip presentation={presentation.trust} />
     </Stack>
   );
 }

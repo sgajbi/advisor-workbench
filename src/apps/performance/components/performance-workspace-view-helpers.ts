@@ -138,6 +138,12 @@ export type PerformanceSummaryHeaderPresentation = {
   observationItems: WorkbenchStatusRowItem[];
 };
 
+export type PerformanceSummaryFirstPaintPresentation = {
+  header: PerformanceSummaryHeaderPresentation;
+  executive: PerformanceExecutiveReturnPresentation;
+  trust: PerformanceTrustStripPresentation;
+};
+
 export function getPerformanceSummaryHeaderPresentation({
   workspace,
   detailBasis,
@@ -277,6 +283,52 @@ export function getPerformanceSummaryHeaderPresentation({
         tone: hasBenchmark ? "success" : "warn",
       },
     ],
+  };
+}
+
+export function getPerformanceSummaryFirstPaintPresentation({
+  workspace,
+  detailBasis,
+  capabilities,
+  selectedBenchmarkCode,
+  selectedBenchmarkLabel,
+  selectedPerformance,
+  hasMoneyWeightedReturn,
+  suspiciousMoneyWeightedReturn,
+}: {
+  workspace: WorkbenchPerformanceWorkspace;
+  detailBasis: string;
+  capabilities: PerformanceWorkspaceCapabilities;
+  selectedBenchmarkCode?: string;
+  selectedBenchmarkLabel?: string | null;
+  selectedPerformance:
+    | WorkbenchPerformanceWorkspace["net_performance"]
+    | WorkbenchPerformanceWorkspace["gross_performance"]
+    | undefined;
+  hasMoneyWeightedReturn: boolean;
+  suspiciousMoneyWeightedReturn: boolean;
+}): PerformanceSummaryFirstPaintPresentation {
+  return {
+    header: getPerformanceSummaryHeaderPresentation({
+      workspace,
+      detailBasis,
+      capabilities,
+      selectedBenchmarkCode,
+      selectedBenchmarkLabel,
+      selectedPerformance,
+      hasMoneyWeightedReturn,
+      suspiciousMoneyWeightedReturn,
+    }),
+    executive: getPerformanceExecutiveReturnPresentation({
+      workspace,
+      detailBasis,
+      selectedPerformance,
+      selectedBenchmarkLabel,
+      capabilities,
+    }),
+    trust: getPerformanceTrustStripPresentation({
+      capabilities,
+    }),
   };
 }
 
