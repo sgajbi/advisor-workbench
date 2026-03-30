@@ -4,11 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
 import {
+  buildPerformanceAttributionTrend,
   buildAggregateContributionPerformanceScenario,
   buildBenchmarkUnassignedPerformanceScenario,
   buildCombinedPartialPerformanceScenario,
   buildNormalizedControlsPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
+  buildPerformanceHorizonComparison,
   buildSupportedPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
   buildUnavailableContributionPerformanceScenario,
@@ -19,9 +21,11 @@ import {
   installPerformancePageFetchScenario,
 } from "../fixtures/performance-workspace-server-fixtures";
 
+const replaceMock = vi.fn();
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    replace: vi.fn(),
+    replace: replaceMock,
   }),
 }));
 
@@ -84,6 +88,7 @@ async function expectTextPresent(text: string) {
 
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
+    replaceMock.mockReset();
     vi.unstubAllGlobals();
   });
 
@@ -285,6 +290,94 @@ describe("PerformanceAnalyticsPage", () => {
       "attribution view reset to Asset Class"
     );
     expect(document.querySelector(".performance-control-normalization-note")).toBeTruthy();
+  });
+
+  it("converges a stale deep link through deferred attribution-trend normalization", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const rawWorkspace = {
+      ...buildSupportedPerformanceScenario().workspace,
+      portfolio_id: "DEMO_ADV_USD_001",
+      portfolio: {
+        ...buildSupportedPerformanceScenario().workspace.portfolio,
+        portfolio_id: "DEMO_ADV_USD_001",
+      },
+      chart_frequency: "monthly",
+      attribution_dimension: "issuer",
+      requested_chart_frequency_supported: true,
+      requested_attribution_dimension_supported: true,
+    };
+    const normalizedTrend = {
+      ...buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
+      chart_frequency: "monthly",
+      attribution_dimension: "asset_class",
+      requested_chart_frequency_supported: true,
+      requested_attribution_dimension_supported: false,
+      warnings: ["PERFORMANCE_ATTRIBUTION_TREND_DIMENSION_NORMALIZED"],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
+              chart_frequency: "monthly",
+              requested_chart_frequency_supported: true,
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
+          return { ok: true, json: async () => normalizedTrend } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    try {
+      render(
+        await PerformanceAnalyticsPage({
+          searchParams: Promise.resolve({
+            attributionDimension: "issuer",
+            chartFrequency: "monthly",
+          }),
+        })
+      );
+
+      fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40&reportStartDate=2026-01-01&reportEndDate=2026-02-24",
+          { scroll: false }
+        );
+      });
+
+      const notice = await screen.findByRole("status", {
+        name: "Attribution trend normalization",
+      });
+      expect(notice).toHaveTextContent("segment reset to Asset Class");
+    } finally {
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+    }
   });
 
   it("uses the shared analysis state panel when attribution detail is unavailable", async () => {
