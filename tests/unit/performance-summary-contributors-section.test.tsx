@@ -50,8 +50,10 @@ describe("PerformanceSummaryContributorsSection", () => {
     render(<PerformanceSummaryContributorsSection {...buildProps()} />);
 
     expect(screen.getByText("What drove the result?")).toBeInTheDocument();
+    expect(screen.getByText("YTD contributor ranking")).toBeInTheDocument();
     expect(screen.getByText("Top contributors")).toBeInTheDocument();
     expect(screen.getByText("Top detractors")).toBeInTheDocument();
+    expect(document.querySelector(".performance-summary-driver-module")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
     expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();

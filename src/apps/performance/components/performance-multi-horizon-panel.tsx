@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Typography } from "@mui/material";
 
 import {
-  AnalyticsModule,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualMeta,
@@ -16,8 +15,9 @@ import type {
   PerformanceHorizonComparisonRow,
 } from "@/features/workbench/types";
 
-import { formatLabel, formatPct } from "../formatters";
-import { getPerformanceHorizonContextPresentation } from "./performance-summary-driver-helpers";
+import { formatPct } from "../formatters";
+import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
+import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
@@ -38,16 +38,6 @@ export default function PerformanceMultiHorizonPanel({
   const [isLoading, setIsLoading] = useState(true);
   const requestIdRef = useRef(0);
   const cacheRef = useRef<Map<string, PerformanceHorizonComparisonRow[]>>(new Map());
-
-  const benchmarkLabel = useMemo(() => {
-    if (!benchmark) {
-      return "Benchmark";
-    }
-    return (
-      benchmarkOptions.find((option) => option.benchmark_code === benchmark)?.benchmark_name ??
-      formatLabel(benchmark)
-    );
-  }, [benchmark, benchmarkOptions]);
 
   useEffect(() => {
     const cacheKey = JSON.stringify({
@@ -106,46 +96,48 @@ export default function PerformanceMultiHorizonPanel({
   );
   const selectedPeriodRow =
     rows?.find((row) => row.period === period) ?? rows?.find((row) => row.period === "YTD") ?? rows?.[0];
-  const context = getPerformanceHorizonContextPresentation({
+  const presentation = getPerformanceHorizonPresentation({
+    benchmark,
+    benchmarkOptions,
+    detailBasis,
     period,
-    benchmarkLabel,
     selectedPeriodRow,
   });
 
   return (
-    <AnalyticsModule
-      className="workbench-summary-module-card performance-summary-module-card"
-      compact
-      title="How did this compare across horizons?"
-      subtitle={`Portfolio vs ${benchmarkLabel}`}
+    <PerformanceSummaryDriverModule
+      title={presentation.frame.title}
+      subtitle={presentation.frame.subtitle}
       actions={
-        <Typography
-          component="span"
-          sx={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "text.secondary",
-          }}
-        >
-          {detailBasis}
-        </Typography>
+        presentation.frame.actionLabel ? (
+          <Typography
+            component="span"
+            sx={{
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "text.secondary",
+            }}
+          >
+            {presentation.frame.actionLabel}
+          </Typography>
+        ) : null
       }
     >
       {isLoading ? (
-        <p className="muted">Loading comparative horizon summaries.</p>
+        <p className="muted">{presentation.loadingBody}</p>
       ) : rows && rows.length > 0 ? (
         <>
           <WorkbenchSummaryToolbar role="group" aria-label="Horizon comparison context">
             <span className="performance-mini-legend-item">
-              Selected period <strong>{context.selectedPeriodLabel}</strong>
+              Selected period <strong>{presentation.selectedPeriodLabel}</strong>
             </span>
             <span className="performance-mini-legend-item">
-              Active return <strong>{context.activeReturnLabel}</strong>
+              Active return <strong>{presentation.activeReturnLabel}</strong>
             </span>
             <span className="performance-mini-legend-item">
-              Compared against <strong>{context.benchmarkLabel}</strong>
+              Compared against <strong>{presentation.benchmarkLabel}</strong>
             </span>
           </WorkbenchSummaryToolbar>
           <WorkbenchSummaryToolbar className="performance-mini-legend">
@@ -153,7 +145,7 @@ export default function PerformanceMultiHorizonPanel({
               Portfolio
             </span>
             <span className="performance-mini-legend-item performance-mini-legend-benchmark">
-              {benchmarkLabel}
+              {presentation.benchmarkLegendLabel}
             </span>
           </WorkbenchSummaryToolbar>
           <div
@@ -189,8 +181,8 @@ export default function PerformanceMultiHorizonPanel({
           </div>
         </>
       ) : (
-        <p className="muted">Comparative horizon summaries are not available for this mandate.</p>
+        <p className="muted">{presentation.emptyBody}</p>
       )}
-    </AnalyticsModule>
+    </PerformanceSummaryDriverModule>
   );
 }

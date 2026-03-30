@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   getPerformanceContributorsPresentation,
-  getPerformanceHorizonContextPresentation,
+  getPerformanceHorizonPresentation,
+  getPerformanceSummaryDriverModuleFrame,
 } from "../../src/apps/performance/components/performance-summary-driver-helpers";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 import {
@@ -53,8 +54,10 @@ describe("performance summary driver helpers", () => {
     if (presentation.mode !== "supported") {
       throw new Error("expected supported presentation");
     }
-    expect(presentation.title).toBe("What drove the result?");
-    expect(presentation.subtitle).toBe("YTD contributor ranking");
+    expect(presentation.frame).toMatchObject({
+      title: "What drove the result?",
+      subtitle: "YTD contributor ranking",
+    });
     expect(presentation.positiveRows[0]).toMatchObject({
       title: "AAPL",
       subtitle: "Avg. Weight 24.00%",
@@ -107,14 +110,41 @@ describe("performance summary driver helpers", () => {
     });
   });
 
+  it("builds a shared summary-module frame for horizon and contributor driver cards", () => {
+    expect(
+      getPerformanceSummaryDriverModuleFrame({
+        kind: "contributors",
+        period: "YTD",
+      })
+    ).toMatchObject({
+      title: "What drove the result?",
+      subtitle: "YTD contributor ranking",
+    });
+
+    expect(
+      getPerformanceSummaryDriverModuleFrame({
+        kind: "horizons",
+        benchmarkAssigned: true,
+        benchmarkLabel: "Global Balanced 60/40",
+        detailBasis: "NET",
+      })
+    ).toMatchObject({
+      title: "How did this compare across horizons?",
+      subtitle: "Portfolio vs Global Balanced 60/40",
+      actionLabel: "NET",
+    });
+  });
+
   it("builds honest horizon context labels for supported and unavailable active return states", () => {
     const supportedScenario = buildSupportedPerformanceScenario();
     const partialScenario = buildPartialBenchmarkPerformanceScenario();
 
     expect(
-      getPerformanceHorizonContextPresentation({
+      getPerformanceHorizonPresentation({
+        benchmark: supportedScenario.workspace.benchmark_code ?? undefined,
+        benchmarkOptions: supportedScenario.workspace.benchmark_options ?? [],
+        detailBasis: "NET",
         period: supportedScenario.workspace.period,
-        benchmarkLabel: supportedScenario.selectedBenchmarkLabel ?? "Benchmark",
         selectedPeriodRow: {
           period: supportedScenario.workspace.period,
           portfolio_return_pct: supportedScenario.selectedPerformance.portfolio_return_pct,
@@ -124,15 +154,25 @@ describe("performance summary driver helpers", () => {
         },
       })
     ).toMatchObject({
+      frame: {
+        title: "How did this compare across horizons?",
+        subtitle: "Portfolio vs Global Balanced 60/40",
+        actionLabel: "NET",
+      },
       selectedPeriodLabel: supportedScenario.workspace.period,
       activeReturnLabel: "0.52%",
       benchmarkLabel: "Global Balanced 60/40",
+      benchmarkLegendLabel: "Global Balanced 60/40",
+      loadingBody: "Loading comparative horizon summaries.",
+      emptyBody: "Comparative horizon summaries are not available for this mandate.",
     });
 
     expect(
-      getPerformanceHorizonContextPresentation({
+      getPerformanceHorizonPresentation({
+        benchmark: partialScenario.workspace.benchmark_code ?? undefined,
+        benchmarkOptions: partialScenario.workspace.benchmark_options ?? [],
+        detailBasis: "NET",
         period: partialScenario.workspace.period,
-        benchmarkLabel: partialScenario.selectedBenchmarkLabel ?? "Benchmark",
         selectedPeriodRow: {
           period: partialScenario.workspace.period,
           portfolio_return_pct: partialScenario.selectedPerformance.portfolio_return_pct,
@@ -142,6 +182,11 @@ describe("performance summary driver helpers", () => {
         },
       })
     ).toMatchObject({
+      frame: {
+        title: "How did this compare across horizons?",
+        subtitle: "Portfolio vs Global Balanced 60/40",
+        actionLabel: "NET",
+      },
       selectedPeriodLabel: partialScenario.workspace.period,
       activeReturnLabel: "Unavailable",
       benchmarkLabel: "Global Balanced 60/40",

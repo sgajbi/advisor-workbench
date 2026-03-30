@@ -61,6 +61,7 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
     });
 
+    expect(document.querySelector(".performance-summary-driver-module")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       "Selected period YTD"
     );
@@ -70,6 +71,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       "Compared against Global Balanced 60/40"
     );
+    expect(screen.getByText("Portfolio vs Global Balanced 60/40")).toBeInTheDocument();
+    expect(screen.getByText("NET")).toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
     expect(screen.getByText("MTD")).toBeInTheDocument();
@@ -162,6 +165,7 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
     });
 
+    expect(screen.getByText("Portfolio comparison across standard reporting windows")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       "Active return Unavailable"
     );
