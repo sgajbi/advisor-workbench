@@ -38,6 +38,9 @@ describe("performance first-paint helper contracts", () => {
     ).toMatchObject({
       value: "5.12%",
     });
+    expect(presentation.cards.find((card) => card.label === "Period")).toMatchObject({
+      value: "YTD",
+    });
   });
 
   it("builds an honest executive strip when benchmark analytics are unassigned and money-weighted return is unavailable", () => {
@@ -71,6 +74,30 @@ describe("performance first-paint helper contracts", () => {
     ).toMatchObject({
       value: "Unavailable",
       unavailable: true,
+    });
+    expect(presentation.cards.find((card) => card.label === "Period")).toMatchObject({
+      value: "YTD",
+    });
+  });
+
+  it("uses business-friendly period wording for explicit windows", () => {
+    const scenario = buildPerformancePresentationScenario({
+      workspaceOverrides: {
+        period: "EXPLICIT",
+      },
+    });
+
+    const presentation = getPerformanceExecutiveReturnPresentation({
+      workspace: scenario.workspace,
+      detailBasis: "NET",
+      selectedPerformance: scenario.selectedPerformance,
+      capabilities: scenario.capabilities,
+      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
+      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
+    });
+
+    expect(presentation.cards.find((card) => card.label === "Period")).toMatchObject({
+      value: "Explicit window",
     });
   });
 

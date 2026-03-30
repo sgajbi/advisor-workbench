@@ -4037,16 +4037,32 @@ a:hover {
 .performance-trust-item-chip {
   justify-self: start;
   border-radius: 6px;
-  padding: 0.15625rem 0.375rem;
-  font-size: 0.65625rem;
+  padding: 0.1875rem 0.4375rem;
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .performance-trust-item-support {
-  font-size: 0.65625rem;
-  line-height: 1.32;
+  font-size: 0.71875rem;
+  line-height: 1.34;
   color: var(--text-muted);
   max-width: 26ch;
+}
+
+.performance-trust-item-chip.status-chip.success {
+  color: #355e47;
+  background: #f2f6f3;
+}
+
+.performance-trust-item-chip.status-chip.warn {
+  color: #8a6a23;
+  background: #faf5e8;
+}
+
+.performance-trust-item-chip.status-chip.danger {
+  color: #8f4b41;
+  background: #faf1ef;
 }
 
 .performance-summary-kpi-grid,
@@ -4092,15 +4108,15 @@ a:hover {
 }
 
 .performance-summary-kpi-label {
-  font-size: 0.65625rem;
+  font-size: 0.6875rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .performance-summary-kpi-value {
-  color: inherit;
+  color: var(--brand-strong);
   font-size: inherit;
   line-height: inherit;
   font-weight: inherit;
@@ -4118,14 +4134,14 @@ a:hover {
 }
 
 .performance-summary-kpi-card-utility .performance-summary-kpi-value {
-  font-size: 0.92rem;
-  line-height: 1.18;
+  font-size: 1rem;
+  line-height: 1.16;
   letter-spacing: -0.01em;
 }
 
 .performance-summary-kpi-card-utility .performance-summary-kpi-support {
-  font-size: 0.65rem;
-  line-height: 1.28;
+  font-size: 0.71875rem;
+  line-height: 1.32;
 }
 
 .performance-summary-kpi-card-primary .performance-summary-kpi-value {
@@ -4141,36 +4157,29 @@ a:hover {
 }
 
 .performance-summary-kpi-card-supporting .performance-summary-kpi-value {
-  font-size: 1.14rem;
-  line-height: 1.12;
+  font-size: 1.18rem;
+  line-height: 1.14;
 }
 
 .performance-summary-kpi-card-unavailable .performance-summary-kpi-value,
 .performance-summary-status-card-secondary .performance-summary-kpi-value {
-  font-size: 1rem;
   letter-spacing: 0;
+  color: #6b7785;
 }
 
 .performance-summary-kpi-support {
   color: var(--text-subtle);
-  font-size: 0.7rem;
-  line-height: 1.26;
-  max-width: 20ch;
+  font-size: 0.75rem;
+  line-height: 1.34;
+  max-width: 21ch;
 }
 
 .performance-summary-kpi-card-primary .performance-summary-kpi-support {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .performance-summary-kpi-card-comparison .performance-summary-kpi-support {
   max-width: 18ch;
-}
-
-.performance-summary-kpi-support {
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  max-width: 24ch;
 }
 
 .performance-chart-grid,
