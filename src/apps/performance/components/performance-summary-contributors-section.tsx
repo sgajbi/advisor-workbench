@@ -1,4 +1,5 @@
 import {
+  AnalyticsTable,
   WorkbenchRankedBarList,
   WorkbenchSummaryVisualCard,
 } from "@/design-system";
@@ -14,6 +15,8 @@ export default function PerformanceSummaryContributorsSection({
   contributorScale,
   positivePositionContributors,
   negativePositionContributors,
+  topContributors,
+  bottomContributors,
   isDetailsPending,
 }: PerformanceSummaryContributorsSectionProps) {
   const presentation = getPerformanceContributorsPresentation({
@@ -22,6 +25,8 @@ export default function PerformanceSummaryContributorsSection({
     contributorScale,
     positivePositionContributors,
     negativePositionContributors,
+    topContributors,
+    bottomContributors,
     isDetailsPending,
   });
 
@@ -31,6 +36,7 @@ export default function PerformanceSummaryContributorsSection({
       subtitle={presentation.frame.subtitle}
     >
       {presentation.mode === "supported" ? (
+        <div className="performance-contributors-panel">
           <div className="performance-contributors-grid">
             <WorkbenchSummaryVisualCard>
               <WorkbenchRankedBarList
@@ -51,6 +57,31 @@ export default function PerformanceSummaryContributorsSection({
               />
             </WorkbenchSummaryVisualCard>
           </div>
+          <AnalyticsTable
+            ariaLabel="Contributor summary"
+            className="performance-contributors-table"
+            dense
+            columns={presentation.tableModel.columns}
+            rows={presentation.tableModel.rows}
+          />
+        </div>
+      ) : presentation.mode === "partial" ? (
+        <div className="performance-contributors-panel">
+          <PerformanceCapabilityNotice
+            capability={capabilities.contributionRanking}
+            partialTitle={presentation.noticeTitle}
+            unavailableTitle={presentation.noticeTitle}
+            body={presentation.noticeBody}
+            hint={presentation.hint}
+          />
+          <AnalyticsTable
+            ariaLabel="Aggregate contributor summary"
+            className="performance-contributors-table"
+            dense
+            columns={presentation.tableModel.columns}
+            rows={presentation.tableModel.rows}
+          />
+        </div>
       ) : presentation.mode === "loading" ? (
         <p className="muted">{presentation.body}</p>
       ) : (

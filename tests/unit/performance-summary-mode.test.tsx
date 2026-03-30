@@ -119,6 +119,28 @@ describe("PerformanceSummaryMode", () => {
             fx_contribution_pct: 0,
           },
         ]}
+        topContributors={[
+          {
+            key_label: "Equity",
+            contribution_pct: 3.8,
+            weight_avg_pct: 61,
+            total_return_pct: 7.4,
+            local_contribution_pct: 3.4,
+            fx_contribution_pct: 0.4,
+            is_other: false,
+          },
+        ]}
+        bottomContributors={[
+          {
+            key_label: "Rates",
+            contribution_pct: -0.6,
+            weight_avg_pct: 18,
+            total_return_pct: -1.9,
+            local_contribution_pct: -0.5,
+            fx_contribution_pct: -0.1,
+            is_other: false,
+          },
+        ]}
         isUpdating={false}
         isDetailsPending={false}
       />

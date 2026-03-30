@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPerformanceContributionTableModel,
   buildPerformanceAttributionTrendTableModel,
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
@@ -125,6 +126,29 @@ describe("performance analytics table models", () => {
       "0.22%",
       "0.22%",
       "0.00%",
+    ]);
+  });
+
+  it("builds a contribution table from aggregate contribution rows", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const rows = scenario.workspace.contribution?.levels?.[0]?.rows ?? [];
+    const model = buildPerformanceContributionTableModel({ rows });
+
+    expect(model.columns.map((column) => column.label)).toEqual([
+      "Bucket",
+      "Contribution",
+      "Avg. Weight",
+      "Return",
+      "Local",
+      "FX",
+    ]);
+    expect(model.rows[0]?.cells).toEqual([
+      "Equity",
+      "3.80%",
+      "61.00%",
+      "7.40%",
+      "3.40%",
+      "0.40%",
     ]);
   });
 });

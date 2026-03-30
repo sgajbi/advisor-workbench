@@ -41,6 +41,28 @@ function buildContributorProps(
         fx_contribution_pct: 0,
       },
     ],
+    topContributors: [
+      {
+        key_label: "Equity",
+        contribution_pct: 3.8,
+        weight_avg_pct: 61,
+        total_return_pct: 7.4,
+        local_contribution_pct: 3.4,
+        fx_contribution_pct: 0.4,
+        is_other: false,
+      },
+    ],
+    bottomContributors: [
+      {
+        key_label: "Rates",
+        contribution_pct: -0.6,
+        weight_avg_pct: 18,
+        total_return_pct: -1.9,
+        local_contribution_pct: -0.5,
+        fx_contribution_pct: -0.1,
+        is_other: false,
+      },
+    ],
     isDetailsPending: false,
     ...overrides,
   };
@@ -70,6 +92,7 @@ describe("performance summary driver helpers", () => {
       value: "-0.20%",
       tone: "negative",
     });
+    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
   });
 
   it("builds a loading contributor presentation while detailed support is pending", () => {
@@ -91,7 +114,7 @@ describe("performance summary driver helpers", () => {
     });
   });
 
-  it("builds a capability notice presentation for partial or unavailable contributor ranking", () => {
+  it("builds a partial contributor presentation with aggregate rows when position ranking is unavailable", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 
     const presentation = getPerformanceContributorsPresentation(
@@ -100,15 +123,21 @@ describe("performance summary driver helpers", () => {
         capabilities: scenario.capabilities,
         positivePositionContributors: [],
         negativePositionContributors: [],
+        topContributors: scenario.workspace.contribution?.levels?.[0]?.rows ?? [],
+        bottomContributors: [],
       })
     );
 
     expect(presentation).toMatchObject({
-      mode: "notice",
+      mode: "partial",
       noticeTitle: "Contributor ranking is partial",
       noticeBody: "Contribution exists, but only aggregate rows are available.",
-      hint: "Position-level ranking requires source-backed contribution detail.",
+      hint: "Aggregate contribution remains available even when position-level ranking is absent.",
     });
+    if (presentation.mode !== "partial") {
+      throw new Error("expected partial contributor presentation");
+    }
+    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
   });
 
   it("builds a shared summary-module frame for horizon and contributor driver cards", () => {

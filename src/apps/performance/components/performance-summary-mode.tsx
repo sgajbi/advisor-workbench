@@ -68,6 +68,8 @@ export default function PerformanceSummaryMode({
   contributorScale,
   positivePositionContributors,
   negativePositionContributors,
+  topContributors,
+  bottomContributors,
 }: PerformanceSummaryModeProps) {
   return (
     <>
@@ -153,6 +155,8 @@ export default function PerformanceSummaryMode({
             contributorScale={contributorScale}
             positivePositionContributors={positivePositionContributors}
             negativePositionContributors={negativePositionContributors}
+            topContributors={topContributors}
+            bottomContributors={bottomContributors}
             isDetailsPending={isDetailsPending}
           />
         </WorkbenchDeferredSection>

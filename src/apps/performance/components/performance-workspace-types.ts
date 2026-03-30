@@ -47,6 +47,8 @@ export type PerformanceSummaryModeProps = PerformanceWorkspaceControls & {
   contributorScale: number;
   positivePositionContributors: ContributionPositionView[];
   negativePositionContributors: ContributionPositionView[];
+  topContributors: ContributionRowView[];
+  bottomContributors: ContributionRowView[];
 };
 
 export type PerformanceControlNormalizationHandler = (
@@ -75,6 +77,8 @@ export type PerformanceSummaryContributorsSectionProps = Pick<
   | "contributorScale"
   | "positivePositionContributors"
   | "negativePositionContributors"
+  | "topContributors"
+  | "bottomContributors"
   | "isDetailsPending"
 >;
 

@@ -691,8 +691,10 @@ describe("PerformanceAnalyticsPage", () => {
       screen.getByText("Contribution exists, but only aggregate rows are available.")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Position-level ranking requires source-backed contribution detail.")
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
@@ -722,8 +724,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
     expect(
-      screen.getByText("Position-level ranking requires source-backed contribution detail.")
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 

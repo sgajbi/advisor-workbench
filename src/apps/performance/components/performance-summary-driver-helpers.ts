@@ -1,9 +1,11 @@
 import type {
+  ContributionRowView,
   PerformanceBenchmarkOptionView,
   PerformanceHorizonComparisonRow,
 } from "@/features/workbench/types";
 
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
+import { buildPerformanceContributionTableModel } from "./performance-analytics-table-models";
 
 import { formatLabel, formatPct } from "../formatters";
 
@@ -28,6 +30,15 @@ export type PerformanceContributorsPresentation =
       frame: PerformanceSummaryDriverModuleFrame;
       positiveRows: PerformanceContributorRankedItem[];
       negativeRows: PerformanceContributorRankedItem[];
+      tableModel: ReturnType<typeof buildPerformanceContributionTableModel>;
+    }
+  | {
+      mode: "partial";
+      frame: PerformanceSummaryDriverModuleFrame;
+      noticeTitle: string;
+      noticeBody: string;
+      hint: string;
+      tableModel: ReturnType<typeof buildPerformanceContributionTableModel>;
     }
   | {
       mode: "loading";
@@ -86,11 +97,20 @@ export function getPerformanceContributorsPresentation({
   capabilities,
   positivePositionContributors,
   negativePositionContributors,
+  topContributors,
+  bottomContributors,
   isDetailsPending,
 }: PerformanceSummaryContributorsSectionProps): PerformanceContributorsPresentation {
   const frame = getPerformanceSummaryDriverModuleFrame({
     kind: "contributors",
     period: workspace.period,
+  });
+  const aggregateRows = getAggregateContributorRows(workspace.contribution?.levels?.[0]?.rows ?? [], {
+    topContributors,
+    bottomContributors,
+  });
+  const tableModel = buildPerformanceContributionTableModel({
+    rows: aggregateRows,
   });
 
   if (capabilities.contributionRanking.state === "supported") {
@@ -113,6 +133,7 @@ export function getPerformanceContributorsPresentation({
         magnitudePct: Math.abs(row.contribution_pct ?? 0),
         tone: "negative",
       })),
+      tableModel,
     };
   }
 
@@ -121,6 +142,19 @@ export function getPerformanceContributorsPresentation({
       mode: "loading",
       frame,
       body: "Loading contributor ranking.",
+    };
+  }
+
+  if (capabilities.contributionRanking.state === "partial" && aggregateRows.length > 0) {
+    return {
+      mode: "partial",
+      frame,
+      noticeTitle: "Contributor ranking is partial",
+      noticeBody:
+        capabilities.contributionRanking.reason ??
+        "Contribution exists, but only aggregate rows are available.",
+      hint: "Aggregate contribution remains available even when position-level ranking is absent.",
+      tableModel,
     };
   }
 
@@ -136,6 +170,29 @@ export function getPerformanceContributorsPresentation({
       "Contributor ranking is not available for the current selection.",
     hint: "Position-level ranking requires source-backed contribution detail.",
   };
+}
+
+function getAggregateContributorRows(
+  levelRows: ContributionRowView[],
+  fallbackRows: {
+    topContributors: ContributionRowView[];
+    bottomContributors: ContributionRowView[];
+  }
+): ContributionRowView[] {
+  if (levelRows.length > 0) {
+    return [...levelRows].sort(
+      (left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct)
+    );
+  }
+
+  const deduped = new Map<string, ContributionRowView>();
+  [...fallbackRows.topContributors, ...fallbackRows.bottomContributors].forEach((row) => {
+    deduped.set(row.key_label, row);
+  });
+
+  return [...deduped.values()].sort(
+    (left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct)
+  );
 }
 
 export function getPerformanceHorizonPresentation({

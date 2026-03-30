@@ -101,6 +101,8 @@ export default function PerformanceWorkspaceView({
       contributorScale={presentation?.contributorScale ?? 0.01}
       positivePositionContributors={presentation?.positivePositionContributors ?? []}
       negativePositionContributors={presentation?.negativePositionContributors ?? []}
+      topContributors={presentation?.topContributors ?? []}
+      bottomContributors={presentation?.bottomContributors ?? []}
     />
   ) : mode === "analysis" ? (
     <DeferredWorkbenchMount
