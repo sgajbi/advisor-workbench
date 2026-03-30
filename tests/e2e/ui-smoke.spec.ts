@@ -261,4 +261,33 @@ test.describe('UI smoke checks', () => {
     expect(trendMetrics.height).toBeLessThanOrEqual(640);
     expect(trendMetrics.width).toBeGreaterThan(800);
   });
+
+  test('performance evidence mode uses the shared unavailable state shell intentionally', async ({ page }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
+    await evidenceTab.click();
+    await expect(evidenceTab).toHaveAttribute('aria-selected', 'true');
+
+    const evidenceModule = page.locator('.performance-evidence-module');
+    await expect(evidenceModule).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Evidence and Calculation Context$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('.performance-analysis-state-panel')).toHaveCount(1);
+    await expect(page.getByText('Evidence unavailable')).toBeVisible();
+    await expect(
+      page.getByText(
+        'Execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract.'
+      )
+    ).toBeVisible();
+
+    const evidenceMetrics = await evidenceModule.evaluate((element) => ({
+      height: element.getBoundingClientRect().height,
+      width: element.getBoundingClientRect().width,
+    }));
+    expect(evidenceMetrics.height).toBeLessThanOrEqual(420);
+    expect(evidenceMetrics.width).toBeGreaterThan(900);
+  });
 });
