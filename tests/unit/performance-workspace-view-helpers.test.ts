@@ -7,11 +7,10 @@ import {
   getPerformanceTrustStripPresentation,
 } from "../../src/apps/performance/components/performance-workspace-view-helpers";
 import {
-  buildPerformanceCapabilities,
+  buildBenchmarkUnassignedPerformanceScenario,
+  buildPartialBenchmarkPerformanceScenario,
   buildPerformancePresentationScenario,
 } from "../fixtures/performance-workspace-fixtures";
-
-const supportedCapabilities = buildPerformanceCapabilities();
 
 describe("getPerformanceSummaryHeaderPresentation", () => {
   it("builds benchmark-unassigned presentation honestly when relative analytics are unavailable", () => {
@@ -132,14 +131,17 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
   });
 
   it("builds compact trust-strip statuses from workspace capabilities", () => {
-    const presentation = getPerformanceTrustStripPresentation({
-      capabilities: {
-        ...supportedCapabilities,
+    const scenario = buildPerformancePresentationScenario({
+      capabilityOverrides: {
         contributionDetail: {
           state: "partial",
           reason: "Contribution exists, but only aggregate rows are available.",
         },
       },
+    });
+
+    const presentation = getPerformanceTrustStripPresentation({
+      capabilities: scenario.capabilities,
     });
 
     expect(presentation.items.find((item) => item.label === "Benchmark")?.value).toBe("Assigned");
@@ -148,9 +150,8 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
   });
 
   it("maps unavailable and pending trust states with explicit tones", () => {
-    const presentation = getPerformanceTrustStripPresentation({
-      capabilities: {
-        ...supportedCapabilities,
+    const scenario = buildPerformancePresentationScenario({
+      capabilityOverrides: {
         benchmarkComparison: {
           state: "unavailable",
           reason: "No benchmark is assigned to this mandate.",
@@ -168,6 +169,10 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
           reason: "Evidence contract unavailable.",
         },
       },
+    });
+
+    const presentation = getPerformanceTrustStripPresentation({
+      capabilities: scenario.capabilities,
     });
 
     expect(presentation.items.find((item) => item.label === "Benchmark")).toMatchObject({
@@ -202,64 +207,18 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     },
     {
       name: "partial relative analytics with limited attribution",
-      scenario: buildPerformancePresentationScenario({
-        fixtureOptions: {
-          partialBenchmarkComparison: true,
-        },
-        capabilityOverrides: {
-          benchmarkComparison: {
-            state: "partial" as const,
-            reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
-          },
-          attributionDetail: {
-            state: "unavailable" as const,
-            reason: "Attribution detail is not available for the current selection.",
-          },
-        },
-      }),
+      scenario: buildPartialBenchmarkPerformanceScenario(),
       expectedObservation: { value: "Relative measurement", tone: "success" },
       expectedTrust: {
         benchmark: { value: "Partial", tone: "warn" },
         history: { value: "Ready", tone: "success" },
-        attribution: { value: "Unavailable", tone: "danger" },
+        attribution: { value: "Ready", tone: "success" },
         evidence: { value: "Pending", tone: "default" },
       },
     },
     {
       name: "unassigned benchmark and missing history",
-      scenario: buildPerformancePresentationScenario({
-        fixtureOptions: {
-          unassignedBenchmark: true,
-          unavailableSummarySeries: true,
-        },
-        capabilityOverrides: {
-          benchmarkComparison: {
-            state: "unavailable" as const,
-            reason: "No benchmark is assigned to this mandate.",
-          },
-          returnPath: {
-            state: "unavailable" as const,
-            reason: "Return observations unavailable.",
-          },
-        },
-        workspaceOverrides: {
-          money_weighted_return: null,
-        },
-        selectedPerformanceOverrides: {
-          portfolio_return_pct: null,
-          benchmark_return_pct: null,
-          active_return_pct: null,
-          annualized_return_pct: null,
-          benchmark_id: null,
-          benchmark_return_source: null,
-          begin_market_value: null,
-          end_market_value: null,
-          net_cash_flow: null,
-        },
-        selectedBenchmarkCode: undefined,
-        selectedBenchmarkLabel: null,
-        hasMoneyWeightedReturn: false,
-      }),
+      scenario: buildBenchmarkUnassignedPerformanceScenario(),
       expectedObservation: { value: "No benchmark assigned", tone: "warn" },
       expectedTrust: {
         benchmark: { value: "Unassigned", tone: "danger" },

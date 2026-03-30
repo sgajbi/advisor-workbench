@@ -6,19 +6,19 @@ import {
 } from "../../src/apps/performance/components/performance-summary-driver-helpers";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 import {
-  buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildAggregateContributionPerformanceScenario,
+  buildPartialBenchmarkPerformanceScenario,
+  buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
-
-const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildContributorProps(
   overrides: Partial<PerformanceSummaryContributorsSectionProps> = {}
 ): PerformanceSummaryContributorsSectionProps {
-  const workspace = buildPerformanceWorkspace();
+  const scenario = buildSupportedPerformanceScenario();
+  const workspace = scenario.workspace;
   return {
     workspace,
-    capabilities: supportedCapabilities,
+    capabilities: scenario.capabilities,
     contributorScale: 1.5,
     positivePositionContributors: [
       {
@@ -70,15 +70,12 @@ describe("performance summary driver helpers", () => {
   });
 
   it("builds a loading contributor presentation while detailed support is pending", () => {
+    const scenario = buildAggregateContributionPerformanceScenario();
+
     const presentation = getPerformanceContributorsPresentation(
       buildContributorProps({
-        capabilities: {
-          ...supportedCapabilities,
-          contributionRanking: {
-            state: "partial",
-            reason: "Contribution exists, but only aggregate rows are available.",
-          },
-        },
+        workspace: scenario.workspace,
+        capabilities: scenario.capabilities,
         isDetailsPending: true,
         positivePositionContributors: [],
         negativePositionContributors: [],
@@ -92,15 +89,12 @@ describe("performance summary driver helpers", () => {
   });
 
   it("builds a capability notice presentation for partial or unavailable contributor ranking", () => {
+    const scenario = buildAggregateContributionPerformanceScenario();
+
     const presentation = getPerformanceContributorsPresentation(
       buildContributorProps({
-        capabilities: {
-          ...supportedCapabilities,
-          contributionRanking: {
-            state: "partial",
-            reason: "Contribution exists, but only aggregate rows are available.",
-          },
-        },
+        workspace: scenario.workspace,
+        capabilities: scenario.capabilities,
         positivePositionContributors: [],
         negativePositionContributors: [],
       })
@@ -114,40 +108,43 @@ describe("performance summary driver helpers", () => {
   });
 
   it("builds honest horizon context labels for supported and unavailable active return states", () => {
+    const supportedScenario = buildSupportedPerformanceScenario();
+    const partialScenario = buildPartialBenchmarkPerformanceScenario();
+
     expect(
       getPerformanceHorizonContextPresentation({
-        period: "YTD",
-        benchmarkLabel: "Global Balanced 60/40",
+        period: supportedScenario.workspace.period,
+        benchmarkLabel: supportedScenario.selectedBenchmarkLabel ?? "Benchmark",
         selectedPeriodRow: {
-          period: "YTD",
-          portfolio_return_pct: 5.4,
-          benchmark_return_pct: 4.9,
-          active_return_pct: 0.5,
-          annualized_return_pct: 5.4,
+          period: supportedScenario.workspace.period,
+          portfolio_return_pct: supportedScenario.selectedPerformance.portfolio_return_pct,
+          benchmark_return_pct: supportedScenario.selectedPerformance.benchmark_return_pct,
+          active_return_pct: supportedScenario.selectedPerformance.active_return_pct,
+          annualized_return_pct: supportedScenario.selectedPerformance.annualized_return_pct,
         },
       })
     ).toMatchObject({
-      selectedPeriodLabel: "YTD",
-      activeReturnLabel: "0.50%",
+      selectedPeriodLabel: supportedScenario.workspace.period,
+      activeReturnLabel: "0.52%",
       benchmarkLabel: "Global Balanced 60/40",
     });
 
     expect(
       getPerformanceHorizonContextPresentation({
-        period: "YTD",
-        benchmarkLabel: "Benchmark",
+        period: partialScenario.workspace.period,
+        benchmarkLabel: partialScenario.selectedBenchmarkLabel ?? "Benchmark",
         selectedPeriodRow: {
-          period: "YTD",
-          portfolio_return_pct: 5.4,
-          benchmark_return_pct: null,
-          active_return_pct: null,
-          annualized_return_pct: 5.4,
+          period: partialScenario.workspace.period,
+          portfolio_return_pct: partialScenario.selectedPerformance.portfolio_return_pct,
+          benchmark_return_pct: partialScenario.selectedPerformance.benchmark_return_pct,
+          active_return_pct: partialScenario.selectedPerformance.active_return_pct,
+          annualized_return_pct: partialScenario.selectedPerformance.annualized_return_pct,
         },
       })
     ).toMatchObject({
-      selectedPeriodLabel: "YTD",
+      selectedPeriodLabel: partialScenario.workspace.period,
       activeReturnLabel: "Unavailable",
-      benchmarkLabel: "Benchmark",
+      benchmarkLabel: "Global Balanced 60/40",
     });
   });
 });
