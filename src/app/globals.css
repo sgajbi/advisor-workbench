@@ -3810,6 +3810,58 @@ a:hover {
   gap: 0.6875rem;
 }
 
+.performance-page-frame {
+  gap: 0.75rem;
+}
+
+.performance-page-frame .workbench-page-frame-header {
+  padding-top: 0.05rem;
+  padding-bottom: 0.1rem;
+}
+
+.performance-page-frame .workbench-page-header {
+  align-items: flex-end;
+  gap: 0.85rem;
+}
+
+.performance-page-frame .workbench-page-header-copy {
+  gap: 0.14rem;
+}
+
+.performance-page-frame .workbench-page-header-title {
+  font-size: clamp(1.5rem, 1.8vw, 2rem);
+  line-height: 1.02;
+}
+
+.performance-page-frame .workbench-page-header-subtitle {
+  max-width: 56ch;
+  font-size: 0.78rem;
+}
+
+.performance-page-frame .workbench-page-header-actions {
+  align-self: flex-start;
+}
+
+.performance-page-frame-body {
+  gap: 0.75rem;
+}
+
+.performance-page-sections {
+  gap: 0.75rem;
+}
+
+.performance-page-frame .portfolio-segmented-control {
+  padding: 0.18rem;
+  border-color: rgba(23, 32, 43, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+}
+
+.performance-page-frame .portfolio-segmented-control-button {
+  min-width: 4.4rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.74rem;
+}
+
 .performance-summary-intro {
   width: 100%;
 }
