@@ -603,6 +603,27 @@ describe("design-system components", () => {
     expect(onChange).toHaveBeenCalledWith("evidence");
   });
 
+  it("supports disabled segmented-control options with shared semantics", () => {
+    render(
+      <WorkbenchSegmentedControl
+        value="asset_class"
+        onChange={() => {}}
+        ariaLabel="Allocation dimensions"
+        options={[
+          { key: "asset_class", label: "Asset Class" },
+          { key: "region", label: "Region", disabled: true, title: "Region pending source support" },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
+    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Region" })).toHaveAttribute(
+      "title",
+      "Region pending source support"
+    );
+  });
+
   it("can defer content without rendering a duplicate wrapper header", async () => {
     render(
       <WorkbenchDeferredSection

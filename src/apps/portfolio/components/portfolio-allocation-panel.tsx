@@ -3,6 +3,7 @@
 import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 
 import {
+  WorkbenchSegmentedControl,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
 } from "@/design-system";
@@ -97,58 +98,37 @@ export default function PortfolioAllocationPanel({
       }
     >
       <WorkbenchSummaryToolbar className="portfolio-allocation-toolbar">
-        <div className="portfolio-segmented-control" role="tablist" aria-label="Allocation dimensions">
-          {DIMENSIONS.map((dimension) => {
+        <WorkbenchSegmentedControl
+          value={activeDimension}
+          onChange={(nextDimension) => {
+            setActiveDimension(nextDimension);
+            setHoveredBucket(null);
+            onSelectionChange(null);
+          }}
+          options={DIMENSIONS.map((dimension) => {
             const isAvailable = viewsByDimension.has(dimension.key);
-            const isActive = activeDimension === dimension.key;
-            return (
-              <button
-                key={dimension.key}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                disabled={!isAvailable}
-                aria-disabled={!isAvailable}
-                className={
-                  isActive
-                    ? "portfolio-segmented-control-button portfolio-segmented-control-button-active"
-                    : "portfolio-segmented-control-button"
-                }
-                onClick={() => {
-                  setActiveDimension(dimension.key);
-                  setHoveredBucket(null);
-                  onSelectionChange(null);
-                }}
-                title={isAvailable ? dimension.label : `${dimension.label} pending source support`}
-              >
-                {dimension.label}
-              </button>
-            );
+            return {
+              key: dimension.key,
+              label: dimension.label,
+              disabled: !isAvailable,
+              title: isAvailable
+                ? dimension.label
+                : `${dimension.label} pending source support`,
+            };
           })}
-        </div>
+          ariaLabel="Allocation dimensions"
+        />
 
         <div className="portfolio-allocation-toolbar-actions">
-          <div className="portfolio-segmented-control" role="tablist" aria-label="Allocation chart types">
-            {CHART_TYPES.map((option) => {
-              const isActive = chartType === option.key;
-              return (
-                <button
-                  key={option.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={
-                    isActive
-                      ? "portfolio-segmented-control-button portfolio-segmented-control-button-active"
-                      : "portfolio-segmented-control-button"
-                  }
-                  onClick={() => setChartType(option.key)}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
+          <WorkbenchSegmentedControl
+            value={chartType}
+            onChange={setChartType}
+            options={CHART_TYPES.map((option) => ({
+              key: option.key,
+              label: option.label,
+            }))}
+            ariaLabel="Allocation chart types"
+          />
 
           <button
             type="button"

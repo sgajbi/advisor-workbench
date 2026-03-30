@@ -3,6 +3,8 @@ import { cx } from "../utils/cx";
 export type WorkbenchSegmentedControlOption<T extends string> = {
   key: T;
   label: string;
+  disabled?: boolean;
+  title?: string;
 };
 
 export default function WorkbenchSegmentedControl<T extends string>({
@@ -34,6 +36,9 @@ export default function WorkbenchSegmentedControl<T extends string>({
             type="button"
             role="tab"
             aria-selected={isActive}
+            disabled={option.disabled}
+            aria-disabled={option.disabled}
+            title={option.title}
             className={cx(
               "workbench-segmented-control-button",
               isActive && "workbench-segmented-control-button-active",

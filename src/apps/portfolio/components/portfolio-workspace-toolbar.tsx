@@ -13,7 +13,7 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
-import { FilterBar, PageToolbar } from "@/design-system";
+import { FilterBar, PageToolbar, WorkbenchSegmentedControl } from "@/design-system";
 
 import { formatDate } from "../formatters";
 import type {
@@ -152,27 +152,15 @@ export default function PortfolioWorkspaceToolbar({
 
         <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">
           <label>Period</label>
-          <div className="portfolio-segmented-control" role="tablist" aria-label="Portfolio period presets">
-            {PORTFOLIO_TIME_WINDOW_OPTIONS.map((option) => {
-              const active = controls.timeWindow === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  className={
-                    active
-                      ? "portfolio-segmented-control-button portfolio-segmented-control-button-active"
-                      : "portfolio-segmented-control-button"
-                  }
-                  onClick={() => onControlsChange({ timeWindow: option })}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
+          <WorkbenchSegmentedControl
+            value={controls.timeWindow}
+            onChange={(timeWindow) => onControlsChange({ timeWindow })}
+            options={PORTFOLIO_TIME_WINDOW_OPTIONS.map((option) => ({
+              key: option,
+              label: option,
+            }))}
+            ariaLabel="Portfolio period presets"
+          />
         </div>
 
         {supportsCustomRange ? (
