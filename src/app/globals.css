@@ -4343,12 +4343,24 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-analysis-shell-action {
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-label-size);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .performance-analysis-metric-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .performance-analysis-mini-module {
   height: 100%;
+}
+
+.performance-analysis-context-row .workbench-chart-context-row-item {
+  padding: 0.62rem 0.78rem;
 }
 
 .performance-summary-driver-module .workbench-summary-card-subtitle {

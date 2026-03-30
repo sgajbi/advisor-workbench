@@ -208,6 +208,9 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
 
     expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
+    expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();

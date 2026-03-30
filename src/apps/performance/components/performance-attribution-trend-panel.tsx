@@ -3,11 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
-import { Typography } from "@mui/material";
 
-import { AnalyticsModule } from "@/design-system";
+import {
+  WorkbenchChartContextRow,
+  WorkbenchChartShell,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type { PerformanceAttributionTrendRow } from "@/features/workbench/types";
+
+import { formatPct } from "../formatters";
 
 type Props = {
   portfolioId: string;
@@ -201,23 +206,66 @@ export default function PerformanceAttributionTrendPanel({
     };
   }, [rows]);
 
+  const latestRow = rows?.at(-1) ?? null;
+
   return (
-    <AnalyticsModule
+    <WorkbenchChartShell
       title="Attribution Over Time"
-      subtitle={`${detailBasis} benchmark-relative effect path`}
+      subtitle="Benchmark-relative effect path across the selected window."
+      className="performance-analysis-module performance-analysis-trend-shell"
       actions={
-        <Typography
-          component="span"
-          sx={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "text.secondary",
-          }}
-        >
+        <span className="performance-analysis-shell-action">
           {chartFrequency}
-        </Typography>
+        </span>
+      }
+      contextRow={
+        <WorkbenchChartContextRow
+          label="Attribution trend context"
+          className="performance-analysis-context-row"
+          items={[
+            {
+              label: "Window",
+              value:
+                reportStartDate && reportEndDate
+                  ? `${reportStartDate} - ${reportEndDate}`
+                  : period,
+            },
+            {
+              label: "Basis",
+              value: detailBasis,
+            },
+            {
+              label: "Benchmark",
+              value: benchmark ?? "Unassigned",
+            },
+            {
+              label: "Segment",
+              value: attributionDimension,
+            },
+          ]}
+        />
+      }
+      metricStrip={
+        latestRow ? (
+          <WorkbenchSummaryMetricStrip
+            className="performance-analysis-metric-strip"
+            ariaLabel="Attribution trend summary strip"
+            items={[
+              {
+                label: "Latest Active Return",
+                value: formatPct(latestRow.active_return_pct),
+              },
+              {
+                label: "Cumulative Total",
+                value: formatPct(latestRow.cumulative_total_effect_pct),
+              },
+              {
+                label: "Residual",
+                value: formatPct(latestRow.residual_pct),
+              },
+            ]}
+          />
+        ) : undefined
       }
     >
       {isLoading ? (
@@ -239,6 +287,6 @@ export default function PerformanceAttributionTrendPanel({
       ) : (
         <p className="muted">Attribution trend is not available for the current selection.</p>
       )}
-    </AnalyticsModule>
+    </WorkbenchChartShell>
   );
 }

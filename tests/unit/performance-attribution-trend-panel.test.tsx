@@ -72,6 +72,12 @@ describe("PerformanceAttributionTrendPanel", () => {
       expect(screen.getByRole("img", { name: "Attribution over time chart" })).toBeInTheDocument();
     });
 
+    expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
+    expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution trend summary strip")).toBeInTheDocument();
+    expect(screen.getByText("Latest Active Return")).toBeInTheDocument();
+    expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
+    expect(screen.getByText("Residual")).toBeInTheDocument();
     expect(screen.getByTestId("performance-attribution-trend-chart")).toBeInTheDocument();
     expect(getTrendMock).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
