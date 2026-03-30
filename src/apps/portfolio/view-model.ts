@@ -485,6 +485,14 @@ export function getBookReadinessSupport(workspace: PortfolioWorkspace): string {
   const status = getBookReadinessStatus(workspace);
   const reportingFreshness = getReportingFreshnessSupport(workspace);
 
+  if (workspace.operations?.controls_blocking) {
+    return "Blocking controls active";
+  }
+
+  if (workspace.operations?.publish_allowed === false) {
+    return "Publication currently blocked";
+  }
+
   if (status === "Ready") {
     return reportingFreshness;
   }
@@ -495,6 +503,10 @@ export function getBookReadinessSupport(workspace: PortfolioWorkspace): string {
 
   if (workspace.readiness.reporting.row_count > 0) {
     return reportingFreshness;
+  }
+
+  if (workspace.operations?.latest_booked_transaction_date) {
+    return `Latest booking ${formatDate(workspace.operations.latest_booked_transaction_date)}`;
   }
 
   return `${workspace.partial_failures.length} active exception${workspace.partial_failures.length === 1 ? "" : "s"}`;

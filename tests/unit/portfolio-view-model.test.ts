@@ -548,6 +548,26 @@ describe("portfolio view model", () => {
     expect(getReportingFreshnessSupport(workspace)).toBe("No published report rows");
   });
 
+  it("prioritizes operational control and booking support in book readiness messaging", () => {
+    const workspace = buildWorkspace();
+    workspace.readiness.reporting.status = "PENDING";
+    workspace.readiness.reporting.row_count = 0;
+    workspace.operations = {
+      publish_allowed: false,
+      controls_blocking: true,
+      latest_booked_transaction_date: "2026-02-20",
+    };
+
+    expect(getBookReadinessSupport(workspace)).toBe("Blocking controls active");
+
+    workspace.operations.controls_blocking = false;
+    expect(getBookReadinessSupport(workspace)).toBe("Publication currently blocked");
+
+    workspace.operations.publish_allowed = null;
+    workspace.readiness.has_positions = true;
+    expect(getBookReadinessSupport(workspace)).toBe("Latest booking 20 Feb 2026");
+  });
+
   it("builds active filter chips for removable business filters", () => {
     const workspace = buildOperationalWorkspace();
 

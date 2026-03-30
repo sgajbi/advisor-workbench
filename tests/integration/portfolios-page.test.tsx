@@ -480,6 +480,22 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
   }, 30000);
 
+  it("surfaces blocking operational controls in the summary-first readiness signal", async () => {
+    stubPortfolioApis({
+      workspace: {
+        operations: {
+          publish_allowed: false,
+          controls_blocking: true,
+          latest_booked_transaction_date: "2026-02-20",
+        },
+      },
+    });
+
+    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getAllByText("Blocking controls active").length).toBeGreaterThanOrEqual(1);
+  }, 30000);
+
   it("renders a coherent combined-gap portfolio state when summary and drilldown support are both incomplete", async () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
     stubPortfolioApis(buildCombinedPartialPortfolioOverrides());
