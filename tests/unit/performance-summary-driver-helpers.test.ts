@@ -1,79 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import {
   getPerformanceContributorsPresentation,
   getPerformanceHorizonContextPresentation,
 } from "../../src/apps/performance/components/performance-summary-driver-helpers";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+import {
+  buildPerformanceCapabilities,
+  buildPerformanceWorkspace,
+} from "../fixtures/performance-workspace-fixtures";
 
-const supportedCapabilities: PerformanceWorkspaceCapabilities = {
-  summaryKpis: { state: "supported" },
-  returnPath: { state: "supported" },
-  benchmarkComparison: { state: "supported" },
-  multiHorizonReturns: { state: "supported" },
-  contributionRanking: { state: "supported" },
-  attributionDetail: { state: "supported" },
-  contributionDetail: { state: "supported" },
-  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
-};
+const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildContributorProps(
   overrides: Partial<PerformanceSummaryContributorsSectionProps> = {}
 ): PerformanceSummaryContributorsSectionProps {
+  const workspace = buildPerformanceWorkspace();
   return {
-    workspace: {
-      correlation_id: "corr",
-      contract_version: "v1",
-      portfolio_id: "PF_1001",
-      as_of_date: "2026-03-29",
-      period: "YTD",
-      report_start_date: "2026-01-01",
-      report_end_date: "2026-03-29",
-      chart_frequency: "monthly",
-      contribution_dimension: "asset_class",
-      attribution_dimension: "asset_class",
-      detail_basis: "NET",
-      segment: "asset_class",
-      benchmark_code: "BMK_1",
-      benchmark_options: [],
-      portfolio: {
-        portfolio_id: "PF_1001",
-        client_id: "CIF_1",
-        base_currency: "USD",
-        booking_center_code: "SG",
-      },
-      overview: {
-        market_value_base: 1000000,
-        cash_weight_pct: 5,
-        position_count: 3,
-      },
-      net_performance: {
-        metric_basis: "NET",
-        portfolio_return_pct: 1.25,
-        benchmark_return_pct: 1,
-        active_return_pct: 0.25,
-        annualized_return_pct: 1.25,
-        benchmark_id: "BMK_1",
-        benchmark_return_source: "calculated",
-      },
-      gross_performance: {
-        metric_basis: "GROSS",
-        portfolio_return_pct: 1.4,
-        benchmark_return_pct: 1,
-        active_return_pct: 0.4,
-        annualized_return_pct: 1.4,
-        benchmark_id: "BMK_1",
-        benchmark_return_source: "calculated",
-      },
-      money_weighted_return: null,
-      net_chart: [],
-      gross_chart: [],
-      contribution: null,
-      attribution: null,
-      warnings: [],
-      partial_failures: [],
-    },
+    workspace,
     capabilities: supportedCapabilities,
     contributorScale: 1.5,
     positivePositionContributors: [

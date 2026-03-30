@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import {
   getPerformanceExecutiveReturnPresentation,
   getPerformanceSummaryFirstPaintPresentation,
@@ -8,97 +7,15 @@ import {
   getPerformanceTrustStripPresentation,
 } from "../../src/apps/performance/components/performance-workspace-view-helpers";
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
+import {
+  buildPerformanceCapabilities,
+  buildPerformanceWorkspace,
+} from "../fixtures/performance-workspace-fixtures";
 
-const supportedCapabilities: PerformanceWorkspaceCapabilities = {
-  summaryKpis: { state: "supported" },
-  returnPath: { state: "supported" },
-  benchmarkComparison: { state: "supported" },
-  multiHorizonReturns: { state: "supported" },
-  contributionRanking: { state: "supported" },
-  attributionDetail: { state: "supported" },
-  contributionDetail: { state: "supported" },
-  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
-};
+const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildWorkspace(): WorkbenchPerformanceWorkspace {
-  return {
-    correlation_id: "corr",
-    contract_version: "v1",
-    portfolio_id: "PF_1001",
-    as_of_date: "2026-03-29",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-03-29",
-    chart_frequency: "monthly",
-    contribution_dimension: "asset_class",
-    attribution_dimension: "asset_class",
-    detail_basis: "NET",
-    segment: "asset_class",
-    benchmark_code: "BMK_1",
-    benchmark_options: [],
-    portfolio: {
-      portfolio_id: "PF_1001",
-      client_id: "CIF_1",
-      base_currency: "USD",
-      booking_center_code: "SG",
-    },
-    overview: {
-      market_value_base: 1000000,
-      cash_weight_pct: 5,
-      position_count: 3,
-    },
-    net_performance: {
-      metric_basis: "NET",
-      portfolio_return_pct: 1.25,
-      benchmark_return_pct: 1,
-      active_return_pct: 0.25,
-      annualized_return_pct: 1.25,
-      benchmark_id: "BMK_1",
-      benchmark_return_source: "calculated",
-      begin_market_value: 950000,
-      end_market_value: 1000000,
-      net_cash_flow: 20000,
-    },
-    gross_performance: {
-      metric_basis: "GROSS",
-      portfolio_return_pct: 1.4,
-      benchmark_return_pct: 1,
-      active_return_pct: 0.4,
-      annualized_return_pct: 1.4,
-      benchmark_id: "BMK_1",
-      benchmark_return_source: "calculated",
-      begin_market_value: 950000,
-      end_market_value: 1000000,
-      net_cash_flow: 20000,
-    },
-    money_weighted_return: {
-      money_weighted_return_pct: 1.1,
-      annualized_return_pct: 1.1,
-      method: "XIRR",
-      start_date: "2026-01-01",
-      end_date: "2026-03-29",
-      notes: [],
-    },
-    net_chart: [
-      {
-        label: "2026-01",
-        frequency: "monthly",
-        period_start: "2026-01-01",
-        period_end: "2026-01-31",
-        portfolio_return_pct: 1,
-        benchmark_return_pct: 0.8,
-        active_return_pct: 0.2,
-        cumulative_portfolio_return_pct: 1,
-        cumulative_benchmark_return_pct: 0.8,
-        cumulative_active_return_pct: 0.2,
-      },
-    ],
-    gross_chart: [],
-    contribution: null,
-    attribution: null,
-    warnings: [],
-    partial_failures: [],
-  } as WorkbenchPerformanceWorkspace;
+  return buildPerformanceWorkspace();
 }
 
 describe("getPerformanceSummaryHeaderPresentation", () => {
@@ -172,10 +89,10 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
 
     expect(presentation.hasBenchmark).toBe(true);
     expect(presentation.benchmarkValue).toBe("Global Balanced 60/40");
-    expect(presentation.primaryReturnCard.support).toContain("Active 0.25%");
-    expect(presentation.benchmarkCard.value).toBe("1.00%");
-    expect(presentation.activeCard.value).toBe("0.25%");
-    expect(presentation.moneyWeightedCard.support).toContain("Annualized 1.10%");
+    expect(presentation.primaryReturnCard.support).toContain("Active 0.52%");
+    expect(presentation.benchmarkCard.value).toBe("4.91%");
+    expect(presentation.activeCard.value).toBe("0.52%");
+    expect(presentation.moneyWeightedCard.support).toContain("Annualized 5.12%");
     expect(presentation.contextCards.find((card) => card.label === "Period")?.value).toBe("YTD");
     expect(presentation.observationItems[2]).toMatchObject({
       value: "1 observations",

@@ -1,4 +1,6 @@
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import type {
+  WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
 } from "../../src/features/workbench/types";
@@ -10,6 +12,22 @@ export type PerformanceFixtureOptions = {
   aggregateContributionOnly?: boolean;
   unavailableAttribution?: boolean;
 };
+
+export function buildPerformanceCapabilities(
+  overrides: Partial<PerformanceWorkspaceCapabilities> = {}
+): PerformanceWorkspaceCapabilities {
+  return {
+    summaryKpis: { state: "supported" },
+    returnPath: { state: "supported" },
+    benchmarkComparison: { state: "supported" },
+    multiHorizonReturns: { state: "supported" },
+    contributionRanking: { state: "supported" },
+    attributionDetail: { state: "supported" },
+    contributionDetail: { state: "supported" },
+    evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+    ...overrides,
+  };
+}
 
 export function buildPerformanceWorkspaceSummary(
   portfolioId = "PF_1001",
@@ -228,6 +246,16 @@ export function buildPerformanceWorkspaceDetails(
         },
     warnings: [],
     partial_failures: [],
+  };
+}
+
+export function buildPerformanceWorkspace(
+  portfolioId = "PF_1001",
+  options?: PerformanceFixtureOptions
+): WorkbenchPerformanceWorkspace {
+  return {
+    ...buildPerformanceWorkspaceSummary(portfolioId, options),
+    ...buildPerformanceWorkspaceDetails(portfolioId, options),
   };
 }
 
