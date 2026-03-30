@@ -1091,6 +1091,7 @@ a:hover {
 .portfolio-cashflow-table.analytics-table-frame {
   width: 100%;
   max-width: 100%;
+  border-radius: 0;
 }
 
 .portfolio-analytics-table.analytics-table-frame {
@@ -2863,14 +2864,15 @@ a:hover {
   --ag-border-color: #d8e1eb;
   --ag-header-column-separator-color: transparent;
   --ag-row-border-color: #edf2f7;
-  --ag-wrapper-border-radius: 12px;
-  --ag-border-radius: 12px;
+  --ag-wrapper-border-radius: 0;
+  --ag-border-radius: 0;
   --ag-cell-horizontal-padding: 12px;
   --ag-scrollbar-size: 12px;
 }
 
 .portfolio-data-grid .ag-root-wrapper {
   border: 1px solid var(--border);
+  border-radius: 0;
   box-shadow: none;
 }
 
