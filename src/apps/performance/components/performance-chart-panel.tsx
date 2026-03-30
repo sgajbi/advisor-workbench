@@ -15,6 +15,7 @@ import {
 
 import {
   WorkbenchChartShell,
+  WorkbenchSegmentedControl,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
@@ -47,6 +48,8 @@ type ComparativeSummary = {
   active_return_pct: number | null;
   benchmark_return_source?: string | null;
 };
+
+type PerformanceChartViewMode = "combined" | "absolute" | "relative";
 
 const CHART_COLORS = {
   portfolio: "#da1e28",
@@ -146,16 +149,31 @@ export default function PerformanceChartPanel({
   );
   const [fromDate, setFromDate] = useState(resolvedReportDates.startDate);
   const [toDate, setToDate] = useState(resolvedReportDates.endDate);
+  const hasBenchmarkSeries = points.some(
+    (point) =>
+      point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
+  );
+  const hasActiveSeries = points.some(
+    (point) => point.active_return_pct !== null || point.cumulative_active_return_pct !== null
+  );
+  const [chartViewMode, setChartViewMode] = useState<PerformanceChartViewMode>(
+    hasBenchmarkSeries && hasActiveSeries ? "combined" : "absolute"
+  );
 
   useEffect(() => {
     setFromDate(resolvedReportDates.startDate);
     setToDate(resolvedReportDates.endDate);
   }, [resolvedReportDates.endDate, resolvedReportDates.startDate]);
 
-  const hasBenchmarkSeries = points.some(
-    (point) =>
-      point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
-  );
+  useEffect(() => {
+    if (chartViewMode === "relative" && !hasActiveSeries) {
+      setChartViewMode(hasBenchmarkSeries ? "combined" : "absolute");
+      return;
+    }
+    if (chartViewMode === "combined" && !hasBenchmarkSeries) {
+      setChartViewMode("absolute");
+    }
+  }, [chartViewMode, hasActiveSeries, hasBenchmarkSeries]);
   const resolvedBenchmarkOptions = useMemo(() => {
     if (benchmarkOptions.length > 0) {
       return benchmarkOptions;
@@ -193,18 +211,23 @@ export default function PerformanceChartPanel({
     const portfolioPeriodic = points.map((point) => toNumeric(point.portfolio_return_pct));
     const benchmarkPeriodic = points.map((point) => toNumeric(point.benchmark_return_pct));
     const activePeriodic = points.map((point) => toNumeric(point.active_return_pct));
-    const hasActiveSeries = hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
+    const hasActiveCumulativeSeries = hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
     const hasActivePeriodicSeries = hasBenchmarkSeries && activePeriodic.some((value) => value !== null);
+    const includeAbsoluteSeries = chartViewMode !== "relative";
+    const includeRelativeSeries = chartViewMode !== "absolute";
+    const showBenchmarkSeries = includeAbsoluteSeries && hasBenchmarkSeries;
+    const showActiveCumulativeSeries = includeRelativeSeries && hasActiveCumulativeSeries;
+    const showActivePeriodicSeries = includeRelativeSeries && hasActivePeriodicSeries;
 
     const cumulativeBounds = buildPercentAxisBounds([
-      ...portfolioCumulative,
-      ...benchmarkCumulative,
-      ...activeCumulative,
+      ...(includeAbsoluteSeries ? portfolioCumulative : []),
+      ...(showBenchmarkSeries ? benchmarkCumulative : []),
+      ...(showActiveCumulativeSeries ? activeCumulative : []),
     ]);
     const barBounds = buildPercentAxisBounds([
-      ...portfolioPeriodic,
-      ...benchmarkPeriodic,
-      ...activePeriodic,
+      ...(includeAbsoluteSeries ? portfolioPeriodic : []),
+      ...(showBenchmarkSeries ? benchmarkPeriodic : []),
+      ...(showActivePeriodicSeries ? activePeriodic : []),
     ]);
 
     return {
@@ -235,12 +258,12 @@ export default function PerformanceChartPanel({
           fontWeight: 700,
         },
         data: [
-          "Portfolio Return",
-          ...(hasBenchmarkSeries ? [returnPathPresentation.benchmarkLabel] : []),
-          ...(hasActiveSeries ? ["Active Cumulative"] : []),
-          "Portfolio Period",
-          ...(hasBenchmarkSeries ? ["Benchmark Period"] : []),
-          ...(hasActivePeriodicSeries ? ["Active Period"] : []),
+          ...(includeAbsoluteSeries ? ["Portfolio Return"] : []),
+          ...(showBenchmarkSeries ? [returnPathPresentation.benchmarkLabel] : []),
+          ...(showActiveCumulativeSeries ? ["Active Cumulative"] : []),
+          ...(includeAbsoluteSeries ? ["Portfolio Period"] : []),
+          ...(showBenchmarkSeries ? ["Benchmark Period"] : []),
+          ...(showActivePeriodicSeries ? ["Active Period"] : []),
         ],
       },
       tooltip: {
@@ -290,20 +313,24 @@ export default function PerformanceChartPanel({
         },
       ],
       series: [
-        {
-          name: "Portfolio Period",
-          type: "bar" as const,
-          yAxisIndex: 1,
-          data: portfolioPeriodic,
-          barWidth: 10,
-          barGap: "20%",
-          z: 1,
-          itemStyle: {
-            color: CHART_COLORS.portfolioBar,
-            borderRadius: [4, 4, 0, 0],
-          },
-        },
-        ...(hasBenchmarkSeries
+        ...(includeAbsoluteSeries
+          ? [
+              {
+                name: "Portfolio Period",
+                type: "bar" as const,
+                yAxisIndex: 1,
+                data: portfolioPeriodic,
+                barWidth: 10,
+                barGap: "20%",
+                z: 1,
+                itemStyle: {
+                  color: CHART_COLORS.portfolioBar,
+                  borderRadius: [4, 4, 0, 0],
+                },
+              },
+            ]
+          : []),
+        ...(showBenchmarkSeries
           ? [
               {
                 name: "Benchmark Period",
@@ -319,7 +346,7 @@ export default function PerformanceChartPanel({
               },
             ]
           : []),
-        ...(hasActivePeriodicSeries
+        ...(showActivePeriodicSeries
           ? [
               {
                 name: "Active Period",
@@ -335,22 +362,26 @@ export default function PerformanceChartPanel({
               },
             ]
           : []),
-        {
-          name: "Portfolio Return",
-          type: "line" as const,
-          data: portfolioCumulative,
-          smooth: true,
-          symbol: "none",
-          z: 3,
-          lineStyle: {
-            width: 4,
-            color: CHART_COLORS.portfolio,
-          },
-          areaStyle: {
-            color: "rgba(218, 30, 40, 0.05)",
-          },
-        },
-        ...(hasBenchmarkSeries
+        ...(includeAbsoluteSeries
+          ? [
+              {
+                name: "Portfolio Return",
+                type: "line" as const,
+                data: portfolioCumulative,
+                smooth: true,
+                symbol: "none",
+                z: 3,
+                lineStyle: {
+                  width: 4,
+                  color: CHART_COLORS.portfolio,
+                },
+                areaStyle: {
+                  color: "rgba(218, 30, 40, 0.05)",
+                },
+              },
+            ]
+          : []),
+        ...(showBenchmarkSeries
           ? [
               {
                 name: returnPathPresentation.benchmarkLabel,
@@ -366,7 +397,7 @@ export default function PerformanceChartPanel({
               },
             ]
           : []),
-        ...(hasActiveSeries
+        ...(showActiveCumulativeSeries
           ? [
               {
                 name: "Active Cumulative",
@@ -385,7 +416,7 @@ export default function PerformanceChartPanel({
           : []),
       ],
     } satisfies EChartsOption;
-  }, [hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
+  }, [chartViewMode, hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
 
   const explicitDateRange =
     resolvedReportDates.startDate && resolvedReportDates.endDate
@@ -507,6 +538,28 @@ export default function PerformanceChartPanel({
                 {isUpdating ? "Updating..." : "Apply"}
               </Button>
             </Stack>
+          </div>
+
+          <div className="performance-chart-control-card">
+            <Typography sx={controlLabelSx}>View</Typography>
+            <WorkbenchSegmentedControl
+              ariaLabel="Return path view mode"
+              className="performance-chart-view-control"
+              value={chartViewMode}
+              onChange={setChartViewMode}
+              options={[
+                { key: "combined", label: "Combined", disabled: !hasBenchmarkSeries },
+                { key: "absolute", label: "Absolute" },
+                {
+                  key: "relative",
+                  label: "Relative",
+                  disabled: !hasActiveSeries,
+                  title: hasActiveSeries
+                    ? undefined
+                    : "Relative comparison requires benchmark-relative observations.",
+                },
+              ]}
+            />
           </div>
 
           <div className="performance-chart-control-card">

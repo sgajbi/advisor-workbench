@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceMultiHorizonPanel from "../../src/apps/performance/components/performance-multi-horizon-panel";
@@ -85,6 +85,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByText("Net Flow")).toBeInTheDocument();
     expect(screen.getByText("Gross")).toBeInTheDocument();
     expect(screen.getByText("Cum Active")).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getAllByText("$450,000")).toHaveLength(2);
     expect(screen.getAllByText("$22,500")).toHaveLength(2);
     expect(screen.getByText("5.88%")).toBeInTheDocument();
@@ -93,6 +94,18 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("YTD")).toHaveLength(3);
     expect(screen.getAllByText("1Y")).toHaveLength(2);
     expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
+    expect(screen.queryByText("Begin MV")).not.toBeInTheDocument();
+    expect(screen.queryByText("Net Flow")).not.toBeInTheDocument();
+    expect(screen.getByText("Benchmark")).toBeInTheDocument();
+    expect(screen.getByText("Ann. Net")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
+    expect(screen.getByText("Begin MV")).toBeInTheDocument();
+    expect(screen.getByText("Net Flow")).toBeInTheDocument();
+    expect(screen.queryByText("Benchmark")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cum Active")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });
 

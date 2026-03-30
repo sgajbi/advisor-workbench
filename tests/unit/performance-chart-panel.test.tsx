@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { EChartsOption } from "echarts";
 
@@ -54,22 +54,42 @@ function buildChartProps(
 }
 
 describe("PerformanceChartPanel", () => {
-  it("includes active period and cumulative active series when relative returns are available", () => {
+  it("switches between combined, relative, and absolute return-path views", () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
-    const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
-    const seriesNames = series.map((entry) => entry?.name);
+    let series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    let seriesNames = series.map((entry) => entry?.name);
 
     expect(seriesNames).toContain("Active Period");
     expect(seriesNames).toContain("Active Cumulative");
+    expect(seriesNames).toContain("Portfolio Return");
+    expect(seriesNames).toContain("Benchmark Period");
 
-    const activeCumulativeSeries = series.find((entry) => entry?.name === "Active Cumulative");
+    let activeCumulativeSeries = series.find((entry) => entry?.name === "Active Cumulative");
     expect(activeCumulativeSeries?.type).toBe("line");
     expect(activeCumulativeSeries?.data).toEqual([0.3]);
 
-    const activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
+    let activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
     expect(activePeriodSeries?.type).toBe("bar");
     expect(activePeriodSeries?.data).toEqual([0.3]);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
+
+    series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    seriesNames = series.map((entry) => entry?.name);
+    expect(seriesNames).toContain("Active Period");
+    expect(seriesNames).toContain("Active Cumulative");
+    expect(seriesNames).not.toContain("Portfolio Return");
+    expect(seriesNames).not.toContain("Benchmark Period");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Absolute" }));
+
+    series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    seriesNames = series.map((entry) => entry?.name);
+    expect(seriesNames).toContain("Portfolio Return");
+    expect(seriesNames).toContain("Benchmark Period");
+    expect(seriesNames).not.toContain("Active Period");
+    expect(seriesNames).not.toContain("Active Cumulative");
   });
 
   it("falls back to chart point dates when report dates are missing", () => {
@@ -128,7 +148,8 @@ describe("PerformanceChartPanel", () => {
     expect(
       document.querySelector(".performance-chart-control-band.workbench-summary-toolbar")
     ).toBeTruthy();
-    expect(document.querySelectorAll(".performance-chart-control-card")).toHaveLength(5);
+    expect(document.querySelectorAll(".performance-chart-control-card")).toHaveLength(6);
+    expect(screen.getByRole("tablist", { name: "Return path view mode" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();

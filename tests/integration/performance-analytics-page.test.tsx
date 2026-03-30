@@ -127,6 +127,8 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getAllByText("How did this compare across horizons?")).toHaveLength(1);
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
+      expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
+      expect(screen.getByRole("tablist", { name: "Return path view mode" })).toBeInTheDocument();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
         compactPattern("Active return 0.51%")
       );

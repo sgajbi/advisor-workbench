@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Typography } from "@mui/material";
 
 import {
   AnalyticsTable,
   WorkbenchChartContextRow,
+  WorkbenchSegmentedControl,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualMeta,
@@ -20,6 +21,8 @@ import type {
 import { formatCurrency, formatDate, formatPct } from "../formatters";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
+
+type HorizonTableView = "combined" | "returns" | "economics";
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
@@ -38,6 +41,7 @@ export default function PerformanceMultiHorizonPanel({
 }) {
   const [comparison, setComparison] = useState<WorkbenchPerformanceHorizonComparison | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [tableView, setTableView] = useState<HorizonTableView>("combined");
   const requestIdRef = useRef(0);
   const cacheRef = useRef<Map<string, WorkbenchPerformanceHorizonComparison>>(new Map());
 
@@ -123,39 +127,65 @@ export default function PerformanceMultiHorizonPanel({
     period,
     selectedPeriodRow,
   });
-  const tableColumns = [
-    { key: "period", label: "Period" },
-    { key: "window", label: "Window" },
-    { key: "beginMv", label: "Begin MV", align: "right" as const },
-    { key: "endMv", label: "End MV", align: "right" as const },
-    { key: "netCashFlow", label: "Net Flow", align: "right" as const },
-    { key: "fees", label: "Fees", align: "right" as const },
-    { key: "netReturn", label: "Net", align: "right" as const },
-    { key: "grossReturn", label: "Gross", align: "right" as const },
-    { key: "benchmarkReturn", label: "Benchmark", align: "right" as const },
-    { key: "activeReturn", label: "Active", align: "right" as const },
-    { key: "cumulativeActive", label: "Cum Active", align: "right" as const },
-  ];
-  const tableRows = (rows ?? []).map((row) => ({
-    key: row.period,
-    cells: [
-      row.period,
-      row.period_start && row.period_end
-        ? `${formatDate(row.period_start)} - ${formatDate(row.period_end)}`
-        : "N/A",
-      formatCurrency(row.begin_market_value, reportingCurrency),
-      formatCurrency(row.end_market_value, reportingCurrency),
-      formatCurrency(row.net_cash_flow, reportingCurrency),
-      formatCurrency(row.fees, reportingCurrency),
-      formatPct(row.net_return_pct ?? row.portfolio_return_pct),
-      formatPct(row.gross_return_pct),
-      formatPct(row.benchmark_return_pct),
-      formatPct(row.active_return_pct),
-      formatPct(row.cumulative_active_return_pct),
-    ],
-    className: row.period === presentation.selectedPeriodLabel ? "performance-horizon-table-row-selected" : undefined,
-    ariaLabel: `${row.period} horizon comparison row`,
-  }));
+  const tableModel = useMemo(() => {
+    const leadingColumns = [
+      { key: "period", label: "Period" },
+      { key: "window", label: "Window" },
+    ];
+    const returnColumns = [
+      { key: "netReturn", label: "Net", align: "right" as const },
+      { key: "grossReturn", label: "Gross", align: "right" as const },
+      { key: "benchmarkReturn", label: "Benchmark", align: "right" as const },
+      { key: "activeReturn", label: "Active", align: "right" as const },
+      { key: "cumulativeActive", label: "Cum Active", align: "right" as const },
+      { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
+    ];
+    const economicsColumns = [
+      { key: "beginMv", label: "Begin MV", align: "right" as const },
+      { key: "endMv", label: "End MV", align: "right" as const },
+      { key: "netCashFlow", label: "Net Flow", align: "right" as const },
+      { key: "fees", label: "Fees", align: "right" as const },
+    ];
+    const columns =
+      tableView === "returns"
+        ? [...leadingColumns, ...returnColumns]
+        : tableView === "economics"
+          ? [...leadingColumns, ...economicsColumns]
+          : [...leadingColumns, ...economicsColumns, ...returnColumns];
+
+    return {
+      columns,
+      rows: (rows ?? []).map((row) => {
+        const cellMap: Record<string, string> = {
+          period: row.period,
+          window:
+            row.period_start && row.period_end
+              ? `${formatDate(row.period_start)} - ${formatDate(row.period_end)}`
+              : "N/A",
+          beginMv: formatCurrency(row.begin_market_value, reportingCurrency),
+          endMv: formatCurrency(row.end_market_value, reportingCurrency),
+          netCashFlow: formatCurrency(row.net_cash_flow, reportingCurrency),
+          fees: formatCurrency(row.fees, reportingCurrency),
+          netReturn: formatPct(row.net_return_pct ?? row.portfolio_return_pct),
+          grossReturn: formatPct(row.gross_return_pct),
+          benchmarkReturn: formatPct(row.benchmark_return_pct),
+          activeReturn: formatPct(row.active_return_pct),
+          cumulativeActive: formatPct(row.cumulative_active_return_pct),
+          annualizedNet: formatPct(row.annualized_net_return_pct ?? row.annualized_return_pct),
+        };
+
+        return {
+          key: row.period,
+          cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
+          className:
+            row.period === presentation.selectedPeriodLabel
+              ? "performance-horizon-table-row-selected"
+              : undefined,
+          ariaLabel: `${row.period} horizon comparison row`,
+        };
+      }),
+    };
+  }, [presentation.selectedPeriodLabel, reportingCurrency, rows, tableView]);
 
   return (
     <PerformanceSummaryDriverModule
@@ -211,6 +241,17 @@ export default function PerformanceMultiHorizonPanel({
             <span className="performance-mini-legend-item performance-mini-legend-benchmark">
               {presentation.benchmarkLegendLabel}
             </span>
+            <WorkbenchSegmentedControl
+              ariaLabel="Horizon table view"
+              className="performance-horizon-table-view"
+              value={tableView}
+              onChange={setTableView}
+              options={[
+                { key: "combined", label: "Combined" },
+                { key: "returns", label: "Returns" },
+                { key: "economics", label: "Economics" },
+              ]}
+            />
           </WorkbenchSummaryToolbar>
           <div
             className="performance-horizon-bars workbench-summary-visual-grid"
@@ -245,8 +286,8 @@ export default function PerformanceMultiHorizonPanel({
           </div>
           <AnalyticsTable
             ariaLabel="Multi-horizon return table"
-            columns={tableColumns}
-            rows={tableRows}
+            columns={tableModel.columns}
+            rows={tableModel.rows}
             dense
             className="performance-horizon-table"
           />
