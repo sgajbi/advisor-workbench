@@ -428,6 +428,47 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
   });
 
+  it("coalesces identical in-flight ledger requests into a single fetch", async () => {
+    const pendingRequest: { resolve?: (value: Response) => void } = {};
+    const fetchSpy = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          pendingRequest.resolve = resolve;
+        })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const firstRequest = getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      limit: 200,
+    });
+    const secondRequest = getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      limit: 200,
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    if (pendingRequest.resolve) {
+      pendingRequest.resolve(
+        jsonResponse({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [{ transaction_id: "TX_1" }],
+        })
+      );
+    }
+
+    const [firstResult, secondResult] = await Promise.all([firstRequest, secondRequest]);
+    expect(firstResult).toEqual(secondResult);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
   it("requests projected cashflow with the selected horizon", async () => {
     const fetchSpy = vi.fn(async () =>
       jsonResponse({
@@ -455,6 +496,28 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("as_of_date=2026-03-28");
     expect(requestUrl).toContain("horizon_days=30");
     expect(requestUrl).toContain("include_projected=true");
+  });
+
+  it("uses the proxied portfolio API base in the browser", async () => {
+    const originalWindow = global.window;
+    vi.stubGlobal("window", {
+      location: { href: "http://localhost:3000/portfolio" },
+    });
+    const fetchSpy = vi.fn(async () => jsonResponse({ items: [] }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    try {
+      await import("../../src/apps/portfolio/api").then(({ getPortfolioCatalog }) =>
+        getPortfolioCatalog()
+      );
+      expect(String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "")).toContain(
+        "/api/bff/api/v1/portfolio/portfolios"
+      );
+    } finally {
+      if (originalWindow) {
+        vi.stubGlobal("window", originalWindow);
+      }
+    }
   });
 });
 

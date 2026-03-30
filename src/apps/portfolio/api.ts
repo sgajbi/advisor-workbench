@@ -3,6 +3,7 @@ import type { PortfolioCatalogResponse, PortfolioWorkspace } from "./types";
 const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 const portfolioApiResponseCache = new Map<string, unknown>();
 const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
+type PortfolioRequestTarget = "server" | "client";
 
 type PortfolioWorkspaceSummaryResponse = {
   as_of_date: string;
@@ -101,8 +102,9 @@ type PortfolioWorkspaceDetailedDetails = Pick<
 
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
   try {
-    const payload = await fetchBffJson<PortfolioCatalogResponse>(
-      `${resolveBffBaseUrl()}/api/v1/portfolio/portfolios`
+    const payload = await fetchPortfolioJson<PortfolioCatalogResponse>(
+      "client",
+      "/portfolio/portfolios"
     );
     if (!payload) {
       return [];
@@ -117,9 +119,9 @@ export async function getPortfolioWorkspaceShell(
   portfolioId: string
 ): Promise<PortfolioWorkspace | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
-    const summaryPayload = await fetchBffJson<PortfolioWorkspaceSummaryResponse>(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
+    const summaryPayload = await fetchPortfolioJson<PortfolioWorkspaceSummaryResponse>(
+      "client",
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
       { useCache: false }
     );
     if (!summaryPayload) {
@@ -169,24 +171,27 @@ export async function getPortfolioWorkspaceSummaryDetails(
   portfolioId: string
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const [
       allocationsPayload,
       positionsPayload,
       incomePayload,
       activityPayload,
     ] = await Promise.all([
-      fetchBffJson<PortfolioAllocationResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
+      fetchPortfolioJson<PortfolioAllocationResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
       ),
-      fetchBffJson<PortfolioPositionsResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
+      fetchPortfolioJson<PortfolioPositionsResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
       ),
-      fetchBffJson<PortfolioIncomeSummaryResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
+      fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
       ),
-      fetchBffJson<PortfolioActivitySummaryResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
+      fetchPortfolioJson<PortfolioActivitySummaryResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
       ),
     ]);
 
@@ -224,7 +229,6 @@ export async function getPortfolioWorkspaceDetailedDetails(
   } = {}
 ): Promise<PortfolioWorkspaceDetailedDetails | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const transactionSearchParams = new URLSearchParams();
     transactionSearchParams.set("limit", "200");
     if (params.asOfDate) {
@@ -243,20 +247,26 @@ export async function getPortfolioWorkspaceDetailedDetails(
       insightsPayload,
       workflowPayload,
     ] = await Promise.all([
-      fetchBffJson<PortfolioLiquidityResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
+      fetchPortfolioJson<PortfolioLiquidityResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
       ),
-      fetchBffJson<PortfolioTransactionLedgerResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${transactionSearchParams.toString()}`
+      fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
+        { query: transactionSearchParams }
       ),
-      fetchBffJson<PortfolioReadinessResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
+      fetchPortfolioJson<PortfolioReadinessResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
       ),
-      fetchBffJson<PortfolioInsightsResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
+      fetchPortfolioJson<PortfolioInsightsResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
       ),
-      fetchBffJson<PortfolioWorkflowResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
+      fetchPortfolioJson<PortfolioWorkflowResponse>(
+        "client",
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
       ),
     ]);
 
@@ -290,7 +300,6 @@ export async function getPortfolioTransactionLedger(
   } = {}
 ): Promise<PortfolioTransactionLedgerResponse | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const searchParams = new URLSearchParams();
     searchParams.set("limit", String(params.limit ?? 200));
     searchParams.set("skip", String(params.skip ?? 0));
@@ -308,8 +317,10 @@ export async function getPortfolioTransactionLedger(
       searchParams.set("transaction_type", params.transactionType);
     }
 
-    return await fetchBffJson<PortfolioTransactionLedgerResponse>(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${searchParams.toString()}`
+    return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
+      "client",
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
+      { query: searchParams }
     );
   } catch {
     return null;
@@ -325,7 +336,6 @@ export async function getPortfolioProjectedCashflow(
   } = {}
 ): Promise<PortfolioWorkspace["cashflow_outlook"] | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const searchParams = new URLSearchParams();
     if (params.asOfDate) {
       searchParams.set("as_of_date", params.asOfDate);
@@ -337,8 +347,10 @@ export async function getPortfolioProjectedCashflow(
       searchParams.set("include_projected", String(params.includeProjected));
     }
 
-    const payload = await fetchBffJson<PortfolioProjectedCashflowResponse>(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow?${searchParams.toString()}`
+    const payload = await fetchPortfolioJson<PortfolioProjectedCashflowResponse>(
+      "client",
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow`,
+      { query: searchParams }
     );
     if (!payload) {
       return null;
@@ -373,13 +385,33 @@ function resolveBffBaseUrl(): string {
   return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
 }
 
-async function fetchBffJson<T>(
-  url: string,
+function buildPortfolioApiUrl(
+  target: PortfolioRequestTarget,
+  path: string,
+  query?: URLSearchParams
+): string {
+  const baseUrl = resolveBffBaseUrlForTarget(target);
+  const suffix = query?.toString();
+  return suffix ? `${baseUrl}/api/v1${path}?${suffix}` : `${baseUrl}/api/v1${path}`;
+}
+
+function resolveBffBaseUrlForTarget(target: PortfolioRequestTarget): string {
+  if (target === "client") {
+    return resolveBffBaseUrl();
+  }
+  return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
+}
+
+async function fetchPortfolioJson<T>(
+  target: PortfolioRequestTarget,
+  path: string,
   options: {
     useCache?: boolean;
+    query?: URLSearchParams;
   } = {}
 ): Promise<T | null> {
   const useCache = options.useCache ?? true;
+  const url = buildPortfolioApiUrl(target, path, options.query);
 
   if (useCache && portfolioApiResponseCache.has(url)) {
     return portfolioApiResponseCache.get(url) as T;
