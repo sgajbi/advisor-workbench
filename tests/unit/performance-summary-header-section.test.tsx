@@ -96,11 +96,8 @@ describe("PerformanceSummaryHeaderSection", () => {
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
     expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getAllByText("No benchmark is assigned to this mandate.").length
-    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
-    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Performance summary observations" })).not.toBeInTheDocument();

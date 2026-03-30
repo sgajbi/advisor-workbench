@@ -182,6 +182,18 @@ export function getPerformanceExecutiveReturnPresentation({
   suspiciousMoneyWeightedReturn: boolean;
 }): PerformanceExecutiveReturnPresentation {
   const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
+  const benchmarkSupport = getFirstPaintCapabilitySupport(
+    "Benchmark",
+    capabilities.benchmarkComparison,
+    "Assigned benchmark result"
+  );
+  const activeReturnSupport = hasBenchmark
+    ? "Portfolio versus benchmark"
+    : getFirstPaintCapabilitySupport(
+        "Benchmark",
+        capabilities.benchmarkComparison,
+        "Requires an assigned benchmark"
+      );
 
   return {
     cards: [
@@ -199,8 +211,7 @@ export function getPerformanceExecutiveReturnPresentation({
           hasBenchmark && selectedPerformance?.benchmark_return_pct != null
             ? formatPctValue(selectedPerformance.benchmark_return_pct)
             : "Unavailable",
-        support:
-          capabilities.benchmarkComparison.reason ?? "Assigned benchmark result",
+        support: benchmarkSupport,
         unavailable: !hasBenchmark || selectedPerformance?.benchmark_return_pct == null,
         priority: "comparison",
       }),
@@ -210,9 +221,7 @@ export function getPerformanceExecutiveReturnPresentation({
           hasBenchmark && selectedPerformance?.active_return_pct != null
             ? formatPctValue(selectedPerformance.active_return_pct)
             : "Unavailable",
-        support: hasBenchmark
-          ? "Portfolio versus benchmark"
-          : capabilities.benchmarkComparison.reason ?? "Requires an assigned benchmark",
+        support: activeReturnSupport,
         unavailable: !hasBenchmark || selectedPerformance?.active_return_pct == null,
         priority: "comparison",
       }),
@@ -297,7 +306,7 @@ function mapCapabilityToTrustItem(
     return {
       label,
       value: labels.supported,
-      support: capability.reason,
+      support: getFirstPaintCapabilitySupport(label, capability),
       tone: "success" as const,
     };
   }
@@ -305,16 +314,67 @@ function mapCapabilityToTrustItem(
     return {
       label,
       value: labels.partial,
-      support: capability.reason,
+      support: getFirstPaintCapabilitySupport(label, capability),
       tone: "warn" as const,
     };
   }
   return {
     label,
     value: labels.unavailable,
-    support: capability.reason,
+    support: getFirstPaintCapabilitySupport(label, capability),
     tone: label === "Evidence" ? ("default" as const) : ("danger" as const),
   };
+}
+
+function getFirstPaintCapabilitySupport(
+  label: string,
+  capability: WorkspaceCapability,
+  fallback?: string
+): string | undefined {
+  switch (label) {
+    case "Benchmark":
+      if (capability.state === "supported") {
+        return "Benchmark context ready";
+      }
+      if (capability.state === "partial") {
+        return "Relative returns incomplete";
+      }
+      return "Benchmark not assigned";
+    case "Return History":
+      if (capability.state === "supported") {
+        return "Published observations ready";
+      }
+      if (capability.state === "partial") {
+        return "Observations only partly published";
+      }
+      return "Published observations unavailable";
+    case "Contribution":
+      if (capability.state === "supported") {
+        return "Position-level contribution ready";
+      }
+      if (capability.state === "partial") {
+        return "Only aggregate contribution available";
+      }
+      return "Contribution detail unavailable";
+    case "Attribution":
+      if (capability.state === "supported") {
+        return "Attribution detail ready";
+      }
+      if (capability.state === "partial") {
+        return "Attribution detail partial";
+      }
+      return "Attribution detail unavailable";
+    case "Evidence":
+      if (capability.state === "supported") {
+        return "Evidence surfaces available";
+      }
+      if (capability.state === "partial") {
+        return "Evidence surfaces still settling";
+      }
+      return "Evidence not exposed by contract";
+    default:
+      return capability.reason ?? fallback;
+  }
 }
 
 function sumOptional(values: Array<number | null | undefined>): number | null {

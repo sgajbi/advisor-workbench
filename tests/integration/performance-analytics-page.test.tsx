@@ -176,7 +176,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect((await screen.findAllByText("Unassigned")).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
@@ -244,7 +244,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
     await waitFor(() => {
       expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
@@ -262,9 +262,7 @@ describe("PerformanceAnalyticsPage", () => {
     const trustStrip = await screen.findByLabelText("Trust and completeness strip");
     expect(within(trustStrip).getByText("Attribution")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Unavailable")).toBeInTheDocument();
-    expect(
-      within(trustStrip).getByText("Attribution detail is not available for the current selection.")
-    ).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Attribution detail unavailable")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Evidence")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Pending")).toBeInTheDocument();
     expect(trustStrip.querySelectorAll(".performance-trust-item .status-chip")).toHaveLength(5);
@@ -278,7 +276,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByText("Partial")).toBeInTheDocument();
     expect(
-      screen.getAllByText("A benchmark is assigned, but benchmark-relative returns are incomplete.")
+      screen.getAllByText("Relative returns incomplete")
     ).toHaveLength(2);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
       "Benchmark line Global Balanced 60/40"
@@ -340,8 +338,8 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
       executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [
-        "No benchmark is assigned to this mandate.",
-        "Published return observations are not available for the selected horizon.",
+        "Benchmark not assigned",
+        "Published observations unavailable",
         "Unavailable",
       ],
       deferredExpectations: [
@@ -356,7 +354,7 @@ describe("PerformanceAnalyticsPage", () => {
       executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [
         "Partial",
-        "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+        "Relative returns incomplete",
       ],
       contextExpectations: ["Active context Unavailable • Partial", "Benchmark line Global Balanced 60/40"],
       horizonExpectations: [
@@ -381,8 +379,8 @@ describe("PerformanceAnalyticsPage", () => {
       trustExpectations: [
         "Partial",
         "Unavailable",
-        "A benchmark is assigned, but benchmark-relative returns are incomplete.",
-        "Attribution detail is not available for the current selection.",
+        "Relative returns incomplete",
+        "Attribution detail unavailable",
       ],
       deferredExpectations: ["Contributor ranking is partial"],
       contextExpectations: ["Active context Unavailable • Partial"],

@@ -58,12 +58,12 @@ describe("performance first-paint helper contracts", () => {
     });
     expect(presentation.cards.find((card) => card.label === "Benchmark Return")).toMatchObject({
       value: "Unavailable",
-      support: "No benchmark is assigned to this mandate.",
+      support: "Benchmark not assigned",
       unavailable: true,
     });
     expect(presentation.cards.find((card) => card.label === "Active Return")).toMatchObject({
       value: "Unavailable",
-      support: "No benchmark is assigned to this mandate.",
+      support: "Benchmark not assigned",
       unavailable: true,
     });
     expect(
@@ -91,14 +91,17 @@ describe("performance first-paint helper contracts", () => {
     expect(presentation.items.find((item) => item.label === "Benchmark")).toMatchObject({
       value: "Assigned",
       tone: "success",
+      support: "Benchmark context ready",
     });
     expect(presentation.items.find((item) => item.label === "Contribution")).toMatchObject({
       value: "Partial",
       tone: "warn",
+      support: "Only aggregate contribution available",
     });
     expect(presentation.items.find((item) => item.label === "Evidence")).toMatchObject({
       value: "Pending",
       tone: "default",
+      support: "Evidence not exposed by contract",
     });
   });
 
