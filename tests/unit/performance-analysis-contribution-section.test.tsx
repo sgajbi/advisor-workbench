@@ -31,6 +31,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByRole("heading", { name: "Contribution Detail" })).toBeInTheDocument();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
     expect(screen.getByText("Local")).toBeInTheDocument();
     expect(screen.getByText("FX")).toBeInTheDocument();

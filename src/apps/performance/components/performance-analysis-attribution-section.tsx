@@ -161,6 +161,7 @@ export default function PerformanceAnalysisAttributionSection({
                 }))}
               />
               <AnalyticsTable
+                className="performance-analysis-table"
                 ariaLabel={`${formatLabel(level.dimension)} attribution table`}
                 columns={[
                   { key: "bucket", label: "Bucket" },

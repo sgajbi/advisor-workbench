@@ -7,6 +7,8 @@ import TableFooter from "@mui/material/TableFooter";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 
+import { cx } from "../utils/cx";
+
 type AnalyticsTableColumn = {
   key: string;
   label: string;
@@ -28,16 +30,19 @@ export default function AnalyticsTable({
   columns,
   rows,
   footer,
+  className,
 }: {
   ariaLabel: string;
   columns: AnalyticsTableColumn[];
   rows: AnalyticsTableRow[];
   footer?: React.ReactNode[];
+  className?: string;
 }) {
   return (
     <TableContainer
       component={Paper}
       variant="outlined"
+      className={cx("analytics-table-frame", className)}
       sx={{
         borderRadius: 3,
         borderColor: "divider",

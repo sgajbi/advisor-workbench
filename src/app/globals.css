@@ -4451,6 +4451,11 @@ a:hover {
   max-width: none;
 }
 
+.performance-analysis-table {
+  border-radius: 12px;
+  border-color: rgba(221, 226, 232, 0.9);
+}
+
 .performance-detail-panel-compact,
 .performance-detail-panel-wide {
   align-self: stretch;

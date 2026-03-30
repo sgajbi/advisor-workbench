@@ -208,6 +208,7 @@ describe("design-system components", () => {
   it("renders analytics tables with aligned numeric columns and totals", () => {
     render(
       <AnalyticsTable
+        className="analysis-table"
         ariaLabel="Allocation summary"
         columns={[
           { key: "bucket", label: "Bucket" },
@@ -223,6 +224,7 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("table", { name: "Allocation summary" })).toBeInTheDocument();
+    expect(document.querySelector(".analytics-table-frame.analysis-table")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Market Value" })).toBeInTheDocument();
     expect(screen.getByText("$800,000")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();

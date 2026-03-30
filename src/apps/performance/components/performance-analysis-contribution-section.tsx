@@ -84,6 +84,7 @@ export default function PerformanceAnalysisContributionSection({
               title={formatLabel(level.name)}
             >
               <AnalyticsTable
+                className="performance-analysis-table"
                 ariaLabel={`${formatLabel(level.name)} contribution table`}
                 columns={[
                   { key: "bucket", label: "Bucket" },
