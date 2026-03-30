@@ -36,6 +36,10 @@ export default function PerformanceAnalysisAttributionSection({
   attributionEffectScale,
 }: PerformanceAnalysisAttributionSectionProps) {
   const hasAttributionSummaryLevels = (workspace.attribution?.levels?.length ?? 0) > 0;
+  const hasDetailedAttributionRows =
+    workspace.attribution?.levels?.some((level) => level.rows.length > 0) ?? false;
+  const showDetailedBreakdownChrome =
+    relativeSegmentRows.length > 0 || topAttributionEffectRows.length > 0 || hasDetailedAttributionRows;
   const actions = (
     <PerformanceAnalysisToolbar
       context={
@@ -131,23 +135,27 @@ export default function PerformanceAnalysisAttributionSection({
         }
         allowPartialContent={hasAttributionSummaryLevels}
       >
-        <div className="performance-analytic-duo-grid">
-          <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
+        {showDetailedBreakdownChrome ? (
+          <>
+            <div className="performance-analytic-duo-grid">
+              <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
 
-          <WorkbenchChartShell
-            title="Total Effect Ranking"
-            subtitle="Largest benchmark-relative effects"
-            className="performance-analysis-mini-module"
-          >
-            <WorkbenchRankedBarList
-              label="Benchmark-relative total effect"
-              rows={getAttributionRankingRows(topAttributionEffectRows)}
-              scale={attributionEffectScale}
-              emptyMessage="No benchmark-relative effect ranking is available for this selection."
-            />
-          </WorkbenchChartShell>
-        </div>
-        <PerformanceAnalysisEffectLegend />
+              <WorkbenchChartShell
+                title="Total Effect Ranking"
+                subtitle="Largest benchmark-relative effects"
+                className="performance-analysis-mini-module"
+              >
+                <WorkbenchRankedBarList
+                  label="Benchmark-relative total effect"
+                  rows={getAttributionRankingRows(topAttributionEffectRows)}
+                  scale={attributionEffectScale}
+                  emptyMessage="No benchmark-relative effect ranking is available for this selection."
+                />
+              </WorkbenchChartShell>
+            </div>
+            <PerformanceAnalysisEffectLegend />
+          </>
+        ) : null}
         {workspace.attribution?.levels.map((level) => {
           const totals = getAttributionTotals(level);
           return (

@@ -131,6 +131,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Total Effect Ranking")).not.toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
