@@ -34,6 +34,9 @@ describe("PerformanceRelativeSegmentPanel", () => {
     expect(screen.getByText("Active Return")).toBeInTheDocument();
     expect(screen.getByText("Total Effect")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(document.querySelectorAll(".performance-relative-row")).toHaveLength(1);
+    expect(screen.getByText("Wt 61.00% vs 58.00%")).toBeInTheDocument();
+    expect(screen.getByText("Ret 7.40% vs 6.80%")).toBeInTheDocument();
   });
 
   it("renders a compact empty state inside the shared chart shell", () => {

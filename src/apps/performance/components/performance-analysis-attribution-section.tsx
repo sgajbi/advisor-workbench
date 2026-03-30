@@ -21,6 +21,7 @@ import {
   inlineControlLabelSx,
   NOT_ADDITIVE_CELL,
 } from "./performance-workspace-view-helpers";
+import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
 
 export default function PerformanceAnalysisAttributionSection({
   workspace,
@@ -133,20 +134,7 @@ export default function PerformanceAnalysisAttributionSection({
             />
           </WorkbenchChartShell>
         </div>
-        <div className="performance-effect-legend" aria-label="Attribution effect legend">
-          <span className="performance-effect-legend-item">
-            <i className="performance-effect-legend-swatch performance-effect-bar-allocation" />
-            Allocation
-          </span>
-          <span className="performance-effect-legend-item">
-            <i className="performance-effect-legend-swatch performance-effect-bar-selection" />
-            Selection
-          </span>
-          <span className="performance-effect-legend-item">
-            <i className="performance-effect-legend-swatch performance-effect-bar-interaction" />
-            Interaction
-          </span>
-        </div>
+        <PerformanceAnalysisEffectLegend />
         {workspace.attribution?.levels.map((level) => {
           const totals = getAttributionTotals(level);
           return (
