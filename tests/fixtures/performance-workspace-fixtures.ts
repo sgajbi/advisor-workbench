@@ -24,6 +24,17 @@ export type PerformancePresentationScenario = {
   suspiciousMoneyWeightedReturn: boolean;
 };
 
+export type PerformanceReturnPathScenarioData = {
+  points: WorkbenchPerformanceWorkspace["net_chart"];
+  summary: Pick<
+    PerformanceComparativeSummary,
+    "portfolio_return_pct" | "benchmark_return_pct" | "active_return_pct"
+  >;
+  benchmark?: string;
+  benchmarkOptions: WorkbenchPerformanceWorkspace["benchmark_options"];
+  capabilities: PerformanceWorkspaceCapabilities;
+};
+
 export function buildPerformanceCapabilities(
   overrides: Partial<PerformanceWorkspaceCapabilities> = {}
 ): PerformanceWorkspaceCapabilities {
@@ -484,6 +495,34 @@ export function buildCombinedPartialPerformanceScenario() {
       },
     },
   });
+}
+
+export function buildPerformanceReturnPathScenarioData(
+  scenario: PerformancePresentationScenario,
+  options?: {
+    useGrossPerformance?: boolean;
+    capabilities?: PerformanceWorkspaceCapabilities;
+  }
+): PerformanceReturnPathScenarioData {
+  const useGrossPerformance = options?.useGrossPerformance ?? false;
+  const summary = useGrossPerformance
+    ? scenario.workspace.gross_performance
+    : scenario.workspace.net_performance;
+  const points = useGrossPerformance
+    ? scenario.workspace.gross_chart
+    : scenario.workspace.net_chart;
+
+  return {
+    points,
+    summary: {
+      portfolio_return_pct: summary.portfolio_return_pct,
+      benchmark_return_pct: summary.benchmark_return_pct,
+      active_return_pct: summary.active_return_pct,
+    },
+    benchmark: scenario.workspace.benchmark_code ?? undefined,
+    benchmarkOptions: scenario.workspace.benchmark_options ?? [],
+    capabilities: options?.capabilities ?? scenario.capabilities,
+  };
 }
 
 export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {

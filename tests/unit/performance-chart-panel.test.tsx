@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import PerformanceChartPanel from "../../src/apps/performance/components/performance-chart-panel";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
+  buildPerformanceReturnPathScenarioData,
   buildPartialBenchmarkPerformanceScenario,
   buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
@@ -20,25 +21,22 @@ function buildChartProps(
 ): React.ComponentProps<typeof PerformanceChartPanel> {
   const scenario = buildSupportedPerformanceScenario();
   const workspace = { ...scenario.workspace, portfolio_id: "DEMO_ADV_USD_001" };
+  const returnPath = buildPerformanceReturnPathScenarioData(scenario);
   return {
     title: "Net Return Path",
-    points: workspace.net_chart,
-    summary: {
-      portfolio_return_pct: workspace.net_performance.portfolio_return_pct,
-      benchmark_return_pct: workspace.net_performance.benchmark_return_pct,
-      active_return_pct: workspace.net_performance.active_return_pct,
-    },
+    points: returnPath.points,
+    summary: returnPath.summary,
     portfolioId: workspace.portfolio_id,
     period: workspace.period,
     detailBasis: workspace.detail_basis,
     contributionDimension: workspace.contribution_dimension,
     attributionDimension: workspace.attribution_dimension,
     chartFrequency: workspace.chart_frequency,
-    benchmark: workspace.benchmark_code ?? undefined,
-    benchmarkOptions: workspace.benchmark_options,
-    reportStartDate: workspace.report_start_date,
-    reportEndDate: workspace.report_end_date,
-    capabilities: scenario.capabilities,
+    benchmark: returnPath.benchmark,
+    benchmarkOptions: returnPath.benchmarkOptions,
+    reportStartDate: workspace.report_start_date ?? "",
+    reportEndDate: workspace.report_end_date ?? "",
+    capabilities: returnPath.capabilities,
     onRequestChange: vi.fn(),
     ...overrides,
   };
@@ -164,19 +162,16 @@ describe("PerformanceChartPanel", () => {
 
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
+    const returnPath = buildPerformanceReturnPathScenarioData(scenario);
 
     render(
       <PerformanceChartPanel
         {...buildChartProps({
-          points: [],
-          summary: {
-            portfolio_return_pct: null,
-            benchmark_return_pct: null,
-            active_return_pct: null,
-          },
-          capabilities: {
-            ...scenario.capabilities,
-          },
+          points: returnPath.points,
+          summary: returnPath.summary,
+          benchmark: returnPath.benchmark,
+          benchmarkOptions: returnPath.benchmarkOptions,
+          capabilities: returnPath.capabilities,
         })}
       />
     );
@@ -194,6 +189,12 @@ describe("PerformanceChartPanel", () => {
 
   it("renders a compact benchmark-unassigned state without weak placeholders", () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
+    const returnPath = buildPerformanceReturnPathScenarioData(scenario, {
+      capabilities: {
+        ...scenario.capabilities,
+        returnPath: { state: "supported" },
+      },
+    });
 
     render(
       <PerformanceChartPanel
@@ -213,16 +214,12 @@ describe("PerformanceChartPanel", () => {
             },
           ],
           summary: {
+            ...returnPath.summary,
             portfolio_return_pct: 6.2,
-            benchmark_return_pct: null,
-            active_return_pct: null,
           },
-          benchmark: undefined,
-          benchmarkOptions: [],
-          capabilities: {
-            ...scenario.capabilities,
-            returnPath: { state: "supported" },
-          },
+          benchmark: returnPath.benchmark,
+          benchmarkOptions: returnPath.benchmarkOptions,
+          capabilities: returnPath.capabilities,
         })}
       />
     );
@@ -245,6 +242,7 @@ describe("PerformanceChartPanel", () => {
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {
     const scenario = buildPartialBenchmarkPerformanceScenario();
+    const returnPath = buildPerformanceReturnPathScenarioData(scenario);
 
     render(
       <PerformanceChartPanel
@@ -264,19 +262,12 @@ describe("PerformanceChartPanel", () => {
             },
           ],
           summary: {
+            ...returnPath.summary,
             portfolio_return_pct: 6.2,
-            benchmark_return_pct: null,
-            active_return_pct: null,
           },
-          benchmark: "BMK_GLOBAL_BALANCED_60_40",
-          benchmarkOptions: [
-            {
-              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-              benchmark_name: "Global Balanced 60/40",
-              is_assigned: true,
-            },
-          ],
-          capabilities: scenario.capabilities,
+          benchmark: returnPath.benchmark,
+          benchmarkOptions: returnPath.benchmarkOptions,
+          capabilities: returnPath.capabilities,
         })}
       />
     );
@@ -297,23 +288,24 @@ describe("PerformanceChartPanel", () => {
 
   it("renders a partial capability notice when return observations are incomplete", () => {
     const scenario = buildPartialBenchmarkPerformanceScenario();
+    const returnPath = buildPerformanceReturnPathScenarioData(scenario, {
+      capabilities: {
+        ...scenario.capabilities,
+        returnPath: {
+          state: "partial",
+          reason: "Return observations are only partially published for the selected horizon.",
+        },
+      },
+    });
 
     render(
       <PerformanceChartPanel
         {...buildChartProps({
-          points: [],
-          summary: {
-            portfolio_return_pct: null,
-            benchmark_return_pct: null,
-            active_return_pct: null,
-          },
-          capabilities: {
-            ...scenario.capabilities,
-            returnPath: {
-              state: "partial",
-              reason: "Return observations are only partially published for the selected horizon.",
-            },
-          },
+          points: returnPath.points,
+          summary: returnPath.summary,
+          benchmark: returnPath.benchmark,
+          benchmarkOptions: returnPath.benchmarkOptions,
+          capabilities: returnPath.capabilities,
         })}
       />
     );
