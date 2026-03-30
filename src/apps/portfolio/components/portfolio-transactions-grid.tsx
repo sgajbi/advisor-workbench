@@ -12,7 +12,7 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { WorkbenchLoadingState } from "@/design-system";
+import { WorkbenchInlineRefreshNote, WorkbenchLoadingState } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
@@ -391,7 +391,9 @@ export default function PortfolioTransactionsGrid({
         />
       )}
 
-      {loading && rowData.length ? <p className="portfolio-inline-note muted">Refreshing transactions…</p> : null}
+      {loading && rowData.length ? (
+        <WorkbenchInlineRefreshNote message="Refreshing transactions…" />
+      ) : null}
     </div>
   );
 }

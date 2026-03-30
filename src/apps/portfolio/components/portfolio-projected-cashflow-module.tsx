@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AnalyticsModule,
   AnalyticsTable,
+  WorkbenchInlineRefreshNote,
   WorkbenchLoadingState,
   WorkspaceStatusPanel,
 } from "@/design-system";
@@ -226,7 +227,9 @@ export default function PortfolioProjectedCashflowModule({
           }
         />
       )}
-      {loading && cashflowOutlook ? <p className="portfolio-inline-note muted">Refreshing projected cashflow…</p> : null}
+      {loading && cashflowOutlook ? (
+        <WorkbenchInlineRefreshNote message="Refreshing projected cashflow…" />
+      ) : null}
     </AnalyticsModule>
   );
 }

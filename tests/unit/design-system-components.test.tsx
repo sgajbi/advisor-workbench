@@ -32,6 +32,7 @@ import {
   WorkspaceRailLink,
   WorkspaceSide,
   WorkbenchDeferredSection,
+  WorkbenchInlineRefreshNote,
   WorkbenchSegmentedControl,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
@@ -665,6 +666,14 @@ describe("design-system components", () => {
       within(loadingState).getByText("Transaction ledger detail is loading for the selected window.")
     ).toBeInTheDocument();
     expect(loadingState.querySelector(".module-skeleton")).toBeTruthy();
+  });
+
+  it("renders the shared inline refresh note with polite status semantics", () => {
+    render(<WorkbenchInlineRefreshNote message="Refreshing transactions…" />);
+
+    const refreshNote = screen.getByRole("status");
+    expect(refreshNote).toHaveClass("workbench-inline-refresh-note");
+    expect(refreshNote).toHaveTextContent("Refreshing transactions…");
   });
 
   it("can defer content without rendering a duplicate wrapper header", async () => {

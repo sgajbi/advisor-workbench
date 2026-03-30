@@ -347,4 +347,38 @@ describe("portfolio data grids", () => {
     expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
+
+  it("shows a shared refresh note while transactions reload over existing rows", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            transaction_type: "BUY",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Transaction start date"), {
+      target: { value: "2026-03-05" },
+    });
+
+    expect(screen.getByText("Refreshing transactions…")).toBeInTheDocument();
+    expect(document.querySelector(".workbench-inline-refresh-note")).toBeTruthy();
+  });
 });

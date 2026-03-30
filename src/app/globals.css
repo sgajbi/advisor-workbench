@@ -3201,6 +3201,12 @@ a:hover {
   color: #64748b;
 }
 
+.workbench-inline-refresh-note {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
 .portfolio-workspace-toolbar-action {
   min-height: 36px;
   padding: 0.35rem 0.7rem;
