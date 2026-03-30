@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
@@ -91,6 +91,12 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("TLT")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 8.00%")).toBeInTheDocument();
+    const rankedLists = document.querySelectorAll(".workbench-ranked-bar-list");
+    expect(rankedLists).toHaveLength(2);
+    expect(within(rankedLists[0] as HTMLElement).getByText("AAPL")).toBeInTheDocument();
+    expect(within(rankedLists[0] as HTMLElement).queryByText("Equity")).not.toBeInTheDocument();
+    expect(within(rankedLists[1] as HTMLElement).getByText("TLT")).toBeInTheDocument();
+    expect(within(rankedLists[1] as HTMLElement).queryByText("Rates")).not.toBeInTheDocument();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {
