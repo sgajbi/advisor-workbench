@@ -98,8 +98,9 @@ The current `lotus-workbench` UI consumes these Performance contracts directly:
 - `GET /workbench/{portfolio_id}/performance/attribution-trend`
 
 The UI no longer consumes a monolithic `GET /workbench/{portfolio_id}/performance` helper path.
-Any retirement decision for that endpoint belongs to Gateway governance and requires consumer
-verification outside this repository first.
+Local repo scanning found no remaining monolithic consumer outside `lotus-gateway` router/service
+definitions and Gateway unit tests. Any retirement decision for that endpoint now depends on
+deployment-edge or external-consumer verification rather than any in-repo Workbench dependency.
 
 The current Portfolio UI consumes a decomposed workspace contract shape:
 
@@ -145,8 +146,9 @@ expanding the API surface:
 These items still need an explicit governance decision rather than silent drift:
 
 - Gateway monolithic Performance endpoint
-  - keep only if another consumer still depends on it
-  - otherwise retire after cross-repo confirmation
+  - local repo evidence shows no current in-repo consumer outside Gateway internals/tests
+  - keep only if a deployed or external consumer still depends on it
+  - otherwise retire after external-consumer confirmation
 - Performance Evidence contract
   - currently unavailable by design
   - add only when Gateway can expose real lineage/evidence data
