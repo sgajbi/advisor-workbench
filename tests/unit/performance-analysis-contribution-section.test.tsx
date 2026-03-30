@@ -5,13 +5,14 @@ import { describe, expect, it } from "vitest";
 import PerformanceAnalysisContributionSection from "../../src/apps/performance/components/performance-analysis-contribution-section";
 import {
   buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildSupportedPerformanceScenario,
+  buildUnavailableContributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildWorkspace() {
-  return buildPerformanceWorkspace();
+  return buildSupportedPerformanceScenario().workspace;
 }
 
 describe("PerformanceAnalysisContributionSection", () => {
@@ -36,20 +37,16 @@ describe("PerformanceAnalysisContributionSection", () => {
   });
 
   it("renders a loading state when contribution detail is pending", () => {
+    const scenario = buildUnavailableContributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisContributionSection
-        workspace={{ ...buildWorkspace(), contribution: null }}
+        workspace={scenario.workspace}
         contributionDimension="asset_class"
         onRequestChange={undefined}
         isUpdating={false}
         isDetailsPending
-        capabilities={{
-          ...supportedCapabilities,
-          contributionDetail: {
-            state: "unavailable",
-            reason: "Contribution detail is not available for the current selection.",
-          },
-        }}
+        capabilities={scenario.capabilities}
       />
     );
 
@@ -59,20 +56,16 @@ describe("PerformanceAnalysisContributionSection", () => {
   });
 
   it("renders a shared capability notice when contribution detail is unavailable", () => {
+    const scenario = buildUnavailableContributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisContributionSection
-        workspace={{ ...buildWorkspace(), contribution: null }}
+        workspace={scenario.workspace}
         contributionDimension="asset_class"
         onRequestChange={undefined}
         isUpdating={false}
         isDetailsPending={false}
-        capabilities={{
-          ...supportedCapabilities,
-          contributionDetail: {
-            state: "unavailable",
-            reason: "Contribution detail is not available for the current selection.",
-          },
-        }}
+        capabilities={scenario.capabilities}
       />
     );
 

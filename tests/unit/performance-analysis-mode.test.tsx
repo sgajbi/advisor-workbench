@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 import PerformanceAnalysisMode from "../../src/apps/performance/components/performance-analysis-mode";
 import {
   buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildSupportedPerformanceScenario,
+  buildUnavailableContributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("../../src/apps/performance/components/performance-attribution-trend-panel", () => ({
@@ -19,7 +20,7 @@ vi.mock("../../src/apps/performance/components/performance-analysis-attribution-
 const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildWorkspace() {
-  return buildPerformanceWorkspace();
+  return buildSupportedPerformanceScenario().workspace;
 }
 
 describe("PerformanceAnalysisMode", () => {
@@ -53,9 +54,11 @@ describe("PerformanceAnalysisMode", () => {
   });
 
   it("shows the contribution loading message when analysis detail is still pending", () => {
+    const scenario = buildUnavailableContributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisMode
-        workspace={{ ...buildWorkspace(), contribution: null }}
+        workspace={scenario.workspace}
         period="YTD"
         detailBasis="NET"
         contributionDimension="asset_class"
@@ -63,11 +66,7 @@ describe("PerformanceAnalysisMode", () => {
         chartFrequency="monthly"
         benchmark="BMK_1"
         capabilities={{
-          ...supportedCapabilities,
-          contributionDetail: {
-            state: "unavailable",
-            reason: "Contribution detail is not available for the current selection.",
-          },
+          ...scenario.capabilities,
           attributionDetail: {
             state: "unavailable",
             reason: "Attribution detail is not available for the current selection.",
@@ -87,9 +86,11 @@ describe("PerformanceAnalysisMode", () => {
   });
 
   it("renders a shared capability notice when contribution detail is unavailable", () => {
+    const scenario = buildUnavailableContributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisMode
-        workspace={{ ...buildWorkspace(), contribution: null }}
+        workspace={scenario.workspace}
         period="YTD"
         detailBasis="NET"
         contributionDimension="asset_class"
@@ -97,11 +98,7 @@ describe("PerformanceAnalysisMode", () => {
         chartFrequency="monthly"
         benchmark="BMK_1"
         capabilities={{
-          ...supportedCapabilities,
-          contributionDetail: {
-            state: "unavailable",
-            reason: "Contribution detail is not available for the current selection.",
-          },
+          ...scenario.capabilities,
           attributionDetail: {
             state: "supported",
           },

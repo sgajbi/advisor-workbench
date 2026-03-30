@@ -5,9 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 import PerformanceAnalysisAttributionSection from "../../src/apps/performance/components/performance-analysis-attribution-section";
 import type { PerformanceAnalysisAttributionSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 import {
-  buildPartialBenchmarkPerformanceScenario,
   buildPerformanceCapabilities,
+  buildPartialAttributionPerformanceScenario,
   buildSupportedPerformanceScenario,
+  buildUnavailableAttributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("../../src/apps/performance/components/performance-relative-segment-panel", () => ({
@@ -73,16 +74,13 @@ describe("PerformanceAnalysisAttributionSection", () => {
   });
 
   it("renders an actionable fallback when attribution detail is unavailable", () => {
+    const scenario = buildUnavailableAttributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
-          capabilities: {
-            ...supportedCapabilities,
-            attributionDetail: {
-              state: "unavailable",
-              reason: "Attribution detail is not available for the current selection.",
-            },
-          },
+          workspace: scenario.workspace,
+          capabilities: scenario.capabilities,
           relativeSegmentRows: [],
           topAttributionEffectRows: [],
         })}
@@ -94,18 +92,12 @@ describe("PerformanceAnalysisAttributionSection", () => {
   });
 
   it("renders a partial-state panel when attribution coverage is incomplete", () => {
-    const scenario = buildPartialBenchmarkPerformanceScenario();
+    const scenario = buildPartialAttributionPerformanceScenario();
 
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
-          capabilities: {
-            ...scenario.capabilities,
-            attributionDetail: {
-              state: "partial",
-              reason: "Benchmark-relative attribution is incomplete for the current selection.",
-            },
-          },
+          capabilities: scenario.capabilities,
           relativeSegmentRows: [],
           topAttributionEffectRows: [],
         })}

@@ -386,6 +386,45 @@ export function buildAggregateContributionPerformanceScenario() {
   });
 }
 
+export function buildUnavailableContributionPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    workspaceOverrides: {
+      contribution: null,
+    },
+    capabilityOverrides: {
+      contributionDetail: {
+        state: "unavailable",
+        reason: "Contribution detail is not available for the current selection.",
+      },
+    },
+  });
+}
+
+export function buildUnavailableAttributionPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    fixtureOptions: {
+      unavailableAttribution: true,
+    },
+    capabilityOverrides: {
+      attributionDetail: {
+        state: "unavailable",
+        reason: "Attribution detail is not available for the current selection.",
+      },
+    },
+  });
+}
+
+export function buildPartialAttributionPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    capabilityOverrides: {
+      attributionDetail: {
+        state: "partial",
+        reason: "Benchmark-relative attribution is incomplete for the current selection.",
+      },
+    },
+  });
+}
+
 export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
   return {
     correlation_id: "corr-performance",
