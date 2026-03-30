@@ -107,6 +107,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("1,145,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("105,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("12 holdings")).toBeInTheDocument();
+    expect(screen.getByText("Generated 24 Feb 2026 • 14 report rows")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Income Plus")).toBeInTheDocument();
       expect(screen.getAllByText("14,750 USD").length).toBeGreaterThanOrEqual(1);

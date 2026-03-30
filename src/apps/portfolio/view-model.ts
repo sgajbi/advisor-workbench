@@ -2,6 +2,7 @@ import {
   getWorkflowTaskLabel,
   WORKFLOW_DISPLAY_ORDER,
 } from "./workspace-config";
+import { formatDate } from "./formatters";
 import type {
   PortfolioActivitySummaryView,
   PortfolioExceptionSummary,
@@ -482,16 +483,51 @@ export function getBookReadinessStatus(workspace: PortfolioWorkspace): "Not Read
 
 export function getBookReadinessSupport(workspace: PortfolioWorkspace): string {
   const status = getBookReadinessStatus(workspace);
+  const reportingFreshness = getReportingFreshnessSupport(workspace);
 
   if (status === "Ready") {
-    return "Reportable and publishable";
+    return reportingFreshness;
   }
 
   if (status === "Not Ready") {
     return "Missing core book coverage";
   }
 
+  if (workspace.readiness.reporting.row_count > 0) {
+    return reportingFreshness;
+  }
+
   return `${workspace.partial_failures.length} active exception${workspace.partial_failures.length === 1 ? "" : "s"}`;
+}
+
+export function getReportingFreshnessSupport(workspace: PortfolioWorkspace): string {
+  const reportingStatus = getReportingReadinessStatus(workspace);
+  const rowCount = workspace.readiness.reporting.row_count;
+  const generatedAt = workspace.readiness.reporting.generated_at_utc;
+  const rowLabel = `${rowCount} report row${rowCount === 1 ? "" : "s"}`;
+
+  if (reportingStatus === "Ready") {
+    if (generatedAt && rowCount > 0) {
+      return `Generated ${formatDate(generatedAt)} • ${rowLabel}`;
+    }
+    if (rowCount > 0) {
+      return `${rowLabel} published`;
+    }
+    return "Published output ready";
+  }
+
+  if (reportingStatus === "Partial") {
+    if (rowCount > 0) {
+      return `${rowLabel} published`;
+    }
+    return "Reporting output pending";
+  }
+
+  if (reportingStatus === "Empty") {
+    return "No published report rows";
+  }
+
+  return "Reporting output missing";
 }
 
 export function getBookReadinessTone(workspace: PortfolioWorkspace): PortfolioUiTone {

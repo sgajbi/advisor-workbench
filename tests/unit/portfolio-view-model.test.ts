@@ -18,6 +18,7 @@ import {
   derivePortfolioWorkspace,
   getBookReadinessStatus,
   getBookReadinessSupport,
+  getReportingFreshnessSupport,
   getBookReadinessTone,
   getNetFlowTone,
   getReadinessTone,
@@ -436,7 +437,7 @@ describe("portfolio view model", () => {
     expect(getYearToDateActivityCount(workspace)).toBe(5);
     expect(getNetFlowTone(workspace)).toBe("success");
     expect(getBookReadinessStatus(workspace)).toBe("Ready");
-    expect(getBookReadinessSupport(workspace)).toBe("Reportable and publishable");
+    expect(getBookReadinessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
     expect(getBookReadinessTone(workspace)).toBe("success");
 
     expect(buildPortfolioReadinessIndicators(workspace, "summary")).toEqual([
@@ -528,6 +529,23 @@ describe("portfolio view model", () => {
     ]);
     expect(getReadinessTone("Missing")).toBe("danger");
     expect(getReadinessTone("Empty")).toBe("warn");
+  });
+
+  it("formats reporting freshness support from published row evidence", () => {
+    const workspace = buildWorkspace();
+
+    expect(getReportingFreshnessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
+    expect(getBookReadinessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
+
+    workspace.readiness.reporting.generated_at_utc = null;
+    expect(getReportingFreshnessSupport(workspace)).toBe("14 report rows published");
+
+    workspace.readiness.reporting.status = "PENDING";
+    expect(getReportingFreshnessSupport(workspace)).toBe("14 report rows published");
+
+    workspace.readiness.reporting.status = "EMPTY";
+    workspace.readiness.reporting.row_count = 0;
+    expect(getReportingFreshnessSupport(workspace)).toBe("No published report rows");
   });
 
   it("builds active filter chips for removable business filters", () => {
