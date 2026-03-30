@@ -14,6 +14,7 @@ describe("PerformanceAnalysisLevelSection", () => {
 
     expect(document.querySelector(".performance-analysis-level-section")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-level-header")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-level-body")).toBeTruthy();
     expect(screen.getByText("Asset Class")).toBeInTheDocument();
     expect(screen.getByText("Level body")).toBeInTheDocument();
   });

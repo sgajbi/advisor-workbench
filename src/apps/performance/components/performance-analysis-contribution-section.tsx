@@ -88,6 +88,7 @@ export default function PerformanceAnalysisContributionSection({
             >
               <AnalyticsTable
                 className="performance-analysis-table"
+                dense
                 ariaLabel={`${formatLabel(level.name)} contribution table`}
                 columns={[
                   { key: "bucket", label: "Bucket" },

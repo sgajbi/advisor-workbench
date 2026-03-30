@@ -32,7 +32,9 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
+    expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
     expect(screen.getByText("Local")).toBeInTheDocument();
     expect(screen.getByText("FX")).toBeInTheDocument();

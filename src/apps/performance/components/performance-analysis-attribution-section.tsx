@@ -154,6 +154,7 @@ export default function PerformanceAnalysisAttributionSection({
               />
               <AnalyticsTable
                 className="performance-analysis-table"
+                dense
                 ariaLabel={`${formatLabel(level.dimension)} attribution table`}
                 columns={[
                   { key: "bucket", label: "Bucket" },

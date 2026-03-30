@@ -4524,14 +4524,23 @@ a:hover {
 
 .performance-analysis-level-section {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.55rem;
   width: 100%;
   max-width: none;
+}
+
+.performance-analysis-level-body {
+  display: grid;
+  gap: 0.55rem;
 }
 
 .performance-analysis-table {
   border-radius: 12px;
   border-color: rgba(221, 226, 232, 0.9);
+}
+
+.performance-analysis-table.analytics-table-frame-dense {
+  border-radius: 10px;
 }
 
 .performance-detail-panel-compact,
@@ -4590,6 +4599,10 @@ a:hover {
   font-size: var(--text-xl);
   line-height: var(--leading-snug);
   letter-spacing: -0.02em;
+}
+
+.performance-analysis-level-header strong {
+  font-size: var(--workbench-analytic-heading-size);
 }
 
 .performance-unavailable-copy {

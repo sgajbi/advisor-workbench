@@ -10,7 +10,7 @@ export default function PerformanceAnalysisLevelSection({
       <header className="performance-analysis-level-header">
         <strong>{title}</strong>
       </header>
-      {children}
+      <div className="performance-analysis-level-body">{children}</div>
     </section>
   );
 }

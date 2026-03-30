@@ -230,6 +230,23 @@ describe("design-system components", () => {
     expect(screen.getByText("100%")).toBeInTheDocument();
   });
 
+  it("renders dense analytics tables through the shared frame contract", () => {
+    render(
+      <AnalyticsTable
+        dense
+        ariaLabel="Dense allocation summary"
+        columns={[
+          { key: "bucket", label: "Bucket" },
+          { key: "value", label: "Market Value", align: "right" },
+        ]}
+        rows={[{ key: "row-1", cells: ["Equity", "$500,000"] }]}
+      />
+    );
+
+    expect(screen.getByRole("table", { name: "Dense allocation summary" })).toBeInTheDocument();
+    expect(document.querySelector(".analytics-table-frame.analytics-table-frame-dense")).toBeTruthy();
+  });
+
   it("supports keyboard activation for interactive analytics table rows", () => {
     const onClick = vi.fn();
 

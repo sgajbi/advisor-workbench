@@ -75,7 +75,9 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
     expect(screen.getAllByText("BMK GLOBAL BALANCED 60 40").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
+    expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
   });
