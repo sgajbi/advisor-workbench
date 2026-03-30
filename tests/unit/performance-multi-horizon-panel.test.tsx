@@ -242,4 +242,29 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(notice).toHaveTextContent("Selection adjusted");
     expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
   });
+
+  it("pushes the resolved horizon frequency back through the shared request handler", async () => {
+    const onRequestChange = vi.fn();
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        chart_frequency: "monthly",
+        requested_chart_frequency_supported: false,
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="weekly"
+        onRequestChange={onRequestChange}
+      />
+    );
+
+    await waitFor(() => {
+      expect(onRequestChange).toHaveBeenCalledWith({ chartFrequency: "monthly" });
+    });
+  });
 });

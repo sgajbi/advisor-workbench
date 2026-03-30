@@ -15,6 +15,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
+import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
 type Props = {
@@ -26,6 +27,7 @@ type Props = {
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 };
 
 const ATTRIBUTION_TREND_COLORS = {
@@ -44,6 +46,7 @@ export default function PerformanceAttributionTrendPanel({
   benchmark,
   reportStartDate,
   reportEndDate,
+  onRequestChange,
 }: Props) {
   const [trend, setTrend] = useState<WorkbenchPerformanceAttributionTrend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -239,6 +242,30 @@ export default function PerformanceAttributionTrendPanel({
       `segment reset to ${formatLabel(trend.attribution_dimension)}`
     );
   }
+
+  useEffect(() => {
+    if (!trend || !onRequestChange) {
+      return;
+    }
+
+    const patch: PerformanceWorkspaceRequestPatch = {};
+    if (
+      trend.requested_chart_frequency_supported === false &&
+      trend.chart_frequency !== chartFrequency
+    ) {
+      patch.chartFrequency = trend.chart_frequency;
+    }
+    if (
+      trend.requested_attribution_dimension_supported === false &&
+      trend.attribution_dimension !== attributionDimension
+    ) {
+      patch.attributionDimension = trend.attribution_dimension;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      onRequestChange(patch);
+    }
+  }, [attributionDimension, chartFrequency, onRequestChange, trend]);
 
   return (
     <WorkbenchChartShell

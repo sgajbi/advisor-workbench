@@ -49,6 +49,13 @@ export type PerformanceSummaryModeProps = PerformanceWorkspaceControls & {
   negativePositionContributors: ContributionPositionView[];
 };
 
+export type PerformanceControlNormalizationHandler = (
+  patch: Pick<
+    PerformanceWorkspaceRequestPatch,
+    "chartFrequency" | "attributionDimension"
+  >
+) => void;
+
 export type PerformanceSummaryHeaderSectionProps = Pick<
   PerformanceSummaryModeProps,
   | "workspace"

@@ -133,6 +133,7 @@ export default function PerformanceSummaryMode({
             benchmark={workspace.benchmark_code ?? benchmark}
             chartFrequency={chartFrequency}
             benchmarkOptions={workspace.benchmark_options ?? []}
+            onRequestChange={onRequestChange}
           />
         </WorkbenchDeferredSection>
         <WorkbenchDeferredSection

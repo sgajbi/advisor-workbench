@@ -19,6 +19,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
+import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
@@ -32,6 +33,7 @@ export default function PerformanceMultiHorizonPanel({
   benchmark,
   chartFrequency,
   benchmarkOptions = [],
+  onRequestChange,
 }: {
   portfolioId: string;
   period: string;
@@ -39,6 +41,7 @@ export default function PerformanceMultiHorizonPanel({
   benchmark?: string;
   chartFrequency: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 }) {
   const [comparison, setComparison] = useState<WorkbenchPerformanceHorizonComparison | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -123,6 +126,17 @@ export default function PerformanceMultiHorizonPanel({
   const resolvedBenchmarkOptions = comparison?.benchmark_options?.length
     ? comparison.benchmark_options
     : benchmarkOptions;
+
+  useEffect(() => {
+    if (
+      !comparison ||
+      comparison.requested_chart_frequency_supported !== false ||
+      comparison.chart_frequency === chartFrequency
+    ) {
+      return;
+    }
+    onRequestChange?.({ chartFrequency: comparison.chart_frequency });
+  }, [chartFrequency, comparison, onRequestChange]);
 
   const scale = Math.max(
     1,
