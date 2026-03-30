@@ -17,6 +17,8 @@ describe("PerformanceEvidenceMode", () => {
       <PerformanceEvidenceMode capability={scenario.capabilities.evidence} />
     );
 
+    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
+    expect(document.querySelector(".performance-evidence-module")).toBeTruthy();
     expect(screen.getByText("Evidence unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -26,7 +28,10 @@ describe("PerformanceEvidenceMode", () => {
     expect(
       screen.getByText("Evidence and lineage surfaces are not exposed by the current gateway contract.")
     ).toBeInTheDocument();
-    expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
+    expect(screen.getByText("Evidence and Calculation Context")).toBeInTheDocument();
   });
 
   it("renders a partial capability state when the contract is incomplete", () => {
@@ -34,10 +39,14 @@ describe("PerformanceEvidenceMode", () => {
 
     render(<PerformanceEvidenceMode capability={scenario.capabilities.evidence} />);
 
+    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
     expect(screen.getByText("Evidence partially available")).toBeInTheDocument();
     expect(
       screen.getByText("Lineage artifacts are available, but execution evidence is incomplete.")
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
+    ).toBeTruthy();
   });
 
   it("renders the evidence workspace when the backend contract supports it", () => {
@@ -45,10 +54,14 @@ describe("PerformanceEvidenceMode", () => {
 
     render(<PerformanceEvidenceMode capability={scenario.capabilities.evidence} />);
 
+    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
+    expect(document.querySelector(".performance-evidence-status-strip")).toBeTruthy();
     expect(screen.getByText("Evidence and Calculation Context")).toBeInTheDocument();
-    expect(
-      screen.getByText(/execution status, lineage artifacts, and calculation evidence/i)
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Evidence support status")).toBeInTheDocument();
+    expect(screen.getAllByText("Exposed")).toHaveLength(3);
+    expect(screen.getByText("Execution status")).toBeInTheDocument();
+    expect(screen.getByText("Lineage artifacts")).toBeInTheDocument();
+    expect(screen.getByText("Calculation evidence")).toBeInTheDocument();
     expect(
       screen.getByText("Execution and lineage evidence can be reviewed for this portfolio.")
     ).toBeInTheDocument();
@@ -60,14 +73,14 @@ describe("PerformanceEvidenceMode", () => {
       scenario: buildUnavailableEvidencePerformanceScenario(),
       expectedHeading: "Evidence unavailable",
       expectedReason: "Evidence and lineage surfaces are not exposed by the current gateway contract.",
-      supportsWorkspace: false,
+      supportsWorkspace: true,
     },
     {
       name: "partial evidence",
       scenario: buildPartialEvidencePerformanceScenario(),
       expectedHeading: "Evidence partially available",
       expectedReason: "Lineage artifacts are available, but execution evidence is incomplete.",
-      supportsWorkspace: false,
+      supportsWorkspace: true,
     },
     {
       name: "supported evidence",
@@ -83,9 +96,7 @@ describe("PerformanceEvidenceMode", () => {
     expect(screen.getByText(expectedReason)).toBeInTheDocument();
 
     if (supportsWorkspace) {
-      expect(
-        screen.getByText(/execution status, lineage artifacts, and calculation evidence/i)
-      ).toBeInTheDocument();
+      expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
     } else {
       expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
     }

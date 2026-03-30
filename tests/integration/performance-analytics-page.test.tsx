@@ -311,6 +311,11 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
 
     expect(await screen.findByText("Evidence unavailable")).toBeInTheDocument();
+    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
+    expect(document.querySelector(".performance-evidence-module")).toBeTruthy();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
     expect(
       screen.getByText(
         /execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract/i

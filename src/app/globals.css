@@ -4631,9 +4631,52 @@ a:hover {
   margin-bottom: 0.18rem;
 }
 
+.performance-evidence-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.performance-evidence-status-item {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.performance-evidence-status-label {
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-label-size);
+  font-weight: 800;
+  letter-spacing: var(--workbench-analytic-label-tracking);
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.performance-evidence-status-body {
+  display: grid;
+  gap: 0.24rem;
+  align-content: start;
+}
+
+.performance-evidence-status-support {
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-fallback-size);
+  line-height: 1.35;
+}
+
+.performance-evidence-copy {
+  margin: 0;
+  font-size: var(--workbench-analytic-fallback-size);
+  line-height: 1.4;
+}
+
 @media (max-width: 1200px) {
   .performance-analysis-context-row.workbench-chart-context-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-evidence-status-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
