@@ -6,40 +6,31 @@ import {
   getPerformanceSummaryHeaderPresentation,
   getPerformanceTrustStripPresentation,
 } from "../../src/apps/performance/components/performance-workspace-view-helpers";
-import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import {
   buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildPerformancePresentationScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 const supportedCapabilities = buildPerformanceCapabilities();
 
-function buildWorkspace(): WorkbenchPerformanceWorkspace {
-  return buildPerformanceWorkspace();
-}
-
 describe("getPerformanceSummaryHeaderPresentation", () => {
   it("builds benchmark-unassigned presentation honestly when relative analytics are unavailable", () => {
-    const workspace = buildWorkspace();
-    workspace.benchmark_code = null;
-    workspace.money_weighted_return = null;
-    workspace.net_chart = [];
-
-    const presentation = getPerformanceSummaryHeaderPresentation({
-      workspace,
-      detailBasis: "NET",
-      capabilities: {
-        ...supportedCapabilities,
+    const scenario = buildPerformancePresentationScenario({
+      fixtureOptions: {
+        unassignedBenchmark: true,
+        unavailableSummarySeries: true,
+      },
+      capabilityOverrides: {
         returnPath: { state: "unavailable", reason: "Return observations unavailable." },
         benchmarkComparison: {
           state: "unavailable",
           reason: "No benchmark is assigned to this mandate.",
         },
       },
-      selectedBenchmarkCode: undefined,
-      selectedBenchmarkLabel: null,
-      selectedPerformance: {
-        ...workspace.net_performance,
+      workspaceOverrides: {
+        money_weighted_return: null,
+      },
+      selectedPerformanceOverrides: {
         portfolio_return_pct: null,
         benchmark_return_pct: null,
         active_return_pct: null,
@@ -50,8 +41,20 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
         end_market_value: null,
         net_cash_flow: null,
       },
+      selectedBenchmarkCode: undefined,
+      selectedBenchmarkLabel: null,
       hasMoneyWeightedReturn: false,
-      suspiciousMoneyWeightedReturn: false,
+    });
+
+    const presentation = getPerformanceSummaryHeaderPresentation({
+      workspace: scenario.workspace,
+      detailBasis: "NET",
+      capabilities: scenario.capabilities,
+      selectedBenchmarkCode: scenario.selectedBenchmarkCode,
+      selectedBenchmarkLabel: scenario.selectedBenchmarkLabel,
+      selectedPerformance: scenario.selectedPerformance,
+      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
+      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
     });
 
     expect(presentation.hasBenchmark).toBe(false);
@@ -74,17 +77,17 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
   });
 
   it("builds relative performance presentation when benchmark analytics are supported", () => {
-    const workspace = buildWorkspace();
+    const scenario = buildPerformancePresentationScenario();
 
     const presentation = getPerformanceSummaryHeaderPresentation({
-      workspace,
+      workspace: scenario.workspace,
       detailBasis: "NET",
-      capabilities: supportedCapabilities,
-      selectedBenchmarkCode: "BMK_1",
-      selectedBenchmarkLabel: "Global Balanced 60/40",
-      selectedPerformance: workspace.net_performance,
-      hasMoneyWeightedReturn: true,
-      suspiciousMoneyWeightedReturn: false,
+      capabilities: scenario.capabilities,
+      selectedBenchmarkCode: scenario.selectedBenchmarkCode,
+      selectedBenchmarkLabel: scenario.selectedBenchmarkLabel,
+      selectedPerformance: scenario.selectedPerformance,
+      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
+      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
     });
 
     expect(presentation.hasBenchmark).toBe(true);
@@ -105,14 +108,14 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
   });
 
   it("builds executive return strip metrics for front-office first paint", () => {
-    const workspace = buildWorkspace();
+    const scenario = buildPerformancePresentationScenario();
 
     const presentation = getPerformanceExecutiveReturnPresentation({
-      workspace,
+      workspace: scenario.workspace,
       detailBasis: "NET",
-      selectedPerformance: workspace.net_performance,
-      selectedBenchmarkLabel: "Global Balanced 60/40",
-      capabilities: supportedCapabilities,
+      selectedPerformance: scenario.selectedPerformance,
+      selectedBenchmarkLabel: scenario.selectedBenchmarkLabel,
+      capabilities: scenario.capabilities,
     });
 
     expect(presentation.cards.map((card) => card.label)).toEqual([
@@ -188,12 +191,7 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
   it.each([
     {
       name: "supported benchmark and history",
-      capabilities: supportedCapabilities,
-      workspace: buildWorkspace(),
-      selectedBenchmarkCode: "BMK_1",
-      selectedBenchmarkLabel: "Global Balanced 60/40",
-      selectedPerformance: buildWorkspace().net_performance,
-      hasMoneyWeightedReturn: true,
+      scenario: buildPerformancePresentationScenario(),
       expectedObservation: { value: "Relative measurement", tone: "success" },
       expectedTrust: {
         benchmark: { value: "Assigned", tone: "success" },
@@ -204,26 +202,21 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     },
     {
       name: "partial relative analytics with limited attribution",
-      capabilities: {
-        ...supportedCapabilities,
-        benchmarkComparison: {
-          state: "partial" as const,
-          reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+      scenario: buildPerformancePresentationScenario({
+        fixtureOptions: {
+          partialBenchmarkComparison: true,
         },
-        attributionDetail: {
-          state: "unavailable" as const,
-          reason: "Attribution detail is not available for the current selection.",
+        capabilityOverrides: {
+          benchmarkComparison: {
+            state: "partial" as const,
+            reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+          },
+          attributionDetail: {
+            state: "unavailable" as const,
+            reason: "Attribution detail is not available for the current selection.",
+          },
         },
-      },
-      workspace: buildWorkspace(),
-      selectedBenchmarkCode: "BMK_1",
-      selectedBenchmarkLabel: "Global Balanced 60/40",
-      selectedPerformance: {
-        ...buildWorkspace().net_performance,
-        benchmark_return_pct: null,
-        active_return_pct: null,
-      },
-      hasMoneyWeightedReturn: true,
+      }),
       expectedObservation: { value: "Relative measurement", tone: "success" },
       expectedTrust: {
         benchmark: { value: "Partial", tone: "warn" },
@@ -234,38 +227,39 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     },
     {
       name: "unassigned benchmark and missing history",
-      capabilities: {
-        ...supportedCapabilities,
-        benchmarkComparison: {
-          state: "unavailable" as const,
-          reason: "No benchmark is assigned to this mandate.",
+      scenario: buildPerformancePresentationScenario({
+        fixtureOptions: {
+          unassignedBenchmark: true,
+          unavailableSummarySeries: true,
         },
-        returnPath: {
-          state: "unavailable" as const,
-          reason: "Return observations unavailable.",
+        capabilityOverrides: {
+          benchmarkComparison: {
+            state: "unavailable" as const,
+            reason: "No benchmark is assigned to this mandate.",
+          },
+          returnPath: {
+            state: "unavailable" as const,
+            reason: "Return observations unavailable.",
+          },
         },
-      },
-      workspace: {
-        ...buildWorkspace(),
-        benchmark_code: null,
-        net_chart: [],
-        money_weighted_return: null,
-      },
-      selectedBenchmarkCode: undefined,
-      selectedBenchmarkLabel: null,
-      selectedPerformance: {
-        ...buildWorkspace().net_performance,
-        portfolio_return_pct: null,
-        benchmark_return_pct: null,
-        active_return_pct: null,
-        annualized_return_pct: null,
-        benchmark_id: null,
-        benchmark_return_source: null,
-        begin_market_value: null,
-        end_market_value: null,
-        net_cash_flow: null,
-      },
-      hasMoneyWeightedReturn: false,
+        workspaceOverrides: {
+          money_weighted_return: null,
+        },
+        selectedPerformanceOverrides: {
+          portfolio_return_pct: null,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+          annualized_return_pct: null,
+          benchmark_id: null,
+          benchmark_return_source: null,
+          begin_market_value: null,
+          end_market_value: null,
+          net_cash_flow: null,
+        },
+        selectedBenchmarkCode: undefined,
+        selectedBenchmarkLabel: null,
+        hasMoneyWeightedReturn: false,
+      }),
       expectedObservation: { value: "No benchmark assigned", tone: "warn" },
       expectedTrust: {
         benchmark: { value: "Unassigned", tone: "danger" },
@@ -277,24 +271,19 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
   ])(
     "builds a consistent first-paint contract for $name",
     ({
-      capabilities,
-      workspace,
-      selectedBenchmarkCode,
-      selectedBenchmarkLabel,
-      selectedPerformance,
-      hasMoneyWeightedReturn,
+      scenario,
       expectedObservation,
       expectedTrust,
     }) => {
       const presentation = getPerformanceSummaryFirstPaintPresentation({
-        workspace,
+        workspace: scenario.workspace,
         detailBasis: "NET",
-        capabilities,
-        selectedBenchmarkCode,
-        selectedBenchmarkLabel,
-        selectedPerformance,
-        hasMoneyWeightedReturn,
-        suspiciousMoneyWeightedReturn: false,
+        capabilities: scenario.capabilities,
+        selectedBenchmarkCode: scenario.selectedBenchmarkCode,
+        selectedBenchmarkLabel: scenario.selectedBenchmarkLabel,
+        selectedPerformance: scenario.selectedPerformance,
+        hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
+        suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
       });
 
       expect(presentation.header.observationItems.at(-1)).toMatchObject(expectedObservation);

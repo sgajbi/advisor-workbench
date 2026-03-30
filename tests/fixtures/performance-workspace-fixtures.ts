@@ -1,5 +1,6 @@
 import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import type {
+  PerformanceComparativeSummary,
   WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
@@ -11,6 +12,16 @@ export type PerformanceFixtureOptions = {
   partialBenchmarkComparison?: boolean;
   aggregateContributionOnly?: boolean;
   unavailableAttribution?: boolean;
+};
+
+export type PerformancePresentationScenario = {
+  workspace: WorkbenchPerformanceWorkspace;
+  capabilities: PerformanceWorkspaceCapabilities;
+  selectedPerformance: PerformanceComparativeSummary;
+  selectedBenchmarkCode?: string;
+  selectedBenchmarkLabel: string | null;
+  hasMoneyWeightedReturn: boolean;
+  suspiciousMoneyWeightedReturn: boolean;
 };
 
 export function buildPerformanceCapabilities(
@@ -256,6 +267,50 @@ export function buildPerformanceWorkspace(
   return {
     ...buildPerformanceWorkspaceSummary(portfolioId, options),
     ...buildPerformanceWorkspaceDetails(portfolioId, options),
+  };
+}
+
+export function buildPerformancePresentationScenario(options?: {
+  portfolioId?: string;
+  fixtureOptions?: PerformanceFixtureOptions;
+  capabilityOverrides?: Partial<PerformanceWorkspaceCapabilities>;
+  workspaceOverrides?: Partial<WorkbenchPerformanceWorkspace>;
+  selectedPerformanceOverrides?: Partial<PerformanceComparativeSummary>;
+  selectedBenchmarkCode?: string;
+  selectedBenchmarkLabel?: string | null;
+  hasMoneyWeightedReturn?: boolean;
+  suspiciousMoneyWeightedReturn?: boolean;
+  useGrossPerformance?: boolean;
+}): PerformancePresentationScenario {
+  const workspace = {
+    ...buildPerformanceWorkspace(options?.portfolioId, options?.fixtureOptions),
+    ...options?.workspaceOverrides,
+  };
+
+  const baseSelectedPerformance = options?.useGrossPerformance
+    ? workspace.gross_performance
+    : workspace.net_performance;
+
+  return {
+    workspace,
+    capabilities: buildPerformanceCapabilities(options?.capabilityOverrides),
+    selectedPerformance: {
+      ...baseSelectedPerformance,
+      ...options?.selectedPerformanceOverrides,
+    },
+    selectedBenchmarkCode:
+      options?.selectedBenchmarkCode !== undefined
+        ? options.selectedBenchmarkCode
+        : workspace.benchmark_code ?? undefined,
+    selectedBenchmarkLabel:
+      options?.selectedBenchmarkLabel !== undefined
+        ? options.selectedBenchmarkLabel
+        : workspace.benchmark_code
+          ? "Global Balanced 60/40"
+          : null,
+    hasMoneyWeightedReturn:
+      options?.hasMoneyWeightedReturn ?? Boolean(workspace.money_weighted_return),
+    suspiciousMoneyWeightedReturn: options?.suspiciousMoneyWeightedReturn ?? false,
   };
 }
 

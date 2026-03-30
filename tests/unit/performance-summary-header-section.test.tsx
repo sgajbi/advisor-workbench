@@ -6,7 +6,7 @@ import PerformanceSummaryHeaderSection from "../../src/apps/performance/componen
 import type { PerformanceSummaryHeaderSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 import {
   buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildPerformancePresentationScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 const supportedCapabilities = buildPerformanceCapabilities();
@@ -14,16 +14,16 @@ const supportedCapabilities = buildPerformanceCapabilities();
 function buildProps(
   overrides: Partial<PerformanceSummaryHeaderSectionProps> = {}
 ): PerformanceSummaryHeaderSectionProps {
-  const workspace = buildPerformanceWorkspace();
+  const scenario = buildPerformancePresentationScenario();
   return {
-    workspace,
+    workspace: scenario.workspace,
     detailBasis: "NET",
-    capabilities: supportedCapabilities,
-    selectedBenchmarkCode: workspace.benchmark_code ?? undefined,
-    selectedBenchmarkLabel: "Global Balanced 60/40",
-    selectedPerformance: workspace.net_performance,
-    hasMoneyWeightedReturn: true,
-    suspiciousMoneyWeightedReturn: false,
+    capabilities: scenario.capabilities,
+    selectedBenchmarkCode: scenario.selectedBenchmarkCode,
+    selectedBenchmarkLabel: scenario.selectedBenchmarkLabel,
+    selectedPerformance: scenario.selectedPerformance,
+    hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
+    suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
     ...overrides,
   };
 }
@@ -52,38 +52,47 @@ describe("PerformanceSummaryHeaderSection", () => {
   });
 
   it("renders a compact benchmark-unassigned trust state without fake placeholders", () => {
+    const scenario = buildPerformancePresentationScenario({
+      fixtureOptions: {
+        unassignedBenchmark: true,
+        unavailableSummarySeries: true,
+      },
+      capabilityOverrides: {
+        returnPath: { state: "unavailable", reason: "Return observations unavailable." },
+        benchmarkComparison: {
+          state: "unavailable",
+          reason: "No benchmark is assigned to this mandate.",
+        },
+      },
+      workspaceOverrides: {
+        money_weighted_return: null,
+      },
+      selectedPerformanceOverrides: {
+        portfolio_return_pct: null,
+        benchmark_return_pct: null,
+        active_return_pct: null,
+        annualized_return_pct: null,
+        benchmark_id: null,
+        benchmark_return_source: null,
+        begin_market_value: null,
+        end_market_value: null,
+        net_cash_flow: null,
+      },
+      selectedBenchmarkCode: undefined,
+      selectedBenchmarkLabel: null,
+      hasMoneyWeightedReturn: false,
+    });
+
     render(
       <PerformanceSummaryHeaderSection
         {...buildProps({
-          capabilities: {
-            ...supportedCapabilities,
-            returnPath: { state: "unavailable", reason: "Return observations unavailable." },
-            benchmarkComparison: {
-              state: "unavailable",
-              reason: "No benchmark is assigned to this mandate.",
-            },
-          },
-          selectedBenchmarkCode: undefined,
-          selectedBenchmarkLabel: null,
-          selectedPerformance: {
-            metric_basis: "NET",
-            portfolio_return_pct: null,
-            benchmark_return_pct: null,
-            active_return_pct: null,
-            annualized_return_pct: null,
-            benchmark_id: null,
-            benchmark_return_source: null,
-            begin_market_value: null,
-            end_market_value: null,
-            net_cash_flow: null,
-          },
-          hasMoneyWeightedReturn: false,
-          workspace: {
-            ...buildProps().workspace,
-            benchmark_code: null,
-            money_weighted_return: null,
-            net_chart: [],
-          },
+          workspace: scenario.workspace,
+          capabilities: scenario.capabilities,
+          selectedBenchmarkCode: scenario.selectedBenchmarkCode,
+          selectedBenchmarkLabel: scenario.selectedBenchmarkLabel,
+          selectedPerformance: scenario.selectedPerformance,
+          hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
+          suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
         })}
       />
     );
