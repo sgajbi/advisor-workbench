@@ -4637,10 +4637,22 @@ a:hover {
   gap: 0.55rem;
 }
 
+.performance-evidence-module {
+  gap: 0.7rem;
+}
+
+.performance-evidence-module .workbench-summary-card-subtitle {
+  max-width: 40ch;
+}
+
 .performance-evidence-status-item {
   display: grid;
   gap: 0.3rem;
   min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(34, 44, 59, 0.06);
+  border-radius: 10px;
+  background: #f8fafc;
 }
 
 .performance-evidence-status-label {
@@ -4668,6 +4680,7 @@ a:hover {
   margin: 0;
   font-size: var(--workbench-analytic-fallback-size);
   line-height: 1.4;
+  max-width: 72ch;
 }
 
 @media (max-width: 1200px) {
