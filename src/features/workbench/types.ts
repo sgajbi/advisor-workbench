@@ -286,6 +286,9 @@ export type WorkbenchPerformanceHorizonComparison = {
   contract_version: string;
   portfolio_id: string;
   as_of_date: string;
+  period: string;
+  report_start_date: string;
+  report_end_date: string;
   reporting_currency?: string | null;
   detail_basis: string;
   chart_frequency: string;

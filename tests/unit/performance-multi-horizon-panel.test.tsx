@@ -23,7 +23,7 @@ function buildHorizonComparison(
   return {
     ...buildPerformanceHorizonComparison(),
     ...overrides,
-  };
+  } as WorkbenchPerformanceHorizonComparison;
 }
 
 describe("PerformanceMultiHorizonPanel", () => {
