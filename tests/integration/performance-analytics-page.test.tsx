@@ -234,6 +234,21 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
   });
 
+  it("uses the shared analysis state panel when attribution detail is unavailable", async () => {
+    installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+    expect(await screen.findByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
+    expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
+    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
+  });
+
   it("renders an evidence placeholder when evidence mode is selected", async () => {
     installPerformancePageFetchMock();
 

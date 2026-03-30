@@ -22,7 +22,7 @@ describe("PerformanceAnalysisModuleState", () => {
     expect(screen.getByText("Ready content")).toBeInTheDocument();
   });
 
-  it("renders a shared loading copy when details are pending", () => {
+  it("renders a shared loading panel when details are pending", () => {
     render(
       <PerformanceAnalysisModuleState
         capability={{ state: "unavailable", reason: "Not exposed." }}
@@ -36,10 +36,13 @@ describe("PerformanceAnalysisModuleState", () => {
       </PerformanceAnalysisModuleState>
     );
 
-    expect(screen.getByText("Loading detail.")).toHaveClass("performance-analysis-loading-copy");
+    expect(screen.getByText("Loading detail.")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-loading .module-state-panel")
+    ).toBeTruthy();
   });
 
-  it("renders the shared capability notice when details are unavailable", () => {
+  it("renders the shared unavailable panel when details are unavailable", () => {
     render(
       <PerformanceAnalysisModuleState
         capability={{ state: "unavailable", reason: "Not exposed." }}
@@ -57,5 +60,8 @@ describe("PerformanceAnalysisModuleState", () => {
     expect(screen.getByText("Detail unavailable")).toBeInTheDocument();
     expect(screen.getByText("Detail is unavailable.")).toBeInTheDocument();
     expect(screen.getByText("Needs source-backed detail.")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
   });
 });

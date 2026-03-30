@@ -46,10 +46,14 @@ describe("PerformanceRelativeSegmentPanel", () => {
       document.querySelector(".performance-relative-segment-module.workbench-chart-shell")
     ).toBeTruthy();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
+    expect(screen.getByText("Relative segment context unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Segment-level relative weight and return context is not available for this selection."
       )
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
   });
 });

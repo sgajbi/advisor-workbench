@@ -98,6 +98,9 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(
       screen.getByText("Attribution detail is not available for the current selection.")
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
   });
 
   it("renders a partial-state panel when attribution coverage is incomplete", () => {
@@ -117,5 +120,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(
       screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
+    ).toBeTruthy();
   });
 });

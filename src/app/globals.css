@@ -4336,11 +4336,34 @@ a:hover {
   height: 100%;
 }
 
-.performance-analysis-loading-copy {
-  margin: 0;
-  min-height: 4.5rem;
-  display: grid;
-  align-content: center;
+.performance-analysis-state-panel {
+  width: 100%;
+}
+
+.performance-analysis-state-panel .module-state-panel {
+  gap: 0.45rem;
+  padding: 0.85rem 0.95rem;
+  min-height: 4.75rem;
+}
+
+.performance-analysis-state-panel .module-state-panel-header {
+  gap: 0.35rem;
+}
+
+.performance-analysis-state-panel .module-state-panel strong {
+  font-size: var(--workbench-analytic-heading-size);
+  line-height: 1.24;
+}
+
+.performance-analysis-state-panel .module-state-panel p,
+.performance-analysis-state-panel .module-state-panel span {
+  font-size: var(--workbench-analytic-fallback-size);
+  line-height: 1.38;
+}
+
+.performance-analysis-state-panel-loading .module-state-panel {
+  border-color: rgba(203, 211, 223, 0.92);
+  background: linear-gradient(180deg, rgba(249, 250, 252, 0.98) 0%, rgba(244, 247, 250, 0.98) 100%);
 }
 
 .performance-analysis-toolbar {

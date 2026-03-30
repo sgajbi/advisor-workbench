@@ -67,6 +67,9 @@ describe("PerformanceAttributionTrendPanel", () => {
     );
 
     expect(screen.getByText("Loading attribution effect trend.")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-loading .module-state-panel")
+    ).toBeTruthy();
 
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Attribution over time chart" })).toBeInTheDocument();
@@ -88,5 +91,45 @@ describe("PerformanceAttributionTrendPanel", () => {
       reportStartDate: "2026-01-01",
       reportEndDate: "2026-03-27",
     });
+  });
+
+  it("renders a shared unavailable panel when the trend contract returns no rows", async () => {
+    getTrendMock.mockResolvedValue({
+      correlation_id: "corr-performance",
+      contract_version: "v1",
+      portfolio_id: "PF_1001",
+      as_of_date: "2026-03-27",
+      period: "YTD",
+      report_start_date: "2026-01-01",
+      report_end_date: "2026-03-27",
+      chart_frequency: "monthly",
+      detail_basis: "NET",
+      attribution_dimension: "asset_class",
+      benchmark_code: null,
+      rows: [],
+      warnings: [],
+      partial_failures: [],
+    });
+
+    render(
+      <PerformanceAttributionTrendPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        chartFrequency="monthly"
+        attributionDimension="asset_class"
+        detailBasis="NET"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Attribution trend unavailable")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText("Attribution trend is not available for the current selection.")
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
   });
 });

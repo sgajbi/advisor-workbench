@@ -57,6 +57,9 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(
       screen.getByText("Loading contribution detail for the selected segment and horizon.")
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-loading .module-state-panel")
+    ).toBeTruthy();
   });
 
   it("renders a shared capability notice when contribution detail is unavailable", () => {
@@ -77,5 +80,8 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(
       screen.getByText("Contribution detail is not available for the current selection.")
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
   });
 });

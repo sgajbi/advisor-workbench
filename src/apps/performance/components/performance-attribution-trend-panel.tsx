@@ -13,6 +13,7 @@ import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbe
 import type { PerformanceAttributionTrendRow } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
+import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
 type Props = {
   portfolioId: string;
@@ -269,7 +270,11 @@ export default function PerformanceAttributionTrendPanel({
       }
     >
       {isLoading ? (
-        <p className="muted">Loading attribution effect trend.</p>
+        <PerformanceAnalysisStatePanel
+          state="loading"
+          title="Loading attribution trend"
+          body="Loading attribution effect trend."
+        />
       ) : chartOption ? (
         <div
           className="performance-chart-library-frame"
@@ -285,7 +290,11 @@ export default function PerformanceAttributionTrendPanel({
           />
         </div>
       ) : (
-        <p className="muted">Attribution trend is not available for the current selection.</p>
+        <PerformanceAnalysisStatePanel
+          state="unavailable"
+          title="Attribution trend unavailable"
+          body="Attribution trend is not available for the current selection."
+        />
       )}
     </WorkbenchChartShell>
   );

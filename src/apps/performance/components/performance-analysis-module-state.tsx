@@ -1,6 +1,6 @@
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
-import PerformanceCapabilityNotice from "./performance-capability-notice";
+import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
 export default function PerformanceAnalysisModuleState({
   capability,
@@ -26,14 +26,19 @@ export default function PerformanceAnalysisModuleState({
   }
 
   if (isDetailsPending) {
-    return <p className="muted performance-analysis-loading-copy">{loadingText}</p>;
+    return (
+      <PerformanceAnalysisStatePanel
+        state="loading"
+        title="Loading detail"
+        body={loadingText}
+      />
+    );
   }
 
   return (
-    <PerformanceCapabilityNotice
-      capability={capability}
-      partialTitle={partialTitle}
-      unavailableTitle={unavailableTitle}
+    <PerformanceAnalysisStatePanel
+      state={capability.state === "partial" ? "partial" : "unavailable"}
+      title={capability.state === "partial" ? partialTitle : unavailableTitle}
       body={body}
       hint={hint}
     />
