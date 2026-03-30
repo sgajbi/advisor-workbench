@@ -30,6 +30,7 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkbenchDeferredSection,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
   WorkbenchRailCard,
@@ -505,5 +506,29 @@ describe("design-system components", () => {
     expect(screen.getByText("As of 2026-03-29")).toHaveClass("status-chip");
     expect(screen.getByText("2 observations")).toHaveClass("status-chip", "success");
     expect(screen.getByText("Relative measurement")).toHaveClass("status-chip", "success");
+  });
+
+  it("renders a reusable deferred workbench section with shared heading structure", () => {
+    render(
+      <WorkbenchDeferredSection
+        className="performance-summary-context-section"
+        title="Return path and benchmark context"
+        subtitle="How the portfolio tracked against the selected benchmark over the current period."
+        loadingTitle="Loading return path"
+        loadingMessage="Return path is loading after first paint."
+      >
+        <div>Deferred content</div>
+      </WorkbenchDeferredSection>
+    );
+
+    expect(document.querySelector(".performance-summary-context-section")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Return path and benchmark context" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "How the portfolio tracked against the selected benchmark over the current period."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Loading return path")).toBeInTheDocument();
+    expect(screen.getByText("Return path is loading after first paint.")).toBeInTheDocument();
   });
 });

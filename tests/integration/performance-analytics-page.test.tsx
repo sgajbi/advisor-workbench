@@ -521,6 +521,21 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 
+  it("keeps first paint focused on the executive and trust strips before deferred summary modules mount", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Horizon comparison")).not.toBeInTheDocument();
+    expect(screen.queryByText("Top contributors and detractors")).not.toBeInTheDocument();
+    expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
+    expect(screen.queryByText("Evidence unavailable")).not.toBeInTheDocument();
+  });
+
   it("shows analysis modules and hides summary-only modules when analysis mode is selected", async () => {
     installPerformancePageFetchMock();
 
@@ -584,6 +599,23 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+  });
+
+  it("renders attribution as unavailable in the trust strip when attribution detail is missing", async () => {
+    installPerformancePageFetchMock({
+      unavailableAttribution: true,
+    });
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const trustStrip = await screen.findByLabelText("Trust and completeness strip");
+    expect(within(trustStrip).getByText("Attribution")).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Unavailable")).toBeInTheDocument();
+    expect(
+      within(trustStrip).getByText("Attribution detail is not available for the current selection.")
+    ).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Evidence")).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Pending")).toBeInTheDocument();
   });
 
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
