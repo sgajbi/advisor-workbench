@@ -51,8 +51,10 @@ type ComparativeSummary = {
 const CHART_COLORS = {
   portfolio: "#da1e28",
   benchmark: "#2d3748",
+  active: "#315d8a",
   portfolioBar: "rgba(218, 30, 40, 0.18)",
   benchmarkBar: "rgba(45, 55, 72, 0.16)",
+  activeBar: "rgba(49, 93, 138, 0.18)",
 };
 
 function toNumeric(value: number | null | undefined): number | null {
@@ -185,22 +187,35 @@ export default function PerformanceChartPanel({
     const benchmarkCumulative = points.map((point) =>
       toNumeric(point.cumulative_benchmark_return_pct)
     );
+    const activeCumulative = points.map((point) =>
+      toNumeric(point.cumulative_active_return_pct)
+    );
     const portfolioPeriodic = points.map((point) => toNumeric(point.portfolio_return_pct));
     const benchmarkPeriodic = points.map((point) => toNumeric(point.benchmark_return_pct));
+    const activePeriodic = points.map((point) => toNumeric(point.active_return_pct));
+    const hasActiveSeries = hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
+    const hasActivePeriodicSeries = hasBenchmarkSeries && activePeriodic.some((value) => value !== null);
 
     const cumulativeBounds = buildPercentAxisBounds([
       ...portfolioCumulative,
       ...benchmarkCumulative,
+      ...activeCumulative,
     ]);
-    const barBounds = buildPercentAxisBounds([...portfolioPeriodic, ...benchmarkPeriodic]);
+    const barBounds = buildPercentAxisBounds([
+      ...portfolioPeriodic,
+      ...benchmarkPeriodic,
+      ...activePeriodic,
+    ]);
 
     return {
       animation: false,
       color: [
         CHART_COLORS.portfolio,
         CHART_COLORS.benchmark,
+        CHART_COLORS.active,
         CHART_COLORS.portfolioBar,
         CHART_COLORS.benchmarkBar,
+        CHART_COLORS.activeBar,
       ],
       grid: {
         left: 58,
@@ -222,8 +237,10 @@ export default function PerformanceChartPanel({
         data: [
           "Portfolio Return",
           ...(hasBenchmarkSeries ? [returnPathPresentation.benchmarkLabel] : []),
+          ...(hasActiveSeries ? ["Active Cumulative"] : []),
           "Portfolio Period",
           ...(hasBenchmarkSeries ? ["Benchmark Period"] : []),
+          ...(hasActivePeriodicSeries ? ["Active Period"] : []),
         ],
       },
       tooltip: {
@@ -302,6 +319,22 @@ export default function PerformanceChartPanel({
               },
             ]
           : []),
+        ...(hasActivePeriodicSeries
+          ? [
+              {
+                name: "Active Period",
+                type: "bar" as const,
+                yAxisIndex: 1,
+                data: activePeriodic,
+                barWidth: 10,
+                z: 1,
+                itemStyle: {
+                  color: CHART_COLORS.activeBar,
+                  borderRadius: [4, 4, 0, 0],
+                },
+              },
+            ]
+          : []),
         {
           name: "Portfolio Return",
           type: "line" as const,
@@ -329,6 +362,23 @@ export default function PerformanceChartPanel({
                 lineStyle: {
                   width: 3,
                   color: CHART_COLORS.benchmark,
+                },
+              },
+            ]
+          : []),
+        ...(hasActiveSeries
+          ? [
+              {
+                name: "Active Cumulative",
+                type: "line" as const,
+                data: activeCumulative,
+                smooth: true,
+                symbol: "none",
+                z: 3,
+                lineStyle: {
+                  width: 2,
+                  type: "dashed" as const,
+                  color: CHART_COLORS.active,
                 },
               },
             ]

@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { EChartsOption } from "echarts";
 
 import PerformanceChartPanel from "../../src/apps/performance/components/performance-chart-panel";
 import {
@@ -10,10 +11,13 @@ import {
   buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
+let lastChartOption: EChartsOption | null = null;
+
 vi.mock("echarts-for-react", () => ({
-  default: ({ style }: { style?: React.CSSProperties }) => (
-    <div data-testid="performance-echart" style={style} />
-  ),
+  default: ({ style, option }: { style?: React.CSSProperties; option?: EChartsOption }) => {
+    lastChartOption = option ?? null;
+    return <div data-testid="performance-echart" style={style} />;
+  },
 }));
 
 function compactPattern(text: string) {
@@ -50,6 +54,24 @@ function buildChartProps(
 }
 
 describe("PerformanceChartPanel", () => {
+  it("includes active period and cumulative active series when relative returns are available", () => {
+    render(<PerformanceChartPanel {...buildChartProps()} />);
+
+    const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    const seriesNames = series.map((entry) => entry?.name);
+
+    expect(seriesNames).toContain("Active Period");
+    expect(seriesNames).toContain("Active Cumulative");
+
+    const activeCumulativeSeries = series.find((entry) => entry?.name === "Active Cumulative");
+    expect(activeCumulativeSeries?.type).toBe("line");
+    expect(activeCumulativeSeries?.data).toEqual([0.3]);
+
+    const activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
+    expect(activePeriodSeries?.type).toBe("bar");
+    expect(activePeriodSeries?.data).toEqual([0.3]);
+  });
+
   it("falls back to chart point dates when report dates are missing", () => {
     render(
       <PerformanceChartPanel
@@ -257,6 +279,9 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Active context Unavailable • Unavailable")
     );
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+    const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    expect(series.map((entry) => entry?.name)).not.toContain("Active Period");
+    expect(series.map((entry) => entry?.name)).not.toContain("Active Cumulative");
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {

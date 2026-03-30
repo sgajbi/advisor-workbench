@@ -130,6 +130,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
         compactPattern("Active return 0.51%")
       );
+      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();

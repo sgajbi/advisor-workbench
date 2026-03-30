@@ -63,6 +63,7 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByText("How did this compare across horizons?")).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
@@ -80,10 +81,18 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByText("NET")).toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
-    expect(screen.getByText("MTD")).toBeInTheDocument();
-    expect(screen.getByText("QTD")).toBeInTheDocument();
-    expect(screen.getAllByText("YTD")).toHaveLength(2);
-    expect(screen.getByText("1Y")).toBeInTheDocument();
+    expect(screen.getByText("Begin MV")).toBeInTheDocument();
+    expect(screen.getByText("Net Flow")).toBeInTheDocument();
+    expect(screen.getByText("Gross")).toBeInTheDocument();
+    expect(screen.getByText("Cum Active")).toBeInTheDocument();
+    expect(screen.getAllByText("$450,000")).toHaveLength(2);
+    expect(screen.getAllByText("$22,500")).toHaveLength(2);
+    expect(screen.getByText("5.88%")).toBeInTheDocument();
+    expect(screen.getAllByText("MTD")).toHaveLength(2);
+    expect(screen.getAllByText("QTD")).toHaveLength(2);
+    expect(screen.getAllByText("YTD")).toHaveLength(3);
+    expect(screen.getAllByText("1Y")).toHaveLength(2);
+    expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });
 

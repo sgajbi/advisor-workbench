@@ -239,9 +239,23 @@ export type PerformanceBenchmarkOptionView = {
 
 export type PerformanceHorizonComparisonRow = {
   period: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  begin_market_value?: number | null;
+  end_market_value?: number | null;
+  net_cash_flow?: number | null;
+  fees?: number | null;
+  net_return_pct?: number | null;
+  gross_return_pct?: number | null;
   portfolio_return_pct: number | null;
   benchmark_return_pct: number | null;
   active_return_pct: number | null;
+  cumulative_net_return_pct?: number | null;
+  cumulative_gross_return_pct?: number | null;
+  cumulative_benchmark_return_pct?: number | null;
+  cumulative_active_return_pct?: number | null;
+  annualized_net_return_pct?: number | null;
+  annualized_gross_return_pct?: number | null;
   annualized_return_pct: number | null;
 };
 
@@ -250,6 +264,7 @@ export type WorkbenchPerformanceHorizonComparison = {
   contract_version: string;
   portfolio_id: string;
   as_of_date: string;
+  reporting_currency?: string | null;
   detail_basis: string;
   benchmark_code: string | null;
   benchmark_options: PerformanceBenchmarkOptionView[];
