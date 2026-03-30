@@ -152,7 +152,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(chartSummaryBand as HTMLElement).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Active Return")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Observations")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Annualized")).toBeInTheDocument();
+    expect(screen.getByLabelText("Return path observation table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 

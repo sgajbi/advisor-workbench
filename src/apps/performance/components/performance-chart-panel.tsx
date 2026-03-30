@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 
 import {
+  AnalyticsTable,
   WorkbenchChartShell,
   WorkbenchSegmentedControl,
   WorkbenchSummaryMetricStrip,
@@ -24,7 +25,7 @@ import type {
   PerformanceChartPoint,
 } from "@/features/workbench/types";
 
-import { formatDate } from "../formatters";
+import { formatDate, formatPct } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
@@ -47,6 +48,9 @@ type ComparativeSummary = {
   portfolio_return_pct: number | null;
   benchmark_return_pct: number | null;
   active_return_pct: number | null;
+  annualized_return_pct?: number | null;
+  end_market_value?: number | null;
+  net_cash_flow?: number | null;
   benchmark_return_source?: string | null;
 };
 
@@ -117,6 +121,7 @@ export default function PerformanceChartPanel({
   chartFrequency,
   benchmark,
   benchmarkOptions = [],
+  reportingCurrency,
   reportStartDate,
   reportEndDate,
   capabilities,
@@ -136,6 +141,7 @@ export default function PerformanceChartPanel({
   chartFrequency: string;
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  reportingCurrency: string;
   reportStartDate: string;
   reportEndDate: string;
   capabilities: PerformanceWorkspaceCapabilities;
@@ -196,7 +202,39 @@ export default function PerformanceChartPanel({
     benchmark,
     benchmarkOptions: resolvedBenchmarkOptions,
     capabilities,
+    reportingCurrency,
   });
+  const chartTableModel = useMemo(
+    () => ({
+      columns: [
+        { key: "period", label: "Period" },
+        { key: "window", label: "Window" },
+        { key: "portfolioPeriod", label: "Portfolio", align: "right" as const },
+        { key: "benchmarkPeriod", label: "Benchmark", align: "right" as const },
+        { key: "activePeriod", label: "Active", align: "right" as const },
+        { key: "portfolioCumulative", label: "Cum Portfolio", align: "right" as const },
+        { key: "benchmarkCumulative", label: "Cum Benchmark", align: "right" as const },
+        { key: "activeCumulative", label: "Cum Active", align: "right" as const },
+      ],
+      rows: points.map((point) => ({
+        key: point.label,
+        ariaLabel: `${point.label} return path row`,
+        cells: [
+          point.label,
+          point.period_start && point.period_end
+            ? `${formatDate(point.period_start)} - ${formatDate(point.period_end)}`
+            : "N/A",
+          formatPct(point.portfolio_return_pct),
+          formatPct(point.benchmark_return_pct),
+          formatPct(point.active_return_pct),
+          formatPct(point.cumulative_portfolio_return_pct),
+          formatPct(point.cumulative_benchmark_return_pct),
+          formatPct(point.cumulative_active_return_pct),
+        ],
+      })),
+    }),
+    [points]
+  );
 
   const chartOption = useMemo(() => {
     const categories = points.map((point) => point.label);
@@ -737,6 +775,13 @@ export default function PerformanceChartPanel({
               </Box>
             ) : null}
           </div>
+          <AnalyticsTable
+            ariaLabel="Return path observation table"
+            columns={chartTableModel.columns}
+            rows={chartTableModel.rows}
+            dense
+            className="performance-chart-observation-table"
+          />
         </>
       ) : null}
     </WorkbenchChartShell>

@@ -16,12 +16,16 @@ describe("performance summary context helpers", () => {
         portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
         benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
+        end_market_value: scenario.workspace.net_performance.end_market_value,
+        net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
+      reportingCurrency: scenario.workspace.portfolio.base_currency,
     });
 
     expect(presentation).toMatchObject({
@@ -36,7 +40,9 @@ describe("performance summary context helpers", () => {
       { label: "Portfolio Return", value: "5.42%", unavailable: false },
       { label: "Benchmark Return", value: "4.91%", unavailable: false },
       { label: "Active Return", value: "0.52%", unavailable: false },
-      { label: "Observations", value: 1, unavailable: false },
+      { label: "Ending MV", value: "$1,250,000", unavailable: false },
+      { label: "Net Flow", value: "$42,000", unavailable: false },
+      { label: "Annualized", value: "5.42%", unavailable: false },
     ]);
   });
 
@@ -48,12 +54,16 @@ describe("performance summary context helpers", () => {
         portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
         benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
+        end_market_value: scenario.workspace.net_performance.end_market_value,
+        net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
+      reportingCurrency: scenario.workspace.portfolio.base_currency,
     });
 
     expect(presentation).toMatchObject({
@@ -84,6 +94,9 @@ describe("performance summary context helpers", () => {
         portfolio_return_pct: 6.2,
         benchmark_return_pct: null,
         active_return_pct: null,
+        annualized_return_pct: null,
+        end_market_value: null,
+        net_cash_flow: null,
         benchmark_return_source: null,
       },
       points: [
@@ -104,6 +117,7 @@ describe("performance summary context helpers", () => {
         ...scenario.capabilities,
         returnPath: { state: "supported" },
       },
+      reportingCurrency: "USD",
     });
 
     expect(presentation).toMatchObject({

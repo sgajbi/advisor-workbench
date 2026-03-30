@@ -46,6 +46,7 @@ function buildChartProps(
     chartFrequency: workspace.chart_frequency,
     benchmark: returnPath.benchmark,
     benchmarkOptions: returnPath.benchmarkOptions,
+    reportingCurrency: workspace.portfolio.base_currency,
     reportStartDate: workspace.report_start_date ?? "",
     reportEndDate: workspace.report_end_date ?? "",
     capabilities: returnPath.capabilities,
@@ -154,7 +155,9 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();
-    expect(screen.getByText("Observations")).toBeInTheDocument();
+    expect(screen.getByText("Ending MV")).toBeInTheDocument();
+    expect(screen.getByText("Net Flow")).toBeInTheDocument();
+    expect(screen.getByText("Annualized")).toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
@@ -173,6 +176,12 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByText("01 Jan 2026 - 28 Feb 2026")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
+    const observationTable = screen.getByLabelText("Return path observation table");
+    expect(within(observationTable).getByText("Cum Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
+    expect(within(observationTable).getByText("2026-02")).toBeInTheDocument();
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {
@@ -300,7 +309,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Active context Unavailable • Unavailable")
     );
-    expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+    expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
     expect(series.map((entry) => entry?.name)).not.toContain("Active Period");
     expect(series.map((entry) => entry?.name)).not.toContain("Active Cumulative");

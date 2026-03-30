@@ -5,7 +5,7 @@ import type {
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 
-import { formatPct } from "../formatters";
+import { formatCurrency, formatPct } from "../formatters";
 
 type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
 
@@ -27,21 +27,25 @@ export type PerformanceReturnPathPresentation = {
 
 export function getPerformanceReturnPathPresentation({
   summary,
-  points,
   benchmark,
   benchmarkOptions = [],
   capabilities,
+  reportingCurrency,
 }: {
   summary: {
     portfolio_return_pct: number | null;
     benchmark_return_pct: number | null;
     active_return_pct: number | null;
+    annualized_return_pct?: number | null;
+    end_market_value?: number | null;
+    net_cash_flow?: number | null;
     benchmark_return_source?: string | null;
   };
   points: PerformanceChartPoint[];
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   capabilities: PerformanceWorkspaceCapabilities;
+  reportingCurrency: string;
 }): PerformanceReturnPathPresentation {
   const benchmarkLabel = formatBenchmarkLabel(benchmark, benchmarkOptions);
   const benchmarkAssigned =
@@ -88,9 +92,19 @@ export function getPerformanceReturnPathPresentation({
         unavailable: activeReturnValue === "Unavailable",
       },
       {
-        label: "Observations",
-        value: points.length,
-        unavailable: points.length === 0,
+        label: "Ending MV",
+        value: formatCurrency(summary.end_market_value, reportingCurrency),
+        unavailable: summary.end_market_value == null,
+      },
+      {
+        label: "Net Flow",
+        value: formatCurrency(summary.net_cash_flow, reportingCurrency),
+        unavailable: summary.net_cash_flow == null,
+      },
+      {
+        label: "Annualized",
+        value: formatPct(summary.annualized_return_pct),
+        unavailable: summary.annualized_return_pct == null,
       },
     ],
   };
