@@ -132,12 +132,12 @@ describe("PerformanceSummaryMode", () => {
     expect(screen.getByText("Trust and completeness strip")).toBeInTheDocument();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
-    expect(screen.getByText("Loading return path")).toBeInTheDocument();
-    expect(screen.getByText("Loading horizons")).toBeInTheDocument();
-    expect(screen.getByText("Loading contributors")).toBeInTheDocument();
     expect(screen.queryByTestId("chart-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();
+    expect(screen.queryByText("Return path and benchmark context")).not.toBeInTheDocument();
+    expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
+    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId("chart-panel")).toHaveTextContent(

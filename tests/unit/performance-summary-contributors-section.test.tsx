@@ -49,7 +49,7 @@ describe("PerformanceSummaryContributorsSection", () => {
   it("renders positive and negative ranked contributors when position ranking exists", () => {
     render(<PerformanceSummaryContributorsSection {...buildProps()} />);
 
-    expect(screen.getByText("Top contributors and detractors")).toBeInTheDocument();
+    expect(screen.getByText("What drove the result?")).toBeInTheDocument();
     expect(screen.getByText("Top contributors")).toBeInTheDocument();
     expect(screen.getByText("Top detractors")).toBeInTheDocument();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);

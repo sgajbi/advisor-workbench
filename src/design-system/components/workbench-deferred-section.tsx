@@ -10,6 +10,8 @@ export default function WorkbenchDeferredSection({
   loadingTitle,
   loadingMessage,
   className,
+  deferHeader = false,
+  placeholder,
   children,
 }: {
   title: string;
@@ -17,15 +19,32 @@ export default function WorkbenchDeferredSection({
   loadingTitle: string;
   loadingMessage: string;
   className?: string;
+  deferHeader?: boolean;
+  placeholder?: ReactNode;
   children: ReactNode;
 }) {
+  const fallbackPlaceholder = (
+    <DeferredModulePlaceholder title={loadingTitle} message={loadingMessage} />
+  );
+
+  if (deferHeader) {
+    return (
+      <section className={className}>
+        <DeferredWorkbenchMount placeholder={placeholder}>
+          <>
+            <AnalyticsSectionHeader title={title} subtitle={subtitle} />
+            {children}
+          </>
+        </DeferredWorkbenchMount>
+      </section>
+    );
+  }
+
   return (
     <section className={className}>
       <AnalyticsSectionHeader title={title} subtitle={subtitle} />
       <DeferredWorkbenchMount
-        placeholder={
-          <DeferredModulePlaceholder title={loadingTitle} message={loadingMessage} />
-        }
+        placeholder={placeholder ?? fallbackPlaceholder}
       >
         {children}
       </DeferredWorkbenchMount>

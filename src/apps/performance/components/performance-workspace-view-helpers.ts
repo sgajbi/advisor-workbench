@@ -1,4 +1,4 @@
-import type { WorkbenchStatusRowItem, WorkbenchStatusStripItem } from "@/design-system";
+import type { WorkbenchStatusStripItem } from "@/design-system";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
@@ -124,174 +124,15 @@ export type PerformanceTrustStripPresentation = {
   items: WorkbenchStatusStripItem[];
 };
 
-export type PerformanceSummaryHeaderPresentation = {
-  hasBenchmark: boolean;
-  hasHistory: boolean;
-  benchmarkValue: string;
-  benchmarkHint: string;
-  selectedBenchmarkCode?: string;
-  primaryReturnCard: SummaryMetricCard;
-  benchmarkCard: SummaryMetricCard;
-  activeCard: SummaryMetricCard;
-  moneyWeightedCard: SummaryMetricCard;
-  contextCards: SummaryMetricCard[];
-  observationItems: WorkbenchStatusRowItem[];
-};
-
 export type PerformanceSummaryFirstPaintPresentation = {
-  header: PerformanceSummaryHeaderPresentation;
   executive: PerformanceExecutiveReturnPresentation;
   trust: PerformanceTrustStripPresentation;
 };
-
-export function getPerformanceSummaryHeaderPresentation({
-  workspace,
-  detailBasis,
-  capabilities,
-  selectedBenchmarkCode,
-  selectedBenchmarkLabel,
-  selectedPerformance,
-  hasMoneyWeightedReturn,
-  suspiciousMoneyWeightedReturn,
-}: {
-  workspace: WorkbenchPerformanceWorkspace;
-  detailBasis: string;
-  capabilities: PerformanceWorkspaceCapabilities;
-  selectedBenchmarkCode?: string;
-  selectedBenchmarkLabel?: string | null;
-  selectedPerformance:
-    | WorkbenchPerformanceWorkspace["net_performance"]
-    | WorkbenchPerformanceWorkspace["gross_performance"]
-    | undefined;
-  hasMoneyWeightedReturn: boolean;
-  suspiciousMoneyWeightedReturn: boolean;
-}): PerformanceSummaryHeaderPresentation {
-  const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
-  const hasHistory = capabilities.returnPath.state === "supported";
-  const benchmarkValue = hasBenchmark ? selectedBenchmarkLabel ?? "Assigned" : "Unassigned";
-  const benchmarkHint =
-    capabilities.benchmarkComparison.state === "supported"
-      ? "Relative analytics are active for this mandate."
-      : capabilities.benchmarkComparison.state === "partial"
-        ? capabilities.benchmarkComparison.reason ?? "Benchmark-relative analytics are partially available."
-        : "Assign a benchmark to enable relative analytics.";
-
-  const primaryReturnCard = buildMetricCard({
-    label: "Portfolio Return",
-    value:
-      selectedPerformance?.portfolio_return_pct != null
-        ? `${selectedPerformance.portfolio_return_pct.toFixed(2)}%`
-        : "Unavailable",
-    support:
-      capabilities.benchmarkComparison.state === "supported"
-        ? `Active ${formatCompactPctValue(selectedPerformance?.active_return_pct ?? null)} versus benchmark`
-        : "Absolute performance for the selected mandate and horizon.",
-    emphasize: true,
-    unavailable: selectedPerformance?.portfolio_return_pct == null,
-  });
-
-  const benchmarkCard = buildMetricCard({
-    label: "Benchmark Return",
-    value:
-      capabilities.benchmarkComparison.state === "supported" &&
-      selectedPerformance?.benchmark_return_pct != null
-        ? `${selectedPerformance.benchmark_return_pct.toFixed(2)}%`
-        : "Unavailable",
-    support:
-      capabilities.benchmarkComparison.reason ?? "Benchmark comparison for the selected period.",
-    unavailable:
-      capabilities.benchmarkComparison.state !== "supported" ||
-      selectedPerformance?.benchmark_return_pct == null,
-  });
-
-  const activeCard = buildMetricCard({
-    label: "Active Return",
-    value:
-      capabilities.benchmarkComparison.state === "supported" &&
-      selectedPerformance?.active_return_pct != null
-        ? `${selectedPerformance.active_return_pct.toFixed(2)}%`
-        : "Unavailable",
-    support:
-      capabilities.benchmarkComparison.state === "supported"
-        ? "Relative portfolio performance versus the assigned benchmark."
-        : capabilities.benchmarkComparison.reason ??
-          "Requires an assigned benchmark and published benchmark returns.",
-    unavailable:
-      capabilities.benchmarkComparison.state !== "supported" ||
-      selectedPerformance?.active_return_pct == null,
-  });
-
-  const moneyWeightedCard = buildMetricCard({
-    label: "Money-Weighted",
-    value:
-      workspace.money_weighted_return?.money_weighted_return_pct != null
-        ? `${workspace.money_weighted_return.money_weighted_return_pct.toFixed(2)}%`
-        : "Unavailable",
-    support: hasMoneyWeightedReturn
-      ? workspace.money_weighted_return?.annualized_return_pct != null
-        ? `Annualized ${formatCompactPctValue(workspace.money_weighted_return.annualized_return_pct)}${
-            suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""
-          }`
-        : workspace.money_weighted_return?.method ?? "Cash-flow aware return"
-      : "Requires cash-flow history across the selected period.",
-    unavailable: workspace.money_weighted_return?.money_weighted_return_pct == null,
-  });
-
-  const contextCards: SummaryMetricCard[] = [
-    buildMetricCard({
-      label: "Basis",
-      value: detailBasis === "GROSS" ? "Gross" : "Net",
-      support: "Selected return basis.",
-    }),
-    buildMetricCard({
-      label: "Period",
-      value: workspace.period,
-      support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
-    }),
-    buildMetricCard({
-      label: "Benchmark",
-      value: benchmarkValue,
-      support: benchmarkHint,
-      unavailable: !hasBenchmark,
-    }),
-  ];
-
-  return {
-    hasBenchmark,
-    hasHistory,
-    benchmarkValue,
-    benchmarkHint,
-    selectedBenchmarkCode,
-    primaryReturnCard,
-    benchmarkCard,
-    activeCard,
-    moneyWeightedCard,
-    contextCards,
-    observationItems: [
-      { value: `As of ${formatDate(workspace.as_of_date)}` },
-      { value: workspace.portfolio.base_currency },
-      {
-        value: hasHistory ? `${workspace.net_chart.length} observations` : "Limited history",
-        tone: hasHistory ? "success" : "warn",
-      },
-      {
-        value: hasBenchmark
-          ? "Relative measurement"
-          : selectedBenchmarkCode
-            ? "Benchmark unavailable"
-            : "No benchmark assigned",
-        tone: hasBenchmark ? "success" : "warn",
-      },
-    ],
-  };
-}
 
 export function getPerformanceSummaryFirstPaintPresentation({
   workspace,
   detailBasis,
   capabilities,
-  selectedBenchmarkCode,
-  selectedBenchmarkLabel,
   selectedPerformance,
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
@@ -299,8 +140,6 @@ export function getPerformanceSummaryFirstPaintPresentation({
   workspace: WorkbenchPerformanceWorkspace;
   detailBasis: string;
   capabilities: PerformanceWorkspaceCapabilities;
-  selectedBenchmarkCode?: string;
-  selectedBenchmarkLabel?: string | null;
   selectedPerformance:
     | WorkbenchPerformanceWorkspace["net_performance"]
     | WorkbenchPerformanceWorkspace["gross_performance"]
@@ -309,22 +148,13 @@ export function getPerformanceSummaryFirstPaintPresentation({
   suspiciousMoneyWeightedReturn: boolean;
 }): PerformanceSummaryFirstPaintPresentation {
   return {
-    header: getPerformanceSummaryHeaderPresentation({
-      workspace,
-      detailBasis,
-      capabilities,
-      selectedBenchmarkCode,
-      selectedBenchmarkLabel,
-      selectedPerformance,
-      hasMoneyWeightedReturn,
-      suspiciousMoneyWeightedReturn,
-    }),
     executive: getPerformanceExecutiveReturnPresentation({
       workspace,
       detailBasis,
       selectedPerformance,
-      selectedBenchmarkLabel,
       capabilities,
+      hasMoneyWeightedReturn,
+      suspiciousMoneyWeightedReturn,
     }),
     trust: getPerformanceTrustStripPresentation({
       capabilities,
@@ -336,8 +166,9 @@ export function getPerformanceExecutiveReturnPresentation({
   workspace,
   detailBasis,
   selectedPerformance,
-  selectedBenchmarkLabel,
   capabilities,
+  hasMoneyWeightedReturn,
+  suspiciousMoneyWeightedReturn,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   detailBasis: string;
@@ -345,8 +176,9 @@ export function getPerformanceExecutiveReturnPresentation({
     | WorkbenchPerformanceWorkspace["net_performance"]
     | WorkbenchPerformanceWorkspace["gross_performance"]
     | undefined;
-  selectedBenchmarkLabel?: string | null;
   capabilities: PerformanceWorkspaceCapabilities;
+  hasMoneyWeightedReturn: boolean;
+  suspiciousMoneyWeightedReturn: boolean;
 }): PerformanceExecutiveReturnPresentation {
   const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
 
@@ -381,6 +213,21 @@ export function getPerformanceExecutiveReturnPresentation({
         unavailable: !hasBenchmark || selectedPerformance?.active_return_pct == null,
       }),
       buildMetricCard({
+        label: "Money-Weighted Return",
+        value:
+          workspace.money_weighted_return?.money_weighted_return_pct != null
+            ? formatPctValue(workspace.money_weighted_return.money_weighted_return_pct)
+            : "Unavailable",
+        support: hasMoneyWeightedReturn
+          ? workspace.money_weighted_return?.annualized_return_pct != null
+            ? `Annualized ${formatCompactPctValue(workspace.money_weighted_return.annualized_return_pct)}${
+                suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""
+              }`
+            : workspace.money_weighted_return?.method ?? "Cash-flow aware return."
+          : "Requires cash-flow history across the selected period.",
+        unavailable: workspace.money_weighted_return?.money_weighted_return_pct == null,
+      }),
+      buildMetricCard({
         label: "Basis",
         value: detailBasis === "GROSS" ? "Gross" : "Net",
         support: "Selected measurement basis.",
@@ -389,14 +236,6 @@ export function getPerformanceExecutiveReturnPresentation({
         label: "Period",
         value: workspace.period,
         support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
-      }),
-      buildMetricCard({
-        label: "Benchmark",
-        value: hasBenchmark ? selectedBenchmarkLabel ?? "Assigned" : "Unassigned",
-        support: hasBenchmark
-          ? "Reference benchmark used for relative comparison."
-          : "Assign a benchmark to enable relative analytics.",
-        unavailable: !hasBenchmark,
       }),
     ],
   };

@@ -49,8 +49,8 @@ export function getPerformanceContributorsPresentation({
   negativePositionContributors,
   isDetailsPending,
 }: PerformanceSummaryContributorsSectionProps): PerformanceContributorsPresentation {
-  const title = "Top contributors and detractors";
-  const subtitle = `${workspace.period} position ranking`;
+  const title = "What drove the result?";
+  const subtitle = `${workspace.period} contributor ranking`;
 
   if (capabilities.contributionRanking.state === "supported") {
     return {

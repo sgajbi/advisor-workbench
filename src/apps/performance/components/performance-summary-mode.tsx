@@ -89,6 +89,8 @@ export default function PerformanceSummaryMode({
           subtitle="How the portfolio tracked against the selected benchmark over the current period."
           loadingTitle="Loading return path"
           loadingMessage="Return path is loading after first paint."
+          deferHeader
+          placeholder={null}
         >
           <DeferredPerformanceChartPanel
             title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
@@ -120,6 +122,8 @@ export default function PerformanceSummaryMode({
           subtitle="Benchmark-aware return comparison across standard reporting windows."
           loadingTitle="Loading horizons"
           loadingMessage="Horizon comparisons are loading after first paint."
+          deferHeader
+          placeholder={null}
         >
           <DeferredPerformanceMultiHorizonPanel
             portfolioId={workspace.portfolio.portfolio_id}
@@ -136,6 +140,8 @@ export default function PerformanceSummaryMode({
           subtitle="Top contributors and detractors for the current performance outcome."
           loadingTitle="Loading contributors"
           loadingMessage="Contributor ranking is loading after first paint."
+          deferHeader
+          placeholder={null}
         >
           <DeferredPerformanceSummaryContributorsSection
             workspace={workspace}

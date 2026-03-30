@@ -98,9 +98,9 @@ describe("PerformanceAnalyticsPage", () => {
 
     const mainShell = document.querySelector(".workstation-shell-main");
     expect(mainShell).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
-      expect(mainShell).toContainElement(screen.getByText("Horizon comparison"));
+      expect(screen.getAllByText("How did this compare across horizons?").length).toBeGreaterThan(0);
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
@@ -120,7 +120,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
@@ -129,17 +129,20 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Basis")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Period")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(executiveStrip).queryByText("Benchmark")).not.toBeInTheDocument();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
-    expect(await screen.findByText("Horizon comparison")).toBeInTheDocument();
-    expect(screen.getByText("Top contributors and detractors")).toBeInTheDocument();
+    expect((await screen.findAllByText("How did this compare across horizons?")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("What drove the result?").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
-    const contributorsModule = screen
-      .getByText("Top contributors and detractors")
-      .closest(".performance-summary-module-card");
+    const contributorsModule =
+      screen
+        .getAllByText("What drove the result?")
+        .map((node) => node.closest(".performance-summary-module-card"))
+        .find(Boolean) ?? null;
     expect(contributorsModule).toBeTruthy();
     expect(
       contributorsModule?.querySelectorAll(".workbench-summary-visual-card").length
@@ -161,8 +164,8 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect((await screen.findAllByText("Unassigned")).length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Assign a benchmark to enable relative analytics.")).toBeInTheDocument();
+    expect((await screen.findAllByText("Unassigned")).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
@@ -176,8 +179,6 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Horizon comparison")).not.toBeInTheDocument();
-    expect(screen.queryByText("Top contributors and detractors")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence unavailable")).not.toBeInTheDocument();
   });
@@ -193,9 +194,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
-    expect(screen.queryByText("Top contributors and detractors")).not.toBeInTheDocument();
+    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Horizon comparison")).not.toBeInTheDocument();
+    expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
 
     const attributionTable = screen.getByLabelText("Asset Class attribution table");
     expect(within(attributionTable).getAllByText("—")).toHaveLength(2);
@@ -221,7 +222,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       screen.getByText(/not exposed by the current gateway contract/i)
     ).toBeInTheDocument();
-    expect(screen.queryByText("Top contributors and detractors")).not.toBeInTheDocument();
+    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
   });
 
@@ -231,10 +232,8 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(2);
-    expect(
-      screen.getByText("Assign a benchmark to enable relative analytics.")
-    ).toBeInTheDocument();
+    expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
     await waitFor(() => {
       expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
@@ -290,8 +289,8 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(await screen.findByText("Top contributors and detractors")).toBeInTheDocument();
-    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect((await screen.findAllByText("What drove the result?")).length).toBeGreaterThan(0);
+    expect(await screen.findByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(
       screen.getByText("Contribution exists, but only aggregate rows are available.")
     ).toBeInTheDocument();
@@ -302,7 +301,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "benchmark-unassigned and return-series-unavailable",
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
-      executiveExpectations: ["Unassigned"],
+      executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [
         "No benchmark is assigned to this mandate.",
         "Published return observations are not available for the selected horizon.",
@@ -314,7 +313,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "assigned benchmark with partial relative comparison",
       scenario: buildPartialBenchmarkPerformanceScenario(),
-      executiveExpectations: ["Global Balanced 60/40"],
+      executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [
         "Partial",
         "A benchmark is assigned, but benchmark-relative returns are incomplete.",
@@ -325,7 +324,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "aggregate-only contribution ranking",
       scenario: buildAggregateContributionPerformanceScenario(),
-      executiveExpectations: ["Global Balanced 60/40"],
+      executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
       absentTexts: ["AAPL"],
@@ -333,7 +332,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "combined benchmark, attribution, and contributor support gaps",
       scenario: buildCombinedPartialPerformanceScenario(),
-      executiveExpectations: ["Global Balanced 60/40"],
+      executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [
         "Partial",
         "Unavailable",

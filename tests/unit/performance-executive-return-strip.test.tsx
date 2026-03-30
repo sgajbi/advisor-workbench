@@ -12,9 +12,9 @@ describe("PerformanceExecutiveReturnStrip", () => {
         { label: "Portfolio Return", value: "5.42%", support: "Performance over the selected period.", emphasize: true },
         { label: "Benchmark Return", value: "4.91%", support: "Benchmark-relative return for the selected period." },
         { label: "Active Return", value: "0.51%", support: "Portfolio return minus benchmark return." },
+        { label: "Money-Weighted Return", value: "5.12%", support: "Annualized 5.12%" },
         { label: "Basis", value: "Net", support: "Selected measurement basis." },
         { label: "Period", value: "YTD", support: "01 Jan 2026 - 29 Mar 2026" },
-        { label: "Benchmark", value: "Global Balanced 60/40", support: "Reference benchmark used for relative comparison." },
       ],
     };
 
@@ -24,8 +24,9 @@ describe("PerformanceExecutiveReturnStrip", () => {
     expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();
+    expect(screen.getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(screen.getByText("Basis")).toBeInTheDocument();
     expect(screen.getByText("Period")).toBeInTheDocument();
-    expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
+    expect(screen.queryByText("Benchmark")).not.toBeInTheDocument();
   });
 });

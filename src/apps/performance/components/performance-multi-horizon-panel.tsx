@@ -116,7 +116,7 @@ export default function PerformanceMultiHorizonPanel({
     <AnalyticsModule
       className="workbench-summary-module-card performance-summary-module-card"
       compact
-      title="Horizon comparison"
+      title="How did this compare across horizons?"
       subtitle={`Portfolio vs ${benchmarkLabel}`}
       actions={
         <Typography

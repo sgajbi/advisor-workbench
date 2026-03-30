@@ -53,8 +53,8 @@ describe("performance summary driver helpers", () => {
     if (presentation.mode !== "supported") {
       throw new Error("expected supported presentation");
     }
-    expect(presentation.title).toBe("Top contributors and detractors");
-    expect(presentation.subtitle).toBe("YTD position ranking");
+    expect(presentation.title).toBe("What drove the result?");
+    expect(presentation.subtitle).toBe("YTD contributor ranking");
     expect(presentation.positiveRows[0]).toMatchObject({
       title: "AAPL",
       subtitle: "Avg. Weight 24.00%",
