@@ -4084,6 +4084,30 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-control-normalization-note {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 0.75rem;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.performance-control-normalization-note-title {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgb(15, 23, 42);
+}
+
+.performance-control-normalization-note-message {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: rgba(51, 65, 85, 0.9);
+}
+
 .performance-page-frame .portfolio-segmented-control,
 .performance-page-frame .workbench-segmented-control {
   padding: 0.18rem;

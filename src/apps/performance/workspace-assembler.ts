@@ -20,6 +20,18 @@ export function assemblePerformanceWorkspace(
     contribution_dimension: details?.contribution_dimension ?? "asset_class",
     attribution_dimension: details?.attribution_dimension ?? "asset_class",
     detail_basis: details?.detail_basis ?? summary.detail_basis,
+    requested_chart_frequency_supported:
+      details?.requested_chart_frequency_supported ??
+      summary.requested_chart_frequency_supported ??
+      true,
+    requested_contribution_dimension_supported:
+      details?.requested_contribution_dimension_supported ??
+      summary.requested_contribution_dimension_supported ??
+      true,
+    requested_attribution_dimension_supported:
+      details?.requested_attribution_dimension_supported ??
+      summary.requested_attribution_dimension_supported ??
+      true,
     segment: details?.segment,
     benchmark_code: details?.benchmark_code ?? summary.benchmark_code,
     benchmark_options: summary.benchmark_options,

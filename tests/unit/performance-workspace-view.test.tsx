@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import PerformanceWorkspaceView from "../../src/apps/performance/components/performance-workspace-view";
 import {
+  buildNormalizedControlsPerformanceScenario,
   buildSupportedPerformanceScenario,
   buildUnavailableEvidencePerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
@@ -135,6 +136,33 @@ describe("PerformanceWorkspaceView", () => {
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
+  });
+
+  it("shows a backend-backed control normalization notice when unsupported deep-link controls were adjusted", async () => {
+    const scenario = buildNormalizedControlsPerformanceScenario();
+
+    render(
+      <PerformanceWorkspaceView
+        workspace={scenario.workspace}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+      />
+    );
+
+    const normalizationNotice = screen.getByRole("status", {
+      name: "Performance control normalization",
+    });
+    expect(normalizationNotice).toHaveTextContent("Selection adjusted");
+    expect(normalizationNotice).toHaveTextContent("frequency reset to Monthly");
+    expect(normalizationNotice).toHaveTextContent(
+      "contribution view reset to Asset Class"
+    );
+    expect(normalizationNotice).toHaveTextContent(
+      "attribution view reset to Asset Class"
+    );
   });
 
   it("switches between summary, analysis, and evidence modes", async () => {

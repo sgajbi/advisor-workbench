@@ -22,7 +22,10 @@ import type {
   PerformanceWorkspaceControls,
   PerformanceWorkspaceViewProps,
 } from "./performance-workspace-types";
-import { getBenchmarkLabel } from "./performance-workspace-view-helpers";
+import {
+  getBenchmarkLabel,
+  getPerformanceControlNormalizationNotice,
+} from "./performance-workspace-view-helpers";
 
 // Workbench discipline:
 // - summary header and compact KPI/status content are first paint
@@ -69,6 +72,9 @@ export default function PerformanceWorkspaceView({
     : undefined;
   const selectedPerformance =
     workspace && detailBasis === "GROSS" ? workspace.gross_performance : workspace?.net_performance;
+  const controlNormalizationNotice = workspace
+    ? getPerformanceControlNormalizationNotice(workspace)
+    : null;
   const controls: PerformanceWorkspaceControls = {
     period,
     detailBasis,
@@ -152,8 +158,22 @@ export default function PerformanceWorkspaceView({
                 capabilities={capabilities}
               />
             }
-          >
+            >
             <WorkbenchSectionStack className="performance-page-sections">
+              {controlNormalizationNotice ? (
+                <div
+                  className="performance-control-normalization-note"
+                  role="status"
+                  aria-label="Performance control normalization"
+                >
+                  <p className="performance-control-normalization-note-title">
+                    {controlNormalizationNotice.title}
+                  </p>
+                  <p className="performance-control-normalization-note-message">
+                    {controlNormalizationNotice.message}
+                  </p>
+                </div>
+              ) : null}
               {modePanel}
             </WorkbenchSectionStack>
           </WorkbenchPageFrame>

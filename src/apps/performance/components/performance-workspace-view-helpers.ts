@@ -125,6 +125,11 @@ export type PerformanceTrustStripPresentation = {
   items: WorkbenchStatusStripItem[];
 };
 
+export type PerformanceControlNormalizationNotice = {
+  title: string;
+  message: string;
+};
+
 export type PerformanceSummaryFirstPaintPresentation = {
   executive: PerformanceExecutiveReturnPresentation;
   trust: PerformanceTrustStripPresentation;
@@ -290,6 +295,37 @@ export function getPerformanceTrustStripPresentation({
         unavailable: "Pending",
       }),
     ],
+  };
+}
+
+export function getPerformanceControlNormalizationNotice(
+  workspace: WorkbenchPerformanceWorkspace
+): PerformanceControlNormalizationNotice | null {
+  const normalizedControls: string[] = [];
+
+  if (workspace.requested_chart_frequency_supported === false) {
+    normalizedControls.push(`frequency reset to ${formatLabel(workspace.chart_frequency)}`);
+  }
+  if (workspace.requested_contribution_dimension_supported === false) {
+    normalizedControls.push(
+      `contribution view reset to ${formatLabel(workspace.contribution_dimension)}`
+    );
+  }
+  if (workspace.requested_attribution_dimension_supported === false) {
+    normalizedControls.push(
+      `attribution view reset to ${formatLabel(workspace.attribution_dimension)}`
+    );
+  }
+
+  if (normalizedControls.length === 0) {
+    return null;
+  }
+
+  return {
+    title: "Selection adjusted",
+    message: `Unsupported controls were replaced with supported defaults: ${normalizedControls.join(
+      " • "
+    )}.`,
   };
 }
 

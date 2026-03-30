@@ -7,6 +7,7 @@ import {
   buildAggregateContributionPerformanceScenario,
   buildBenchmarkUnassignedPerformanceScenario,
   buildCombinedPartialPerformanceScenario,
+  buildNormalizedControlsPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
   buildSupportedPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
@@ -257,6 +258,33 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
     expect(within(attributionLegend).getByText("Selection")).toBeInTheDocument();
     expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
+  });
+
+  it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {
+    installPerformancePageFetchScenario(buildNormalizedControlsPerformanceScenario());
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          chartFrequency: "weekly",
+          contributionDimension: "currency",
+          attributionDimension: "issuer",
+        }),
+      })
+    );
+
+    const normalizationNotice = await screen.findByRole("status", {
+      name: "Performance control normalization",
+    });
+    expect(normalizationNotice).toHaveTextContent("Selection adjusted");
+    expect(normalizationNotice).toHaveTextContent("frequency reset to Monthly");
+    expect(normalizationNotice).toHaveTextContent(
+      "contribution view reset to Asset Class"
+    );
+    expect(normalizationNotice).toHaveTextContent(
+      "attribution view reset to Asset Class"
+    );
+    expect(document.querySelector(".performance-control-normalization-note")).toBeTruthy();
   });
 
   it("uses the shared analysis state panel when attribution detail is unavailable", async () => {

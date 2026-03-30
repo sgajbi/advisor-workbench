@@ -522,6 +522,24 @@ export function buildUnavailableContributionPerformanceScenario() {
   });
 }
 
+export function buildNormalizedControlsPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    workspaceOverrides: {
+      chart_frequency: "monthly",
+      contribution_dimension: "asset_class",
+      attribution_dimension: "asset_class",
+      requested_chart_frequency_supported: false,
+      requested_contribution_dimension_supported: false,
+      requested_attribution_dimension_supported: false,
+      warnings: [
+        "PERFORMANCE_CHART_FREQUENCY_NORMALIZED",
+        "PERFORMANCE_CONTRIBUTION_DIMENSION_NORMALIZED",
+        "PERFORMANCE_ATTRIBUTION_DIMENSION_NORMALIZED",
+      ],
+    },
+  });
+}
+
 export function buildUnavailableAttributionPerformanceScenario() {
   return buildPerformancePresentationScenario({
     fixtureOptions: {
