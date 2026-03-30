@@ -6,6 +6,10 @@ import PerformanceAttributionTrendPanel from "../../src/apps/performance/compone
 
 const getTrendMock = vi.fn();
 
+function compactPattern(text: string) {
+  return new RegExp(text.replaceAll(" ", "\\s*"));
+}
+
 vi.mock("echarts-for-react", () => ({
   default: ({ style }: { style?: React.CSSProperties }) => (
     <div data-testid="performance-attribution-trend-chart" style={style} />
@@ -77,6 +81,9 @@ describe("PerformanceAttributionTrendPanel", () => {
 
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
+      compactPattern("Resolved window 01 Jan 2026 - 27 Mar 2026")
+    );
     expect(
       document.querySelectorAll(
         ".performance-analysis-context-row .workbench-chart-context-row-item"

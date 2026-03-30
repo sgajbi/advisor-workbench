@@ -18,7 +18,7 @@ import type {
   WorkbenchPerformanceHorizonComparison,
 } from "@/features/workbench/types";
 
-import { formatLabel } from "../formatters";
+import { formatDate, formatLabel } from "../formatters";
 import {
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
@@ -168,6 +168,10 @@ export default function PerformanceMultiHorizonPanel({
     period,
     selectedPeriodRow,
   });
+  const resolvedWindowLabel =
+    comparison?.report_start_date && comparison?.report_end_date
+      ? `${formatDate(comparison.report_start_date)} - ${formatDate(comparison.report_end_date)}`
+      : presentation.selectedPeriodLabel;
   const tableModel = useMemo(() => {
     return buildPerformanceHorizonTableModel({
       rows: rows ?? [],
@@ -240,11 +244,11 @@ export default function PerformanceMultiHorizonPanel({
             itemClassName="performance-mini-legend-item"
             label="Horizon comparison context"
             items={[
-              {
-                key: "selected-period",
-                label: "Selected period",
-                value: presentation.selectedPeriodLabel,
-              },
+                {
+                  key: "resolved-window",
+                  label: "Resolved window",
+                  value: resolvedWindowLabel,
+                },
               {
                 key: "active-return",
                 label: "Active return",

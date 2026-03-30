@@ -1,5 +1,7 @@
 import { WorkbenchChartContextRow } from "@/design-system";
 
+import { formatDate } from "../formatters";
+
 type PerformanceChartContextStripProps = {
   period: string;
   detailBasis: string;
@@ -8,6 +10,8 @@ type PerformanceChartContextStripProps = {
   benchmarkAssigned: boolean;
   activeReturn: string;
   relativeContextStatus: "available" | "partial" | "unavailable";
+  reportStartDate?: string;
+  reportEndDate?: string;
 };
 
 export default function PerformanceChartContextStrip({
@@ -18,9 +22,15 @@ export default function PerformanceChartContextStrip({
   benchmarkAssigned,
   activeReturn,
   relativeContextStatus,
+  reportStartDate,
+  reportEndDate,
 }: PerformanceChartContextStripProps) {
   const relativeContextLabel =
     relativeContextStatus.charAt(0).toUpperCase() + relativeContextStatus.slice(1);
+  const resolvedWindow =
+    reportStartDate && reportEndDate
+      ? `${formatDate(reportStartDate)} - ${formatDate(reportEndDate)}`
+      : period;
 
   return (
     <WorkbenchChartContextRow
@@ -44,8 +54,8 @@ export default function PerformanceChartContextStrip({
         },
         {
           key: "window",
-          label: "Window / basis",
-          value: `${period} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`,
+          label: "Resolved window / basis",
+          value: `${resolvedWindow} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`,
         },
       ]}
     />

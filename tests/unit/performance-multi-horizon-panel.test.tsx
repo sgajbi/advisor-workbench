@@ -70,7 +70,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Selected period YTD")
+      compactPattern("Resolved window 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       compactPattern("Active return 0.51%")
@@ -102,7 +102,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("MTD")).toHaveLength(2);
     expect(screen.getAllByText("QTD")).toHaveLength(2);
-    expect(screen.getAllByText("YTD")).toHaveLength(3);
+    expect(screen.getAllByText("YTD")).toHaveLength(2);
     expect(screen.getAllByText("1Y")).toHaveLength(2);
     expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
 
@@ -186,11 +186,11 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-        compactPattern("Selected period YTD")
-      );
-    });
+      await waitFor(() => {
+        expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+        compactPattern("Resolved window 01 Jan 2026 - 24 Feb 2026")
+        );
+      });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
 
     view.rerender(
@@ -204,7 +204,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Selected period YTD")
+      compactPattern("Resolved window 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);

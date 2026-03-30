@@ -190,7 +190,7 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Active context 0.80% • Available")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Window / basis YTD • Net")
+      compactPattern("Resolved window / basis 01 Jan 2026 - 28 Feb 2026 • Net")
     );
     expect(screen.getByText("01 Jan 2026 - 28 Feb 2026")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");

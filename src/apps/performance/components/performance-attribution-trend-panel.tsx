@@ -15,7 +15,7 @@ import type {
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
-import { formatLabel, formatPct } from "../formatters";
+import { formatDate, formatLabel, formatPct } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
@@ -233,6 +233,10 @@ export default function PerformanceAttributionTrendPanel({
   }, [rows]);
 
   const latestRow = rows?.at(-1) ?? null;
+  const resolvedWindowLabel =
+    trend?.report_start_date && trend?.report_end_date
+      ? `${formatDate(trend.report_start_date)} - ${formatDate(trend.report_end_date)}`
+      : period;
   const tableModel = useMemo(
     () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
     [rows]
@@ -288,13 +292,10 @@ export default function PerformanceAttributionTrendPanel({
           label="Attribution trend context"
           className="performance-analysis-context-row"
           items={[
-            {
-              label: "Window",
-              value:
-                reportStartDate && reportEndDate
-                  ? `${reportStartDate} - ${reportEndDate}`
-                  : period,
-            },
+              {
+                label: "Resolved window",
+                value: resolvedWindowLabel,
+              },
             {
               label: "Basis",
               value: detailBasis,

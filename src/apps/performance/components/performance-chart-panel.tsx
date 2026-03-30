@@ -484,6 +484,8 @@ export default function PerformanceChartPanel({
           benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
           activeReturn={returnPathPresentation.activeReturnValue}
           relativeContextStatus={returnPathPresentation.relativeContextStatus}
+          reportStartDate={resolvedReportDates.startDate}
+          reportEndDate={resolvedReportDates.endDate}
         />
       }
       toolbar={
