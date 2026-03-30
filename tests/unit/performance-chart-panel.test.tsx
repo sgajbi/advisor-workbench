@@ -80,6 +80,15 @@ describe("PerformanceChartPanel", () => {
     expect(
       document.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")
     ).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Selected period YTD"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Compared against BMK_GLOBAL_BALANCED_60_40"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Active return 0.80%"
+    );
     expect(screen.getByText("2026-01-01 - 2026-02-28")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
@@ -135,7 +144,9 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Compared To")).toHaveDisplayValue("Global Growth 80/20");
-    expect(screen.getByText("Global Growth 80/20")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Compared against Global Growth 80/20"
+    );
   });
 
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
@@ -222,6 +233,12 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.getByText("Benchmark unassigned")).toBeInTheDocument();
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Compared against Unassigned"
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      "Relative context Unavailable"
+    );
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 

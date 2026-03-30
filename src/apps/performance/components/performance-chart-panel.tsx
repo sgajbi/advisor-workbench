@@ -6,7 +6,6 @@ import type { EChartsOption } from "echarts";
 import {
   Box,
   Button,
-  Chip,
   Stack,
   TextField,
   ToggleButton,
@@ -24,6 +23,7 @@ import type {
 import { formatDate, formatPct } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
+import PerformanceChartContextStrip from "./performance-chart-context-strip";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -352,6 +352,11 @@ export default function PerformanceChartPanel({
     resolvedReportDates.startDate && resolvedReportDates.endDate
       ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
       : "Date range unavailable";
+  const benchmarkLabel = formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions);
+  const activeReturnValue =
+    benchmarkUnavailable || summary.active_return_pct === null || summary.active_return_pct === undefined
+      ? "Unavailable"
+      : formatPct(summary.active_return_pct);
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -539,30 +544,14 @@ export default function PerformanceChartPanel({
             </Stack>
           </Stack>
 
-          <Stack
-            direction={{ xs: "column", sm: "row", xl: "column" }}
-            spacing={1}
-            sx={{ minWidth: { xl: 280 }, maxWidth: { xl: 320 } }}
-          >
-            <Chip
-              label={`Portfolio ${formatPct(summary.portfolio_return_pct)}`}
-              color="error"
-              variant="outlined"
-              sx={summaryChipSx}
+          <Box sx={{ minWidth: { xl: 280 }, maxWidth: { xl: 360 }, width: "100%" }}>
+            <PerformanceChartContextStrip
+              period={period}
+              benchmarkLabel={benchmarkLabel}
+              benchmarkAssigned={!benchmarkUnavailable}
+              activeReturn={activeReturnValue}
             />
-            <Chip
-              label={`${formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)} ${
-                hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "Unavailable"
-              }`}
-              variant="outlined"
-              sx={summaryChipSx}
-            />
-            <Chip
-              label={`Active ${hasBenchmarkSeries ? formatPct(summary.active_return_pct) : "Unavailable"}`}
-              variant="outlined"
-              sx={summaryChipSx}
-            />
-          </Stack>
+          </Box>
         </Stack>
 
       {capabilities.returnPath.state === "supported" && points.length ? (
@@ -695,16 +684,3 @@ const selectControlSx = {
   },
 } as const;
 
-const summaryChipSx = {
-  justifyContent: "space-between",
-  borderRadius: "999px",
-  px: 1,
-  py: 2.2,
-  fontWeight: 700,
-  "& .MuiChip-label": {
-    display: "flex",
-    justifyContent: "space-between",
-    width: "100%",
-    gap: 1,
-  },
-} as const;

@@ -4533,6 +4533,36 @@ a:hover {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.performance-chart-context-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.performance-chart-context-item {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid rgba(34, 44, 59, 0.07);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.96);
+  color: var(--text-muted);
+  font-size: 0.71875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.performance-chart-context-item strong {
+  color: var(--brand-strong);
+  font-size: 0.875rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
 .performance-chart-benchmark-state {
   display: grid;
   gap: 0.28rem;
@@ -5757,6 +5787,10 @@ a:hover {
 
   .performance-chart-summary-band {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-chart-context-strip {
+    grid-template-columns: 1fr;
   }
 
   .performance-chart-toolbar-left {
