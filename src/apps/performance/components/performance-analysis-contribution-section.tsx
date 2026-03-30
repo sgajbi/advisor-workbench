@@ -4,6 +4,7 @@ import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
 import { formatLabel, formatPct } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
+import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import {
   getContributionTotals,
@@ -67,10 +68,10 @@ export default function PerformanceAnalysisContributionSection({
           const totals = getContributionTotals(workspace, level) ?? null;
           const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
           return (
-            <div key={`${level.level}-${level.name}`} className="performance-detail-block">
-              <div className="performance-level-heading">
-                <strong>{formatLabel(level.name)}</strong>
-              </div>
+            <PerformanceAnalysisLevelSection
+              key={`${level.level}-${level.name}`}
+              title={formatLabel(level.name)}
+            >
               <AnalyticsTable
                 ariaLabel={`${formatLabel(level.name)} contribution table`}
                 columns={[
@@ -117,7 +118,7 @@ export default function PerformanceAnalysisContributionSection({
                     : []),
                 ]}
               />
-            </div>
+            </PerformanceAnalysisLevelSection>
           );
         })
       ) : isDetailsPending ? (

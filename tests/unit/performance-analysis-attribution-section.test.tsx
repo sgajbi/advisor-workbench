@@ -71,6 +71,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(screen.getAllByText("BMK GLOBAL BALANCED 60 40").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
   });

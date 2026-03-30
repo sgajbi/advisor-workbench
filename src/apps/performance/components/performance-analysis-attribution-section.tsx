@@ -9,6 +9,7 @@ import {
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
+import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
@@ -165,10 +166,10 @@ export default function PerformanceAnalysisAttributionSection({
         workspace.attribution?.levels.map((level) => {
           const totals = getAttributionTotals(level);
           return (
-            <div key={`${level.dimension}-${level.total_effect_pct}`} className="performance-detail-block">
-              <div className="performance-level-heading">
-                <strong>{formatLabel(level.dimension)}</strong>
-              </div>
+            <PerformanceAnalysisLevelSection
+              key={`${level.dimension}-${level.total_effect_pct}`}
+              title={formatLabel(level.dimension)}
+            >
               <AnalyticsEffectStrip
                 rows={level.rows.map((row) => ({
                   key: `effect-${level.dimension}-${row.key_label}`,
@@ -218,7 +219,7 @@ export default function PerformanceAnalysisAttributionSection({
                   formatPct(totals.totalEffectPct ?? level.total_effect_pct),
                 ]}
               />
-            </div>
+            </PerformanceAnalysisLevelSection>
           );
         })
       ) : isDetailsPending ? (

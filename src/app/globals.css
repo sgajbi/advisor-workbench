@@ -4430,8 +4430,14 @@ a:hover {
 }
 
 .performance-chart-panel,
-.performance-detail-block,
 .performance-measurement-panel {
+  display: grid;
+  gap: 0.7rem;
+  width: 100%;
+  max-width: none;
+}
+
+.performance-analysis-level-section {
   display: grid;
   gap: 0.7rem;
   width: 100%;
@@ -4467,7 +4473,8 @@ a:hover {
 }
 
 .performance-section-heading,
-.performance-level-heading {
+.performance-level-heading,
+.performance-analysis-level-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4475,7 +4482,8 @@ a:hover {
 }
 
 .performance-section-heading h3,
-.performance-level-heading strong {
+.performance-level-heading strong,
+.performance-analysis-level-header strong {
   margin: 0;
 }
 
@@ -4487,7 +4495,8 @@ a:hover {
 }
 
 .performance-section-heading h3,
-.performance-level-heading strong {
+.performance-level-heading strong,
+.performance-analysis-level-header strong {
   font-size: var(--text-xl);
   line-height: var(--leading-snug);
   letter-spacing: -0.02em;
