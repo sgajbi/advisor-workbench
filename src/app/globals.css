@@ -679,11 +679,16 @@ a:hover {
   height: 100%;
 }
 
+.portfolio-paired-analytics-grid-detailed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .portfolio-analytics-module-body {
   display: grid;
   gap: var(--space-3);
   align-content: start;
   height: 100%;
+  min-width: 0;
 }
 
 .portfolio-analytics-summary-row {
@@ -879,12 +884,15 @@ a:hover {
 }
 
 .portfolio-cashflow-chart {
-  min-height: 196px;
+  min-height: 0;
+  max-height: 15.5rem;
 }
 
 .portfolio-timeseries-chart-svg {
+  display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  max-height: 15.5rem;
 }
 
 .portfolio-timeseries-chart-area {
@@ -925,7 +933,7 @@ a:hover {
 
 .portfolio-cashflow-axis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: var(--space-2);
 }
 
@@ -1077,6 +1085,38 @@ a:hover {
   gap: var(--space-1) var(--space-2);
   font-size: 0.6875rem;
   line-height: 1.25;
+}
+
+.portfolio-analytics-table.analytics-table-frame,
+.portfolio-cashflow-table.analytics-table-frame {
+  width: 100%;
+  max-width: 100%;
+}
+
+.portfolio-analytics-table.analytics-table-frame {
+  align-self: start;
+}
+
+.portfolio-analytics-table.analytics-table-frame .MuiTable-root,
+.portfolio-cashflow-table.analytics-table-frame .MuiTable-root {
+  min-width: 0;
+}
+
+.portfolio-analytics-table.analytics-table-frame .MuiTableCell-root,
+.portfolio-cashflow-table.analytics-table-frame .MuiTableCell-root {
+  white-space: nowrap;
+}
+
+.portfolio-cashflow-card {
+  gap: 0.625rem;
+}
+
+.portfolio-cashflow-card-flat .portfolio-cashflow-chart {
+  max-height: 11rem;
+}
+
+.portfolio-cashflow-card-flat .portfolio-timeseries-chart-svg {
+  max-height: 11rem;
 }
 
 @media (max-width: 960px) {
@@ -1983,6 +2023,10 @@ a:hover {
 .workspace-grid > *,
 .portfolio-summary-grid > * {
   height: 100%;
+}
+
+.workspace-grid.portfolio-paired-analytics-grid-detailed {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .portfolio-action-grid {

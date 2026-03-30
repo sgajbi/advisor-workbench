@@ -242,8 +242,10 @@ describe("PortfolioPairedAnalyticsSection", () => {
       expect(screen.getByTestId("portfolio-income-panel")).toHaveTextContent("detailed");
       expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
     });
+    expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeTruthy();
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
+    expect(document.querySelectorAll(".portfolio-analytics-table.analytics-table-frame-dense")).toHaveLength(2);
   });
 
   it("renders capability-driven partial and unavailable states intentionally", () => {

@@ -181,8 +181,16 @@ export function PortfolioProjectedCashflowPanel({
   const linePath = buildLinePath(chartPoints);
   const zeroLineY = roundSvg(172 - (((0 - minValue) / range) * 112 + 24));
 
-  return (
-      <div className="portfolio-chart-card">
+    const flatCashflow = positiveFlowCount === 0 && negativeFlowCount === 0;
+
+    return (
+      <div
+        className={
+          flatCashflow
+            ? "portfolio-chart-card portfolio-cashflow-card portfolio-cashflow-card-flat"
+            : "portfolio-chart-card portfolio-cashflow-card"
+        }
+      >
       <div className="portfolio-cashflow-summary-strip" aria-label="Projected cashflow summary">
         <div className="portfolio-cashflow-summary-stat">
           <span>Net Flow</span>
@@ -359,7 +367,7 @@ export function PortfolioActivityPanel({
                 </WorkbenchSummaryVisualMeta>
               ) : (
                 <WorkbenchSummaryVisualMeta className="portfolio-flow-row-meta">
-                  <span>{requestedAmount < 0 ? "Window outflow" : "Window inflow"}</span>
+                  <span>{describeActivityBucket(bucket.bucket)}</span>
                   <span>YTD {formatCurrency(ytdAmount, summary.reporting_currency)}</span>
                   <span>{bucket.requested_window.transaction_count} txn</span>
                 </WorkbenchSummaryVisualMeta>
@@ -518,6 +526,21 @@ function formatBucketLabel(value: string): string {
     .split("_")
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
+}
+
+function describeActivityBucket(bucket: string): string {
+  switch (bucket) {
+    case "INFLOWS":
+      return "Window inflow";
+    case "OUTFLOWS":
+      return "Window outflow";
+    case "FEES":
+      return "Window fees";
+    case "TAXES":
+      return "Window taxes";
+    default:
+      return "Window activity";
+  }
 }
 
 function buildLinePath(points: Array<{ x: number; y: number }>): string {

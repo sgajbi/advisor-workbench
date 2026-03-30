@@ -195,6 +195,8 @@ export default function PortfolioProjectedCashflowModule({
           ) : null}
           {expanded ? (
             <AnalyticsTable
+              dense
+              className="portfolio-analytics-table portfolio-cashflow-table"
               ariaLabel="Cashflow outlook"
               columns={[
                 { key: "date", label: "Date" },

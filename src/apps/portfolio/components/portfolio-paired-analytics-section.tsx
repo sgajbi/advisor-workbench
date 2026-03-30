@@ -89,7 +89,13 @@ export default function PortfolioPairedAnalyticsSection({
   }
 
   const content = (
-    <WorkspaceGrid className="portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region">
+    <WorkspaceGrid
+      className={
+        isDetailedView
+          ? "portfolio-primary-grid portfolio-paired-analytics-grid portfolio-paired-analytics-grid-detailed workbench-summary-region"
+          : "portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region"
+      }
+    >
       {showIncomeModule ? (
         <PortfolioCollapsibleModule
           className="portfolio-summary-module-card"
@@ -206,6 +212,8 @@ function renderIncomeModule({
           </DeferredWorkbenchMount>
           {isDetailedView ? (
             <AnalyticsTable
+              dense
+              className="portfolio-analytics-table"
               ariaLabel="Income summary"
               columns={[
                 { key: "category", label: "Income Type" },
@@ -332,6 +340,8 @@ function renderActivityModule({
           </DeferredWorkbenchMount>
           {isDetailedView ? (
             <AnalyticsTable
+              dense
+              className="portfolio-analytics-table"
               ariaLabel="Activity summary"
               columns={[
                 { key: "bucket", label: "Bucket" },
