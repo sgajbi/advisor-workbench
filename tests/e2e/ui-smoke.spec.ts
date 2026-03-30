@@ -1,6 +1,20 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('UI smoke checks', () => {
+  async function openSummaryPortfolio(page: import('@playwright/test').Page) {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('lotus:portfolio:view-mode', 'summary');
+    });
+    await page.goto('/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001', {
+      waitUntil: 'domcontentloaded',
+    });
+
+    await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible();
+    const summaryViewButton = page.getByRole('button', { name: /^Summary$/i });
+    await expect(summaryViewButton).toBeVisible();
+    await expect(summaryViewButton).toHaveAttribute('aria-pressed', 'true');
+  }
+
   async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
     await page.goto('/performance?portfolioId=PB_SG_GLOBAL_BAL_001', {
       waitUntil: 'domcontentloaded',
@@ -150,6 +164,36 @@ test.describe('UI smoke checks', () => {
     await expect(page.getByText('Window outflow')).toBeVisible();
     await expect(page.getByText('Window fees')).toBeVisible();
     await expect(page.getByText('Window taxes')).toBeVisible();
+  });
+
+  test('portfolio summary stays summary-first and does not mount detailed drilldowns', async ({ page }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openSummaryPortfolio(page);
+
+    await expect(page.getByRole('heading', { name: /Portfolio Allocation/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Top Holdings/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Performance Snapshot/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Income$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Activity$/i })).toBeVisible();
+
+    await expect(page.locator('.portfolio-paired-analytics-grid')).toBeVisible();
+    await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toHaveCount(0);
+    await expect(page.locator('.portfolio-data-grid')).toHaveCount(0);
+    await expect(page.getByLabel('Income summary')).toHaveCount(0);
+    await expect(page.getByLabel('Activity summary')).toHaveCount(0);
+    await expect(page.getByLabel(/Projected cashflow chart in /i)).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /^Holdings$/i })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /^Transactions$/i })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Projected Cashflow/i })).toHaveCount(0);
+
+    const pairedAnalyticsMetrics = await page.locator('.portfolio-paired-analytics-grid').evaluate((element) => ({
+      columns: getComputedStyle(element).gridTemplateColumns,
+      childCount: element.children.length,
+      width: element.getBoundingClientRect().width,
+    }));
+    expect(pairedAnalyticsMetrics.columns).toContain(' ');
+    expect(pairedAnalyticsMetrics.childCount).toBe(2);
+    expect(pairedAnalyticsMetrics.width).toBeGreaterThan(900);
   });
 
   test('performance workbench keeps summary first, then mounts deferred analytics by mode', async ({ page }) => {
