@@ -117,7 +117,7 @@ describe("performance first-paint helper contracts", () => {
 
     expect(presentation.items.find((item) => item.label === "Benchmark")).toMatchObject({
       value: "Assigned",
-      tone: "success",
+      tone: "default",
       support: "Benchmark context ready",
     });
     expect(presentation.items.find((item) => item.label === "Contribution")).toMatchObject({
@@ -136,22 +136,22 @@ describe("performance first-paint helper contracts", () => {
     {
       name: "supported state",
       scenario: buildPerformancePresentationScenario(),
-      expectedBenchmark: { value: "Assigned", tone: "success" },
-      expectedHistory: { value: "Ready", tone: "success" },
-      expectedAttribution: { value: "Ready", tone: "success" },
+      expectedBenchmark: { value: "Assigned", tone: "default" },
+      expectedHistory: { value: "Ready", tone: "default" },
+      expectedAttribution: { value: "Ready", tone: "default" },
     },
     {
       name: "partial benchmark comparison",
       scenario: buildPartialBenchmarkPerformanceScenario(),
       expectedBenchmark: { value: "Partial", tone: "warn" },
-      expectedHistory: { value: "Ready", tone: "success" },
-      expectedAttribution: { value: "Ready", tone: "success" },
+      expectedHistory: { value: "Ready", tone: "default" },
+      expectedAttribution: { value: "Ready", tone: "default" },
     },
     {
       name: "combined support gaps",
       scenario: buildCombinedPartialPerformanceScenario(),
       expectedBenchmark: { value: "Partial", tone: "warn" },
-      expectedHistory: { value: "Ready", tone: "success" },
+      expectedHistory: { value: "Ready", tone: "default" },
       expectedAttribution: { value: "Unavailable", tone: "danger" },
     },
     {
@@ -159,7 +159,7 @@ describe("performance first-paint helper contracts", () => {
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
       expectedBenchmark: { value: "Unassigned", tone: "danger" },
       expectedHistory: { value: "Unavailable", tone: "danger" },
-      expectedAttribution: { value: "Ready", tone: "success" },
+      expectedAttribution: { value: "Ready", tone: "default" },
     },
   ])("builds a consistent first-paint contract for $name", ({ scenario, expectedBenchmark, expectedHistory, expectedAttribution }) => {
     const presentation = getPerformanceSummaryFirstPaintPresentation({

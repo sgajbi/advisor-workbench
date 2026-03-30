@@ -307,7 +307,7 @@ function mapCapabilityToTrustItem(
       label,
       value: labels.supported,
       support: getFirstPaintCapabilitySupport(label, capability),
-      tone: "success" as const,
+      tone: "default" as const,
     };
   }
   if (capability.state === "partial") {

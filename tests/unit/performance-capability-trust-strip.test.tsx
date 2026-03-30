@@ -9,8 +9,8 @@ describe("PerformanceCapabilityTrustStrip", () => {
   it("renders compact capability-driven trust statuses", () => {
     const presentation: PerformanceTrustStripPresentation = {
       items: [
-        { label: "Benchmark", value: "Assigned", support: "Benchmark-relative return metrics are available.", tone: "success" },
-        { label: "Return History", value: "Ready", support: "Time-series return observations are available.", tone: "success" },
+        { label: "Benchmark", value: "Assigned", support: "Benchmark-relative return metrics are available.", tone: "default" },
+        { label: "Return History", value: "Ready", support: "Time-series return observations are available.", tone: "default" },
         { label: "Contribution", value: "Partial", support: "Contribution exists, but only aggregate rows are available.", tone: "warn" },
         { label: "Attribution", value: "Unavailable", support: "Attribution detail is not available.", tone: "danger" },
         { label: "Evidence", value: "Pending", support: "Evidence and lineage surfaces are not exposed by the current gateway contract.", tone: "default" },
