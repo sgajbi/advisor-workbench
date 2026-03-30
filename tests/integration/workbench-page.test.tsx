@@ -159,9 +159,9 @@ describe("WorkbenchPage", () => {
 
     expect(screen.getByRole("heading", { name: "Advisor Workbench" })).toBeInTheDocument();
     expect(screen.getByText(/Unable to load workbench overview for PF_404/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Proposal Workspace" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open Performance Workspace" })).toHaveAttribute(
       "href",
-      "/proposals"
+      "/performance?portfolioId=PF_404"
     );
     expect(screen.getByRole("link", { name: "Open Portfolio Intake" })).toHaveAttribute(
       "href",

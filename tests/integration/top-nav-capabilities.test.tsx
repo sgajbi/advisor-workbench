@@ -10,10 +10,7 @@ describe("TopNav", () => {
 
     expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
-    expect(screen.getByRole("link", { name: "Recommendations" })).toHaveAttribute(
-      "href",
-      "/recommendations"
-    );
+    expect(screen.queryByText("Recommendations")).not.toBeInTheDocument();
 
     const clientsDisabled = screen.getByText("Relationship Book");
     const analyticsDisabled = screen.getByText("Performance");

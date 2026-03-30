@@ -6132,6 +6132,12 @@ a:hover {
     max-width: none;
   }
 
+  .workstation-shell-both.workstation-shell-side-density-comfortable,
+  .workstation-shell-side.workstation-shell-side-comfortable {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
   .workbench-page-header {
     flex-direction: column;
     align-items: stretch;

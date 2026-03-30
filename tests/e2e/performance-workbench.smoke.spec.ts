@@ -1,0 +1,151 @@
+import { test, expect } from '@playwright/test';
+import {
+  expectActiveTab,
+  measureElement,
+} from './workbench-smoke-helpers';
+
+async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
+  await page.goto('/performance?portfolioId=PB_SG_GLOBAL_BAL_001', {
+    waitUntil: 'domcontentloaded',
+  });
+
+  await expect(
+    page.getByRole('heading', { name: /^Performance Workbench$/i })
+  ).toBeVisible({ timeout: 15000 });
+  await expect(
+    page.getByRole('tablist', { name: /^Performance workspace mode$/i })
+  ).toBeVisible({ timeout: 15000 });
+}
+
+test.describe('Performance workbench smoke', () => {
+  test('summary keeps first paint and then mounts deferred analytics by mode', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    const executiveStrip = page.getByLabel('Executive return strip');
+    await expect(executiveStrip.getByText('Portfolio Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Active Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Basis', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Period', { exact: true })).toBeVisible();
+
+    await expect(page.locator('.performance-summary-stage')).toBeVisible();
+    await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
+    await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
+
+    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
+    await expectActiveTab(page, /^Summary$/i);
+
+    await expect(page.getByText('Return path and benchmark context')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText('Return series unavailable')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText('How did this compare across horizons?')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText('What drove the result?')).toBeVisible({
+      timeout: 15000,
+    });
+
+    const returnPathPanel = page.locator('.performance-chart-stage');
+    const chartMetrics = await measureElement(returnPathPanel);
+    expect(chartMetrics.height).toBeLessThanOrEqual(520);
+    expect(chartMetrics.width).toBeGreaterThan(900);
+
+    await analysisTab.click();
+    await expectActiveTab(page, /^Analysis$/i);
+    await expect(page.locator('.performance-analysis-stage')).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Attribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Contribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
+
+    await evidenceTab.click();
+    await expectActiveTab(page, /^Evidence$/i);
+    await expect(page.getByText('Evidence and Calculation Context')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.locator('.performance-evidence-module')).toBeVisible();
+  });
+
+  test('analysis degraded state stays compact and intentional', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    await analysisTab.click();
+    await expectActiveTab(page, /^Analysis$/i);
+
+    const analysisStage = page.locator('.performance-analysis-stage');
+    await expect(analysisStage).toBeVisible({ timeout: 15000 });
+
+    await expect(
+      page.getByRole('heading', { name: /^Attribution Over Time$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Attribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Contribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+
+    const statePanels = page.locator('.performance-analysis-state-panel');
+    await expect(statePanels).toHaveCount(3);
+
+    const statePanelMetrics = await statePanels.evaluateAll((elements) =>
+      elements.map((element) => ({
+        height: element.getBoundingClientRect().height,
+        width: element.getBoundingClientRect().width,
+      }))
+    );
+    expect(statePanelMetrics.every((panel) => panel.height <= 240)).toBeTruthy();
+    expect(statePanelMetrics.every((panel) => panel.width >= 400)).toBeTruthy();
+
+    await expect(page.getByText('Loading attribution trend')).toBeVisible();
+    await expect(page.getByText('Attribution detail unavailable')).toBeVisible();
+    await expect(page.getByText('Contribution detail unavailable')).toBeVisible();
+    await expect(page.locator('.performance-analysis-table')).toHaveCount(0);
+
+    const trendShell = page.locator('.performance-analysis-trend-shell');
+    await expect(trendShell).toBeVisible();
+    const trendMetrics = await measureElement(trendShell);
+    expect(trendMetrics.height).toBeLessThanOrEqual(640);
+    expect(trendMetrics.width).toBeGreaterThan(800);
+  });
+
+  test('evidence mode uses the shared unavailable state shell intentionally', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
+    await evidenceTab.click();
+    await expectActiveTab(page, /^Evidence$/i);
+
+    const evidenceModule = page.locator('.performance-evidence-module');
+    await expect(evidenceModule).toBeVisible({ timeout: 30000 });
+    await expect(
+      page.getByRole('heading', { name: /^Evidence and Calculation Context$/i })
+    ).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('.performance-analysis-state-panel')).toHaveCount(1);
+    await expect(page.getByText('Evidence unavailable')).toBeVisible();
+    await expect(
+      page.getByText(
+        'Execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract.'
+      )
+    ).toBeVisible();
+
+    const evidenceMetrics = await measureElement(evidenceModule);
+    expect(evidenceMetrics.height).toBeLessThanOrEqual(420);
+    expect(evidenceMetrics.width).toBeGreaterThan(900);
+  });
+});

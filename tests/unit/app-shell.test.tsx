@@ -41,7 +41,7 @@ describe("AppShell", () => {
     expect(screen.getByRole("navigation", { name: "Application Switcher" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
-    expect(screen.getByRole("link", { name: "Recommendations" })).toHaveAttribute("href", "/recommendations");
+    expect(screen.queryByText("Recommendations")).not.toBeInTheDocument();
     expect(screen.getByText("Relationship Book")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Portfolio workspace body")).toBeInTheDocument();
   });

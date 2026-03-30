@@ -61,7 +61,6 @@ export default function PortfolioUnavailableWorkspace() {
           <h3>Service State</h3>
           <MetricRow label="Portfolio catalog" value="Unavailable" />
           <MetricRow label="Performance area" value="Available" />
-          <MetricRow label="Recommendations" value="Available" />
           <MetricRow label="Operations" value="Available" />
         </Panel>
       }

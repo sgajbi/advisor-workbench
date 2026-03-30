@@ -421,12 +421,12 @@ export default function PortfolioWorkspaceView({
               <WorkbenchSectionStack className="portfolio-page-sections">
                 {toolbar}
                 {!workspace ? (
-                  <DegradedStatePanel
+                    <DegradedStatePanel
                     title="Portfolio context unavailable"
                     status="Workspace unavailable"
                     actions={[
                       { href: "/performance", label: "Performance" },
-                      { href: "/recommendations", label: "Open Recommendations" },
+                      { href: "/workbench", label: "Open Operations" },
                     ]}
                   >
                     <p className="error-text">We could not load the selected portfolio briefing.</p>
@@ -608,7 +608,6 @@ export default function PortfolioWorkspaceView({
                 </p>
               </div>
               <div className="toolbar">
-                <ActionLink href="/recommendations">Open Recommendations</ActionLink>
                 <ActionLink href="/performance">Performance</ActionLink>
                 <ActionLink href="/workbench">Open Operations</ActionLink>
               </div>

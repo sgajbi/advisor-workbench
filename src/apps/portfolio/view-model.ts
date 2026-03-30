@@ -737,7 +737,10 @@ export function buildPortfolioInsights(workspace: PortfolioWorkspace): Portfolio
 }
 
 export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): PortfolioWorkflowCue[] {
+  const supportedWorkflowKeys = new Set<string>(WORKFLOW_DISPLAY_ORDER);
+
   return [...workspace.workflow_cues]
+    .filter((cue) => supportedWorkflowKeys.has(cue.key))
     .filter(
       (cue, index, cues) => cues.findIndex((candidate) => candidate.key === cue.key) === index
     )
@@ -1102,8 +1105,6 @@ function getWorkflowImpactLabel(key: string): string {
       return "Review portfolio return, benchmark context, and contribution once the book is valued.";
     case "risk":
       return "Validate suitability, exposure, and mandate fit before the next client action.";
-    case "proposal":
-      return "Prepare the next recommended portfolio action or client proposal.";
     default:
       return "Open the next available workflow for this portfolio.";
   }

@@ -75,8 +75,8 @@ export default async function WorkbenchPage({
             Unable to load workbench overview for {portfolioId}. {detail}
           </p>
           <div className="toolbar">
-            <Link href="/proposals" className="nav-link">
-              Open Proposal Workspace
+            <Link href={`/performance?portfolioId=${encodeURIComponent(portfolioId)}`} className="nav-link">
+              Open Performance Workspace
             </Link>
             <Link href="/intake" className="nav-link">
               Open Portfolio Intake
