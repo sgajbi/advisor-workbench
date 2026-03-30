@@ -4330,10 +4330,27 @@ a:hover {
 
 .performance-analysis-stage {
   align-items: start;
+  gap: 1rem;
 }
 
 .performance-analysis-module {
   height: 100%;
+}
+
+.performance-analysis-module .workbench-summary-card-header {
+  gap: 0.375rem;
+}
+
+.performance-analysis-module .workbench-summary-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.performance-analysis-module .workbench-summary-card-subtitle {
+  max-width: 34ch;
+  font-size: var(--workbench-analytic-subtitle-size);
+  line-height: 1.34;
 }
 
 .performance-analysis-state-panel {
@@ -4369,13 +4386,25 @@ a:hover {
 .performance-analysis-toolbar {
   display: inline-flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  row-gap: 0.4rem;
+  min-width: 0;
 }
 
 .performance-analysis-toolbar-context {
   display: inline-flex;
   align-items: center;
+  min-height: 2rem;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid rgba(34, 44, 59, 0.08);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-label-size);
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .performance-analysis-shell-action {
@@ -4384,6 +4413,14 @@ a:hover {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  align-self: start;
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid rgba(34, 44, 59, 0.08);
+  border-radius: 999px;
+  background: #f8fafc;
 }
 
 .performance-analysis-metric-strip {
@@ -4395,7 +4432,20 @@ a:hover {
 }
 
 .performance-analysis-context-row .workbench-chart-context-row-item {
-  padding: 0.62rem 0.78rem;
+  padding: 0.5rem 0.7rem;
+}
+
+.performance-analysis-context-row.workbench-chart-context-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.performance-analysis-context-row .workbench-chart-context-row-label {
+  line-height: 1.2;
+}
+
+.performance-analysis-context-row .workbench-chart-context-row-value {
+  line-height: 1.25;
 }
 
 .performance-summary-driver-module .workbench-summary-card-subtitle {
@@ -4545,6 +4595,33 @@ a:hover {
 .performance-unavailable-copy {
   margin: 0.5rem 0 0;
   line-height: 1.45;
+}
+
+.performance-analysis-toolbar .MuiFormControl-root {
+  min-width: 148px;
+}
+
+.performance-analysis-toolbar .MuiInputBase-root {
+  min-height: 2rem;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.performance-analysis-toolbar .MuiSelect-select {
+  padding-top: 0.46rem;
+  padding-bottom: 0.46rem;
+  font-size: var(--workbench-analytic-context-value-size);
+  font-weight: 600;
+}
+
+.performance-analysis-toolbar .MuiTypography-root {
+  margin-bottom: 0.18rem;
+}
+
+@media (max-width: 1200px) {
+  .performance-analysis-context-row.workbench-chart-context-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .performance-effect-strip {

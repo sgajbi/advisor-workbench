@@ -16,5 +16,8 @@ describe("PerformanceAnalysisToolbar", () => {
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
     expect(screen.getByText("Segment")).toBeInTheDocument();
     expect(screen.getByText("Versus Benchmark")).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-toolbar-context")?.textContent).toContain(
+      "Versus Benchmark"
+    );
   });
 });

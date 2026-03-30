@@ -77,6 +77,11 @@ describe("PerformanceAttributionTrendPanel", () => {
 
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
+    expect(
+      document.querySelectorAll(
+        ".performance-analysis-context-row .workbench-chart-context-row-item"
+      )
+    ).toHaveLength(4);
     expect(screen.getByLabelText("Attribution trend summary strip")).toBeInTheDocument();
     expect(screen.getByText("Latest Active Return")).toBeInTheDocument();
     expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
