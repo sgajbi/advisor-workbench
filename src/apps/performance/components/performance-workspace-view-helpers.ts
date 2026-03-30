@@ -249,7 +249,7 @@ export function getPerformanceExecutiveReturnPresentation({
       }),
       buildMetricCard({
         label: "Period",
-        value: workspace.period,
+        value: formatExecutivePeriodValue(workspace.period),
         support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
         priority: "utility",
       }),
@@ -395,5 +395,12 @@ function formatPctValue(value: number | null | undefined): string {
 
 function formatCompactPctValue(value: number | null | undefined): string {
   return formatPctValue(value);
+}
+
+function formatExecutivePeriodValue(period: string): string {
+  if (period === "EXPLICIT") {
+    return "Explicit window";
+  }
+  return formatLabel(period);
 }
 
