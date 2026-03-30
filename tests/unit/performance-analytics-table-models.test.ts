@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPerformanceAttributionTrendTableModel,
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
   buildPerformanceReturnPathTableModel,
 } from "../../src/apps/performance/components/performance-analytics-table-models";
 import {
+  buildPerformanceAttributionTrend,
   buildPerformanceHorizonComparison,
   buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
@@ -96,5 +98,33 @@ describe("performance analytics table models", () => {
       spreadLabel: "Fee Drag",
       spreadValue: "0.46%",
     });
+  });
+
+  it("builds an attribution trend table from the deferred trend contract", () => {
+    const trend = buildPerformanceAttributionTrend();
+    const model = buildPerformanceAttributionTrendTableModel({ rows: trend.rows });
+
+    expect(model.columns.map((column) => column.label)).toEqual([
+      "Period",
+      "Window",
+      "Allocation",
+      "Selection",
+      "Interaction",
+      "Total",
+      "Cum Total",
+      "Active",
+      "Residual",
+    ]);
+    expect(model.rows[0]?.cells).toEqual([
+      "2026-01",
+      "01 Jan 2026 - 31 Jan 2026",
+      "0.12%",
+      "0.08%",
+      "0.02%",
+      "0.22%",
+      "0.22%",
+      "0.22%",
+      "0.00%",
+    ]);
   });
 });

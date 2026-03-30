@@ -1,5 +1,6 @@
 import type {
   PerformanceChartPoint,
+  PerformanceAttributionTrendRow,
   PerformanceHorizonComparisonRow,
 } from "@/features/workbench/types";
 
@@ -43,6 +44,50 @@ export type PerformanceHorizonVisualCard = {
   spreadLabel: string;
   spreadValue: string;
 };
+
+export function buildPerformanceAttributionTrendTableModel({
+  rows,
+}: {
+  rows: PerformanceAttributionTrendRow[];
+}): PerformanceAnalyticsTableModel {
+  const columns: PerformanceAnalyticsTableColumn[] = [
+    { key: "period", label: "Period" },
+    { key: "window", label: "Window" },
+    { key: "allocation", label: "Allocation", align: "right" },
+    { key: "selection", label: "Selection", align: "right" },
+    { key: "interaction", label: "Interaction", align: "right" },
+    { key: "total", label: "Total", align: "right" },
+    { key: "cumulativeTotal", label: "Cum Total", align: "right" },
+    { key: "active", label: "Active", align: "right" },
+    { key: "residual", label: "Residual", align: "right" },
+  ];
+
+  return {
+    columns,
+    rows: rows.map((row) => {
+      const cellMap: Record<string, string> = {
+        period: row.period_label,
+        window:
+          row.period_start && row.period_end
+            ? `${formatDate(row.period_start)} - ${formatDate(row.period_end)}`
+            : "N/A",
+        allocation: formatPct(row.allocation_pct),
+        selection: formatPct(row.selection_pct),
+        interaction: formatPct(row.interaction_pct),
+        total: formatPct(row.total_effect_pct),
+        cumulativeTotal: formatPct(row.cumulative_total_effect_pct),
+        active: formatPct(row.active_return_pct),
+        residual: formatPct(row.residual_pct),
+      };
+
+      return {
+        key: row.period_label,
+        ariaLabel: `${row.period_label} attribution trend row`,
+        cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
+      };
+    }),
+  };
+}
 
 const LEADING_COLUMNS: PerformanceAnalyticsTableColumn[] = [
   { key: "period", label: "Period" },

@@ -5,6 +5,7 @@ import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 
 import {
+  AnalyticsTable,
   WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
@@ -15,6 +16,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
+import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
@@ -231,6 +233,10 @@ export default function PerformanceAttributionTrendPanel({
   }, [rows]);
 
   const latestRow = rows?.at(-1) ?? null;
+  const tableModel = useMemo(
+    () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
+    [rows]
+  );
   const normalizationMessages: string[] = [];
   if (trend?.requested_chart_frequency_supported === false) {
     normalizationMessages.push(
@@ -311,6 +317,10 @@ export default function PerformanceAttributionTrendPanel({
             ariaLabel="Attribution trend summary strip"
             items={[
               {
+                label: "Latest Total Effect",
+                value: formatPct(latestRow.total_effect_pct),
+              },
+              {
                 label: "Latest Active Return",
                 value: formatPct(latestRow.active_return_pct),
               },
@@ -346,19 +356,28 @@ export default function PerformanceAttributionTrendPanel({
           body="Loading attribution effect trend."
         />
       ) : chartOption ? (
-        <div
-          className="performance-chart-library-frame"
-          role="img"
-          aria-label="Attribution over time chart"
-        >
-          <ReactECharts
-            option={chartOption}
-            style={{ width: "100%", height: "320px" }}
-            opts={{ renderer: "svg" }}
-            notMerge
-            lazyUpdate
+        <>
+          <div
+            className="performance-chart-library-frame"
+            role="img"
+            aria-label="Attribution over time chart"
+          >
+            <ReactECharts
+              option={chartOption}
+              style={{ width: "100%", height: "320px" }}
+              opts={{ renderer: "svg" }}
+              notMerge
+              lazyUpdate
+            />
+          </div>
+          <AnalyticsTable
+            ariaLabel="Attribution trend table"
+            columns={tableModel.columns}
+            rows={tableModel.rows}
+            dense
+            className="performance-analysis-table performance-attribution-trend-table"
           />
-        </div>
+        </>
       ) : (
         <PerformanceAnalysisStatePanel
           state="unavailable"

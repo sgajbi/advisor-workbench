@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAttributionTrendPanel from "../../src/apps/performance/components/performance-attribution-trend-panel";
@@ -83,10 +83,20 @@ describe("PerformanceAttributionTrendPanel", () => {
       )
     ).toHaveLength(4);
     expect(screen.getByLabelText("Attribution trend summary strip")).toBeInTheDocument();
+    expect(screen.getByText("Latest Total Effect")).toBeInTheDocument();
     expect(screen.getByText("Latest Active Return")).toBeInTheDocument();
     expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
-    expect(screen.getByText("Residual")).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("Attribution trend summary strip")).getByText("Residual")
+    ).toBeInTheDocument();
     expect(screen.getByTestId("performance-attribution-trend-chart")).toBeInTheDocument();
+    const trendTable = screen.getByLabelText("Attribution trend table");
+    expect(within(trendTable).getByText("Allocation")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Selection")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Interaction")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Cum Total")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Residual")).toBeInTheDocument();
+    expect(within(trendTable).getByText("2026-01")).toBeInTheDocument();
     expect(getTrendMock).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
       chartFrequency: "monthly",
