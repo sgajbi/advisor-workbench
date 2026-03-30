@@ -1,4 +1,6 @@
-export const PERIOD_OPTIONS = ["MTD", "QTD", "YTD", "1Y", "3Y", "5Y"] as const;
+import { CANONICAL_PERFORMANCE_PERIOD_OPTIONS } from "./periods";
+
+export const PERIOD_OPTIONS = CANONICAL_PERFORMANCE_PERIOD_OPTIONS;
 export const BASIS_OPTIONS = ["NET", "GROSS"] as const;
 export const CONTRIBUTION_DIMENSION_OPTIONS = ["asset_class", "sector", "country"] as const;
 export const ATTRIBUTION_DIMENSION_OPTIONS = [
