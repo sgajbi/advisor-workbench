@@ -2,6 +2,7 @@ import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 
 import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
+import { buildPerformancePositionContributionTableModel } from "./performance-analytics-table-models";
 import { formatLabel, formatPct } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
@@ -33,6 +34,13 @@ export default function PerformanceAnalysisContributionSection({
   isDetailsPending,
   capabilities,
 }: PerformanceAnalysisContributionSectionProps) {
+  const hasAggregateContributionLevels = (workspace.contribution?.levels?.length ?? 0) > 0;
+  const hasPositionContributionRows = (workspace.contribution?.position_rows?.length ?? 0) > 0;
+  const positionTableModel = hasPositionContributionRows
+    ? buildPerformancePositionContributionTableModel({
+        rows: workspace.contribution?.position_rows ?? [],
+      })
+    : null;
   const actions = (
     <PerformanceAnalysisToolbar>
       <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -83,8 +91,28 @@ export default function PerformanceAnalysisContributionSection({
           capabilities.contributionDetail.reason ??
           "Contribution detail is not available for the current selection."
         }
-        hint="Contribution detail requires source-backed contribution levels for the selected segment and horizon."
+        hint={
+          hasAggregateContributionLevels
+            ? "Aggregate contribution remains available even when position-level ranking is absent."
+            : "Contribution detail requires source-backed contribution levels for the selected segment and horizon."
+        }
+        allowPartialContent={hasAggregateContributionLevels}
       >
+        {positionTableModel ? (
+          <PerformanceAnalysisLevelSection title="Top Positions">
+            <AnalyticsTable
+              className="performance-analysis-table"
+              dense
+              ariaLabel="Position contribution table"
+              columns={positionTableModel.columns}
+              rows={positionTableModel.rows.map((row) => ({
+                key: row.key,
+                ariaLabel: row.ariaLabel,
+                cells: row.cells,
+              }))}
+            />
+          </PerformanceAnalysisLevelSection>
+        ) : null}
         {workspace.contribution?.levels.map((level) => {
           const totals = getContributionTotals(workspace, level) ?? null;
           const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);

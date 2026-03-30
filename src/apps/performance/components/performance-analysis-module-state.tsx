@@ -10,6 +10,7 @@ export default function PerformanceAnalysisModuleState({
   unavailableTitle,
   body,
   hint,
+  allowPartialContent = false,
   children,
 }: {
   capability: WorkspaceCapability;
@@ -19,6 +20,7 @@ export default function PerformanceAnalysisModuleState({
   unavailableTitle: string;
   body: string;
   hint?: string;
+  allowPartialContent?: boolean;
   children: React.ReactNode;
 }) {
   if (capability.state === "supported") {
@@ -32,6 +34,20 @@ export default function PerformanceAnalysisModuleState({
         title="Loading detail"
         body={loadingText}
       />
+    );
+  }
+
+  if (capability.state === "partial" && allowPartialContent) {
+    return (
+      <>
+        <PerformanceAnalysisStatePanel
+          state="partial"
+          title={partialTitle}
+          body={body}
+          hint={hint}
+        />
+        {children}
+      </>
     );
   }
 

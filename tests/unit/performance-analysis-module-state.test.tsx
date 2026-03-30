@@ -64,4 +64,29 @@ describe("PerformanceAnalysisModuleState", () => {
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
     ).toBeTruthy();
   });
+
+  it("renders the partial panel and content together when partial content is allowed", () => {
+    render(
+      <PerformanceAnalysisModuleState
+        capability={{ state: "partial", reason: "Aggregate fallback only." }}
+        isDetailsPending={false}
+        loadingText="Loading detail."
+        partialTitle="Detail is partial"
+        unavailableTitle="Detail unavailable"
+        body="Aggregate fallback only."
+        hint="Aggregate data remains available."
+        allowPartialContent
+      >
+        <div>Aggregate table</div>
+      </PerformanceAnalysisModuleState>
+    );
+
+    expect(screen.getByText("Detail is partial")).toBeInTheDocument();
+    expect(screen.getByText("Aggregate fallback only.")).toBeInTheDocument();
+    expect(screen.getByText("Aggregate data remains available.")).toBeInTheDocument();
+    expect(screen.getByText("Aggregate table")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
+    ).toBeTruthy();
+  });
 });

@@ -44,8 +44,8 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getByRole("heading", { name: "Contribution Detail" })).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
-    expect(screen.getByText("Local")).toBeInTheDocument();
-    expect(screen.getByText("FX")).toBeInTheDocument();
+    expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Total")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
   });
@@ -145,6 +145,11 @@ describe("PerformanceAnalysisMode", () => {
     expect(
       screen.getByText("Contribution exists, but only aggregate rows are available.")
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();

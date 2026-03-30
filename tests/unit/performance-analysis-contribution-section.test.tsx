@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import PerformanceAnalysisContributionSection from "../../src/apps/performance/components/performance-analysis-contribution-section";
 import {
+  buildAggregateContributionPerformanceScenario,
   buildPerformanceCapabilities,
   buildSupportedPerformanceScenario,
   buildUnavailableContributionPerformanceScenario,
@@ -35,9 +36,13 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
+    expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
+    expect(screen.getByText("Top Positions")).toBeInTheDocument();
+    expect(screen.getByText("Position")).toBeInTheDocument();
+    expect(screen.getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
-    expect(screen.getByText("Local")).toBeInTheDocument();
-    expect(screen.getByText("FX")).toBeInTheDocument();
+    expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
   });
@@ -84,6 +89,35 @@ describe("PerformanceAnalysisContributionSection", () => {
     ).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
+  });
+
+  it("renders aggregate contribution detail alongside the partial-state banner when only aggregate rows exist", () => {
+    const scenario = buildAggregateContributionPerformanceScenario();
+
+    render(
+      <PerformanceAnalysisContributionSection
+        workspace={scenario.workspace}
+        contributionDimension="asset_class"
+        onRequestChange={undefined}
+        isUpdating={false}
+        isDetailsPending={false}
+        capabilities={scenario.capabilities}
+      />
+    );
+
+    expect(screen.getByText("Contribution detail is partial")).toBeInTheDocument();
+    expect(
+      screen.getByText("Contribution exists, but only aggregate rows are available.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
   });
 
