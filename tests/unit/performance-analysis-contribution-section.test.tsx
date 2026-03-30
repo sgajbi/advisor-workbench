@@ -47,6 +47,49 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByText("Total")).toBeInTheDocument();
   });
 
+  it("keeps the position return column when upstream emits real returns and no local contribution", () => {
+    const workspace = buildWorkspace();
+    if (!workspace.contribution) {
+      throw new Error("Expected contribution detail in supported workspace fixture");
+    }
+    workspace.contribution.position_rows = [
+      {
+        position_id: "PB_SG_GLOBAL_BAL_001:FO_EQ_AAPL_US",
+        contribution_pct: 0.29551,
+        weight_avg_pct: 7.444525,
+        total_return_pct: 4.308425,
+        local_contribution_pct: 0,
+        fx_contribution_pct: 0.29551,
+      },
+      {
+        position_id: "PB_SG_GLOBAL_BAL_001:FO_EQ_MSFT_US",
+        contribution_pct: 0.173727,
+        weight_avg_pct: 10.268896,
+        total_return_pct: 1.71342,
+        local_contribution_pct: 0,
+        fx_contribution_pct: 0.173727,
+      },
+    ];
+
+    render(
+      <PerformanceAnalysisContributionSection
+        workspace={workspace}
+        contributionDimension="asset_class"
+        onRequestChange={undefined}
+        isUpdating={false}
+        isDetailsPending={false}
+        capabilities={supportedCapabilities}
+      />
+    );
+
+    const positionTable = screen.getByLabelText("Position contribution table");
+    expect(within(positionTable).getByText("Return")).toBeInTheDocument();
+    expect(within(positionTable).queryByText("Local")).not.toBeInTheDocument();
+    expect(within(positionTable).getByText("AAPL US")).toBeInTheDocument();
+    expect(within(positionTable).getByText("4.31%")).toBeInTheDocument();
+    expect(within(positionTable).getAllByText("0.30%")).toHaveLength(2);
+  });
+
   it("renders a loading state when contribution detail is pending", () => {
     const scenario = buildUnavailableContributionPerformanceScenario();
 
