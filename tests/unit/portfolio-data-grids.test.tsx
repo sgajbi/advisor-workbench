@@ -274,6 +274,8 @@ describe("portfolio data grids", () => {
     expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".module-state-panel-partial")).toBeTruthy();
     expect(screen.getByTestId("mock-grid")).toBeInTheDocument();
+    expect(screen.getByText("Instrument")).toBeInTheDocument();
+    expect(screen.getByText("Weight")).toBeInTheDocument();
   });
 
   it("shows an actionable error state when transactions cannot be loaded", async () => {
@@ -394,5 +396,87 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("Refreshing transactions…")).toBeInTheDocument();
     expect(document.querySelector(".workbench-inline-refresh-note")).toBeTruthy();
+  });
+
+  it("keeps supported holdings and transactions on the shared grid frame path", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            total: 1,
+            skip: 0,
+            limit: 200,
+            transactions: [
+              {
+                transaction_id: "TX_1",
+                transaction_date: "2026-03-20T00:00:00Z",
+                transaction_type: "BUY",
+                component_type: "TRADE",
+                security_id: "EQ_1",
+                instrument_id: "AAPL",
+                quantity: 50,
+                net_cost_base: 9000,
+                currency: "USD",
+                settlement_status: "SETTLED",
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    const { container } = render(
+      <>
+        <PortfolioHoldingsGrid
+          portfolioId="MANUAL_PB_USD_001"
+          positions={[
+            {
+              security_id: "EQ_1",
+              instrument_name: "Apple Inc.",
+              asset_class: "Equities",
+              quantity: 700,
+              market_price: 210,
+              market_value_base: 147000,
+              unrealized_gain_loss_base: 12000,
+              weight_pct: 14.67,
+              currency: "USD",
+            },
+          ]}
+          baseCurrency="USD"
+          asOfDate="2026-03-28"
+          columnMode="expanded"
+        />
+        <PortfolioTransactionsGrid
+          portfolioId="MANUAL_PB_USD_001"
+          baseCurrency="USD"
+          asOfDate="2026-03-28"
+          defaultStartDate="2026-03-01"
+          defaultEndDate="2026-03-28"
+          initialTransactions={[
+            {
+              transaction_id: "TX_1",
+              transaction_date: "2026-03-20T00:00:00Z",
+              transaction_type: "BUY",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 50,
+              net_cost_base: 9000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+            },
+          ]}
+        />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Trade Date")).toBeInTheDocument();
+    });
+
+    expect(container.querySelectorAll(".portfolio-data-grid").length).toBeGreaterThanOrEqual(2);
+    expect(container.querySelectorAll(".portfolio-data-grid .portfolio-module-state")).toHaveLength(0);
+    expect(screen.getAllByTestId("mock-grid")).toHaveLength(2);
   });
 });

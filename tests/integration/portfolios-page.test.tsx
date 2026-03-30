@@ -285,6 +285,10 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
+    expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeTruthy();
+    expect(document.querySelectorAll(".portfolio-analytics-table").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".portfolio-data-grid").length).toBeGreaterThanOrEqual(2);
+    expect(document.querySelector(".portfolio-cashflow-table.analytics-table-frame")).toBeTruthy();
     expect(screen.getAllByText("25 Feb 2026").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/booked events in 30D/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
@@ -298,6 +302,8 @@ describe("PortfolioFoundationPage", () => {
       "aria-pressed",
       "true"
     );
+    expect(document.querySelector("#portfolio-drilldown .portfolio-holdings-grid .portfolio-module-state")).toBeFalsy();
+    expect(document.querySelector("#portfolio-drilldown .portfolio-transactions-grid .portfolio-module-state")).toBeFalsy();
 
     fireEvent.click(
       screen.getByRole("listitem", { name: /Apple Inc: 250,000 USD. Select to filter holdings./i })
