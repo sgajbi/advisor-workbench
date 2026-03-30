@@ -1,11 +1,17 @@
 import type {
+  ContributionPositionView,
   ContributionRowView,
   PerformanceChartPoint,
   PerformanceAttributionTrendRow,
   PerformanceHorizonComparisonRow,
 } from "@/features/workbench/types";
 
-import { formatCurrency, formatDate, formatPct } from "../formatters";
+import {
+  formatCurrency,
+  formatDate,
+  formatPct,
+  formatPerformancePositionLabel,
+} from "../formatters";
 
 export type PerformanceAnalyticsTableColumn = {
   key: string;
@@ -75,6 +81,42 @@ export function buildPerformanceContributionTableModel({
       return {
         key: row.key_label,
         ariaLabel: `${row.key_label} contribution row`,
+        cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
+      };
+    }),
+  };
+}
+
+export function buildPerformancePositionContributionTableModel({
+  rows,
+}: {
+  rows: ContributionPositionView[];
+}): PerformanceAnalyticsTableModel {
+  const columns: PerformanceAnalyticsTableColumn[] = [
+    { key: "position", label: "Position" },
+    { key: "contribution", label: "Contribution", align: "right" },
+    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "return", label: "Return", align: "right" },
+    { key: "local", label: "Local", align: "right" },
+    { key: "fx", label: "FX", align: "right" },
+  ];
+
+  return {
+    columns,
+    rows: rows.map((row) => {
+      const positionLabel = formatPerformancePositionLabel(row.position_id);
+      const cellMap: Record<string, string> = {
+        position: positionLabel,
+        contribution: formatPct(row.contribution_pct),
+        weight: formatPct(row.weight_avg_pct),
+        return: formatPct(row.total_return_pct),
+        local: formatPct(row.local_contribution_pct),
+        fx: formatPct(row.fx_contribution_pct),
+      };
+
+      return {
+        key: row.position_id,
+        ariaLabel: `${positionLabel} contribution row`,
         cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
       };
     }),

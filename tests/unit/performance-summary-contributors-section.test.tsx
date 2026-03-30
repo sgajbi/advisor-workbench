@@ -85,9 +85,8 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(document.querySelectorAll(".workbench-ranked-bar-row")).toHaveLength(2);
     expect(screen.getByLabelText("Contributor summary")).toBeInTheDocument();
     expect(document.querySelector(".performance-contributors-table.analytics-table-frame-dense")).toBeTruthy();
-    expect(screen.getByText("Bucket")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
-    expect(screen.getByText("AAPL")).toBeInTheDocument();
+    expect(screen.getByText("Position")).toBeInTheDocument();
+    expect(screen.getAllByText("AAPL")).toHaveLength(2);
     expect(screen.getByText("TLT")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 8.00%")).toBeInTheDocument();

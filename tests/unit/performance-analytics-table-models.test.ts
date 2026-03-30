@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPerformanceContributionTableModel,
+  buildPerformancePositionContributionTableModel,
   buildPerformanceAttributionTrendTableModel,
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
@@ -149,6 +150,29 @@ describe("performance analytics table models", () => {
       "7.40%",
       "3.40%",
       "0.40%",
+    ]);
+  });
+
+  it("builds a position contribution table from workspace position rows", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const rows = scenario.workspace.contribution?.position_rows ?? [];
+    const model = buildPerformancePositionContributionTableModel({ rows });
+
+    expect(model.columns.map((column) => column.label)).toEqual([
+      "Position",
+      "Contribution",
+      "Avg. Weight",
+      "Return",
+      "Local",
+      "FX",
+    ]);
+    expect(model.rows[0]?.cells).toEqual([
+      "AAPL",
+      "1.55%",
+      "24.10%",
+      "8.20%",
+      "1.18%",
+      "0.37%",
     ]);
   });
 });

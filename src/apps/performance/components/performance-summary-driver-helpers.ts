@@ -1,13 +1,18 @@
 import type {
+  ContributionPositionView,
   ContributionRowView,
   PerformanceBenchmarkOptionView,
   PerformanceHorizonComparisonRow,
 } from "@/features/workbench/types";
 
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
-import { buildPerformanceContributionTableModel } from "./performance-analytics-table-models";
+import {
+  buildPerformanceContributionTableModel,
+  buildPerformancePositionContributionTableModel,
+  type PerformanceAnalyticsTableModel,
+} from "./performance-analytics-table-models";
 
-import { formatLabel, formatPct } from "../formatters";
+import { formatLabel, formatPct, formatPerformancePositionLabel } from "../formatters";
 
 export type PerformanceContributorRankedItem = {
   key: string;
@@ -30,7 +35,7 @@ export type PerformanceContributorsPresentation =
       frame: PerformanceSummaryDriverModuleFrame;
       positiveRows: PerformanceContributorRankedItem[];
       negativeRows: PerformanceContributorRankedItem[];
-      tableModel: ReturnType<typeof buildPerformanceContributionTableModel>;
+      tableModel: PerformanceAnalyticsTableModel;
     }
   | {
       mode: "partial";
@@ -38,7 +43,7 @@ export type PerformanceContributorsPresentation =
       noticeTitle: string;
       noticeBody: string;
       hint: string;
-      tableModel: ReturnType<typeof buildPerformanceContributionTableModel>;
+      tableModel: PerformanceAnalyticsTableModel;
     }
   | {
       mode: "loading";
@@ -109,14 +114,20 @@ export function getPerformanceContributorsPresentation({
     topContributors,
     bottomContributors,
   });
-  const tableModel = buildPerformanceContributionTableModel({
-    rows: aggregateRows,
-  });
+  const positionRows = getSortedPositionContributorRows(workspace.contribution?.position_rows ?? []);
+  const tableModel =
+    capabilities.contributionRanking.state === "supported" && positionRows.length > 0
+      ? buildPerformancePositionContributionTableModel({
+          rows: positionRows,
+        })
+      : buildPerformanceContributionTableModel({
+          rows: aggregateRows,
+        });
   const positiveRankedRows =
     positivePositionContributors.length > 0
       ? positivePositionContributors.map((row) => ({
           key: `top-position-${row.position_id}`,
-          title: row.position_id,
+          title: formatPerformancePositionLabel(row.position_id),
           subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
           value: formatPct(row.contribution_pct),
           magnitudePct: Math.abs(row.contribution_pct ?? 0),
@@ -127,7 +138,7 @@ export function getPerformanceContributorsPresentation({
     negativePositionContributors.length > 0
       ? negativePositionContributors.map((row) => ({
           key: `bottom-position-${row.position_id}`,
-          title: row.position_id,
+          title: formatPerformancePositionLabel(row.position_id),
           subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
           value: formatPct(row.contribution_pct),
           magnitudePct: Math.abs(row.contribution_pct ?? 0),
@@ -178,6 +189,14 @@ export function getPerformanceContributorsPresentation({
       "Contributor ranking is not available for the current selection.",
     hint: "Position-level ranking requires source-backed contribution detail.",
   };
+}
+
+function getSortedPositionContributorRows(
+  rows: ContributionPositionView[]
+): ContributionPositionView[] {
+  return [...rows].sort(
+    (left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct)
+  );
 }
 
 function getAggregateContributorRows(

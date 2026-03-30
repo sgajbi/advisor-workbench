@@ -92,7 +92,8 @@ describe("performance summary driver helpers", () => {
       value: "-0.20%",
       tone: "negative",
     });
-    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
+    expect(presentation.tableModel.columns[0]?.label).toBe("Position");
+    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("AAPL");
   });
 
   it("keeps supported ranked contributor cards position-only", () => {
@@ -109,7 +110,8 @@ describe("performance summary driver helpers", () => {
     }
     expect(presentation.positiveRows).toEqual([]);
     expect(presentation.negativeRows).toEqual([]);
-    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
+    expect(presentation.tableModel.columns[0]?.label).toBe("Position");
+    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("AAPL");
   });
 
   it("builds a loading contributor presentation while detailed support is pending", () => {

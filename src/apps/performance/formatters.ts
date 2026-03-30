@@ -48,3 +48,12 @@ export function formatLabel(value: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+export function formatPerformancePositionLabel(value: string): string {
+  const rawIdentifier = value.includes(":") ? value.split(":").at(-1) ?? value : value;
+  const normalizedIdentifier = rawIdentifier.replace(
+    /^(FO_EQ_|FO_ETF_|FO_FUND_|FO_BOND_|FO_PRIV_|CASH_)/,
+    ""
+  );
+  return normalizedIdentifier.replaceAll("_", " ");
+}
