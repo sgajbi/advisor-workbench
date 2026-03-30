@@ -1,5 +1,6 @@
 import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import type {
+  WorkbenchPerformanceCapabilities,
   PerformanceComparativeSummary,
   WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceWorkspaceDetails,
@@ -51,10 +52,76 @@ export function buildPerformanceCapabilities(
   };
 }
 
+function toContractCapabilities(
+  capabilities: PerformanceWorkspaceCapabilities
+): WorkbenchPerformanceCapabilities {
+  return {
+    summary_kpis: capabilities.summaryKpis,
+    return_path: capabilities.returnPath,
+    benchmark_comparison: capabilities.benchmarkComparison,
+    multi_horizon_returns: capabilities.multiHorizonReturns,
+    contribution_ranking: capabilities.contributionRanking,
+    attribution_detail: capabilities.attributionDetail,
+    contribution_detail: capabilities.contributionDetail,
+    evidence: capabilities.evidence,
+  };
+}
+
+function deriveFixtureCapabilities(
+  options?: PerformanceFixtureOptions
+): PerformanceWorkspaceCapabilities {
+  if (options?.unassignedBenchmark && options?.unavailableSummarySeries) {
+    return buildPerformanceCapabilities({
+      returnPath: {
+        state: "unavailable",
+        reason: "Published return observations are not available for the selected horizon.",
+      },
+      benchmarkComparison: {
+        state: "unavailable",
+        reason: "No benchmark is assigned to this mandate.",
+      },
+    });
+  }
+  if (options?.partialBenchmarkComparison || options?.aggregateContributionOnly || options?.unavailableAttribution) {
+    return buildPerformanceCapabilities({
+      ...(options.partialBenchmarkComparison
+        ? {
+            benchmarkComparison: {
+              state: "partial",
+              reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+            },
+          }
+        : {}),
+      ...(options.aggregateContributionOnly
+        ? {
+            contributionRanking: {
+              state: "partial",
+              reason: "Contribution exists, but only aggregate rows are available.",
+            },
+            contributionDetail: {
+              state: "partial",
+              reason: "Contribution exists, but only aggregate rows are available.",
+            },
+          }
+        : {}),
+      ...(options.unavailableAttribution
+        ? {
+            attributionDetail: {
+              state: "unavailable",
+              reason: "Attribution detail is not available for the current selection.",
+            },
+          }
+        : {}),
+    });
+  }
+  return buildPerformanceCapabilities();
+}
+
 export function buildPerformanceWorkspaceSummary(
   portfolioId = "PF_1001",
   options?: PerformanceFixtureOptions
 ): WorkbenchPerformanceWorkspaceSummary {
+  const capabilities = deriveFixtureCapabilities(options);
   return {
     correlation_id: "corr-performance",
     contract_version: "v1",
@@ -75,6 +142,7 @@ export function buildPerformanceWorkspaceSummary(
             is_assigned: true,
           },
         ],
+    capabilities: toContractCapabilities(capabilities),
     portfolio: {
       portfolio_id: portfolioId,
       client_id: "CIF_1001",
@@ -147,6 +215,7 @@ export function buildPerformanceWorkspaceDetails(
   portfolioId = "PF_1001",
   options?: PerformanceFixtureOptions
 ): WorkbenchPerformanceWorkspaceDetails {
+  const capabilities = deriveFixtureCapabilities(options);
   return {
     correlation_id: "corr-performance",
     contract_version: "v1",
@@ -161,6 +230,7 @@ export function buildPerformanceWorkspaceDetails(
     detail_basis: "NET",
     segment: "asset_class",
     benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+    capabilities: toContractCapabilities(capabilities),
     net_chart: options?.unavailableSummarySeries
       ? []
       : [
@@ -295,6 +365,9 @@ export function buildPerformancePresentationScenario(options?: {
 }): PerformancePresentationScenario {
   const workspace = {
     ...buildPerformanceWorkspace(options?.portfolioId, options?.fixtureOptions),
+    capabilities: toContractCapabilities(
+      buildPerformanceCapabilities(options?.capabilityOverrides)
+    ),
     ...options?.workspaceOverrides,
   };
 

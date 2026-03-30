@@ -395,4 +395,38 @@ describe("performance view model", () => {
     expect(partialCapabilities.benchmarkComparison.state).toBe("partial");
     expect(partialCapabilities.contributionRanking.state).toBe("partial");
   });
+
+  it("prefers backend-owned capability metadata when the contract provides it", () => {
+    const capabilities = getPerformanceWorkspaceCapabilities(
+      buildWorkspace({
+        capabilities: {
+          summary_kpis: { state: "supported", reason: "Summary supported." },
+          return_path: { state: "unavailable", reason: "No published return history." },
+          benchmark_comparison: { state: "partial", reason: "Benchmark-relative returns incomplete." },
+          multi_horizon_returns: { state: "supported", reason: "Horizon comparison available." },
+          contribution_ranking: { state: "partial", reason: "Only aggregate contribution rows are available." },
+          attribution_detail: { state: "unavailable", reason: "Attribution detail unavailable." },
+          contribution_detail: { state: "partial", reason: "Contribution detail is aggregate-only." },
+          evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+        },
+      })
+    );
+
+    expect(capabilities.returnPath).toMatchObject({
+      state: "unavailable",
+      reason: "No published return history.",
+    });
+    expect(capabilities.benchmarkComparison).toMatchObject({
+      state: "partial",
+      reason: "Benchmark-relative returns incomplete.",
+    });
+    expect(capabilities.contributionRanking).toMatchObject({
+      state: "partial",
+      reason: "Only aggregate contribution rows are available.",
+    });
+    expect(capabilities.attributionDetail).toMatchObject({
+      state: "unavailable",
+      reason: "Attribution detail unavailable.",
+    });
+  });
 });

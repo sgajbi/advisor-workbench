@@ -237,6 +237,22 @@ export type PerformanceBenchmarkOptionView = {
   is_assigned: boolean;
 };
 
+export type PerformanceModuleCapability = {
+  state: "supported" | "partial" | "unavailable" | "hidden";
+  reason?: string | null;
+};
+
+export type WorkbenchPerformanceCapabilities = {
+  summary_kpis: PerformanceModuleCapability;
+  return_path: PerformanceModuleCapability;
+  benchmark_comparison: PerformanceModuleCapability;
+  multi_horizon_returns: PerformanceModuleCapability;
+  contribution_ranking: PerformanceModuleCapability;
+  attribution_detail: PerformanceModuleCapability;
+  contribution_detail: PerformanceModuleCapability;
+  evidence: PerformanceModuleCapability;
+};
+
 export type PerformanceHorizonComparisonRow = {
   period: string;
   period_start?: string | null;
@@ -331,6 +347,7 @@ export type WorkbenchPerformanceWorkspace = {
   segment?: string;
   benchmark_code: string | null;
   benchmark_options?: PerformanceBenchmarkOptionView[];
+  capabilities?: WorkbenchPerformanceCapabilities;
   portfolio: WorkbenchOverview["portfolio"];
   overview: WorkbenchOverview["overview"];
   net_performance: PerformanceComparativeSummary;
@@ -357,6 +374,7 @@ export type WorkbenchPerformanceWorkspaceSummary = Pick<
   | "detail_basis"
   | "benchmark_code"
   | "benchmark_options"
+  | "capabilities"
   | "portfolio"
   | "overview"
   | "net_performance"
@@ -381,6 +399,7 @@ export type WorkbenchPerformanceWorkspaceDetails = Pick<
   | "detail_basis"
   | "segment"
   | "benchmark_code"
+  | "capabilities"
   | "net_chart"
   | "gross_chart"
   | "contribution"
