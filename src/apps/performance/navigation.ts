@@ -36,6 +36,7 @@ export function buildPerformanceHref({
   reportEndDate?: string;
 }) {
   const query = new URLSearchParams();
+  const isExplicitWindow = period === "EXPLICIT";
   query.set("portfolioId", portfolioId);
   query.set("period", period);
   query.set("detailBasis", detailBasis);
@@ -45,10 +46,10 @@ export function buildPerformanceHref({
   if (benchmark) {
     query.set("benchmark", benchmark);
   }
-  if (reportStartDate) {
+  if (isExplicitWindow && reportStartDate) {
     query.set("reportStartDate", reportStartDate);
   }
-  if (reportEndDate) {
+  if (isExplicitWindow && reportEndDate) {
     query.set("reportEndDate", reportEndDate);
   }
   return `/performance?${query.toString()}`;
