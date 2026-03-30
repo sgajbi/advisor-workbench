@@ -273,6 +273,11 @@ describe("PerformanceChartPanel", () => {
         "Published return observations are not available for the selected horizon."
       )
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Adjust the period or explicit dates once performance history is available for this resolved window."
+      )
+    ).toBeInTheDocument();
     expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
   });

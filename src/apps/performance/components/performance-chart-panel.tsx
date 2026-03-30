@@ -708,9 +708,9 @@ export default function PerformanceChartPanel({
               unavailableTitle="Return series unavailable"
               body={
                 capabilities.returnPath.reason ??
-                "The selected period does not currently have published performance observations for this mandate."
+                "The resolved window does not currently have published performance observations for this mandate."
               }
-              hint="Adjust the horizon or explicit dates once performance history is available for the requested window."
+              hint="Adjust the period or explicit dates once performance history is available for this resolved window."
             />
           </div>
         ) : undefined

@@ -31,15 +31,16 @@ describe("performance first-paint helper contracts", () => {
       "Active Return",
       "Money-Weighted Return",
       "Basis",
-      "Period",
+      "Resolved window",
     ]);
     expect(
       presentation.cards.find((card) => card.label === "Money-Weighted Return")
     ).toMatchObject({
       value: "5.12%",
     });
-    expect(presentation.cards.find((card) => card.label === "Period")).toMatchObject({
-      value: "YTD",
+    expect(presentation.cards.find((card) => card.label === "Resolved window")).toMatchObject({
+      value: "01 Jan 2026 - 24 Feb 2026",
+      support: "YTD",
     });
   });
 
@@ -75,8 +76,9 @@ describe("performance first-paint helper contracts", () => {
       value: "Unavailable",
       unavailable: true,
     });
-    expect(presentation.cards.find((card) => card.label === "Period")).toMatchObject({
-      value: "YTD",
+    expect(presentation.cards.find((card) => card.label === "Resolved window")).toMatchObject({
+      value: "01 Jan 2026 - 24 Feb 2026",
+      support: "YTD",
     });
   });
 
@@ -96,8 +98,9 @@ describe("performance first-paint helper contracts", () => {
       suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
     });
 
-    expect(presentation.cards.find((card) => card.label === "Period")).toMatchObject({
-      value: "Explicit window",
+    expect(presentation.cards.find((card) => card.label === "Resolved window")).toMatchObject({
+      value: "01 Jan 2026 - 24 Feb 2026",
+      support: "Explicit window",
     });
   });
 

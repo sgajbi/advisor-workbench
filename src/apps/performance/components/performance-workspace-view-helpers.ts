@@ -253,9 +253,9 @@ export function getPerformanceExecutiveReturnPresentation({
         priority: "utility",
       }),
       buildMetricCard({
-        label: "Period",
-        value: formatExecutivePeriodValue(workspace.period),
-        support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
+        label: "Resolved window",
+        value: formatResolvedWindowValue(workspace.report_start_date, workspace.report_end_date),
+        support: formatExecutivePeriodValue(workspace.period),
         priority: "utility",
       }),
     ],
@@ -448,5 +448,9 @@ function formatExecutivePeriodValue(period: string): string {
     return "Explicit window";
   }
   return formatLabel(period);
+}
+
+function formatResolvedWindowValue(startDate: string, endDate: string): string {
+  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }
 
