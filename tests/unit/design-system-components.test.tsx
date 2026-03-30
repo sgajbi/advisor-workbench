@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -10,6 +10,7 @@ import {
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
+  DeferredModulePlaceholder,
   DegradedStatePanel,
   EmptyStatePanel,
   FilterBar,
@@ -31,6 +32,7 @@ import {
   WorkspaceRailLink,
   WorkspaceSide,
   WorkbenchDeferredSection,
+  WorkbenchSegmentedControl,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
   WorkbenchRailCard,
@@ -549,6 +551,56 @@ describe("design-system components", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Loading return path")).toBeInTheDocument();
     expect(screen.getByText("Return path is loading after first paint.")).toBeInTheDocument();
+  });
+
+  it("renders the shared deferred placeholder class contract with optional extension classes", () => {
+    render(
+      <DeferredModulePlaceholder
+        title="Loading analysis"
+        message="Analysis is loading after first paint."
+        className="performance-analysis-loading"
+      />
+    );
+
+    const placeholder = screen.getByRole("status");
+    expect(placeholder).toHaveClass(
+      "deferred-module-placeholder",
+      "workbench-deferred-placeholder",
+      "performance-analysis-loading"
+    );
+    expect(within(placeholder).getByText("Loading analysis")).toBeInTheDocument();
+    expect(within(placeholder).getByText("Analysis is loading after first paint.")).toBeInTheDocument();
+  });
+
+  it("renders the shared segmented control with tab semantics and active-state classes", () => {
+    const onChange = vi.fn();
+
+    render(
+      <WorkbenchSegmentedControl
+        value="summary"
+        onChange={onChange}
+        ariaLabel="Workbench mode"
+        className="performance-mode-switch"
+        options={[
+          { key: "summary", label: "Summary" },
+          { key: "analysis", label: "Analysis" },
+          { key: "evidence", label: "Evidence" },
+        ]}
+      />
+    );
+
+    const tablist = screen.getByRole("tablist", { name: "Workbench mode" });
+    expect(tablist).toHaveClass("workbench-segmented-control", "performance-mode-switch");
+    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
+      "workbench-segmented-control-button",
+      "workbench-segmented-control-button-active"
+    );
+    expect(screen.getByRole("tab", { name: "Analysis" })).toHaveClass(
+      "workbench-segmented-control-button"
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+    expect(onChange).toHaveBeenCalledWith("evidence");
   });
 
   it("can defer content without rendering a duplicate wrapper header", async () => {

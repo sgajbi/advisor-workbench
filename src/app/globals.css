@@ -545,7 +545,8 @@ a:hover {
   gap: var(--space-2);
 }
 
-.deferred-module-placeholder {
+.deferred-module-placeholder,
+.workbench-deferred-placeholder {
   display: grid;
   gap: 0.25rem;
   padding: 0.875rem 1rem;
@@ -554,13 +555,15 @@ a:hover {
   background: rgba(255, 255, 255, 0.78);
 }
 
-.deferred-module-placeholder strong {
+.deferred-module-placeholder strong,
+.workbench-deferred-placeholder strong {
   font-size: 0.85rem;
   font-weight: 600;
   color: #0f172a;
 }
 
-.deferred-module-placeholder span {
+.deferred-module-placeholder span,
+.workbench-deferred-placeholder span {
   font-size: 0.76rem;
   line-height: 1.4;
   color: #64748b;
@@ -3715,7 +3718,8 @@ a:hover {
     max-width: 22rem;
   }
 
-  .portfolio-segmented-control {
+  .portfolio-segmented-control,
+  .workbench-segmented-control {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
@@ -3726,7 +3730,8 @@ a:hover {
     background: #f7f9fb;
   }
 
-  .portfolio-segmented-control-button {
+  .portfolio-segmented-control-button,
+  .workbench-segmented-control-button {
     appearance: none;
     border: 0;
     background: transparent;
@@ -3742,11 +3747,13 @@ a:hover {
       color 140ms ease;
   }
 
-  .portfolio-segmented-control-button:hover {
+  .portfolio-segmented-control-button:hover,
+  .workbench-segmented-control-button:hover {
     color: var(--text);
   }
 
-  .portfolio-segmented-control-button-active {
+  .portfolio-segmented-control-button-active,
+  .workbench-segmented-control-button-active {
     background: #ffffff;
     color: var(--text);
     box-shadow: none;
@@ -3974,13 +3981,15 @@ a:hover {
   gap: 0.75rem;
 }
 
-.performance-page-frame .portfolio-segmented-control {
+.performance-page-frame .portfolio-segmented-control,
+.performance-page-frame .workbench-segmented-control {
   padding: 0.18rem;
   border-color: rgba(23, 32, 43, 0.08);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
 }
 
-.performance-page-frame .portfolio-segmented-control-button {
+.performance-page-frame .portfolio-segmented-control-button,
+.performance-page-frame .workbench-segmented-control-button {
   min-width: 4.4rem;
   padding: 0.45rem 0.7rem;
   font-size: 0.74rem;
@@ -6348,6 +6357,7 @@ a:hover {
 
 .analytics-stat-interactive,
 .portfolio-segmented-control-button,
+.workbench-segmented-control-button,
 .portfolio-allocation-toggle,
 .portfolio-allocation-ranked-row,
 .portfolio-allocation-bar-row,
@@ -6371,6 +6381,7 @@ a:hover {
 
 .analytics-stat-interactive:focus-visible,
 .portfolio-segmented-control-button:focus-visible,
+.workbench-segmented-control-button:focus-visible,
 .portfolio-allocation-toggle:focus-visible,
 .portfolio-allocation-ranked-row:focus-visible,
 .portfolio-allocation-bar-row:focus-visible,

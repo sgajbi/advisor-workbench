@@ -9,6 +9,8 @@ export { default as DegradedStatePanel } from "./components/degraded-state-panel
 export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";
 export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
+export { default as WorkbenchSegmentedControl } from "./components/workbench-segmented-control";
+export type { WorkbenchSegmentedControlOption } from "./components/workbench-segmented-control";
 export { default as WorkbenchChartContextRow } from "./components/workbench-chart-context-row";
 export type { WorkbenchChartContextRowItem } from "./components/workbench-chart-context-row";
 export { default as WorkbenchChartShell } from "./components/workbench-chart-shell";

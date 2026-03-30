@@ -109,6 +109,8 @@ describe("PerformanceAnalyticsPage", () => {
         "Benchmark-aware portfolio performance, attribution, and contribution analysis"
       )
     ).toBeInTheDocument();
+    expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
+      .toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
   });

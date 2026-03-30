@@ -101,9 +101,12 @@ describe("PerformanceWorkspaceView", () => {
         "Benchmark-aware portfolio performance, attribution, and contribution analysis"
       )
     ).toBeInTheDocument();
-    expect(
-      document.querySelector(".workbench-page-header-actions [role='tablist']")
-    ).toBeTruthy();
+    expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
+      .toBeTruthy();
+    expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
+      "workbench-segmented-control-button-active"
+    );
     await waitFor(() => {
       expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
     });
@@ -117,6 +120,7 @@ describe("PerformanceWorkspaceView", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
     expect(screen.getByText("Loading analysis")).toBeInTheDocument();
+    expect(document.querySelector(".workbench-deferred-placeholder")).toBeTruthy();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();

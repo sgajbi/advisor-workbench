@@ -1,3 +1,5 @@
+import { WorkbenchSegmentedControl } from "@/design-system";
+
 export type PerformanceWorkspaceMode = "summary" | "analysis" | "evidence";
 
 const WORKSPACE_MODES: Array<{ key: PerformanceWorkspaceMode; label: string }> = [
@@ -14,24 +16,12 @@ export default function PerformanceWorkspaceModeSwitch({
   onChange: (value: PerformanceWorkspaceMode) => void;
 }) {
   return (
-    <div className="portfolio-segmented-control" role="tablist" aria-label="Performance workspace mode">
-      {WORKSPACE_MODES.map((option) => {
-        const isActive = option.key === value;
-        return (
-          <button
-            key={option.key}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            className={`portfolio-segmented-control-button${
-              isActive ? " portfolio-segmented-control-button-active" : ""
-            }`}
-            onClick={() => onChange(option.key)}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
+    <WorkbenchSegmentedControl
+      value={value}
+      onChange={onChange}
+      options={WORKSPACE_MODES}
+      ariaLabel="Performance workspace mode"
+      className="performance-workspace-mode-switch"
+    />
   );
 }
