@@ -176,7 +176,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Basis")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Period")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Resolved window")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("01 Jan 2026 - 24 Feb 2026")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Benchmark")).not.toBeInTheDocument();
     expect(executiveStrip.querySelector(".performance-summary-kpi-card-primary")).toBeTruthy();
     expect(executiveStrip.querySelectorAll(".performance-summary-kpi-card-comparison")).toHaveLength(2);
@@ -505,8 +506,9 @@ describe("PerformanceAnalyticsPage", () => {
       expectations: [
         "Attribution detail unavailable",
         "Contribution Detail",
+        "Equity",
       ],
-      absent: ["Contribution detail is partial", "AAPL"],
+      absent: ["AAPL"],
     },
   ])(
     "renders a contract-backed analysis scenario matrix for $name",
@@ -580,9 +582,13 @@ describe("PerformanceAnalyticsPage", () => {
       name: "combined partial workspace",
       scenario: buildCombinedPartialPerformanceScenario(),
       summaryExpectations: ["Relative returns incomplete", "Attribution detail unavailable"],
-      analysisExpectations: ["Attribution detail unavailable", "Contribution Detail"],
+      analysisExpectations: [
+        "Attribution detail unavailable",
+        "Contribution Detail",
+        "Equity",
+      ],
       evidenceExpectations: ["Evidence pending contract"],
-      analysisAbsent: ["Contribution detail is partial"],
+      analysisAbsent: ["AAPL"],
     },
   ])(
     "renders a contract-backed workspace mode matrix for $name",
