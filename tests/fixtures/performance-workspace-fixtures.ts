@@ -425,6 +425,39 @@ export function buildPartialAttributionPerformanceScenario() {
   });
 }
 
+export function buildUnavailableEvidencePerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    capabilityOverrides: {
+      evidence: {
+        state: "unavailable",
+        reason: "Evidence and lineage surfaces are not exposed by the current gateway contract.",
+      },
+    },
+  });
+}
+
+export function buildPartialEvidencePerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    capabilityOverrides: {
+      evidence: {
+        state: "partial",
+        reason: "Lineage artifacts are available, but execution evidence is incomplete.",
+      },
+    },
+  });
+}
+
+export function buildSupportedEvidencePerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    capabilityOverrides: {
+      evidence: {
+        state: "supported",
+        reason: "Execution and lineage evidence can be reviewed for this portfolio.",
+      },
+    },
+  });
+}
+
 export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
   return {
     correlation_id: "corr-performance",
