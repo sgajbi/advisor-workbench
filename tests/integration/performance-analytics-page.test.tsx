@@ -10,6 +10,7 @@ import {
   buildCombinedPartialPerformanceScenario,
   buildNormalizedControlsPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
+  buildPerformancePresentationScenario,
   buildPerformanceHorizonComparison,
   buildSupportedPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
@@ -207,6 +208,38 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
+  });
+
+  it("honors query param period on initial page entry", async () => {
+    installPerformancePageFetchScenario(
+      buildPerformancePresentationScenario({
+        workspaceOverrides: {
+          period: "QTD",
+          report_start_date: "2026-01-01",
+          report_end_date: "2026-02-24",
+        },
+      }),
+      { portfolioId: "PF_1001" }
+    );
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PF_1001",
+          period: "QTD",
+          detailBasis: "NET",
+          contributionDimension: "asset_class",
+          attributionDimension: "asset_class",
+          chartFrequency: "monthly",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        }),
+      })
+    );
+
+    const executiveStrip = await screen.findByLabelText("Executive return strip");
+    expect(within(executiveStrip).getByText("Resolved window")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("01 Jan 2026 - 24 Feb 2026")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("QTD")).toBeInTheDocument();
   });
 
   it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
