@@ -40,6 +40,11 @@ export default function PerformanceAnalysisAttributionSection({
     workspace.attribution?.levels?.some((level) => level.rows.length > 0) ?? false;
   const showDetailedBreakdownChrome =
     relativeSegmentRows.length > 0 || topAttributionEffectRows.length > 0 || hasDetailedAttributionRows;
+  const disableAttributionSegmentControl =
+    isUpdating ||
+    (capabilities.attributionDetail.state === "partial" &&
+      hasAttributionSummaryLevels &&
+      !hasDetailedAttributionRows);
   const actions = (
     <PerformanceAnalysisToolbar
       context={
@@ -62,7 +67,7 @@ export default function PerformanceAnalysisAttributionSection({
               attributionDimension: event.target.value,
             })
           }
-          disabled={isUpdating}
+          disabled={disableAttributionSegmentControl}
         >
           {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
             <MenuItem
