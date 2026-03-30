@@ -13,7 +13,10 @@ import {
   Typography,
 } from "@mui/material";
 
-import { AnalyticsSectionHeader, Panel } from "@/design-system";
+import {
+  WorkbenchChartShell,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
@@ -366,192 +369,217 @@ export default function PerformanceChartPanel({
   }
 
   return (
-    <Panel
+    <WorkbenchChartShell
       id={id}
-      className="performance-chart-stage workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
-    >
-      <Stack spacing={2.25}>
-        <Stack spacing={1.5}>
-          <Stack
-            direction={{ xs: "column", xl: "row" }}
-            spacing={1.5}
-            justifyContent="space-between"
-            alignItems={{ xs: "stretch", xl: "flex-start" }}
-          >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <AnalyticsSectionHeader title={title} subtitle={explicitDateRange} />
-            </Box>
-
-            <Box sx={{ minWidth: { xl: 360 }, maxWidth: { xl: 520 }, width: "100%" }}>
-              <PerformanceChartContextStrip
-                period={period}
-                detailBasis={detailBasis}
-                benchmarkLabel={returnPathPresentation.benchmarkLabel}
-                benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
-                activeReturn={returnPathPresentation.activeReturnValue}
-                relativeContextStatus={returnPathPresentation.relativeContextStatus}
-              />
-            </Box>
-          </Stack>
-
-          <div className="performance-chart-control-band workbench-summary-toolbar">
-            <div className="performance-chart-control-card">
-              <Typography sx={controlLabelSx}>Horizon</Typography>
-              <div className="performance-chart-toggle-wrap">
-                <ToggleButtonGroup
-                  exclusive
-                  size="small"
-                  value={period}
-                  aria-label="Horizon"
-                  sx={toggleGroupSx}
-                >
-                  {PERIOD_OPTIONS.map((option) => (
-                    <ToggleButton
-                      key={option}
-                      value={option}
-                      onClick={() =>
-                        updateSelection({
-                          period: option,
-                          reportStartDate: undefined,
-                          reportEndDate: undefined,
-                        })
-                      }
-                      disabled={isUpdating && option === period}
-                    >
-                      {option}
-                    </ToggleButton>
-                  ))}
-                </ToggleButtonGroup>
-              </div>
-            </div>
-
-            <div className="performance-chart-control-card performance-chart-control-card-dates">
-              <Typography sx={controlLabelSx}>Explicit Dates</Typography>
-              <Stack
-                component="form"
-                className="performance-chart-date-stack"
-                direction={{ xs: "column", sm: "row" }}
-                spacing={1}
-                useFlexGap
-                onSubmit={applyExplicitDates}
-              >
-                <TextField
-                  size="small"
-                  type="date"
-                  value={fromDate}
-                  slotProps={{
-                    htmlInput: {
-                      "aria-label": "From",
-                      max: toDate || resolvedReportDates.endDate,
-                    },
-                  }}
-                  onChange={(event) => setFromDate(event.currentTarget.value)}
-                />
-                <TextField
-                  size="small"
-                  type="date"
-                  value={toDate}
-                  slotProps={{
-                    htmlInput: {
-                      "aria-label": "To",
-                      min: fromDate,
-                      max: resolvedReportDates.endDate,
-                    },
-                  }}
-                  onChange={(event) => setToDate(event.currentTarget.value)}
-                />
-                <Button type="submit" variant="contained" size="small" disableElevation>
-                  {isUpdating ? "Updating..." : "Apply"}
-                </Button>
-              </Stack>
-            </div>
-
-            <div className="performance-chart-control-card">
-              <Typography sx={controlLabelSx}>Frequency</Typography>
-              <TextField
-                select
+      title={title}
+      subtitle={explicitDateRange}
+      className="performance-chart-stage workbench-summary-panel performance-summary-module-card"
+      contextRow={
+        <PerformanceChartContextStrip
+          period={period}
+          detailBasis={detailBasis}
+          benchmarkLabel={returnPathPresentation.benchmarkLabel}
+          benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
+          activeReturn={returnPathPresentation.activeReturnValue}
+          relativeContextStatus={returnPathPresentation.relativeContextStatus}
+        />
+      }
+      toolbar={
+        <div className="performance-chart-control-band workbench-summary-toolbar">
+          <div className="performance-chart-control-card">
+            <Typography sx={controlLabelSx}>Horizon</Typography>
+            <div className="performance-chart-toggle-wrap">
+              <ToggleButtonGroup
+                exclusive
                 size="small"
-                label="Frequency"
-                value={chartFrequency}
-                onChange={(event) =>
-                  updateSelection({
-                    chartFrequency: event.target.value,
-                  })
-                }
-                disabled={isUpdating}
-                sx={selectControlSx}
-                SelectProps={{ native: true }}
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  htmlInput: { "aria-label": "Frequency" },
-                }}
+                value={period}
+                aria-label="Horizon"
+                sx={toggleGroupSx}
               >
-                {CHART_FREQUENCY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </TextField>
-            </div>
-
-            <div className="performance-chart-control-card">
-              <Typography sx={controlLabelSx}>Compared To</Typography>
-              <TextField
-                select
-                size="small"
-                label="Compared To"
-                value={benchmark ?? ""}
-                onChange={(event) =>
-                  updateSelection({
-                    benchmark: event.target.value || undefined,
-                  })
-                }
-                disabled={isUpdating}
-                sx={selectControlSx}
-                SelectProps={{ native: true }}
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  htmlInput: { "aria-label": "Compared To" },
-                }}
-              >
-                {resolvedBenchmarkOptions.map((option) => (
-                  <option key={option.benchmark_code} value={option.benchmark_code}>
-                    {option.benchmark_name}
-                  </option>
-                ))}
-              </TextField>
-            </div>
-
-            <div className="performance-chart-control-card performance-chart-control-card-basis">
-              <Typography sx={controlLabelSx}>Basis</Typography>
-              <div className="performance-chart-toggle-wrap">
-                  <ToggleButtonGroup
-                    exclusive
-                    size="small"
-                    value={detailBasis}
-                    aria-label="Basis"
-                    sx={toggleGroupSx}
+                {PERIOD_OPTIONS.map((option) => (
+                  <ToggleButton
+                    key={option}
+                    value={option}
+                    onClick={() =>
+                      updateSelection({
+                        period: option,
+                        reportStartDate: undefined,
+                        reportEndDate: undefined,
+                      })
+                    }
+                    disabled={isUpdating && option === period}
                   >
-                    {BASIS_OPTIONS.map((option) => (
-                      <ToggleButton
-                        key={option}
-                        value={option}
-                        onClick={() =>
-                          updateSelection({
-                            detailBasis: option,
-                          })
-                        }
-                        disabled={isUpdating && option === detailBasis}
-                      >
-                        {option}
-                      </ToggleButton>
-                    ))}
-                  </ToggleButtonGroup>
-              </div>
+                    {option}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
             </div>
           </div>
-        </Stack>
 
+          <div className="performance-chart-control-card performance-chart-control-card-dates">
+            <Typography sx={controlLabelSx}>Explicit Dates</Typography>
+            <Stack
+              component="form"
+              className="performance-chart-date-stack"
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              useFlexGap
+              onSubmit={applyExplicitDates}
+            >
+              <TextField
+                size="small"
+                type="date"
+                value={fromDate}
+                slotProps={{
+                  htmlInput: {
+                    "aria-label": "From",
+                    max: toDate || resolvedReportDates.endDate,
+                  },
+                }}
+                onChange={(event) => setFromDate(event.currentTarget.value)}
+              />
+              <TextField
+                size="small"
+                type="date"
+                value={toDate}
+                slotProps={{
+                  htmlInput: {
+                    "aria-label": "To",
+                    min: fromDate,
+                    max: resolvedReportDates.endDate,
+                  },
+                }}
+                onChange={(event) => setToDate(event.currentTarget.value)}
+              />
+              <Button type="submit" variant="contained" size="small" disableElevation>
+                {isUpdating ? "Updating..." : "Apply"}
+              </Button>
+            </Stack>
+          </div>
+
+          <div className="performance-chart-control-card">
+            <Typography sx={controlLabelSx}>Frequency</Typography>
+            <TextField
+              select
+              size="small"
+              label="Frequency"
+              value={chartFrequency}
+              onChange={(event) =>
+                updateSelection({
+                  chartFrequency: event.target.value,
+                })
+              }
+              disabled={isUpdating}
+              sx={selectControlSx}
+              SelectProps={{ native: true }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { "aria-label": "Frequency" },
+              }}
+            >
+              {CHART_FREQUENCY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </TextField>
+          </div>
+
+          <div className="performance-chart-control-card">
+            <Typography sx={controlLabelSx}>Compared To</Typography>
+            <TextField
+              select
+              size="small"
+              label="Compared To"
+              value={benchmark ?? ""}
+              onChange={(event) =>
+                updateSelection({
+                  benchmark: event.target.value || undefined,
+                })
+              }
+              disabled={isUpdating}
+              sx={selectControlSx}
+              SelectProps={{ native: true }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { "aria-label": "Compared To" },
+              }}
+            >
+              {resolvedBenchmarkOptions.map((option) => (
+                <option key={option.benchmark_code} value={option.benchmark_code}>
+                  {option.benchmark_name}
+                </option>
+              ))}
+            </TextField>
+          </div>
+
+          <div className="performance-chart-control-card performance-chart-control-card-basis">
+            <Typography sx={controlLabelSx}>Basis</Typography>
+            <div className="performance-chart-toggle-wrap">
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={detailBasis}
+                aria-label="Basis"
+                sx={toggleGroupSx}
+              >
+                {BASIS_OPTIONS.map((option) => (
+                  <ToggleButton
+                    key={option}
+                    value={option}
+                    onClick={() =>
+                      updateSelection({
+                        detailBasis: option,
+                      })
+                    }
+                    disabled={isUpdating && option === detailBasis}
+                  >
+                    {option}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </div>
+          </div>
+        </div>
+      }
+      metricStrip={
+        capabilities.returnPath.state === "supported" && points.length ? (
+          <WorkbenchSummaryMetricStrip
+            className="performance-chart-summary-band"
+            items={returnPathPresentation.metrics.map((metric) => ({
+              key: metric.label,
+              label: metric.label,
+              value: metric.value,
+              unavailable: metric.unavailable,
+              className: "performance-chart-summary-stat",
+            }))}
+          />
+        ) : undefined
+      }
+      loadingState={
+        isDetailsPending ? (
+          <div className="performance-chart-loading-state">
+            <p className="muted">Loading analytical time series and benchmark comparison.</p>
+          </div>
+        ) : undefined
+      }
+      fallbackState={
+        !isDetailsPending ? (
+          <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
+            <PerformanceCapabilityNotice
+              capability={capabilities.returnPath}
+              partialTitle="Return series is partial"
+              unavailableTitle="Return series unavailable"
+              body={
+                capabilities.returnPath.reason ??
+                "The selected period does not currently have published performance observations for this mandate."
+              }
+              hint="Adjust the horizon or explicit dates once performance history is available for the requested window."
+            />
+          </div>
+        ) : undefined
+      }
+    >
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
           {returnPathPresentation.benchmarkStateBody ? (
@@ -560,22 +588,6 @@ export default function PerformanceChartPanel({
               <span>{returnPathPresentation.benchmarkStateBody}</span>
             </div>
           ) : null}
-          <Box
-            className="performance-chart-summary-band workbench-summary-metric-strip"
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "repeat(2, minmax(0, 1fr))",
-                md: "repeat(4, minmax(0, 1fr))",
-              },
-              gap: 1.25,
-            }}
-          >
-            {returnPathPresentation.metrics.map((metric) =>
-              renderSummaryMetric(metric.label, metric.value, metric.unavailable, metric.label)
-            )}
-          </Box>
-
           <div
             className="performance-chart-library-frame workbench-summary-visual"
             role="img"
@@ -610,49 +622,8 @@ export default function PerformanceChartPanel({
             ) : null}
           </div>
         </>
-      ) : isDetailsPending ? (
-        <div className="performance-chart-loading-state">
-          <p className="muted">Loading analytical time series and benchmark comparison.</p>
-        </div>
-      ) : (
-        <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
-          <PerformanceCapabilityNotice
-            capability={capabilities.returnPath}
-            partialTitle="Return series is partial"
-            unavailableTitle="Return series unavailable"
-            body={
-              capabilities.returnPath.reason ??
-              "The selected period does not currently have published performance observations for this mandate."
-            }
-            hint="Adjust the horizon or explicit dates once performance history is available for the requested window."
-          />
-        </div>
-      )}
-      </Stack>
-    </Panel>
-  );
-}
-
-function renderSummaryMetric(
-  label: string,
-  value: React.ReactNode,
-  unavailable = false,
-  key?: string
-) {
-  return (
-    <div
-      key={key ?? label}
-      className={[
-        "performance-chart-summary-stat",
-        "workbench-summary-metric-card",
-        unavailable ? "performance-chart-summary-stat-unavailable" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <span className="workbench-summary-metric-label">{label}</span>
-      <strong className="workbench-summary-metric-value">{value}</strong>
-    </div>
+      ) : null}
+    </WorkbenchChartShell>
   );
 }
 
@@ -697,4 +668,3 @@ const selectControlSx = {
     fontWeight: 700,
   },
 } as const;
-

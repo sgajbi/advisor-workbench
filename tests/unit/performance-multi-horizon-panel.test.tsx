@@ -8,6 +8,10 @@ import { buildPerformanceHorizonComparison } from "../fixtures/performance-works
 
 const getHorizonComparisonClientMock = vi.fn();
 
+function compactPattern(text: string) {
+  return new RegExp(text.replaceAll(" ", "\\s*"));
+}
+
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchPerformanceHorizonComparisonClient: (...args: unknown[]) =>
     getHorizonComparisonClientMock(...args),
@@ -61,16 +65,17 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
     });
 
-    expect(document.querySelector(".performance-summary-driver-module")).toBeTruthy();
+    expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Selected period YTD"
+      compactPattern("Selected period YTD")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Active return 0.51%"
+      compactPattern("Active return 0.51%")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Compared against Global Balanced 60/40"
+      compactPattern("Compared against Global Balanced 60/40")
     );
+    expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
     expect(screen.getByText("Portfolio vs Global Balanced 60/40")).toBeInTheDocument();
     expect(screen.getByText("NET")).toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
@@ -112,7 +117,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-        "Selected period YTD"
+        compactPattern("Selected period YTD")
       );
     });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
@@ -128,7 +133,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Selected period YTD"
+      compactPattern("Selected period YTD")
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
@@ -167,10 +172,10 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     expect(screen.getByText("Portfolio comparison across standard reporting windows")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Active return Unavailable"
+      compactPattern("Active return Unavailable")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Compared against Benchmark"
+      compactPattern("Compared against Benchmark")
     );
   });
 });

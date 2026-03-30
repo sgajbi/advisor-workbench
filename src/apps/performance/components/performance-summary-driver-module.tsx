@@ -1,4 +1,4 @@
-import { AnalyticsModule } from "@/design-system";
+import { WorkbenchChartShell } from "@/design-system";
 
 export default function PerformanceSummaryDriverModule({
   title,
@@ -12,14 +12,13 @@ export default function PerformanceSummaryDriverModule({
   children: React.ReactNode;
 }) {
   return (
-    <AnalyticsModule
+    <WorkbenchChartShell
       className="workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card performance-summary-driver-module"
-      compact
       title={title}
       subtitle={subtitle}
       actions={actions}
     >
       {children}
-    </AnalyticsModule>
+    </WorkbenchChartShell>
   );
 }

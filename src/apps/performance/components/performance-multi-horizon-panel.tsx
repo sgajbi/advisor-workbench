@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Typography } from "@mui/material";
 
 import {
+  WorkbenchChartContextRow,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualMeta,
@@ -129,17 +130,28 @@ export default function PerformanceMultiHorizonPanel({
         <p className="muted">{presentation.loadingBody}</p>
       ) : rows && rows.length > 0 ? (
         <>
-          <WorkbenchSummaryToolbar role="group" aria-label="Horizon comparison context">
-            <span className="performance-mini-legend-item">
-              Selected period <strong>{presentation.selectedPeriodLabel}</strong>
-            </span>
-            <span className="performance-mini-legend-item">
-              Active return <strong>{presentation.activeReturnLabel}</strong>
-            </span>
-            <span className="performance-mini-legend-item">
-              Compared against <strong>{presentation.benchmarkLabel}</strong>
-            </span>
-          </WorkbenchSummaryToolbar>
+          <WorkbenchChartContextRow
+            className="performance-horizon-context-row"
+            itemClassName="performance-mini-legend-item"
+            label="Horizon comparison context"
+            items={[
+              {
+                key: "selected-period",
+                label: "Selected period",
+                value: presentation.selectedPeriodLabel,
+              },
+              {
+                key: "active-return",
+                label: "Active return",
+                value: presentation.activeReturnLabel,
+              },
+              {
+                key: "benchmark",
+                label: "Compared against",
+                value: presentation.benchmarkLabel,
+              },
+            ]}
+          />
           <WorkbenchSummaryToolbar className="performance-mini-legend">
             <span className="performance-mini-legend-item performance-mini-legend-portfolio">
               Portfolio

@@ -60,6 +60,10 @@ type PerformanceSummaryScenario = {
   absentTexts?: string[];
 };
 
+function compactPattern(text: string) {
+  return new RegExp(text.replaceAll(" ", "\\s*"));
+}
+
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -105,11 +109,12 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
-        "Active return 0.51%"
+        compactPattern("Active return 0.51%")
       );
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
-    expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
+    expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
+    expect(mainShell?.querySelector(".performance-chart-context-strip.workbench-chart-context-row")).toBeTruthy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     const chartSummaryBand = mainShell?.querySelector(
       ".performance-chart-summary-band.workbench-summary-metric-strip"
@@ -148,7 +153,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect((await screen.findAllByText("How did this compare across horizons?")).length).toBe(1);
     expect(screen.getAllByText("What drove the result?").length).toBe(1);
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
-    expect(document.querySelectorAll(".performance-summary-driver-module")).toHaveLength(2);
+    expect(document.querySelectorAll(".performance-summary-driver-module.workbench-chart-shell")).toHaveLength(2);
     const contributorsModule =
       screen
         .getAllByText("What drove the result?")
@@ -158,6 +163,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       contributorsModule?.querySelectorAll(".workbench-summary-visual-card").length
     ).toBe(2);
+    expect(contributorsModule?.querySelectorAll(".workbench-ranked-bar-list").length).toBe(2);
     expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
@@ -279,10 +285,10 @@ describe("PerformanceAnalyticsPage", () => {
       screen.getAllByText("Relative returns incomplete")
     ).toHaveLength(2);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Benchmark line Global Balanced 60/40"
+      compactPattern("Benchmark line Global Balanced 60/40")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      "Active context Unavailable • Partial"
+      compactPattern("Active context Unavailable • Partial")
     );
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
@@ -322,10 +328,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(horizonTitles).toHaveLength(1);
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Active return Unavailable"
+      compactPattern("Active return Unavailable")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      "Compared against Global Balanced 60/40"
+      compactPattern("Compared against Global Balanced 60/40")
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
 
@@ -428,14 +434,14 @@ describe("PerformanceAnalyticsPage", () => {
       if (contextExpectations.length) {
         const returnPathContext = await screen.findByRole("group", { name: "Return path context" });
         for (const text of contextExpectations) {
-          expect(returnPathContext).toHaveTextContent(text);
+          expect(returnPathContext).toHaveTextContent(compactPattern(text));
         }
       }
 
       if (horizonExpectations.length) {
         const horizonContext = await screen.findByRole("group", { name: "Horizon comparison context" });
         for (const text of horizonExpectations) {
-          expect(horizonContext).toHaveTextContent(text);
+          expect(horizonContext).toHaveTextContent(compactPattern(text));
         }
       }
 

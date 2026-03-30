@@ -53,12 +53,14 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("YTD contributor ranking")).toBeInTheDocument();
     expect(screen.getByText("Top contributors")).toBeInTheDocument();
     expect(screen.getByText("Top detractors")).toBeInTheDocument();
-    expect(document.querySelector(".performance-summary-driver-module")).toBeTruthy();
+    expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
     expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
+    expect(document.querySelectorAll(".workbench-ranked-bar-list")).toHaveLength(2);
+    expect(document.querySelectorAll(".workbench-ranked-bar-row")).toHaveLength(2);
     expect(screen.getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByText("TLT")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();

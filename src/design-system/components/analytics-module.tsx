@@ -11,6 +11,7 @@ export default function AnalyticsModule({
   children,
   className,
   compact = false,
+  id,
 }: {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -18,9 +19,11 @@ export default function AnalyticsModule({
   children: React.ReactNode;
   className?: string;
   compact?: boolean;
+  id?: string;
 }) {
   return (
     <Box
+      id={id}
       className={cx(
         "workbench-summary-card",
         compact && "workbench-summary-card-compact",

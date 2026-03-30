@@ -1,5 +1,5 @@
 import {
-  AnalyticsRankedList,
+  WorkbenchRankedBarList,
   WorkbenchSummaryVisualCard,
 } from "@/design-system";
 
@@ -33,7 +33,7 @@ export default function PerformanceSummaryContributorsSection({
       {presentation.mode === "supported" ? (
           <div className="performance-contributors-grid">
             <WorkbenchSummaryVisualCard>
-              <AnalyticsRankedList
+              <WorkbenchRankedBarList
                 title="Top contributors"
                 label="Contribution"
                 scale={contributorScale}
@@ -42,7 +42,7 @@ export default function PerformanceSummaryContributorsSection({
               />
             </WorkbenchSummaryVisualCard>
             <WorkbenchSummaryVisualCard>
-              <AnalyticsRankedList
+              <WorkbenchRankedBarList
                 title="Top detractors"
                 label="Contribution"
                 scale={contributorScale}
