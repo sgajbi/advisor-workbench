@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
   buildPerformanceReturnPathTableModel,
 } from "../../src/apps/performance/components/performance-analytics-table-models";
@@ -65,5 +66,35 @@ describe("performance analytics table models", () => {
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("5.88%");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("4.91%");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("0.51%");
+  });
+
+  it("builds horizon visual cards for relative and basis views from contract-backed rows", () => {
+    const comparison = buildPerformanceHorizonComparison();
+
+    const relativeModel = buildPerformanceHorizonVisualModel({
+      rows: comparison.rows,
+      basisView: "both",
+      visualMode: "relative",
+    });
+    expect(relativeModel[0]).toMatchObject({
+      label: "MTD",
+      leftBarLabel: "Active",
+      rightBarLabel: "Cum Active",
+      spreadLabel: "Spread",
+      spreadValue: "0.20%",
+    });
+
+    const basisModel = buildPerformanceHorizonVisualModel({
+      rows: comparison.rows,
+      basisView: "gross",
+      visualMode: "basis",
+    });
+    expect(basisModel[2]).toMatchObject({
+      label: "YTD",
+      leftBarLabel: "Net",
+      rightBarLabel: "Gross",
+      spreadLabel: "Fee Drag",
+      spreadValue: "0.46%",
+    });
   });
 });

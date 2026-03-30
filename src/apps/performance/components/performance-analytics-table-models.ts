@@ -26,6 +26,23 @@ export type PerformanceAnalyticsTableModel = {
 export type PerformanceReturnPathTableView = "combined" | "absolute" | "relative";
 export type PerformanceHorizonTableView = "combined" | "returns" | "economics";
 export type PerformanceHorizonBasisView = "both" | "net" | "gross";
+export type PerformanceHorizonVisualMode = "absolute" | "relative" | "basis";
+
+export type PerformanceHorizonVisualCard = {
+  key: string;
+  label: string;
+  primaryValue: string;
+  secondaryValue: string;
+  tertiaryValue?: string;
+  leftBarLabel: string;
+  leftBarHeightPct: number;
+  leftBarClassName: string;
+  rightBarLabel: string;
+  rightBarHeightPct: number;
+  rightBarClassName: string;
+  spreadLabel: string;
+  spreadValue: string;
+};
 
 const LEADING_COLUMNS: PerformanceAnalyticsTableColumn[] = [
   { key: "period", label: "Period" },
@@ -188,4 +205,98 @@ export function buildPerformanceHorizonTableModel({
       };
     }),
   };
+}
+
+export function buildPerformanceHorizonVisualModel({
+  rows,
+  basisView,
+  visualMode,
+}: {
+  rows: PerformanceHorizonComparisonRow[];
+  basisView: PerformanceHorizonBasisView;
+  visualMode: PerformanceHorizonVisualMode;
+}): PerformanceHorizonVisualCard[] {
+  const basisValueForScale = (row: PerformanceHorizonComparisonRow) =>
+    basisView === "gross"
+      ? row.gross_return_pct
+      : (row.net_return_pct ?? row.portfolio_return_pct);
+
+  const scale = Math.max(
+    1,
+    ...rows.flatMap((row) => {
+      const netReturn = row.net_return_pct ?? row.portfolio_return_pct;
+      return [
+        Math.abs(row.portfolio_return_pct ?? 0),
+        Math.abs(row.benchmark_return_pct ?? 0),
+        Math.abs(row.active_return_pct ?? 0),
+        Math.abs(netReturn ?? 0),
+        Math.abs(row.gross_return_pct ?? 0),
+      ];
+    })
+  );
+
+  return rows.map((row) => {
+    const netReturn = row.net_return_pct ?? row.portfolio_return_pct;
+    const grossReturn = row.gross_return_pct;
+    const basisReturn = basisValueForScale(row);
+
+    if (visualMode === "relative") {
+      return {
+        key: row.period,
+        label: row.period,
+        primaryValue: formatPct(row.active_return_pct),
+        secondaryValue: `Cum ${formatPct(row.cumulative_active_return_pct)}`,
+        tertiaryValue: `Benchmark ${formatPct(row.benchmark_return_pct)}`,
+        leftBarLabel: "Active",
+        leftBarHeightPct: Math.abs((row.active_return_pct ?? 0) / scale) * 100,
+        leftBarClassName: "performance-horizon-bar performance-horizon-bar-active",
+        rightBarLabel: "Cum Active",
+        rightBarHeightPct: Math.abs((row.cumulative_active_return_pct ?? 0) / scale) * 100,
+        rightBarClassName: "performance-horizon-bar performance-horizon-bar-active-soft",
+        spreadLabel: "Spread",
+        spreadValue: formatPct(row.active_return_pct),
+      };
+    }
+
+    if (visualMode === "basis") {
+      return {
+        key: row.period,
+        label: row.period,
+        primaryValue: formatPct(netReturn),
+        secondaryValue: `Gross ${formatPct(grossReturn)}`,
+        tertiaryValue: `Cum ${formatPct(
+          basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
+        )}`,
+        leftBarLabel: "Net",
+        leftBarHeightPct: Math.abs((netReturn ?? 0) / scale) * 100,
+        leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
+        rightBarLabel: "Gross",
+        rightBarHeightPct: Math.abs((grossReturn ?? 0) / scale) * 100,
+        rightBarClassName: "performance-horizon-bar performance-horizon-bar-gross",
+        spreadLabel: "Fee Drag",
+        spreadValue:
+          grossReturn != null && netReturn != null
+            ? formatPct(grossReturn - netReturn)
+            : "N/A",
+      };
+    }
+
+    return {
+      key: row.period,
+      label: row.period,
+      primaryValue: formatPct(basisReturn),
+      secondaryValue: `Benchmark ${formatPct(row.benchmark_return_pct)}`,
+      tertiaryValue: `Cum ${formatPct(
+        basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
+      )}`,
+      leftBarLabel: basisView === "gross" ? "Gross" : "Portfolio",
+      leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
+      leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
+      rightBarLabel: "Benchmark",
+      rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
+      rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
+      spreadLabel: "Active",
+      spreadValue: formatPct(row.active_return_pct),
+    };
+  });
 }

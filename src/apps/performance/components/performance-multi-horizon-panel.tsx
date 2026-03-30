@@ -18,11 +18,13 @@ import type {
   WorkbenchPerformanceHorizonComparison,
 } from "@/features/workbench/types";
 
-import { formatLabel, formatPct } from "../formatters";
+import { formatLabel } from "../formatters";
 import {
+  buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
   type PerformanceHorizonBasisView,
   type PerformanceHorizonTableView,
+  type PerformanceHorizonVisualMode,
 } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
@@ -49,6 +51,7 @@ export default function PerformanceMultiHorizonPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
   const [basisView, setBasisView] = useState<PerformanceHorizonBasisView>("both");
+  const [visualMode, setVisualMode] = useState<PerformanceHorizonVisualMode>("absolute");
   const requestIdRef = useRef(0);
   const cacheRef = useRef<Map<string, WorkbenchPerformanceHorizonComparison>>(new Map());
 
@@ -140,13 +143,6 @@ export default function PerformanceMultiHorizonPanel({
     onRequestChange?.({ chartFrequency: comparison.chart_frequency });
   }, [chartFrequency, comparison, onRequestChange]);
 
-  const scale = Math.max(
-    1,
-    ...(rows ?? []).flatMap((row) => [
-      Math.abs(row.portfolio_return_pct ?? 0),
-      Math.abs(row.benchmark_return_pct ?? 0),
-    ])
-  );
   const selectedPeriodRow =
     rows?.find((row) => row.period === period) ?? rows?.find((row) => row.period === "YTD") ?? rows?.[0];
   const presentation = getPerformanceHorizonPresentation({
@@ -165,6 +161,24 @@ export default function PerformanceMultiHorizonPanel({
       selectedPeriodLabel: presentation.selectedPeriodLabel,
     });
   }, [basisView, presentation.selectedPeriodLabel, reportingCurrency, rows, tableView]);
+  const visualCards = useMemo(
+    () =>
+      buildPerformanceHorizonVisualModel({
+        rows: rows ?? [],
+        basisView,
+        visualMode,
+      }),
+    [basisView, rows, visualMode]
+  );
+  const hasRelativeVisual = (rows ?? []).some(
+    (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
+  );
+
+  useEffect(() => {
+    if (visualMode === "relative" && !hasRelativeVisual) {
+      setVisualMode("absolute");
+    }
+  }, [hasRelativeVisual, visualMode]);
 
   return (
     <PerformanceSummaryDriverModule
@@ -256,35 +270,63 @@ export default function PerformanceMultiHorizonPanel({
                 { key: "gross", label: "Gross" },
               ]}
             />
+            <WorkbenchSegmentedControl
+              ariaLabel="Horizon visual mode"
+              className="performance-horizon-visual-mode"
+              value={visualMode}
+              onChange={setVisualMode}
+              options={[
+                { key: "absolute", label: "Absolute" },
+                {
+                  key: "relative",
+                  label: "Relative",
+                  disabled: !hasRelativeVisual,
+                  title: hasRelativeVisual
+                    ? undefined
+                    : "Relative view requires active return observations.",
+                },
+                { key: "basis", label: "Basis" },
+              ]}
+            />
           </WorkbenchSummaryToolbar>
           <div
             className="performance-horizon-bars workbench-summary-visual-grid"
             aria-label="Multi-horizon returns"
           >
-            {rows.map((row) => (
+            {visualCards.map((card) => (
               <WorkbenchSummaryVisualCard
-                key={row.period}
+                key={card.key}
                 className="performance-horizon-bar-group workbench-summary-visual-card"
               >
                 <div className="performance-horizon-bar-values">
-                  <WorkbenchSummaryVisualMeta>{formatPct(row.portfolio_return_pct)}</WorkbenchSummaryVisualMeta>
-                  <WorkbenchSummaryVisualMeta>{formatPct(row.benchmark_return_pct)}</WorkbenchSummaryVisualMeta>
+                  <WorkbenchSummaryVisualMeta>{card.primaryValue}</WorkbenchSummaryVisualMeta>
+                  <WorkbenchSummaryVisualMeta>{card.secondaryValue}</WorkbenchSummaryVisualMeta>
+                  {card.tertiaryValue ? (
+                    <WorkbenchSummaryVisualMeta>{card.tertiaryValue}</WorkbenchSummaryVisualMeta>
+                  ) : null}
                 </div>
                 <div className="performance-horizon-bar-track">
                   <div
-                    className="performance-horizon-bar performance-horizon-bar-portfolio"
+                    className={card.leftBarClassName}
                     style={{
-                      height: `${(Math.abs(row.portfolio_return_pct ?? 0) / scale) * 120}px`,
+                      height: `${Math.max(card.leftBarHeightPct * 1.2, 2)}px`,
                     }}
+                    aria-label={`${card.label} ${card.leftBarLabel}`}
                   />
                   <div
-                    className="performance-horizon-bar performance-horizon-bar-benchmark"
+                    className={card.rightBarClassName}
                     style={{
-                      height: `${(Math.abs(row.benchmark_return_pct ?? 0) / scale) * 120}px`,
+                      height: `${Math.max(card.rightBarHeightPct * 1.2, 2)}px`,
                     }}
+                    aria-label={`${card.label} ${card.rightBarLabel}`}
                   />
                 </div>
-                <WorkbenchSummaryVisualValue>{row.period}</WorkbenchSummaryVisualValue>
+                <div className="performance-horizon-bar-footer">
+                  <WorkbenchSummaryVisualValue>{card.label}</WorkbenchSummaryVisualValue>
+                  <WorkbenchSummaryVisualMeta>
+                    {card.spreadLabel} {card.spreadValue}
+                  </WorkbenchSummaryVisualMeta>
+                </div>
               </WorkbenchSummaryVisualCard>
             ))}
           </div>
