@@ -1,6 +1,36 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('UI smoke checks', () => {
+  async function openDetailedPortfolio(page: import('@playwright/test').Page) {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('lotus:portfolio:view-mode', 'detailed');
+      for (const sectionKey of [
+        'income',
+        'activity',
+        'holdings',
+        'transactions',
+        'projected-cashflow',
+      ]) {
+        window.localStorage.setItem(`lotus:portfolio:section:${sectionKey}`, 'true');
+      }
+    });
+    await page.goto('/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible();
+
+    const detailedViewButton = page.getByRole('button', { name: /^Detailed$/i });
+    await expect(detailedViewButton).toBeVisible();
+    await detailedViewButton.click();
+    await expect(detailedViewButton).toHaveAttribute('aria-pressed', 'true');
+
+    await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.locator('.portfolio-data-grid').first()).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByLabel(/Projected cashflow chart in /i)
+    ).toBeVisible({ timeout: 15000 });
+  }
+
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
     await expect(
@@ -50,5 +80,62 @@ test.describe('UI smoke checks', () => {
       const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
       expect(hasOverflow, `horizontal overflow detected on ${path}`).toBeFalsy();
     }
+  });
+
+  test('detailed portfolio analytics keep grids usable and analytical surfaces proportionate', async ({ page }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openDetailedPortfolio(page);
+
+    const detailedAnalyticsGrid = page.locator('.portfolio-paired-analytics-grid-detailed');
+    await expect(detailedAnalyticsGrid).toBeVisible();
+
+    const analyticsGridMetrics = await detailedAnalyticsGrid.evaluate((element) => ({
+      columns: getComputedStyle(element).gridTemplateColumns,
+      width: element.getBoundingClientRect().width,
+      childWidths: Array.from(element.children).map((child) => child.getBoundingClientRect().width),
+    }));
+
+    expect(analyticsGridMetrics.columns).not.toContain(' ');
+    expect(analyticsGridMetrics.childWidths.every((width) => width >= analyticsGridMetrics.width - 2)).toBeTruthy();
+
+    const holdingsGrid = page.locator('.portfolio-data-grid').first();
+    await expect(holdingsGrid).toBeVisible();
+    const holdingsGridMetrics = await holdingsGrid.evaluate((element) => {
+      const centerViewport = element.querySelector('.ag-center-cols-viewport') as HTMLElement | null;
+      return {
+        clientWidth: element.clientWidth,
+        centerClientWidth: centerViewport?.clientWidth ?? 0,
+      };
+    });
+    expect(holdingsGridMetrics.centerClientWidth).toBeGreaterThan(700);
+
+    const incomeTable = page.getByLabel('Income summary').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
+    const activityTable = page.getByLabel('Activity summary').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
+    const cashflowTable = page.getByLabel('Cashflow outlook').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
+    await expect(incomeTable).toBeVisible();
+    await expect(activityTable).toBeVisible();
+    await expect(cashflowTable).toBeVisible();
+
+    for (const table of [incomeTable, activityTable, cashflowTable]) {
+      const metrics = await table.evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
+      expect(metrics.scrollWidth - metrics.clientWidth).toBeLessThanOrEqual(8);
+    }
+
+    const cashflowChart = page.getByLabel(/Projected cashflow chart in /i);
+    await expect(cashflowChart).toBeVisible();
+    const cashflowChartMetrics = await cashflowChart.evaluate((element) => ({
+      height: element.getBoundingClientRect().height,
+      width: element.getBoundingClientRect().width,
+    }));
+    expect(cashflowChartMetrics.height).toBeLessThanOrEqual(260);
+    expect(cashflowChartMetrics.width).toBeGreaterThan(700);
+
+    await expect(page.getByText('Window inflow')).toBeVisible();
+    await expect(page.getByText('Window outflow')).toBeVisible();
+    await expect(page.getByText('Window fees')).toBeVisible();
+    await expect(page.getByText('Window taxes')).toBeVisible();
   });
 });
