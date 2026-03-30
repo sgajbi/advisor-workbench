@@ -2,12 +2,13 @@
 
 import Button from "@mui/material/Button";
 
-import { AnalyticsModule, MetricRow, WorkspaceCapabilityPanel } from "@/design-system";
+import { AnalyticsModule, MetricRow } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
+import PortfolioModuleState from "./portfolio-module-state";
 
 type PerformanceSnapshotProps = {
   capability: WorkspaceCapability;
@@ -71,7 +72,8 @@ export default function PortfolioPerformanceSnapshotModule({
             <MetricRow label="Period Selector" value="Uses page period context" />
           </div>
         ) : (
-          <WorkspaceCapabilityPanel
+          <PortfolioModuleState
+            variant="capability"
             capability={capability}
             partialTitle="Performance not available yet"
             unavailableTitle="Performance not available yet"
@@ -79,7 +81,8 @@ export default function PortfolioPerformanceSnapshotModule({
               capability.reason ??
               "Performance analytics are not available for this portfolio context."
             }
-            hint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
+            partialHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
+            unavailableHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
             why={{
               body:
                 "Performance requires valuation history, cashflow history, and a selected reporting period so returns can be calculated on a time-aware basis.",

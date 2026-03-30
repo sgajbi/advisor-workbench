@@ -82,6 +82,7 @@ describe("portfolio performance snapshot module", () => {
     expect(
       screen.getByText("Performance history is incomplete for the current selection.")
     ).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).not.toBeNull();
     expect(container.querySelector(".module-state-panel-partial")).not.toBeNull();
   });
 

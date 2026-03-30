@@ -25,6 +25,7 @@ describe("PortfolioAnalyticsCapabilityBody", () => {
     expect(
       screen.getByText("Analytical detail is loading for the selected portfolio context.")
     ).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).not.toBeNull();
     expect(container.querySelector(".workbench-loading-state")).not.toBeNull();
     expect(container.querySelector(".module-skeleton")).not.toBeNull();
     expect(screen.queryByText("Supported content")).not.toBeInTheDocument();
@@ -67,6 +68,7 @@ describe("PortfolioAnalyticsCapabilityBody", () => {
 
     expect(screen.getByText("Income is not classified yet")).toBeInTheDocument();
     expect(screen.getByText("Publish the classified summary.")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).not.toBeNull();
     expect(container.querySelector(".module-state-panel-partial")).not.toBeNull();
   });
 
@@ -88,6 +90,7 @@ describe("PortfolioAnalyticsCapabilityBody", () => {
 
     expect(screen.getByText("No client activity")).toBeInTheDocument();
     expect(screen.getByText("Funding and trade events will populate the activity view.")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).not.toBeNull();
     expect(container.querySelector(".portfolio-empty-state")).not.toBeNull();
   });
 });

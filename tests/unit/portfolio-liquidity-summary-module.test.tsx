@@ -56,6 +56,7 @@ describe("PortfolioLiquiditySummaryModule", () => {
       screen.getByText("No projected cashflow outlook is available in the current contract.")
     ).toBeInTheDocument();
     expect(screen.getByText("Publish forward cashflow projections to support projected liquidity review.")).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 });

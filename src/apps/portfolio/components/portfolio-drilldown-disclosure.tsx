@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react";
 
-import { WorkspaceCapabilityPanel } from "@/design-system";
 import {
   isRenderableCapability,
   isSupportedCapability,
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
+import PortfolioModuleState from "./portfolio-module-state";
 
 type PortfolioDrilldownDisclosureProps = {
   title: string;
@@ -62,12 +62,14 @@ export default function PortfolioDrilldownDisclosure({
           isSupportedCapability(capability) ? (
             children
           ) : (
-            <WorkspaceCapabilityPanel
+            <PortfolioModuleState
+              variant="capability"
               capability={capability}
               partialTitle={partialTitle}
               unavailableTitle={unavailableTitle}
               body={body}
-              hint={hint}
+              partialHint={hint}
+              unavailableHint={hint}
               why={why}
             />
           )

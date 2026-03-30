@@ -1,11 +1,12 @@
 "use client";
 
-import { AnalyticsModule, MetricRow, WorkspaceCapabilityPanel } from "@/design-system";
+import { AnalyticsModule, MetricRow } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 import { isSupportedCapability } from "@/shell/workspace-capabilities";
 
 import { formatCurrency, formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
+import PortfolioModuleState from "./portfolio-module-state";
 
 export default function PortfolioLiquiditySummaryModule({
   capability,
@@ -41,7 +42,8 @@ export default function PortfolioLiquiditySummaryModule({
           />
         </div>
       ) : (
-        <WorkspaceCapabilityPanel
+        <PortfolioModuleState
+          variant="capability"
           capability={capability}
           partialTitle="Projected cashflow is partially available"
           unavailableTitle="Projected cashflow unavailable"
@@ -49,7 +51,8 @@ export default function PortfolioLiquiditySummaryModule({
             capability.reason ??
             "A projected liquidity path is not available in the current portfolio contract."
           }
-          hint="Publish forward cashflow projections to support projected liquidity review."
+          partialHint="Publish forward cashflow projections to support projected liquidity review."
+          unavailableHint="Publish forward cashflow projections to support projected liquidity review."
           why={{
             body:
               "Projected cashflow requires forward-looking cashflow points from the liquidity contract. Without those points, the UI should not imply a reliable liquidity forecast.",

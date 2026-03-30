@@ -14,8 +14,6 @@ import * as XLSX from "xlsx";
 
 import {
   WorkbenchInlineRefreshNote,
-  WorkbenchLoadingState,
-  WorkspaceStatusPanel,
 } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
@@ -23,6 +21,7 @@ import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
+import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -327,14 +326,16 @@ export default function PortfolioTransactionsGrid({
       ) : null}
 
       {loading && !rowData.length ? (
-        <WorkbenchLoadingState
+        <PortfolioModuleState
+          variant="loading"
           title="Loading transactions"
           message="Transaction ledger detail is loading for the selected window."
           rows={5}
         />
       ) : rowData.length ? (
         <>
-          <WorkspaceStatusPanel
+          <PortfolioModuleState
+            variant="status"
             state="partial"
             title="Transaction lifecycle detail is limited"
             body="Trade activity is available, but the current contract does not expose settlement dates."
@@ -364,14 +365,16 @@ export default function PortfolioTransactionsGrid({
         </div>
         </>
       ) : loadError ? (
-        <WorkspaceStatusPanel
+        <PortfolioModuleState
+          variant="status"
           state="error"
           title="Transaction history unavailable"
           body="We could not load the transaction ledger for the selected period."
           hint="Retry the request or narrow the date window. If the issue persists, check upstream ledger availability."
         />
       ) : externalFilter ? (
-        <WorkspaceStatusPanel
+        <PortfolioModuleState
+          variant="status"
           state="empty"
           title="No matching transactions in view"
           body="The current drill-down does not match any transactions in the selected ledger window."
@@ -383,7 +386,8 @@ export default function PortfolioTransactionsGrid({
           }
         />
       ) : (
-        <WorkspaceStatusPanel
+        <PortfolioModuleState
+          variant="status"
           state="empty"
           title="No transactions booked"
           body="No funding, trading, or cash activity has been recorded in the selected window."

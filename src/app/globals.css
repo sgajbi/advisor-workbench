@@ -2533,6 +2533,17 @@ a:hover {
   gap: var(--space-2);
 }
 
+.portfolio-module-state {
+  display: grid;
+  gap: 0;
+}
+
+.portfolio-module-state .workbench-loading-state,
+.portfolio-module-state .module-state-panel,
+.portfolio-module-state .portfolio-empty-state {
+  width: 100%;
+}
+
 .portfolio-performance-snapshot-collapsed {
   display: grid;
   gap: var(--space-1);

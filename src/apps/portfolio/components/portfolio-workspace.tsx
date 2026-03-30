@@ -19,7 +19,6 @@ import {
   WorkbenchSectionStack,
   WorkstationShell,
   WorkspaceGrid,
-  WorkspaceCapabilityPanel,
 } from "@/design-system";
 
 import {
@@ -75,6 +74,7 @@ import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
 import PortfolioDrilldownDisclosure from "./portfolio-drilldown-disclosure";
 import PortfolioLiquiditySummaryModule from "./portfolio-liquidity-summary-module";
+import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRail from "./portfolio-rail";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
@@ -994,7 +994,8 @@ function PortfolioInsightsSection({
                 onSelectionChange={onSelectAllocation}
               />
             ) : (
-              <WorkspaceCapabilityPanel
+              <PortfolioModuleState
+                variant="capability"
                 capability={capabilities.allocation}
                 partialTitle="Allocation is partially available"
                 unavailableTitle="No allocation data yet"
@@ -1002,11 +1003,8 @@ function PortfolioInsightsSection({
                   capabilities.allocation.reason ??
                   "Allocation becomes available once funded holdings are valued."
                 }
-                hint={
-                  capabilities.allocation.state === "partial"
-                    ? "Publish current prices and valuation outputs to complete the composition view."
-                    : "Book positions and publish prices to generate allocation views."
-                }
+                partialHint="Publish current prices and valuation outputs to complete the composition view."
+                unavailableHint="Book positions and publish prices to generate allocation views."
                 why={{
                   body:
                     capabilities.allocation.state === "partial"
@@ -1064,7 +1062,8 @@ function PortfolioInsightsSection({
                 onSelectionChange={onSelectTopHolding}
               />
             ) : (
-              <WorkspaceCapabilityPanel
+              <PortfolioModuleState
+                variant="capability"
                 capability={capabilities.topHoldings}
                 partialTitle="Top holdings are not ranked yet"
                 unavailableTitle="No holdings yet"
@@ -1072,11 +1071,8 @@ function PortfolioInsightsSection({
                   capabilities.topHoldings.reason ??
                   "Holdings will appear once positions are funded and priced."
                 }
-                hint={
-                  capabilities.topHoldings.state === "partial"
-                    ? "Complete valuation and concentration calculations to populate the ranked view."
-                    : "Add funding, book a trade, and publish pricing."
-                }
+                partialHint="Complete valuation and concentration calculations to populate the ranked view."
+                unavailableHint="Add funding, book a trade, and publish pricing."
                 why={
                   capabilities.topHoldings.state === "partial"
                     ? undefined

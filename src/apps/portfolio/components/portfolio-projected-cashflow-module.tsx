@@ -6,14 +6,13 @@ import {
   AnalyticsModule,
   AnalyticsTable,
   WorkbenchInlineRefreshNote,
-  WorkbenchLoadingState,
-  WorkspaceStatusPanel,
 } from "@/design-system";
 
 import { getPortfolioProjectedCashflow } from "../api";
 import { formatCurrency, formatDate } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
 import { PortfolioProjectedCashflowPanel } from "./portfolio-chart-panels";
+import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 const CASHFLOW_HORIZON_PRESETS = [10, 30, 90] as const;
@@ -172,7 +171,8 @@ export default function PortfolioProjectedCashflowModule({
       /> 
 
       {loading && !cashflowOutlook ? (
-        <WorkbenchLoadingState
+        <PortfolioModuleState
+          variant="loading"
           title="Loading projected cashflow"
           message="Projected liquidity is loading for the selected horizon."
           chart
@@ -185,7 +185,8 @@ export default function PortfolioProjectedCashflowModule({
             baseCurrency={baseCurrency}
           />
           {hasFlatCashflow(cashflowOutlook) ? (
-            <WorkspaceStatusPanel
+            <PortfolioModuleState
+              variant="status"
               state="partial"
               title="Flat projected cashflow"
               body="Projected cash movements are flat across the current forecast horizon."
@@ -212,7 +213,8 @@ export default function PortfolioProjectedCashflowModule({
           ) : null}
         </>
       ) : (
-        <WorkspaceStatusPanel
+        <PortfolioModuleState
+          variant="status"
           state={loadError ? "error" : "empty"}
           title={loadError ? "Projected cashflow unavailable" : "No projected cashflow"}
           body={

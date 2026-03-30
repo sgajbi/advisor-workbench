@@ -238,6 +238,7 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
@@ -265,6 +266,7 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("Holdings partially valued")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".module-state-panel-partial")).toBeTruthy();
     expect(screen.getByTestId("mock-grid")).toBeInTheDocument();
   });
@@ -289,6 +291,7 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Transaction history unavailable")).toBeInTheDocument();
     });
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".module-state-panel-error")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
@@ -314,6 +317,7 @@ describe("portfolio data grids", () => {
     expect(
       screen.getByText("Transaction ledger detail is loading for the selected window.")
     ).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-module-state")).toBeTruthy();
     await waitFor(() => expect(fetchMock).not.toHaveBeenCalled());
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -348,6 +352,7 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
