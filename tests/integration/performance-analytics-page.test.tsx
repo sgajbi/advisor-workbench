@@ -216,6 +216,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
+    expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
