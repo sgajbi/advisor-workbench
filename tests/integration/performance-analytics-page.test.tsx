@@ -101,7 +101,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(mainShell).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getAllByText("How did this compare across horizons?").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("How did this compare across horizons?")).toHaveLength(1);
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
@@ -145,8 +145,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(executiveStrip.querySelectorAll(".performance-summary-kpi-card-comparison")).toHaveLength(2);
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
-    expect((await screen.findAllByText("How did this compare across horizons?")).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("What drove the result?").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("How did this compare across horizons?")).length).toBe(1);
+    expect(screen.getAllByText("What drove the result?").length).toBe(1);
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
     expect(document.querySelectorAll(".performance-summary-driver-module")).toHaveLength(2);
     const contributorsModule =
@@ -298,7 +298,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect((await screen.findAllByText("What drove the result?")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("What drove the result?")).length).toBe(1);
     expect(await screen.findByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(
       screen.getByText("Contribution exists, but only aggregate rows are available.")
@@ -318,7 +318,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(trustStrip).getAllByText("Unavailable").length).toBeGreaterThan(0);
 
     const horizonTitles = await screen.findAllByText("How did this compare across horizons?");
-    expect(horizonTitles.length).toBeGreaterThan(0);
+    expect(horizonTitles).toHaveLength(1);
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       "Active return Unavailable"
@@ -328,7 +328,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
 
-    expect((await screen.findAllByText("What drove the result?")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("What drove the result?")).length).toBe(1);
     expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();

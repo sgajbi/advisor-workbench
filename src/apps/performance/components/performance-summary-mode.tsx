@@ -123,6 +123,7 @@ export default function PerformanceSummaryMode({
           loadingTitle="Loading horizons"
           loadingMessage="Horizon comparisons are loading after first paint."
           deferHeader
+          hideHeader
           placeholder={null}
         >
           <DeferredPerformanceMultiHorizonPanel
@@ -141,6 +142,7 @@ export default function PerformanceSummaryMode({
           loadingTitle="Loading contributors"
           loadingMessage="Contributor ranking is loading after first paint."
           deferHeader
+          hideHeader
           placeholder={null}
         >
           <DeferredPerformanceSummaryContributorsSection

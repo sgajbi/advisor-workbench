@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -530,5 +530,28 @@ describe("design-system components", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Loading return path")).toBeInTheDocument();
     expect(screen.getByText("Return path is loading after first paint.")).toBeInTheDocument();
+  });
+
+  it("can defer content without rendering a duplicate wrapper header", async () => {
+    render(
+      <WorkbenchDeferredSection
+        className="performance-summary-driver-section"
+        title="What drove the result?"
+        subtitle="Top contributors and detractors for the current performance outcome."
+        loadingTitle="Loading contributors"
+        loadingMessage="Contributor ranking is loading after first paint."
+        deferHeader
+        hideHeader
+        placeholder={null}
+      >
+        <div>Deferred driver content</div>
+      </WorkbenchDeferredSection>
+    );
+
+    expect(document.querySelector(".performance-summary-driver-section")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "What drove the result?" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Deferred driver content")).toBeInTheDocument();
+    });
   });
 });

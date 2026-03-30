@@ -143,12 +143,13 @@ describe("PerformanceSummaryMode", () => {
       expect(screen.getByTestId("chart-panel")).toHaveTextContent(
         "Gross Return Path:performance-trend"
       );
-      expect(screen.getByText("How did this compare across horizons?")).toBeInTheDocument();
-      expect(screen.getByText("What drove the result?")).toBeInTheDocument();
       expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
         `${scenario.workspace.portfolio_id}:YTD:GROSS:${scenario.selectedBenchmarkCode}`
       );
       expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
     });
+
+    expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
+    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
   });
 });

@@ -11,6 +11,7 @@ export default function WorkbenchDeferredSection({
   loadingMessage,
   className,
   deferHeader = false,
+  hideHeader = false,
   placeholder,
   children,
 }: {
@@ -20,6 +21,7 @@ export default function WorkbenchDeferredSection({
   loadingMessage: string;
   className?: string;
   deferHeader?: boolean;
+  hideHeader?: boolean;
   placeholder?: ReactNode;
   children: ReactNode;
 }) {
@@ -32,7 +34,9 @@ export default function WorkbenchDeferredSection({
       <section className={className}>
         <DeferredWorkbenchMount placeholder={placeholder}>
           <>
-            <AnalyticsSectionHeader title={title} subtitle={subtitle} />
+            {!hideHeader ? (
+              <AnalyticsSectionHeader title={title} subtitle={subtitle} />
+            ) : null}
             {children}
           </>
         </DeferredWorkbenchMount>
