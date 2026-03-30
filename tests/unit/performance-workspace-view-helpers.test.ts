@@ -209,4 +209,45 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     expect(presentation.items.find((item) => item.label === "Contribution")?.value).toBe("Partial");
     expect(presentation.items.find((item) => item.label === "Evidence")?.value).toBe("Pending");
   });
+
+  it("maps unavailable and pending trust states with explicit tones", () => {
+    const presentation = getPerformanceTrustStripPresentation({
+      capabilities: {
+        ...supportedCapabilities,
+        benchmarkComparison: {
+          state: "unavailable",
+          reason: "No benchmark is assigned to this mandate.",
+        },
+        returnPath: {
+          state: "partial",
+          reason: "Return observations are only partially published.",
+        },
+        attributionDetail: {
+          state: "unavailable",
+          reason: "Attribution detail is not available.",
+        },
+        evidence: {
+          state: "unavailable",
+          reason: "Evidence contract unavailable.",
+        },
+      },
+    });
+
+    expect(presentation.items.find((item) => item.label === "Benchmark")).toMatchObject({
+      value: "Unassigned",
+      tone: "danger",
+    });
+    expect(presentation.items.find((item) => item.label === "Return History")).toMatchObject({
+      value: "Partial",
+      tone: "warn",
+    });
+    expect(presentation.items.find((item) => item.label === "Attribution")).toMatchObject({
+      value: "Unavailable",
+      tone: "danger",
+    });
+    expect(presentation.items.find((item) => item.label === "Evidence")).toMatchObject({
+      value: "Pending",
+      tone: "default",
+    });
+  });
 });

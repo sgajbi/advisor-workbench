@@ -1,3 +1,4 @@
+import type { WorkbenchStatusStripItem } from "@/design-system";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
@@ -120,12 +121,7 @@ export type PerformanceExecutiveReturnPresentation = {
 };
 
 export type PerformanceTrustStripPresentation = {
-  items: Array<{
-    label: string;
-    value: string;
-    support?: string;
-    tone: "default" | "success" | "warn" | "danger";
-  }>;
+  items: WorkbenchStatusStripItem[];
 };
 
 export function getPerformanceSummaryHeaderPresentation({

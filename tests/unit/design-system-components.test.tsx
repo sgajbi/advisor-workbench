@@ -34,6 +34,7 @@ import {
   WorkbenchPageHeader,
   WorkbenchRailCard,
   WorkbenchSectionStack,
+  WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,
@@ -446,5 +447,42 @@ describe("design-system components", () => {
     ).toHaveClass("workbench-page-header-subtitle");
     expect(screen.getByRole("button", { name: "Header Action" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-actions")).toBeTruthy();
+  });
+
+  it("renders the shared workbench status strip with consistent item structure", () => {
+    render(
+      <WorkbenchStatusStrip
+        label="Capability status"
+        className="performance-trust-strip"
+        gridClassName="performance-trust-strip-grid"
+        itemClassName="performance-trust-item"
+        itemLabelClassName="performance-trust-item-label"
+        itemBodyClassName="performance-trust-item-body"
+        itemChipClassName="performance-trust-item-chip"
+        itemSupportClassName="performance-trust-item-support"
+        items={[
+          {
+            label: "Benchmark",
+            value: "Assigned",
+            support: "Relative analytics are active.",
+            tone: "success",
+          },
+          {
+            label: "Evidence",
+            value: "Pending",
+            support: "Evidence is not yet exposed.",
+            tone: "default",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByLabelText("Capability status")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark")).toHaveClass("performance-trust-item-label");
+    expect(screen.getByText("Assigned")).toHaveClass("performance-trust-item-chip");
+    expect(screen.getByText("Relative analytics are active.")).toHaveClass(
+      "performance-trust-item-support"
+    );
+    expect(screen.getByText("Pending")).toHaveClass("performance-trust-item-chip");
   });
 });
