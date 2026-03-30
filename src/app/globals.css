@@ -4464,6 +4464,10 @@ a:hover {
   min-width: 0;
 }
 
+.performance-summary-contributors-section {
+  grid-column: 1 / -1;
+}
+
 .performance-analysis-stage {
   align-items: start;
   gap: 1rem;

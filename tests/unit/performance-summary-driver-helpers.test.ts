@@ -95,6 +95,23 @@ describe("performance summary driver helpers", () => {
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
   });
 
+  it("keeps supported ranked contributor cards position-only", () => {
+    const presentation = getPerformanceContributorsPresentation(
+      buildContributorProps({
+        positivePositionContributors: [],
+        negativePositionContributors: [],
+      })
+    );
+
+    expect(presentation.mode).toBe("supported");
+    if (presentation.mode !== "supported") {
+      throw new Error("expected supported presentation");
+    }
+    expect(presentation.positiveRows).toEqual([]);
+    expect(presentation.negativeRows).toEqual([]);
+    expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
+  });
+
   it("builds a loading contributor presentation while detailed support is pending", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 

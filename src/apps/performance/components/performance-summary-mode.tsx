@@ -140,7 +140,7 @@ export default function PerformanceSummaryMode({
           />
         </WorkbenchDeferredSection>
         <WorkbenchDeferredSection
-          className="performance-summary-driver-section"
+          className="performance-summary-driver-section performance-summary-contributors-section"
           title="What drove the result?"
           subtitle="Top contributors and detractors for the current performance outcome."
           loadingTitle="Loading contributors"

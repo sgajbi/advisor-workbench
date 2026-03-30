@@ -112,27 +112,35 @@ export function getPerformanceContributorsPresentation({
   const tableModel = buildPerformanceContributionTableModel({
     rows: aggregateRows,
   });
+  const positiveRankedRows =
+    positivePositionContributors.length > 0
+      ? positivePositionContributors.map((row) => ({
+          key: `top-position-${row.position_id}`,
+          title: row.position_id,
+          subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+          value: formatPct(row.contribution_pct),
+          magnitudePct: Math.abs(row.contribution_pct ?? 0),
+          tone: "positive" as const,
+        }))
+      : [];
+  const negativeRankedRows =
+    negativePositionContributors.length > 0
+      ? negativePositionContributors.map((row) => ({
+          key: `bottom-position-${row.position_id}`,
+          title: row.position_id,
+          subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+          value: formatPct(row.contribution_pct),
+          magnitudePct: Math.abs(row.contribution_pct ?? 0),
+          tone: "negative" as const,
+        }))
+      : [];
 
   if (capabilities.contributionRanking.state === "supported") {
     return {
       mode: "supported",
       frame,
-      positiveRows: positivePositionContributors.map((row) => ({
-        key: `top-position-${row.position_id}`,
-        title: row.position_id,
-        subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
-        value: formatPct(row.contribution_pct),
-        magnitudePct: Math.abs(row.contribution_pct ?? 0),
-        tone: "positive",
-      })),
-      negativeRows: negativePositionContributors.map((row) => ({
-        key: `bottom-position-${row.position_id}`,
-        title: row.position_id,
-        subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
-        value: formatPct(row.contribution_pct),
-        magnitudePct: Math.abs(row.contribution_pct ?? 0),
-        tone: "negative",
-      })),
+      positiveRows: positiveRankedRows,
+      negativeRows: negativeRankedRows,
       tableModel,
     };
   }
