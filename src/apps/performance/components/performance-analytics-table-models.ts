@@ -92,13 +92,17 @@ export function buildPerformancePositionContributionTableModel({
 }: {
   rows: ContributionPositionView[];
 }): PerformanceAnalyticsTableModel {
+  const includeReturnColumn = rows.some((row) => isMeaningfulValue(row.total_return_pct));
+  const includeLocalColumn = rows.some((row) => isMeaningfulValue(row.local_contribution_pct));
+  const includeFxColumn = rows.some((row) => isMeaningfulValue(row.fx_contribution_pct));
+
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "position", label: "Position" },
     { key: "contribution", label: "Contribution", align: "right" },
     { key: "weight", label: "Avg. Weight", align: "right" },
-    { key: "return", label: "Return", align: "right" },
-    { key: "local", label: "Local", align: "right" },
-    { key: "fx", label: "FX", align: "right" },
+    ...(includeReturnColumn ? [{ key: "return", label: "Return", align: "right" as const }] : []),
+    ...(includeLocalColumn ? [{ key: "local", label: "Local", align: "right" as const }] : []),
+    ...(includeFxColumn ? [{ key: "fx", label: "FX", align: "right" as const }] : []),
   ];
 
   return {
@@ -121,6 +125,10 @@ export function buildPerformancePositionContributionTableModel({
       };
     }),
   };
+}
+
+function isMeaningfulValue(value: number | null | undefined): value is number {
+  return value != null && Math.abs(value) > 0.000001;
 }
 
 export function buildPerformanceAttributionTrendTableModel({

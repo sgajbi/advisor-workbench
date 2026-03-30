@@ -175,4 +175,40 @@ describe("performance analytics table models", () => {
       "0.37%",
     ]);
   });
+
+  it("omits empty position contribution columns when the live contract provides no values", () => {
+    const model = buildPerformancePositionContributionTableModel({
+      rows: [
+        {
+          position_id: "PB_SG_GLOBAL_BAL_001:FO_EQ_AAPL_US",
+          contribution_pct: 0.29551,
+          weight_avg_pct: 7.444525,
+          total_return_pct: 0,
+          local_contribution_pct: 0,
+          fx_contribution_pct: 0.29551,
+        },
+        {
+          position_id: "PB_SG_GLOBAL_BAL_001:FO_EQ_MSFT_US",
+          contribution_pct: 0.173727,
+          weight_avg_pct: 10.268896,
+          total_return_pct: 0,
+          local_contribution_pct: 0,
+          fx_contribution_pct: 0.173727,
+        },
+      ],
+    });
+
+    expect(model.columns.map((column) => column.label)).toEqual([
+      "Position",
+      "Contribution",
+      "Avg. Weight",
+      "FX",
+    ]);
+    expect(model.rows[0]?.cells).toEqual([
+      "AAPL US",
+      "0.30%",
+      "7.44%",
+      "0.30%",
+    ]);
+  });
 });
