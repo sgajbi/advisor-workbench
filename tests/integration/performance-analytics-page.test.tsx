@@ -380,6 +380,83 @@ describe("PerformanceAnalyticsPage", () => {
     }
   });
 
+  it("converges a stale deep link through deferred horizon normalization", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const rawWorkspace = {
+      ...buildSupportedPerformanceScenario().workspace,
+      portfolio_id: "DEMO_ADV_USD_001",
+      portfolio: {
+        ...buildSupportedPerformanceScenario().workspace.portfolio,
+        portfolio_id: "DEMO_ADV_USD_001",
+      },
+      chart_frequency: "weekly",
+      requested_chart_frequency_supported: true,
+    };
+    const normalizedHorizon = {
+      ...buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
+      chart_frequency: "monthly",
+      requested_chart_frequency_supported: false,
+      warnings: ["PERFORMANCE_HORIZON_CHART_FREQUENCY_NORMALIZED"],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
+          return { ok: true, json: async () => normalizedHorizon } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
+          return {
+            ok: true,
+            json: async () => buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
+          } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    try {
+      render(
+        await PerformanceAnalyticsPage({
+          searchParams: Promise.resolve({
+            chartFrequency: "weekly",
+          }),
+        })
+      );
+
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40&reportStartDate=2026-01-01&reportEndDate=2026-02-24",
+          { scroll: false }
+        );
+      });
+
+      const notice = await screen.findByRole("status", {
+        name: "Horizon comparison normalization",
+      });
+      expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
+    } finally {
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
   it("uses the shared analysis state panel when attribution detail is unavailable", async () => {
     installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
 
