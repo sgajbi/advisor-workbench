@@ -47,6 +47,8 @@ describe("PerformanceMultiHorizonPanel", () => {
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
         benchmarkOptions={[
           {
             benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
@@ -146,6 +148,14 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Cum Net")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledWith("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      chartFrequency: "monthly",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-03-27",
+    });
   });
 
   it("reuses cached horizon data when rerendered with the same analytical inputs", async () => {

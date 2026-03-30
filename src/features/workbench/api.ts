@@ -271,16 +271,28 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
 export async function getWorkbenchPerformanceHorizonComparisonClient(
   portfolioId: string,
   params: {
+    period?: string;
     detailBasis: string;
     benchmark?: string;
     chartFrequency?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceHorizonComparison> {
   const query = new URLSearchParams();
+  if (params.period) {
+    query.set("period", params.period);
+  }
   query.set("detail_basis", params.detailBasis);
   query.set("chart_frequency", params.chartFrequency ?? "monthly");
   if (params.benchmark) {
     query.set("benchmark_code", params.benchmark);
+  }
+  if (params.reportStartDate) {
+    query.set("report_start_date", params.reportStartDate);
+  }
+  if (params.reportEndDate) {
+    query.set("report_end_date", params.reportEndDate);
   }
   return await fetchWorkbenchResource<WorkbenchPerformanceHorizonComparison>(
     "client",

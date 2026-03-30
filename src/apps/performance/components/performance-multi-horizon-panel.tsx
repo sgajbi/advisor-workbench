@@ -36,6 +36,8 @@ export default function PerformanceMultiHorizonPanel({
   detailBasis,
   benchmark,
   chartFrequency,
+  reportStartDate,
+  reportEndDate,
   benchmarkOptions = [],
   onRequestChange,
 }: {
@@ -44,6 +46,8 @@ export default function PerformanceMultiHorizonPanel({
   detailBasis: string;
   benchmark?: string;
   chartFrequency: string;
+  reportStartDate?: string;
+  reportEndDate?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 }) {
@@ -58,9 +62,12 @@ export default function PerformanceMultiHorizonPanel({
   useEffect(() => {
     const cacheKey = JSON.stringify({
       portfolioId,
+      period,
       detailBasis,
       benchmark: benchmark ?? null,
       chartFrequency,
+      reportStartDate: reportStartDate ?? null,
+      reportEndDate: reportEndDate ?? null,
     });
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {
@@ -74,9 +81,12 @@ export default function PerformanceMultiHorizonPanel({
     setIsLoading(true);
 
     void getWorkbenchPerformanceHorizonComparisonClient(portfolioId, {
+      period,
       detailBasis,
       benchmark,
       chartFrequency,
+      reportStartDate,
+      reportEndDate,
     })
       .then((result) => {
         if (requestIdRef.current !== requestId) {
@@ -116,6 +126,9 @@ export default function PerformanceMultiHorizonPanel({
     chartFrequency,
     detailBasis,
     portfolioId,
+    period,
+    reportEndDate,
+    reportStartDate,
   ]);
   const rows = comparison?.rows ?? null;
   const reportingCurrency = comparison?.reporting_currency ?? "USD";
