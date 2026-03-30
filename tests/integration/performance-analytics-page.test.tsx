@@ -221,7 +221,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
-      "Evidence unavailable"
+      "Evidence pending contract"
     );
   });
 
@@ -336,14 +336,14 @@ describe("PerformanceAnalyticsPage", () => {
     const evidenceTab = await screen.findByRole("tab", { name: "Evidence" });
     expect(evidenceTab).toBeDisabled();
     expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
-      "Evidence unavailable"
+      "Evidence pending contract"
     );
     fireEvent.click(evidenceTab);
 
     expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeFalsy();
     expect(document.querySelector(".performance-evidence-module")).toBeFalsy();
     expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
-    expect(screen.queryByText("Evidence unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Evidence pending contract")).toBeInTheDocument();
   });
 
   it.each<PerformanceWorkspaceScenarioMatrix>([
@@ -352,7 +352,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildSupportedPerformanceScenario(),
       summaryExpectations: ["Portfolio Return", "How did this compare across horizons?"],
       analysisExpectations: ["Attribution Over Time", "Contribution Detail"],
-      evidenceExpectations: ["Evidence unavailable"],
+      evidenceExpectations: ["Evidence pending contract"],
       summaryAbsent: ["Benchmark not assigned"],
       analysisAbsent: ["Attribution detail unavailable", "Contribution detail unavailable"],
     },
@@ -361,7 +361,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildUnavailableAttributionPerformanceScenario(),
       summaryExpectations: ["Attribution", "Unavailable"],
       analysisExpectations: ["Attribution detail unavailable", "Contribution Detail"],
-      evidenceExpectations: ["Evidence unavailable"],
+      evidenceExpectations: ["Evidence pending contract"],
       analysisAbsent: ["Relative Segment Matrix"],
     },
     {
@@ -372,7 +372,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Attribution Over Time",
         "Contribution detail unavailable",
       ],
-      evidenceExpectations: ["Evidence unavailable"],
+      evidenceExpectations: ["Evidence pending contract"],
       analysisAbsent: ["Contribution detail is partial"],
     },
     {
@@ -380,7 +380,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildCombinedPartialPerformanceScenario(),
       summaryExpectations: ["Relative returns incomplete", "Attribution detail unavailable"],
       analysisExpectations: ["Attribution detail unavailable", "Contribution Detail"],
-      evidenceExpectations: ["Evidence unavailable"],
+      evidenceExpectations: ["Evidence pending contract"],
       analysisAbsent: ["Contribution detail is partial"],
     },
   ])(
@@ -389,7 +389,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario,
       summaryExpectations,
       analysisExpectations,
-      evidenceExpectations = ["Evidence unavailable"],
+      evidenceExpectations = ["Evidence pending contract"],
       summaryAbsent = [],
       analysisAbsent = [],
     }) => {

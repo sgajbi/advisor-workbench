@@ -51,4 +51,28 @@ describe("PerformanceWorkspaceModeSwitch", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("surfaces aggregate fallback in analysis readiness when only aggregate contribution is available", () => {
+    const onChange = vi.fn();
+
+    render(
+      <PerformanceWorkspaceModeSwitch
+        value="summary"
+        onChange={onChange}
+        capabilities={buildPerformanceCapabilities({
+          contributionDetail: {
+            state: "partial",
+            reason: "Contribution exists, but only aggregate rows are available.",
+            coverageLevel: "aggregate",
+            fallbackAvailable: true,
+          },
+        })}
+      />
+    );
+
+    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
+      "Analysis partial • aggregate fallback"
+    );
+    expect(screen.getByRole("tab", { name: "Analysis" })).not.toBeDisabled();
+  });
 });

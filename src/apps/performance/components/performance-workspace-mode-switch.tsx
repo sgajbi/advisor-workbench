@@ -5,6 +5,7 @@ import {
   isSupportedCapability,
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
+import { formatDate } from "../formatters";
 
 export type PerformanceWorkspaceMode = "summary" | "analysis" | "evidence";
 
@@ -46,6 +47,56 @@ function getAnalysisCapability(
   };
 }
 
+function getAnalysisReadiness(capabilities?: PerformanceWorkspaceCapabilities | null): {
+  value: string;
+  tone: "default" | "warn" | "danger";
+} | null {
+  const analysisCapability = getAnalysisCapability(capabilities ?? undefined);
+  if (!analysisCapability || !capabilities) {
+    return null;
+  }
+
+  if (!isModeUsable(analysisCapability)) {
+    return { value: "Analysis unavailable", tone: "danger" };
+  }
+
+  if (
+    capabilities.contributionDetail.state === "partial" &&
+    capabilities.contributionDetail.fallbackAvailable
+  ) {
+    return { value: "Analysis partial • aggregate fallback", tone: "warn" };
+  }
+  if (capabilities.attributionDetail.state === "unavailable") {
+    return { value: "Analysis partial • no attribution", tone: "warn" };
+  }
+  if (
+    capabilities.returnPath.state === "partial" &&
+    capabilities.returnPath.latestAvailableDate
+  ) {
+    return {
+      value: `Analysis partial • history through ${formatDate(capabilities.returnPath.latestAvailableDate)}`,
+      tone: "warn",
+    };
+  }
+  if (analysisCapability.state === "partial") {
+    return { value: "Analysis partial", tone: "warn" };
+  }
+
+  return { value: "Analysis ready", tone: "default" };
+}
+
+function getEvidenceReadinessLabel(capability: WorkspaceCapability) {
+  if (capability.state === "supported") {
+    return "Evidence ready";
+  }
+  if (capability.state === "partial") {
+    return "Evidence partial";
+  }
+  return capability.reason?.includes("not exposed by the current gateway contract")
+    ? "Evidence pending contract"
+    : "Evidence unavailable";
+}
+
 export default function PerformanceWorkspaceModeSwitch({
   value,
   onChange,
@@ -56,6 +107,7 @@ export default function PerformanceWorkspaceModeSwitch({
   capabilities?: PerformanceWorkspaceCapabilities | null;
 }) {
   const analysisCapability = getAnalysisCapability(capabilities ?? undefined);
+  const analysisReadiness = getAnalysisReadiness(capabilities);
   const evidenceCapability = capabilities?.evidence ?? null;
   const modeOptions = WORKSPACE_MODES.map((mode) => {
     if (mode.key === "analysis" && analysisCapability) {
@@ -75,30 +127,15 @@ export default function PerformanceWorkspaceModeSwitch({
     return mode;
   });
   const modeStatusItems = [
-    analysisCapability
+    analysisReadiness
       ? {
-          value:
-            analysisCapability.state === "supported"
-              ? "Analysis ready"
-              : analysisCapability.state === "partial"
-                ? "Analysis partial"
-                : "Analysis unavailable",
-          tone:
-            analysisCapability.state === "supported"
-              ? ("default" as const)
-              : analysisCapability.state === "partial"
-                ? ("warn" as const)
-                : ("danger" as const),
+          value: analysisReadiness.value,
+          tone: analysisReadiness.tone,
         }
       : null,
     evidenceCapability
       ? {
-          value:
-            evidenceCapability.state === "supported"
-              ? "Evidence ready"
-              : evidenceCapability.state === "partial"
-                ? "Evidence partial"
-                : "Evidence unavailable",
+          value: getEvidenceReadinessLabel(evidenceCapability),
           tone:
             evidenceCapability.state === "supported"
               ? ("default" as const)

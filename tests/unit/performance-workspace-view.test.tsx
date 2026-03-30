@@ -92,7 +92,7 @@ describe("PerformanceWorkspaceView", () => {
 
     expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
     expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
-      "Evidence unavailable"
+      "Evidence pending contract"
     );
   });
 
