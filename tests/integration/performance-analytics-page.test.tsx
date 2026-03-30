@@ -264,6 +264,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
     ).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-state-panel").length).toBeGreaterThanOrEqual(1);
+    expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
   });
@@ -330,6 +332,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByText("Evidence unavailable")).toBeInTheDocument();
     expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelector(".performance-evidence-module")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-state-panel")).toHaveLength(1);
+    expect(document.querySelector(".performance-evidence-status-strip")).toBeFalsy();
     expect(
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
     ).toBeTruthy();

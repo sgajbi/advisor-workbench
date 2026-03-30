@@ -46,6 +46,36 @@ vi.mock("../../src/apps/performance/components/performance-evidence-mode", () =>
 }));
 
 describe("PerformanceWorkspaceView", () => {
+  it("keeps summary mode as the only mounted mode on initial render", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    render(
+      <PerformanceWorkspaceView
+        workspace={scenario.workspace}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+      />
+    );
+
+    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
+      "workbench-segmented-control-button-active"
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
+    });
+
+    expect(summaryModeMock).toHaveBeenCalledTimes(1);
+    expect(analysisModeMock).not.toHaveBeenCalled();
+    expect(evidenceModeMock).not.toHaveBeenCalled();
+    expect(document.querySelector(".workbench-deferred-placeholder")).toBeFalsy();
+    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
+  });
+
   it("passes contract-backed evidence capability into evidence mode from the shared scenario", async () => {
     const scenario = buildUnavailableEvidencePerformanceScenario();
 
