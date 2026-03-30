@@ -43,6 +43,7 @@ export {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "./components/workbench-page-frame";
+export { default as WorkbenchRailCard } from "./components/workbench-rail-card";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";
 export { default as WorkspaceStatusPanel } from "./components/workspace-status-panel";
 export {

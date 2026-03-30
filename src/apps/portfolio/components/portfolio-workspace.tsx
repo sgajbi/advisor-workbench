@@ -15,6 +15,7 @@ import {
   SectionLabel,
   StatusChip,
   WorkbenchPageFrame,
+  WorkbenchRailCard,
   WorkbenchSectionStack,
   WorkstationShell,
   WorkspaceGrid,
@@ -599,7 +600,7 @@ export default function PortfolioWorkspaceView({
               <PortfolioActionsModule actions={setupActions} />
             </>
           ) : (
-            <Panel className="portfolio-side-card">
+            <WorkbenchRailCard className="portfolio-side-card">
               <div className="portfolio-card-header">
                 <h3 className="portfolio-side-card-title">Available Work Areas</h3>
                 <p className="portfolio-card-subtitle">
@@ -611,7 +612,7 @@ export default function PortfolioWorkspaceView({
                 <ActionLink href="/performance">Performance</ActionLink>
                 <ActionLink href="/workbench">Open Operations</ActionLink>
               </div>
-            </Panel>
+            </WorkbenchRailCard>
           )
         }
       />

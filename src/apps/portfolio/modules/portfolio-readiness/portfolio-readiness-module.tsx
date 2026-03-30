@@ -1,6 +1,6 @@
 "use client";
 
-import { Panel, StateInfoHint } from "@/design-system";
+import { StateInfoHint, WorkbenchRailCard } from "@/design-system";
 
 import { formatDate } from "../../formatters";
 import type { PortfolioExceptionSummary, PortfolioWorkspace } from "../../types";
@@ -34,7 +34,7 @@ export default function PortfolioReadinessModule({
   onOpenException: (exception: PortfolioExceptionSummary) => void;
 }) {
   return (
-    <Panel className="portfolio-side-card workbench-rail-card portfolio-readiness-card">
+    <WorkbenchRailCard className="portfolio-side-card portfolio-readiness-card">
       <div className="portfolio-card-header">
         <div className="portfolio-empty-state-header">
           <h3 className="portfolio-side-card-title">Readiness and Exceptions</h3>
@@ -82,7 +82,7 @@ export default function PortfolioReadinessModule({
           </span>
         </div>
       ) : null}
-    </Panel>
+    </WorkbenchRailCard>
   );
 }
 

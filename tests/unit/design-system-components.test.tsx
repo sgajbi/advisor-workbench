@@ -32,6 +32,7 @@ import {
   WorkspaceSide,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
+  WorkbenchRailCard,
   WorkbenchSectionStack,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
@@ -143,6 +144,20 @@ describe("design-system components", () => {
     expect(document.querySelector(".workbench-section-stack")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
     expect(screen.getByText("Catalog live")).toHaveClass("status-chip");
+  });
+
+  it("renders the shared workbench rail card primitive", () => {
+    render(
+      <WorkbenchRailCard className="portfolio-context-card">
+        <div className="portfolio-card-header">
+          <h3 className="portfolio-side-card-title">Portfolio Context</h3>
+          <p className="portfolio-card-subtitle">Identity and setup.</p>
+        </div>
+      </WorkbenchRailCard>
+    );
+
+    expect(document.querySelector(".workbench-rail-card.portfolio-context-card")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Portfolio Context" })).toBeInTheDocument();
   });
 
   it("renders degraded state and rail link primitives", () => {
