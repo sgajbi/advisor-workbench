@@ -413,6 +413,16 @@ function buildAttributionTrend(portfolioId: string) {
   };
 }
 
+type PerformanceSummaryScenario = {
+  name: string;
+  options?: Parameters<typeof installPerformancePageFetchMock>[0];
+  executiveExpectations?: string[];
+  trustExpectations?: string[];
+  deferredExpectations?: string[];
+  contextExpectations?: string[];
+  absentTexts?: string[];
+};
+
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -660,6 +670,89 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
+
+  it.each<PerformanceSummaryScenario>([
+    {
+      name: "benchmark-unassigned and return-series-unavailable",
+      options: {
+        unassignedBenchmark: true,
+        unavailableSummarySeries: true,
+      },
+      executiveExpectations: ["Unassigned"],
+      trustExpectations: [
+        "No benchmark is assigned to this mandate.",
+        "Published return observations are not available for the selected horizon.",
+        "Unavailable",
+      ],
+      deferredExpectations: ["Return series unavailable"],
+      absentTexts: ["Relative context Partial"],
+    },
+    {
+      name: "assigned benchmark with partial relative comparison",
+      options: {
+        partialBenchmarkComparison: true,
+      },
+      executiveExpectations: ["Global Balanced 60/40"],
+      trustExpectations: [
+        "Partial",
+        "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+      ],
+      contextExpectations: ["Relative context Partial", "Compared against Global Balanced 60/40"],
+      absentTexts: ["Benchmark unassigned"],
+    },
+    {
+      name: "aggregate-only contribution ranking",
+      options: {
+        aggregateContributionOnly: true,
+      },
+      executiveExpectations: ["Global Balanced 60/40"],
+      trustExpectations: [],
+      deferredExpectations: ["Contributor ranking is partial"],
+      absentTexts: ["AAPL"],
+    },
+  ])(
+    "renders a contract-backed summary supportability matrix for $name",
+    async ({
+      options,
+      executiveExpectations = [],
+      trustExpectations = [],
+      deferredExpectations = [],
+      contextExpectations = [],
+      absentTexts = [],
+    }) => {
+      installPerformancePageFetchMock(options);
+
+      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+      expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+
+      const executiveStrip = screen.getByLabelText("Executive return strip");
+      const trustStrip = screen.getByLabelText("Trust and completeness strip");
+
+      for (const text of executiveExpectations) {
+        expect(within(executiveStrip).queryAllByText(text).length).toBeGreaterThan(0);
+      }
+
+      for (const text of trustExpectations) {
+        expect(within(trustStrip).queryAllByText(text).length).toBeGreaterThan(0);
+      }
+
+      for (const text of deferredExpectations) {
+        expect(await screen.findByText(text)).toBeInTheDocument();
+      }
+
+      if (contextExpectations.length) {
+        const returnPathContext = await screen.findByRole("group", { name: "Return path context" });
+        for (const text of contextExpectations) {
+          expect(returnPathContext).toHaveTextContent(text);
+        }
+      }
+
+      for (const text of absentTexts) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+    }
+  );
 
   it("passes a selected benchmark through to summary and details requests", async () => {
     installPerformancePageFetchMock();
