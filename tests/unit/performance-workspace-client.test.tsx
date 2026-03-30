@@ -208,6 +208,37 @@ describe("PerformanceWorkspaceClient", () => {
     expect(getSummaryClientMock).not.toHaveBeenCalled();
   });
 
+  it("normalizes stale initial control params to the server-resolved detail controls", async () => {
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary({
+          chart_frequency: "monthly",
+        })}
+        initialDetails={buildDetails({
+          contribution_dimension: "asset_class",
+          attribution_dimension: "asset_class",
+          chart_frequency: "monthly",
+        })}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="currency"
+        initialAttributionDimension="issuer"
+        initialChartFrequency="weekly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40&reportStartDate=2026-01-01&reportEndDate=2026-02-24",
+        { scroll: false }
+      );
+    });
+    expect(getDetailsClientMock).not.toHaveBeenCalled();
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+  });
+
   it("ignores stale responses when a newer interaction finishes later", async () => {
     let resolveThreeYearSummary:
       | ((value: WorkbenchPerformanceWorkspaceSummary) => void)

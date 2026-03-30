@@ -350,6 +350,9 @@ export type WorkbenchPerformanceWorkspace = {
   contribution_dimension: string;
   attribution_dimension: string;
   detail_basis: string;
+  requested_chart_frequency_supported?: boolean;
+  requested_contribution_dimension_supported?: boolean;
+  requested_attribution_dimension_supported?: boolean;
   segment?: string;
   benchmark_code: string | null;
   benchmark_options?: PerformanceBenchmarkOptionView[];

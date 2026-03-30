@@ -53,26 +53,48 @@ export default function PerformanceWorkspaceClient({
   initialBenchmark,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
-  const initialSummaryKey = useMemo(
+  const initialControls = useMemo<PerformanceControlState | null>(
     () =>
       initialPortfolioId
-        ? buildSummaryCacheKey({
-            portfolioId: initialPortfolioId,
-            period: initialSummary?.period ?? initialPeriod,
-            detailBasis: initialSummary?.detail_basis ?? initialDetailBasis,
-            chartFrequency: initialSummary?.chart_frequency ?? initialChartFrequency,
-            benchmark: initialSummary?.benchmark_code ?? initialBenchmark,
-            reportStartDate: initialSummary?.report_start_date,
-            reportEndDate: initialSummary?.report_end_date,
+        ? resolveInitialControls({
+            initialPortfolioId,
+            initialPeriod,
+            initialDetailBasis,
+            initialContributionDimension,
+            initialAttributionDimension,
+            initialChartFrequency,
+            initialBenchmark,
+            initialSummary,
+            initialDetails,
           })
         : null,
     [
+      initialAttributionDimension,
       initialBenchmark,
       initialChartFrequency,
+      initialContributionDimension,
       initialDetailBasis,
+      initialDetails,
       initialPeriod,
       initialPortfolioId,
       initialSummary,
+    ]
+  );
+  const initialSummaryKey = useMemo(
+    () =>
+      initialControls
+        ? buildSummaryCacheKey({
+            portfolioId: initialControls.portfolioId,
+            period: initialControls.period,
+            detailBasis: initialControls.detailBasis,
+            chartFrequency: initialControls.chartFrequency,
+            benchmark: initialControls.benchmark,
+            reportStartDate: initialControls.reportStartDate,
+            reportEndDate: initialControls.reportEndDate,
+          })
+        : null,
+    [
+      initialControls,
     ]
   );
 
@@ -85,58 +107,18 @@ export default function PerformanceWorkspaceClient({
   const [isSummaryUpdating, setIsSummaryUpdating] = useState(false);
   const [isDetailsUpdating, setIsDetailsUpdating] = useState(false);
   const [controls, setControls] = useState<PerformanceControlState | null>(
-    initialPortfolioId
-      ? {
-          portfolioId: initialPortfolioId,
-          period: initialSummary?.period ?? initialPeriod,
-          detailBasis: initialSummary?.detail_basis ?? initialDetailBasis,
-          contributionDimension: initialContributionDimension,
-          attributionDimension: initialAttributionDimension,
-          chartFrequency: initialSummary?.chart_frequency ?? initialChartFrequency,
-          benchmark: initialSummary?.benchmark_code ?? initialBenchmark,
-          reportStartDate: initialSummary?.report_start_date,
-          reportEndDate: initialSummary?.report_end_date,
-        }
-      : null
+    initialControls
   );
   const requestSequenceRef = useRef(0);
   const initialDetailsRequestedRef = useRef(false);
 
   const initialDetailsKey = useMemo(
     () =>
-      initialPortfolioId
-        ? buildDetailsCacheKey({
-            portfolioId: initialPortfolioId,
-            period: initialDetails?.period ?? initialSummary?.period ?? initialPeriod,
-            detailBasis:
-              initialDetails?.detail_basis ?? initialSummary?.detail_basis ?? initialDetailBasis,
-            contributionDimension:
-              initialDetails?.contribution_dimension ?? initialContributionDimension,
-            attributionDimension:
-              initialDetails?.attribution_dimension ?? initialAttributionDimension,
-            chartFrequency:
-              initialDetails?.chart_frequency ??
-              initialSummary?.chart_frequency ??
-              initialChartFrequency,
-            benchmark:
-              initialDetails?.benchmark_code ??
-              initialSummary?.benchmark_code ??
-              initialBenchmark,
-            reportStartDate:
-              initialDetails?.report_start_date ?? initialSummary?.report_start_date,
-            reportEndDate: initialDetails?.report_end_date ?? initialSummary?.report_end_date,
-          })
+      initialControls
+        ? buildDetailsCacheKey(initialControls)
         : null,
     [
-      initialDetails,
-      initialAttributionDimension,
-      initialBenchmark,
-      initialChartFrequency,
-      initialContributionDimension,
-      initialDetailBasis,
-      initialPeriod,
-      initialPortfolioId,
-      initialSummary,
+      initialControls,
     ]
   );
   const [detailsKey, setDetailsKey] = useState<string | null>(initialDetailsKey ?? null);
@@ -160,6 +142,43 @@ export default function PerformanceWorkspaceClient({
     Boolean(summary) &&
     (isSummaryUpdating || isDetailsUpdating) &&
     detailsKey !== expectedDetailsKey;
+
+  useEffect(() => {
+    if (!initialControls || !initialPortfolioId) {
+      return;
+    }
+    const requestedControls: PerformanceControlState = {
+      portfolioId: initialPortfolioId,
+      period: initialPeriod,
+      detailBasis: initialDetailBasis,
+      contributionDimension: initialContributionDimension,
+      attributionDimension: initialAttributionDimension,
+      chartFrequency: initialChartFrequency,
+      benchmark: initialBenchmark,
+      reportStartDate: initialSummary?.report_start_date,
+      reportEndDate: initialSummary?.report_end_date,
+    };
+    if (
+      buildPerformanceHref(requestedControls) === buildPerformanceHref(initialControls)
+    ) {
+      return;
+    }
+    startTransition(() => {
+      router.replace(buildPerformanceHref(initialControls), { scroll: false });
+    });
+  }, [
+    initialAttributionDimension,
+    initialBenchmark,
+    initialChartFrequency,
+    initialContributionDimension,
+    initialControls,
+    initialDetailBasis,
+    initialPeriod,
+    initialPortfolioId,
+    initialSummary?.report_end_date,
+    initialSummary?.report_start_date,
+    router,
+  ]);
 
   useEffect(() => {
     if (!controls || !summary || details || initialDetailsRequestedRef.current) {
@@ -427,4 +446,43 @@ function buildDetailsCacheKey(controls: PerformanceControlState): string {
     reportStartDate: isExplicitWindow ? controls.reportStartDate ?? null : null,
     reportEndDate: isExplicitWindow ? controls.reportEndDate ?? null : null,
   });
+}
+
+function resolveInitialControls({
+  initialPortfolioId,
+  initialPeriod,
+  initialDetailBasis,
+  initialContributionDimension,
+  initialAttributionDimension,
+  initialChartFrequency,
+  initialBenchmark,
+  initialSummary,
+  initialDetails,
+}: {
+  initialPortfolioId: string;
+  initialPeriod: string;
+  initialDetailBasis: string;
+  initialContributionDimension: string;
+  initialAttributionDimension: string;
+  initialChartFrequency: string;
+  initialBenchmark?: string;
+  initialSummary: WorkbenchPerformanceWorkspaceSummary | null;
+  initialDetails?: WorkbenchPerformanceWorkspaceDetails | null;
+}): PerformanceControlState {
+  return {
+    portfolioId: initialPortfolioId,
+    period: initialSummary?.period ?? initialPeriod,
+    detailBasis: initialDetails?.detail_basis ?? initialSummary?.detail_basis ?? initialDetailBasis,
+    contributionDimension:
+      initialDetails?.contribution_dimension ?? initialContributionDimension,
+    attributionDimension:
+      initialDetails?.attribution_dimension ?? initialAttributionDimension,
+    chartFrequency: initialDetails?.chart_frequency ?? initialSummary?.chart_frequency ?? initialChartFrequency,
+    benchmark:
+      initialDetails?.benchmark_code ??
+      initialSummary?.benchmark_code ??
+      initialBenchmark,
+    reportStartDate: initialDetails?.report_start_date ?? initialSummary?.report_start_date,
+    reportEndDate: initialDetails?.report_end_date ?? initialSummary?.report_end_date,
+  };
 }
