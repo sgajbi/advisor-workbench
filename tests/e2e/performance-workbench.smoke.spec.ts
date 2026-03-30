@@ -3,6 +3,7 @@ import {
   expectActiveTab,
   measureElement,
   parseServerTimingDuration,
+  parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
 
 async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
@@ -66,6 +67,13 @@ test.describe('Performance workbench smoke', () => {
     expect(endpointResults.horizon.status).toBe(200);
     expect(endpointResults.attribution.status).toBe(200);
 
+    const summaryMetrics = parseServerTimingMetrics(endpointResults.summary.serverTiming);
+    const detailsMetrics = parseServerTimingMetrics(endpointResults.details.serverTiming);
+    const horizonMetrics = parseServerTimingMetrics(endpointResults.horizon.serverTiming);
+    const attributionMetrics = parseServerTimingMetrics(
+      endpointResults.attribution.serverTiming
+    );
+
     expect(parseServerTimingDuration(endpointResults.summary.serverTiming)).toBeGreaterThanOrEqual(
       0
     );
@@ -78,6 +86,22 @@ test.describe('Performance workbench smoke', () => {
     expect(
       parseServerTimingDuration(endpointResults.attribution.serverTiming)
     ).toBeGreaterThanOrEqual(0);
+
+    expect(summaryMetrics.get('perf-reference')).toBeGreaterThanOrEqual(0);
+    expect(summaryMetrics.get('perf-benchmark')).toBeGreaterThanOrEqual(0);
+    expect(summaryMetrics.get('perf-summary')).toBeGreaterThanOrEqual(0);
+
+    expect(detailsMetrics.get('perf-reference')).toBeGreaterThanOrEqual(0);
+    expect(detailsMetrics.get('perf-benchmark')).toBeGreaterThanOrEqual(0);
+    expect(detailsMetrics.get('perf-summary')).toBeGreaterThanOrEqual(0);
+
+    expect(horizonMetrics.get('perf-reference')).toBeGreaterThanOrEqual(0);
+    expect(horizonMetrics.get('perf-benchmark')).toBeGreaterThanOrEqual(0);
+    expect(horizonMetrics.get('perf-horizon')).toBeGreaterThanOrEqual(0);
+
+    expect(attributionMetrics.get('perf-reference')).toBeGreaterThanOrEqual(0);
+    expect(attributionMetrics.get('perf-benchmark')).toBeGreaterThanOrEqual(0);
+    expect(attributionMetrics.get('perf-attribution')).toBeGreaterThanOrEqual(0);
   });
 
   test('summary keeps first paint and then mounts deferred analytics by mode', async ({ page }) => {

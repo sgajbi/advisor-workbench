@@ -58,3 +58,18 @@ export function parseServerTimingDuration(header: string | null) {
   }
   return Number(match[1]);
 }
+
+export function parseServerTimingMetrics(header: string | null) {
+  const metrics = new Map<string, number>();
+  if (!header) {
+    return metrics;
+  }
+  for (const segment of header.split(',')) {
+    const match = segment.trim().match(/^([^;,\s]+);dur=([0-9]+(?:\.[0-9]+)?)$/i);
+    if (!match) {
+      continue;
+    }
+    metrics.set(match[1], Number(match[2]));
+  }
+  return metrics;
+}
