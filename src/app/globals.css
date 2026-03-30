@@ -4193,7 +4193,7 @@ a:hover {
 }
 
 .performance-summary-driver-module {
-  gap: 0.875rem;
+  gap: 0.6875rem;
 }
 
 .performance-summary-driver-module .workbench-summary-card-header {
@@ -4209,6 +4209,41 @@ a:hover {
   font-size: 0.78125rem;
   line-height: 1.4;
   color: #5f6b7b;
+}
+
+.performance-summary-driver-module > .muted {
+  margin: 0;
+  min-height: 4.5rem;
+  display: grid;
+  align-content: center;
+  padding: 0.2rem 0;
+  font-size: 0.78125rem;
+  line-height: 1.35;
+}
+
+.performance-capability-notice .module-state-panel,
+.performance-capability-notice .empty-state-panel {
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.performance-capability-notice .module-state-panel-header,
+.performance-capability-notice .empty-state-header {
+  gap: 0.35rem;
+}
+
+.performance-capability-notice .module-state-panel strong,
+.performance-capability-notice .empty-state-panel strong {
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.performance-capability-notice .module-state-panel p,
+.performance-capability-notice .module-state-panel span,
+.performance-capability-notice .empty-state-panel p,
+.performance-capability-notice .empty-state-panel span {
+  font-size: 0.75rem;
+  line-height: 1.38;
 }
 
 .performance-secondary-zone > * {
@@ -4847,16 +4882,16 @@ a:hover {
 .performance-chart-unavailable {
   display: grid;
   gap: 0.28rem;
-  min-height: 6.5rem;
+  min-height: 5rem;
   align-content: center;
-  padding: 0.85rem 1rem;
+  padding: 0.7rem 0.85rem;
   border: 1px solid rgba(217, 224, 231, 0.92);
   border-radius: 12px;
   background: #f8fafc;
 }
 
 .performance-chart-unavailable strong {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   line-height: 1.2;
   color: var(--brand-strong);
 }
@@ -4864,8 +4899,8 @@ a:hover {
 .performance-chart-unavailable p,
 .performance-chart-unavailable span {
   margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: 0.75rem;
+  line-height: 1.38;
   color: var(--text-muted);
 }
 
@@ -5504,12 +5539,14 @@ a:hover {
 }
 
 .performance-chart-loading-state {
-  min-height: 8.25rem;
+  min-height: 5.25rem;
   display: grid;
   place-items: center;
   border: 1px dashed rgba(52, 70, 95, 0.18);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(250, 251, 253, 0.92), rgba(245, 247, 250, 0.9));
+  padding: 0.75rem 0.9rem;
+  text-align: center;
 }
 
 .performance-multi-horizon-panel {
