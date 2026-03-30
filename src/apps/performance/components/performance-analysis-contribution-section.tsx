@@ -5,13 +5,13 @@ import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 import { formatLabel, formatPct } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
+import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import {
   getContributionTotals,
   inlineControlLabelSx,
   shouldShowContributionLocalFx,
 } from "./performance-workspace-view-helpers";
-import PerformanceCapabilityNotice from "./performance-capability-notice";
 
 type PerformanceAnalysisContributionSectionProps = Pick<
   PerformanceAnalysisModeProps,
@@ -63,8 +63,19 @@ export default function PerformanceAnalysisContributionSection({
       actions={actions}
       className="performance-detail-panel-wide performance-analysis-module"
     >
-      {capabilities.contributionDetail.state === "supported" ? (
-        workspace.contribution?.levels.map((level) => {
+      <PerformanceAnalysisModuleState
+        capability={capabilities.contributionDetail}
+        isDetailsPending={isDetailsPending}
+        loadingText="Loading contribution detail for the selected segment and horizon."
+        partialTitle="Contribution detail is partial"
+        unavailableTitle="Contribution detail unavailable"
+        body={
+          capabilities.contributionDetail.reason ??
+          "Contribution detail is not available for the current selection."
+        }
+        hint="Contribution detail requires source-backed contribution levels for the selected segment and horizon."
+      >
+        {workspace.contribution?.levels.map((level) => {
           const totals = getContributionTotals(workspace, level) ?? null;
           const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
           return (
@@ -120,21 +131,8 @@ export default function PerformanceAnalysisContributionSection({
               />
             </PerformanceAnalysisLevelSection>
           );
-        })
-      ) : isDetailsPending ? (
-        <p className="muted">Loading contribution detail for the selected segment and horizon.</p>
-      ) : (
-        <PerformanceCapabilityNotice
-          capability={capabilities.contributionDetail}
-          partialTitle="Contribution detail is partial"
-          unavailableTitle="Contribution detail unavailable"
-          body={
-            capabilities.contributionDetail.reason ??
-            "Contribution detail is not available for the current selection."
-          }
-          hint="Contribution detail requires source-backed contribution levels for the selected segment and horizon."
-        />
-      )}
+        })}
+      </PerformanceAnalysisModuleState>
     </WorkbenchDataGridFrame>
   );
 }

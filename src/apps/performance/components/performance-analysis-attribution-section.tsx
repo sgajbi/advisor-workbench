@@ -11,8 +11,8 @@ import {
 import { formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
+import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import { getAttributionRankingRows } from "./performance-analysis-view-helpers";
-import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import {
@@ -32,7 +32,6 @@ export default function PerformanceAnalysisAttributionSection({
   topAttributionEffectRows,
   attributionEffectScale,
 }: PerformanceAnalysisAttributionSectionProps) {
-  const hasAttribution = capabilities.attributionDetail.state === "supported";
   const actions = (
     <div className="performance-analysis-toolbar">
       <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -102,7 +101,18 @@ export default function PerformanceAnalysisAttributionSection({
       }
       className="performance-detail-panel-compact performance-analysis-module"
     >
-      {hasAttribution ? (
+      <PerformanceAnalysisModuleState
+        capability={capabilities.attributionDetail}
+        isDetailsPending={isDetailsPending}
+        loadingText="Loading attribution effects and benchmark-relative decomposition."
+        partialTitle="Attribution detail is partial"
+        unavailableTitle="Attribution detail unavailable"
+        body={
+          capabilities.attributionDetail.reason ??
+          "Attribution detail is not available for the current selection."
+        }
+        hint="Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
+      >
         <div className="performance-analytic-duo-grid">
           <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
 
@@ -119,23 +129,21 @@ export default function PerformanceAnalysisAttributionSection({
             />
           </WorkbenchChartShell>
         </div>
-      ) : null}
-      <div className="performance-effect-legend" aria-label="Attribution effect legend">
-        <span className="performance-effect-legend-item">
-          <i className="performance-effect-legend-swatch performance-effect-bar-allocation" />
-          Allocation
-        </span>
-        <span className="performance-effect-legend-item">
-          <i className="performance-effect-legend-swatch performance-effect-bar-selection" />
-          Selection
-        </span>
-        <span className="performance-effect-legend-item">
-          <i className="performance-effect-legend-swatch performance-effect-bar-interaction" />
-          Interaction
-        </span>
-      </div>
-      {hasAttribution ? (
-        workspace.attribution?.levels.map((level) => {
+        <div className="performance-effect-legend" aria-label="Attribution effect legend">
+          <span className="performance-effect-legend-item">
+            <i className="performance-effect-legend-swatch performance-effect-bar-allocation" />
+            Allocation
+          </span>
+          <span className="performance-effect-legend-item">
+            <i className="performance-effect-legend-swatch performance-effect-bar-selection" />
+            Selection
+          </span>
+          <span className="performance-effect-legend-item">
+            <i className="performance-effect-legend-swatch performance-effect-bar-interaction" />
+            Interaction
+          </span>
+        </div>
+        {workspace.attribution?.levels.map((level) => {
           const totals = getAttributionTotals(level);
           return (
             <PerformanceAnalysisLevelSection
@@ -193,21 +201,8 @@ export default function PerformanceAnalysisAttributionSection({
               />
             </PerformanceAnalysisLevelSection>
           );
-        })
-      ) : isDetailsPending ? (
-        <p className="muted">Loading attribution effects and benchmark-relative decomposition.</p>
-      ) : (
-        <PerformanceCapabilityNotice
-          capability={capabilities.attributionDetail}
-          partialTitle="Attribution detail is partial"
-          unavailableTitle="Attribution detail unavailable"
-          body={
-            capabilities.attributionDetail.reason ??
-            "Attribution detail is not available for the current selection."
-          }
-          hint="Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
-        />
-      )}
+        })}
+      </PerformanceAnalysisModuleState>
     </WorkbenchChartShell>
   );
 }
