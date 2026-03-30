@@ -152,12 +152,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("How did this compare across horizons?")).length).toBe(1);
     expect(screen.getAllByText("What drove the result?").length).toBe(1);
-    expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".workbench-chart-shell").length).toBeGreaterThanOrEqual(3);
     expect(document.querySelectorAll(".performance-summary-driver-module.workbench-chart-shell")).toHaveLength(2);
     const contributorsModule =
       screen
         .getAllByText("What drove the result?")
-        .map((node) => node.closest(".performance-summary-module-card"))
+        .map((node) => node.closest(".workbench-chart-shell"))
         .find(Boolean) ?? null;
     expect(contributorsModule).toBeTruthy();
     expect(

@@ -13,7 +13,7 @@ export default function PerformanceSummaryDriverModule({
 }) {
   return (
     <WorkbenchChartShell
-      className="workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card performance-summary-driver-module"
+      className="performance-summary-driver-module"
       title={title}
       subtitle={subtitle}
       actions={actions}

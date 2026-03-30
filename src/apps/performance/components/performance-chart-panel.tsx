@@ -373,7 +373,7 @@ export default function PerformanceChartPanel({
       id={id}
       title={title}
       subtitle={explicitDateRange}
-      className="performance-chart-stage workbench-summary-panel performance-summary-module-card"
+      className="performance-chart-stage workbench-summary-panel"
       contextRow={
         <PerformanceChartContextStrip
           period={period}
