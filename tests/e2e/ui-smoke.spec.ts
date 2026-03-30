@@ -1,9 +1,17 @@
 import { test, expect } from '@playwright/test';
+import {
+  expectActiveTab,
+  measureAgGridViewport,
+  measureElement,
+  measureGrid,
+  measureTableFrame,
+  setLocalStorageBeforeNavigation,
+} from './workbench-smoke-helpers';
 
 test.describe('UI smoke checks', () => {
   async function openSummaryPortfolio(page: import('@playwright/test').Page) {
-    await page.addInitScript(() => {
-      window.localStorage.setItem('lotus:portfolio:view-mode', 'summary');
+    await setLocalStorageBeforeNavigation(page, {
+      'lotus:portfolio:view-mode': 'summary',
     });
     await page.goto('/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001', {
       waitUntil: 'domcontentloaded',
@@ -29,17 +37,13 @@ test.describe('UI smoke checks', () => {
   }
 
   async function openDetailedPortfolio(page: import('@playwright/test').Page) {
-    await page.addInitScript(() => {
-      window.localStorage.setItem('lotus:portfolio:view-mode', 'detailed');
-      for (const sectionKey of [
-        'income',
-        'activity',
-        'holdings',
-        'transactions',
-        'projected-cashflow',
-      ]) {
-        window.localStorage.setItem(`lotus:portfolio:section:${sectionKey}`, 'true');
-      }
+    await setLocalStorageBeforeNavigation(page, {
+      'lotus:portfolio:view-mode': 'detailed',
+      'lotus:portfolio:section:income': 'true',
+      'lotus:portfolio:section:activity': 'true',
+      'lotus:portfolio:section:holdings': 'true',
+      'lotus:portfolio:section:transactions': 'true',
+      'lotus:portfolio:section:projected-cashflow': 'true',
     });
     await page.goto('/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible();
@@ -116,24 +120,14 @@ test.describe('UI smoke checks', () => {
     const detailedAnalyticsGrid = page.locator('.portfolio-paired-analytics-grid-detailed');
     await expect(detailedAnalyticsGrid).toBeVisible();
 
-    const analyticsGridMetrics = await detailedAnalyticsGrid.evaluate((element) => ({
-      columns: getComputedStyle(element).gridTemplateColumns,
-      width: element.getBoundingClientRect().width,
-      childWidths: Array.from(element.children).map((child) => child.getBoundingClientRect().width),
-    }));
+    const analyticsGridMetrics = await measureGrid(detailedAnalyticsGrid);
 
     expect(analyticsGridMetrics.columns).not.toContain(' ');
     expect(analyticsGridMetrics.childWidths.every((width) => width >= analyticsGridMetrics.width - 2)).toBeTruthy();
 
     const holdingsGrid = page.locator('.portfolio-data-grid').first();
     await expect(holdingsGrid).toBeVisible();
-    const holdingsGridMetrics = await holdingsGrid.evaluate((element) => {
-      const centerViewport = element.querySelector('.ag-center-cols-viewport') as HTMLElement | null;
-      return {
-        clientWidth: element.clientWidth,
-        centerClientWidth: centerViewport?.clientWidth ?? 0,
-      };
-    });
+    const holdingsGridMetrics = await measureAgGridViewport(holdingsGrid);
     expect(holdingsGridMetrics.centerClientWidth).toBeGreaterThan(700);
 
     const incomeTable = page.getByLabel('Income summary').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
@@ -144,19 +138,13 @@ test.describe('UI smoke checks', () => {
     await expect(cashflowTable).toBeVisible();
 
     for (const table of [incomeTable, activityTable, cashflowTable]) {
-      const metrics = await table.evaluate((element) => ({
-        clientWidth: element.clientWidth,
-        scrollWidth: element.scrollWidth,
-      }));
+      const metrics = await measureTableFrame(table);
       expect(metrics.scrollWidth - metrics.clientWidth).toBeLessThanOrEqual(8);
     }
 
     const cashflowChart = page.getByLabel(/Projected cashflow chart in /i);
     await expect(cashflowChart).toBeVisible();
-    const cashflowChartMetrics = await cashflowChart.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      width: element.getBoundingClientRect().width,
-    }));
+    const cashflowChartMetrics = await measureElement(cashflowChart);
     expect(cashflowChartMetrics.height).toBeLessThanOrEqual(260);
     expect(cashflowChartMetrics.width).toBeGreaterThan(700);
 
@@ -186,11 +174,7 @@ test.describe('UI smoke checks', () => {
     await expect(page.getByRole('heading', { name: /^Transactions$/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Projected Cashflow/i })).toHaveCount(0);
 
-    const pairedAnalyticsMetrics = await page.locator('.portfolio-paired-analytics-grid').evaluate((element) => ({
-      columns: getComputedStyle(element).gridTemplateColumns,
-      childCount: element.children.length,
-      width: element.getBoundingClientRect().width,
-    }));
+    const pairedAnalyticsMetrics = await measureGrid(page.locator('.portfolio-paired-analytics-grid'));
     expect(pairedAnalyticsMetrics.columns).toContain(' ');
     expect(pairedAnalyticsMetrics.childCount).toBe(2);
     expect(pairedAnalyticsMetrics.width).toBeGreaterThan(900);
@@ -212,10 +196,9 @@ test.describe('UI smoke checks', () => {
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
 
-    const summaryTab = page.getByRole('tab', { name: /^Summary$/i });
     const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
-    await expect(summaryTab).toHaveAttribute('aria-selected', 'true');
+    await expectActiveTab(page, /^Summary$/i);
 
     await expect(page.getByText('Return path and benchmark context')).toBeVisible({
       timeout: 15000,
@@ -231,15 +214,12 @@ test.describe('UI smoke checks', () => {
     });
 
     const returnPathPanel = page.locator('.performance-chart-stage');
-    const chartMetrics = await returnPathPanel.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      width: element.getBoundingClientRect().width,
-    }));
+    const chartMetrics = await measureElement(returnPathPanel);
     expect(chartMetrics.height).toBeLessThanOrEqual(520);
     expect(chartMetrics.width).toBeGreaterThan(900);
 
     await analysisTab.click();
-    await expect(analysisTab).toHaveAttribute('aria-selected', 'true');
+    await expectActiveTab(page, /^Analysis$/i);
     await expect(page.locator('.performance-analysis-stage')).toBeVisible({ timeout: 15000 });
     await expect(
       page.getByRole('heading', { name: /^Attribution Detail$/i })
@@ -250,7 +230,7 @@ test.describe('UI smoke checks', () => {
     await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
 
     await evidenceTab.click();
-    await expect(evidenceTab).toHaveAttribute('aria-selected', 'true');
+    await expectActiveTab(page, /^Evidence$/i);
     await expect(page.getByText('Evidence and Calculation Context')).toBeVisible({
       timeout: 15000,
     });
@@ -264,7 +244,7 @@ test.describe('UI smoke checks', () => {
 
     const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
     await analysisTab.click();
-    await expect(analysisTab).toHaveAttribute('aria-selected', 'true');
+    await expectActiveTab(page, /^Analysis$/i);
 
     const analysisStage = page.locator('.performance-analysis-stage');
     await expect(analysisStage).toBeVisible({ timeout: 15000 });
@@ -298,10 +278,7 @@ test.describe('UI smoke checks', () => {
 
     const trendShell = page.locator('.performance-analysis-trend-shell');
     await expect(trendShell).toBeVisible();
-    const trendMetrics = await trendShell.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      width: element.getBoundingClientRect().width,
-    }));
+    const trendMetrics = await measureElement(trendShell);
     expect(trendMetrics.height).toBeLessThanOrEqual(640);
     expect(trendMetrics.width).toBeGreaterThan(800);
   });
@@ -312,7 +289,7 @@ test.describe('UI smoke checks', () => {
 
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
     await evidenceTab.click();
-    await expect(evidenceTab).toHaveAttribute('aria-selected', 'true');
+    await expectActiveTab(page, /^Evidence$/i);
 
     const evidenceModule = page.locator('.performance-evidence-module');
     await expect(evidenceModule).toBeVisible({ timeout: 15000 });
@@ -327,10 +304,7 @@ test.describe('UI smoke checks', () => {
       )
     ).toBeVisible();
 
-    const evidenceMetrics = await evidenceModule.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      width: element.getBoundingClientRect().width,
-    }));
+    const evidenceMetrics = await measureElement(evidenceModule);
     expect(evidenceMetrics.height).toBeLessThanOrEqual(420);
     expect(evidenceMetrics.width).toBeGreaterThan(900);
   });
