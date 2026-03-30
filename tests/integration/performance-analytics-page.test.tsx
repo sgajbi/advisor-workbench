@@ -301,6 +301,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       screen.getByText("Contribution exists, but only aggregate rows are available.")
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("Position-level ranking requires source-backed contribution detail.")
+    ).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
@@ -329,6 +332,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect((await screen.findAllByText("What drove the result?")).length).toBe(1);
     expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Position-level ranking requires source-backed contribution detail.")
+    ).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
@@ -344,7 +350,7 @@ describe("PerformanceAnalyticsPage", () => {
       ],
       deferredExpectations: [
         "Return series unavailable",
-        "Comparative horizon summaries are not available for this mandate.",
+        "Horizon comparison is unavailable for this mandate.",
       ],
       absentTexts: ["Relative context Partial"],
     },

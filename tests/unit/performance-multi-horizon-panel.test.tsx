@@ -53,7 +53,7 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(screen.getByText("Loading comparative horizon summaries.")).toBeInTheDocument();
+    expect(screen.getByText("Loading horizon comparison.")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("How did this compare across horizons?")).toBeInTheDocument();

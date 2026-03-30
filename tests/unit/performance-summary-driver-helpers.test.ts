@@ -87,7 +87,7 @@ describe("performance summary driver helpers", () => {
 
     expect(presentation).toMatchObject({
       mode: "loading",
-      body: "Loading contributor ranking for the selected analytical slice.",
+      body: "Loading contributor ranking.",
     });
   });
 
@@ -107,6 +107,7 @@ describe("performance summary driver helpers", () => {
       mode: "notice",
       noticeTitle: "Contributor ranking is partial",
       noticeBody: "Contribution exists, but only aggregate rows are available.",
+      hint: "Position-level ranking requires source-backed contribution detail.",
     });
   });
 
@@ -163,8 +164,8 @@ describe("performance summary driver helpers", () => {
       activeReturnLabel: "0.52%",
       benchmarkLabel: "Global Balanced 60/40",
       benchmarkLegendLabel: "Global Balanced 60/40",
-      loadingBody: "Loading comparative horizon summaries.",
-      emptyBody: "Comparative horizon summaries are not available for this mandate.",
+      loadingBody: "Loading horizon comparison.",
+      emptyBody: "Horizon comparison is unavailable for this mandate.",
     });
 
     expect(

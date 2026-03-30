@@ -120,7 +120,7 @@ export function getPerformanceContributorsPresentation({
     return {
       mode: "loading",
       frame,
-      body: "Loading contributor ranking for the selected analytical slice.",
+      body: "Loading contributor ranking.",
     };
   }
 
@@ -134,7 +134,7 @@ export function getPerformanceContributorsPresentation({
     noticeBody:
       capabilities.contributionRanking.reason ??
       "Contributor ranking is not available for the current selection.",
-    hint: "Position-level contribution ranking needs source-backed contribution detail for the selected slice.",
+    hint: "Position-level ranking requires source-backed contribution detail.",
   };
 }
 
@@ -143,8 +143,8 @@ export function getPerformanceHorizonPresentation({
   benchmarkOptions = [],
   detailBasis,
   period,
-  loadingBody = "Loading comparative horizon summaries.",
-  emptyBody = "Comparative horizon summaries are not available for this mandate.",
+  loadingBody = "Loading horizon comparison.",
+  emptyBody = "Horizon comparison is unavailable for this mandate.",
   selectedPeriodRow,
 }: {
   benchmark?: string;
