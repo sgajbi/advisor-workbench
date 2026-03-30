@@ -4,11 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
 import {
+  buildAggregateContributionPerformanceScenario,
   buildPerformanceAttributionTrend,
   buildPerformanceHorizonComparison,
+  buildBenchmarkUnassignedPerformanceScenario,
+  buildPartialBenchmarkPerformanceScenario,
+  buildSupportedPerformanceScenario,
+  buildUnavailableAttributionPerformanceScenario,
   buildPerformanceWorkspaceDetails,
   buildPerformanceWorkspaceSummary,
   type PerformanceFixtureOptions,
+  type PerformancePresentationScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("next/navigation", () => ({
@@ -101,9 +107,81 @@ function installPerformancePageFetchMock(options?: PerformanceFixtureOptions) {
   );
 }
 
+function installPerformancePageFetchScenario(
+  scenario: PerformancePresentationScenario,
+  options?: {
+    portfolioId?: string;
+  }
+) {
+  const portfolioId = options?.portfolioId ?? "DEMO_ADV_USD_001";
+  const workspace = {
+    ...scenario.workspace,
+    portfolio_id: portfolioId,
+    portfolio: {
+      ...scenario.workspace.portfolio,
+      portfolio_id: portfolioId,
+    },
+  };
+
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string | URL) => {
+      const url = input.toString();
+      if (url.includes("/api/v1/lookups/portfolios")) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [
+              { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
+              { id: "PF_1001", label: "Global Balanced Mandate" },
+            ],
+          }),
+        } as Response;
+      }
+      if (url.includes(`/api/v1/workbench/${portfolioId}/performance/summary`)) {
+        return {
+          ok: true,
+          json: async () => workspace,
+        } as Response;
+      }
+      if (url.includes(`/api/v1/workbench/${portfolioId}/performance/details`)) {
+        return {
+          ok: true,
+          json: async () => workspace,
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/horizon-comparison`)) {
+        return {
+          ok: true,
+          json: async () => buildPerformanceHorizonComparison(portfolioId),
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/attribution-trend`)) {
+        return {
+          ok: true,
+          json: async () => buildPerformanceAttributionTrend(portfolioId),
+        } as Response;
+      }
+      if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
+        return {
+          ok: true,
+          json: async () => buildPerformanceWorkspaceSummary("PF_1001"),
+        } as Response;
+      }
+      if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
+        return {
+          ok: true,
+          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
+        } as Response;
+      }
+      return { ok: false, json: async () => ({}) } as Response;
+    })
+  );
+}
+
 type PerformanceSummaryScenario = {
   name: string;
-  options?: Parameters<typeof installPerformancePageFetchMock>[0];
+  scenario: PerformancePresentationScenario;
   executiveExpectations?: string[];
   trustExpectations?: string[];
   deferredExpectations?: string[];
@@ -209,7 +287,7 @@ describe("PerformanceAnalyticsPage", () => {
   });
 
   it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
-    installPerformancePageFetchMock({ unassignedBenchmark: true, unavailableSummarySeries: true });
+    installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
@@ -278,10 +356,7 @@ describe("PerformanceAnalyticsPage", () => {
   });
 
   it("renders compact unavailable summary states when benchmark and return series are missing", async () => {
-    installPerformancePageFetchMock({
-      unassignedBenchmark: true,
-      unavailableSummarySeries: true,
-    });
+    installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
@@ -300,9 +375,7 @@ describe("PerformanceAnalyticsPage", () => {
   });
 
   it("renders attribution as unavailable in the trust strip when attribution detail is missing", async () => {
-    installPerformancePageFetchMock({
-      unavailableAttribution: true,
-    });
+    installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
@@ -317,9 +390,7 @@ describe("PerformanceAnalyticsPage", () => {
   });
 
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
-    installPerformancePageFetchMock({
-      partialBenchmarkComparison: true,
-    });
+    installPerformancePageFetchScenario(buildPartialBenchmarkPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
@@ -344,9 +415,7 @@ describe("PerformanceAnalyticsPage", () => {
   });
 
   it("renders a contributor-ranking partial state when only aggregate contribution rows are available", async () => {
-    installPerformancePageFetchMock({
-      aggregateContributionOnly: true,
-    });
+    installPerformancePageFetchScenario(buildAggregateContributionPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
@@ -362,10 +431,7 @@ describe("PerformanceAnalyticsPage", () => {
   it.each<PerformanceSummaryScenario>([
     {
       name: "benchmark-unassigned and return-series-unavailable",
-      options: {
-        unassignedBenchmark: true,
-        unavailableSummarySeries: true,
-      },
+      scenario: buildBenchmarkUnassignedPerformanceScenario(),
       executiveExpectations: ["Unassigned"],
       trustExpectations: [
         "No benchmark is assigned to this mandate.",
@@ -377,9 +443,7 @@ describe("PerformanceAnalyticsPage", () => {
     },
     {
       name: "assigned benchmark with partial relative comparison",
-      options: {
-        partialBenchmarkComparison: true,
-      },
+      scenario: buildPartialBenchmarkPerformanceScenario(),
       executiveExpectations: ["Global Balanced 60/40"],
       trustExpectations: [
         "Partial",
@@ -390,9 +454,7 @@ describe("PerformanceAnalyticsPage", () => {
     },
     {
       name: "aggregate-only contribution ranking",
-      options: {
-        aggregateContributionOnly: true,
-      },
+      scenario: buildAggregateContributionPerformanceScenario(),
       executiveExpectations: ["Global Balanced 60/40"],
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
@@ -401,14 +463,14 @@ describe("PerformanceAnalyticsPage", () => {
   ])(
     "renders a contract-backed summary supportability matrix for $name",
     async ({
-      options,
+      scenario,
       executiveExpectations = [],
       trustExpectations = [],
       deferredExpectations = [],
       contextExpectations = [],
       absentTexts = [],
     }) => {
-      installPerformancePageFetchMock(options);
+      installPerformancePageFetchScenario(scenario);
 
       render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
