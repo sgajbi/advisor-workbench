@@ -29,7 +29,12 @@ export type PerformanceReturnPathScenarioData = {
   points: WorkbenchPerformanceWorkspace["net_chart"];
   summary: Pick<
     PerformanceComparativeSummary,
-    "portfolio_return_pct" | "benchmark_return_pct" | "active_return_pct"
+    | "portfolio_return_pct"
+    | "benchmark_return_pct"
+    | "active_return_pct"
+    | "annualized_return_pct"
+    | "end_market_value"
+    | "net_cash_flow"
   >;
   benchmark?: string;
   benchmarkOptions: WorkbenchPerformanceWorkspace["benchmark_options"];
@@ -647,6 +652,9 @@ export function buildPerformanceReturnPathScenarioData(
       portfolio_return_pct: summary.portfolio_return_pct,
       benchmark_return_pct: summary.benchmark_return_pct,
       active_return_pct: summary.active_return_pct,
+      annualized_return_pct: summary.annualized_return_pct,
+      end_market_value: summary.end_market_value,
+      net_cash_flow: summary.net_cash_flow,
     },
     benchmark: scenario.workspace.benchmark_code ?? undefined,
     benchmarkOptions: scenario.workspace.benchmark_options ?? [],

@@ -18,13 +18,15 @@ import type {
   WorkbenchPerformanceHorizonComparison,
 } from "@/features/workbench/types";
 
-import { formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
+import { formatLabel, formatPct } from "../formatters";
+import {
+  buildPerformanceHorizonTableModel,
+  type PerformanceHorizonBasisView,
+  type PerformanceHorizonTableView,
+} from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
-
-type HorizonTableView = "combined" | "returns" | "economics";
-type HorizonBasisView = "both" | "net" | "gross";
 
 export default function PerformanceMultiHorizonPanel({
   portfolioId,
@@ -45,8 +47,8 @@ export default function PerformanceMultiHorizonPanel({
 }) {
   const [comparison, setComparison] = useState<WorkbenchPerformanceHorizonComparison | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [tableView, setTableView] = useState<HorizonTableView>("combined");
-  const [basisView, setBasisView] = useState<HorizonBasisView>("both");
+  const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
+  const [basisView, setBasisView] = useState<PerformanceHorizonBasisView>("both");
   const requestIdRef = useRef(0);
   const cacheRef = useRef<Map<string, WorkbenchPerformanceHorizonComparison>>(new Map());
 
@@ -155,89 +157,13 @@ export default function PerformanceMultiHorizonPanel({
     selectedPeriodRow,
   });
   const tableModel = useMemo(() => {
-    const leadingColumns = [
-      { key: "period", label: "Period" },
-      { key: "window", label: "Window" },
-    ];
-    const basisColumns =
-      basisView === "net"
-        ? [
-            { key: "netReturn", label: "Net", align: "right" as const },
-            { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
-          ]
-        : basisView === "gross"
-          ? [
-              { key: "grossReturn", label: "Gross", align: "right" as const },
-              { key: "annualizedGross", label: "Ann. Gross", align: "right" as const },
-            ]
-          : [
-              { key: "netReturn", label: "Net", align: "right" as const },
-              { key: "grossReturn", label: "Gross", align: "right" as const },
-              { key: "feeDrag", label: "Fee Drag", align: "right" as const },
-              { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
-              { key: "annualizedGross", label: "Ann. Gross", align: "right" as const },
-            ];
-    const returnColumns = [
-      ...basisColumns,
-      { key: "benchmarkReturn", label: "Benchmark", align: "right" as const },
-      { key: "activeReturn", label: "Active", align: "right" as const },
-      { key: "cumulativeActive", label: "Cum Active", align: "right" as const },
-    ];
-    const economicsColumns = [
-      { key: "beginMv", label: "Begin MV", align: "right" as const },
-      { key: "endMv", label: "End MV", align: "right" as const },
-      { key: "netCashFlow", label: "Net Flow", align: "right" as const },
-      { key: "fees", label: "Fees", align: "right" as const },
-    ];
-    const columns =
-      tableView === "returns"
-        ? [...leadingColumns, ...returnColumns]
-        : tableView === "economics"
-          ? [...leadingColumns, ...economicsColumns]
-          : [...leadingColumns, ...economicsColumns, ...returnColumns];
-
-    return {
-      columns,
-      rows: (rows ?? []).map((row) => {
-        const cellMap: Record<string, string> = {
-          period: row.period,
-          window:
-            row.period_start && row.period_end
-              ? `${formatDate(row.period_start)} - ${formatDate(row.period_end)}`
-              : "N/A",
-          beginMv: formatCurrency(row.begin_market_value, reportingCurrency),
-          endMv: formatCurrency(row.end_market_value, reportingCurrency),
-          netCashFlow: formatCurrency(row.net_cash_flow, reportingCurrency),
-          fees: formatCurrency(row.fees, reportingCurrency),
-          netReturn: formatPct(row.net_return_pct ?? row.portfolio_return_pct),
-          grossReturn: formatPct(row.gross_return_pct),
-          feeDrag:
-            row.gross_return_pct !== null &&
-            row.gross_return_pct !== undefined &&
-            (row.net_return_pct ?? row.portfolio_return_pct) !== null &&
-            (row.net_return_pct ?? row.portfolio_return_pct) !== undefined
-              ? formatPct(
-                  row.gross_return_pct - (row.net_return_pct ?? row.portfolio_return_pct ?? 0)
-                )
-              : "N/A",
-          benchmarkReturn: formatPct(row.benchmark_return_pct),
-          activeReturn: formatPct(row.active_return_pct),
-          cumulativeActive: formatPct(row.cumulative_active_return_pct),
-          annualizedNet: formatPct(row.annualized_net_return_pct ?? row.annualized_return_pct),
-          annualizedGross: formatPct(row.annualized_gross_return_pct),
-        };
-
-        return {
-          key: row.period,
-          cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
-          className:
-            row.period === presentation.selectedPeriodLabel
-              ? "performance-horizon-table-row-selected"
-              : undefined,
-          ariaLabel: `${row.period} horizon comparison row`,
-        };
-      }),
-    };
+    return buildPerformanceHorizonTableModel({
+      rows: rows ?? [],
+      reportingCurrency,
+      tableView,
+      basisView,
+      selectedPeriodLabel: presentation.selectedPeriodLabel,
+    });
   }, [basisView, presentation.selectedPeriodLabel, reportingCurrency, rows, tableView]);
 
   return (

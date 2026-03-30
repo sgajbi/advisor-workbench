@@ -88,6 +88,9 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Fee Drag")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Cum Active")).toBeInTheDocument();
     expect(within(horizonTable).getAllByText("$450,000")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("$22,500")).toHaveLength(2);
@@ -103,6 +106,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Begin MV")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Net Flow")).not.toBeInTheDocument();
     expect(within(horizonTable).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
@@ -114,14 +119,18 @@ describe("PerformanceMultiHorizonPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
     fireEvent.click(screen.getByRole("tab", { name: "Net" }));
     expect(within(horizonTable).getByText("Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
     expect(within(horizonTable).queryByText("Gross")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cum Gross")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
     expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Gross")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Ann. Gross")).toBeInTheDocument();
     expect(within(horizonTable).queryByText("Net")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cum Net")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });

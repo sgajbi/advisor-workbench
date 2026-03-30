@@ -61,11 +61,18 @@ describe("PerformanceChartPanel", () => {
 
     let series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
     let seriesNames = series.map((entry) => entry?.name);
+    const observationTable = screen.getByLabelText("Return path observation table");
 
     expect(seriesNames).toContain("Active Period");
     expect(seriesNames).toContain("Active Cumulative");
     expect(seriesNames).toContain("Portfolio Return");
     expect(seriesNames).toContain("Benchmark Period");
+    expect(within(observationTable).getByText("Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
 
     let activeCumulativeSeries = series.find((entry) => entry?.name === "Active Cumulative");
     expect(activeCumulativeSeries?.type).toBe("line");
@@ -83,6 +90,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Active Cumulative");
     expect(seriesNames).not.toContain("Portfolio Return");
     expect(seriesNames).not.toContain("Benchmark Period");
+    expect(within(observationTable).queryByText("Portfolio")).not.toBeInTheDocument();
+    expect(within(observationTable).queryByText("Benchmark")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cum Portfolio")).not.toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cum Benchmark")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Absolute" }));
 
@@ -92,6 +105,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Benchmark Period");
     expect(seriesNames).not.toContain("Active Period");
     expect(seriesNames).not.toContain("Active Cumulative");
+    expect(within(observationTable).getByText("Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Active")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cum Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cum Active")).not.toBeInTheDocument();
   });
 
   it("falls back to chart point dates when report dates are missing", () => {
