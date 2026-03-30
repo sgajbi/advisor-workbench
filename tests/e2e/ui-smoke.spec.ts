@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('UI smoke checks', () => {
+  async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
+    await page.goto('/performance?portfolioId=PB_SG_GLOBAL_BAL_001', {
+      waitUntil: 'domcontentloaded',
+    });
+
+    await expect(page.getByRole('heading', { name: /^Performance Workbench$/i })).toBeVisible();
+    await expect(
+      page.getByRole('tablist', { name: /^Performance workspace mode$/i })
+    ).toBeVisible();
+  }
+
   async function openDetailedPortfolio(page: import('@playwright/test').Page) {
     await page.addInitScript(() => {
       window.localStorage.setItem('lotus:portfolio:view-mode', 'detailed');
@@ -137,5 +148,65 @@ test.describe('UI smoke checks', () => {
     await expect(page.getByText('Window outflow')).toBeVisible();
     await expect(page.getByText('Window fees')).toBeVisible();
     await expect(page.getByText('Window taxes')).toBeVisible();
+  });
+
+  test('performance workbench keeps summary first, then mounts deferred analytics by mode', async ({ page }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    await openPerformanceWorkbench(page);
+
+    await expect(page.getByText('Portfolio Return')).toBeVisible();
+    await expect(page.getByText('Benchmark Return')).toBeVisible();
+    await expect(page.getByText('Active Return')).toBeVisible();
+    await expect(page.getByText('Money-Weighted Return')).toBeVisible();
+    await expect(page.getByText('Basis', { exact: true })).toBeVisible();
+    await expect(page.getByText('Period', { exact: true })).toBeVisible();
+
+    await expect(page.locator('.performance-summary-stage')).toBeVisible();
+    await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
+    await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
+
+    const summaryTab = page.getByRole('tab', { name: /^Summary$/i });
+    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
+    await expect(summaryTab).toHaveAttribute('aria-selected', 'true');
+
+    await expect(page.getByText('Return path and benchmark context')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText('Return series unavailable')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText('How did this compare across horizons?')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText('What drove the result?')).toBeVisible({
+      timeout: 15000,
+    });
+
+    const returnPathPanel = page.locator('.performance-chart-stage');
+    const chartMetrics = await returnPathPanel.evaluate((element) => ({
+      height: element.getBoundingClientRect().height,
+      width: element.getBoundingClientRect().width,
+    }));
+    expect(chartMetrics.height).toBeLessThanOrEqual(520);
+    expect(chartMetrics.width).toBeGreaterThan(900);
+
+    await analysisTab.click();
+    await expect(analysisTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.performance-analysis-stage')).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Attribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Contribution Detail$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
+
+    await evidenceTab.click();
+    await expect(evidenceTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByText('Evidence and Calculation Context')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.locator('.performance-evidence-module')).toBeVisible();
   });
 });
