@@ -534,6 +534,37 @@ describe("workbench api", () => {
     );
   });
 
+  it("defaults the client-side horizon comparison frequency to monthly", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-performance",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-02-24",
+            detail_basis: "NET",
+            benchmark_code: null,
+            benchmark_options: [],
+            rows: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceHorizonComparisonClient("PF_1001", {
+      detailBasis: "NET",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain("chart_frequency=monthly");
+    expect(requestedUrl).not.toContain("benchmark_code=");
+  });
+
   it("calls the client-side attribution trend endpoint", async () => {
     vi.stubGlobal(
       "fetch",
@@ -602,5 +633,22 @@ describe("workbench api", () => {
       expect.stringContaining("/api/v1/reports/PF_1001/snapshot?asOfDate=2026-02-24"),
       expect.objectContaining({ cache: "no-store" })
     );
+  });
+
+  it("raises a labeled error when the split summary endpoint fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("downstream failed", { status: 503 }))
+    );
+
+    await expect(
+      getWorkbenchPerformanceWorkspaceSummary("PF_1001", {
+        period: "YTD",
+        chartFrequency: "monthly",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        detailBasis: "NET",
+      })
+    ).rejects.toThrow("Failed to fetch performance workspace summary (503)");
   });
 });
