@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ModuleSkeleton, WorkstationPage } from "@/design-system";
+import {
+  ModuleSkeleton,
+  WorkbenchToolbarPlaceholder,
+  WorkstationPage,
+} from "@/design-system";
 
 import {
   getPortfolioWorkspaceDetailedDetails,
@@ -249,30 +253,17 @@ export default function PortfolioWorkspaceClient({
           }
           toolbar={
             !interactiveReady ? (
-              <div className="portfolio-client-shell-placeholder" aria-hidden="true">
-                <section className="portfolio-workspace-toolbar portfolio-workspace-toolbar-placeholder">
-                  <div className="portfolio-workspace-toolbar-row">
-                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                      <span className="portfolio-toolbar-placeholder-label">As of</span>
-                      <div className="portfolio-toolbar-placeholder-control" />
-                    </div>
-                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                      <span className="portfolio-toolbar-placeholder-label">Reporting Currency</span>
-                      <div className="portfolio-toolbar-placeholder-control" />
-                    </div>
-                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                      <span className="portfolio-toolbar-placeholder-label">View</span>
-                      <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-wide" />
-                    </div>
-                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                      <span className="portfolio-toolbar-placeholder-label">Period</span>
-                      <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-period" />
-                    </div>
-                  </div>
-                  <div className="portfolio-workspace-toolbar-context">
-                    <span>Loading portfolio controls…</span>
-                  </div>
-                </section>
+              <div className="workbench-toolbar-placeholder-stack">
+                <WorkbenchToolbarPlaceholder
+                  className="portfolio-workspace-toolbar"
+                  contextMessage="Loading portfolio controls…"
+                  fields={[
+                    { key: "as-of", label: "As of" },
+                    { key: "reporting-currency", label: "Reporting Currency" },
+                    { key: "view", label: "View", width: "wide" },
+                    { key: "period", label: "Period", width: "period" },
+                  ]}
+                />
                 <ModuleSkeleton chart rows={6} />
               </div>
             ) : (

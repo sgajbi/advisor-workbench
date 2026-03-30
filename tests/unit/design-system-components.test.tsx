@@ -40,6 +40,7 @@ import {
   WorkbenchSectionStack,
   WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
+  WorkbenchToolbarPlaceholder,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,
   WorkbenchSummaryVisualLabel,
@@ -622,6 +623,29 @@ describe("design-system components", () => {
       "title",
       "Region pending source support"
     );
+  });
+
+  it("renders the shared workbench toolbar placeholder with generic field widths", () => {
+    render(
+      <WorkbenchToolbarPlaceholder
+        className="portfolio-workspace-toolbar"
+        contextMessage="Loading workspace controls…"
+        fields={[
+          { key: "as-of", label: "As of" },
+          { key: "view", label: "View", width: "wide" },
+          { key: "period", label: "Period", width: "period" },
+        ]}
+      />
+    );
+
+    expect(document.querySelector(".workbench-toolbar-placeholder.portfolio-workspace-toolbar"))
+      .toBeTruthy();
+    expect(document.querySelector(".workbench-toolbar-placeholder-row")).toBeTruthy();
+    expect(document.querySelectorAll(".workbench-toolbar-placeholder-field")).toHaveLength(3);
+    expect(screen.getByText("As of")).toHaveClass("workbench-toolbar-placeholder-label");
+    expect(document.querySelector(".workbench-toolbar-placeholder-control-wide")).toBeTruthy();
+    expect(document.querySelector(".workbench-toolbar-placeholder-control-period")).toBeTruthy();
+    expect(screen.getByText("Loading workspace controls…")).toBeInTheDocument();
   });
 
   it("can defer content without rendering a duplicate wrapper header", async () => {

@@ -3137,38 +3137,45 @@ a:hover {
   font-weight: 600;
 }
 
-.portfolio-client-shell-placeholder {
+.workbench-toolbar-placeholder-stack {
   display: grid;
   gap: 20px;
 }
 
-.portfolio-workspace-toolbar-placeholder {
+.workbench-toolbar-placeholder {
   pointer-events: none;
 }
 
-.portfolio-workspace-toolbar-field-placeholder {
+.workbench-toolbar-placeholder-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.workbench-toolbar-placeholder-field {
   min-width: 160px;
 }
 
-.portfolio-toolbar-placeholder-label {
+.workbench-toolbar-placeholder-label {
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-muted);
 }
 
-.portfolio-toolbar-placeholder-control {
+.workbench-toolbar-placeholder-control {
   height: 36px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #f5f7fa;
 }
 
-.portfolio-toolbar-placeholder-control-wide {
+.workbench-toolbar-placeholder-control-wide {
   width: 120px;
 }
 
-.portfolio-toolbar-placeholder-control-period {
+.workbench-toolbar-placeholder-control-period {
   width: 320px;
 }
 
@@ -3195,6 +3202,11 @@ a:hover {
 }
 
 @media (max-width: 1180px) {
+  .workbench-toolbar-placeholder-row {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
   .portfolio-workspace-toolbar-row {
     flex-wrap: wrap;
     overflow-x: visible;

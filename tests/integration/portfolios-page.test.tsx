@@ -124,12 +124,12 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
+    const regionTab = await screen.findByRole("tab", { name: "Region" }, { timeout: 5000 });
+    expect(regionTab).toBeDisabled();
     expect(document.querySelector(".workbench-segmented-control[aria-label='Allocation dimensions']"))
       .toBeTruthy();
     expect(document.querySelector(".workbench-segmented-control[aria-label='Allocation chart types']"))
       .toBeTruthy();
-    const regionTab = await screen.findByRole("tab", { name: "Region" }, { timeout: 5000 });
-    expect(regionTab).toBeDisabled();
     expect(
       await screen.findByRole(
         "button",
