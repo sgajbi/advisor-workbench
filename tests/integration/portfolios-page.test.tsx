@@ -2,6 +2,27 @@ import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("next/dynamic", () => ({
+  default: (loader: () => Promise<unknown>) => {
+    const React = require("react");
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const [Component, setComponent] = React.useState(
+        null as React.ComponentType<Record<string, unknown>> | null
+      );
+      React.useEffect(() => {
+        loader().then((mod: unknown) => {
+          const resolved =
+            typeof mod === "function"
+              ? (mod as React.ComponentType<Record<string, unknown>>)
+              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          setComponent(() => resolved ?? null);
+        });
+      }, []);
+      return Component ? React.createElement(Component, props) : null;
+    };
+  },
+}));
+
 vi.mock("ag-grid-react", () => ({
   AgGridReact: ({ rowData = [], columnDefs = [], onRowClicked }: any) => {
     const visibleColumns = columnDefs.filter((column: any) => !column.hide);
@@ -35,9 +56,11 @@ vi.mock("ag-grid-react", () => ({
 }));
 
 import PortfolioFoundationPage from "../../src/app/portfolios/page";
+import { resetPortfolioApiRequestCache } from "../../src/apps/portfolio/api";
 
 describe("PortfolioFoundationPage", () => {
   afterEach(() => {
+    resetPortfolioApiRequestCache();
     window.localStorage.clear();
     vi.unstubAllGlobals();
   });
@@ -47,7 +70,23 @@ describe("PortfolioFoundationPage", () => {
 
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
+    expect(document.querySelector("main.workstation-page.portfolio-page")).toBeTruthy();
+    expect(document.querySelector(".page-container")).toBeFalsy();
+    expect(document.querySelector(".workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell.workstation-shell-both.portfolio-layout")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail.portfolio-rail-shell")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-main.portfolio-main")).toBeTruthy();
+    expect(
+      document.querySelector(".workstation-shell.workstation-shell-side-density-comfortable.portfolio-layout")
+    ).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".workstation-shell-side.workstation-shell-side-comfortable.portfolio-side.portfolio-side-wide"
+      )
+    ).toBeTruthy();
+    expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(screen.getByRole("heading", { name: /^Portfolio$/i })).toBeInTheDocument();
+    expect(document.querySelector(".workstation-shell-main .portfolio-hero")).toBeTruthy();
     const hero = screen.getByRole("heading", { name: /Global Balanced/i }).closest(".portfolio-hero");
     expect(hero).toBeTruthy();
     expect(within(hero as HTMLElement).getByText("USD")).toBeInTheDocument();
@@ -76,8 +115,15 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("button", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Detailed" })).toBeInTheDocument();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
+    const regionTab = await screen.findByRole("tab", { name: "Region" }, { timeout: 5000 });
+    expect(regionTab).toBeDisabled();
+    expect(
+      await screen.findByRole(
+        "button",
+        { name: "Look-through pending source support" },
+        { timeout: 5000 }
+      )
+    ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export portfolio data" })).toBeInTheDocument();
 
@@ -95,17 +141,52 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Next Actions/i })).toBeInTheDocument();
 
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /What changed over time/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Where can I drill down/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Holdings$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Transactions$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Projected Cashflow/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio holdings grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio transactions grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();
 
+    await waitFor(() => {
+      expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
+      expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
+      expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    });
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
+    expect(document.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
+    expect(document.querySelector(".portfolio-paired-analytics-grid.workbench-summary-region")).toBeTruthy();
+    expect(document.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
+    expect(document.querySelectorAll(".portfolio-summary-module-card").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll(".workbench-summary-card.workbench-summary-card-compact").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
+    expect(document.querySelectorAll(".workbench-summary-toolbar").length).toBeGreaterThanOrEqual(2);
+    expect(document.querySelectorAll(".workbench-summary-visual-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
+    expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-label")).toBeTruthy();
+    expect(document.querySelector(".portfolio-analytics-summary-stat .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
+    expect(document.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
+    expect(document.querySelector(".portfolio-allocation-panel-compact .portfolio-allocation-ranked")).toBeFalsy();
+    expect(document.querySelectorAll(".workbench-rail-card")).toHaveLength(3);
+    expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-actions-card .portfolio-workflow-item")).toBeTruthy();
+    expect(document.querySelector(".portfolio-actions-card .portfolio-evidence-copy")).toBeTruthy();
+    expect(
+      document.querySelector(".portfolio-actions-card .portfolio-workflow-actions .portfolio-workflow-cta")
+    ).toBeTruthy();
+    expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
     expect(screen.getByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
@@ -117,7 +198,7 @@ describe("PortfolioFoundationPage", () => {
     expect(
       screen.getByText(/review portfolio return, benchmark context, and contribution/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/target: performance workflow for this portfolio/i)).toBeInTheDocument();
+    expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[1]).toHaveAttribute(
       "href",
       "/ignored"
@@ -161,7 +242,7 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /What changed over time/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("heading", { name: /Portfolio Context/i })).toBeInTheDocument();
@@ -171,9 +252,11 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /What changed over time/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /^Holdings$/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /^Holdings$/i }, { timeout: 5000 })
+    ).toBeInTheDocument();
     expect(screen.getByText("As of 24 Feb 2026 in USD")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Columns/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: /^Transactions$/i })).toBeInTheDocument();
@@ -187,6 +270,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("Inflows").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
     expect(screen.getAllByText("25 Feb 2026").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/booked events in 30D/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
@@ -252,9 +336,10 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
     const transactionsGrid = screen.getByLabelText("Portfolio transactions grid");
+    expect(within(transactionsGrid).queryByText("Settle Date")).not.toBeInTheDocument();
     fireEvent.click(
       within(transactionsGrid).getByRole("button", {
-        name: /20 Feb 2026 \| — \| BUY \| AAPL/i,
+        name: /20 Feb 2026 \| Buy \| AAPL/i,
       })
     );
     await waitFor(() => {
@@ -276,7 +361,7 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Summary" }));
 
     expect(window.localStorage.getItem("lotus:portfolio:view-mode")).toBe("summary");
-    expect(screen.queryByRole("heading", { name: /What changed over time/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(true);
@@ -300,15 +385,96 @@ describe("PortfolioFoundationPage", () => {
     });
     expect(screen.getAllByText("Holdings").length).toBeGreaterThan(0);
   }, 30000);
+
+  it("renders unavailable drilldown panels intentionally when detailed support is missing", async () => {
+    window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
+    stubPortfolioApis({
+      workspace: {
+        summary: {
+          assets_under_management_base: 105000,
+          invested_market_value_base: 0,
+          cash_market_value_base: 105000,
+          cash_weight_pct: 100,
+          position_count: 0,
+          cash_balance_count: 1,
+        },
+        cashflow_outlook: null,
+      },
+      positions: {
+        top_positions: [],
+        positions: [],
+      },
+      transactions: {
+        transactions: [],
+      },
+      liquidity: {
+        cash_balances: [],
+        cashflow_outlook: null,
+      },
+    });
+
+    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
+    });
+
+    const drilldownSection = document.getElementById("portfolio-drilldown");
+    expect(drilldownSection).toBeTruthy();
+    expect(drilldownSection?.querySelectorAll(".portfolio-disclosure")).toHaveLength(3);
+    const liquidityHeading = screen.getByRole("heading", { name: /Liquidity and Projected Cash/i });
+    expect(liquidityHeading).toBeInTheDocument();
+    expect(screen.getAllByText("Projected cashflow unavailable").length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.getAllByText("No projected cashflow outlook is available in the current contract.").length
+    ).toBeGreaterThanOrEqual(2);
+    const liquidityModule = liquidityHeading.closest(".workbench-summary-card");
+    expect(liquidityModule).toBeTruthy();
+    expect(within(liquidityModule as HTMLElement).queryByText("N/A")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio holdings grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio transactions grid")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();
+  }, 30000);
+
+  it("renders partial summary modules intentionally when portfolio support is incomplete", async () => {
+    stubPortfolioApis({
+      allocations: {
+        views: [],
+      },
+      positions: {
+        top_positions: [],
+        positions: [],
+      },
+    });
+
+    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Allocation is partially available")).toBeInTheDocument();
+    expect(screen.getByText("Top holdings are not ranked yet")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Allocation donut chart")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
+  }, 30000);
 });
 
-function stubPortfolioApis() {
-  const fetchSpy = buildPortfolioFetchStub();
+type PortfolioFetchOverrides = {
+  workspace?: Record<string, unknown>;
+  liquidity?: Record<string, unknown>;
+  allocations?: Record<string, unknown>;
+  positions?: Record<string, unknown>;
+  transactions?: Record<string, unknown>;
+};
+
+function stubPortfolioApis(overrides: PortfolioFetchOverrides = {}) {
+  const fetchSpy = buildPortfolioFetchStub(overrides);
   vi.stubGlobal("fetch", fetchSpy);
   return fetchSpy;
 }
 
-function buildPortfolioFetchStub() {
+function buildPortfolioFetchStub(overrides: PortfolioFetchOverrides = {}) {
   return vi.fn(async (input: string | URL) => {
     const url = input.toString();
 
@@ -371,6 +537,7 @@ function buildPortfolioFetchStub() {
             detail: "cash balance service unavailable",
           },
         ],
+        ...overrides.workspace,
       });
     }
 
@@ -400,6 +567,7 @@ function buildPortfolioFetchStub() {
             },
           ],
         },
+        ...overrides.liquidity,
       });
     }
 
@@ -458,6 +626,7 @@ function buildPortfolioFetchStub() {
             ],
           },
         ],
+        ...overrides.allocations,
       });
     }
 
@@ -511,6 +680,7 @@ function buildPortfolioFetchStub() {
             weight_pct: 14.4,
           },
         ],
+        ...overrides.positions,
       });
     }
 
@@ -532,6 +702,7 @@ function buildPortfolioFetchStub() {
             settlement_status: "SETTLED",
           },
         ],
+        ...overrides.transactions,
       });
     }
 

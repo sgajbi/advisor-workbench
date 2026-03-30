@@ -2,12 +2,24 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceAnalysisAttributionSection from "../../src/apps/performance/components/performance-analysis-attribution-section";
 import type { PerformanceAnalysisAttributionSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 
 vi.mock("../../src/apps/performance/components/performance-relative-segment-panel", () => ({
   default: () => <div>Relative Segment Panel</div>,
 }));
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildProps(
   overrides: Partial<PerformanceAnalysisAttributionSectionProps> = {}
@@ -100,7 +112,7 @@ function buildProps(
     onRequestChange: vi.fn(),
     isUpdating: false,
     isDetailsPending: false,
-    hasAttribution: true,
+    capabilities: supportedCapabilities,
     relativeSegmentRows: [
       {
         key_label: "Equity",
@@ -150,15 +162,41 @@ describe("PerformanceAnalysisAttributionSection", () => {
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
-          hasAttribution: false,
+          capabilities: {
+            ...supportedCapabilities,
+            attributionDetail: {
+              state: "unavailable",
+              reason: "Attribution detail is not available for the current selection.",
+            },
+          },
           relativeSegmentRows: [],
           topAttributionEffectRows: [],
         })}
       />
     );
 
-    expect(
-      screen.getByText("Attribution detail is not available for the current selection.")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Attribution detail is not available for the current selection.")).toBeInTheDocument();
+  });
+
+  it("renders a partial-state panel when attribution coverage is incomplete", () => {
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({
+          capabilities: {
+            ...supportedCapabilities,
+            attributionDetail: {
+              state: "partial",
+              reason: "Benchmark-relative attribution is incomplete for the current selection.",
+            },
+          },
+          relativeSegmentRows: [],
+          topAttributionEffectRows: [],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")).toBeInTheDocument();
   });
 });

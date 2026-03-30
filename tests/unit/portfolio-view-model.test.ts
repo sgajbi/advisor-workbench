@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
+import { getPortfolioWorkspaceCapabilities } from "../../src/apps/portfolio/capabilities";
 import {
   buildPortfolioActiveFilterChips,
   buildPortfolioExceptionSummaries,
@@ -550,5 +551,25 @@ describe("portfolio view model", () => {
       { key: "showOnlyExceptions", label: "Focus", value: "Exceptions only" },
       { key: "timeWindow", label: "Period", value: "2026-02-01 to 2026-02-20" },
     ]);
+  });
+
+  it("builds explicit portfolio workspace capabilities for supported, partial, and hidden features", () => {
+    const workspace = buildOperationalWorkspace();
+
+    const summaryCapabilities = getPortfolioWorkspaceCapabilities(workspace, {
+      viewMode: "summary",
+      hideEmptyModules: true,
+    });
+
+    expect(summaryCapabilities.summaryKpis.state).toBe("supported");
+    expect(summaryCapabilities.readinessIndicators.state).toBe("partial");
+    expect(summaryCapabilities.allocation.state).toBe("supported");
+    expect(summaryCapabilities.topHoldings.state).toBe("supported");
+    expect(summaryCapabilities.income.state).toBe("partial");
+    expect(summaryCapabilities.activity.state).toBe("supported");
+    expect(summaryCapabilities.projectedCashflow.state).toBe("hidden");
+    expect(summaryCapabilities.holdingsDrilldown.state).toBe("hidden");
+    expect(summaryCapabilities.transactionsDrilldown.state).toBe("hidden");
+    expect(summaryCapabilities.performanceSnapshot.state).toBe("unavailable");
   });
 });

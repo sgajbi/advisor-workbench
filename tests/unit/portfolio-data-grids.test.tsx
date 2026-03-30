@@ -163,6 +163,11 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
+    expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
+    expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not expose settlement dates/i)
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /20 Mar 2026/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
@@ -214,7 +219,7 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("Filtered by security: Apple Inc.")).toBeInTheDocument();
     expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /18 Mar 2026 \| — \| Buy \| MSFT/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /18 Mar 2026 \| Buy \| MSFT/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
@@ -233,6 +238,7 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
+    expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
   it("shows a partial state when some holdings are unpriced", () => {
@@ -258,6 +264,7 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("Holdings partially valued")).toBeInTheDocument();
+    expect(screen.getByTestId("mock-grid")).toBeInTheDocument();
   });
 
   it("shows an actionable error state when transactions cannot be loaded", async () => {
@@ -280,6 +287,7 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Transaction history unavailable")).toBeInTheDocument();
     });
+    expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
   it("does not fetch the default transaction ledger while parent detailed data is still loading", async () => {
@@ -301,5 +309,38 @@ describe("portfolio data grids", () => {
     expect(screen.getByRole("heading", { name: "Transactions" })).toBeInTheDocument();
     await waitFor(() => expect(fetchMock).not.toHaveBeenCalled());
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("shows an empty drill-down state without mounting the transactions grid", async () => {
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "security",
+          security_id: "EQ_404",
+          label: "Filtered by security: Missing holding",
+        }}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            transaction_type: "BUY",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 });

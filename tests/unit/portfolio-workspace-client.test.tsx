@@ -32,13 +32,16 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace-toolbar", () =>
 
 vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
   default: ({
+    toolbar,
     detailsLoading,
     workspace,
   }: {
+    toolbar?: React.ReactNode;
     detailsLoading: boolean;
     workspace: { portfolio?: { portfolio_id?: string } } | null;
   }) => (
     <div>
+      {toolbar}
       <div data-testid="details-loading">{String(detailsLoading)}</div>
       <div data-testid="portfolio-id">{workspace?.portfolio?.portfolio_id ?? "none"}</div>
     </div>

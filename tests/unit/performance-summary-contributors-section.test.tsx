@@ -2,8 +2,20 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildProps(
   overrides: Partial<PerformanceSummaryContributorsSectionProps> = {}
@@ -61,8 +73,7 @@ function buildProps(
       warnings: [],
       partial_failures: [],
     },
-    hasContribution: true,
-    hasPositionRanking: true,
+    capabilities: supportedCapabilities,
     contributorScale: 1.5,
     positivePositionContributors: [
       {
@@ -96,6 +107,11 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(screen.getByText("Highest")).toBeInTheDocument();
     expect(screen.getByText("Lowest")).toBeInTheDocument();
+    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
+    expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
     expect(screen.getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByText("TLT")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
@@ -106,16 +122,41 @@ describe("PerformanceSummaryContributorsSection", () => {
     render(
       <PerformanceSummaryContributorsSection
         {...buildProps({
-          hasContribution: false,
-          hasPositionRanking: false,
+          capabilities: {
+            ...supportedCapabilities,
+            contributionRanking: {
+              state: "unavailable",
+              reason: "Contributor ranking is not available for the current selection.",
+            },
+          },
           positivePositionContributors: [],
           negativePositionContributors: [],
         })}
       />
     );
 
-    expect(
-      screen.getByText("Contributor ranking is not available for the current selection.")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Contributor ranking unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Contributor ranking is not available for the current selection.")).toBeInTheDocument();
+  });
+
+  it("renders a partial-state panel when only aggregate contributor support exists", () => {
+    render(
+      <PerformanceSummaryContributorsSection
+        {...buildProps({
+          capabilities: {
+            ...supportedCapabilities,
+            contributionRanking: {
+              state: "partial",
+              reason: "Contribution exists, but only aggregate rows are available.",
+            },
+          },
+          positivePositionContributors: [],
+          negativePositionContributors: [],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,12 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+
+import {
+  WorkbenchSummaryVisualHeading,
+  WorkbenchSummaryVisualLabel,
+  WorkbenchSummaryVisualMeta,
+  WorkbenchSummaryVisualTrack,
+  WorkbenchSummaryVisualValue,
+} from "./workbench-summary-visual";
 
 type AnalyticsRankedRow = {
   key: string;
@@ -34,12 +41,8 @@ export default function AnalyticsRankedList({
           mb: 1,
         }}
       >
-        <Typography sx={{ fontSize: "0.95rem", fontWeight: 700, color: "text.primary" }}>
-          {title}
-        </Typography>
-        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "text.secondary" }}>
-          {label}
-        </Typography>
+        <WorkbenchSummaryVisualHeading>{title}</WorkbenchSummaryVisualHeading>
+        <WorkbenchSummaryVisualMeta>{label}</WorkbenchSummaryVisualMeta>
       </Box>
 
       {rows.length ? (
@@ -59,24 +62,14 @@ export default function AnalyticsRankedList({
                   minWidth: 0,
                 }}
               >
-                <Typography sx={{ fontSize: "0.875rem", fontWeight: 700, color: "text.primary" }}>
-                  {row.title}
-                </Typography>
+                <WorkbenchSummaryVisualLabel>{row.title}</WorkbenchSummaryVisualLabel>
                 {row.subtitle ? (
-                  <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-                    {row.subtitle}
-                  </Typography>
+                  <WorkbenchSummaryVisualMeta>{row.subtitle}</WorkbenchSummaryVisualMeta>
                 ) : null}
               </Box>
 
-              <Box
-                sx={{
-                  position: "relative",
-                  height: 10,
-                  borderRadius: 999,
-                  overflow: "hidden",
-                  backgroundColor: "rgba(31, 39, 51, 0.08)",
-                }}
+              <WorkbenchSummaryVisualTrack
+                className="performance-ranked-bar-track"
               >
                 <Box
                   sx={{
@@ -89,25 +82,16 @@ export default function AnalyticsRankedList({
                         : "linear-gradient(90deg, #8e625f 0%, #b1827e 100%)",
                   }}
                 />
-              </Box>
+              </WorkbenchSummaryVisualTrack>
 
-              <Typography
-                sx={{
-                  fontSize: "0.875rem",
-                  fontWeight: 700,
-                  textAlign: "right",
-                  color: "text.primary",
-                }}
-              >
+              <WorkbenchSummaryVisualValue className="performance-ranked-value">
                 {row.value}
-              </Typography>
+              </WorkbenchSummaryVisualValue>
             </Box>
           ))}
         </Box>
       ) : (
-        <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
-          {emptyMessage}
-        </Typography>
+        <WorkbenchSummaryVisualMeta>{emptyMessage}</WorkbenchSummaryVisualMeta>
       )}
     </Box>
   );

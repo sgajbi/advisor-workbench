@@ -90,10 +90,61 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     });
 
+    expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
+    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
     expect(screen.getByText("MTD")).toBeInTheDocument();
     expect(screen.getByText("QTD")).toBeInTheDocument();
     expect(screen.getByText("YTD")).toBeInTheDocument();
     expect(screen.getByText("1Y")).toBeInTheDocument();
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses cached horizon data when rerendered with the same analytical inputs", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue({
+      correlation_id: "corr",
+      contract_version: "v1",
+      portfolio_id: "PF_1001",
+      as_of_date: "2026-03-27",
+      detail_basis: "NET",
+      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_options: [],
+      rows: [
+        {
+          period: "YTD",
+          portfolio_return_pct: 5.4,
+          benchmark_return_pct: 4.9,
+          active_return_pct: 0.5,
+          annualized_return_pct: 5.4,
+        },
+      ],
+      warnings: [],
+      partial_failures: [],
+    });
+
+    const view = render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("YTD")).toBeInTheDocument();
+    });
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
+
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />
+    );
+
+    expect(screen.getByText("YTD")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });
 });

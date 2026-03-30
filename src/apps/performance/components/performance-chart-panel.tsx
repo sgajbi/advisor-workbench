@@ -14,7 +14,8 @@ import {
   Typography,
 } from "@mui/material";
 
-import { AnalyticsSectionHeader, AnalyticsStat, Panel } from "@/design-system";
+import { AnalyticsSectionHeader, Panel } from "@/design-system";
+import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
   PerformanceChartPoint,
@@ -22,6 +23,7 @@ import type {
 
 import { formatDate, formatPct } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
+import PerformanceCapabilityNotice from "./performance-capability-notice";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -119,6 +121,7 @@ export default function PerformanceChartPanel({
   benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
+  capabilities,
   onRequestChange,
   isUpdating = false,
   isDetailsPending = false,
@@ -137,6 +140,7 @@ export default function PerformanceChartPanel({
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate: string;
   reportEndDate: string;
+  capabilities: PerformanceWorkspaceCapabilities;
   onRequestChange: (patch: PerformanceControlPatch) => void;
   isUpdating?: boolean;
   isDetailsPending?: boolean;
@@ -376,7 +380,10 @@ export default function PerformanceChartPanel({
   }
 
   return (
-    <Panel id={id} className="performance-chart-stage">
+    <Panel
+      id={id}
+      className="performance-chart-stage workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card performance-summary-module-card"
+    >
       <Stack spacing={2.25}>
         <Stack
           direction={{ xs: "column", xl: "row" }}
@@ -557,10 +564,10 @@ export default function PerformanceChartPanel({
           </Stack>
         </Stack>
 
-      {points.length ? (
+      {capabilities.returnPath.state === "supported" && points.length ? (
         <>
           <Box
-            className="performance-chart-summary-band"
+            className="performance-chart-summary-band workbench-summary-metric-strip"
             sx={{
               display: "grid",
               gridTemplateColumns: {
@@ -570,14 +577,14 @@ export default function PerformanceChartPanel({
               gap: 1.25,
             }}
           >
-            <AnalyticsStat label="Latest" value={formatPct(latestValue)} />
-            <AnalyticsStat label="High" value={formatPct(highestValue)} />
-            <AnalyticsStat label="Low" value={formatPct(lowestValue)} />
-            <AnalyticsStat label="Observations" value={points.length} />
+            {renderSummaryMetric("Latest", formatPct(latestValue))}
+            {renderSummaryMetric("High", formatPct(highestValue))}
+            {renderSummaryMetric("Low", formatPct(lowestValue))}
+            {renderSummaryMetric("Observations", points.length)}
           </Box>
 
           <div
-            className="performance-chart-library-frame"
+            className="performance-chart-library-frame workbench-summary-visual"
             role="img"
             aria-label={`${title} chart`}
             style={{ position: "relative" }}
@@ -615,10 +622,30 @@ export default function PerformanceChartPanel({
           <p className="muted">Loading analytical time series and benchmark comparison.</p>
         </div>
       ) : (
-        <p className="muted">Performance breakdown is not available for the selected period.</p>
+        <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
+          <PerformanceCapabilityNotice
+            capability={capabilities.returnPath}
+            partialTitle="Return series is partial"
+            unavailableTitle="Return series unavailable"
+            body={
+              capabilities.returnPath.reason ??
+              "The selected period does not currently have published performance observations for this mandate."
+            }
+            hint="Adjust the horizon or explicit dates once performance history is available for the requested window."
+          />
+        </div>
       )}
       </Stack>
     </Panel>
+  );
+}
+
+function renderSummaryMetric(label: string, value: React.ReactNode) {
+  return (
+    <div className="performance-chart-summary-stat workbench-summary-metric-card">
+      <span className="workbench-summary-metric-label">{label}</span>
+      <strong className="workbench-summary-metric-value">{value}</strong>
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ import type {
   WorkbenchPerformanceWorkspace,
 } from "@/features/workbench/types";
 
+import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { PerformanceWorkspacePresentation } from "../view-model";
 import type { PerformanceWorkspaceMode } from "./performance-workspace-mode-switch";
 
@@ -33,8 +34,7 @@ export type PerformanceWorkspaceControls = {
 
 export type PerformanceSummaryModeProps = PerformanceWorkspaceControls & {
   workspace: WorkbenchPerformanceWorkspace;
-  hasBenchmark: boolean;
-  hasHistory: boolean;
+  capabilities: PerformanceWorkspaceCapabilities;
   selectedBenchmarkCode?: string;
   selectedBenchmarkLabel?: string | null;
   selectedPerformance:
@@ -44,8 +44,6 @@ export type PerformanceSummaryModeProps = PerformanceWorkspaceControls & {
   primaryDriver: ContributionRowView | null;
   hasMoneyWeightedReturn: boolean;
   suspiciousMoneyWeightedReturn: boolean;
-  hasContribution: boolean;
-  hasPositionRanking: boolean;
   contributorScale: number;
   positivePositionContributors: ContributionPositionView[];
   negativePositionContributors: ContributionPositionView[];
@@ -55,8 +53,7 @@ export type PerformanceSummaryHeaderSectionProps = Pick<
   PerformanceSummaryModeProps,
   | "workspace"
   | "detailBasis"
-  | "hasBenchmark"
-  | "hasHistory"
+  | "capabilities"
   | "selectedBenchmarkCode"
   | "selectedBenchmarkLabel"
   | "selectedPerformance"
@@ -68,8 +65,7 @@ export type PerformanceSummaryHeaderSectionProps = Pick<
 export type PerformanceSummaryContributorsSectionProps = Pick<
   PerformanceSummaryModeProps,
   | "workspace"
-  | "hasContribution"
-  | "hasPositionRanking"
+  | "capabilities"
   | "contributorScale"
   | "positivePositionContributors"
   | "negativePositionContributors"
@@ -78,8 +74,7 @@ export type PerformanceSummaryContributorsSectionProps = Pick<
 
 export type PerformanceAnalysisModeProps = PerformanceWorkspaceControls & {
   workspace: WorkbenchPerformanceWorkspace;
-  hasAttribution: boolean;
-  hasContribution: boolean;
+  capabilities: PerformanceWorkspaceCapabilities;
   relativeSegmentRows: PerformanceWorkspacePresentation["relativeSegmentRows"];
   topAttributionEffectRows: PerformanceWorkspacePresentation["topAttributionEffectRows"];
   attributionEffectScale: number;
@@ -92,7 +87,7 @@ export type PerformanceAnalysisAttributionSectionProps = Pick<
   | "onRequestChange"
   | "isUpdating"
   | "isDetailsPending"
-  | "hasAttribution"
+  | "capabilities"
   | "relativeSegmentRows"
   | "topAttributionEffectRows"
   | "attributionEffectScale"

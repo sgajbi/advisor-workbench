@@ -6,6 +6,8 @@ export { default as AnalyticsSectionHeader } from "./components/analytics-sectio
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
+export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
+export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";
 export { default as PageToolbar } from "./components/page-toolbar";
 export { default as ContextCard } from "./components/context-card";
 export { default as KpiStatTile } from "./components/kpi-stat-tile";
@@ -26,6 +28,8 @@ export { default as Panel } from "./components/panel";
 export { default as SectionLabel } from "./components/section-label";
 export { default as StatusChip } from "./components/status-chip";
 export {
+  WorkstationPage,
+  WorkstationShell,
   WorkspaceGrid,
   WorkspaceLayout,
   WorkspaceMain,
@@ -34,3 +38,15 @@ export {
 } from "./components/workspace-layout";
 export { default as WorkspaceRailLink } from "./components/workspace-rail-link";
 export { default as WorkspaceHeader } from "./components/workspace-header";
+export { default as WorkbenchPageHeader } from "./components/workbench-page-header";
+export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";
+export { default as WorkspaceStatusPanel } from "./components/workspace-status-panel";
+export {
+  WorkbenchSummaryToolbar,
+  WorkbenchSummaryVisualCard,
+  WorkbenchSummaryVisualHeading,
+  WorkbenchSummaryVisualLabel,
+  WorkbenchSummaryVisualMeta,
+  WorkbenchSummaryVisualTrack,
+  WorkbenchSummaryVisualValue,
+} from "./components/workbench-summary-visual";

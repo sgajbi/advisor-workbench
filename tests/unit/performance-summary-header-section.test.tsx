@@ -2,8 +2,20 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceSummaryHeaderSection from "../../src/apps/performance/components/performance-summary-header-section";
 import type { PerformanceSummaryHeaderSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildProps(
   overrides: Partial<PerformanceSummaryHeaderSectionProps> = {}
@@ -100,8 +112,7 @@ function buildProps(
       partial_failures: [],
     },
     detailBasis: "NET",
-    hasBenchmark: true,
-    hasHistory: true,
+    capabilities: supportedCapabilities,
     selectedBenchmarkCode: "BMK_1",
     selectedBenchmarkLabel: "Global Balanced 60/40",
     selectedPerformance: {
@@ -134,16 +145,74 @@ describe("PerformanceSummaryHeaderSection", () => {
   it("renders the first-paint performance summary context and mandate stats", () => {
     render(<PerformanceSummaryHeaderSection {...buildProps()} />);
 
+    expect(
+      document.querySelector(
+        ".performance-summary-stage.workbench-summary-panel.workbench-summary-module-card"
+      )
+    ).toBeTruthy();
     expect(screen.getByRole("heading", { name: "PF_1001" })).toBeInTheDocument();
-    expect(screen.getAllByText("Benchmark").length).toBeGreaterThan(0);
+    expect(screen.getByText("Benchmark")).toBeInTheDocument();
     expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
-    expect(screen.getByText("Primary Contributor")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.getByText("2 observations")).toBeInTheDocument();
     expect(screen.getByText("Relative measurement")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark Comparison")).toBeInTheDocument();
-    expect(screen.getByText("Economic Context")).toBeInTheDocument();
-    expect(screen.getByText("Mandate Context")).toBeInTheDocument();
-    expect(screen.getByText("MWR annualized 1.10%")).toBeInTheDocument();
+    expect(screen.getByText("Primary Contributor")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getByText("Money-Weighted")).toBeInTheDocument();
+    expect(screen.getByText("Annualized 1.10%")).toBeInTheDocument();
+  });
+
+  it("renders compact unavailable KPI states and a benchmark unassigned status card", () => {
+    render(
+      <PerformanceSummaryHeaderSection
+        {...buildProps({
+          capabilities: {
+            ...supportedCapabilities,
+            returnPath: { state: "unavailable", reason: "Return observations unavailable." },
+            benchmarkComparison: {
+              state: "unavailable",
+              reason: "No benchmark is assigned to this mandate.",
+            },
+          },
+          selectedBenchmarkCode: undefined,
+          selectedBenchmarkLabel: null,
+          selectedPerformance: {
+            metric_basis: "NET",
+            portfolio_return_pct: null,
+            benchmark_return_pct: null,
+            active_return_pct: null,
+            annualized_return_pct: null,
+            benchmark_id: null,
+            benchmark_return_source: null,
+            begin_market_value: null,
+            end_market_value: null,
+            net_cash_flow: null,
+          },
+          primaryDriver: null,
+          hasMoneyWeightedReturn: false,
+          workspace: {
+            ...buildProps().workspace,
+            benchmark_code: null,
+            money_weighted_return: null,
+            net_chart: [],
+          },
+        })}
+      />
+    );
+
+    expect(
+      document.querySelector(
+        ".performance-summary-stage .performance-summary-status-card.workbench-summary-metric-card"
+      )
+    ).toBeTruthy();
+    expect(screen.getByText("Unassigned")).toBeInTheDocument();
+    expect(
+      screen.getByText("Assign a benchmark to enable relative analytics.")
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-summary-status-card.performance-summary-kpi-card-unavailable")
+    ).toBeTruthy();
   });
 });

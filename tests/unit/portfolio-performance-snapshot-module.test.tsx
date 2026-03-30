@@ -8,6 +8,10 @@ describe("portfolio performance snapshot module", () => {
   it("renders a collapsed unavailable placeholder in summary mode", () => {
     render(
       <PortfolioPerformanceSnapshotModule
+        capability={{
+          state: "unavailable",
+          reason: "Requires valuation history, cashflow history, and a selected reporting period.",
+        }}
         performance={null}
         rebalance={null}
         reportingRowCount={0}
@@ -41,11 +45,52 @@ describe("portfolio performance snapshot module", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders expanded unsupported performance through the shared capability panel contract", () => {
+    const { container } = render(
+      <PortfolioPerformanceSnapshotModule
+        capability={{
+          state: "partial",
+          reason: "Performance history is incomplete for the current selection.",
+        }}
+        performance={null}
+        rebalance={null}
+        reportingRowCount={0}
+        context={{
+          selectedAsOfDate: "2026-03-28",
+          selectedReportingCurrency: "USD",
+          timeWindow: "30D",
+          periodLabel: "30D",
+          viewMode: "detailed",
+          columnMode: "expanded",
+          hideEmptyModules: false,
+          focusExceptions: false,
+          effectivePeriodStartDate: "2026-02-27",
+          effectivePeriodEndDate: "2026-03-28",
+          usesCustomDateRange: false,
+          hasHistoricalGap: false,
+          currencyOptions: ["USD"],
+          supportsHistoricalSnapshots: false,
+          supportsReportingCurrencyRestatement: false,
+        }}
+        selectedPeriod="30D"
+        expanded
+        onToggle={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Performance not available yet")).toBeInTheDocument();
+    expect(
+      screen.getByText("Performance history is incomplete for the current selection.")
+    ).toBeInTheDocument();
+    expect(container.querySelector(".module-state-panel-partial")).not.toBeNull();
+  });
+
   it("renders expanded future-ready metrics when performance data exists", () => {
     const onToggle = vi.fn();
 
     render(
       <PortfolioPerformanceSnapshotModule
+        capability={{ state: "supported" }}
         performance={{
           period: "YTD",
           return_pct: 5.12,

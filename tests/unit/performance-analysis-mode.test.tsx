@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 import PerformanceAnalysisMode from "../../src/apps/performance/components/performance-analysis-mode";
 
@@ -12,6 +13,17 @@ vi.mock("../../src/apps/performance/components/performance-attribution-trend-pan
 vi.mock("../../src/apps/performance/components/performance-analysis-attribution-section", () => ({
   default: () => <div data-testid="attribution-section">Attribution Detail Section</div>,
 }));
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 function buildWorkspace(): WorkbenchPerformanceWorkspace {
   return {
@@ -108,8 +120,7 @@ describe("PerformanceAnalysisMode", () => {
         attributionDimension="asset_class"
         chartFrequency="monthly"
         benchmark="BMK_1"
-        hasAttribution={false}
-        hasContribution
+        capabilities={supportedCapabilities}
         relativeSegmentRows={[]}
         topAttributionEffectRows={[]}
         attributionEffectScale={0.01}
@@ -138,8 +149,17 @@ describe("PerformanceAnalysisMode", () => {
         attributionDimension="asset_class"
         chartFrequency="monthly"
         benchmark="BMK_1"
-        hasAttribution={false}
-        hasContribution={false}
+        capabilities={{
+          ...supportedCapabilities,
+          contributionDetail: {
+            state: "unavailable",
+            reason: "Contribution detail is not available for the current selection.",
+          },
+          attributionDetail: {
+            state: "unavailable",
+            reason: "Attribution detail is not available for the current selection.",
+          },
+        }}
         relativeSegmentRows={[]}
         topAttributionEffectRows={[]}
         attributionEffectScale={0.01}
@@ -151,5 +171,37 @@ describe("PerformanceAnalysisMode", () => {
     expect(
       screen.getByText("Loading contribution detail for the selected segment and horizon.")
     ).toBeInTheDocument();
+  });
+
+  it("renders a shared capability notice when contribution detail is unavailable", () => {
+    render(
+      <PerformanceAnalysisMode
+        workspace={{ ...buildWorkspace(), contribution: null }}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark="BMK_1"
+        capabilities={{
+          ...supportedCapabilities,
+          contributionDetail: {
+            state: "unavailable",
+            reason: "Contribution detail is not available for the current selection.",
+          },
+          attributionDetail: {
+            state: "supported",
+          },
+        }}
+        relativeSegmentRows={[]}
+        topAttributionEffectRows={[]}
+        attributionEffectScale={0.01}
+        isUpdating={false}
+        isDetailsPending={false}
+      />
+    );
+
+    expect(screen.getByText("Contribution detail unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Contribution detail is not available for the current selection.")).toBeInTheDocument();
   });
 });

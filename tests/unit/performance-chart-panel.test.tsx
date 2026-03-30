@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceChartPanel from "../../src/apps/performance/components/performance-chart-panel";
 
 vi.mock("echarts-for-react", () => ({
@@ -9,6 +10,17 @@ vi.mock("echarts-for-react", () => ({
     <div data-testid="performance-echart" style={style} />
   ),
 }));
+
+const supportedCapabilities: PerformanceWorkspaceCapabilities = {
+  summaryKpis: { state: "supported" },
+  returnPath: { state: "supported" },
+  benchmarkComparison: { state: "supported" },
+  multiHorizonReturns: { state: "supported" },
+  contributionRanking: { state: "supported" },
+  attributionDetail: { state: "supported" },
+  contributionDetail: { state: "supported" },
+  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+};
 
 describe("PerformanceChartPanel", () => {
   it("falls back to chart point dates when report dates are missing", () => {
@@ -55,10 +67,19 @@ describe("PerformanceChartPanel", () => {
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         reportStartDate=""
         reportEndDate=""
+        capabilities={supportedCapabilities}
         onRequestChange={vi.fn()}
       />
     );
 
+    expect(
+      document.querySelector(
+        ".performance-chart-stage.workbench-summary-panel.workbench-summary-module-card"
+      )
+    ).toBeTruthy();
+    expect(
+      document.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")
+    ).toBeTruthy();
     expect(screen.getByText("2026-01-01 - 2026-02-28")).toBeInTheDocument();
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
@@ -108,11 +129,86 @@ describe("PerformanceChartPanel", () => {
         ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
+        capabilities={supportedCapabilities}
         onRequestChange={vi.fn()}
       />
     );
 
     expect(screen.getByLabelText("Compared To")).toHaveDisplayValue("Global Growth 80/20");
     expect(screen.getByText("Global Growth 80/20")).toBeInTheDocument();
+  });
+
+  it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
+    render(
+      <PerformanceChartPanel
+        title="Net Return Path"
+        points={[]}
+        summary={{
+          portfolio_return_pct: null,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        }}
+        portfolioId="DEMO_ADV_USD_001"
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+        capabilities={{
+          ...supportedCapabilities,
+          returnPath: {
+            state: "unavailable",
+            reason: "Published return observations are not available for the selected horizon.",
+          },
+        }}
+        onRequestChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Published return observations are not available for the selected horizon."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+  });
+
+  it("renders a partial capability notice when return observations are incomplete", () => {
+    render(
+      <PerformanceChartPanel
+        title="Net Return Path"
+        points={[]}
+        summary={{
+          portfolio_return_pct: null,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        }}
+        portfolioId="DEMO_ADV_USD_001"
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+        capabilities={{
+          ...supportedCapabilities,
+          returnPath: {
+            state: "partial",
+            reason: "Return observations are only partially published for the selected horizon.",
+          },
+        }}
+        onRequestChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Return series is partial")).toBeInTheDocument();
+    expect(screen.getByText("Return observations are only partially published for the selected horizon.")).toBeInTheDocument();
+    expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
   });
 });

@@ -4,6 +4,8 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
+      - ci-local-node-modules:/app/node_modules
+      - ci-local-next-cache:/app/.next
     command:
       [
         "sh",
@@ -12,3 +14,7 @@ services:
       ]
     environment:
       - BFF_BASE_URL=http://host.docker.internal:8100
+
+volumes:
+  ci-local-node-modules:
+  ci-local-next-cache:

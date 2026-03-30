@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ModuleSkeleton, StatusChip, WorkspaceHeader } from "@/design-system";
+import { ModuleSkeleton, WorkstationPage } from "@/design-system";
 
 import {
   getPortfolioWorkspaceDetailedDetails,
@@ -234,60 +234,7 @@ export default function PortfolioWorkspaceClient({
   }
 
   return (
-    <main className="page-container">
-      <WorkspaceHeader
-        title="Portfolio"
-        meta={
-          <>
-            <StatusChip>{portfolios.length} portfolios</StatusChip>
-            <StatusChip tone={portfolios.length ? "success" : "warn"}>
-              {portfolios.length ? "Catalog live" : "Catalog unavailable"}
-            </StatusChip>
-          </>
-        }
-      />
-
-      {!interactiveReady ? (
-        <div className="portfolio-client-shell-placeholder" aria-hidden="true">
-          <section className="portfolio-workspace-toolbar portfolio-workspace-toolbar-placeholder">
-            <div className="portfolio-workspace-toolbar-row">
-              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                <span className="portfolio-toolbar-placeholder-label">As of</span>
-                <div className="portfolio-toolbar-placeholder-control" />
-              </div>
-              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                <span className="portfolio-toolbar-placeholder-label">Reporting Currency</span>
-                <div className="portfolio-toolbar-placeholder-control" />
-              </div>
-              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                <span className="portfolio-toolbar-placeholder-label">View</span>
-                <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-wide" />
-              </div>
-              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
-                <span className="portfolio-toolbar-placeholder-label">Period</span>
-                <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-period" />
-              </div>
-            </div>
-            <div className="portfolio-workspace-toolbar-context">
-              <span>Loading portfolio controls…</span>
-            </div>
-          </section>
-          <ModuleSkeleton chart rows={6} />
-        </div>
-      ) : portfolios.length ? (
-        <PortfolioWorkspaceToolbar
-          controls={controls}
-          context={context}
-          filterOptions={filterOptions}
-          activeFilterChips={activeFilterChips}
-          onControlsChange={handleControlsChange}
-          onFilterReset={handleFilterReset}
-          onFilterChipRemove={handleFilterChipRemove}
-          onExport={handleExport}
-          quickActions={initialWorkspace?.workflow_cues ?? []}
-        />
-      ) : null}
-
+    <WorkstationPage className="portfolio-page">
       {!portfolios.length ? (
         <PortfolioUnavailableWorkspace />
       ) : (
@@ -300,9 +247,51 @@ export default function PortfolioWorkspaceClient({
             summaryDetailsLoading ||
             (controls.viewMode === "detailed" && !detailedDetailsLoaded)
           }
+          toolbar={
+            !interactiveReady ? (
+              <div className="portfolio-client-shell-placeholder" aria-hidden="true">
+                <section className="portfolio-workspace-toolbar portfolio-workspace-toolbar-placeholder">
+                  <div className="portfolio-workspace-toolbar-row">
+                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                      <span className="portfolio-toolbar-placeholder-label">As of</span>
+                      <div className="portfolio-toolbar-placeholder-control" />
+                    </div>
+                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                      <span className="portfolio-toolbar-placeholder-label">Reporting Currency</span>
+                      <div className="portfolio-toolbar-placeholder-control" />
+                    </div>
+                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                      <span className="portfolio-toolbar-placeholder-label">View</span>
+                      <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-wide" />
+                    </div>
+                    <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-placeholder">
+                      <span className="portfolio-toolbar-placeholder-label">Period</span>
+                      <div className="portfolio-toolbar-placeholder-control portfolio-toolbar-placeholder-control-period" />
+                    </div>
+                  </div>
+                  <div className="portfolio-workspace-toolbar-context">
+                    <span>Loading portfolio controls…</span>
+                  </div>
+                </section>
+                <ModuleSkeleton chart rows={6} />
+              </div>
+            ) : (
+              <PortfolioWorkspaceToolbar
+                controls={controls}
+                context={context}
+                filterOptions={filterOptions}
+                activeFilterChips={activeFilterChips}
+                onControlsChange={handleControlsChange}
+                onFilterReset={handleFilterReset}
+                onFilterChipRemove={handleFilterChipRemove}
+                onExport={handleExport}
+                quickActions={initialWorkspace?.workflow_cues ?? []}
+              />
+            )
+          }
         />
       )}
-    </main>
+    </WorkstationPage>
   );
 }
 

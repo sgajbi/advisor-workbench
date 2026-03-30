@@ -12,13 +12,14 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { EmptyStatePanel, ModuleSkeleton, ModuleStatePanel } from "@/design-system";
+import { ModuleSkeleton } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
+import PortfolioDetailGridState from "./portfolio-detail-grid-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -42,7 +43,6 @@ type PortfolioTransactionsGridProps = {
 export type TransactionRow = {
   transactionId: string;
   tradeDate: string;
-  settleDate: string;
   type: string;
   instrument: string;
   quantity: number;
@@ -163,7 +163,6 @@ export default function PortfolioTransactionsGrid({
       filteredTransactions.map((transaction) => ({
         transactionId: transaction.transaction_id,
         tradeDate: transaction.transaction_date,
-        settleDate: "—",
         type: formatStatus(transaction.transaction_type),
         instrument: transaction.instrument_id,
         quantity: transaction.quantity,
@@ -184,12 +183,6 @@ export default function PortfolioTransactionsGrid({
         pinned: "left",
         minWidth: 130,
         valueFormatter: ({ value }) => formatDate(value),
-      }),
-      buildTransactionColumn({
-        field: "settleDate",
-        headerName: "Settle Date",
-        pinned: "left",
-        minWidth: 130,
       }),
       buildTransactionColumn({
         field: "type",
@@ -334,11 +327,11 @@ export default function PortfolioTransactionsGrid({
         <ModuleSkeleton rows={5} />
       ) : rowData.length ? (
         <>
-          <ModuleStatePanel
+          <PortfolioDetailGridState
             state="partial"
-            title="Settlement detail is limited"
-            body="Transaction activity is available, but settlement dates are not yet exposed from the source contract."
-            hint="Use trade date, status, and amount for current operational review."
+            title="Transaction lifecycle detail is limited"
+            body="Trade activity is available, but the current contract does not expose settlement dates."
+            hint="Use trade date, status, and amount for current operational review until settlement fields are added upstream."
           />
         <div
           className={`ag-theme-quartz portfolio-data-grid ${showExpandedColumns ? "portfolio-data-grid-dense" : ""}`}
@@ -364,26 +357,27 @@ export default function PortfolioTransactionsGrid({
         </div>
         </>
       ) : loadError ? (
-        <ModuleStatePanel
+        <PortfolioDetailGridState
           state="error"
           title="Transaction history unavailable"
           body="We could not load the transaction ledger for the selected period."
           hint="Retry the request or narrow the date window. If the issue persists, check upstream ledger availability."
         />
       ) : externalFilter ? (
-        <ModuleStatePanel
+        <PortfolioDetailGridState
           state="empty"
           title="No matching transactions in view"
           body="The current drill-down does not match any transactions in the selected ledger window."
           hint="Clear the drill-down or widen the period to inspect a broader transaction history."
-          action={
+          actions={
             <Button size="small" variant="text" onClick={onClearExternalFilter}>
               Clear drill-down
             </Button>
           }
         />
       ) : (
-        <EmptyStatePanel
+        <PortfolioDetailGridState
+          state="empty"
           title="No transactions booked"
           body="No funding, trading, or cash activity has been recorded in the selected window."
           hint="Start with a funding entry or the first trade."
@@ -417,7 +411,6 @@ function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<Transact
 function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
   const exportRows = rows.map((row) => ({
     "Trade Date": formatDate(row.tradeDate),
-    "Settle Date": row.settleDate,
     Type: row.type,
     Instrument: row.instrument,
     Quantity: row.quantity,

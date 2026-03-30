@@ -11,11 +11,11 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import * as XLSX from "xlsx";
 
-import { EmptyStatePanel, ModuleStatePanel } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
+import PortfolioDetailGridState from "./portfolio-detail-grid-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -288,7 +288,7 @@ export default function PortfolioHoldingsGrid({
       {rowData.length ? (
         <>
           {unpricedCount ? (
-            <ModuleStatePanel
+            <PortfolioDetailGridState
               state="partial"
               title="Holdings partially valued"
               body={`${formatCount(unpricedCount, "holding")} is missing current price or valuation data.`}
@@ -322,7 +322,8 @@ export default function PortfolioHoldingsGrid({
         </div>
         </>
       ) : (
-        <EmptyStatePanel
+        <PortfolioDetailGridState
+          state="empty"
           title="No holdings in this portfolio"
           body="The holdings inventory is empty."
           hint="Add securities, cash funding, or subscriptions to populate the book."

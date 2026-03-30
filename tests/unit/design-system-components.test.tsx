@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import {
   ActionLink,
   ActionListCard,
+  AnalyticsModule,
+  AnalyticsRankedList,
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
@@ -28,6 +30,16 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkbenchPageHeader,
+  WorkbenchSummaryToolbar,
+  WorkbenchSummaryVisualCard,
+  WorkbenchSummaryVisualHeading,
+  WorkbenchSummaryVisualLabel,
+  WorkbenchSummaryVisualMeta,
+  WorkbenchSummaryVisualTrack,
+  WorkbenchSummaryVisualValue,
+  WorkstationPage,
+  WorkstationShell,
 } from "@/design-system";
 
 describe("design-system components", () => {
@@ -85,6 +97,27 @@ describe("design-system components", () => {
     expect(document.querySelector(".workspace-main")).toBeTruthy();
     expect(document.querySelector(".workspace-grid")).toBeTruthy();
     expect(document.querySelector(".workspace-side")).toBeTruthy();
+  });
+
+  it("renders the shared workstation shell with explicit slot structure", () => {
+    render(
+      <WorkstationPage>
+        <WorkstationShell
+          sideDensity="comfortable"
+          rail={<Panel>Workstation Rail</Panel>}
+          main={<Panel>Workstation Main</Panel>}
+          side={<Panel>Workstation Side</Panel>}
+        />
+      </WorkstationPage>
+    );
+
+    expect(document.querySelector(".workstation-page")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side-density-comfortable")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side-comfortable")).toBeTruthy();
   });
 
   it("renders degraded state and rail link primitives", () => {
@@ -281,5 +314,97 @@ describe("design-system components", () => {
     expect(screen.getByText("Ready")).toHaveClass("kpi-stat-value");
     expect(screen.getByText("0 active exceptions")).toHaveClass("kpi-stat-support");
     expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
+  });
+
+  it("renders analytics modules with the shared workbench summary-card contract", () => {
+    render(
+      <AnalyticsModule
+        compact
+        title="Shared Summary"
+        subtitle="Shared subtitle"
+        actions={<button type="button">Module Action</button>}
+      >
+        <div>Body</div>
+      </AnalyticsModule>
+    );
+
+    expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact")).toBeTruthy();
+    expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
+    expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
+    expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();
+  });
+
+  it("renders ranked analytics content with shared summary visual typography classes", () => {
+    render(
+      <AnalyticsRankedList
+        title="Highest"
+        label="Contribution"
+        scale={1}
+        rows={[
+          {
+            key: "row-1",
+            title: "Apple Inc",
+            subtitle: "Avg. Weight 24.00%",
+            value: "1.55%",
+            magnitudePct: 1.55,
+            tone: "positive",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Highest")).toHaveClass("workbench-summary-visual-heading");
+    expect(screen.getByText("Contribution")).toHaveClass("workbench-summary-visual-meta");
+    expect(screen.getByText("Apple Inc")).toHaveClass("workbench-summary-visual-label");
+    expect(screen.getByText("Avg. Weight 24.00%")).toHaveClass("workbench-summary-visual-meta");
+    expect(screen.getByText("1.55%")).toHaveClass("workbench-summary-visual-value");
+  });
+
+  it("renders reusable workbench summary visual primitives with the shared class contract", () => {
+    render(
+      <>
+        <WorkbenchSummaryToolbar>
+          <span>Toolbar Item</span>
+        </WorkbenchSummaryToolbar>
+        <WorkbenchSummaryVisualCard>
+          <WorkbenchSummaryVisualHeading>Visual Heading</WorkbenchSummaryVisualHeading>
+          <WorkbenchSummaryVisualLabel>Visual Label</WorkbenchSummaryVisualLabel>
+          <WorkbenchSummaryVisualMeta>Visual Meta</WorkbenchSummaryVisualMeta>
+          <WorkbenchSummaryVisualTrack className="custom-track">
+            <span>Track Body</span>
+          </WorkbenchSummaryVisualTrack>
+          <WorkbenchSummaryVisualValue>123</WorkbenchSummaryVisualValue>
+        </WorkbenchSummaryVisualCard>
+      </>
+    );
+
+    expect(document.querySelector(".workbench-summary-toolbar")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-visual-card")).toBeTruthy();
+    expect(screen.getByText("Visual Heading")).toHaveClass("workbench-summary-visual-heading");
+    expect(screen.getByText("Visual Label")).toHaveClass("workbench-summary-visual-label");
+    expect(screen.getByText("Visual Meta")).toHaveClass("workbench-summary-visual-meta");
+    expect(screen.getByText("123")).toHaveClass("workbench-summary-visual-value");
+    expect(document.querySelector(".custom-track")).toBeTruthy();
+  });
+
+  it("renders the shared neutral workbench page header with title, subtitle, and actions", () => {
+    render(
+      <WorkbenchPageHeader
+        title="Performance Workbench"
+        subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
+        actions={<button type="button">Header Action</button>}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Performance Workbench" })).toHaveClass(
+      "workbench-page-header-title"
+    );
+    expect(
+      screen.getByText(
+        "Benchmark-aware portfolio performance, attribution, and contribution analysis"
+      )
+    ).toHaveClass("workbench-page-header-subtitle");
+    expect(screen.getByRole("button", { name: "Header Action" })).toBeInTheDocument();
+    expect(document.querySelector(".workbench-page-header-actions")).toBeTruthy();
   });
 });
