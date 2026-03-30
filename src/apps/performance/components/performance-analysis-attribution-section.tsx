@@ -35,6 +35,7 @@ export default function PerformanceAnalysisAttributionSection({
   topAttributionEffectRows,
   attributionEffectScale,
 }: PerformanceAnalysisAttributionSectionProps) {
+  const hasAttributionSummaryLevels = (workspace.attribution?.levels?.length ?? 0) > 0;
   const actions = (
     <PerformanceAnalysisToolbar
       context={
@@ -123,7 +124,12 @@ export default function PerformanceAnalysisAttributionSection({
           capabilities.attributionDetail.reason ??
           "Attribution detail is not available for the current selection."
         }
-        hint="Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
+        hint={
+          hasAttributionSummaryLevels
+            ? "Summary-level attribution remains available even when segment rows are absent."
+            : "Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
+        }
+        allowPartialContent={hasAttributionSummaryLevels}
       >
         <div className="performance-analytic-duo-grid">
           <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />

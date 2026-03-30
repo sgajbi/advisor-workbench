@@ -13,6 +13,7 @@ export type PerformanceFixtureOptions = {
   partialBenchmarkComparison?: boolean;
   aggregateContributionOnly?: boolean;
   unavailableAttribution?: boolean;
+  summaryOnlyAttribution?: boolean;
 };
 
 export type PerformancePresentationScenario = {
@@ -119,7 +120,12 @@ function deriveFixtureCapabilities(
       },
     });
   }
-  if (options?.partialBenchmarkComparison || options?.aggregateContributionOnly || options?.unavailableAttribution) {
+  if (
+    options?.partialBenchmarkComparison ||
+    options?.aggregateContributionOnly ||
+    options?.unavailableAttribution ||
+    options?.summaryOnlyAttribution
+  ) {
     return buildPerformanceCapabilities({
       ...(options.partialBenchmarkComparison
         ? {
@@ -152,6 +158,19 @@ function deriveFixtureCapabilities(
             attributionDetail: {
               state: "unavailable",
               reason: "Attribution detail is not available for the current selection.",
+            },
+          }
+        : {}),
+      ...(options.summaryOnlyAttribution
+        ? {
+            attributionDetail: {
+              state: "partial",
+              reason:
+                "Benchmark-relative attribution is available only at summary level for the current selection.",
+              coverageLevel: "summary",
+              fallbackAvailable: true,
+              supportedDimensions: ["asset_class", "sector", "country", "currency"],
+              supportedFrequencies: ["monthly", "quarterly"],
             },
           }
         : {}),
@@ -363,19 +382,21 @@ export function buildPerformanceWorkspaceDetails(
               selection_total_pct: 0.24,
               interaction_total_pct: 0.03,
               total_effect_pct: 0.45,
-              rows: [
-                {
-                  key_label: "Equity",
-                  portfolio_weight_avg_pct: 61,
-                  benchmark_weight_avg_pct: 58,
-                  portfolio_return_pct: 7.4,
-                  benchmark_return_pct: 6.8,
-                  allocation_pct: 0.18,
-                  selection_pct: 0.24,
-                  interaction_pct: 0.03,
-                  total_effect_pct: 0.45,
-                },
-              ],
+              rows: options?.summaryOnlyAttribution
+                ? []
+                : [
+                    {
+                      key_label: "Equity",
+                      portfolio_weight_avg_pct: 61,
+                      benchmark_weight_avg_pct: 58,
+                      portfolio_return_pct: 7.4,
+                      benchmark_return_pct: 6.8,
+                      allocation_pct: 0.18,
+                      selection_pct: 0.24,
+                      interaction_pct: 0.03,
+                      total_effect_pct: 0.45,
+                    },
+                  ],
             },
           ],
         },
@@ -561,10 +582,18 @@ export function buildUnavailableAttributionPerformanceScenario() {
 
 export function buildPartialAttributionPerformanceScenario() {
   return buildPerformancePresentationScenario({
+    fixtureOptions: {
+      summaryOnlyAttribution: true,
+    },
     capabilityOverrides: {
       attributionDetail: {
         state: "partial",
-        reason: "Benchmark-relative attribution is incomplete for the current selection.",
+        reason:
+          "Benchmark-relative attribution is available only at summary level for the current selection.",
+        coverageLevel: "summary",
+        fallbackAvailable: true,
+        supportedDimensions: ["asset_class", "sector", "country", "currency"],
+        supportedFrequencies: ["monthly", "quarterly"],
       },
     },
   });

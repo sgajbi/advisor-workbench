@@ -111,6 +111,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
+          workspace: scenario.workspace,
           capabilities: scenario.capabilities,
           relativeSegmentRows: [],
           topAttributionEffectRows: [],
@@ -120,8 +121,16 @@ describe("PerformanceAnalysisAttributionSection", () => {
 
     expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
     expect(
-      screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")
+      screen.getByText(
+        "Benchmark-relative attribution is available only at summary level for the current selection."
+      )
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
+    expect(screen.getByText("Total")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
