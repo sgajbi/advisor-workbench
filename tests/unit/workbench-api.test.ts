@@ -7,10 +7,10 @@ import {
   getWorkbenchAnalytics,
   getWorkbenchPerformanceAttributionTrendClient,
   getWorkbenchPerformanceHorizonComparisonClient,
+  getWorkbenchPerformanceWorkspaceDetailsClient,
   getWorkbenchPerformanceWorkspaceDetails,
+  getWorkbenchPerformanceWorkspaceSummaryClient,
   getWorkbenchPerformanceWorkspaceSummary,
-  getWorkbenchPerformanceWorkspaceClient,
-  getWorkbenchPerformanceWorkspace,
 } from "../../src/features/workbench/api";
 
 const expectedBaseUrl = "/api/bff/api/v1";
@@ -135,7 +135,7 @@ describe("workbench api", () => {
     );
   });
 
-  it("omits benchmark code when performance workspace is requested without an assigned benchmark", async () => {
+  it("omits benchmark code when performance summary is requested without an assigned benchmark", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -193,7 +193,7 @@ describe("workbench api", () => {
       )
     );
 
-    await getWorkbenchPerformanceWorkspace("PF_1001", {
+    await getWorkbenchPerformanceWorkspaceSummary("PF_1001", {
       period: "YTD",
       chartFrequency: "monthly",
       contributionDimension: "asset_class",
@@ -204,12 +204,12 @@ describe("workbench api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     const requestedUrl = fetchMock.mock.calls[0]?.[0]?.toString();
     expect(requestedUrl).toContain(
-      "/api/v1/workbench/PF_1001/performance?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET"
+      "/api/v1/workbench/PF_1001/performance/summary?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET"
     );
     expect(requestedUrl).not.toContain("benchmark_code=");
   });
 
-  it("includes benchmark code when performance workspace is requested with a selected benchmark", async () => {
+  it("includes benchmark code when performance details are requested with a selected benchmark", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({
@@ -265,7 +265,7 @@ describe("workbench api", () => {
       }))
     );
 
-    await getWorkbenchPerformanceWorkspace("PF_1001", {
+    await getWorkbenchPerformanceWorkspaceDetails("PF_1001", {
       period: "YTD",
       chartFrequency: "monthly",
       contributionDimension: "asset_class",
@@ -276,9 +276,10 @@ describe("workbench api", () => {
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
+    expect(requestedUrl).toContain("/api/v1/workbench/PF_1001/performance/details?");
   });
 
-  it("uses the proxy path for client-side performance workspace refreshes", async () => {
+  it("uses the proxy path for client-side performance summary refreshes", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -338,7 +339,7 @@ describe("workbench api", () => {
       )
     );
 
-    await getWorkbenchPerformanceWorkspaceClient("PF_1001", {
+    await getWorkbenchPerformanceWorkspaceSummaryClient("PF_1001", {
       period: "3Y",
       chartFrequency: "monthly",
       contributionDimension: "asset_class",
@@ -349,7 +350,53 @@ describe("workbench api", () => {
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/bff/api/v1/workbench/PF_1001/performance?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+      "/api/bff/api/v1/workbench/PF_1001/performance/summary?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+    );
+  });
+
+  it("uses the proxy path for client-side performance detail refreshes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-performance",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-02-24",
+            period: "3Y",
+            report_start_date: "2023-02-25",
+            report_end_date: "2026-02-24",
+            chart_frequency: "monthly",
+            contribution_dimension: "asset_class",
+            attribution_dimension: "asset_class",
+            detail_basis: "NET",
+            segment: "asset_class",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            net_chart: [],
+            gross_chart: [],
+            contribution: null,
+            attribution: null,
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceWorkspaceDetailsClient("PF_1001", {
+      period: "3Y",
+      chartFrequency: "monthly",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/bff/api/v1/workbench/PF_1001/performance/details?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
   });
 
