@@ -4350,6 +4350,11 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-analysis-toolbar-context {
+  display: inline-flex;
+  align-items: center;
+}
+
 .performance-analysis-shell-action {
   color: var(--text-muted);
   font-size: var(--workbench-analytic-label-size);
@@ -5417,32 +5422,6 @@ a:hover {
   color: #8f2f2f;
 }
 
-.performance-inline-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #66748a;
-}
-
-.performance-inline-select select {
-  border: 1px solid #d4dfef;
-  border-radius: 999px;
-  background: #fff;
-  color: #22324a;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.35rem 0.8rem;
-}
-
-.performance-section-heading-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .performance-section-benchmark {
   display: inline-flex;
   align-items: center;
@@ -6171,12 +6150,6 @@ a:hover {
 .shell-nav-link {
     font-size: 0.78rem;
     padding: 0.34rem 0.68rem;
-  }
-
-  .performance-section-heading-meta {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
   }
 
   .performance-attribution-summary-strip {

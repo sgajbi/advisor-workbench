@@ -67,6 +67,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
 
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();

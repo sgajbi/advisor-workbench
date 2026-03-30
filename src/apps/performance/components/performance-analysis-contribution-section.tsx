@@ -6,6 +6,7 @@ import { formatLabel, formatPct } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
+import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import {
   getContributionTotals,
@@ -32,27 +33,29 @@ export default function PerformanceAnalysisContributionSection({
   capabilities,
 }: PerformanceAnalysisContributionSectionProps) {
   const actions = (
-    <FormControl size="small" sx={{ minWidth: 180 }}>
-      <Typography component="label" sx={inlineControlLabelSx}>
-        Segment
-      </Typography>
-      <Select
-        aria-label="Contribution Segment"
-        value={contributionDimension}
-        onChange={(event) =>
-          onRequestChange?.({
-            contributionDimension: event.target.value,
-          })
-        }
-        disabled={isUpdating}
-      >
-        {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-          <MenuItem key={option} value={option}>
-            {formatLabel(option)}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <PerformanceAnalysisToolbar>
+      <FormControl size="small" sx={{ minWidth: 180 }}>
+        <Typography component="label" sx={inlineControlLabelSx}>
+          Segment
+        </Typography>
+        <Select
+          aria-label="Contribution Segment"
+          value={contributionDimension}
+          onChange={(event) =>
+            onRequestChange?.({
+              contributionDimension: event.target.value,
+            })
+          }
+          disabled={isUpdating}
+        >
+          {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {formatLabel(option)}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </PerformanceAnalysisToolbar>
   );
 
   return (

@@ -12,6 +12,7 @@ import { formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
+import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import { getAttributionRankingRows } from "./performance-analysis-view-helpers";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
@@ -33,7 +34,15 @@ export default function PerformanceAnalysisAttributionSection({
   attributionEffectScale,
 }: PerformanceAnalysisAttributionSectionProps) {
   const actions = (
-    <div className="performance-analysis-toolbar">
+    <PerformanceAnalysisToolbar
+      context={
+        workspace.attribution?.benchmark_id ? (
+          <span className="performance-section-benchmark">
+            Versus {formatLabel(workspace.attribution.benchmark_id)}
+          </span>
+        ) : undefined
+      }
+    >
       <FormControl size="small" sx={{ minWidth: 180 }}>
         <Typography component="label" sx={inlineControlLabelSx}>
           Segment
@@ -55,12 +64,7 @@ export default function PerformanceAnalysisAttributionSection({
           ))}
         </Select>
       </FormControl>
-      {workspace.attribution?.benchmark_id ? (
-        <span className="performance-section-benchmark">
-          Versus {formatLabel(workspace.attribution.benchmark_id)}
-        </span>
-      ) : null}
-    </div>
+    </PerformanceAnalysisToolbar>
   );
 
   const metricItems = workspace.attribution?.benchmark_id

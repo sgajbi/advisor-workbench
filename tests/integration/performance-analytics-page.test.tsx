@@ -216,6 +216,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThanOrEqual(2);
