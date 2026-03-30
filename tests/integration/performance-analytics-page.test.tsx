@@ -62,8 +62,23 @@ type PerformanceSummaryScenario = {
   absentTexts?: string[];
 };
 
+type PerformanceWorkspaceScenarioMatrix = {
+  name: string;
+  scenario: PerformancePresentationScenario;
+  summaryExpectations: string[];
+  analysisExpectations: string[];
+  evidenceExpectations?: string[];
+  summaryAbsent?: string[];
+  analysisAbsent?: string[];
+};
+
 function compactPattern(text: string) {
   return new RegExp(text.replaceAll(" ", "\\s*"));
+}
+
+async function expectTextPresent(text: string) {
+  const matches = await screen.findAllByText(text);
+  expect(matches.length).toBeGreaterThan(0);
 }
 
 describe("PerformanceAnalyticsPage", () => {
@@ -327,6 +342,83 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
   });
+
+  it.each<PerformanceWorkspaceScenarioMatrix>([
+    {
+      name: "supported workspace",
+      scenario: buildSupportedPerformanceScenario(),
+      summaryExpectations: ["Portfolio Return", "How did this compare across horizons?"],
+      analysisExpectations: ["Attribution Over Time", "Contribution Detail"],
+      evidenceExpectations: ["Evidence unavailable"],
+      summaryAbsent: ["Benchmark not assigned"],
+      analysisAbsent: ["Attribution detail unavailable", "Contribution detail unavailable"],
+    },
+    {
+      name: "unavailable attribution workspace",
+      scenario: buildUnavailableAttributionPerformanceScenario(),
+      summaryExpectations: ["Attribution", "Unavailable"],
+      analysisExpectations: ["Attribution detail unavailable", "Contribution Detail"],
+      evidenceExpectations: ["Evidence unavailable"],
+      analysisAbsent: ["Relative Segment Matrix"],
+    },
+    {
+      name: "unavailable contribution workspace",
+      scenario: buildUnavailableContributionPerformanceScenario(),
+      summaryExpectations: ["Contribution", "Unavailable"],
+      analysisExpectations: [
+        "Attribution Over Time",
+        "Contribution detail unavailable",
+      ],
+      evidenceExpectations: ["Evidence unavailable"],
+      analysisAbsent: ["Contribution detail is partial"],
+    },
+    {
+      name: "combined partial workspace",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      summaryExpectations: ["Relative returns incomplete", "Attribution detail unavailable"],
+      analysisExpectations: ["Attribution detail unavailable", "Contribution Detail"],
+      evidenceExpectations: ["Evidence unavailable"],
+      analysisAbsent: ["Contribution detail is partial"],
+    },
+  ])(
+    "renders a contract-backed workspace mode matrix for $name",
+    async ({
+      scenario,
+      summaryExpectations,
+      analysisExpectations,
+      evidenceExpectations = ["Evidence unavailable"],
+      summaryAbsent = [],
+      analysisAbsent = [],
+    }) => {
+      installPerformancePageFetchScenario(scenario);
+
+      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+      expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+      for (const text of summaryExpectations) {
+        await expectTextPresent(text);
+      }
+      expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
+      for (const text of summaryAbsent) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+
+      fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+      for (const text of analysisExpectations) {
+        await expectTextPresent(text);
+      }
+      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      for (const text of analysisAbsent) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+
+      fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+      for (const text of evidenceExpectations) {
+        await expectTextPresent(text);
+      }
+      expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
+    }
+  );
 
   it("renders compact unavailable summary states when benchmark and return series are missing", async () => {
     installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
