@@ -58,6 +58,11 @@
   --workbench-summary-visual-label-size: 0.8125rem;
   --workbench-summary-visual-value-size: 0.875rem;
   --workbench-summary-visual-meta-size: 0.75rem;
+  --workbench-analytic-label-size: 0.6875rem;
+  --workbench-analytic-label-tracking: 0.06em;
+  --workbench-analytic-chip-size: 0.6875rem;
+  --workbench-analytic-support-size: 0.71875rem;
+  --workbench-analytic-context-value-size: 0.78125rem;
   --workstation-shell-gap: 20px;
   --workstation-rail-width: 280px;
   --workstation-side-width: 320px;
@@ -370,16 +375,16 @@ a:hover {
 
 .workbench-chart-context-row-label {
   color: var(--text-muted);
-  font-size: 0.6875rem;
+  font-size: var(--workbench-analytic-label-size);
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--workbench-analytic-label-tracking);
   text-transform: uppercase;
   line-height: 1.3;
 }
 
 .workbench-chart-context-row-value {
   color: var(--brand-strong);
-  font-size: 0.78125rem;
+  font-size: var(--workbench-analytic-context-value-size);
   font-weight: 750;
   letter-spacing: 0;
   text-transform: none;
@@ -4032,10 +4037,10 @@ a:hover {
 }
 
 .performance-trust-item-label {
-  font-size: 0.6875rem;
+  font-size: var(--workbench-analytic-label-size);
   font-weight: 800;
   line-height: 1.3;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--workbench-analytic-label-tracking);
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -4050,13 +4055,13 @@ a:hover {
   justify-self: start;
   border-radius: 6px;
   padding: 0.1875rem 0.4375rem;
-  font-size: 0.6875rem;
+  font-size: var(--workbench-analytic-chip-size);
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .performance-trust-item-support {
-  font-size: 0.71875rem;
+  font-size: var(--workbench-analytic-support-size);
   line-height: 1.34;
   color: var(--text-muted);
   max-width: 26ch;
@@ -4120,9 +4125,9 @@ a:hover {
 }
 
 .performance-summary-kpi-label {
-  font-size: 0.6875rem;
+  font-size: var(--workbench-analytic-label-size);
   font-weight: 800;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--workbench-analytic-label-tracking);
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -4152,7 +4157,7 @@ a:hover {
 }
 
 .performance-summary-kpi-card-utility .performance-summary-kpi-support {
-  font-size: 0.71875rem;
+  font-size: var(--workbench-analytic-support-size);
   line-height: 1.32;
 }
 
@@ -4181,7 +4186,7 @@ a:hover {
 
 .performance-summary-kpi-support {
   color: var(--text-subtle);
-  font-size: 0.75rem;
+  font-size: var(--workbench-analytic-support-size);
   line-height: 1.34;
   max-width: 21ch;
 }
