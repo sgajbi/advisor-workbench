@@ -2822,11 +2822,17 @@ a:hover {
   --ag-wrapper-border-radius: 12px;
   --ag-border-radius: 12px;
   --ag-cell-horizontal-padding: 12px;
+  --ag-scrollbar-size: 12px;
 }
 
 .portfolio-data-grid .ag-root-wrapper {
   border: 1px solid var(--border);
   box-shadow: none;
+}
+
+.portfolio-data-grid .ag-body-horizontal-scroll,
+.portfolio-data-grid .ag-body-horizontal-scroll-viewport {
+  min-height: 12px;
 }
 
 .portfolio-data-grid .ag-header-cell-text {

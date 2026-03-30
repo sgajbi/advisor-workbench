@@ -88,6 +88,8 @@ describe("portfolio data grids", () => {
     expect(screen.getByRole("button", { name: "Show expanded holdings columns" })).toBeInTheDocument();
     expect(screen.getByText("Instrument")).toBeInTheDocument();
     expect(screen.getByText("Market Value")).toBeInTheDocument();
+    expect(screen.getByText("Weight")).toBeInTheDocument();
+    expect(screen.getByText("Unrealized P&L")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear filter/i }));
     expect(onClearFilter).toHaveBeenCalled();
 
@@ -163,6 +165,9 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
+    expect(screen.getByText("Amount")).toBeInTheDocument();
+    expect(screen.getByText("Currency")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
     expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
     expect(

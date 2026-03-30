@@ -21,6 +21,10 @@ import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
+import {
+  PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
+  shouldPinPortfolioGridLeadColumns,
+} from "./portfolio-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
@@ -75,6 +79,7 @@ export default function PortfolioTransactionsGrid({
   const [loadError, setLoadError] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [showExpandedColumns, setShowExpandedColumns] = useState(false);
+  const gridDensity = showExpandedColumns ? "expanded" : "essential";
 
   useEffect(() => {
     setStartDate(defaultStartDate);
@@ -182,59 +187,59 @@ export default function PortfolioTransactionsGrid({
       buildTransactionColumn({
         field: "tradeDate",
         headerName: "Trade Date",
-        pinned: "left",
-        minWidth: 130,
+        pinned: shouldPinPortfolioGridLeadColumns(gridDensity) ? "left" : null,
+        minWidth: 118,
         valueFormatter: ({ value }) => formatDate(value),
       }),
       buildTransactionColumn({
         field: "type",
         headerName: "Type",
-        minWidth: 120,
+        minWidth: 104,
       }),
       buildTransactionColumn({
         field: "instrument",
         headerName: "Instrument",
-        minWidth: 140,
+        minWidth: 126,
         flex: 1.2,
       }),
       buildTransactionColumn({
         field: "quantity",
         headerName: "Quantity",
-        minWidth: 120,
+        minWidth: 104,
         type: "numericColumn",
         valueFormatter: ({ value }) => formatQuantity(value),
       }),
       buildTransactionColumn({
         field: "amount",
         headerName: "Amount",
-        minWidth: 135,
+        minWidth: 126,
         type: "numericColumn",
         valueFormatter: ({ value, data }) => formatCurrency(value, data?.currency ?? baseCurrency),
       }),
       buildTransactionColumn({
         field: "currency",
         headerName: "Currency",
-        minWidth: 110,
+        minWidth: 92,
       }),
       buildTransactionColumn({
         field: "status",
         headerName: "Status",
-        minWidth: 120,
+        minWidth: 106,
       }),
       buildTransactionColumn({
         field: "componentType",
         headerName: "Component Type",
-        minWidth: 140,
+        minWidth: 126,
         hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
         field: "transactionId",
         headerName: "Transaction ID",
-        minWidth: 160,
+        minWidth: 146,
         hide: !showExpandedColumns,
       }),
     ],
-    [baseCurrency, showExpandedColumns]
+    [baseCurrency, gridDensity, showExpandedColumns]
   );
 
   return (
@@ -349,6 +354,7 @@ export default function PortfolioTransactionsGrid({
             rowData={rowData}
             columnDefs={columnDefs}
             theme="legacy"
+            autoSizeStrategy={PORTFOLIO_GRID_AUTO_SIZE_STRATEGY}
             defaultColDef={DEFAULT_GRID_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"

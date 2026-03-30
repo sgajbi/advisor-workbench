@@ -14,6 +14,10 @@ import * as XLSX from "xlsx";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
+import {
+  PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
+  shouldPinPortfolioGridLeadColumns,
+} from "./portfolio-grid-helpers";
 import PortfolioSectionHeader from "./portfolio-section-header";
 import PortfolioModuleState from "./portfolio-module-state";
 
@@ -88,12 +92,12 @@ export default function PortfolioHoldingsGrid({
 }: HoldingsGridProps) {
   const gridApiRef = useRef<GridApi<HoldingsRow> | null>(null);
   const [chooserAnchor, setChooserAnchor] = useState<HTMLElement | null>(null);
-  const [pinImportantColumns] = useState(true);
   const [columnVisibility, setColumnVisibility] = useState<Record<HoldingsColumnKey, boolean>>(() =>
     columnMode === "essential"
       ? { ...DEFAULT_COLUMN_VISIBILITY, sector: false, heldSince: false, isin: false }
       : { ...DEFAULT_COLUMN_VISIBILITY, sector: true, heldSince: true }
   );
+  const pinImportantColumns = shouldPinPortfolioGridLeadColumns(columnMode);
 
   const rowData = useMemo<HoldingsRow[]>(
     () =>
@@ -126,7 +130,7 @@ export default function PortfolioHoldingsGrid({
         field: "instrument",
         pinned: pinImportantColumns ? "left" : null,
         hide: !columnVisibility.instrument,
-        minWidth: 220,
+        minWidth: 190,
         flex: 2,
       }),
       buildHoldingsColumn({
@@ -135,7 +139,7 @@ export default function PortfolioHoldingsGrid({
         field: "assetClass",
         pinned: pinImportantColumns ? "left" : null,
         hide: !columnVisibility.assetClass,
-        minWidth: 140,
+        minWidth: 126,
         flex: 1.1,
       }),
       buildHoldingsColumn({
@@ -144,7 +148,7 @@ export default function PortfolioHoldingsGrid({
         field: "quantity",
         type: "numericColumn",
         hide: !columnVisibility.quantity,
-        minWidth: 120,
+        minWidth: 104,
         valueFormatter: ({ value }) => formatQuantity(value),
       }),
       buildHoldingsColumn({
@@ -153,7 +157,7 @@ export default function PortfolioHoldingsGrid({
         field: "price",
         type: "numericColumn",
         hide: !columnVisibility.price,
-        minWidth: 120,
+        minWidth: 108,
         valueFormatter: ({ value, data }) =>
           value === null || value === undefined ? "—" : formatCurrency(value, data?.currency ?? baseCurrency),
       }),
@@ -163,7 +167,7 @@ export default function PortfolioHoldingsGrid({
         field: "marketValue",
         type: "numericColumn",
         hide: !columnVisibility.marketValue,
-        minWidth: 145,
+        minWidth: 132,
         valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
       }),
       buildHoldingsColumn({
@@ -172,7 +176,7 @@ export default function PortfolioHoldingsGrid({
         field: "weight",
         type: "numericColumn",
         hide: !columnVisibility.weight,
-        minWidth: 110,
+        minWidth: 98,
         valueFormatter: ({ value }) => formatPct(value),
       }),
       buildHoldingsColumn({
@@ -181,7 +185,7 @@ export default function PortfolioHoldingsGrid({
         field: "upl",
         type: "numericColumn",
         hide: !columnVisibility.upl,
-        minWidth: 160,
+        minWidth: 138,
         valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
       }),
       buildHoldingsColumn({
@@ -189,21 +193,21 @@ export default function PortfolioHoldingsGrid({
         headerName: "Currency",
         field: "currency",
         hide: !columnVisibility.currency,
-        minWidth: 110,
+        minWidth: 92,
       }),
       buildHoldingsColumn({
         key: "sector",
         headerName: "Sector",
         field: "sector",
         hide: !columnVisibility.sector,
-        minWidth: 140,
+        minWidth: 118,
       }),
       buildHoldingsColumn({
         key: "heldSince",
         headerName: "Held Since",
         field: "heldSince",
         hide: !columnVisibility.heldSince,
-        minWidth: 130,
+        minWidth: 116,
         valueFormatter: ({ value }) => formatDate(value),
       }),
       buildHoldingsColumn({
@@ -211,7 +215,7 @@ export default function PortfolioHoldingsGrid({
         headerName: "ISIN",
         field: "isin",
         hide: !columnVisibility.isin,
-        minWidth: 150,
+        minWidth: 128,
       }),
     ],
     [baseCurrency, columnVisibility, pinImportantColumns]
@@ -303,6 +307,7 @@ export default function PortfolioHoldingsGrid({
             rowData={rowData}
             columnDefs={columnDefs}
             theme="legacy"
+            autoSizeStrategy={PORTFOLIO_GRID_AUTO_SIZE_STRATEGY}
             defaultColDef={DEFAULT_GRID_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"
