@@ -12,10 +12,10 @@ import MenuItem from "@mui/material/MenuItem";
 import * as XLSX from "xlsx";
 
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
+import { WorkspaceStatusPanel } from "@/design-system";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
-import PortfolioDetailGridState from "./portfolio-detail-grid-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -288,7 +288,7 @@ export default function PortfolioHoldingsGrid({
       {rowData.length ? (
         <>
           {unpricedCount ? (
-            <PortfolioDetailGridState
+            <WorkspaceStatusPanel
               state="partial"
               title="Holdings partially valued"
               body={`${formatCount(unpricedCount, "holding")} is missing current price or valuation data.`}
@@ -322,7 +322,7 @@ export default function PortfolioHoldingsGrid({
         </div>
         </>
       ) : (
-        <PortfolioDetailGridState
+        <WorkspaceStatusPanel
           state="empty"
           title="No holdings in this portfolio"
           body="The holdings inventory is empty."
@@ -332,7 +332,7 @@ export default function PortfolioHoldingsGrid({
               "Holdings require booked positions or funded balances. Until inventory is booked into the portfolio, the holdings grid stays empty.",
             label: "Why holdings are unavailable",
           }}
-          actions={
+          action={
             <>
               <a href={`/workbench?portfolioId=${encodeURIComponent(portfolioId)}`}>Book first trade</a>
               <a href={`/portfolio?portfolioId=${encodeURIComponent(portfolioId)}#portfolio-attention`}>Review readiness</a>

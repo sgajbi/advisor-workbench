@@ -19,6 +19,7 @@ import {
   WorkbenchSectionStack,
   WorkstationShell,
   WorkspaceGrid,
+  WorkspaceCapabilityPanel,
 } from "@/design-system";
 
 import {
@@ -69,7 +70,6 @@ import {
   getYearToDateActivityAmount,
 } from "../view-model";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
-import PortfolioCapabilityState from "./portfolio-capability-state";
 import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-section";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
@@ -994,7 +994,7 @@ function PortfolioInsightsSection({
                 onSelectionChange={onSelectAllocation}
               />
             ) : (
-              <PortfolioCapabilityState
+              <WorkspaceCapabilityPanel
                 capability={capabilities.allocation}
                 partialTitle="Allocation is partially available"
                 unavailableTitle="No allocation data yet"
@@ -1064,7 +1064,7 @@ function PortfolioInsightsSection({
                 onSelectionChange={onSelectTopHolding}
               />
             ) : (
-              <PortfolioCapabilityState
+              <WorkspaceCapabilityPanel
                 capability={capabilities.topHoldings}
                 partialTitle="Top holdings are not ranked yet"
                 unavailableTitle="No holdings yet"

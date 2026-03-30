@@ -12,14 +12,17 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { WorkbenchInlineRefreshNote, WorkbenchLoadingState } from "@/design-system";
+import {
+  WorkbenchInlineRefreshNote,
+  WorkbenchLoadingState,
+  WorkspaceStatusPanel,
+} from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
-import PortfolioDetailGridState from "./portfolio-detail-grid-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -331,7 +334,7 @@ export default function PortfolioTransactionsGrid({
         />
       ) : rowData.length ? (
         <>
-          <PortfolioDetailGridState
+          <WorkspaceStatusPanel
             state="partial"
             title="Transaction lifecycle detail is limited"
             body="Trade activity is available, but the current contract does not expose settlement dates."
@@ -361,31 +364,31 @@ export default function PortfolioTransactionsGrid({
         </div>
         </>
       ) : loadError ? (
-        <PortfolioDetailGridState
+        <WorkspaceStatusPanel
           state="error"
           title="Transaction history unavailable"
           body="We could not load the transaction ledger for the selected period."
           hint="Retry the request or narrow the date window. If the issue persists, check upstream ledger availability."
         />
       ) : externalFilter ? (
-        <PortfolioDetailGridState
+        <WorkspaceStatusPanel
           state="empty"
           title="No matching transactions in view"
           body="The current drill-down does not match any transactions in the selected ledger window."
           hint="Clear the drill-down or widen the period to inspect a broader transaction history."
-          actions={
+          action={
             <Button size="small" variant="text" onClick={onClearExternalFilter}>
               Clear drill-down
             </Button>
           }
         />
       ) : (
-        <PortfolioDetailGridState
+        <WorkspaceStatusPanel
           state="empty"
           title="No transactions booked"
           body="No funding, trading, or cash activity has been recorded in the selected window."
           hint="Start with a funding entry or the first trade."
-          actions={
+          action={
             <a href={`/workbench?portfolioId=${encodeURIComponent(portfolioId)}`}>Book first transaction</a>
           }
         />

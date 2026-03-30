@@ -226,7 +226,7 @@ describe("portfolio data grids", () => {
   });
 
   it("shows an empty-state CTA for holdings with no rows", () => {
-    render(
+    const { container } = render(
       <PortfolioHoldingsGrid
         portfolioId="MANUAL_PB_USD_001"
         positions={[]}
@@ -238,11 +238,12 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
   it("shows a partial state when some holdings are unpriced", () => {
-    render(
+    const { container } = render(
       <PortfolioHoldingsGrid
         portfolioId="MANUAL_PB_USD_001"
         positions={[
@@ -264,6 +265,7 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("Holdings partially valued")).toBeInTheDocument();
+    expect(container.querySelector(".module-state-panel-partial")).toBeTruthy();
     expect(screen.getByTestId("mock-grid")).toBeInTheDocument();
   });
 
@@ -273,7 +275,7 @@ describe("portfolio data grids", () => {
       vi.fn(async () => new Response("{}", { status: 500 }))
     );
 
-    render(
+    const { container } = render(
       <PortfolioTransactionsGrid
         portfolioId="MANUAL_PB_USD_001"
         baseCurrency="USD"
@@ -287,6 +289,7 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Transaction history unavailable")).toBeInTheDocument();
     });
+    expect(container.querySelector(".module-state-panel-error")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
@@ -316,7 +319,7 @@ describe("portfolio data grids", () => {
   });
 
   it("shows an empty drill-down state without mounting the transactions grid", async () => {
-    render(
+    const { container } = render(
       <PortfolioTransactionsGrid
         portfolioId="MANUAL_PB_USD_001"
         baseCurrency="USD"
@@ -345,6 +348,7 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
