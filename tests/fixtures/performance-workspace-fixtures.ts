@@ -314,6 +314,78 @@ export function buildPerformancePresentationScenario(options?: {
   };
 }
 
+export function buildSupportedPerformanceScenario() {
+  return buildPerformancePresentationScenario();
+}
+
+export function buildBenchmarkUnassignedPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    fixtureOptions: {
+      unassignedBenchmark: true,
+      unavailableSummarySeries: true,
+    },
+    capabilityOverrides: {
+      returnPath: {
+        state: "unavailable",
+        reason: "Published return observations are not available for the selected horizon.",
+      },
+      benchmarkComparison: {
+        state: "unavailable",
+        reason: "No benchmark is assigned to this mandate.",
+      },
+    },
+    workspaceOverrides: {
+      money_weighted_return: null,
+    },
+    selectedPerformanceOverrides: {
+      portfolio_return_pct: null,
+      benchmark_return_pct: null,
+      active_return_pct: null,
+      annualized_return_pct: null,
+      benchmark_id: null,
+      benchmark_return_source: null,
+      begin_market_value: null,
+      end_market_value: null,
+      net_cash_flow: null,
+    },
+    selectedBenchmarkCode: undefined,
+    selectedBenchmarkLabel: null,
+    hasMoneyWeightedReturn: false,
+  });
+}
+
+export function buildPartialBenchmarkPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    fixtureOptions: {
+      partialBenchmarkComparison: true,
+    },
+    capabilityOverrides: {
+      benchmarkComparison: {
+        state: "partial",
+        reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+      },
+    },
+  });
+}
+
+export function buildAggregateContributionPerformanceScenario() {
+  return buildPerformancePresentationScenario({
+    fixtureOptions: {
+      aggregateContributionOnly: true,
+    },
+    capabilityOverrides: {
+      contributionRanking: {
+        state: "partial",
+        reason: "Contribution exists, but only aggregate rows are available.",
+      },
+      contributionDetail: {
+        state: "partial",
+        reason: "Contribution exists, but only aggregate rows are available.",
+      },
+    },
+  });
+}
+
 export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
   return {
     correlation_id: "corr-performance",

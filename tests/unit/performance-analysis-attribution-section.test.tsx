@@ -5,8 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 import PerformanceAnalysisAttributionSection from "../../src/apps/performance/components/performance-analysis-attribution-section";
 import type { PerformanceAnalysisAttributionSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 import {
+  buildPartialBenchmarkPerformanceScenario,
   buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("../../src/apps/performance/components/performance-relative-segment-panel", () => ({
@@ -18,7 +19,7 @@ const supportedCapabilities = buildPerformanceCapabilities();
 function buildProps(
   overrides: Partial<PerformanceAnalysisAttributionSectionProps> = {}
 ): PerformanceAnalysisAttributionSectionProps {
-  const workspace = buildPerformanceWorkspace();
+  const workspace = buildSupportedPerformanceScenario().workspace;
   return {
     workspace,
     attributionDimension: "asset_class",
@@ -93,11 +94,13 @@ describe("PerformanceAnalysisAttributionSection", () => {
   });
 
   it("renders a partial-state panel when attribution coverage is incomplete", () => {
+    const scenario = buildPartialBenchmarkPerformanceScenario();
+
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
           capabilities: {
-            ...supportedCapabilities,
+            ...scenario.capabilities,
             attributionDetail: {
               state: "partial",
               reason: "Benchmark-relative attribution is incomplete for the current selection.",

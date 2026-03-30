@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
 import {
+  buildAggregateContributionPerformanceScenario,
   buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 const supportedCapabilities = buildPerformanceCapabilities();
@@ -14,7 +15,7 @@ const supportedCapabilities = buildPerformanceCapabilities();
 function buildProps(
   overrides: Partial<PerformanceSummaryContributorsSectionProps> = {}
 ): PerformanceSummaryContributorsSectionProps {
-  const workspace = buildPerformanceWorkspace();
+  const workspace = buildSupportedPerformanceScenario().workspace;
   return {
     workspace,
     capabilities: supportedCapabilities,
@@ -84,16 +85,12 @@ describe("PerformanceSummaryContributorsSection", () => {
   });
 
   it("renders a partial-state panel when only aggregate contributor support exists", () => {
+    const scenario = buildAggregateContributionPerformanceScenario();
+
     render(
       <PerformanceSummaryContributorsSection
         {...buildProps({
-          capabilities: {
-            ...supportedCapabilities,
-            contributionRanking: {
-              state: "partial",
-              reason: "Contribution exists, but only aggregate rows are available.",
-            },
-          },
+          capabilities: scenario.capabilities,
           positivePositionContributors: [],
           negativePositionContributors: [],
         })}

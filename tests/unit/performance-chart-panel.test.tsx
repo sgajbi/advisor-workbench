@@ -4,8 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import PerformanceChartPanel from "../../src/apps/performance/components/performance-chart-panel";
 import {
-  buildPerformanceCapabilities,
-  buildPerformanceWorkspace,
+  buildBenchmarkUnassignedPerformanceScenario,
+  buildPartialBenchmarkPerformanceScenario,
+  buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("echarts-for-react", () => ({
@@ -14,12 +15,11 @@ vi.mock("echarts-for-react", () => ({
   ),
 }));
 
-const supportedCapabilities = buildPerformanceCapabilities();
-
 function buildChartProps(
   overrides: Partial<React.ComponentProps<typeof PerformanceChartPanel>> = {}
 ): React.ComponentProps<typeof PerformanceChartPanel> {
-  const workspace = buildPerformanceWorkspace("DEMO_ADV_USD_001");
+  const scenario = buildSupportedPerformanceScenario();
+  const workspace = { ...scenario.workspace, portfolio_id: "DEMO_ADV_USD_001" };
   return {
     title: "Net Return Path",
     points: workspace.net_chart,
@@ -38,7 +38,7 @@ function buildChartProps(
     benchmarkOptions: workspace.benchmark_options,
     reportStartDate: workspace.report_start_date,
     reportEndDate: workspace.report_end_date,
-    capabilities: supportedCapabilities,
+    capabilities: scenario.capabilities,
     onRequestChange: vi.fn(),
     ...overrides,
   };
@@ -156,6 +156,8 @@ describe("PerformanceChartPanel", () => {
   });
 
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
+    const scenario = buildBenchmarkUnassignedPerformanceScenario();
+
     render(
       <PerformanceChartPanel
         {...buildChartProps({
@@ -166,11 +168,7 @@ describe("PerformanceChartPanel", () => {
             active_return_pct: null,
           },
           capabilities: {
-            ...supportedCapabilities,
-            returnPath: {
-              state: "unavailable",
-              reason: "Published return observations are not available for the selected horizon.",
-            },
+            ...scenario.capabilities,
           },
         })}
       />
@@ -188,6 +186,8 @@ describe("PerformanceChartPanel", () => {
   });
 
   it("renders a compact benchmark-unassigned state without weak placeholders", () => {
+    const scenario = buildBenchmarkUnassignedPerformanceScenario();
+
     render(
       <PerformanceChartPanel
         {...buildChartProps({
@@ -213,19 +213,19 @@ describe("PerformanceChartPanel", () => {
           benchmark: undefined,
           benchmarkOptions: [],
           capabilities: {
-            ...supportedCapabilities,
-            benchmarkComparison: {
-              state: "unavailable",
-              reason: "No benchmark is assigned to this mandate.",
-            },
+            ...scenario.capabilities,
+            returnPath: { state: "supported" },
           },
         })}
       />
     );
 
-    expect(
-      screen.getByText((_, element) => element?.textContent === "Benchmark unassigned")
-    ).toBeInTheDocument();
+    const benchmarkState = screen
+      .getByText("No benchmark is assigned to this mandate.")
+      .closest(".performance-chart-benchmark-state");
+
+    expect(benchmarkState).not.toBeNull();
+    expect(benchmarkState).toHaveTextContent("Benchmark unassigned");
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       "Compared against Unassigned"
@@ -237,6 +237,8 @@ describe("PerformanceChartPanel", () => {
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {
+    const scenario = buildPartialBenchmarkPerformanceScenario();
+
     render(
       <PerformanceChartPanel
         {...buildChartProps({
@@ -267,13 +269,7 @@ describe("PerformanceChartPanel", () => {
               is_assigned: true,
             },
           ],
-          capabilities: {
-            ...supportedCapabilities,
-            benchmarkComparison: {
-              state: "partial",
-              reason: "A benchmark is assigned, but benchmark-relative returns are incomplete.",
-            },
-          },
+          capabilities: scenario.capabilities,
         })}
       />
     );
@@ -291,6 +287,8 @@ describe("PerformanceChartPanel", () => {
   });
 
   it("renders a partial capability notice when return observations are incomplete", () => {
+    const scenario = buildPartialBenchmarkPerformanceScenario();
+
     render(
       <PerformanceChartPanel
         {...buildChartProps({
@@ -301,7 +299,7 @@ describe("PerformanceChartPanel", () => {
             active_return_pct: null,
           },
           capabilities: {
-            ...supportedCapabilities,
+            ...scenario.capabilities,
             returnPath: {
               state: "partial",
               reason: "Return observations are only partially published for the selected horizon.",
