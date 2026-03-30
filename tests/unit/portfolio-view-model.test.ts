@@ -215,6 +215,7 @@ describe("portfolio view model", () => {
     expect(resolveTimeWindowStartDate("2026-02-24", "MTD", "2024-01-01")).toBe("2026-02-01");
     expect(resolveTimeWindowStartDate("2026-05-24", "QTD", "2024-01-01")).toBe("2026-04-01");
     expect(resolveTimeWindowStartDate("2026-02-24", "YTD", "2024-01-01")).toBe("2026-01-01");
+    expect(resolveTimeWindowStartDate("2026-02-24", "1Y", "2024-01-01")).toBe("2025-02-25");
     expect(resolveTimeWindowStartDate("2026-02-24", "SI", "2024-01-01")).toBe("2024-01-01");
   });
 

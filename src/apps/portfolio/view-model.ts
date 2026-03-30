@@ -329,6 +329,7 @@ export function resolveTimeWindowStartDate(
       break;
     case "1Y":
       start.setUTCFullYear(start.getUTCFullYear() - 1);
+      start.setUTCDate(start.getUTCDate() + 1);
       break;
     case "SI":
       return inceptionDate ?? asOfDate;
