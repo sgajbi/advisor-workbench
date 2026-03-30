@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalysisMode from "../../src/apps/performance/components/performance-analysis-mode";
 import {
-  buildPerformanceCapabilities,
+  buildAggregateContributionPerformanceScenario,
   buildSupportedPerformanceScenario,
   buildUnavailableContributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
@@ -17,24 +17,20 @@ vi.mock("../../src/apps/performance/components/performance-analysis-attribution-
   default: () => <div data-testid="attribution-section">Attribution Detail Section</div>,
 }));
 
-const supportedCapabilities = buildPerformanceCapabilities();
-
-function buildWorkspace() {
-  return buildSupportedPerformanceScenario().workspace;
-}
-
 describe("PerformanceAnalysisMode", () => {
-  it("renders analysis modules and contribution detail with local and FX columns", () => {
+  it("renders supported analysis modules from the shared supported scenario", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
     render(
       <PerformanceAnalysisMode
-        workspace={buildWorkspace()}
+        workspace={scenario.workspace}
         period="YTD"
         detailBasis="NET"
         contributionDimension="asset_class"
         attributionDimension="asset_class"
         chartFrequency="monthly"
         benchmark="BMK_1"
-        capabilities={supportedCapabilities}
+        capabilities={scenario.capabilities}
         relativeSegmentRows={[]}
         topAttributionEffectRows={[]}
         attributionEffectScale={0.01}
@@ -54,7 +50,7 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getByText("Equity")).toBeInTheDocument();
   });
 
-  it("shows the contribution loading message when analysis detail is still pending", () => {
+  it("shows the shared loading state when analysis detail is still pending", () => {
     const scenario = buildUnavailableContributionPerformanceScenario();
 
     render(
@@ -84,9 +80,12 @@ describe("PerformanceAnalysisMode", () => {
     expect(
       screen.getByText("Loading contribution detail for the selected segment and horizon.")
     ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-loading .module-state-panel")
+    ).toBeTruthy();
   });
 
-  it("renders a shared capability notice when contribution detail is unavailable", () => {
+  it("renders shared unavailable analysis state from the contribution scenario", () => {
     const scenario = buildUnavailableContributionPerformanceScenario();
 
     render(
@@ -113,6 +112,41 @@ describe("PerformanceAnalysisMode", () => {
     );
 
     expect(screen.getByText("Contribution detail unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Contribution detail is not available for the current selection.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Contribution detail is not available for the current selection.")
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
+  });
+
+  it("renders partial contribution state from the aggregate-only scenario", () => {
+    const scenario = buildAggregateContributionPerformanceScenario();
+
+    render(
+      <PerformanceAnalysisMode
+        workspace={scenario.workspace}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark="BMK_1"
+        capabilities={scenario.capabilities}
+        relativeSegmentRows={[]}
+        topAttributionEffectRows={[]}
+        attributionEffectScale={0.01}
+        isUpdating={false}
+        isDetailsPending={false}
+      />
+    );
+
+    expect(screen.getByText("Contribution detail is partial")).toBeInTheDocument();
+    expect(
+      screen.getByText("Contribution exists, but only aggregate rows are available.")
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
+    ).toBeTruthy();
   });
 });

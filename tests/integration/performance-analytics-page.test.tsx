@@ -8,7 +8,9 @@ import {
   buildBenchmarkUnassignedPerformanceScenario,
   buildCombinedPartialPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
+  buildSupportedPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
+  buildUnavailableContributionPerformanceScenario,
   type PerformancePresentationScenario,
 } from "../fixtures/performance-workspace-fixtures";
 import {
@@ -248,6 +250,58 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
   });
+
+  it.each([
+    {
+      name: "supported analysis",
+      scenario: buildSupportedPerformanceScenario(),
+      expectations: ["Attribution Over Time", "Attribution Detail", "Contribution Detail"],
+      absent: ["Attribution detail unavailable", "Contribution detail unavailable"],
+    },
+    {
+      name: "unavailable attribution analysis",
+      scenario: buildUnavailableAttributionPerformanceScenario(),
+      expectations: ["Attribution detail unavailable"],
+      absent: ["Relative Segment Matrix"],
+    },
+    {
+      name: "unavailable contribution analysis",
+      scenario: buildUnavailableContributionPerformanceScenario(),
+      expectations: [
+        "Contribution detail unavailable",
+        "Contribution detail is not available for the current selection.",
+      ],
+      absent: ["AAPL", "Contribution detail is partial"],
+    },
+    {
+      name: "combined partial analysis",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      expectations: [
+        "Attribution detail unavailable",
+        "Contribution Detail",
+      ],
+      absent: ["Contribution detail is partial", "AAPL"],
+    },
+  ])(
+    "renders a contract-backed analysis scenario matrix for $name",
+    async ({ scenario, expectations, absent }) => {
+      installPerformancePageFetchScenario(scenario);
+
+      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+      fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+      for (const text of expectations) {
+        expect(await screen.findByText(text)).toBeInTheDocument();
+      }
+
+      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(1);
+
+      for (const text of absent) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+    }
+  );
 
   it("renders an evidence placeholder when evidence mode is selected", async () => {
     installPerformancePageFetchMock();
