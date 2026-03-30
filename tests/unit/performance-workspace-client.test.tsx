@@ -8,10 +8,17 @@ import type {
   WorkbenchPerformanceWorkspace,
 } from "../../src/features/workbench/types";
 import PerformanceWorkspaceClient from "../../src/apps/performance/components/performance-workspace-client";
+import {
+  buildPerformanceWorkspaceDetails,
+  buildPerformanceWorkspaceSummary,
+} from "../fixtures/performance-workspace-fixtures";
 
 const replaceMock = vi.fn();
 const getSummaryClientMock = vi.fn();
 const getDetailsClientMock = vi.fn();
+const DEFAULT_PORTFOLIO_RETURN = String(
+  buildPerformanceWorkspaceSummary().net_performance.portfolio_return_pct
+);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -77,55 +84,7 @@ function buildSummary(
   overrides: Partial<WorkbenchPerformanceWorkspaceSummary> = {}
 ): WorkbenchPerformanceWorkspaceSummary {
   return {
-    correlation_id: "corr",
-    contract_version: "v1",
-    portfolio_id: "PF_1001",
-    as_of_date: "2026-03-27",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-03-27",
-    chart_frequency: "monthly",
-    detail_basis: "NET",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    benchmark_options: [
-      {
-        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-        benchmark_name: "Global Balanced 60/40",
-        is_assigned: true,
-      },
-    ],
-    portfolio: {
-      portfolio_id: "PF_1001",
-      client_id: "CIF_1",
-      base_currency: "USD",
-      booking_center_code: "SG",
-    },
-    overview: {
-      market_value_base: 1000000,
-      cash_weight_pct: 5,
-      position_count: 10,
-    },
-    net_performance: {
-      metric_basis: "NET",
-      portfolio_return_pct: 2.1,
-      benchmark_return_pct: 1.8,
-      active_return_pct: 0.3,
-      annualized_return_pct: 2.1,
-      benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: "calculated",
-    },
-    gross_performance: {
-      metric_basis: "GROSS",
-      portfolio_return_pct: 2.3,
-      benchmark_return_pct: 1.8,
-      active_return_pct: 0.5,
-      annualized_return_pct: 2.3,
-      benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: "calculated",
-    },
-    money_weighted_return: null,
-    warnings: [],
-    partial_failures: [],
+    ...buildPerformanceWorkspaceSummary(),
     ...overrides,
   };
 }
@@ -134,38 +93,7 @@ function buildDetails(
   overrides: Partial<WorkbenchPerformanceWorkspaceDetails> = {}
 ): WorkbenchPerformanceWorkspaceDetails {
   return {
-    correlation_id: "corr",
-    contract_version: "v1",
-    portfolio_id: "PF_1001",
-    as_of_date: "2026-03-27",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-03-27",
-    chart_frequency: "monthly",
-    contribution_dimension: "asset_class",
-    attribution_dimension: "asset_class",
-    detail_basis: "NET",
-    segment: "asset_class",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    net_chart: [
-      {
-        label: "2026-03",
-        frequency: "monthly",
-        period_start: "2026-03-01",
-        period_end: "2026-03-27",
-        portfolio_return_pct: 2.1,
-        benchmark_return_pct: 1.8,
-        active_return_pct: 0.3,
-        cumulative_portfolio_return_pct: 2.1,
-        cumulative_benchmark_return_pct: 1.8,
-        cumulative_active_return_pct: 0.3,
-      },
-    ],
-    gross_chart: [],
-    contribution: null,
-    attribution: null,
-    warnings: [],
-    partial_failures: [],
+    ...buildPerformanceWorkspaceDetails(),
     ...overrides,
   };
 }
@@ -220,7 +148,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
     });
 
-    expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+    expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
 
     await act(async () => {
       screen.getByRole("button", { name: "Switch 3Y" }).click();
@@ -240,7 +168,7 @@ describe("PerformanceWorkspaceClient", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("period")).toHaveTextContent("YTD");
-      expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+      expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
     });
 
     await act(async () => {
@@ -332,7 +260,7 @@ describe("PerformanceWorkspaceClient", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("period")).toHaveTextContent("YTD");
-      expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+      expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
     });
 
     await act(async () => {
@@ -356,7 +284,7 @@ describe("PerformanceWorkspaceClient", () => {
     });
 
     expect(screen.getByTestId("period")).toHaveTextContent("YTD");
-    expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+    expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
   });
 
   it("refreshes only the details contract for analytic-only control changes", async () => {
@@ -442,7 +370,7 @@ describe("PerformanceWorkspaceClient", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("period")).toHaveTextContent("3Y");
-      expect(screen.getByTestId("return")).toHaveTextContent("2.1");
+      expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
       expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("true");
     });

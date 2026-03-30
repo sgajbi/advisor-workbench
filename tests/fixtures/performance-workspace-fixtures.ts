@@ -1,0 +1,315 @@
+import type {
+  WorkbenchPerformanceWorkspaceDetails,
+  WorkbenchPerformanceWorkspaceSummary,
+} from "../../src/features/workbench/types";
+
+export type PerformanceFixtureOptions = {
+  unassignedBenchmark?: boolean;
+  unavailableSummarySeries?: boolean;
+  partialBenchmarkComparison?: boolean;
+  aggregateContributionOnly?: boolean;
+  unavailableAttribution?: boolean;
+};
+
+export function buildPerformanceWorkspaceSummary(
+  portfolioId = "PF_1001",
+  options?: PerformanceFixtureOptions
+): WorkbenchPerformanceWorkspaceSummary {
+  return {
+    correlation_id: "corr-performance",
+    contract_version: "v1",
+    portfolio_id: portfolioId,
+    as_of_date: "2026-02-24",
+    period: "YTD",
+    report_start_date: "2026-01-01",
+    report_end_date: "2026-02-24",
+    chart_frequency: "monthly",
+    detail_basis: "NET",
+    benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+    benchmark_options: options?.unassignedBenchmark
+      ? []
+      : [
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ],
+    portfolio: {
+      portfolio_id: portfolioId,
+      client_id: "CIF_1001",
+      base_currency: "USD",
+      booking_center_code: "SG",
+    },
+    overview: {
+      market_value_base: 1250000,
+      cash_weight_pct: 6.8,
+      position_count: 18,
+    },
+    net_performance: {
+      metric_basis: "NET",
+      portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.42,
+      benchmark_return_pct:
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 4.91,
+      active_return_pct:
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 0.52,
+      annualized_return_pct: options?.unavailableSummarySeries ? null : 5.42,
+      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
+      begin_market_value: 1200000,
+      end_market_value: 1250000,
+      net_cash_flow: 42000,
+    },
+    gross_performance: {
+      metric_basis: "GROSS",
+      portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.88,
+      benchmark_return_pct:
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 5.12,
+      active_return_pct:
+        options?.unassignedBenchmark ||
+        options?.unavailableSummarySeries ||
+        options?.partialBenchmarkComparison
+          ? null
+          : 0.76,
+      annualized_return_pct: options?.unavailableSummarySeries ? null : 5.88,
+      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
+      begin_market_value: 1200000,
+      end_market_value: 1250000,
+      net_cash_flow: 42000,
+    },
+    money_weighted_return: {
+      money_weighted_return_pct: 5.12,
+      annualized_return_pct: 5.12,
+      method: "XIRR",
+      start_date: "2026-01-01",
+      end_date: "2026-02-24",
+      notes: ["cash-flow aware"],
+    },
+    warnings: [],
+    partial_failures: [],
+  };
+}
+
+export function buildPerformanceWorkspaceDetails(
+  portfolioId = "PF_1001",
+  options?: PerformanceFixtureOptions
+): WorkbenchPerformanceWorkspaceDetails {
+  return {
+    correlation_id: "corr-performance",
+    contract_version: "v1",
+    portfolio_id: portfolioId,
+    as_of_date: "2026-02-24",
+    period: "YTD",
+    report_start_date: "2026-01-01",
+    report_end_date: "2026-02-24",
+    chart_frequency: "monthly",
+    contribution_dimension: "asset_class",
+    attribution_dimension: "asset_class",
+    detail_basis: "NET",
+    segment: "asset_class",
+    benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+    net_chart: options?.unavailableSummarySeries
+      ? []
+      : [
+          {
+            label: "2026-01",
+            frequency: "monthly",
+            period_start: "2026-01-01",
+            period_end: "2026-01-31",
+            portfolio_return_pct: 2.2,
+            benchmark_return_pct: options?.partialBenchmarkComparison ? null : 1.9,
+            active_return_pct: options?.partialBenchmarkComparison ? null : 0.3,
+            cumulative_portfolio_return_pct: 2.2,
+            cumulative_benchmark_return_pct: options?.partialBenchmarkComparison ? null : 1.9,
+            cumulative_active_return_pct: options?.partialBenchmarkComparison ? null : 0.3,
+          },
+        ],
+    gross_chart: [
+      {
+        label: "2026-01",
+        frequency: "monthly",
+        period_start: "2026-01-01",
+        period_end: "2026-01-31",
+        portfolio_return_pct: 2.4,
+        benchmark_return_pct: 2.0,
+        active_return_pct: 0.4,
+        cumulative_portfolio_return_pct: 2.4,
+        cumulative_benchmark_return_pct: 2.0,
+        cumulative_active_return_pct: 0.4,
+      },
+    ],
+    contribution: {
+      metric_basis: "NET",
+      weighting_scheme: "average_weight",
+      portfolio_contribution_pct: 5.42,
+      total_portfolio_return_pct: 5.42,
+      coverage_mv_pct: 98.7,
+      portfolio_local_contribution_pct: 4.8,
+      portfolio_fx_contribution_pct: 0.62,
+      position_rows: options?.aggregateContributionOnly
+        ? []
+        : [
+            {
+              position_id: "AAPL",
+              contribution_pct: 1.55,
+              weight_avg_pct: 24.1,
+              total_return_pct: 8.2,
+              local_contribution_pct: 1.18,
+              fx_contribution_pct: 0.37,
+            },
+          ],
+      levels: [
+        {
+          level: 1,
+          name: "asset_class",
+          total_contribution_pct: 5,
+          total_weight_avg_pct: 100,
+          total_portfolio_return_pct: 5.42,
+          rows: [
+            {
+              key_label: "Equity",
+              contribution_pct: 3.8,
+              weight_avg_pct: 61,
+              total_return_pct: 7.4,
+              local_contribution_pct: 3.4,
+              fx_contribution_pct: 0.4,
+              is_other: false,
+            },
+          ],
+        },
+      ],
+    },
+    attribution: options?.unavailableAttribution
+      ? null
+      : {
+          metric_basis: "NET",
+          model: "BF",
+          linking: "carino",
+          benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
+          active_return_pct: 0.52,
+          sum_of_effects_pct: 0.5,
+          residual_pct: 0.02,
+          levels: [
+            {
+              dimension: "asset_class",
+              allocation_total_pct: 0.18,
+              selection_total_pct: 0.24,
+              interaction_total_pct: 0.03,
+              total_effect_pct: 0.45,
+              rows: [
+                {
+                  key_label: "Equity",
+                  portfolio_weight_avg_pct: 61,
+                  benchmark_weight_avg_pct: 58,
+                  portfolio_return_pct: 7.4,
+                  benchmark_return_pct: 6.8,
+                  allocation_pct: 0.18,
+                  selection_pct: 0.24,
+                  interaction_pct: 0.03,
+                  total_effect_pct: 0.45,
+                },
+              ],
+            },
+          ],
+        },
+    warnings: [],
+    partial_failures: [],
+  };
+}
+
+export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
+  return {
+    correlation_id: "corr-performance",
+    contract_version: "v1",
+    portfolio_id: portfolioId,
+    as_of_date: "2026-02-24",
+    detail_basis: "NET",
+    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+    benchmark_options: [
+      {
+        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+        benchmark_name: "Global Balanced 60/40",
+        is_assigned: true,
+      },
+    ],
+    rows: [
+      {
+        period: "MTD",
+        portfolio_return_pct: 1.2,
+        benchmark_return_pct: 1.0,
+        active_return_pct: 0.2,
+        annualized_return_pct: 1.2,
+      },
+      {
+        period: "QTD",
+        portfolio_return_pct: 2.8,
+        benchmark_return_pct: 2.4,
+        active_return_pct: 0.4,
+        annualized_return_pct: 2.8,
+      },
+      {
+        period: "YTD",
+        portfolio_return_pct: 5.42,
+        benchmark_return_pct: 4.91,
+        active_return_pct: 0.51,
+        annualized_return_pct: 5.42,
+      },
+      {
+        period: "1Y",
+        portfolio_return_pct: 12.1,
+        benchmark_return_pct: 10.7,
+        active_return_pct: 1.4,
+        annualized_return_pct: 12.1,
+      },
+    ],
+    warnings: [],
+    partial_failures: [],
+  };
+}
+
+export function buildPerformanceAttributionTrend(portfolioId = "PF_1001") {
+  return {
+    correlation_id: "corr-performance",
+    contract_version: "v1",
+    portfolio_id: portfolioId,
+    as_of_date: "2026-02-24",
+    period: "YTD",
+    report_start_date: "2026-01-01",
+    report_end_date: "2026-02-24",
+    chart_frequency: "monthly",
+    detail_basis: "NET",
+    attribution_dimension: "asset_class",
+    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+    rows: [
+      {
+        period_label: "2026-01",
+        period_start: "2026-01-01",
+        period_end: "2026-01-31",
+        frequency: "monthly",
+        allocation_pct: 0.12,
+        selection_pct: 0.08,
+        interaction_pct: 0.02,
+        total_effect_pct: 0.22,
+        cumulative_total_effect_pct: 0.22,
+        active_return_pct: 0.22,
+        residual_pct: 0,
+      },
+    ],
+    warnings: [],
+    partial_failures: [],
+  };
+}
