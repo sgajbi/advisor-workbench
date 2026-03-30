@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import {
   buildPerformanceAttributionTrend,
   buildPerformanceHorizonComparison,
+  buildPerformanceHorizonComparisonForScenario,
   buildBenchmarkUnassignedPerformanceScenario,
   buildPerformanceWorkspaceDetails,
   buildPerformanceWorkspaceSummary,
@@ -112,7 +113,13 @@ export function installPerformancePageFetchScenario(
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/horizon-comparison`)) {
         return {
           ok: true,
-          json: async () => buildPerformanceHorizonComparison(portfolioId),
+          json: async () => buildPerformanceHorizonComparisonForScenario(
+            {
+              ...scenario,
+              workspace,
+            },
+            portfolioId
+          ),
         } as Response;
       }
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/attribution-trend`)) {

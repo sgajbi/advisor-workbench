@@ -56,6 +56,7 @@ type PerformanceSummaryScenario = {
   trustExpectations?: string[];
   deferredExpectations?: string[];
   contextExpectations?: string[];
+  horizonExpectations?: string[];
   absentTexts?: string[];
 };
 
@@ -304,6 +305,34 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
+  it("keeps deferred horizon and contributor modules coherent when multiple support gaps exist", async () => {
+    installPerformancePageFetchScenario(buildCombinedPartialPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+
+    const trustStrip = screen.getByLabelText("Trust and completeness strip");
+    expect(within(trustStrip).getAllByText("Partial").length).toBeGreaterThan(0);
+    expect(within(trustStrip).getAllByText("Unavailable").length).toBeGreaterThan(0);
+
+    const horizonTitles = await screen.findAllByText("How did this compare across horizons?");
+    expect(horizonTitles.length).toBeGreaterThan(0);
+    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      "Active return Unavailable"
+    );
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      "Compared against Global Balanced 60/40"
+    );
+    expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
+
+    expect((await screen.findAllByText("What drove the result?")).length).toBeGreaterThan(0);
+    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
+    expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
+  });
+
   it.each<PerformanceSummaryScenario>([
     {
       name: "benchmark-unassigned and return-series-unavailable",
@@ -314,7 +343,10 @@ describe("PerformanceAnalyticsPage", () => {
         "Published return observations are not available for the selected horizon.",
         "Unavailable",
       ],
-      deferredExpectations: ["Return series unavailable"],
+      deferredExpectations: [
+        "Return series unavailable",
+        "Comparative horizon summaries are not available for this mandate.",
+      ],
       absentTexts: ["Relative context Partial"],
     },
     {
@@ -326,6 +358,10 @@ describe("PerformanceAnalyticsPage", () => {
         "A benchmark is assigned, but benchmark-relative returns are incomplete.",
       ],
       contextExpectations: ["Relative context Partial", "Compared against Global Balanced 60/40"],
+      horizonExpectations: [
+        "Active return Unavailable",
+        "Compared against Global Balanced 60/40",
+      ],
       absentTexts: ["Benchmark unassigned"],
     },
     {
@@ -334,6 +370,7 @@ describe("PerformanceAnalyticsPage", () => {
       executiveExpectations: ["Money-Weighted Return"],
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
+      horizonExpectations: ["Active return 0.51%", "Compared against Global Balanced 60/40"],
       absentTexts: ["AAPL"],
     },
     {
@@ -348,6 +385,7 @@ describe("PerformanceAnalyticsPage", () => {
       ],
       deferredExpectations: ["Contributor ranking is partial"],
       contextExpectations: ["Relative context Partial", "Active return Unavailable"],
+      horizonExpectations: ["Active return Unavailable", "Compared against Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },
   ])(
@@ -358,6 +396,7 @@ describe("PerformanceAnalyticsPage", () => {
       trustExpectations = [],
       deferredExpectations = [],
       contextExpectations = [],
+      horizonExpectations = [],
       absentTexts = [],
     }) => {
       installPerformancePageFetchScenario(scenario);
@@ -385,6 +424,13 @@ describe("PerformanceAnalyticsPage", () => {
         const returnPathContext = await screen.findByRole("group", { name: "Return path context" });
         for (const text of contextExpectations) {
           expect(returnPathContext).toHaveTextContent(text);
+        }
+      }
+
+      if (horizonExpectations.length) {
+        const horizonContext = await screen.findByRole("group", { name: "Horizon comparison context" });
+        for (const text of horizonExpectations) {
+          expect(horizonContext).toHaveTextContent(text);
         }
       }
 

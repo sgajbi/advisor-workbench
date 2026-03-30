@@ -536,6 +536,41 @@ export function buildPerformanceHorizonComparison(portfolioId = "PF_1001") {
   };
 }
 
+export function buildPerformanceHorizonComparisonForScenario(
+  scenario: PerformancePresentationScenario,
+  portfolioId = scenario.workspace.portfolio.portfolio_id
+) {
+  const base = buildPerformanceHorizonComparison(portfolioId);
+  const benchmarkAssigned = Boolean(scenario.workspace.benchmark_code);
+  const hasReturnHistory =
+    scenario.capabilities.returnPath.state === "supported" &&
+    (scenario.workspace.net_chart?.length ?? 0) > 0;
+  const hasRelativeComparison =
+    benchmarkAssigned && scenario.capabilities.benchmarkComparison.state === "supported";
+
+  if (!hasReturnHistory) {
+    return {
+      ...base,
+      portfolio_id: portfolioId,
+      benchmark_code: scenario.workspace.benchmark_code ?? null,
+      benchmark_options: scenario.workspace.benchmark_options ?? [],
+      rows: [],
+    };
+  }
+
+  return {
+    ...base,
+    portfolio_id: portfolioId,
+    benchmark_code: scenario.workspace.benchmark_code ?? null,
+    benchmark_options: scenario.workspace.benchmark_options ?? [],
+    rows: base.rows.map((row) => ({
+      ...row,
+      benchmark_return_pct: hasRelativeComparison ? row.benchmark_return_pct : null,
+      active_return_pct: hasRelativeComparison ? row.active_return_pct : null,
+    })),
+  };
+}
+
 export function buildPerformanceAttributionTrend(portfolioId = "PF_1001") {
   return {
     correlation_id: "corr-performance",
