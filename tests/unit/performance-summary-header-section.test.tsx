@@ -151,6 +151,7 @@ describe("PerformanceSummaryHeaderSection", () => {
     expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("group", { name: "Performance summary observations" })).toBeInTheDocument();
     expect(screen.getByText("2 observations")).toBeInTheDocument();
     expect(screen.getByText("Relative measurement")).toBeInTheDocument();
   });

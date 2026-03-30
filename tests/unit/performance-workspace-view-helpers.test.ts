@@ -145,6 +145,14 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     expect(presentation.activeCard.support).toBe("No benchmark is assigned to this mandate.");
     expect(presentation.moneyWeightedCard.value).toBe("Unavailable");
     expect(presentation.contextCards.find((card) => card.label === "Benchmark")?.value).toBe("Unassigned");
+    expect(presentation.observationItems[2]).toMatchObject({
+      value: "Limited history",
+      tone: "warn",
+    });
+    expect(presentation.observationItems[3]).toMatchObject({
+      value: "No benchmark assigned",
+      tone: "warn",
+    });
   });
 
   it("builds relative performance presentation when benchmark analytics are supported", () => {
@@ -168,6 +176,14 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     expect(presentation.activeCard.value).toBe("0.25%");
     expect(presentation.moneyWeightedCard.support).toContain("Annualized 1.10%");
     expect(presentation.contextCards.find((card) => card.label === "Period")?.value).toBe("YTD");
+    expect(presentation.observationItems[2]).toMatchObject({
+      value: "1 observations",
+      tone: "success",
+    });
+    expect(presentation.observationItems[3]).toMatchObject({
+      value: "Relative measurement",
+      tone: "success",
+    });
   });
 
   it("builds executive return strip metrics for front-office first paint", () => {

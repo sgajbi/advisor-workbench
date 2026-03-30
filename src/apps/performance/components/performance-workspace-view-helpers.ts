@@ -1,4 +1,4 @@
-import type { WorkbenchStatusStripItem } from "@/design-system";
+import type { WorkbenchStatusRowItem, WorkbenchStatusStripItem } from "@/design-system";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
@@ -124,6 +124,20 @@ export type PerformanceTrustStripPresentation = {
   items: WorkbenchStatusStripItem[];
 };
 
+export type PerformanceSummaryHeaderPresentation = {
+  hasBenchmark: boolean;
+  hasHistory: boolean;
+  benchmarkValue: string;
+  benchmarkHint: string;
+  selectedBenchmarkCode?: string;
+  primaryReturnCard: SummaryMetricCard;
+  benchmarkCard: SummaryMetricCard;
+  activeCard: SummaryMetricCard;
+  moneyWeightedCard: SummaryMetricCard;
+  contextCards: SummaryMetricCard[];
+  observationItems: WorkbenchStatusRowItem[];
+};
+
 export function getPerformanceSummaryHeaderPresentation({
   workspace,
   detailBasis,
@@ -145,7 +159,7 @@ export function getPerformanceSummaryHeaderPresentation({
     | undefined;
   hasMoneyWeightedReturn: boolean;
   suspiciousMoneyWeightedReturn: boolean;
-}) {
+}): PerformanceSummaryHeaderPresentation {
   const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
   const hasHistory = capabilities.returnPath.state === "supported";
   const benchmarkValue = hasBenchmark ? selectedBenchmarkLabel ?? "Assigned" : "Unassigned";
@@ -247,6 +261,22 @@ export function getPerformanceSummaryHeaderPresentation({
     activeCard,
     moneyWeightedCard,
     contextCards,
+    observationItems: [
+      { value: `As of ${formatDate(workspace.as_of_date)}` },
+      { value: workspace.portfolio.base_currency },
+      {
+        value: hasHistory ? `${workspace.net_chart.length} observations` : "Limited history",
+        tone: hasHistory ? "success" : "warn",
+      },
+      {
+        value: hasBenchmark
+          ? "Relative measurement"
+          : selectedBenchmarkCode
+            ? "Benchmark unavailable"
+            : "No benchmark assigned",
+        tone: hasBenchmark ? "success" : "warn",
+      },
+    ],
   };
 }
 

@@ -33,6 +33,7 @@ import {
   WorkbenchPageFrame,
   WorkbenchPageHeader,
   WorkbenchRailCard,
+  WorkbenchStatusRow,
   WorkbenchSectionStack,
   WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
@@ -484,5 +485,25 @@ describe("design-system components", () => {
       "performance-trust-item-support"
     );
     expect(screen.getByText("Pending")).toHaveClass("performance-trust-item-chip");
+  });
+
+  it("renders the shared workbench status row with compact status chips", () => {
+    render(
+      <WorkbenchStatusRow
+        label="Observation status"
+        className="performance-observation-strip"
+        items={[
+          { value: "As of 2026-03-29" },
+          { value: "USD" },
+          { value: "2 observations", tone: "success" },
+          { value: "Relative measurement", tone: "success" },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("group", { name: "Observation status" })).toBeInTheDocument();
+    expect(screen.getByText("As of 2026-03-29")).toHaveClass("status-chip");
+    expect(screen.getByText("2 observations")).toHaveClass("status-chip", "success");
+    expect(screen.getByText("Relative measurement")).toHaveClass("status-chip", "success");
   });
 });

@@ -44,6 +44,8 @@ export {
   WorkbenchSectionStack,
 } from "./components/workbench-page-frame";
 export { default as WorkbenchRailCard } from "./components/workbench-rail-card";
+export { default as WorkbenchStatusRow } from "./components/workbench-status-row";
+export type { WorkbenchStatusRowItem } from "./components/workbench-status-row";
 export { default as WorkbenchStatusStrip } from "./components/workbench-status-strip";
 export type { WorkbenchStatusStripItem } from "./components/workbench-status-strip";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";

@@ -1,7 +1,6 @@
 import { Stack } from "@mui/material";
 
-import { AnalyticsSectionHeader, Panel, StatusChip } from "@/design-system";
-import { formatDate } from "../formatters";
+import { AnalyticsSectionHeader, Panel, WorkbenchStatusRow } from "@/design-system";
 import PerformanceCapabilityTrustStrip from "./performance-capability-trust-strip";
 import PerformanceExecutiveReturnStrip from "./performance-executive-return-strip";
 import type { PerformanceSummaryHeaderSectionProps } from "./performance-workspace-types";
@@ -48,20 +47,11 @@ export default function PerformanceSummaryHeaderSection({
             title={workspace.portfolio.portfolio_id}
             subtitle="Immediate front-office performance summary for the selected mandate"
           />
-          <div className="performance-observation-strip">
-            <StatusChip>As of {formatDate(workspace.as_of_date)}</StatusChip>
-            <StatusChip>{workspace.portfolio.base_currency}</StatusChip>
-            <StatusChip>
-              {presentation.hasHistory ? `${workspace.net_chart.length} observations` : "Limited history"}
-            </StatusChip>
-            <StatusChip>
-              {presentation.hasBenchmark
-                ? "Relative measurement"
-                : presentation.selectedBenchmarkCode
-                  ? "Benchmark unavailable"
-                  : "No benchmark assigned"}
-            </StatusChip>
-          </div>
+          <WorkbenchStatusRow
+            label="Performance summary observations"
+            className="performance-observation-strip"
+            items={presentation.observationItems}
+          />
         </Stack>
       </Panel>
       <PerformanceExecutiveReturnStrip presentation={executiveStrip} />
