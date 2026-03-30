@@ -54,7 +54,11 @@ vi.mock("../../src/apps/performance/components/performance-multi-horizon-panel",
 
 vi.mock("../../src/apps/performance/components/performance-summary-header-section", () => ({
   default: ({ selectedBenchmarkLabel }: { selectedBenchmarkLabel?: string | null }) => (
-    <div data-testid="summary-header">{selectedBenchmarkLabel ?? "no benchmark"}</div>
+    <div data-testid="summary-header">
+      <div>Executive return strip</div>
+      <div>Trust and completeness strip</div>
+      <div>{selectedBenchmarkLabel ?? "no benchmark"}</div>
+    </div>
   ),
 }));
 
@@ -191,6 +195,10 @@ describe("PerformanceSummaryMode", () => {
 
     expect(document.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     expect(screen.getByTestId("summary-header")).toHaveTextContent("Model 60/40");
+    expect(screen.getByText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByText("Trust and completeness strip")).toBeInTheDocument();
+    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(screen.getByText("Loading return path")).toBeInTheDocument();
     expect(screen.getByText("Loading horizons")).toBeInTheDocument();
     expect(screen.getByText("Loading contributors")).toBeInTheDocument();
@@ -202,6 +210,8 @@ describe("PerformanceSummaryMode", () => {
       expect(screen.getByTestId("chart-panel")).toHaveTextContent(
         "Gross Return Path:performance-trend"
       );
+      expect(screen.getByText("How did this compare across horizons?")).toBeInTheDocument();
+      expect(screen.getByText("What drove the result?")).toBeInTheDocument();
       expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent("PF_1001:GROSS:BMK_1");
       expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
     });

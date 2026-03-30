@@ -400,7 +400,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact.performance-summary-stage")).toBeTruthy();
+    expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
     expect(
@@ -408,6 +408,8 @@ describe("PerformanceAnalyticsPage", () => {
         "Benchmark-aware portfolio performance, attribution, and contribution analysis"
       )
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
   });
 
   it("renders performance content inside the workstation shell main region", async () => {
@@ -440,7 +442,16 @@ describe("PerformanceAnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
-    expect(document.querySelector(".performance-summary-stage.workbench-summary-module-card")).toBeTruthy();
+    expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
+    const executiveStrip = screen.getByLabelText("Executive return strip");
+    expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Basis")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Period")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Benchmark")).toBeInTheDocument();
+    expect(screen.getByText("Assigned")).toBeInTheDocument();
+    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
@@ -461,6 +472,17 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
+  });
+
+  it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
+    installPerformancePageFetchMock({ unassignedBenchmark: true, unavailableSummarySeries: true });
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect((await screen.findAllByText("Unassigned")).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Assign a benchmark to enable relative analytics.")).toBeInTheDocument();
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 
   it("shows analysis modules and hides summary-only modules when analysis mode is selected", async () => {
@@ -515,10 +537,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(
-      document.querySelector(".performance-summary-status-card .performance-summary-kpi-value")
-        ?.textContent
-    ).toBe("Unassigned");
+    expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(2);
     expect(
       screen.getByText("Assign a benchmark to enable relative analytics.")
     ).toBeInTheDocument();

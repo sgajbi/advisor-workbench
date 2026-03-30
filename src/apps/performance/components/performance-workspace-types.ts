@@ -57,7 +57,6 @@ export type PerformanceSummaryHeaderSectionProps = Pick<
   | "selectedBenchmarkCode"
   | "selectedBenchmarkLabel"
   | "selectedPerformance"
-  | "primaryDriver"
   | "hasMoneyWeightedReturn"
   | "suspiciousMoneyWeightedReturn"
 >;

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
-import { getPerformanceSummaryHeaderPresentation } from "../../src/apps/performance/components/performance-workspace-view-helpers";
+import {
+  getPerformanceExecutiveReturnPresentation,
+  getPerformanceSummaryHeaderPresentation,
+  getPerformanceTrustStripPresentation,
+} from "../../src/apps/performance/components/performance-workspace-view-helpers";
 import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
 
 const supportedCapabilities: PerformanceWorkspaceCapabilities = {
@@ -128,7 +132,6 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
         end_market_value: null,
         net_cash_flow: null,
       },
-      primaryDriver: null,
       hasMoneyWeightedReturn: false,
       suspiciousMoneyWeightedReturn: false,
     });
@@ -141,7 +144,7 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     expect(presentation.benchmarkCard.unavailable).toBe(true);
     expect(presentation.activeCard.support).toBe("No benchmark is assigned to this mandate.");
     expect(presentation.moneyWeightedCard.value).toBe("Unavailable");
-    expect(presentation.contextCards.find((card) => card.label === "Primary Contributor")?.value).toBe("Unavailable");
+    expect(presentation.contextCards.find((card) => card.label === "Benchmark")?.value).toBe("Unassigned");
   });
 
   it("builds relative performance presentation when benchmark analytics are supported", () => {
@@ -154,10 +157,6 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
       selectedBenchmarkCode: "BMK_1",
       selectedBenchmarkLabel: "Global Balanced 60/40",
       selectedPerformance: workspace.net_performance,
-      primaryDriver: {
-        key_label: "Equity",
-        contribution_pct: 0.9,
-      },
       hasMoneyWeightedReturn: true,
       suspiciousMoneyWeightedReturn: false,
     });
@@ -168,6 +167,46 @@ describe("getPerformanceSummaryHeaderPresentation", () => {
     expect(presentation.benchmarkCard.value).toBe("1.00%");
     expect(presentation.activeCard.value).toBe("0.25%");
     expect(presentation.moneyWeightedCard.support).toContain("Annualized 1.10%");
-    expect(presentation.contextCards.find((card) => card.label === "Primary Contributor")?.support).toContain("Contribution 0.90%");
+    expect(presentation.contextCards.find((card) => card.label === "Period")?.value).toBe("YTD");
+  });
+
+  it("builds executive return strip metrics for front-office first paint", () => {
+    const workspace = buildWorkspace();
+
+    const presentation = getPerformanceExecutiveReturnPresentation({
+      workspace,
+      detailBasis: "NET",
+      selectedPerformance: workspace.net_performance,
+      selectedBenchmarkLabel: "Global Balanced 60/40",
+      capabilities: supportedCapabilities,
+    });
+
+    expect(presentation.cards.map((card) => card.label)).toEqual([
+      "Portfolio Return",
+      "Benchmark Return",
+      "Active Return",
+      "Basis",
+      "Period",
+      "Benchmark",
+    ]);
+    expect(presentation.cards.find((card) => card.label === "Benchmark")?.value).toBe(
+      "Global Balanced 60/40"
+    );
+  });
+
+  it("builds compact trust-strip statuses from workspace capabilities", () => {
+    const presentation = getPerformanceTrustStripPresentation({
+      capabilities: {
+        ...supportedCapabilities,
+        contributionDetail: {
+          state: "partial",
+          reason: "Contribution exists, but only aggregate rows are available.",
+        },
+      },
+    });
+
+    expect(presentation.items.find((item) => item.label === "Benchmark")?.value).toBe("Assigned");
+    expect(presentation.items.find((item) => item.label === "Contribution")?.value).toBe("Partial");
+    expect(presentation.items.find((item) => item.label === "Evidence")?.value).toBe("Pending");
   });
 });

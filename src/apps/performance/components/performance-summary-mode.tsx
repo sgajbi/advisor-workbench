@@ -3,10 +3,12 @@ import dynamic from "next/dynamic";
 import {
   DeferredWorkbenchMount,
   DeferredModulePlaceholder,
+  AnalyticsSectionHeader,
   WorkspaceGrid,
 } from "@/design-system";
 
 import PerformanceSummaryHeaderSection from "./performance-summary-header-section";
+import PerformanceSummaryDriverSection from "./performance-summary-driver-section";
 import type { PerformanceSummaryModeProps } from "./performance-workspace-types";
 
 // Workbench discipline:
@@ -63,7 +65,6 @@ export default function PerformanceSummaryMode({
   selectedBenchmarkCode,
   selectedBenchmarkLabel,
   selectedPerformance,
-  primaryDriver,
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
   contributorScale,
@@ -79,77 +80,92 @@ export default function PerformanceSummaryMode({
         selectedBenchmarkCode={selectedBenchmarkCode}
         selectedBenchmarkLabel={selectedBenchmarkLabel}
         selectedPerformance={selectedPerformance}
-        primaryDriver={primaryDriver}
         hasMoneyWeightedReturn={hasMoneyWeightedReturn}
         suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
       />
 
       <WorkspaceGrid className="performance-chart-grid workbench-summary-region">
-        <DeferredWorkbenchMount
-          placeholder={
-            <DeferredModulePlaceholder
-              title="Loading return path"
-              message="Return path is loading after first paint."
-            />
-          }
-        >
-          <DeferredPerformanceChartPanel
-            title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
-            points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
-            summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
-            portfolioId={workspace.portfolio.portfolio_id}
-            period={period}
-            detailBasis={detailBasis}
-            contributionDimension={contributionDimension}
-            attributionDimension={attributionDimension}
-            chartFrequency={chartFrequency}
-            benchmark={benchmark}
-            benchmarkOptions={workspace.benchmark_options ?? []}
-            reportStartDate={workspace.report_start_date}
-            reportEndDate={workspace.report_end_date}
-            capabilities={capabilities}
-            onRequestChange={onRequestChange ?? (() => undefined)}
-            isUpdating={isUpdating}
-            isDetailsPending={isDetailsPending}
-            id="performance-trend"
+        <section className="performance-summary-context-section">
+          <AnalyticsSectionHeader
+            title="Return path and benchmark context"
+            subtitle="How the portfolio tracked against the selected benchmark over the current period."
           />
-        </DeferredWorkbenchMount>
+          <DeferredWorkbenchMount
+            placeholder={
+              <DeferredModulePlaceholder
+                title="Loading return path"
+                message="Return path is loading after first paint."
+              />
+            }
+          >
+            <DeferredPerformanceChartPanel
+              title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
+              points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
+              summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
+              portfolioId={workspace.portfolio.portfolio_id}
+              period={period}
+              detailBasis={detailBasis}
+              contributionDimension={contributionDimension}
+              attributionDimension={attributionDimension}
+              chartFrequency={chartFrequency}
+              benchmark={benchmark}
+              benchmarkOptions={workspace.benchmark_options ?? []}
+              reportStartDate={workspace.report_start_date}
+              reportEndDate={workspace.report_end_date}
+              capabilities={capabilities}
+              onRequestChange={onRequestChange ?? (() => undefined)}
+              isUpdating={isUpdating}
+              isDetailsPending={isDetailsPending}
+              id="performance-trend"
+            />
+          </DeferredWorkbenchMount>
+        </section>
       </WorkspaceGrid>
 
       <WorkspaceGrid className="performance-detail-grid workbench-summary-region">
-        <DeferredWorkbenchMount
-          placeholder={
-            <DeferredModulePlaceholder
-              title="Loading horizons"
-              message="Horizon comparisons are loading after first paint."
-            />
-          }
+        <PerformanceSummaryDriverSection
+          title="How did this compare across horizons?"
+          subtitle="Benchmark-aware return comparison across standard reporting windows."
         >
-          <DeferredPerformanceMultiHorizonPanel
-            portfolioId={workspace.portfolio.portfolio_id}
-            detailBasis={detailBasis}
-            benchmark={workspace.benchmark_code ?? benchmark}
-            chartFrequency={chartFrequency}
-            benchmarkOptions={workspace.benchmark_options ?? []}
-          />
-        </DeferredWorkbenchMount>
-        <DeferredWorkbenchMount
-          placeholder={
-            <DeferredModulePlaceholder
-              title="Loading contributors"
-              message="Contributor ranking is loading after first paint."
+          <DeferredWorkbenchMount
+            placeholder={
+              <DeferredModulePlaceholder
+                title="Loading horizons"
+                message="Horizon comparisons are loading after first paint."
+              />
+            }
+          >
+            <DeferredPerformanceMultiHorizonPanel
+              portfolioId={workspace.portfolio.portfolio_id}
+              detailBasis={detailBasis}
+              benchmark={workspace.benchmark_code ?? benchmark}
+              chartFrequency={chartFrequency}
+              benchmarkOptions={workspace.benchmark_options ?? []}
             />
-          }
+          </DeferredWorkbenchMount>
+        </PerformanceSummaryDriverSection>
+        <PerformanceSummaryDriverSection
+          title="What drove the result?"
+          subtitle="Top contributors and detractors for the current performance outcome."
         >
-          <DeferredPerformanceSummaryContributorsSection
-            workspace={workspace}
-            capabilities={capabilities}
-            contributorScale={contributorScale}
-            positivePositionContributors={positivePositionContributors}
-            negativePositionContributors={negativePositionContributors}
-            isDetailsPending={isDetailsPending}
-          />
-        </DeferredWorkbenchMount>
+          <DeferredWorkbenchMount
+            placeholder={
+              <DeferredModulePlaceholder
+                title="Loading contributors"
+                message="Contributor ranking is loading after first paint."
+              />
+            }
+          >
+            <DeferredPerformanceSummaryContributorsSection
+              workspace={workspace}
+              capabilities={capabilities}
+              contributorScale={contributorScale}
+              positivePositionContributors={positivePositionContributors}
+              negativePositionContributors={negativePositionContributors}
+              isDetailsPending={isDetailsPending}
+            />
+          </DeferredWorkbenchMount>
+        </PerformanceSummaryDriverSection>
       </WorkspaceGrid>
     </>
   );

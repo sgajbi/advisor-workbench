@@ -1,7 +1,8 @@
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
+import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
-import { formatLabel } from "../formatters";
+import { formatDate, formatLabel } from "../formatters";
 
 export const NOT_ADDITIVE_CELL = "—";
 
@@ -114,6 +115,19 @@ type SummaryMetricCard = {
   unavailable?: boolean;
 };
 
+export type PerformanceExecutiveReturnPresentation = {
+  cards: SummaryMetricCard[];
+};
+
+export type PerformanceTrustStripPresentation = {
+  items: Array<{
+    label: string;
+    value: string;
+    support?: string;
+    tone: "default" | "success" | "warn" | "danger";
+  }>;
+};
+
 export function getPerformanceSummaryHeaderPresentation({
   workspace,
   detailBasis,
@@ -121,7 +135,6 @@ export function getPerformanceSummaryHeaderPresentation({
   selectedBenchmarkCode,
   selectedBenchmarkLabel,
   selectedPerformance,
-  primaryDriver,
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
 }: {
@@ -134,10 +147,6 @@ export function getPerformanceSummaryHeaderPresentation({
     | WorkbenchPerformanceWorkspace["net_performance"]
     | WorkbenchPerformanceWorkspace["gross_performance"]
     | undefined;
-  primaryDriver: {
-    key_label: string;
-    contribution_pct: number;
-  } | null;
   hasMoneyWeightedReturn: boolean;
   suspiciousMoneyWeightedReturn: boolean;
 }) {
@@ -152,7 +161,7 @@ export function getPerformanceSummaryHeaderPresentation({
         : "Assign a benchmark to enable relative analytics.";
 
   const primaryReturnCard = buildMetricCard({
-    label: detailBasis === "GROSS" ? "Gross Return" : "Net Return",
+    label: "Portfolio Return",
     value:
       selectedPerformance?.portfolio_return_pct != null
         ? `${selectedPerformance.portfolio_return_pct.toFixed(2)}%`
@@ -214,52 +223,20 @@ export function getPerformanceSummaryHeaderPresentation({
 
   const contextCards: SummaryMetricCard[] = [
     buildMetricCard({
-      label: "Start MV",
-      value:
-        selectedPerformance?.begin_market_value != null
-          ? formatCurrencyValue(selectedPerformance.begin_market_value, workspace.portfolio.base_currency)
-          : "Unavailable",
-      support: "Opening market value for the selected horizon.",
-      unavailable: selectedPerformance?.begin_market_value == null,
+      label: "Basis",
+      value: detailBasis === "GROSS" ? "Gross" : "Net",
+      support: "Selected return basis.",
     }),
     buildMetricCard({
-      label: "End MV",
-      value: formatCurrencyValue(
-        selectedPerformance?.end_market_value ?? workspace.overview.market_value_base,
-        workspace.portfolio.base_currency
-      ),
-      support: "Latest market value across the mandate.",
-      unavailable:
-        selectedPerformance?.end_market_value == null && workspace.overview.market_value_base == null,
+      label: "Period",
+      value: workspace.period,
+      support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
     }),
     buildMetricCard({
-      label: "Net Cash Flow",
-      value:
-        selectedPerformance?.net_cash_flow != null
-          ? formatCurrencyValue(selectedPerformance.net_cash_flow, workspace.portfolio.base_currency)
-          : "Unavailable",
-      support: "Booked flows inside the selected window.",
-      unavailable: selectedPerformance?.net_cash_flow == null,
-    }),
-    buildMetricCard({
-      label: "Cash Weight",
-      value: formatPctValue(workspace.overview.cash_weight_pct),
-      support: "Current cash share of the mandate market value.",
-      unavailable: workspace.overview.cash_weight_pct == null,
-    }),
-    buildMetricCard({
-      label: "Position Count",
-      value: workspace.overview.position_count ?? "Unavailable",
-      support: "Currently valued positions in the mandate.",
-      unavailable: workspace.overview.position_count == null,
-    }),
-    buildMetricCard({
-      label: "Primary Contributor",
-      value: primaryDriver ? formatLabel(primaryDriver.key_label) : "Unavailable",
-      support: primaryDriver
-        ? `Contribution ${formatCompactPctValue(primaryDriver.contribution_pct)}`
-        : "Requires contribution detail for the selected slice.",
-      unavailable: primaryDriver == null,
+      label: "Benchmark",
+      value: benchmarkValue,
+      support: benchmarkHint,
+      unavailable: !hasBenchmark,
     }),
   ];
 
@@ -274,6 +251,145 @@ export function getPerformanceSummaryHeaderPresentation({
     activeCard,
     moneyWeightedCard,
     contextCards,
+  };
+}
+
+export function getPerformanceExecutiveReturnPresentation({
+  workspace,
+  detailBasis,
+  selectedPerformance,
+  selectedBenchmarkLabel,
+  capabilities,
+}: {
+  workspace: WorkbenchPerformanceWorkspace;
+  detailBasis: string;
+  selectedPerformance:
+    | WorkbenchPerformanceWorkspace["net_performance"]
+    | WorkbenchPerformanceWorkspace["gross_performance"]
+    | undefined;
+  selectedBenchmarkLabel?: string | null;
+  capabilities: PerformanceWorkspaceCapabilities;
+}): PerformanceExecutiveReturnPresentation {
+  const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
+
+  return {
+    cards: [
+      buildMetricCard({
+        label: "Portfolio Return",
+        value: formatPctValue(selectedPerformance?.portfolio_return_pct),
+        support: "Performance over the selected period.",
+        emphasize: true,
+        unavailable: selectedPerformance?.portfolio_return_pct == null,
+      }),
+      buildMetricCard({
+        label: "Benchmark Return",
+        value:
+          hasBenchmark && selectedPerformance?.benchmark_return_pct != null
+            ? formatPctValue(selectedPerformance.benchmark_return_pct)
+            : "Unavailable",
+        support:
+          capabilities.benchmarkComparison.reason ?? "Benchmark-relative return for the selected period.",
+        unavailable: !hasBenchmark || selectedPerformance?.benchmark_return_pct == null,
+      }),
+      buildMetricCard({
+        label: "Active Return",
+        value:
+          hasBenchmark && selectedPerformance?.active_return_pct != null
+            ? formatPctValue(selectedPerformance.active_return_pct)
+            : "Unavailable",
+        support: hasBenchmark
+          ? "Portfolio return minus benchmark return."
+          : capabilities.benchmarkComparison.reason ?? "Requires an assigned benchmark.",
+        unavailable: !hasBenchmark || selectedPerformance?.active_return_pct == null,
+      }),
+      buildMetricCard({
+        label: "Basis",
+        value: detailBasis === "GROSS" ? "Gross" : "Net",
+        support: "Selected measurement basis.",
+      }),
+      buildMetricCard({
+        label: "Period",
+        value: workspace.period,
+        support: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
+      }),
+      buildMetricCard({
+        label: "Benchmark",
+        value: hasBenchmark ? selectedBenchmarkLabel ?? "Assigned" : "Unassigned",
+        support: hasBenchmark
+          ? "Reference benchmark used for relative comparison."
+          : "Assign a benchmark to enable relative analytics.",
+        unavailable: !hasBenchmark,
+      }),
+    ],
+  };
+}
+
+export function getPerformanceTrustStripPresentation({
+  capabilities,
+}: {
+  capabilities: PerformanceWorkspaceCapabilities;
+}): PerformanceTrustStripPresentation {
+  return {
+    items: [
+      mapCapabilityToTrustItem("Benchmark", capabilities.benchmarkComparison, {
+        supported: "Assigned",
+        partial: "Partial",
+        unavailable: "Unassigned",
+      }),
+      mapCapabilityToTrustItem("Return History", capabilities.returnPath, {
+        supported: "Ready",
+        partial: "Partial",
+        unavailable: "Unavailable",
+      }),
+      mapCapabilityToTrustItem("Contribution", capabilities.contributionDetail, {
+        supported: "Ready",
+        partial: "Partial",
+        unavailable: "Unavailable",
+      }),
+      mapCapabilityToTrustItem("Attribution", capabilities.attributionDetail, {
+        supported: "Ready",
+        partial: "Partial",
+        unavailable: "Unavailable",
+      }),
+      mapCapabilityToTrustItem("Evidence", capabilities.evidence, {
+        supported: "Available",
+        partial: "Pending",
+        unavailable: "Pending",
+      }),
+    ],
+  };
+}
+
+function mapCapabilityToTrustItem(
+  label: string,
+  capability: WorkspaceCapability,
+  labels: {
+    supported: string;
+    partial: string;
+    unavailable: string;
+  }
+) {
+  if (capability.state === "supported") {
+    return {
+      label,
+      value: labels.supported,
+      support: capability.reason,
+      tone: "success" as const,
+    };
+  }
+  if (capability.state === "partial") {
+    return {
+      label,
+      value: labels.partial,
+      support: capability.reason,
+      tone: "warn" as const,
+    };
+  }
+  return {
+    label,
+    value: labels.unavailable,
+    support: capability.reason,
+    tone: label === "Evidence" ? ("default" as const) : ("danger" as const),
   };
 }
 
@@ -297,16 +413,3 @@ function formatCompactPctValue(value: number | null | undefined): string {
   return formatPctValue(value);
 }
 
-function formatCurrencyValue(value: number | null | undefined, currency: string): string {
-  if (value == null) {
-    return "Unavailable";
-  }
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  })
-    .format(value)
-    .replace("$", "")
-    .trim() + ` ${currency}`;
-}

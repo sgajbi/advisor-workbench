@@ -127,14 +127,6 @@ function buildProps(
       end_market_value: 1000000,
       net_cash_flow: 20000,
     },
-    primaryDriver: {
-      key_label: "Equity",
-      contribution_pct: 0.9,
-      weight_avg_pct: 55,
-      local_contribution_pct: 0.8,
-      fx_contribution_pct: 0.1,
-      is_other: false,
-    },
     hasMoneyWeightedReturn: true,
     suspiciousMoneyWeightedReturn: false,
     ...overrides,
@@ -142,26 +134,28 @@ function buildProps(
 }
 
 describe("PerformanceSummaryHeaderSection", () => {
-  it("renders the first-paint performance summary context and mandate stats", () => {
+  it("renders the first-paint executive strip and trust strip", () => {
     render(<PerformanceSummaryHeaderSection {...buildProps()} />);
 
     expect(
-      document.querySelector(
-        ".performance-summary-stage.workbench-summary-panel.workbench-summary-module-card"
-      )
+      document.querySelector(".performance-summary-stage")
     ).toBeTruthy();
     expect(screen.getByRole("heading", { name: "PF_1001" })).toBeInTheDocument();
-    expect(screen.getByText("Benchmark")).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
+    expect(screen.getByText("Active Return")).toBeInTheDocument();
+    expect(screen.getByText("Basis")).toBeInTheDocument();
+    expect(screen.getByText("Period")).toBeInTheDocument();
     expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
+    expect(screen.getByText("Assigned")).toBeInTheDocument();
+    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("2 observations")).toBeInTheDocument();
     expect(screen.getByText("Relative measurement")).toBeInTheDocument();
-    expect(screen.getByText("Primary Contributor")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
-    expect(screen.getByText("Money-Weighted")).toBeInTheDocument();
-    expect(screen.getByText("Annualized 1.10%")).toBeInTheDocument();
   });
 
-  it("renders compact unavailable KPI states and a benchmark unassigned status card", () => {
+  it("renders a compact benchmark-unassigned trust state without fake placeholders", () => {
     render(
       <PerformanceSummaryHeaderSection
         {...buildProps({
@@ -187,7 +181,6 @@ describe("PerformanceSummaryHeaderSection", () => {
             end_market_value: null,
             net_cash_flow: null,
           },
-          primaryDriver: null,
           hasMoneyWeightedReturn: false,
           workspace: {
             ...buildProps().workspace,
@@ -199,20 +192,15 @@ describe("PerformanceSummaryHeaderSection", () => {
       />
     );
 
-    expect(
-      document.querySelector(
-        ".performance-summary-stage .performance-summary-status-card.workbench-summary-metric-card"
-      )
-    ).toBeTruthy();
-    expect(screen.getByText("Unassigned")).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
+    expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(2);
     expect(
       screen.getByText("Assign a benchmark to enable relative analytics.")
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
     expect(screen.getAllByText("No benchmark is assigned to this mandate.").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
-    expect(
-      document.querySelector(".performance-summary-status-card.performance-summary-kpi-card-unavailable")
-    ).toBeTruthy();
+    expect(screen.getByText("Pending")).toBeInTheDocument();
   });
 });

@@ -178,6 +178,53 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
   });
 
+  it("renders a compact benchmark-unassigned state without weak placeholders", () => {
+    render(
+      <PerformanceChartPanel
+        title="Net Return Path"
+        points={[
+          {
+            label: "2026-03",
+            frequency: "monthly",
+            period_start: "2026-03-01",
+            period_end: "2026-03-27",
+            portfolio_return_pct: 1.4,
+            benchmark_return_pct: null,
+            active_return_pct: null,
+            cumulative_portfolio_return_pct: 6.2,
+            cumulative_benchmark_return_pct: null,
+            cumulative_active_return_pct: null,
+          },
+        ]}
+        summary={{
+          portfolio_return_pct: 6.2,
+          benchmark_return_pct: null,
+          active_return_pct: null,
+        }}
+        portfolioId="DEMO_ADV_USD_001"
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+        capabilities={{
+          ...supportedCapabilities,
+          benchmarkComparison: {
+            state: "unavailable",
+            reason: "No benchmark is assigned to this mandate.",
+          },
+        }}
+        onRequestChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Benchmark unassigned")).toBeInTheDocument();
+    expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
+    expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+  });
+
   it("renders a partial capability notice when return observations are incomplete", () => {
     render(
       <PerformanceChartPanel

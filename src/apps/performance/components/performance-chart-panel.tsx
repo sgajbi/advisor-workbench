@@ -162,6 +162,7 @@ export default function PerformanceChartPanel({
     (point) =>
       point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
   );
+  const benchmarkUnavailable = capabilities.benchmarkComparison.state !== "supported";
   const resolvedBenchmarkOptions = useMemo(() => {
     if (benchmarkOptions.length > 0) {
       return benchmarkOptions;
@@ -551,13 +552,13 @@ export default function PerformanceChartPanel({
             />
             <Chip
               label={`${formatBenchmarkLabel(benchmark, resolvedBenchmarkOptions)} ${
-                hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "N/A"
+                hasBenchmarkSeries ? formatPct(summary.benchmark_return_pct) : "Unavailable"
               }`}
               variant="outlined"
               sx={summaryChipSx}
             />
             <Chip
-              label={`Active ${hasBenchmarkSeries ? formatPct(summary.active_return_pct) : "N/A"}`}
+              label={`Active ${hasBenchmarkSeries ? formatPct(summary.active_return_pct) : "Unavailable"}`}
               variant="outlined"
               sx={summaryChipSx}
             />
@@ -566,6 +567,15 @@ export default function PerformanceChartPanel({
 
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
+          {benchmarkUnavailable ? (
+            <div className="performance-chart-benchmark-state">
+              <strong>Benchmark unassigned</strong>
+              <span>
+                {capabilities.benchmarkComparison.reason ??
+                  "Assign a benchmark to enable relative comparison and active return context."}
+              </span>
+            </div>
+          ) : null}
           <Box
             className="performance-chart-summary-band workbench-summary-metric-strip"
             sx={{
