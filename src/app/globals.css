@@ -41,6 +41,8 @@
   --workbench-section-gap: 16px;
   --workbench-card-padding: 24px;
   --workbench-card-padding-compact: 20px;
+  --workbench-page-frame-gap: 16px;
+  --workbench-page-frame-header-padding: 4px;
   --workbench-summary-body-gap: 12px;
   --workbench-title-gap: 4px;
   --workbench-metric-strip-gap: 8px;
@@ -184,6 +186,33 @@ a:hover {
   gap: 1rem;
   width: 100%;
   padding: 0.1rem 0 0.2rem;
+}
+
+.workbench-page-frame {
+  display: grid;
+  gap: var(--workbench-page-frame-gap);
+  min-width: 0;
+}
+
+.workbench-page-frame-header {
+  padding-block: var(--workbench-page-frame-header-padding);
+}
+
+.workbench-page-frame-body {
+  display: grid;
+  gap: var(--workbench-page-frame-gap);
+  min-width: 0;
+}
+
+.workbench-section-stack {
+  display: grid;
+  gap: var(--workbench-section-gap);
+  min-width: 0;
+}
+
+.workbench-page-frame-body > *,
+.workbench-section-stack > * {
+  min-width: 0;
 }
 
 .workbench-page-header-copy {
@@ -389,6 +418,7 @@ a:hover {
   justify-content: flex-end;
   flex: 0 0 auto;
   min-width: 0;
+  gap: var(--space-2);
 }
 
 .deferred-module-placeholder {

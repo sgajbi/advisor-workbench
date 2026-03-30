@@ -5,7 +5,8 @@ import {
   DeferredWorkbenchMount,
   DeferredModulePlaceholder,
   Panel,
-  WorkbenchPageHeader,
+  WorkbenchPageFrame,
+  WorkbenchSectionStack,
   WorkstationShell,
 } from "@/design-system";
 
@@ -139,14 +140,17 @@ export default function PerformanceWorkspaceView({
             </p>
           </Panel>
         ) : (
-          <>
-            <WorkbenchPageHeader
-              title="Performance Workbench"
-              subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
-              actions={<PerformanceWorkspaceModeSwitch value={mode} onChange={setMode} />}
-            />
-            {modePanel}
-          </>
+          <WorkbenchPageFrame
+            className="performance-page-frame"
+            bodyClassName="performance-page-frame-body"
+            title="Performance Workbench"
+            subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
+            actions={<PerformanceWorkspaceModeSwitch value={mode} onChange={setMode} />}
+          >
+            <WorkbenchSectionStack className="performance-page-sections">
+              {modePanel}
+            </WorkbenchSectionStack>
+          </WorkbenchPageFrame>
         )
       }
     />

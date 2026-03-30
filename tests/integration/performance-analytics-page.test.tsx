@@ -393,6 +393,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(document.querySelector("main.workstation-page.performance-page")).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
+    expect(document.querySelector(".workbench-page-frame.performance-page-frame")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
+    expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
@@ -436,6 +440,7 @@ describe("PerformanceAnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
+    expect(document.querySelector(".performance-summary-stage.workbench-summary-module-card")).toBeTruthy();
     expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);

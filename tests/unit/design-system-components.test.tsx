@@ -30,7 +30,9 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkbenchPageFrame,
   WorkbenchPageHeader,
+  WorkbenchSectionStack,
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,
@@ -118,6 +120,29 @@ describe("design-system components", () => {
     expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-side-density-comfortable")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-side-comfortable")).toBeTruthy();
+  });
+
+  it("renders the shared workbench page frame with shared header and section stack", () => {
+    render(
+      <WorkstationPage>
+        <WorkbenchPageFrame
+          title="Portfolio"
+          subtitle="Front-office portfolio context"
+          actions={<StatusChip>Catalog live</StatusChip>}
+        >
+          <WorkbenchSectionStack>
+            <Panel>Summary Section</Panel>
+          </WorkbenchSectionStack>
+        </WorkbenchPageFrame>
+      </WorkstationPage>
+    );
+
+    expect(document.querySelector(".workbench-page-frame")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
+    expect(document.querySelector(".workbench-section-stack")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
+    expect(screen.getByText("Catalog live")).toHaveClass("status-chip");
   });
 
   it("renders degraded state and rail link primitives", () => {

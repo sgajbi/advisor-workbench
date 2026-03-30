@@ -72,7 +72,10 @@ describe("PortfolioFoundationPage", () => {
 
     expect(document.querySelector("main.workstation-page.portfolio-page")).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
-    expect(document.querySelector(".workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
+    expect(document.querySelector(".workbench-section-stack.portfolio-page-sections")).toBeTruthy();
     expect(document.querySelector(".workstation-shell.workstation-shell-both.portfolio-layout")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-rail.portfolio-rail-shell")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main.portfolio-main")).toBeTruthy();
@@ -165,6 +168,7 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelectorAll(".portfolio-summary-module-card").length).toBeGreaterThanOrEqual(5);
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(5);
     expect(document.querySelectorAll(".workbench-summary-card.workbench-summary-card-compact").length).toBeGreaterThanOrEqual(5);
+    expect(document.querySelector(".portfolio-summary-module-card.workbench-summary-module-card")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(document.querySelectorAll(".workbench-summary-toolbar").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelectorAll(".workbench-summary-visual-card").length).toBeGreaterThanOrEqual(3);

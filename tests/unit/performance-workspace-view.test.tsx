@@ -110,7 +110,10 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     expect(document.querySelector(".workspace-layout")).toBeFalsy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
-    expect(document.querySelector(".workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame.performance-page-frame")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
+    expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
     expect(
       screen.getByText(
