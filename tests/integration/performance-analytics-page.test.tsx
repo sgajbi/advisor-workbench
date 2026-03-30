@@ -5,17 +5,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
 import {
   buildAggregateContributionPerformanceScenario,
-  buildPerformanceAttributionTrend,
-  buildPerformanceHorizonComparison,
   buildBenchmarkUnassignedPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
-  buildSupportedPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
-  buildPerformanceWorkspaceDetails,
-  buildPerformanceWorkspaceSummary,
-  type PerformanceFixtureOptions,
   type PerformancePresentationScenario,
 } from "../fixtures/performance-workspace-fixtures";
+import {
+  installPerformancePageFetchMock,
+  installPerformancePageFetchScenario,
+} from "../fixtures/performance-workspace-server-fixtures";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -49,135 +47,6 @@ vi.mock("echarts-for-react", () => ({
     <div data-testid="performance-echart" style={style} />
   ),
 }));
-
-function installPerformancePageFetchMock(options?: PerformanceFixtureOptions) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (input: string | URL) => {
-      const url = input.toString();
-      if (url.includes("/api/v1/lookups/portfolios")) {
-        return {
-          ok: true,
-          json: async () => ({
-            items: [
-              { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
-              { id: "PF_1001", label: "Global Balanced Mandate" },
-            ],
-          }),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceWorkspaceSummary("DEMO_ADV_USD_001", options),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
-        } as Response;
-      }
-      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
-        } as Response;
-      }
-      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceWorkspaceSummary("PF_1001"),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
-        } as Response;
-      }
-      return { ok: false, json: async () => ({}) } as Response;
-    })
-  );
-}
-
-function installPerformancePageFetchScenario(
-  scenario: PerformancePresentationScenario,
-  options?: {
-    portfolioId?: string;
-  }
-) {
-  const portfolioId = options?.portfolioId ?? "DEMO_ADV_USD_001";
-  const workspace = {
-    ...scenario.workspace,
-    portfolio_id: portfolioId,
-    portfolio: {
-      ...scenario.workspace.portfolio,
-      portfolio_id: portfolioId,
-    },
-  };
-
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (input: string | URL) => {
-      const url = input.toString();
-      if (url.includes("/api/v1/lookups/portfolios")) {
-        return {
-          ok: true,
-          json: async () => ({
-            items: [
-              { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
-              { id: "PF_1001", label: "Global Balanced Mandate" },
-            ],
-          }),
-        } as Response;
-      }
-      if (url.includes(`/api/v1/workbench/${portfolioId}/performance/summary`)) {
-        return {
-          ok: true,
-          json: async () => workspace,
-        } as Response;
-      }
-      if (url.includes(`/api/v1/workbench/${portfolioId}/performance/details`)) {
-        return {
-          ok: true,
-          json: async () => workspace,
-        } as Response;
-      }
-      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/horizon-comparison`)) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceHorizonComparison(portfolioId),
-        } as Response;
-      }
-      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/attribution-trend`)) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceAttributionTrend(portfolioId),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceWorkspaceSummary("PF_1001"),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
-        return {
-          ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
-        } as Response;
-      }
-      return { ok: false, json: async () => ({}) } as Response;
-    })
-  );
-}
 
 type PerformanceSummaryScenario = {
   name: string;
