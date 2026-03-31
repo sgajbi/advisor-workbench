@@ -172,6 +172,9 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
     expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
     expect(screen.getByText("01 Jan 2026 - 28 Mar 2026")).toBeInTheDocument();
+    expect(screen.getByText("14 report rows • Rebalance Ready")).toBeInTheDocument();
+    expect(screen.queryByText("Reporting Rows")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rebalance Status")).not.toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
     ).toBeInTheDocument();

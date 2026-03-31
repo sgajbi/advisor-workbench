@@ -2693,6 +2693,13 @@ a:hover {
   background: #fff;
 }
 
+.portfolio-performance-snapshot-support {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .portfolio-performance-sparkline {
   display: grid;
   gap: var(--space-1);

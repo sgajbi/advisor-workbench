@@ -48,6 +48,7 @@ export default function PortfolioPerformanceSnapshotModule({
     performance?.sparkline_points?.length
       ? `${performance.sparkline_points.length} source-backed observations`
       : "Open Performance workspace for source-backed return path detail.";
+  const operationalSupport = getOperationalSupportLine(reportingRowCount, rebalance?.status ?? null);
   const performanceWorkspaceHref = buildPerformanceWorkspaceHref({
     portfolioId,
     selectedPeriod,
@@ -121,9 +122,8 @@ export default function PortfolioPerformanceSnapshotModule({
                         : "Unavailable"
                     }
                   />
-                  <MetricRow label="Reporting Rows" value={reportingRowCount} />
-                  <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />
                 </div>
+                <p className="portfolio-performance-snapshot-support">{operationalSupport}</p>
               </div>
             </div>
           </div>
@@ -243,4 +243,17 @@ function SnapshotStat({
       <strong>{value}</strong>
     </div>
   );
+}
+
+function getOperationalSupportLine(
+  reportingRowCount: number,
+  rebalanceStatus: string | null
+) {
+  const parts = [`${reportingRowCount} report row${reportingRowCount === 1 ? "" : "s"}`];
+
+  if (rebalanceStatus) {
+    parts.push(`Rebalance ${formatPortfolioToken(rebalanceStatus)}`);
+  }
+
+  return parts.join(" • ");
 }
