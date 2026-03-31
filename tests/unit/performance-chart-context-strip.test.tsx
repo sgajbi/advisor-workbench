@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import PerformanceChartContextStrip from "../../src/apps/performance/components/performance-chart-context-strip";
 
 function compactPattern(text: string) {
-  return new RegExp(text.replaceAll(" ", "\\s*"));
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(" ", "\\s*"));
 }
 
 describe("PerformanceChartContextStrip", () => {
@@ -14,9 +14,7 @@ describe("PerformanceChartContextStrip", () => {
       <PerformanceChartContextStrip
         period="YTD"
         detailBasis="NET"
-        benchmarkLabel="Global Balanced 60/40"
-        benchmarkSourceLabel="Calculated"
-        benchmarkAssigned
+        benchmarkContextValue="Global Balanced 60/40 • Calculated"
         activeReturn="0.80%"
         relativeContextStatus="available"
       />
@@ -28,7 +26,7 @@ describe("PerformanceChartContextStrip", () => {
       compactPattern("Benchmark line Global Balanced 60/40 • Calculated")
     );
     expect(context).toHaveTextContent(compactPattern("Active context 0.80% • Available"));
-    expect(context).toHaveTextContent(compactPattern("Window / basis YTD • Net"));
+    expect(context).toHaveTextContent(compactPattern("Resolved window / basis YTD • Net"));
   });
 
   it("renders an honest unavailable relative context when no benchmark is assigned", () => {
@@ -36,9 +34,7 @@ describe("PerformanceChartContextStrip", () => {
       <PerformanceChartContextStrip
         period="YTD"
         detailBasis="NET"
-        benchmarkLabel="Benchmark"
-        benchmarkSourceLabel={null}
-        benchmarkAssigned={false}
+        benchmarkContextValue="Unassigned"
         activeReturn="Unavailable"
         relativeContextStatus="unavailable"
       />
@@ -47,7 +43,7 @@ describe("PerformanceChartContextStrip", () => {
     const context = screen.getByRole("group", { name: "Return path context" });
     expect(context).toHaveTextContent(compactPattern("Benchmark line Unassigned"));
     expect(context).toHaveTextContent(compactPattern("Active context Unavailable • Unavailable"));
-    expect(context).toHaveTextContent(compactPattern("Window / basis YTD • Net"));
+    expect(context).toHaveTextContent(compactPattern("Resolved window / basis YTD • Net"));
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {
@@ -55,9 +51,7 @@ describe("PerformanceChartContextStrip", () => {
       <PerformanceChartContextStrip
         period="YTD"
         detailBasis="GROSS"
-        benchmarkLabel="Global Balanced 60/40"
-        benchmarkSourceLabel={null}
-        benchmarkAssigned
+        benchmarkContextValue="Global Balanced 60/40"
         activeReturn="Unavailable"
         relativeContextStatus="partial"
       />
@@ -66,6 +60,6 @@ describe("PerformanceChartContextStrip", () => {
     const context = screen.getByRole("group", { name: "Return path context" });
     expect(context).toHaveTextContent(compactPattern("Benchmark line Global Balanced 60/40"));
     expect(context).toHaveTextContent(compactPattern("Active context Unavailable • Partial"));
-    expect(context).toHaveTextContent(compactPattern("Window / basis YTD • Gross"));
+    expect(context).toHaveTextContent(compactPattern("Resolved window / basis YTD • Gross"));
   });
 });

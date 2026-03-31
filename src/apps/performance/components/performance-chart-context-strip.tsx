@@ -5,9 +5,7 @@ import { formatDate } from "../formatters";
 type PerformanceChartContextStripProps = {
   period: string;
   detailBasis: string;
-  benchmarkLabel: string;
-  benchmarkSourceLabel: string | null;
-  benchmarkAssigned: boolean;
+  benchmarkContextValue: string;
   activeReturn: string;
   relativeContextStatus: "available" | "partial" | "unavailable";
   reportStartDate?: string;
@@ -17,9 +15,7 @@ type PerformanceChartContextStripProps = {
 export default function PerformanceChartContextStrip({
   period,
   detailBasis,
-  benchmarkLabel,
-  benchmarkSourceLabel,
-  benchmarkAssigned,
+  benchmarkContextValue,
   activeReturn,
   relativeContextStatus,
   reportStartDate,
@@ -41,11 +37,7 @@ export default function PerformanceChartContextStrip({
         {
           key: "benchmark",
           label: "Benchmark line",
-          value: benchmarkAssigned
-            ? benchmarkSourceLabel
-              ? `${benchmarkLabel} • ${benchmarkSourceLabel}`
-              : benchmarkLabel
-            : "Unassigned",
+          value: benchmarkContextValue,
         },
         {
           key: "active",

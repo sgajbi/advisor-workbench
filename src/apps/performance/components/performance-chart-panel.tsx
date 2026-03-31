@@ -501,9 +501,7 @@ export default function PerformanceChartPanel({
         <PerformanceChartContextStrip
           period={period}
           detailBasis={detailBasis}
-          benchmarkLabel={returnPathPresentation.benchmarkLabel}
-          benchmarkSourceLabel={returnPathPresentation.benchmarkSourceLabel}
-          benchmarkAssigned={returnPathPresentation.benchmarkAssigned}
+          benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
           activeReturn={returnPathPresentation.activeReturnValue}
           relativeContextStatus={returnPathPresentation.relativeContextStatus}
           reportStartDate={resolvedReportDates.startDate}

@@ -181,7 +181,7 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Portfolio line Portfolio")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Balanced 60/40 • Calculated")
+      compactPattern("Benchmark line Global Balanced 60/40 • Calculated • Lotus Demo")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Active context 0.80% • Available")
@@ -396,7 +396,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Balanced 60/40")
+      compactPattern("Benchmark line Global Balanced 60/40 • Calculated • Lotus Demo")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Active context Unavailable • Partial")

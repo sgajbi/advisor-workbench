@@ -22,6 +22,7 @@ export type PerformanceReturnPathPresentation = {
   benchmarkAssigned: boolean;
   benchmarkLabel: string;
   benchmarkSourceLabel: string | null;
+  benchmarkContextValue: string;
   activeReturnValue: string;
   relativeContextStatus: PerformanceChartContextStatus;
   benchmarkStateBody: string | null;
@@ -83,6 +84,11 @@ export function getPerformanceReturnPathPresentation({
     benchmarkAssigned,
     benchmarkLabel,
     benchmarkSourceLabel: formatBenchmarkSourceLabel(summary.benchmark_return_source),
+    benchmarkContextValue: getPerformanceBenchmarkContextValue({
+      benchmark,
+      benchmarkOptions,
+      benchmarkReturnSource: summary.benchmark_return_source,
+    }),
     activeReturnValue,
     relativeContextStatus,
     benchmarkStateBody: benchmarkAssigned
@@ -228,6 +234,37 @@ export function getPerformanceBenchmarkLabel(
   );
 }
 
+export function getPerformanceBenchmarkContextValue({
+  benchmark,
+  benchmarkOptions = [],
+  benchmarkReturnSource,
+}: {
+  benchmark?: string;
+  benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  benchmarkReturnSource?: string | null;
+}) {
+  if (!benchmark) {
+    return "Unassigned";
+  }
+
+  const selectedOption = benchmarkOptions.find((option) => option.benchmark_code === benchmark);
+  const supportSegments = [
+    formatBenchmarkSourceLabel(benchmarkReturnSource),
+    selectedOption?.benchmark_provider
+      ? formatProvenanceLabel(selectedOption.benchmark_provider)
+      : null,
+  ].filter(Boolean);
+
+  const benchmarkLabel =
+    selectedOption?.benchmark_name ?? getPerformanceBenchmarkLabel(benchmark, benchmarkOptions);
+
+  if (supportSegments.length === 0) {
+    return benchmarkLabel;
+  }
+
+  return `${benchmarkLabel} • ${supportSegments.join(" • ")}`;
+}
+
 export function getPerformanceBenchmarkOptionLabel(
   option: PerformanceBenchmarkOptionView
 ) {
@@ -277,4 +314,12 @@ function formatMoneyWeightedInputModeLabel(inputMode?: string | null) {
     default:
       return formatLabel(inputMode);
   }
+}
+
+function formatProvenanceLabel(value: string) {
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .join(" ");
 }
