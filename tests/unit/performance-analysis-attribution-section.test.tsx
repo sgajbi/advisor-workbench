@@ -130,6 +130,12 @@ describe("PerformanceAnalysisAttributionSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(screen.getByText("Summary-only attribution")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Segment rows are unavailable for this selection. Total benchmark-relative effects remain available below."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("Summary totals")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");

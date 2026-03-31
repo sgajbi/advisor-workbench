@@ -522,6 +522,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByText("Attribution Detail")).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(await screen.findByText("Summary-only attribution")).toBeInTheDocument();
     expect(await screen.findByText("Summary totals")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.queryByText("Relative Segment Matrix")).not.toBeInTheDocument();

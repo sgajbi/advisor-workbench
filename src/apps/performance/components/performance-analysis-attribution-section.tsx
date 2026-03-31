@@ -224,30 +224,39 @@ export default function PerformanceAnalysisAttributionSection({
                   />
                 </>
               ) : (
-                <AnalyticsTable
-                  className="performance-analysis-table"
-                  dense
-                  ariaLabel={`${formatLabel(level.dimension)} attribution totals`}
-                  columns={[
-                    { key: "view", label: "View" },
-                    { key: "allocation", label: "Allocation", align: "right" },
-                    { key: "selection", label: "Selection", align: "right" },
-                    { key: "interaction", label: "Interaction", align: "right" },
-                    { key: "total", label: "Total Effect", align: "right" },
-                  ]}
-                  rows={[
-                    {
-                      key: `${level.dimension}-summary`,
-                      cells: [
-                        "Summary totals",
-                        formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-                        formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-                        formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-                        formatPct(totals.totalEffectPct ?? level.total_effect_pct),
-                      ],
-                    },
-                  ]}
-                />
+                <div className="performance-analysis-summary-fallback">
+                  <div className="performance-analysis-summary-fallback-copy">
+                    <strong>Summary-only attribution</strong>
+                    <span>
+                      Segment rows are unavailable for this selection. Total benchmark-relative
+                      effects remain available below.
+                    </span>
+                  </div>
+                  <AnalyticsTable
+                    className="performance-analysis-table"
+                    dense
+                    ariaLabel={`${formatLabel(level.dimension)} attribution totals`}
+                    columns={[
+                      { key: "view", label: "View" },
+                      { key: "allocation", label: "Allocation", align: "right" },
+                      { key: "selection", label: "Selection", align: "right" },
+                      { key: "interaction", label: "Interaction", align: "right" },
+                      { key: "total", label: "Total Effect", align: "right" },
+                    ]}
+                    rows={[
+                      {
+                        key: `${level.dimension}-summary`,
+                        cells: [
+                          "Summary totals",
+                          formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
+                          formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
+                          formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
+                          formatPct(totals.totalEffectPct ?? level.total_effect_pct),
+                        ],
+                      },
+                    ]}
+                  />
+                </div>
               )}
             </PerformanceAnalysisLevelSection>
           );
