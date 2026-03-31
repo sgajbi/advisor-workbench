@@ -245,7 +245,7 @@ describe("portfolio performance snapshot module", () => {
 
     expect(screen.getByText("5.12%")).toBeInTheDocument();
     expect(
-      screen.getByText("Active 0.21% versus Global Balanced 60/40 for QTD")
+      screen.getByText("5.12% total return • active 0.21% vs Global Balanced 60/40 • QTD")
     ).toBeInTheDocument();
   });
 

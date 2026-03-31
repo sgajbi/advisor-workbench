@@ -154,9 +154,11 @@ export default function PortfolioPerformanceSnapshotModule({
                 {formatPct(performance?.return_pct)}
               </span>
               <span className="portfolio-performance-snapshot-copy">
-                {performance?.benchmark_return_pct != null && performance?.excess_return_pct != null
-                  ? `Active ${formatPct(performance.excess_return_pct)} versus ${benchmarkLabel ?? "assigned benchmark"} for ${performance?.period ?? selectedPeriod}`
-                  : `Portfolio return for ${performance?.period ?? selectedPeriod}`}
+                {buildCollapsedSnapshotCopy({
+                  performance,
+                  selectedPeriod,
+                  benchmarkLabel,
+                })}
               </span>
             </>
           ) : (
@@ -256,4 +258,25 @@ function getOperationalSupportLine(
   }
 
   return parts.join(" • ");
+}
+
+function buildCollapsedSnapshotCopy({
+  performance,
+  selectedPeriod,
+  benchmarkLabel,
+}: {
+  performance: PortfolioWorkspace["performance"];
+  selectedPeriod: PortfolioTimeWindow;
+  benchmarkLabel: string | null;
+}) {
+  const periodLabel = performance?.period ?? selectedPeriod;
+  const portfolioReturn = formatPct(performance?.return_pct);
+
+  if (performance?.benchmark_return_pct != null && performance?.excess_return_pct != null) {
+    return `${portfolioReturn} total return • active ${formatPct(
+      performance.excess_return_pct
+    )} vs ${benchmarkLabel ?? "assigned benchmark"} • ${periodLabel}`;
+  }
+
+  return `${portfolioReturn} total return • ${periodLabel}`;
 }
