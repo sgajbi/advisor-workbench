@@ -51,6 +51,7 @@ type ComparativeSummary = {
   net_cash_flow?: number | null;
   fees?: number | null;
   benchmark_return_source?: string | null;
+  benchmark_input_mode?: string | null;
 };
 
 type PerformanceChartViewMode = "combined" | "absolute" | "relative";

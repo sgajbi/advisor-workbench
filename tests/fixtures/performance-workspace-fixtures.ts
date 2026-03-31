@@ -36,6 +36,7 @@ export type PerformanceReturnPathScenarioData = {
     | "annualized_return_pct"
     | "end_market_value"
     | "net_cash_flow"
+    | "benchmark_input_mode"
   >;
   benchmark?: string;
   benchmarkOptions: WorkbenchPerformanceWorkspace["benchmark_options"];
