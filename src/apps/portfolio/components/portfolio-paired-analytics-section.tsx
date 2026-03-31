@@ -58,6 +58,7 @@ type PortfolioPairedAnalyticsSectionProps = {
   sectionId?: string;
   title?: string;
   subtitle?: string;
+  sectionClassName?: string;
 };
 
 type SummaryStat = {
@@ -80,6 +81,7 @@ export default function PortfolioPairedAnalyticsSection({
   sectionId,
   title,
   subtitle,
+  sectionClassName,
 }: PortfolioPairedAnalyticsSectionProps) {
   const showIncomeModule = isRenderableCapability(capabilities.income);
   const showActivityModule = isRenderableCapability(capabilities.activity);
@@ -143,7 +145,10 @@ export default function PortfolioPairedAnalyticsSection({
   }
 
   return (
-    <section id={sectionId} className="portfolio-workspace-section">
+    <section
+      id={sectionId}
+      className={sectionClassName ? `portfolio-workspace-section ${sectionClassName}` : "portfolio-workspace-section"}
+    >
       <div className="portfolio-section-header">
         <h3>{title}</h3>
         <p className="portfolio-section-copy">{subtitle}</p>

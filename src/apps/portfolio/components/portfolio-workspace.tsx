@@ -512,70 +512,72 @@ export default function PortfolioWorkspaceView({
                       />
                     </div>
 
-                    <PortfolioHealthSection
-                      workspace={workspace}
-                      context={context}
-                      showHealthSection={showHealthSection}
-                    />
+                    <div className="portfolio-detailed-cluster">
+                      <PortfolioHealthSection
+                        workspace={workspace}
+                        context={context}
+                        showHealthSection={showHealthSection}
+                      />
 
-                    <PortfolioChangesSection
-                      workspace={workspace}
-                      context={context}
-                      capabilities={capabilities!}
-                      showChanges={showChanges}
-                      incomeDisplayCurrency={incomeDisplayCurrency}
-                      activityDisplayCurrency={activityDisplayCurrency}
-                      transactionDrilldown={transactionDrilldown}
-                      isDetailedView={isDetailedView}
-                      onSelectActivityBucket={(bucket) => {
-                        if (!bucket) {
-                          clearTransactionDrilldown();
-                          return;
+                      <PortfolioChangesSection
+                        workspace={workspace}
+                        context={context}
+                        capabilities={capabilities!}
+                        showChanges={showChanges}
+                        incomeDisplayCurrency={incomeDisplayCurrency}
+                        activityDisplayCurrency={activityDisplayCurrency}
+                        transactionDrilldown={transactionDrilldown}
+                        isDetailedView={isDetailedView}
+                        onSelectActivityBucket={(bucket) => {
+                          if (!bucket) {
+                            clearTransactionDrilldown();
+                            return;
+                          }
+                          openTransactionDrilldown({
+                            kind: "activity",
+                            bucket,
+                            label: buildActivityDrilldownLabel(bucket),
+                          });
+                        }}
+                        getSectionExpanded={getSectionExpanded}
+                        toggleSection={toggleSection}
+                      />
+
+                      <PortfolioDrilldownSection
+                        workspace={workspace}
+                        context={context}
+                        capabilities={capabilities!}
+                        detailsLoading={detailsLoading}
+                        showDrilldown={showDrilldown}
+                        isDetailedView={isDetailedView}
+                        filteredPositions={filteredPositions}
+                        holdingsFilterCopy={holdingsFilterCopy}
+                        transactionDrilldown={transactionDrilldown}
+                        onClearHoldingsDrilldown={clearHoldingsDrilldown}
+                        onClearTransactionDrilldown={clearTransactionDrilldown}
+                        onSelectHoldingRow={(row) =>
+                          setDetailDrawer(
+                            buildHoldingDrawer(
+                              row,
+                              workspace.portfolio.portfolio_id,
+                              workspace.portfolio.base_currency,
+                              getRelatedTransactionsForSecurity(workspace, row.securityId)
+                            )
+                          )
                         }
-                        openTransactionDrilldown({
-                          kind: "activity",
-                          bucket,
-                          label: buildActivityDrilldownLabel(bucket),
-                        });
-                      }}
-                      getSectionExpanded={getSectionExpanded}
-                      toggleSection={toggleSection}
-                    />
-
-                    <PortfolioDrilldownSection
-                      workspace={workspace}
-                      context={context}
-                      capabilities={capabilities!}
-                      detailsLoading={detailsLoading}
-                      showDrilldown={showDrilldown}
-                      isDetailedView={isDetailedView}
-                      filteredPositions={filteredPositions}
-                      holdingsFilterCopy={holdingsFilterCopy}
-                      transactionDrilldown={transactionDrilldown}
-                      onClearHoldingsDrilldown={clearHoldingsDrilldown}
-                      onClearTransactionDrilldown={clearTransactionDrilldown}
-                      onSelectHoldingRow={(row) =>
-                        setDetailDrawer(
-                          buildHoldingDrawer(
-                            row,
-                            workspace.portfolio.portfolio_id,
-                            workspace.portfolio.base_currency,
-                            getRelatedTransactionsForSecurity(workspace, row.securityId)
+                        onSelectTransactionRow={(row) =>
+                          setDetailDrawer(
+                            buildTransactionDrawer(
+                              row,
+                              workspace.portfolio.portfolio_id,
+                              workspace.portfolio.base_currency
+                            )
                           )
-                        )
-                      }
-                      onSelectTransactionRow={(row) =>
-                        setDetailDrawer(
-                          buildTransactionDrawer(
-                            row,
-                            workspace.portfolio.portfolio_id,
-                            workspace.portfolio.base_currency
-                          )
-                        )
-                      }
-                      getSectionExpanded={getSectionExpanded}
-                      setSectionPreferences={setSectionPreferences}
-                    />
+                        }
+                        getSectionExpanded={getSectionExpanded}
+                        setSectionPreferences={setSectionPreferences}
+                      />
+                    </div>
                   </>
                 )}
               </WorkbenchSectionStack>
@@ -813,7 +815,10 @@ function PortfolioHealthSection({
   }
 
   return (
-    <section id="portfolio-health" className="portfolio-workspace-section">
+    <section
+      id="portfolio-health"
+      className="portfolio-workspace-section portfolio-detailed-cluster-section"
+    >
       <div className="portfolio-section-header">
         <h3>Portfolio Health Snapshot</h3>
         <p className="portfolio-section-copy">
@@ -1167,6 +1172,7 @@ function PortfolioChangesSection({
       sectionId="portfolio-changes"
       title="Recent Flows"
       subtitle={`Income and client activity for ${formatPeriodContext(context)}.`}
+      sectionClassName="portfolio-detailed-cluster-section"
     />
   );
 }
@@ -1222,7 +1228,10 @@ function PortfolioDrilldownSection({
   };
 
   return (
-    <section id="portfolio-drilldown" className="portfolio-workspace-section">
+    <section
+      id="portfolio-drilldown"
+      className="portfolio-workspace-section portfolio-detailed-cluster-section"
+    >
       <div className="portfolio-section-header">
         <h3>Where can I drill down?</h3>
         <p className="portfolio-section-copy">Holdings, transactions, and projected liquidity on demand.</p>

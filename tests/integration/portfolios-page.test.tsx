@@ -290,6 +290,11 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Readiness and Exceptions/i })).toBeInTheDocument();
     expect(screen.getByText("Identity")).toBeInTheDocument();
     expect(screen.getByText("Book Setup")).toBeInTheDocument();
+    const detailedCluster = document.querySelector(".portfolio-detailed-cluster");
+    expect(detailedCluster).toBeTruthy();
+    expect(detailedCluster?.querySelector("#portfolio-health")).toBeTruthy();
+    expect(detailedCluster?.querySelector("#portfolio-changes")).toBeTruthy();
+    expect(detailedCluster?.querySelector("#portfolio-drilldown")).toBeTruthy();
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
