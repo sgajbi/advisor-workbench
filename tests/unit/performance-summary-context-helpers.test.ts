@@ -198,6 +198,16 @@ describe("performance summary context helpers", () => {
   it("builds money-weighted audit support from method, window, and notes", () => {
     const scenario = buildSupportedPerformanceScenario();
 
+    expect(scenario.workspace.money_weighted_return).toMatchObject({
+      begin_market_value: 1200000,
+      end_market_value: 1250000,
+      beginning_cash_flow: 50000,
+      ending_cash_flow: -8000,
+      flow_adjusted_end_market_value: 1208000,
+      net_cash_flow: 42000,
+      fees: 0,
+    });
+
     expect(
       getPerformanceMoneyWeightedAuditSupport({
         explicitDateRange: "01 Jan 2026 - 24 Feb 2026",

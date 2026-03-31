@@ -167,6 +167,13 @@ export type MoneyWeightedReturnSummary = {
   method: string | null;
   start_date: string | null;
   end_date: string | null;
+  begin_market_value?: number | null;
+  end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
+  flow_adjusted_end_market_value?: number | null;
+  net_cash_flow?: number | null;
+  fees?: number | null;
   notes: string[];
 };
 
