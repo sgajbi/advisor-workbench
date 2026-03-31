@@ -222,6 +222,23 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(document.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
     expect(document.querySelector(".portfolio-allocation-panel-compact .portfolio-allocation-ranked")).toBeFalsy();
+    const allocationCard = screen
+      .getByRole("heading", { name: /Portfolio Allocation/i })
+      .closest(".portfolio-summary-module-card");
+    const topHoldingsCard = screen
+      .getByRole("heading", { name: /Top Holdings/i })
+      .closest(".portfolio-summary-module-card");
+    expect(allocationCard).toBeTruthy();
+    expect(topHoldingsCard).toBeTruthy();
+    expect(allocationCard?.parentElement).toBe(topHoldingsCard?.parentElement);
+    expect(
+      Boolean(
+        allocationCard &&
+          topHoldingsCard &&
+          allocationCard.compareDocumentPosition(topHoldingsCard) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
     expect(document.querySelectorAll(".workbench-rail-card")).toHaveLength(3);
     expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeTruthy();
     expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeTruthy();

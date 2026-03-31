@@ -2301,6 +2301,14 @@ a:hover {
   min-width: 0;
 }
 
+.portfolio-primary-grid > .portfolio-summary-module-card:first-child {
+  grid-column: span 8;
+}
+
+.portfolio-primary-grid > .portfolio-summary-module-card:nth-child(2) {
+  grid-column: span 4;
+}
+
 .portfolio-summary-module-card .portfolio-inline-action {
   min-height: 1.875rem;
   padding: 0 0.75rem;
@@ -3846,8 +3854,8 @@ a:hover {
 
   .portfolio-allocation-body {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+    gap: var(--space-3);
     align-items: stretch;
   }
 
@@ -3869,7 +3877,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     min-height: 20rem;
-    padding: 0.875rem;
+    padding: var(--space-4);
   }
 
   .portfolio-allocation-panel-compact .portfolio-allocation-chart-card {
@@ -4004,6 +4012,7 @@ a:hover {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     min-height: 20rem;
+    border-color: rgba(226, 232, 240, 0.75);
   }
 
   .portfolio-allocation-ranked-header,
@@ -4019,8 +4028,7 @@ a:hover {
     border-bottom: 1px solid rgba(226, 232, 240, 0.9);
     font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--text-muted);
   }
 
@@ -4047,7 +4055,7 @@ a:hover {
 
   .portfolio-allocation-ranked-row-hovered,
   .portfolio-allocation-ranked-row-selected {
-    background: #f8fbff;
+    background: rgba(248, 251, 255, 0.85);
   }
 
   .portfolio-allocation-ranked-dimension {
@@ -4072,6 +4080,26 @@ a:hover {
     align-content: center;
     justify-items: start;
     padding: 1rem;
+  }
+
+  .portfolio-top-holdings-list-card.workbench-summary-visual-card {
+    border-color: rgba(226, 232, 240, 0.75);
+    background: #fcfdff;
+  }
+
+  .portfolio-top-holdings-body {
+    gap: var(--space-3);
+  }
+
+  .portfolio-horizontal-bar-row {
+    gap: var(--space-3);
+    padding: 0.75rem;
+    border-radius: 10px;
+  }
+
+  .portfolio-horizontal-bar-row-hovered,
+  .portfolio-horizontal-bar-row-selected {
+    background: rgba(248, 251, 255, 0.9);
   }
 
   .portfolio-allocation-empty {
