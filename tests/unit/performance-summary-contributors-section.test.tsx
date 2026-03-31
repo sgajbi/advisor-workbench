@@ -89,6 +89,9 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(within(contributorStrip).getByText("Top Detractor")).toBeInTheDocument();
     expect(within(contributorStrip).getByText("Coverage MV")).toBeInTheDocument();
     expect(within(contributorStrip).getByText("Portfolio Contribution")).toBeInTheDocument();
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent("High coverage");
+    expect(note).toHaveTextContent("Reconciles to return");
     expect(screen.getByLabelText("Contributor summary")).toBeInTheDocument();
     expect(document.querySelector(".performance-contributors-table.analytics-table-frame-dense")).toBeTruthy();
     const contributorTable = screen.getByLabelText("Contributor summary");
@@ -147,6 +150,9 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent("High coverage");
+    expect(note).toHaveTextContent("Reconciles to return");
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();

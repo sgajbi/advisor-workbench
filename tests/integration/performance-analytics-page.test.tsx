@@ -756,6 +756,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
+    expect(screen.getByText("High coverage")).toBeInTheDocument();
+    expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
     expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();

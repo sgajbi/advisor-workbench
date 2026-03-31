@@ -5,6 +5,7 @@ import {
 } from "@/design-system";
 
 import PerformanceCapabilityNotice from "./performance-capability-notice";
+import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
@@ -45,6 +46,9 @@ export default function PerformanceSummaryContributorsSection({
               className="performance-contributors-strip"
             />
           ) : null}
+          {workspace.contribution?.levels?.length ? (
+            <PerformanceContributionContextNote contribution={workspace.contribution} />
+          ) : null}
           <div className="performance-contributors-grid">
             <WorkbenchSummaryVisualCard>
               <WorkbenchRankedBarList
@@ -82,6 +86,9 @@ export default function PerformanceSummaryContributorsSection({
             body={presentation.noticeBody}
             hint={presentation.hint}
           />
+          {workspace.contribution?.levels?.length ? (
+            <PerformanceContributionContextNote contribution={workspace.contribution} />
+          ) : null}
           <AnalyticsTable
             ariaLabel="Aggregate contributor summary"
             className="performance-contributors-table"
