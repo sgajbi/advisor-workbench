@@ -201,6 +201,8 @@ describe("PerformanceAnalyticsPage", () => {
       contributorsModule?.querySelectorAll(".workbench-summary-visual-card").length
     ).toBe(2);
     expect(contributorsModule?.querySelectorAll(".workbench-ranked-bar-list").length).toBe(2);
+    expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
+    expect(contributorsModule?.querySelector(".performance-contributors-table")).toBeFalsy();
     expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();

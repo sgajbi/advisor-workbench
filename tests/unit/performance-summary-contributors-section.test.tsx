@@ -92,12 +92,8 @@ describe("PerformanceSummaryContributorsSection", () => {
     const note = screen.getByRole("note");
     expect(note).toHaveTextContent("High coverage");
     expect(note).toHaveTextContent("Reconciles to return");
-    expect(screen.getByLabelText("Contributor summary")).toBeInTheDocument();
-    expect(document.querySelector(".performance-contributors-table.analytics-table-frame-dense")).toBeTruthy();
-    const contributorTable = screen.getByLabelText("Contributor summary");
-    expect(within(contributorTable).getByText("Position")).toBeInTheDocument();
-    expect(within(contributorTable).getByText("AAPL")).toBeInTheDocument();
-    expect(within(contributorTable).queryByText("TLT")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contributor summary")).not.toBeInTheDocument();
+    expect(document.querySelector(".performance-contributors-table.analytics-table-frame-dense")).toBeFalsy();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 8.00%")).toBeInTheDocument();
     const rankedLists = document.querySelectorAll(".workbench-ranked-bar-list");
@@ -106,7 +102,6 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(within(rankedLists[0] as HTMLElement).queryByText("Equity")).not.toBeInTheDocument();
     expect(within(rankedLists[1] as HTMLElement).getByText("TLT")).toBeInTheDocument();
     expect(within(rankedLists[1] as HTMLElement).queryByText("Rates")).not.toBeInTheDocument();
-    expect(within(contributorTable).queryByText("Total")).not.toBeInTheDocument();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {

@@ -70,14 +70,6 @@ export default function PerformanceSummaryContributorsSection({
               />
             </WorkbenchSummaryVisualCard>
           </div>
-          <AnalyticsTable
-            ariaLabel="Contributor summary"
-            className="performance-contributors-table"
-            dense
-            columns={presentation.tableModel.columns}
-            rows={presentation.tableModel.rows}
-            footer={presentation.tableModel.footer}
-          />
         </div>
       ) : presentation.mode === "partial" ? (
         <div className="performance-contributors-panel">
