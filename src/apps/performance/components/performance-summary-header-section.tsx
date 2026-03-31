@@ -1,7 +1,7 @@
 import PerformanceCapabilityTrustStrip from "./performance-capability-trust-strip";
 import type { PerformanceSummaryHeaderSectionProps } from "./performance-workspace-types";
 import {
-  getPerformanceSummaryFirstPaintPresentation,
+  getPerformanceTrustStripPresentation,
 } from "./performance-workspace-view-helpers";
 
 export default function PerformanceSummaryHeaderSection({
@@ -12,18 +12,19 @@ export default function PerformanceSummaryHeaderSection({
   hasMoneyWeightedReturn,
   suspiciousMoneyWeightedReturn,
 }: PerformanceSummaryHeaderSectionProps) {
-  const presentation = getPerformanceSummaryFirstPaintPresentation({
-    workspace,
-    detailBasis,
+  void workspace;
+  void detailBasis;
+  void selectedPerformance;
+  void hasMoneyWeightedReturn;
+  void suspiciousMoneyWeightedReturn;
+
+  const presentation = getPerformanceTrustStripPresentation({
     capabilities,
-    selectedPerformance,
-    hasMoneyWeightedReturn,
-    suspiciousMoneyWeightedReturn,
   });
 
   return (
     <section id="performance-overview" className="performance-summary-stage">
-      <PerformanceCapabilityTrustStrip presentation={presentation.trust} />
+      <PerformanceCapabilityTrustStrip presentation={presentation} />
     </section>
   );
 }

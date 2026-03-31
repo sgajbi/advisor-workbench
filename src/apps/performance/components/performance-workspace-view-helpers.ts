@@ -108,19 +108,6 @@ export function getAttributionTotals(
   };
 }
 
-type SummaryMetricCard = {
-  label: string;
-  value: string | number;
-  support?: string;
-  emphasize?: boolean;
-  unavailable?: boolean;
-  priority?: "primary" | "comparison" | "supporting" | "utility";
-};
-
-export type PerformanceExecutiveReturnPresentation = {
-  cards: SummaryMetricCard[];
-};
-
 export type PerformanceTrustStripPresentation = {
   items: WorkbenchStatusStripItem[];
 };
@@ -129,138 +116,6 @@ export type PerformanceControlNormalizationNotice = {
   title: string;
   message: string;
 };
-
-export type PerformanceSummaryFirstPaintPresentation = {
-  executive: PerformanceExecutiveReturnPresentation;
-  trust: PerformanceTrustStripPresentation;
-};
-
-export function getPerformanceSummaryFirstPaintPresentation({
-  workspace,
-  detailBasis,
-  capabilities,
-  selectedPerformance,
-  hasMoneyWeightedReturn,
-  suspiciousMoneyWeightedReturn,
-}: {
-  workspace: WorkbenchPerformanceWorkspace;
-  detailBasis: string;
-  capabilities: PerformanceWorkspaceCapabilities;
-  selectedPerformance:
-    | WorkbenchPerformanceWorkspace["net_performance"]
-    | WorkbenchPerformanceWorkspace["gross_performance"]
-    | undefined;
-  hasMoneyWeightedReturn: boolean;
-  suspiciousMoneyWeightedReturn: boolean;
-}): PerformanceSummaryFirstPaintPresentation {
-  return {
-    executive: getPerformanceExecutiveReturnPresentation({
-      workspace,
-      detailBasis,
-      selectedPerformance,
-      capabilities,
-      hasMoneyWeightedReturn,
-      suspiciousMoneyWeightedReturn,
-    }),
-    trust: getPerformanceTrustStripPresentation({
-      capabilities,
-    }),
-  };
-}
-
-export function getPerformanceExecutiveReturnPresentation({
-  workspace,
-  detailBasis,
-  selectedPerformance,
-  capabilities,
-  hasMoneyWeightedReturn,
-  suspiciousMoneyWeightedReturn,
-}: {
-  workspace: WorkbenchPerformanceWorkspace;
-  detailBasis: string;
-  selectedPerformance:
-    | WorkbenchPerformanceWorkspace["net_performance"]
-    | WorkbenchPerformanceWorkspace["gross_performance"]
-    | undefined;
-  capabilities: PerformanceWorkspaceCapabilities;
-  hasMoneyWeightedReturn: boolean;
-  suspiciousMoneyWeightedReturn: boolean;
-}): PerformanceExecutiveReturnPresentation {
-  const hasBenchmark = capabilities.benchmarkComparison.state !== "unavailable";
-  const benchmarkSupport = getFirstPaintCapabilitySupport(
-    "Benchmark",
-    capabilities.benchmarkComparison,
-    "Assigned benchmark result"
-  );
-  const activeReturnSupport = hasBenchmark
-    ? "Portfolio versus benchmark"
-    : getFirstPaintCapabilitySupport(
-        "Benchmark",
-        capabilities.benchmarkComparison,
-        "Requires an assigned benchmark"
-      );
-
-  return {
-    cards: [
-      buildMetricCard({
-        label: "Portfolio Return",
-        value: formatPctValue(selectedPerformance?.portfolio_return_pct),
-        support: "Selected portfolio performance",
-        emphasize: true,
-        unavailable: selectedPerformance?.portfolio_return_pct == null,
-        priority: "primary",
-      }),
-      buildMetricCard({
-        label: "Benchmark Return",
-        value:
-          hasBenchmark && selectedPerformance?.benchmark_return_pct != null
-            ? formatPctValue(selectedPerformance.benchmark_return_pct)
-            : "Unavailable",
-        support: benchmarkSupport,
-        unavailable: !hasBenchmark || selectedPerformance?.benchmark_return_pct == null,
-        priority: "comparison",
-      }),
-      buildMetricCard({
-        label: "Active Return",
-        value:
-          hasBenchmark && selectedPerformance?.active_return_pct != null
-            ? formatPctValue(selectedPerformance.active_return_pct)
-            : "Unavailable",
-        support: activeReturnSupport,
-        unavailable: !hasBenchmark || selectedPerformance?.active_return_pct == null,
-        priority: "comparison",
-      }),
-      buildMetricCard({
-        label: "Money-Weighted Return",
-        value:
-          workspace.money_weighted_return?.money_weighted_return_pct != null
-            ? formatPctValue(workspace.money_weighted_return.money_weighted_return_pct)
-            : "Unavailable",
-        support: hasMoneyWeightedReturn
-          ? workspace.money_weighted_return?.annualized_return_pct != null
-            ? `Annualized ${formatCompactPctValue(workspace.money_weighted_return.annualized_return_pct)}${
-                suspiciousMoneyWeightedReturn ? " • review cash-flow timing" : ""
-              }`
-            : workspace.money_weighted_return?.method ?? "Cash-flow aware return"
-          : "Requires cash-flow history",
-        unavailable: workspace.money_weighted_return?.money_weighted_return_pct == null,
-        priority: "supporting",
-      }),
-      buildMetricCard({
-        label: "Basis",
-        value: detailBasis === "GROSS" ? "Gross" : "Net",
-        support: "Measurement basis",
-        priority: "utility",
-      }),
-      buildMetricCard({
-        label: "Resolved window",
-        value: formatResolvedWindowValue(workspace.report_start_date, workspace.report_end_date),
-        support: formatExecutivePeriodValue(workspace.period),
-        priority: "utility",
-      }),
-    ],
-  };
-}
 
 export function getPerformanceTrustStripPresentation({
   capabilities,
@@ -429,28 +284,5 @@ function sumOptional(values: Array<number | null | undefined>): number | null {
     return null;
   }
   return numericValues.reduce((sum, value) => sum + value, 0);
-}
-
-function buildMetricCard(card: SummaryMetricCard): SummaryMetricCard {
-  return card;
-}
-
-function formatPctValue(value: number | null | undefined): string {
-  return value == null ? "Unavailable" : `${value.toFixed(2)}%`;
-}
-
-function formatCompactPctValue(value: number | null | undefined): string {
-  return formatPctValue(value);
-}
-
-function formatExecutivePeriodValue(period: string): string {
-  if (period === "EXPLICIT") {
-    return "Explicit window";
-  }
-  return formatLabel(period);
-}
-
-function formatResolvedWindowValue(startDate: string, endDate: string): string {
-  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }
 

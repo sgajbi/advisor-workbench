@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  getPerformanceExecutiveReturnPresentation,
-  getPerformanceSummaryFirstPaintPresentation,
   getPerformanceTrustStripPresentation,
 } from "../../src/apps/performance/components/performance-workspace-view-helpers";
 import {
@@ -13,97 +11,6 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 
 describe("performance first-paint helper contracts", () => {
-  it("builds the executive return strip with the front-office metric set", () => {
-    const scenario = buildPerformancePresentationScenario();
-
-    const presentation = getPerformanceExecutiveReturnPresentation({
-      workspace: scenario.workspace,
-      detailBasis: "NET",
-      selectedPerformance: scenario.selectedPerformance,
-      capabilities: scenario.capabilities,
-      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
-      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
-    });
-
-    expect(presentation.cards.map((card) => card.label)).toEqual([
-      "Portfolio Return",
-      "Benchmark Return",
-      "Active Return",
-      "Money-Weighted Return",
-      "Basis",
-      "Resolved window",
-    ]);
-    expect(
-      presentation.cards.find((card) => card.label === "Money-Weighted Return")
-    ).toMatchObject({
-      value: "5.12%",
-    });
-    expect(presentation.cards.find((card) => card.label === "Resolved window")).toMatchObject({
-      value: "01 Jan 2026 - 24 Feb 2026",
-      support: "YTD",
-    });
-  });
-
-  it("builds an honest executive strip when benchmark analytics are unassigned and money-weighted return is unavailable", () => {
-    const scenario = buildBenchmarkUnassignedPerformanceScenario();
-
-    const presentation = getPerformanceExecutiveReturnPresentation({
-      workspace: scenario.workspace,
-      detailBasis: "NET",
-      selectedPerformance: scenario.selectedPerformance,
-      capabilities: scenario.capabilities,
-      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
-      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
-    });
-
-    expect(presentation.cards.find((card) => card.label === "Portfolio Return")).toMatchObject({
-      value: "Unavailable",
-      unavailable: true,
-    });
-    expect(presentation.cards.find((card) => card.label === "Benchmark Return")).toMatchObject({
-      value: "Unavailable",
-      support: "Benchmark not assigned",
-      unavailable: true,
-    });
-    expect(presentation.cards.find((card) => card.label === "Active Return")).toMatchObject({
-      value: "Unavailable",
-      support: "Benchmark not assigned",
-      unavailable: true,
-    });
-    expect(
-      presentation.cards.find((card) => card.label === "Money-Weighted Return")
-    ).toMatchObject({
-      value: "Unavailable",
-      unavailable: true,
-    });
-    expect(presentation.cards.find((card) => card.label === "Resolved window")).toMatchObject({
-      value: "01 Jan 2026 - 24 Feb 2026",
-      support: "YTD",
-    });
-  });
-
-  it("uses business-friendly period wording for explicit windows", () => {
-    const scenario = buildPerformancePresentationScenario({
-      workspaceOverrides: {
-        period: "EXPLICIT",
-      },
-    });
-
-    const presentation = getPerformanceExecutiveReturnPresentation({
-      workspace: scenario.workspace,
-      detailBasis: "NET",
-      selectedPerformance: scenario.selectedPerformance,
-      capabilities: scenario.capabilities,
-      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
-      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
-    });
-
-    expect(presentation.cards.find((card) => card.label === "Resolved window")).toMatchObject({
-      value: "01 Jan 2026 - 24 Feb 2026",
-      support: "Explicit window",
-    });
-  });
-
   it("maps compact trust-strip statuses from backend-backed capabilities", () => {
     const scenario = buildPerformancePresentationScenario({
       capabilityOverrides: {
@@ -167,33 +74,27 @@ describe("performance first-paint helper contracts", () => {
       expectedAttribution: { value: "Ready", tone: "default" },
     },
   ])("builds a consistent first-paint contract for $name", ({ scenario, expectedBenchmark, expectedHistory, expectedAttribution }) => {
-    const presentation = getPerformanceSummaryFirstPaintPresentation({
-      workspace: scenario.workspace,
-      detailBasis: "NET",
+    const presentation = getPerformanceTrustStripPresentation({
       capabilities: scenario.capabilities,
-      selectedPerformance: scenario.selectedPerformance,
-      hasMoneyWeightedReturn: scenario.hasMoneyWeightedReturn,
-      suspiciousMoneyWeightedReturn: scenario.suspiciousMoneyWeightedReturn,
     });
 
-    expect(presentation.executive.cards).toHaveLength(6);
     expect(
-      presentation.trust.items.find((item) => item.label === "Benchmark")
+      presentation.items.find((item) => item.label === "Benchmark")
     ).toMatchObject(expectedBenchmark);
     expect(
-      presentation.trust.items.find((item) => item.label === "Return History")
+      presentation.items.find((item) => item.label === "Return History")
     ).toMatchObject(expectedHistory);
     if (expectedHistory.value === "Ready") {
       expect(
-        presentation.trust.items.find((item) => item.label === "Return History")
+        presentation.items.find((item) => item.label === "Return History")
       ).toMatchObject({
         support: "Published through 24 Feb 2026",
       });
     }
     expect(
-      presentation.trust.items.find((item) => item.label === "Attribution")
+      presentation.items.find((item) => item.label === "Attribution")
     ).toMatchObject(expectedAttribution);
-    expect(presentation.trust.items.find((item) => item.label === "Evidence")).toMatchObject({
+    expect(presentation.items.find((item) => item.label === "Evidence")).toMatchObject({
       value: "Pending",
       tone: "default",
     });
