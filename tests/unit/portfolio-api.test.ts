@@ -152,16 +152,61 @@ describe("portfolio api", () => {
         });
       }
 
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+        return jsonResponse({
+          period: "EXPLICIT",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_options: [
+            {
+              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+              benchmark_name: "Global Balanced 60/40",
+              is_assigned: true,
+            },
+          ],
+          net_performance: {
+            portfolio_return_pct: 5.12,
+            benchmark_return_pct: 4.91,
+            active_return_pct: 0.21,
+            benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
+          },
+          money_weighted_return: {
+            money_weighted_return_pct: 4.88,
+            method: "XIRR",
+          },
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchSpy);
 
-    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
 
     expect(details?.allocation_views?.[0].dimension).toBe("asset_class");
     expect(details?.top_positions[0].market_value_base).toBe(147000);
     expect(details?.positions[0].market_value_local).toBe(147000);
     expect(details?.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);
+    expect(details?.performance).toMatchObject({
+      period: "EXPLICIT",
+      report_start_date: "2026-03-01",
+      report_end_date: "2026-03-28",
+      return_pct: 5.12,
+      benchmark_return_pct: 4.91,
+      excess_return_pct: 0.21,
+      money_weighted_return_pct: 4.88,
+      money_weighted_method: "XIRR",
+      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_label: "Global Balanced 60/40",
+      benchmark_return_source: "calculated",
+      benchmark_input_mode: "stateful",
+    });
     expect(details?.readiness_indicators).toBeUndefined();
     expect(details?.insights).toBeUndefined();
     expect(details?.exception_summaries).toBeUndefined();
@@ -173,6 +218,15 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?") &&
+          url.includes("period=EXPLICIT") &&
+          url.includes("report_start_date=2026-03-01") &&
+          url.includes("report_end_date=2026-03-28")
+      )
+    ).toBe(true);
   });
 
   it("loads detailed ledger and liquidity slices only when detailed modules need them", async () => {
@@ -400,6 +454,22 @@ describe("portfolio api", () => {
         return jsonResponse(null);
       }
 
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+        return jsonResponse({
+          period: "EXPLICIT",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
+          benchmark_code: null,
+          benchmark_options: [],
+          net_performance: {
+            portfolio_return_pct: 2.1,
+            benchmark_return_pct: null,
+            active_return_pct: null,
+          },
+          money_weighted_return: null,
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchSpy);
@@ -417,8 +487,16 @@ describe("portfolio api", () => {
       limit: 200,
     });
 
-    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
-    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
@@ -426,6 +504,7 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(1);
   });
 
   it("coalesces identical in-flight ledger requests into a single fetch", async () => {

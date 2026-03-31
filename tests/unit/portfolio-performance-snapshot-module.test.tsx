@@ -86,16 +86,24 @@ describe("portfolio performance snapshot module", () => {
     expect(container.querySelector(".module-state-panel-partial")).not.toBeNull();
   });
 
-  it("renders expanded future-ready metrics when performance data exists", () => {
+  it("renders expanded source-backed performance summary fields when performance data exists", () => {
     const onToggle = vi.fn();
 
     render(
       <PortfolioPerformanceSnapshotModule
         capability={{ state: "supported" }}
         performance={{
-          period: "YTD",
+          period: "QTD",
+          report_start_date: "2026-01-01",
+          report_end_date: "2026-03-28",
           return_pct: 5.12,
+          money_weighted_return_pct: 4.88,
+          money_weighted_method: "XIRR",
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_label: "Global Balanced 60/40",
           benchmark_return_pct: 4.91,
+          benchmark_return_source: "calculated",
+          benchmark_input_mode: "stateful",
           excess_return_pct: 0.21,
           sparkline_points: null,
         }}
@@ -118,7 +126,7 @@ describe("portfolio performance snapshot module", () => {
           supportsHistoricalSnapshots: false,
           supportsReportingCurrencyRestatement: false,
         }}
-        selectedPeriod="YTD"
+        selectedPeriod="QTD"
         expanded
         onToggle={onToggle}
       />
@@ -127,9 +135,60 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("5.12%")).toBeInTheDocument();
     expect(screen.getByText("4.91%")).toBeInTheDocument();
     expect(screen.getByText("0.21%")).toBeInTheDocument();
-    expect(screen.getByText("Pending source-backed series")).toBeInTheDocument();
+    expect(screen.getByText("4.88%")).toBeInTheDocument();
+    expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
+    expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
+    expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
+    expect(
+      screen.getByText("Open Performance workspace for source-backed return path detail.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("01 Jan 2026 - 28 Mar 2026")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
     expect(onToggle).toHaveBeenCalled();
+  });
+
+  it("renders collapsed active-return context when benchmark-relative values are available", () => {
+    render(
+      <PortfolioPerformanceSnapshotModule
+        capability={{ state: "supported" }}
+        performance={{
+          period: "QTD",
+          return_pct: 5.12,
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_label: "Global Balanced 60/40",
+          benchmark_return_pct: 4.91,
+          excess_return_pct: 0.21,
+          sparkline_points: null,
+        }}
+        rebalance={null}
+        reportingRowCount={0}
+        context={{
+          selectedAsOfDate: "2026-03-28",
+          selectedReportingCurrency: "USD",
+          timeWindow: "QTD",
+          periodLabel: "QTD",
+          viewMode: "summary",
+          columnMode: "essential",
+          hideEmptyModules: false,
+          focusExceptions: false,
+          effectivePeriodStartDate: "2026-01-01",
+          effectivePeriodEndDate: "2026-03-28",
+          usesCustomDateRange: false,
+          hasHistoricalGap: false,
+          currencyOptions: ["USD"],
+          supportsHistoricalSnapshots: false,
+          supportsReportingCurrencyRestatement: false,
+        }}
+        selectedPeriod="QTD"
+        expanded={false}
+        onToggle={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("5.12%")).toBeInTheDocument();
+    expect(
+      screen.getByText("Active 0.21% versus Global Balanced 60/40 for QTD")
+    ).toBeInTheDocument();
   });
 });

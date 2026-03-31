@@ -22,6 +22,7 @@ import {
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
   getPortfolioDefaultFilterValue,
+  type PortfolioTimeWindow,
   type PortfolioWorkspaceControls,
 } from "../view-model";
 import PortfolioUnavailableWorkspace from "./portfolio-unavailable-workspace";
@@ -95,14 +96,19 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      const requestKey = `${selectedPortfolioId}:${initialWorkspace.as_of_date}`;
+      const requestKey = `${selectedPortfolioId}:${initialWorkspace.as_of_date}:${context.timeWindow}:${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}:${context.usesCustomDateRange}`;
       if (summaryRequestRef.current?.key === requestKey) {
         return;
       }
 
       summaryRequestRef.current = { key: requestKey, status: "loading" };
       setSummaryDetailsLoading(true);
-      const details = await getPortfolioWorkspaceSummaryDetailsOnce(requestKey, selectedPortfolioId);
+      const details = await getPortfolioWorkspaceSummaryDetailsOnce(requestKey, selectedPortfolioId, {
+        timeWindow: context.timeWindow,
+        reportStartDate: context.effectivePeriodStartDate,
+        reportEndDate: context.effectivePeriodEndDate,
+        usesCustomDateRange: context.usesCustomDateRange,
+      });
       if (cancelled) {
         return;
       }
@@ -121,7 +127,14 @@ export default function PortfolioWorkspaceClient({
     return () => {
       cancelled = true;
     };
-  }, [initialWorkspace, selectedPortfolioId]);
+  }, [
+    context.effectivePeriodEndDate,
+    context.effectivePeriodStartDate,
+    context.timeWindow,
+    context.usesCustomDateRange,
+    initialWorkspace,
+    selectedPortfolioId,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -319,13 +332,22 @@ function applyPortfolioControlPatch(
   return next;
 }
 
-function getPortfolioWorkspaceSummaryDetailsOnce(requestKey: string, portfolioId: string) {
+function getPortfolioWorkspaceSummaryDetailsOnce(
+  requestKey: string,
+  portfolioId: string,
+  params: {
+    timeWindow: PortfolioTimeWindow;
+    reportStartDate: string;
+    reportEndDate: string;
+    usesCustomDateRange?: boolean;
+  }
+) {
   const existingRequest = summaryDetailsInflightRequests.get(requestKey);
   if (existingRequest) {
     return existingRequest;
   }
 
-  const request = getPortfolioWorkspaceSummaryDetails(portfolioId).finally(() => {
+  const request = getPortfolioWorkspaceSummaryDetails(portfolioId, params).finally(() => {
     summaryDetailsInflightRequests.delete(requestKey);
   });
   summaryDetailsInflightRequests.set(requestKey, request);

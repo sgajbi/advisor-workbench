@@ -269,8 +269,16 @@ export type PortfolioWorkspace = {
   } | null;
   performance: {
     period: string;
+    report_start_date?: string | null;
+    report_end_date?: string | null;
     return_pct: number | null;
+    money_weighted_return_pct?: number | null;
+    money_weighted_method?: string | null;
+    benchmark_code?: string | null;
+    benchmark_label?: string | null;
     benchmark_return_pct?: number | null;
+    benchmark_return_source?: string | null;
+    benchmark_input_mode?: string | null;
     excess_return_pct?: number | null;
     sparkline_points?: Array<{
       label: string;

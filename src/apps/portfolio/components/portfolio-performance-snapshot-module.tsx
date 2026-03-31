@@ -21,11 +21,6 @@ type PerformanceSnapshotProps = {
   selectedPeriod: PortfolioTimeWindow;
 };
 
-/**
- * Portfolio insights performance module.
- * Uses the current lightweight portfolio performance contract when available,
- * while reserving API shape for future benchmark/excess/sparkline support.
- */
 export default function PortfolioPerformanceSnapshotModule({
   capability,
   performance,
@@ -38,6 +33,17 @@ export default function PortfolioPerformanceSnapshotModule({
 }: PerformanceSnapshotProps) {
   const hasPerformance = capability.state === "supported" && Boolean(performance);
   const compact = context.viewMode === "summary";
+  const benchmarkLabel =
+    performance?.benchmark_label ?? formatPortfolioToken(performance?.benchmark_code);
+  const resolvedWindow =
+    performance?.report_start_date && performance?.report_end_date
+      ? `${formatDate(performance.report_start_date)} - ${formatDate(performance.report_end_date)}`
+      : `${formatDate(context.effectivePeriodStartDate)} - ${formatDate(context.effectivePeriodEndDate)}`;
+  const benchmarkProvenance = getBenchmarkProvenance(performance);
+  const trendValue =
+    performance?.sparkline_points?.length
+      ? `${performance.sparkline_points.length} source-backed observations`
+      : "Open Performance workspace for source-backed return path detail.";
 
   return (
     <AnalyticsModule
@@ -57,19 +63,29 @@ export default function PortfolioPerformanceSnapshotModule({
         hasPerformance ? (
           <div className="portfolio-mandate-grid">
             <MetricRow label="Period" value={performance?.period ?? selectedPeriod} />
+            <MetricRow label="Resolved Window" value={resolvedWindow} />
             <MetricRow label="Portfolio Return" value={formatPct(performance?.return_pct)} />
             <MetricRow
               label="Benchmark Return"
               value={formatPct(performance?.benchmark_return_pct)}
             />
             <MetricRow
-              label="Excess Return"
+              label="Active Return"
               value={formatPct(performance?.excess_return_pct)}
             />
+            <MetricRow
+              label="Money-Weighted Return"
+              value={formatPct(performance?.money_weighted_return_pct)}
+            />
+            <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
+            <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
+            <MetricRow
+              label="Method"
+              value={performance?.money_weighted_method ? `MWR ${performance.money_weighted_method}` : "Unavailable"}
+            />
+            <MetricRow label="Trend" value={trendValue} />
             <MetricRow label="Reporting Rows" value={reportingRowCount} />
             <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />
-            <MetricRow label="Sparkline" value="Pending source-backed series" />
-            <MetricRow label="Period Selector" value="Uses page period context" />
           </div>
         ) : (
           <PortfolioModuleState
@@ -98,7 +114,9 @@ export default function PortfolioPerformanceSnapshotModule({
                 {formatPct(performance?.return_pct)}
               </span>
               <span className="portfolio-performance-snapshot-copy">
-                Portfolio return for {selectedPeriod}
+                {performance?.benchmark_return_pct != null && performance?.excess_return_pct != null
+                  ? `Active ${formatPct(performance.excess_return_pct)} versus ${benchmarkLabel ?? "assigned benchmark"} for ${performance?.period ?? selectedPeriod}`
+                  : `Portfolio return for ${performance?.period ?? selectedPeriod}`}
               </span>
             </>
           ) : (
@@ -114,4 +132,33 @@ export default function PortfolioPerformanceSnapshotModule({
       )}
     </AnalyticsModule>
   );
+}
+
+function getBenchmarkProvenance(performance: PortfolioWorkspace["performance"]) {
+  if (!performance?.benchmark_code) {
+    return "Unassigned";
+  }
+
+  const segments = [
+    performance.benchmark_return_source
+      ? formatPortfolioToken(performance.benchmark_return_source)
+      : null,
+    performance.benchmark_input_mode
+      ? `${formatPortfolioToken(performance.benchmark_input_mode)} benchmark`
+      : null,
+  ].filter(Boolean);
+
+  return segments.length > 0 ? segments.join(" • ") : "Assigned benchmark";
+}
+
+function formatPortfolioToken(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .join(" ");
 }
