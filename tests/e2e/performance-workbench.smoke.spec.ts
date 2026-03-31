@@ -204,7 +204,7 @@ test.describe('Performance workbench smoke', () => {
       'aria-selected',
       'true'
     );
-    await expect(page.getByRole('tab', { name: /^Effect breakdown$/i })).toHaveAttribute(
+    await expect(page.getByRole('tab', { name: /^Effect breakdown/i })).toHaveAttribute(
       'aria-selected',
       'false'
     );
@@ -212,8 +212,8 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByText('Relative Segment Matrix')).toBeVisible();
     await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
 
-    await page.getByRole('tab', { name: /^Effect breakdown$/i }).click();
-    await expect(page.getByRole('tab', { name: /^Effect breakdown$/i })).toHaveAttribute(
+    await page.getByRole('tab', { name: /^Effect breakdown/i }).click();
+    await expect(page.getByRole('tab', { name: /^Effect breakdown/i })).toHaveAttribute(
       'aria-selected',
       'true'
     );
@@ -233,16 +233,10 @@ test.describe('Performance workbench smoke', () => {
   test('analysis contribution module renders live position detail cleanly', async ({ page }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
-    await page.goto(
-      '/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=QTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_PB_GLOBAL_BALANCED_60_40',
-      { waitUntil: 'domcontentloaded' }
-    );
-
-    await expect(
-      page.getByRole('heading', { name: /^Performance Workbench$/i })
-    ).toBeVisible({ timeout: 15000 });
+    await openPerformanceWorkbench(page);
 
     const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    await expect(analysisTab).toBeVisible();
     await analysisTab.click();
     await expectActiveTab(page, /^Analysis$/i);
 
@@ -266,11 +260,11 @@ test.describe('Performance workbench smoke', () => {
     ).toBeVisible();
     await expect(
       contributionModule
-        .getByRole('tab', { name: /^Positions$/i })
+        .getByRole('tab', { name: /^Positions/i })
     ).toHaveAttribute('aria-selected', 'true');
     await expect(
       contributionModule
-        .getByRole('tab', { name: /^Segment breakdown$/i })
+        .getByRole('tab', { name: /^Segment breakdown/i })
     ).toHaveAttribute('aria-selected', 'false');
 
     const positionHeaders = await contributionModule
@@ -283,9 +277,9 @@ test.describe('Performance workbench smoke', () => {
     );
     expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
 
-    await contributionModule.getByRole('tab', { name: /^Segment breakdown$/i }).click();
+    await contributionModule.getByRole('tab', { name: /^Segment breakdown/i }).click();
     await expect(
-      contributionModule.getByRole('tab', { name: /^Segment breakdown$/i })
+      contributionModule.getByRole('tab', { name: /^Segment breakdown/i })
     ).toHaveAttribute('aria-selected', 'true');
     await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
     await expect(contributionModule.getByLabel('Asset Class contribution table')).toBeVisible();

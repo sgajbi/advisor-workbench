@@ -170,7 +170,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.queryByText("Summary-only attribution")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution totals")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown (summary only)" }));
     expect(screen.getByText("Summary-only attribution")).toBeInTheDocument();
     expect(
       screen.getByText(

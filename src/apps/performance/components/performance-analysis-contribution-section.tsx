@@ -10,6 +10,7 @@ import {
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import PerformanceAnalysisDrilldownWorkspace from "./performance-analysis-drilldown-workspace";
 import PerformanceAnalysisInsightPane from "./performance-analysis-insight-pane";
+import { getContributionDetailOptions } from "./performance-analysis-detail-options";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
@@ -148,14 +149,11 @@ export default function PerformanceAnalysisContributionSection({
                 subtitle="Inspect either position-level detail or grouped segment contribution."
                 value={detailView}
                 onChange={setDetailView}
-                options={[
-                  { key: "positions", label: "Positions" },
-                  {
-                    key: "segments",
-                    label: "Segment breakdown",
-                    disabled: !hasAggregateContributionLevels,
-                  },
-                ]}
+                options={getContributionDetailOptions({
+                  positionCount: workspace.contribution.position_rows.length,
+                  segmentCount: segmentLevel?.rows.length ?? 0,
+                  hasSegmentBreakdown: hasAggregateContributionLevels,
+                })}
               >
                 {detailView === "positions" ? (
                   positionTableModel ? (

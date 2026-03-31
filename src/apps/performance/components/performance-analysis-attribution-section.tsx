@@ -14,6 +14,7 @@ import {
 import { formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
+import { getAttributionDetailOptions } from "./performance-analysis-detail-options";
 import PerformanceAnalysisDrilldownWorkspace from "./performance-analysis-drilldown-workspace";
 import PerformanceAnalysisInsightPane from "./performance-analysis-insight-pane";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
@@ -184,10 +185,9 @@ export default function PerformanceAnalysisAttributionSection({
                 subtitle="Inspect relative segment context or benchmark-relative effect breakdown."
                 value={detailView}
                 onChange={setDetailView}
-                options={[
-                  { key: "relative", label: "Relative context" },
-                  { key: "breakdown", label: "Effect breakdown" },
-                ]}
+                options={getAttributionDetailOptions({
+                  hasSummaryOnlyBreakdown: hasAttributionSummaryLevels && !hasDetailedAttributionRows,
+                })}
               >
                 {detailView === "relative" ? (
                   <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />

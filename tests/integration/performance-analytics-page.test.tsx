@@ -300,8 +300,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Contribution detail grid panel")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution ranked insight panel")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution detail grid panel")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Segment breakdown" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /^Segment breakdown/ })).toHaveAttribute(
       "aria-selected",
       "false"
     );
@@ -310,14 +310,14 @@ describe("PerformanceAnalyticsPage", () => {
       "aria-selected",
       "true"
     );
-    expect(screen.getByRole("tab", { name: "Effect breakdown" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /^Effect breakdown/ })).toHaveAttribute(
       "aria-selected",
       "false"
     );
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Effect breakdown/ }));
     const attributionTable = await screen.findByLabelText("Asset Class attribution table");
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
@@ -547,7 +547,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.queryByText("Summary-only attribution")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Effect breakdown/ }));
     expect(await screen.findByText("Summary-only attribution")).toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(await screen.findByText("Summary totals")).toBeInTheDocument();
