@@ -113,7 +113,8 @@ The current flagship demo path is the benchmark-aware performance workstation:
 - UI: `http://workbench.dev.lotus/performance`
 - Gateway: `http://gateway.dev.lotus`
 - Required upstreams:
-  - `lotus-core`: `http://core.dev.lotus`
+  - `lotus-core` query: `http://core-query.dev.lotus`
+  - `lotus-core` ingestion: `http://core-ingestion.dev.lotus`
   - `lotus-performance`: `http://performance.dev.lotus`
 
 Flagship seeded mandate and benchmarks:
