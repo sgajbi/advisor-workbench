@@ -15,10 +15,14 @@ import type {
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
-import { formatDate, formatLabel, formatPct } from "../formatters";
+import { formatLabel } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
+import {
+  getAttributionTrendContextItems,
+  getAttributionTrendSummaryItems,
+} from "./performance-attribution-presentations";
 
 type Props = {
   portfolioId: string;
@@ -232,14 +236,24 @@ export default function PerformanceAttributionTrendPanel({
     };
   }, [rows]);
 
-  const latestRow = rows?.at(-1) ?? null;
-  const resolvedWindowLabel =
-    trend?.report_start_date && trend?.report_end_date
-      ? `${formatDate(trend.report_start_date)} - ${formatDate(trend.report_end_date)}`
-      : period;
   const tableModel = useMemo(
     () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
     [rows]
+  );
+  const contextItems = useMemo(
+    () =>
+      getAttributionTrendContextItems({
+        trend,
+        detailBasis,
+        attributionDimension,
+        benchmark,
+        period,
+      }),
+    [attributionDimension, benchmark, detailBasis, period, trend]
+  );
+  const metricItems = useMemo(
+    () => getAttributionTrendSummaryItems(trend),
+    [trend]
   );
   const normalizationMessages: string[] = [];
   if (trend?.requested_chart_frequency_supported === false) {
@@ -291,49 +305,15 @@ export default function PerformanceAttributionTrendPanel({
         <WorkbenchChartContextRow
           label="Attribution trend context"
           className="performance-analysis-context-row"
-          items={[
-              {
-                label: "Resolved window",
-                value: resolvedWindowLabel,
-              },
-            {
-              label: "Basis",
-              value: detailBasis,
-            },
-            {
-              label: "Benchmark",
-              value: benchmark ?? "Unassigned",
-            },
-            {
-              label: "Segment",
-              value: trend?.attribution_dimension ?? attributionDimension,
-            },
-          ]}
+          items={contextItems}
         />
       }
       metricStrip={
-        latestRow ? (
+        metricItems.length ? (
           <WorkbenchSummaryMetricStrip
             className="performance-analysis-metric-strip"
             ariaLabel="Attribution trend summary strip"
-            items={[
-              {
-                label: "Latest Total Effect",
-                value: formatPct(latestRow.total_effect_pct),
-              },
-              {
-                label: "Latest Active Return",
-                value: formatPct(latestRow.active_return_pct),
-              },
-              {
-                label: "Cumulative Total",
-                value: formatPct(latestRow.cumulative_total_effect_pct),
-              },
-              {
-                label: "Residual",
-                value: formatPct(latestRow.residual_pct),
-              },
-            ]}
+            items={metricItems}
           />
         ) : undefined
       }

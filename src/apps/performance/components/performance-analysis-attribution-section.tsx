@@ -24,6 +24,10 @@ import {
 } from "./performance-workspace-view-helpers";
 import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
+import {
+  getAttributionDetailContextItems,
+  getAttributionDetailSummaryItems,
+} from "./performance-attribution-presentations";
 
 export default function PerformanceAnalysisAttributionSection({
   workspace,
@@ -86,26 +90,7 @@ export default function PerformanceAnalysisAttributionSection({
     </PerformanceAnalysisToolbar>
   );
 
-  const metricItems = workspace.attribution?.benchmark_id
-    ? [
-        {
-          label: "Benchmark",
-          value: formatLabel(workspace.attribution.benchmark_id),
-        },
-        {
-          label: "Active Return",
-          value: formatPct(workspace.attribution.active_return_pct),
-        },
-        {
-          label: "Effects Sum",
-          value: formatPct(workspace.attribution.sum_of_effects_pct),
-        },
-        {
-          label: "Residual",
-          value: formatPct(workspace.attribution.residual_pct),
-        },
-      ]
-    : [];
+  const metricItems = getAttributionDetailSummaryItems(workspace.attribution);
 
   return (
     <WorkbenchChartShell
@@ -118,32 +103,7 @@ export default function PerformanceAnalysisAttributionSection({
           <WorkbenchChartContextRow
             label="Attribution detail context"
             className="performance-analysis-context-row"
-            items={[
-              {
-                label: "Benchmark",
-                value: workspace.attribution.benchmark_id
-                  ? formatLabel(workspace.attribution.benchmark_id)
-                  : "Unassigned",
-              },
-              {
-                label: "Source",
-                value: workspace.attribution.benchmark_return_source
-                  ? formatLabel(workspace.attribution.benchmark_return_source)
-                  : "Unavailable",
-              },
-              {
-                label: "Model",
-                value: workspace.attribution.model
-                  ? formatLabel(workspace.attribution.model)
-                  : "Unavailable",
-              },
-              {
-                label: "Linking",
-                value: workspace.attribution.linking
-                  ? formatLabel(workspace.attribution.linking)
-                  : "Unavailable",
-              },
-            ]}
+            items={getAttributionDetailContextItems(workspace.attribution)}
           />
         ) : undefined
       }
