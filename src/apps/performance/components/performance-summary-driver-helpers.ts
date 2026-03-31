@@ -11,8 +11,9 @@ import {
   buildPerformancePositionContributionTableModel,
   type PerformanceAnalyticsTableModel,
 } from "./performance-analytics-table-models";
+import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
 
-import { formatLabel, formatPct, formatPerformancePositionLabel } from "../formatters";
+import { formatPct, formatPerformancePositionLabel } from "../formatters";
 
 export type PerformanceContributorRankedItem = {
   key: string;
@@ -245,7 +246,7 @@ export function getPerformanceHorizonPresentation({
 }): PerformanceHorizonPresentation {
   const benchmarkAssigned =
     Boolean(benchmark) || benchmarkOptions.some((option) => option.is_assigned);
-  const benchmarkLabel = formatBenchmarkLabel(benchmark, benchmarkOptions);
+  const benchmarkLabel = getPerformanceBenchmarkLabel(benchmark, benchmarkOptions);
 
   return {
     frame: getPerformanceSummaryDriverModuleFrame({
@@ -265,18 +266,4 @@ export function getPerformanceHorizonPresentation({
     loadingBody,
     emptyBody,
   };
-}
-
-function formatBenchmarkLabel(
-  benchmark?: string,
-  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
-) {
-  if (!benchmark) {
-    return "Benchmark";
-  }
-
-  return (
-    benchmarkOptions.find((option) => option.benchmark_code === benchmark)?.benchmark_name ??
-    formatLabel(benchmark)
-  );
 }
