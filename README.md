@@ -53,7 +53,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://workbench.dev.lotus`.
 
 Preferred local entry points follow the RFC-0071 service identity model:
 
