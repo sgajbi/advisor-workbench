@@ -26,6 +26,8 @@ describe("PortfolioDrilldownDisclosure", () => {
 
     expect(screen.getByText("Transactions")).toBeInTheDocument();
     expect(screen.getByText("1 booked event in 30D")).toBeInTheDocument();
+    expect(screen.getByText("Open detail")).toBeInTheDocument();
+    expect(screen.getByText("Expand")).toBeInTheDocument();
     expect(screen.queryByText("Contract-backed transaction grid")).not.toBeInTheDocument();
 
     rerender(
@@ -44,6 +46,8 @@ describe("PortfolioDrilldownDisclosure", () => {
     );
 
     expect(screen.getByText("Contract-backed transaction grid")).toBeInTheDocument();
+    expect(screen.getByText("Collapse detail")).toBeInTheDocument();
+    expect(screen.getByText("Collapse")).toBeInTheDocument();
   });
 
   it("renders a partial capability panel instead of unsupported children", () => {
@@ -88,6 +92,7 @@ describe("PortfolioDrilldownDisclosure", () => {
     expect(screen.getByText("Projected cashflow unavailable")).toBeInTheDocument();
     expect(screen.getByText("No projected cashflow outlook is available in the current contract.")).toBeInTheDocument();
     expect(document.querySelector(".portfolio-module-state")).toBeTruthy();
+    expect(document.querySelector(".portfolio-disclosure-toggle")).toBeTruthy();
     expect(screen.queryByText("Should not render projected cashflow chart")).not.toBeInTheDocument();
   });
 

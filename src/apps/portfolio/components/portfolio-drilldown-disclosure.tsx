@@ -51,11 +51,21 @@ export default function PortfolioDrilldownDisclosure({
       onToggle={(event) => onToggle((event.currentTarget as HTMLDetailsElement).open)}
     >
       <summary>
-        <div>
-          <strong>{title}</strong>
-          <span>{summary}</span>
+        <div className="portfolio-disclosure-header">
+          <div className="portfolio-disclosure-heading">
+            <strong>{title}</strong>
+            <span>{summary}</span>
+          </div>
+          <span className="portfolio-disclosure-action-copy">
+            {expanded ? "Collapse detail" : "Open detail"}
+          </span>
         </div>
-        <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
+        <div className="portfolio-disclosure-toggle" aria-hidden="true">
+          <span className="portfolio-disclosure-toggle-label">
+            {expanded ? "Collapse" : "Expand"}
+          </span>
+          <span className="portfolio-disclosure-chevron">▾</span>
+        </div>
       </summary>
       <div className="portfolio-disclosure-content">
         {expanded ? (
