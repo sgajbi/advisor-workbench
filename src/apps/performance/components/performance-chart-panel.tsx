@@ -21,7 +21,10 @@ import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
-import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
+import {
+  getPerformanceMoneyWeightedAuditSupport,
+  getPerformanceReturnPathPresentation,
+} from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
 
 type PerformanceControlPatch = {
@@ -438,17 +441,10 @@ export default function PerformanceChartPanel({
     resolvedReportDates.startDate && resolvedReportDates.endDate
       ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
       : "Date range unavailable";
-  const moneyWeightedSupportSegments = [
-    moneyWeightedReturn?.method ? `MWR ${moneyWeightedReturn.method}` : null,
-    moneyWeightedReturn?.start_date && moneyWeightedReturn?.end_date
-      ? `${formatDate(moneyWeightedReturn.start_date)} - ${formatDate(moneyWeightedReturn.end_date)}`
-      : null,
-    moneyWeightedReturn?.notes?.[0] ?? null,
-  ].filter(Boolean);
-  const periodSupport =
-    moneyWeightedSupportSegments.length > 0
-      ? `${explicitDateRange} • ${moneyWeightedSupportSegments.join(" • ")}`
-      : explicitDateRange;
+  const periodSupport = getPerformanceMoneyWeightedAuditSupport({
+    explicitDateRange,
+    moneyWeightedReturn,
+  });
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

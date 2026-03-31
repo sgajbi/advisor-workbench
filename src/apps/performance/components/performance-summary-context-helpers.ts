@@ -1,11 +1,12 @@
 import type {
   PerformanceBenchmarkOptionView,
   PerformanceChartPoint,
+  MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 
-import { formatCurrency, formatPct } from "../formatters";
+import { formatCurrency, formatDate, formatPct } from "../formatters";
 
 type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
 
@@ -104,7 +105,7 @@ export function getPerformanceReturnPathPresentation({
         key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(summary.net_cash_flow, reportingCurrency),
-        support: formatNetFlowSupport(summary, reportingCurrency),
+        support: getPerformanceNetFlowSupport(summary, reportingCurrency),
         unavailable: summary.net_cash_flow == null,
       },
       {
@@ -121,7 +122,7 @@ export function getPerformanceReturnPathPresentation({
   };
 }
 
-function formatNetFlowSupport(
+export function getPerformanceNetFlowSupport(
   summary: {
     beginning_cash_flow?: number | null;
     ending_cash_flow?: number | null;
@@ -149,6 +150,28 @@ function formatNetFlowSupport(
   }
 
   return undefined;
+}
+
+export function getPerformanceMoneyWeightedAuditSupport({
+  explicitDateRange,
+  moneyWeightedReturn,
+}: {
+  explicitDateRange: string;
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
+}) {
+  const supportSegments = [
+    moneyWeightedReturn?.method ? `MWR ${moneyWeightedReturn.method}` : null,
+    moneyWeightedReturn?.start_date && moneyWeightedReturn?.end_date
+      ? `${formatDate(moneyWeightedReturn.start_date)} - ${formatDate(moneyWeightedReturn.end_date)}`
+      : null,
+    moneyWeightedReturn?.notes?.[0] ?? null,
+  ].filter(Boolean);
+
+  if (supportSegments.length === 0) {
+    return explicitDateRange;
+  }
+
+  return `${explicitDateRange} • ${supportSegments.join(" • ")}`;
 }
 
 function formatBenchmarkLabel(

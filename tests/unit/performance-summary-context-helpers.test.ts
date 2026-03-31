@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getPerformanceReturnPathPresentation } from "../../src/apps/performance/components/performance-summary-context-helpers";
+import {
+  getPerformanceMoneyWeightedAuditSupport,
+  getPerformanceReturnPathPresentation,
+} from "../../src/apps/performance/components/performance-summary-context-helpers";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
@@ -189,5 +192,27 @@ describe("performance summary context helpers", () => {
       support: "Fees $125",
       unavailable: false,
     });
+  });
+
+  it("builds money-weighted audit support from method, window, and notes", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    expect(
+      getPerformanceMoneyWeightedAuditSupport({
+        explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
+        moneyWeightedReturn: scenario.workspace.money_weighted_return,
+      })
+    ).toBe(
+      "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+    );
+  });
+
+  it("falls back to the plain resolved window when money-weighted audit metadata is absent", () => {
+    expect(
+      getPerformanceMoneyWeightedAuditSupport({
+        explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
+        moneyWeightedReturn: null,
+      })
+    ).toBe("01 Jan 2026 - 24 Feb 2026");
   });
 });
