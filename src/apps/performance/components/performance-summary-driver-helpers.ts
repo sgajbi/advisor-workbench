@@ -125,7 +125,9 @@ export function getPerformanceContributorsPresentation({
         });
   const positiveRankedRows =
     positivePositionContributors.length > 0
-      ? positivePositionContributors.map((row) => ({
+      ? positivePositionContributors
+          .filter((row) => row.contribution_pct >= 0)
+          .map((row) => ({
           key: `top-position-${row.position_id}`,
           title: formatPerformancePositionLabel(row.position_id),
           subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
@@ -136,7 +138,9 @@ export function getPerformanceContributorsPresentation({
       : [];
   const negativeRankedRows =
     negativePositionContributors.length > 0
-      ? negativePositionContributors.map((row) => ({
+      ? negativePositionContributors
+          .filter((row) => row.contribution_pct < 0)
+          .map((row) => ({
           key: `bottom-position-${row.position_id}`,
           title: formatPerformancePositionLabel(row.position_id),
           subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,

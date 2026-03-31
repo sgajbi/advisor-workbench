@@ -114,6 +114,57 @@ describe("performance summary driver helpers", () => {
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("AAPL");
   });
 
+  it("enforces contributor sign rules for ranked cards", () => {
+    const presentation = getPerformanceContributorsPresentation(
+      buildContributorProps({
+        positivePositionContributors: [
+          {
+            position_id: "CASH",
+            contribution_pct: 0,
+            weight_avg_pct: 2,
+            total_return_pct: 0,
+            local_contribution_pct: 0,
+            fx_contribution_pct: 0,
+          },
+          {
+            position_id: "MISCLASSIFIED_NEG",
+            contribution_pct: -0.05,
+            weight_avg_pct: 1,
+            total_return_pct: -0.2,
+            local_contribution_pct: -0.05,
+            fx_contribution_pct: 0,
+          },
+        ],
+        negativePositionContributors: [
+          {
+            position_id: "REAL_NEG",
+            contribution_pct: -0.15,
+            weight_avg_pct: 3,
+            total_return_pct: -1.1,
+            local_contribution_pct: -0.15,
+            fx_contribution_pct: 0,
+          },
+          {
+            position_id: "MISCLASSIFIED_POS",
+            contribution_pct: 0.12,
+            weight_avg_pct: 4,
+            total_return_pct: 0.9,
+            local_contribution_pct: 0.12,
+            fx_contribution_pct: 0,
+          },
+        ],
+      })
+    );
+
+    expect(presentation.mode).toBe("supported");
+    if (presentation.mode !== "supported") {
+      throw new Error("expected supported presentation");
+    }
+
+    expect(presentation.positiveRows.map((row) => row.title)).toEqual(["CASH"]);
+    expect(presentation.negativeRows.map((row) => row.title)).toEqual(["REAL NEG"]);
+  });
+
   it("builds a loading contributor presentation while detailed support is pending", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 
