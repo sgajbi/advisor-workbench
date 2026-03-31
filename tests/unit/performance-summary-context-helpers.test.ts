@@ -30,6 +30,7 @@ describe("performance summary context helpers", () => {
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
         fees: scenario.workspace.net_performance.fees,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+        benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
@@ -42,7 +43,8 @@ describe("performance summary context helpers", () => {
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
       benchmarkSourceLabel: "Calculated",
-      benchmarkContextValue: "Global Balanced 60/40 • Calculated • Lotus Demo",
+      benchmarkContextValue:
+        "Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo",
       activeReturnValue: "0.52%",
       relativeContextStatus: "available",
       benchmarkStateBody: null,
@@ -85,6 +87,7 @@ describe("performance summary context helpers", () => {
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
         fees: scenario.workspace.net_performance.fees,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+        benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
@@ -97,7 +100,8 @@ describe("performance summary context helpers", () => {
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
       benchmarkSourceLabel: "Calculated",
-      benchmarkContextValue: "Global Balanced 60/40 • Calculated • Lotus Demo",
+      benchmarkContextValue:
+        "Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo",
       activeReturnValue: "Unavailable",
       relativeContextStatus: "partial",
       benchmarkStateBody: null,
@@ -128,6 +132,7 @@ describe("performance summary context helpers", () => {
         net_cash_flow: null,
         fees: null,
         benchmark_return_source: null,
+        benchmark_input_mode: null,
       },
       points: [
         {
@@ -190,6 +195,7 @@ describe("performance summary context helpers", () => {
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
         fees: 125,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+        benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
@@ -223,6 +229,7 @@ describe("performance summary context helpers", () => {
         net_cash_flow: null,
         fees: null,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+        benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       moneyWeightedReturn: scenario.workspace.money_weighted_return,
       points: scenario.workspace.net_chart,
@@ -307,5 +314,34 @@ describe("performance summary context helpers", () => {
         is_assigned: true,
       })
     ).toBe("Global Balanced 60/40 • USD • Composite");
+  });
+
+  it("includes benchmark input provenance when comparative summary exposes it", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const presentation = getPerformanceReturnPathPresentation({
+      summary: {
+        portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
+        benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
+        active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
+        end_market_value: scenario.workspace.net_performance.end_market_value,
+        beginning_cash_flow: scenario.workspace.net_performance.beginning_cash_flow,
+        ending_cash_flow: scenario.workspace.net_performance.ending_cash_flow,
+        flow_adjusted_end_market_value:
+          scenario.workspace.net_performance.flow_adjusted_end_market_value,
+        net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
+        fees: scenario.workspace.net_performance.fees,
+        benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+        benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
+      },
+      points: scenario.workspace.net_chart,
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      benchmarkOptions: scenario.workspace.benchmark_options ?? [],
+      capabilities: scenario.capabilities,
+      reportingCurrency: scenario.workspace.portfolio.base_currency,
+    });
+
+    expect(presentation.benchmarkContextValue).toContain("Stateful benchmark");
   });
 });

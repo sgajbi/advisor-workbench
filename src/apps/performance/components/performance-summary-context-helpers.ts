@@ -49,6 +49,7 @@ export function getPerformanceReturnPathPresentation({
     net_cash_flow?: number | null;
     fees?: number | null;
     benchmark_return_source?: string | null;
+    benchmark_input_mode?: string | null;
   };
   moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
   points: PerformanceChartPoint[];
@@ -88,6 +89,7 @@ export function getPerformanceReturnPathPresentation({
       benchmark,
       benchmarkOptions,
       benchmarkReturnSource: summary.benchmark_return_source,
+      benchmarkInputMode: summary.benchmark_input_mode,
     }),
     activeReturnValue,
     relativeContextStatus,
@@ -238,10 +240,12 @@ export function getPerformanceBenchmarkContextValue({
   benchmark,
   benchmarkOptions = [],
   benchmarkReturnSource,
+  benchmarkInputMode,
 }: {
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   benchmarkReturnSource?: string | null;
+  benchmarkInputMode?: string | null;
 }) {
   if (!benchmark) {
     return "Unassigned";
@@ -250,6 +254,7 @@ export function getPerformanceBenchmarkContextValue({
   const selectedOption = benchmarkOptions.find((option) => option.benchmark_code === benchmark);
   const supportSegments = [
     formatBenchmarkSourceLabel(benchmarkReturnSource),
+    formatBenchmarkInputModeLabel(benchmarkInputMode),
     selectedOption?.benchmark_provider
       ? formatProvenanceLabel(selectedOption.benchmark_provider)
       : null,
@@ -298,6 +303,21 @@ function formatBenchmarkSourceLabel(source?: string | null) {
         .filter(Boolean)
         .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
         .join(" ");
+  }
+}
+
+function formatBenchmarkInputModeLabel(inputMode?: string | null) {
+  if (!inputMode) {
+    return null;
+  }
+
+  switch (inputMode.trim().toLowerCase()) {
+    case "stateful":
+      return "Stateful benchmark";
+    case "stateless":
+      return "Stateless benchmark";
+    default:
+      return `${formatLabel(inputMode)} benchmark`;
   }
 }
 

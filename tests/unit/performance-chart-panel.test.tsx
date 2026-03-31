@@ -149,6 +149,7 @@ describe("PerformanceChartPanel", () => {
             benchmark_return_pct: 2.5,
             active_return_pct: 0.8,
             benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
           },
           benchmark: "BMK_GLOBAL_BALANCED_60_40",
           reportStartDate: "",
@@ -181,7 +182,9 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Portfolio line Portfolio")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Balanced 60/40 • Calculated • Lotus Demo")
+      compactPattern(
+        "Benchmark line Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
+      )
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Active context 0.80% • Available")
@@ -227,6 +230,7 @@ describe("PerformanceChartPanel", () => {
             benchmark_return_pct: 5.8,
             active_return_pct: 0.4,
             benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
           },
           benchmark: "BMK_GLOBAL_GROWTH_80_20",
           benchmarkOptions: [
@@ -386,6 +390,7 @@ describe("PerformanceChartPanel", () => {
             ...returnPath.summary,
             portfolio_return_pct: 6.2,
             benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
           },
           benchmark: returnPath.benchmark,
           benchmarkOptions: returnPath.benchmarkOptions,
@@ -396,7 +401,9 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Balanced 60/40 • Calculated • Lotus Demo")
+      compactPattern(
+        "Benchmark line Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
+      )
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Active context Unavailable • Partial")

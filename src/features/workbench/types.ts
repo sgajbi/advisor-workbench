@@ -139,6 +139,7 @@ export type PerformanceComparativeSummary = {
   annualized_return_pct: number | null;
   benchmark_id: string | null;
   benchmark_return_source: string | null;
+  benchmark_input_mode?: string | null;
   begin_market_value?: number | null;
   end_market_value?: number | null;
   beginning_cash_flow?: number | null;
