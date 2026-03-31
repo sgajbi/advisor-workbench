@@ -179,6 +179,16 @@ describe("portfolio api", () => {
         });
       }
 
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
+        return jsonResponse({
+          net_chart: [
+            { label: "2026-01", cumulative_portfolio_return_pct: 1.1 },
+            { label: "2026-02", cumulative_portfolio_return_pct: 2.9 },
+            { label: "2026-03", cumulative_portfolio_return_pct: 5.12 },
+          ],
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchSpy);
@@ -206,6 +216,11 @@ describe("portfolio api", () => {
       benchmark_label: "Global Balanced 60/40",
       benchmark_return_source: "calculated",
       benchmark_input_mode: "stateful",
+      sparkline_points: [
+        { label: "2026-01", return_pct: 1.1 },
+        { label: "2026-02", return_pct: 2.9 },
+        { label: "2026-03", return_pct: 5.12 },
+      ],
     });
     expect(details?.readiness_indicators).toBeUndefined();
     expect(details?.insights).toBeUndefined();
@@ -225,6 +240,14 @@ describe("portfolio api", () => {
           url.includes("period=EXPLICIT") &&
           url.includes("report_start_date=2026-03-01") &&
           url.includes("report_end_date=2026-03-28")
+      )
+    ).toBe(true);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/workbench/MANUAL_PB_USD_001/performance/details?") &&
+          url.includes("contribution_dimension=asset_class") &&
+          url.includes("attribution_dimension=asset_class")
       )
     ).toBe(true);
   });
@@ -470,6 +493,16 @@ describe("portfolio api", () => {
         });
       }
 
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
+        return jsonResponse({
+          net_chart: [
+            { label: "2026-01", cumulative_portfolio_return_pct: 0.8 },
+            { label: "2026-02", cumulative_portfolio_return_pct: 1.6 },
+            { label: "2026-03", cumulative_portfolio_return_pct: 2.1 },
+          ],
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchSpy);
@@ -505,6 +538,7 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(1);
   });
 
   it("coalesces identical in-flight ledger requests into a single fetch", async () => {

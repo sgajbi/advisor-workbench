@@ -105,7 +105,11 @@ describe("portfolio performance snapshot module", () => {
           benchmark_return_source: "calculated",
           benchmark_input_mode: "stateful",
           excess_return_pct: 0.21,
-          sparkline_points: null,
+          sparkline_points: [
+            { label: "2026-01", return_pct: 1.1 },
+            { label: "2026-02", return_pct: 2.9 },
+            { label: "2026-03", return_pct: 5.12 },
+          ],
         }}
         rebalance={{ status: "READY", last_run_at_utc: null, last_rebalance_run_id: null }}
         reportingRowCount={14}
@@ -139,10 +143,10 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
     expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
     expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
-    expect(
-      screen.getByText("Open Performance workspace for source-backed return path detail.")
-    ).toBeInTheDocument();
+    expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
     expect(screen.getByText("01 Jan 2026 - 28 Mar 2026")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Performance snapshot sparkline" })).toBeInTheDocument();
+    expect(screen.getByText("2026-01 to 2026-03")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
     expect(onToggle).toHaveBeenCalled();

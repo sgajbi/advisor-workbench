@@ -2609,6 +2609,36 @@ a:hover {
   color: var(--text-muted);
 }
 
+.portfolio-performance-sparkline {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.portfolio-performance-sparkline svg {
+  width: 100%;
+  max-width: 180px;
+  height: 52px;
+}
+
+.portfolio-performance-sparkline-line {
+  fill: none;
+  stroke: #315d8a;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.portfolio-performance-sparkline-copy {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .state-info-hint {
   display: inline-flex;
   align-items: center;

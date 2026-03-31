@@ -114,6 +114,13 @@ type PortfolioPerformanceSummaryResponse = {
   } | null;
 };
 
+type PortfolioPerformanceDetailsResponse = {
+  net_chart: Array<{
+    label: string;
+    cumulative_portfolio_return_pct?: number | null;
+  }>;
+};
+
 type PortfolioWorkspaceDetailedDetails = Pick<
   PortfolioWorkspace,
   | "cash_balances"
@@ -209,6 +216,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       incomePayload,
       activityPayload,
       performancePayload,
+      performanceDetailsPayload,
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioAllocationResponse>(
         "client",
@@ -231,6 +239,11 @@ export async function getPortfolioWorkspaceSummaryDetails(
         `/workbench/${encodeURIComponent(portfolioId)}/performance/summary`,
         { query: performanceQuery }
       ),
+      fetchPortfolioJson<PortfolioPerformanceDetailsResponse>(
+        "client",
+        `/workbench/${encodeURIComponent(portfolioId)}/performance/details`,
+        { query: buildPortfolioPerformanceDetailsQuery(params) }
+      ),
     ]);
 
     if (!allocationsPayload || !positionsPayload) {
@@ -252,7 +265,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       positions: positionsPayload.positions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
-      performance: mapPortfolioPerformanceSummary(performancePayload),
+      performance: mapPortfolioPerformanceSummary(performancePayload, performanceDetailsPayload),
     };
   } catch {
     return null;
@@ -438,8 +451,21 @@ function buildPortfolioPerformanceSummaryQuery(params: {
   return query;
 }
 
+function buildPortfolioPerformanceDetailsQuery(params: {
+  timeWindow: PortfolioTimeWindow;
+  reportStartDate: string;
+  reportEndDate: string;
+  usesCustomDateRange?: boolean;
+}) {
+  const query = buildPortfolioPerformanceSummaryQuery(params);
+  query.set("contribution_dimension", "asset_class");
+  query.set("attribution_dimension", "asset_class");
+  return query;
+}
+
 function mapPortfolioPerformanceSummary(
-  payload: PortfolioPerformanceSummaryResponse | null
+  payload: PortfolioPerformanceSummaryResponse | null,
+  detailsPayload?: PortfolioPerformanceDetailsResponse | null
 ): PortfolioWorkspace["performance"] {
   if (!payload) {
     return null;
@@ -463,7 +489,11 @@ function mapPortfolioPerformanceSummary(
     benchmark_return_source: payload.net_performance.benchmark_return_source ?? null,
     benchmark_input_mode: payload.net_performance.benchmark_input_mode ?? null,
     excess_return_pct: payload.net_performance.active_return_pct,
-    sparkline_points: null,
+    sparkline_points:
+      detailsPayload?.net_chart?.map((point) => ({
+        label: point.label,
+        return_pct: point.cumulative_portfolio_return_pct ?? null,
+      })) ?? null,
   };
 }
 

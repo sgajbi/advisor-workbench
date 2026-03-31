@@ -9,6 +9,7 @@ import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
 import PortfolioModuleState from "./portfolio-module-state";
+import PortfolioPerformanceSparkline from "./portfolio-performance-sparkline";
 
 type PerformanceSnapshotProps = {
   capability: WorkspaceCapability;
@@ -84,6 +85,9 @@ export default function PortfolioPerformanceSnapshotModule({
               value={performance?.money_weighted_method ? `MWR ${performance.money_weighted_method}` : "Unavailable"}
             />
             <MetricRow label="Trend" value={trendValue} />
+            {performance?.sparkline_points?.length ? (
+              <PortfolioPerformanceSparkline points={performance.sparkline_points} />
+            ) : null}
             <MetricRow label="Reporting Rows" value={reportingRowCount} />
             <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />
           </div>
