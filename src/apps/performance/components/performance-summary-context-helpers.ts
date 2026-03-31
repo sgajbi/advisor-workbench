@@ -10,8 +10,10 @@ import { formatCurrency, formatPct } from "../formatters";
 type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
 
 export type PerformanceReturnPathMetric = {
+  key: string;
   label: string;
   value: string | number;
+  support?: string;
   unavailable?: boolean;
 };
 
@@ -74,11 +76,13 @@ export function getPerformanceReturnPathPresentation({
         "Assign a benchmark to enable relative comparison and active return context.",
     metrics: [
       {
+        key: "portfolio-return",
         label: "Portfolio Return",
         value: formatPct(summary.portfolio_return_pct),
         unavailable: summary.portfolio_return_pct == null,
       },
       {
+        key: "benchmark-return",
         label: "Benchmark Return",
         value:
           benchmarkAssigned && summary.benchmark_return_pct != null
@@ -87,24 +91,22 @@ export function getPerformanceReturnPathPresentation({
         unavailable: !benchmarkAssigned || summary.benchmark_return_pct == null,
       },
       {
+        key: "active-return",
         label: "Active Return",
         value: activeReturnValue,
         unavailable: activeReturnValue === "Unavailable",
       },
       {
-        label: "Ending MV",
-        value: formatCurrency(summary.end_market_value, reportingCurrency),
-        unavailable: summary.end_market_value == null,
-      },
-      {
+        key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(summary.net_cash_flow, reportingCurrency),
         unavailable: summary.net_cash_flow == null,
       },
       {
-        label: "Annualized",
-        value: formatPct(summary.annualized_return_pct),
-        unavailable: summary.annualized_return_pct == null,
+        key: "ending-mv",
+        label: "Ending MV",
+        value: formatCurrency(summary.end_market_value, reportingCurrency),
+        unavailable: summary.end_market_value == null,
       },
     ],
   };

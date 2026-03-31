@@ -147,16 +147,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-context-strip.workbench-chart-context-row")).toBeTruthy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
-    const chartSummaryBand = mainShell?.querySelector(
-      ".performance-chart-summary-band.workbench-summary-metric-strip"
-    );
+    const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
     expect(chartSummaryBand).toBeTruthy();
     expect(within(chartSummaryBand as HTMLElement).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Active Return")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Annualized")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Basis / Period")).toBeInTheDocument();
     expect(screen.getByLabelText("Return path observation table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
@@ -176,13 +174,11 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Basis")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Resolved window")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Basis / Period")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("01 Jan 2026 - 24 Feb 2026")).toBeInTheDocument();
-    expect(within(executiveStrip).queryByText("Benchmark")).not.toBeInTheDocument();
-    expect(executiveStrip.querySelector(".performance-summary-kpi-card-primary")).toBeTruthy();
-    expect(executiveStrip.querySelectorAll(".performance-summary-kpi-card-comparison")).toHaveLength(2);
+    expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("How did this compare across horizons?")).length).toBe(1);
@@ -203,8 +199,6 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
-    expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-label")).toBeTruthy();
-    expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-value")).toBeTruthy();
     expect(screen.queryByText("Attribution Over Time")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Detail")).not.toBeInTheDocument();
@@ -238,9 +232,9 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     const executiveStrip = await screen.findByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Resolved window")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Basis / Period")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("01 Jan 2026 - 24 Feb 2026")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("QTD")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Net • QTD")).toBeInTheDocument();
   });
 
   it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
@@ -250,11 +244,11 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect((await screen.findAllByText("Unassigned")).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 
-  it("keeps first paint focused on the executive and trust strips before deferred summary modules mount", async () => {
+  it("renders the compact top analysis zone with chart-first hierarchy on first paint", async () => {
     installPerformancePageFetchMock();
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
@@ -262,7 +256,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
+    expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
       "Evidence pending contract"
@@ -691,7 +687,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
       expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
       expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
@@ -721,9 +717,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByText("Partial")).toBeInTheDocument();
-    expect(
-      screen.getAllByText("Relative returns incomplete")
-    ).toHaveLength(2);
+    expect(screen.getAllByText("Relative returns incomplete").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Benchmark line Global Balanced 60/40")
     );
@@ -792,7 +786,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "benchmark-unassigned and return-series-unavailable",
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
-      executiveExpectations: ["Money-Weighted Return"],
+      executiveExpectations: [],
       trustExpectations: [
         "Benchmark not assigned",
         "Published observations unavailable",
@@ -807,7 +801,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "assigned benchmark with partial relative comparison",
       scenario: buildPartialBenchmarkPerformanceScenario(),
-      executiveExpectations: ["Money-Weighted Return"],
+      executiveExpectations: ["Basis / Period", "Portfolio Return"],
       trustExpectations: [
         "Partial",
         "Relative returns incomplete",
@@ -822,7 +816,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "aggregate-only contribution ranking",
       scenario: buildAggregateContributionPerformanceScenario(),
-      executiveExpectations: ["Money-Weighted Return"],
+      executiveExpectations: ["Basis / Period", "Portfolio Return"],
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
       horizonExpectations: ["Active return 0.51%", "Compared against Global Balanced 60/40"],
@@ -831,7 +825,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "combined benchmark, attribution, and contributor support gaps",
       scenario: buildCombinedPartialPerformanceScenario(),
-      executiveExpectations: ["Money-Weighted Return"],
+      executiveExpectations: ["Basis / Period", "Portfolio Return"],
       trustExpectations: [
         "Partial",
         "Unavailable",
@@ -860,11 +854,16 @@ describe("PerformanceAnalyticsPage", () => {
 
       expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
 
-      const executiveStrip = screen.getByLabelText("Executive return strip");
+      const executiveStrip = screen.queryByLabelText("Executive return strip");
       const trustStrip = screen.getByLabelText("Trust and completeness strip");
 
-      for (const text of executiveExpectations) {
-        expect(within(executiveStrip).queryAllByText(text).length).toBeGreaterThan(0);
+      if (executiveExpectations.length) {
+        expect(executiveStrip).toBeInTheDocument();
+        for (const text of executiveExpectations) {
+          expect(within(executiveStrip as HTMLElement).queryAllByText(text).length).toBeGreaterThan(0);
+        }
+      } else {
+        expect(executiveStrip).not.toBeInTheDocument();
       }
 
       for (const text of trustExpectations) {

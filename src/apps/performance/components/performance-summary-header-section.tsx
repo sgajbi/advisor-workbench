@@ -1,7 +1,4 @@
-import { Stack } from "@mui/material";
-
 import PerformanceCapabilityTrustStrip from "./performance-capability-trust-strip";
-import PerformanceExecutiveReturnStrip from "./performance-executive-return-strip";
 import type { PerformanceSummaryHeaderSectionProps } from "./performance-workspace-types";
 import {
   getPerformanceSummaryFirstPaintPresentation,
@@ -25,9 +22,8 @@ export default function PerformanceSummaryHeaderSection({
   });
 
   return (
-    <Stack spacing={1.5} id="performance-overview" className="performance-summary-stage">
-      <PerformanceExecutiveReturnStrip presentation={presentation.executive} />
+    <section id="performance-overview" className="performance-summary-stage">
       <PerformanceCapabilityTrustStrip presentation={presentation.trust} />
-    </Stack>
+    </section>
   );
 }

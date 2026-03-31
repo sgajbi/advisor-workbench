@@ -162,21 +162,17 @@ describe("PerformanceChartPanel", () => {
       )
     ).toBeTruthy();
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
-    expect(
-      document.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")
-    ).toBeTruthy();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-chart-context-strip.workbench-chart-context-row")).toBeTruthy();
-    expect(
-      document.querySelector(".performance-chart-control-band.workbench-summary-toolbar")
-    ).toBeTruthy();
-    expect(document.querySelectorAll(".performance-chart-control-card")).toHaveLength(6);
+    expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
     expect(screen.getByRole("tablist", { name: "Return path view mode" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();
-    expect(screen.getByText("Ending MV")).toBeInTheDocument();
     expect(screen.getByText("Net Flow")).toBeInTheDocument();
-    expect(screen.getByText("Annualized")).toBeInTheDocument();
+    expect(screen.getByText("Ending MV")).toBeInTheDocument();
+    expect(screen.getByText("Basis / Period")).toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
@@ -192,7 +188,9 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Resolved window / basis 01 Jan 2026 - 28 Feb 2026 • Net")
     );
-    expect(screen.getByText("01 Jan 2026 - 28 Feb 2026")).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
+      compactPattern("Basis / Period Net • YTD 01 Jan 2026 - 28 Feb 2026")
+    );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
     const observationTable = screen.getByLabelText("Return path observation table");

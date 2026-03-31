@@ -26,13 +26,17 @@ vi.mock("next/dynamic", () => ({
   },
 }));
 
-vi.mock("../../src/apps/performance/components/performance-chart-panel", () => ({
-  default: ({ title, id }: { title: string; id?: string }) => (
+const { chartPanelMock } = vi.hoisted(() => ({
+  chartPanelMock: vi.fn(({ title, id }: { title: string; id?: string }) => (
     <div data-testid="chart-panel">
       {title}
       {id ? `:${id}` : ""}
     </div>
-  ),
+  )),
+}));
+
+vi.mock("../../src/apps/performance/components/performance-chart-panel", () => ({
+  default: chartPanelMock,
 }));
 
 vi.mock("../../src/apps/performance/components/performance-multi-horizon-panel", () => ({
@@ -56,7 +60,6 @@ vi.mock("../../src/apps/performance/components/performance-multi-horizon-panel",
 vi.mock("../../src/apps/performance/components/performance-summary-header-section", () => ({
   default: ({ selectedBenchmarkLabel }: { selectedBenchmarkLabel?: string | null }) => (
     <div data-testid="summary-header">
-      <div>Executive return strip</div>
       <div>Trust and completeness strip</div>
       <div>{selectedBenchmarkLabel ?? "no benchmark"}</div>
     </div>
@@ -150,21 +153,18 @@ describe("PerformanceSummaryMode", () => {
     expect(screen.getByTestId("summary-header")).toHaveTextContent(
       scenario.selectedBenchmarkLabel ?? "no benchmark"
     );
-    expect(screen.getByText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByText("Trust and completeness strip")).toBeInTheDocument();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("chart-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("chart-panel")).toHaveTextContent(
+      "Gross Return Path:performance-trend"
+    );
     expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();
-    expect(screen.queryByText("Return path and benchmark context")).not.toBeInTheDocument();
     expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByTestId("chart-panel")).toHaveTextContent(
-        "Gross Return Path:performance-trend"
-      );
       expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
         `${scenario.workspace.portfolio_id}:YTD:GROSS:${scenario.selectedBenchmarkCode}`
       );
@@ -173,5 +173,6 @@ describe("PerformanceSummaryMode", () => {
 
     expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
+    expect(chartPanelMock).toHaveBeenCalledTimes(1);
   });
 });

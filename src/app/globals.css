@@ -4041,7 +4041,7 @@ a:hover {
 .performance-summary-stage {
   width: 100%;
   max-width: none;
-  gap: 0.6875rem;
+  gap: 0.5rem;
 }
 
 .performance-page-frame {
@@ -4133,7 +4133,6 @@ a:hover {
   gap: var(--workbench-metric-strip-gap);
 }
 
-.performance-executive-strip,
 .performance-trust-strip {
   width: 100%;
 }
@@ -4157,13 +4156,9 @@ a:hover {
   gap: 0.4375rem;
 }
 
-.performance-executive-strip {
-  border-color: rgba(23, 32, 43, 0.08);
-}
-
 .performance-trust-strip {
-  padding-top: 0.9rem;
-  padding-bottom: 0.9rem;
+  padding-top: 0.72rem;
+  padding-bottom: 0.72rem;
   border-color: rgba(23, 32, 43, 0.06);
   background: linear-gradient(180deg, rgba(251, 252, 253, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%);
 }
@@ -5022,7 +5017,7 @@ a:hover {
 .performance-chart-stage {
   width: 100%;
   max-width: none;
-  gap: 1rem;
+  gap: 0.7rem;
   border-color: rgba(23, 32, 43, 0.1);
   background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
 }
@@ -5171,51 +5166,94 @@ a:hover {
   color: #b78326;
 }
 
-.performance-chart-summary-band {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.625rem;
+.performance-analysis-top-region {
+  gap: 0.75rem;
 }
 
-.performance-chart-control-band {
+.performance-analysis-control-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.9fr) minmax(10rem, 0.9fr) minmax(12rem, 1.15fr) auto;
+  grid-template-columns:
+    minmax(180px, 0.9fr)
+    minmax(360px, 1.55fr)
+    minmax(132px, 0.68fr)
+    minmax(220px, 0.95fr)
+    minmax(220px, 0.92fr)
+    minmax(160px, 0.7fr);
   gap: 0.625rem;
   align-items: end;
 }
 
-.performance-chart-control-card {
+.performance-analysis-control-slot {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.25rem;
   min-width: 0;
-  padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(34, 44, 59, 0.07);
-  border-radius: 10px;
-  background: #f8fafc;
 }
 
-.performance-chart-control-card .MuiInputBase-root {
+.performance-analysis-control-slot .MuiInputBase-root {
   background: #ffffff;
 }
 
-.performance-chart-control-card-dates {
-  align-content: start;
+.performance-analysis-control-slot .MuiInputBase-input {
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
-.performance-chart-date-stack {
+.performance-analysis-control-slot .MuiToggleButtonGroup-root,
+.performance-analysis-control-slot .workbench-segmented-control {
+  min-height: 36px;
+}
+
+.performance-analysis-control-slot .workbench-segmented-control {
+  padding: 2px;
+}
+
+.performance-analysis-control-slot .workbench-segmented-control-button {
+  min-height: 32px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.performance-analysis-date-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.5rem;
   align-items: center;
 }
 
-.performance-chart-date-stack .MuiFormControl-root,
-.performance-chart-date-stack .MuiTextField-root {
-  flex: 1 1 0;
+.performance-analysis-apply-button.MuiButton-root {
+  min-height: 36px;
+  padding-inline: 0.9rem;
+  white-space: nowrap;
 }
 
-.performance-chart-control-card-basis {
-  min-width: 8.5rem;
+.performance-outcome-strip {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
 }
 
-.performance-chart-toggle-wrap {
-  min-width: 0;
+.performance-outcome-strip-item {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid rgba(34, 44, 59, 0.07);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.performance-outcome-strip-item .workbench-summary-metric-label {
+  font-size: 0.6875rem;
+  color: #6b7280;
+}
+
+.performance-outcome-strip-item .workbench-summary-metric-value {
+  font-size: 1.08rem;
+  font-weight: 780;
+  line-height: 1.15;
+}
+
+.performance-outcome-strip-item .workbench-summary-metric-support {
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .performance-chart-benchmark-state {
@@ -5290,8 +5328,8 @@ a:hover {
 .performance-chart-library-frame {
   width: 100%;
   max-width: none;
-  min-height: 26rem;
-  border-radius: 16px;
+  min-height: 21rem;
+  border-radius: 14px;
   border: 1px solid rgba(23, 32, 43, 0.08);
   background: #ffffff;
   overflow: hidden;
@@ -6414,11 +6452,11 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-chart-summary-band {
+  .performance-outcome-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .performance-chart-control-band {
+  .performance-analysis-control-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -6673,7 +6711,7 @@ a:hover {
   }
 
   .performance-overview-band-stats,
-  .performance-chart-summary-band,
+  .performance-outcome-strip,
   .performance-chart-summary {
     grid-template-columns: 1fr;
   }
@@ -6699,7 +6737,7 @@ a:hover {
     gap: 0.75rem;
   }
 
-  .performance-chart-control-band {
+  .performance-analysis-control-bar {
     grid-template-columns: 1fr;
   }
 
@@ -6709,6 +6747,10 @@ a:hover {
 
   .performance-chart-inline-controls,
   .performance-chart-date-form {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-analysis-date-row {
     grid-template-columns: 1fr;
   }
 

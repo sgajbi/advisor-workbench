@@ -3,21 +3,11 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
-import {
-  Box,
-  Button,
-  Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import {
   AnalyticsTable,
   WorkbenchChartShell,
-  WorkbenchSegmentedControl,
-  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
@@ -26,12 +16,12 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatDate } from "../formatters";
-import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
-import { isCapabilityOptionSupported } from "./performance-capability-options";
+import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
+import PerformanceOutcomeStrip from "./performance-outcome-strip";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -469,11 +459,27 @@ export default function PerformanceChartPanel({
     });
   }
 
+  const outcomeItems = [
+    returnPathPresentation.metrics[0],
+    returnPathPresentation.metrics[1],
+    returnPathPresentation.metrics[2],
+    returnPathPresentation.metrics[3],
+    returnPathPresentation.metrics[4],
+    {
+      key: "basis-period-summary",
+      label: "Basis / Period",
+      value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
+        period === "EXPLICIT" ? "Explicit window" : period
+      }`,
+      support: explicitDateRange,
+    },
+  ];
+
   return (
     <WorkbenchChartShell
       id={id}
       title={title}
-      subtitle={explicitDateRange}
+      subtitle="Primary return path and benchmark-relative comparison."
       className="performance-chart-stage workbench-summary-panel"
       contextRow={
         <PerformanceChartContextStrip
@@ -489,205 +495,37 @@ export default function PerformanceChartPanel({
         />
       }
       toolbar={
-        <div className="performance-chart-control-band workbench-summary-toolbar">
-          <div className="performance-chart-control-card">
-            <Typography sx={controlLabelSx}>Horizon</Typography>
-            <div className="performance-chart-toggle-wrap">
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={period}
-                aria-label="Horizon"
-                sx={toggleGroupSx}
-              >
-                {PERIOD_OPTIONS.map((option) => (
-                  <ToggleButton
-                    key={option}
-                    value={option}
-                    onClick={() =>
-                      updateSelection({
-                        period: option,
-                        reportStartDate: undefined,
-                        reportEndDate: undefined,
-                      })
-                    }
-                    disabled={isUpdating && option === period}
-                  >
-                    {option}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-            </div>
-          </div>
-
-          <div className="performance-chart-control-card performance-chart-control-card-dates">
-            <Typography sx={controlLabelSx}>Explicit Dates</Typography>
-            <Stack
-              component="form"
-              className="performance-chart-date-stack"
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1}
-              useFlexGap
-              onSubmit={applyExplicitDates}
-            >
-              <TextField
-                size="small"
-                type="date"
-                value={fromDate}
-                slotProps={{
-                  htmlInput: {
-                    "aria-label": "From",
-                    max: toDate || resolvedReportDates.endDate,
-                  },
-                }}
-                onChange={(event) => setFromDate(event.currentTarget.value)}
-              />
-              <TextField
-                size="small"
-                type="date"
-                value={toDate}
-                slotProps={{
-                  htmlInput: {
-                    "aria-label": "To",
-                    min: fromDate,
-                    max: resolvedReportDates.endDate,
-                  },
-                }}
-                onChange={(event) => setToDate(event.currentTarget.value)}
-              />
-              <Button type="submit" variant="contained" size="small" disableElevation>
-                {isUpdating ? "Updating..." : "Apply"}
-              </Button>
-            </Stack>
-          </div>
-
-          <div className="performance-chart-control-card">
-            <Typography sx={controlLabelSx}>View</Typography>
-            <WorkbenchSegmentedControl
-              ariaLabel="Return path view mode"
-              className="performance-chart-view-control"
-              value={chartViewMode}
-              onChange={setChartViewMode}
-              options={[
-                { key: "combined", label: "Combined", disabled: !hasBenchmarkSeries },
-                { key: "absolute", label: "Absolute" },
-                {
-                  key: "relative",
-                  label: "Relative",
-                  disabled: !hasActiveSeries,
-                  title: hasActiveSeries
-                    ? undefined
-                    : "Relative comparison requires benchmark-relative observations.",
-                },
-              ]}
-            />
-          </div>
-
-          <div className="performance-chart-control-card">
-            <Typography sx={controlLabelSx}>Frequency</Typography>
-            <TextField
-              select
-              size="small"
-              label="Frequency"
-              value={chartFrequency}
-              onChange={(event) =>
-                updateSelection({
-                  chartFrequency: event.target.value,
-                })
-              }
-              disabled={isUpdating}
-              sx={selectControlSx}
-              SelectProps={{ native: true }}
-              slotProps={{
-                inputLabel: { shrink: true },
-                htmlInput: { "aria-label": "Frequency" },
-              }}
-            >
-              {CHART_FREQUENCY_OPTIONS.map((option) => (
-                <option
-                  key={option.value}
-                  value={option.value}
-                  disabled={
-                    !isCapabilityOptionSupported(
-                      capabilities.returnPath,
-                      "frequency",
-                      option.value
-                    )
-                  }
-                >
-                  {option.label}
-                </option>
-              ))}
-            </TextField>
-          </div>
-
-          <div className="performance-chart-control-card">
-            <Typography sx={controlLabelSx}>Compared To</Typography>
-            <TextField
-              select
-              size="small"
-              label="Compared To"
-              value={benchmark ?? ""}
-              onChange={(event) =>
-                updateSelection({
-                  benchmark: event.target.value || undefined,
-                })
-              }
-              disabled={isUpdating}
-              sx={selectControlSx}
-              SelectProps={{ native: true }}
-              slotProps={{
-                inputLabel: { shrink: true },
-                htmlInput: { "aria-label": "Compared To" },
-              }}
-            >
-              {resolvedBenchmarkOptions.map((option) => (
-                <option key={option.benchmark_code} value={option.benchmark_code}>
-                  {option.benchmark_name}
-                </option>
-              ))}
-            </TextField>
-          </div>
-
-          <div className="performance-chart-control-card performance-chart-control-card-basis">
-            <Typography sx={controlLabelSx}>Basis</Typography>
-            <div className="performance-chart-toggle-wrap">
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={detailBasis}
-                aria-label="Basis"
-                sx={toggleGroupSx}
-              >
-                {BASIS_OPTIONS.map((option) => (
-                  <ToggleButton
-                    key={option}
-                    value={option}
-                    onClick={() =>
-                      updateSelection({
-                        detailBasis: option,
-                      })
-                    }
-                    disabled={isUpdating && option === detailBasis}
-                  >
-                    {option}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-            </div>
-          </div>
-        </div>
+        <PerformanceAnalysisControlBar
+          period={period}
+          detailBasis={detailBasis}
+          chartFrequency={chartFrequency}
+          benchmark={benchmark}
+          resolvedBenchmarkOptions={resolvedBenchmarkOptions}
+          fromDate={fromDate}
+          toDate={toDate}
+          maxEndDate={resolvedReportDates.endDate}
+          minEndDate={resolvedReportDates.startDate}
+          chartViewMode={chartViewMode}
+          hasBenchmarkSeries={hasBenchmarkSeries}
+          hasActiveSeries={hasActiveSeries}
+          capabilities={capabilities}
+          isUpdating={isUpdating}
+          onRequestChange={updateSelection}
+          onApplyExplicitDates={applyExplicitDates}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onChartViewModeChange={setChartViewMode}
+        />
       }
       metricStrip={
         capabilities.returnPath.state === "supported" && points.length ? (
-          <WorkbenchSummaryMetricStrip
-            className="performance-chart-summary-band"
-            items={returnPathPresentation.metrics.map((metric) => ({
-              key: metric.label,
+          <PerformanceOutcomeStrip
+            items={outcomeItems.map((metric) => ({
+              key: metric.key,
               label: metric.label,
               value: metric.value,
+              support: metric.support,
               unavailable: metric.unavailable,
-              className: "performance-chart-summary-stat",
             }))}
           />
         ) : undefined
@@ -732,7 +570,7 @@ export default function PerformanceChartPanel({
           >
             <ReactECharts
               option={chartOption}
-              style={{ width: "100%", height: "460px" }}
+              style={{ width: "100%", height: "360px" }}
               opts={{ renderer: "svg" }}
               notMerge
               lazyUpdate
@@ -769,45 +607,3 @@ export default function PerformanceChartPanel({
     </WorkbenchChartShell>
   );
 }
-
-const controlLabelSx = {
-  mb: 0.15,
-  fontSize: "0.6875rem",
-  fontWeight: 800,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "text.secondary",
-} as const;
-
-const toggleGroupSx = {
-  flexWrap: "wrap",
-  gap: 0.5,
-  "& .MuiToggleButtonGroup-grouped": {
-    borderRadius: "8px !important",
-    border: "1px solid rgba(31, 39, 51, 0.1) !important",
-    px: 1.05,
-    py: 0.45,
-    color: "text.secondary",
-    textTransform: "none",
-    fontWeight: 700,
-    fontSize: "0.78rem",
-    minHeight: 34,
-    backgroundColor: "#ffffff",
-  },
-  "& .Mui-selected": {
-    bgcolor: "#1f2733 !important",
-    color: "#fff !important",
-  },
-} as const;
-
-const selectControlSx = {
-  minWidth: { xs: "100%", sm: 140 },
-  "& .MuiInputBase-input": {
-    fontSize: "0.8125rem",
-    fontWeight: 600,
-  },
-  "& .MuiInputLabel-root": {
-    fontSize: "0.75rem",
-    fontWeight: 700,
-  },
-} as const;

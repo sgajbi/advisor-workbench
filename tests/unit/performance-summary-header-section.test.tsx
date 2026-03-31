@@ -26,23 +26,15 @@ function buildProps(
 }
 
 describe("PerformanceSummaryHeaderSection", () => {
-  it("renders the first-paint executive strip and trust strip", () => {
+  it("renders the trust strip as the secondary summary header band", () => {
     render(<PerformanceSummaryHeaderSection {...buildProps()} />);
 
     expect(
       document.querySelector(".performance-summary-stage")
     ).toBeTruthy();
-    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
-    expect(screen.getByText("Active Return")).toBeInTheDocument();
-    expect(screen.getByText("Money-Weighted Return")).toBeInTheDocument();
-    expect(screen.getByText("Basis")).toBeInTheDocument();
-    expect(screen.getByText("Period")).toBeInTheDocument();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelector(".performance-summary-kpi-card-primary")).toBeTruthy();
     expect(document.querySelectorAll(".performance-trust-item")).toHaveLength(5);
     expect(screen.queryByRole("group", { name: "Performance summary observations" })).not.toBeInTheDocument();
   });
@@ -93,11 +85,10 @@ describe("PerformanceSummaryHeaderSection", () => {
       />
     );
 
-    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
     expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Performance summary observations" })).not.toBeInTheDocument();
