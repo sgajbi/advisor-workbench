@@ -5,6 +5,7 @@ import {
 } from "@/design-system";
 
 import PerformanceCapabilityNotice from "./performance-capability-notice";
+import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
@@ -90,14 +91,23 @@ export default function PerformanceSummaryContributorsSection({
           {workspace.contribution?.levels?.length ? (
             <PerformanceContributionContextNote contribution={workspace.contribution} />
           ) : null}
-          <AnalyticsTable
-            ariaLabel="Aggregate contributor summary"
-            className="performance-contributors-table"
-            dense
-            columns={presentation.tableModel.columns}
-            rows={presentation.tableModel.rows}
-            footer={presentation.tableModel.footer}
-          />
+          {workspace.contribution?.levels?.[0] ? (
+            <PerformanceContributionAggregateTable
+              contribution={workspace.contribution}
+              level={workspace.contribution.levels[0]}
+              ariaLabel="Aggregate contributor summary"
+              className="performance-contributors-table"
+            />
+          ) : (
+            <AnalyticsTable
+              ariaLabel="Aggregate contributor summary"
+              className="performance-contributors-table"
+              dense
+              columns={presentation.tableModel.columns}
+              rows={presentation.tableModel.rows}
+              footer={presentation.tableModel.footer}
+            />
+          )}
         </div>
       ) : presentation.mode === "loading" ? (
         <p className="muted">{presentation.body}</p>

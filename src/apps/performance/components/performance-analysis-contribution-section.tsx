@@ -3,9 +3,9 @@ import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
 import {
-  buildPerformanceContributionLevelTableModel,
   buildPerformancePositionContributionTableModel,
 } from "./performance-analytics-table-models";
+import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import { formatLabel } from "../formatters";
@@ -121,27 +121,17 @@ export default function PerformanceAnalysisContributionSection({
           <PerformanceContributionContextNote contribution={workspace.contribution} />
         ) : null}
         {workspace.contribution?.levels.map((level) => {
-          const tableModel = buildPerformanceContributionLevelTableModel({
-            rows: level.rows,
-            contribution: workspace.contribution,
-            level,
-          });
           return (
             <PerformanceAnalysisLevelSection
               key={`${level.level}-${level.name}`}
               title={formatLabel(level.name)}
             >
-              <AnalyticsTable
+              <PerformanceContributionAggregateTable
                 className="performance-analysis-table"
-                dense
+                contribution={workspace.contribution!}
+                level={level}
                 ariaLabel={`${formatLabel(level.name)} contribution table`}
-                columns={tableModel.columns}
-                rows={tableModel.rows.map((row) => ({
-                  key: `${level.name}-${row.key}`,
-                  ariaLabel: row.ariaLabel,
-                  cells: row.cells,
-                }))}
-                footer={tableModel.footer}
+                rowKeyPrefix={level.name}
               />
             </PerformanceAnalysisLevelSection>
           );
