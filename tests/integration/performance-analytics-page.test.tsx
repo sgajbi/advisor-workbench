@@ -287,18 +287,23 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
-    expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
+    expect(screen.getByText("What drove the result?")).toBeInTheDocument();
     expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThanOrEqual(2);
+    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Segment breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+    expect(document.querySelectorAll("#performance-drivers .performance-analysis-table").length).toBe(1);
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
-    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
 
@@ -515,8 +520,7 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-state-panel").length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
-    expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
-    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
+    expect(screen.getByText("What drove the result?")).toBeInTheDocument();
   });
 
   it("renders summary-only attribution totals when detailed rows are unavailable", async () => {
@@ -541,7 +545,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "supported analysis",
       scenario: buildSupportedPerformanceScenario(),
-      expectations: ["Attribution Over Time", "Attribution Detail", "Contribution Detail"],
+      expectations: ["Attribution Over Time", "Attribution Detail", "What drove the result?"],
       absent: ["Attribution detail unavailable", "Contribution detail unavailable"],
     },
     {
@@ -564,7 +568,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildCombinedPartialPerformanceScenario(),
       expectations: [
         "Attribution detail unavailable",
-        "Contribution Detail",
+        "What drove the result?",
         "Equity",
       ],
       absent: ["AAPL"],
@@ -613,7 +617,7 @@ describe("PerformanceAnalyticsPage", () => {
       name: "supported workspace",
       scenario: buildSupportedPerformanceScenario(),
       summaryExpectations: ["Portfolio Return", "How did this compare across horizons?"],
-      analysisExpectations: ["Attribution Over Time", "Contribution Detail"],
+      analysisExpectations: ["Attribution Over Time", "What drove the result?"],
       evidenceExpectations: ["Evidence pending contract"],
       summaryAbsent: ["Benchmark not assigned"],
       analysisAbsent: ["Attribution detail unavailable", "Contribution detail unavailable"],
@@ -622,7 +626,7 @@ describe("PerformanceAnalyticsPage", () => {
       name: "unavailable attribution workspace",
       scenario: buildUnavailableAttributionPerformanceScenario(),
       summaryExpectations: ["Attribution", "Unavailable"],
-      analysisExpectations: ["Attribution detail unavailable", "Contribution Detail"],
+      analysisExpectations: ["Attribution detail unavailable", "What drove the result?"],
       evidenceExpectations: ["Evidence pending contract"],
       analysisAbsent: ["Relative Segment Matrix"],
     },
@@ -643,7 +647,7 @@ describe("PerformanceAnalyticsPage", () => {
       summaryExpectations: ["Relative returns incomplete", "Attribution detail unavailable"],
       analysisExpectations: [
         "Attribution detail unavailable",
-        "Contribution Detail",
+        "What drove the result?",
         "Equity",
       ],
       evidenceExpectations: ["Evidence pending contract"],

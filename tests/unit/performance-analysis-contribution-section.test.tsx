@@ -29,12 +29,12 @@ describe("PerformanceAnalysisContributionSection", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Contribution Detail" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What drove the result?" })).toBeInTheDocument();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
-    expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
-    expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
+    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
     expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(screen.getByText("Top Contributor")).toBeInTheDocument();
@@ -44,17 +44,24 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
     const detailStrip = screen.getByLabelText("Contribution detail summary strip");
     expect(within(detailStrip).getByText(/High coverage • Average weight/)).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Segment breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
     const positionTable = screen.getByLabelText("Position contribution table");
     expect(positionTable).toBeInTheDocument();
-    expect(screen.getByText("Position Ranking")).toBeInTheDocument();
     expect(within(positionTable).getByText("Position")).toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL")).toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Equity")).toBeInTheDocument();
-    expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getAllByText("5.42%").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Ranked contributors").length).toBeGreaterThanOrEqual(1);
+    const insightPane = document.querySelector(
+      ".performance-analysis-drilldown-pane-insight"
+    ) as HTMLElement;
+    expect(within(insightPane).queryByLabelText("Position contribution table")).not.toBeInTheDocument();
+    expect(within(insightPane).queryByText("Position")).not.toBeInTheDocument();
   });
 
   it("keeps the position return column when upstream emits real returns and no local contribution", () => {
@@ -172,13 +179,38 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
-    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Position contribution detail unavailable")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
+  });
+
+  it("shows only one detail grid at a time and switches to the grouped segment breakdown", () => {
+    render(
+      <PerformanceAnalysisContributionSection
+        workspace={buildWorkspace()}
+        contributionDimension="asset_class"
+        onRequestChange={undefined}
+        isUpdating={false}
+        isDetailsPending={false}
+        capabilities={supportedCapabilities}
+      />
+    );
+
+    expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Segment breakdown" }));
+
+    expect(screen.getByRole("tab", { name: "Segment breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.queryByLabelText("Position contribution table")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
   });
 
   it("disables contribution segment options that are outside the backend capability contract", () => {

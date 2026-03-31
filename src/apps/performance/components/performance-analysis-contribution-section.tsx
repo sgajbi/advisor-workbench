@@ -1,21 +1,28 @@
+import { useMemo, useState } from "react";
+
 import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 
-import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
+import { AnalyticsTable, WorkbenchDataGridFrame, WorkbenchRankedBarList } from "@/design-system";
 
 import {
   buildPerformancePositionContributionTableModel,
 } from "./performance-analytics-table-models";
+import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
+import PerformanceAnalysisDrilldownWorkspace from "./performance-analysis-drilldown-workspace";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import { formatLabel } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
-import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import { inlineControlLabelSx } from "./performance-workspace-view-helpers";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
+import { formatPct, formatPerformancePositionLabel } from "../formatters";
+import type { ContributionRowView, WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
+
+type ContributionDetailView = "positions" | "segments";
 
 type PerformanceAnalysisContributionSectionProps = Pick<
   PerformanceAnalysisModeProps,
@@ -35,6 +42,7 @@ export default function PerformanceAnalysisContributionSection({
   isDetailsPending,
   capabilities,
 }: PerformanceAnalysisContributionSectionProps) {
+  const [detailView, setDetailView] = useState<ContributionDetailView>("positions");
   const hasAggregateContributionLevels = (workspace.contribution?.levels?.length ?? 0) > 0;
   const hasPositionContributionRows = (workspace.contribution?.position_rows?.length ?? 0) > 0;
   const positionTableModel = hasPositionContributionRows
@@ -42,6 +50,11 @@ export default function PerformanceAnalysisContributionSection({
         rows: workspace.contribution?.position_rows ?? [],
       })
     : null;
+  const rankedRows = useMemo(
+    () => getContributionInsightRows(workspace),
+    [workspace]
+  );
+  const segmentLevel = workspace.contribution?.levels?.[0] ?? null;
   const actions = (
     <PerformanceAnalysisToolbar>
       <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -77,8 +90,8 @@ export default function PerformanceAnalysisContributionSection({
   return (
     <WorkbenchDataGridFrame
       id="performance-drivers"
-      title="Contribution Detail"
-      subtitle="Position and segment contribution detail for the selected horizon."
+      title="What drove the result?"
+      subtitle="Contribution drivers for the selected horizon."
       actions={actions}
       className="performance-detail-panel-wide performance-analysis-module"
     >
@@ -99,44 +112,128 @@ export default function PerformanceAnalysisContributionSection({
         }
         allowPartialContent={hasAggregateContributionLevels}
       >
-        {workspace.contribution && hasPositionContributionRows ? (
-          <PerformanceContributionDetailStrip contribution={workspace.contribution} />
+        {workspace.contribution ? (
+          <PerformanceAnalysisDrilldownWorkspace
+            insightPane={
+              <div className="performance-contribution-insight-pane">
+                <PerformanceContributionDetailStrip contribution={workspace.contribution} />
+                <div className="performance-contribution-ranked-panel">
+                  <div className="performance-contribution-ranked-panel-copy">
+                    <strong>Ranked contributors</strong>
+                    <span>Quick scan of the largest positive and negative drivers.</span>
+                  </div>
+                  <WorkbenchRankedBarList
+                    title="Ranked contributors"
+                    label="Contribution"
+                    rows={rankedRows}
+                    scale={
+                      rankedRows.length > 0
+                        ? Math.max(...rankedRows.map((row) => row.magnitudePct))
+                        : 0
+                    }
+                    emptyMessage="No ranked contribution insight is available for this selection."
+                  />
+                </div>
+                {hasAggregateContributionLevels ? (
+                  <PerformanceContributionContextNote contribution={workspace.contribution} />
+                ) : null}
+              </div>
+            }
+            detailPane={
+              <PerformanceAnalysisDetailPane
+                title="Detail grid"
+                subtitle="Inspect either position-level detail or grouped segment contribution."
+                value={detailView}
+                onChange={setDetailView}
+                options={[
+                  { key: "positions", label: "Positions" },
+                  {
+                    key: "segments",
+                    label: "Segment breakdown",
+                    disabled: !hasAggregateContributionLevels,
+                  },
+                ]}
+              >
+                {detailView === "positions" ? (
+                  positionTableModel ? (
+                    <AnalyticsTable
+                      className="performance-analysis-table"
+                      dense
+                      ariaLabel="Position contribution table"
+                      columns={positionTableModel.columns}
+                      rows={positionTableModel.rows.map((row) => ({
+                        key: row.key,
+                        ariaLabel: row.ariaLabel,
+                        cells: row.cells,
+                      }))}
+                    />
+                  ) : (
+                    <div
+                      className="performance-analysis-detail-empty"
+                      aria-label="Position contribution detail unavailable"
+                    >
+                      <strong>Position ranking unavailable</strong>
+                      <span>
+                        Open Segment breakdown to inspect grouped contribution for the selected
+                        segment.
+                      </span>
+                    </div>
+                  )
+                ) : segmentLevel ? (
+                  <PerformanceContributionAggregateTable
+                    className="performance-analysis-table"
+                    contribution={workspace.contribution}
+                    level={segmentLevel}
+                    ariaLabel={`${formatLabel(segmentLevel.name)} contribution table`}
+                    rowKeyPrefix={segmentLevel.name}
+                  />
+                ) : (
+                  <div
+                    className="performance-analysis-detail-empty"
+                    aria-label="Segment contribution detail unavailable"
+                  >
+                    <strong>Segment breakdown unavailable</strong>
+                    <span>
+                      Grouped contribution is not available for the current selection and horizon.
+                    </span>
+                  </div>
+                )}
+              </PerformanceAnalysisDetailPane>
+            }
+          />
         ) : null}
-        {positionTableModel ? (
-          <PerformanceAnalysisLevelSection title="Position Ranking">
-            <AnalyticsTable
-              className="performance-analysis-table"
-              dense
-              ariaLabel="Position contribution table"
-              columns={positionTableModel.columns}
-              rows={positionTableModel.rows.map((row) => ({
-                key: row.key,
-                ariaLabel: row.ariaLabel,
-                cells: row.cells,
-              }))}
-            />
-          </PerformanceAnalysisLevelSection>
-        ) : null}
-        {workspace.contribution && hasAggregateContributionLevels ? (
-          <PerformanceContributionContextNote contribution={workspace.contribution} />
-        ) : null}
-        {workspace.contribution?.levels.map((level) => {
-          return (
-            <PerformanceAnalysisLevelSection
-              key={`${level.level}-${level.name}`}
-              title={formatLabel(level.name)}
-            >
-              <PerformanceContributionAggregateTable
-                className="performance-analysis-table"
-                contribution={workspace.contribution!}
-                level={level}
-                ariaLabel={`${formatLabel(level.name)} contribution table`}
-                rowKeyPrefix={level.name}
-              />
-            </PerformanceAnalysisLevelSection>
-          );
-        })}
       </PerformanceAnalysisModuleState>
     </WorkbenchDataGridFrame>
   );
+}
+
+function getContributionInsightRows(workspace: WorkbenchPerformanceWorkspace) {
+  const positionRows = [...(workspace.contribution?.position_rows ?? [])]
+    .sort((left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct))
+    .slice(0, 6)
+    .map((row) => ({
+      key: `position-${row.position_id}`,
+      title: formatPerformancePositionLabel(row.position_id),
+      subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+      value: formatPct(row.contribution_pct),
+      magnitudePct: Math.abs(row.contribution_pct ?? 0),
+      tone: row.contribution_pct < 0 ? ("negative" as const) : ("positive" as const),
+    }));
+
+  if (positionRows.length > 0) {
+    return positionRows;
+  }
+
+  const aggregateRows = [...(workspace.contribution?.levels?.[0]?.rows ?? [])]
+    .sort((left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct))
+    .slice(0, 6);
+
+  return aggregateRows.map((row: ContributionRowView) => ({
+    key: `segment-${row.key_label}`,
+    title: row.key_label,
+    subtitle: row.weight_avg_pct == null ? "Grouped contribution" : `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+    value: formatPct(row.contribution_pct),
+    magnitudePct: Math.abs(row.contribution_pct ?? 0),
+    tone: row.contribution_pct < 0 ? ("negative" as const) : ("positive" as const),
+  }));
 }
