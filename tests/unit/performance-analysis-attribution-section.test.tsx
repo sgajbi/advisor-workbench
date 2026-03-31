@@ -129,8 +129,9 @@ describe("PerformanceAnalysisAttributionSection", () => {
       screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
-    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(screen.getByText("Summary totals")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Total Effect Ranking")).not.toBeInTheDocument();

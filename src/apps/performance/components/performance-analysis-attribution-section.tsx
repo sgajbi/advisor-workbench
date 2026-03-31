@@ -163,62 +163,92 @@ export default function PerformanceAnalysisAttributionSection({
         ) : null}
         {workspace.attribution?.levels.map((level) => {
           const totals = getAttributionTotals(level);
+          const hasDetailRows = level.rows.length > 0;
           return (
             <PerformanceAnalysisLevelSection
               key={`${level.dimension}-${level.total_effect_pct}`}
               title={formatLabel(level.dimension)}
             >
-              <AnalyticsEffectStrip
-                rows={level.rows.map((row) => ({
-                  key: `effect-${level.dimension}-${row.key_label}`,
-                  label: row.key_label,
-                  allocationPct: row.allocation_pct,
-                  selectionPct: row.selection_pct,
-                  interactionPct: row.interaction_pct,
-                  totalPct: formatPct(row.total_effect_pct),
-                }))}
-              />
-              <AnalyticsTable
-                className="performance-analysis-table"
-                dense
-                ariaLabel={`${formatLabel(level.dimension)} attribution table`}
-                columns={[
-                  { key: "bucket", label: "Bucket" },
-                  { key: "portWt", label: "Port Wt", align: "right" },
-                  { key: "bmkWt", label: "Bmk Wt", align: "right" },
-                  { key: "portRet", label: "Port Return", align: "right" },
-                  { key: "bmkRet", label: "Bmk Return", align: "right" },
-                  { key: "allocation", label: "Allocation", align: "right" },
-                  { key: "selection", label: "Selection", align: "right" },
-                  { key: "interaction", label: "Interaction", align: "right" },
-                  { key: "total", label: "Total Effect", align: "right" },
-                ]}
-                rows={level.rows.map((row) => ({
-                  key: `${level.dimension}-${row.key_label}`,
-                  cells: [
-                    row.key_label,
-                    formatPct(row.portfolio_weight_avg_pct),
-                    formatPct(row.benchmark_weight_avg_pct),
-                    formatPct(row.portfolio_return_pct),
-                    formatPct(row.benchmark_return_pct),
-                    formatPct(row.allocation_pct),
-                    formatPct(row.selection_pct),
-                    formatPct(row.interaction_pct),
-                    formatPct(row.total_effect_pct),
-                  ],
-                }))}
-                footer={[
-                  "Total",
-                  formatPct(totals.portfolioWeightAvgPct),
-                  formatPct(totals.benchmarkWeightAvgPct),
-                  NOT_ADDITIVE_CELL,
-                  NOT_ADDITIVE_CELL,
-                  formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-                  formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-                  formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-                  formatPct(totals.totalEffectPct ?? level.total_effect_pct),
-                ]}
-              />
+              {hasDetailRows ? (
+                <>
+                  <AnalyticsEffectStrip
+                    rows={level.rows.map((row) => ({
+                      key: `effect-${level.dimension}-${row.key_label}`,
+                      label: row.key_label,
+                      allocationPct: row.allocation_pct,
+                      selectionPct: row.selection_pct,
+                      interactionPct: row.interaction_pct,
+                      totalPct: formatPct(row.total_effect_pct),
+                    }))}
+                  />
+                  <AnalyticsTable
+                    className="performance-analysis-table"
+                    dense
+                    ariaLabel={`${formatLabel(level.dimension)} attribution table`}
+                    columns={[
+                      { key: "bucket", label: "Bucket" },
+                      { key: "portWt", label: "Port Wt", align: "right" },
+                      { key: "bmkWt", label: "Bmk Wt", align: "right" },
+                      { key: "portRet", label: "Port Return", align: "right" },
+                      { key: "bmkRet", label: "Bmk Return", align: "right" },
+                      { key: "allocation", label: "Allocation", align: "right" },
+                      { key: "selection", label: "Selection", align: "right" },
+                      { key: "interaction", label: "Interaction", align: "right" },
+                      { key: "total", label: "Total Effect", align: "right" },
+                    ]}
+                    rows={level.rows.map((row) => ({
+                      key: `${level.dimension}-${row.key_label}`,
+                      cells: [
+                        row.key_label,
+                        formatPct(row.portfolio_weight_avg_pct),
+                        formatPct(row.benchmark_weight_avg_pct),
+                        formatPct(row.portfolio_return_pct),
+                        formatPct(row.benchmark_return_pct),
+                        formatPct(row.allocation_pct),
+                        formatPct(row.selection_pct),
+                        formatPct(row.interaction_pct),
+                        formatPct(row.total_effect_pct),
+                      ],
+                    }))}
+                    footer={[
+                      "Total",
+                      formatPct(totals.portfolioWeightAvgPct),
+                      formatPct(totals.benchmarkWeightAvgPct),
+                      NOT_ADDITIVE_CELL,
+                      NOT_ADDITIVE_CELL,
+                      formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
+                      formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
+                      formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
+                      formatPct(totals.totalEffectPct ?? level.total_effect_pct),
+                    ]}
+                  />
+                </>
+              ) : (
+                <AnalyticsTable
+                  className="performance-analysis-table"
+                  dense
+                  ariaLabel={`${formatLabel(level.dimension)} attribution totals`}
+                  columns={[
+                    { key: "view", label: "View" },
+                    { key: "allocation", label: "Allocation", align: "right" },
+                    { key: "selection", label: "Selection", align: "right" },
+                    { key: "interaction", label: "Interaction", align: "right" },
+                    { key: "total", label: "Total Effect", align: "right" },
+                  ]}
+                  rows={[
+                    {
+                      key: `${level.dimension}-summary`,
+                      cells: [
+                        "Summary totals",
+                        formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
+                        formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
+                        formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
+                        formatPct(totals.totalEffectPct ?? level.total_effect_pct),
+                      ],
+                    },
+                  ]}
+                />
+              )}
             </PerformanceAnalysisLevelSection>
           );
         })}

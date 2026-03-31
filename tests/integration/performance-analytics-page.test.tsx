@@ -9,6 +9,7 @@ import {
   buildBenchmarkUnassignedPerformanceScenario,
   buildCombinedPartialPerformanceScenario,
   buildNormalizedControlsPerformanceScenario,
+  buildPartialAttributionPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
   buildPerformancePresentationScenario,
   buildPerformanceHorizonComparison,
@@ -509,6 +510,22 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
+  });
+
+  it("renders summary-only attribution totals when detailed rows are unavailable", async () => {
+    installPerformancePageFetchScenario(buildPartialAttributionPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+    expect(await screen.findByText("Attribution Detail")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(await screen.findByText("Summary totals")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    expect(screen.queryByText("Relative Segment Matrix")).not.toBeInTheDocument();
+    expect(screen.queryByText("Total Effect Ranking")).not.toBeInTheDocument();
   });
 
   it.each([
