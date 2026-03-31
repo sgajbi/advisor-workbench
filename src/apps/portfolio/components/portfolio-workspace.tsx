@@ -433,87 +433,89 @@ export default function PortfolioWorkspaceView({
                   </DegradedStatePanel>
                 ) : (
                   <>
-                    <PortfolioSummaryHeaderSection
-                      workspace={workspace}
-                      context={context}
-                      activityDisplayCurrency={activityDisplayCurrency}
-                      orderedWorkflowCues={orderedWorkflowCues}
-                      primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
-                      readinessIndicators={priorityReadinessIndicators}
-                      onOpenMetricDrawer={(metric) =>
-                        setDetailDrawer(buildMetricDrawer(metric, workspace, context, activityDisplayCurrency))
-                      }
-                    />
+                    <div className="portfolio-summary-cluster">
+                      <PortfolioSummaryHeaderSection
+                        workspace={workspace}
+                        context={context}
+                        activityDisplayCurrency={activityDisplayCurrency}
+                        orderedWorkflowCues={orderedWorkflowCues}
+                        primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
+                        readinessIndicators={priorityReadinessIndicators}
+                        onOpenMetricDrawer={(metric) =>
+                          setDetailDrawer(buildMetricDrawer(metric, workspace, context, activityDisplayCurrency))
+                        }
+                      />
 
-                    <PortfolioExceptionsSection workspace={workspace} />
+                      <PortfolioExceptionsSection workspace={workspace} />
+
+                      <PortfolioInsightsSection
+                        workspace={workspace}
+                        context={context}
+                        capabilities={capabilities!}
+                        detailsLoading={detailsLoading}
+                        showInsights={showInsights}
+                        showLiquidityModule={showLiquidityModule}
+                        showChangeHighlights={showChangeHighlights}
+                        incomeDisplayCurrency={incomeDisplayCurrency}
+                        activityDisplayCurrency={activityDisplayCurrency}
+                        visibleInsights={visibleInsights}
+                        holdingsDrilldown={holdingsDrilldown}
+                        filteredPositions={filteredPositions}
+                        transactionDrilldown={transactionDrilldown}
+                        onDismissInsight={(key) =>
+                          setDismissedInsightKeys((current) => [...current, key])
+                        }
+                        onSelectAllocation={(selection) => {
+                          setTransactionDrilldown(null);
+                          setHoldingsDrilldown(
+                            selection
+                              ? {
+                                  kind: "allocation",
+                                  selection,
+                                  label: `Filtered by ${buildAllocationDrilldownLabel(
+                                    selection.dimension,
+                                    selection.bucket
+                                  )}`,
+                                }
+                              : null
+                          );
+                        }}
+                        onSelectTopHolding={(securityId) => {
+                          setTransactionDrilldown(null);
+                          setHoldingsDrilldown(
+                            securityId
+                              ? {
+                                  kind: "security",
+                                  security_id: securityId,
+                                  label: buildSecurityDrilldownLabel(
+                                    workspace.top_positions.find((position) => position.security_id === securityId)
+                                      ?.instrument_name ?? "Selected holding",
+                                    "holdings"
+                                  ),
+                                }
+                              : null
+                          );
+                        }}
+                        onSelectActivityBucket={(bucket) => {
+                          if (!bucket) {
+                            clearTransactionDrilldown();
+                            return;
+                          }
+                          openTransactionDrilldown({
+                            kind: "activity",
+                            bucket,
+                            label: buildActivityDrilldownLabel(bucket),
+                          });
+                        }}
+                        getSectionExpanded={getSectionExpanded}
+                        toggleSection={toggleSection}
+                      />
+                    </div>
 
                     <PortfolioHealthSection
                       workspace={workspace}
                       context={context}
                       showHealthSection={showHealthSection}
-                    />
-
-                    <PortfolioInsightsSection
-                      workspace={workspace}
-                      context={context}
-                      capabilities={capabilities!}
-                      detailsLoading={detailsLoading}
-                      showInsights={showInsights}
-                      showLiquidityModule={showLiquidityModule}
-                      showChangeHighlights={showChangeHighlights}
-                      incomeDisplayCurrency={incomeDisplayCurrency}
-                      activityDisplayCurrency={activityDisplayCurrency}
-                      visibleInsights={visibleInsights}
-                      holdingsDrilldown={holdingsDrilldown}
-                      filteredPositions={filteredPositions}
-                      transactionDrilldown={transactionDrilldown}
-                      onDismissInsight={(key) =>
-                        setDismissedInsightKeys((current) => [...current, key])
-                      }
-                      onSelectAllocation={(selection) => {
-                        setTransactionDrilldown(null);
-                        setHoldingsDrilldown(
-                          selection
-                            ? {
-                                kind: "allocation",
-                                selection,
-                                label: `Filtered by ${buildAllocationDrilldownLabel(
-                                  selection.dimension,
-                                  selection.bucket
-                                )}`,
-                              }
-                            : null
-                        );
-                      }}
-                      onSelectTopHolding={(securityId) => {
-                        setTransactionDrilldown(null);
-                        setHoldingsDrilldown(
-                          securityId
-                            ? {
-                                kind: "security",
-                                security_id: securityId,
-                                label: buildSecurityDrilldownLabel(
-                                  workspace.top_positions.find((position) => position.security_id === securityId)
-                                    ?.instrument_name ?? "Selected holding",
-                                  "holdings"
-                                ),
-                              }
-                            : null
-                        );
-                      }}
-                      onSelectActivityBucket={(bucket) => {
-                        if (!bucket) {
-                          clearTransactionDrilldown();
-                          return;
-                        }
-                        openTransactionDrilldown({
-                          kind: "activity",
-                          bucket,
-                          label: buildActivityDrilldownLabel(bucket),
-                        });
-                      }}
-                      getSectionExpanded={getSectionExpanded}
-                      toggleSection={toggleSection}
                     />
 
                     <PortfolioChangesSection
@@ -642,7 +644,10 @@ function PortfolioSummaryHeaderSection({
   onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
 }) {
   return (
-    <section id="portfolio-summary" className="portfolio-workspace-section">
+    <section
+      id="portfolio-summary"
+      className="portfolio-workspace-section portfolio-summary-cluster-section portfolio-summary-cluster-hero"
+    >
       <Panel className="portfolio-hero portfolio-book-hero">
         <div className="portfolio-hero-content">
           <SectionLabel>Portfolio Book</SectionLabel>
@@ -751,7 +756,10 @@ function PortfolioSummaryHeaderSection({
 
 function PortfolioExceptionsSection({ workspace }: { workspace: PortfolioWorkspace }) {
   return (
-    <section id="portfolio-attention" className="portfolio-workspace-section">
+    <section
+      id="portfolio-attention"
+      className="portfolio-workspace-section portfolio-summary-cluster-section"
+    >
       <div className="portfolio-section-header">
         <h3>{workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}</h3>
         <p className="portfolio-section-copy">
@@ -929,7 +937,7 @@ function PortfolioInsightsSection({
   const showInsightsSummaryBand =
     visibleInsights.length > 0 || showLiquidityModule || showPerformanceSnapshot;
   return (
-    <section className="portfolio-workspace-section">
+    <section className="portfolio-workspace-section portfolio-summary-cluster-section">
       <div className="portfolio-section-header">
         <h3>Portfolio Insights</h3>
         <p className="portfolio-section-copy">

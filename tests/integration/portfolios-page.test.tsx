@@ -146,6 +146,10 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("heading", { name: /Portfolio Health Snapshot/i })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Insights/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Critical Exceptions and Blockers/i })).toBeInTheDocument();
+    const summaryCluster = document.querySelector(".portfolio-summary-cluster");
+    expect(summaryCluster).toBeTruthy();
+    expect(summaryCluster?.querySelector("#portfolio-summary")).toBeTruthy();
+    expect(summaryCluster?.querySelector("#portfolio-attention")).toBeTruthy();
     expect(screen.getByRole("heading", { name: /Portfolio Allocation/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Top Holdings/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Performance Snapshot/i })).toBeInTheDocument();
@@ -165,6 +169,7 @@ describe("PortfolioFoundationPage", () => {
       performanceSnapshotCard &&
         performanceSnapshotCard.closest(".portfolio-insights-summary-grid")
     ).toBeTruthy();
+    expect(insightsSection?.classList.contains("portfolio-summary-cluster-section")).toBe(true);
     expect(
       within(performanceSnapshotCard as HTMLElement).getByRole("link", { name: "Open Performance" })
     ).toHaveAttribute(

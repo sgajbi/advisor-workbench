@@ -3558,6 +3558,19 @@ a:hover {
   min-width: 0;
 }
 
+.portfolio-summary-cluster {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.portfolio-summary-cluster-section {
+  gap: var(--space-4);
+}
+
+.portfolio-summary-cluster-hero {
+  gap: var(--space-5);
+}
+
 .section-card,
 .portfolio-hero,
 .workspace-grid,
@@ -3569,7 +3582,11 @@ a:hover {
 
 .portfolio-section-header {
   display: grid;
-  gap: 0.125rem;
+  gap: var(--space-1);
+}
+
+.portfolio-summary-cluster .portfolio-section-header {
+  padding-inline: var(--space-1);
 }
 
 .portfolio-section-header h3 {
@@ -3597,6 +3614,11 @@ a:hover {
 
 .portfolio-workspace-section > .portfolio-insights-summary-band + .portfolio-primary-grid {
   margin-top: calc(var(--space-1) * -1);
+}
+
+.portfolio-summary-cluster > .portfolio-workspace-section + .portfolio-workspace-section {
+  padding-top: var(--space-1);
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .portfolio-disclosure-stack {
