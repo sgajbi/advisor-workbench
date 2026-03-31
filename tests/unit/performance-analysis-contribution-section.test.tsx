@@ -36,10 +36,16 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
-    expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
-    expect(screen.getByText("Top Positions")).toBeInTheDocument();
-    expect(screen.getByText("Position")).toBeInTheDocument();
-    expect(screen.getByText("AAPL")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
+    expect(screen.getByText("Top Contributor")).toBeInTheDocument();
+    expect(screen.getByText("Top Detractor")).toBeInTheDocument();
+    expect(screen.getByText("Coverage MV")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Contribution")).toBeInTheDocument();
+    const positionTable = screen.getByLabelText("Position contribution table");
+    expect(positionTable).toBeInTheDocument();
+    expect(screen.getByText("Position Ranking")).toBeInTheDocument();
+    expect(within(positionTable).getByText("Position")).toBeInTheDocument();
+    expect(within(positionTable).getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
@@ -83,6 +89,11 @@ describe("PerformanceAnalysisContributionSection", () => {
     );
 
     const positionTable = screen.getByLabelText("Position contribution table");
+    const detailStrip = screen.getByLabelText("Contribution detail summary strip");
+    expect(within(detailStrip).getByText("Top Contributor")).toBeInTheDocument();
+    expect(within(detailStrip).getByText("AAPL US")).toBeInTheDocument();
+    expect(within(detailStrip).getByText("Top Detractor")).toBeInTheDocument();
+    expect(within(detailStrip).getByText("None")).toBeInTheDocument();
     expect(within(positionTable).getByText("Return")).toBeInTheDocument();
     expect(within(positionTable).queryByText("Local")).not.toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL US")).toBeInTheDocument();
@@ -157,6 +168,7 @@ describe("PerformanceAnalysisContributionSection", () => {
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
     expect(

@@ -3,6 +3,7 @@ import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
 import { buildPerformancePositionContributionTableModel } from "./performance-analytics-table-models";
+import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import { formatLabel, formatPct } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
@@ -98,8 +99,11 @@ export default function PerformanceAnalysisContributionSection({
         }
         allowPartialContent={hasAggregateContributionLevels}
       >
+        {workspace.contribution && hasPositionContributionRows ? (
+          <PerformanceContributionDetailStrip contribution={workspace.contribution} />
+        ) : null}
         {positionTableModel ? (
-          <PerformanceAnalysisLevelSection title="Top Positions">
+          <PerformanceAnalysisLevelSection title="Position Ranking">
             <AnalyticsTable
               className="performance-analysis-table"
               dense

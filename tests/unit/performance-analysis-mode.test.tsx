@@ -42,6 +42,7 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getByTestId("attribution-trend")).toBeInTheDocument();
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Contribution Detail" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);

@@ -278,6 +278,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
