@@ -284,6 +284,7 @@ export function buildPerformanceHorizonTableModel({
   const economicsColumns = [
     { key: "beginMv", label: "Begin MV", align: "right" as const },
     { key: "endMv", label: "End MV", align: "right" as const },
+    { key: "flowAdjustedEndMv", label: "Flow-Adj MV", align: "right" as const },
     { key: "netCashFlow", label: "Net Flow", align: "right" as const },
     { key: "fees", label: "Fees", align: "right" as const },
   ];
@@ -307,6 +308,7 @@ export function buildPerformanceHorizonTableModel({
             : "N/A",
         beginMv: formatCurrency(row.begin_market_value, reportingCurrency),
         endMv: formatCurrency(row.end_market_value, reportingCurrency),
+        flowAdjustedEndMv: formatCurrency(row.flow_adjusted_end_market_value, reportingCurrency),
         netCashFlow: formatCurrency(row.net_cash_flow, reportingCurrency),
         fees: formatCurrency(row.fees, reportingCurrency),
         netReturn: formatPct(netReturn),

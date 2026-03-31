@@ -43,7 +43,7 @@ describe("performance analytics table models", () => {
     const model = buildPerformanceHorizonTableModel({
       rows: comparison.rows,
       reportingCurrency: comparison.reporting_currency ?? "USD",
-      tableView: "returns",
+      tableView: "combined",
       basisView: "both",
       selectedPeriodLabel: "YTD",
     });
@@ -51,6 +51,11 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
       "Window",
+      "Begin MV",
+      "End MV",
+      "Flow-Adj MV",
+      "Net Flow",
+      "Fees",
       "Net",
       "Gross",
       "Fee Drag",
@@ -66,6 +71,7 @@ describe("performance analytics table models", () => {
     expect(model.rows.find((row) => row.key === "YTD")?.className).toBe(
       "performance-horizon-table-row-selected"
     );
+    expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("$486,370");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("5.42%");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("5.88%");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("4.91%");

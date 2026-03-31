@@ -89,6 +89,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByText("Active 0.20%")).toBeInTheDocument();
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
     expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-Adj MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Fee Drag")).toBeInTheDocument();
@@ -97,6 +98,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Cum Active")).toBeInTheDocument();
     expect(within(horizonTable).getAllByText("$450,000")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("$486,370")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("$22,500")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("5.88%").length).toBeGreaterThan(0);
     expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
@@ -108,6 +110,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
     expect(within(horizonTable).queryByText("Begin MV")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Flow-Adj MV")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Net Flow")).not.toBeInTheDocument();
     expect(within(horizonTable).getByText("Benchmark")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
@@ -116,6 +119,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
     expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-Adj MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
     expect(within(horizonTable).queryByText("Benchmark")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Cum Active")).not.toBeInTheDocument();
