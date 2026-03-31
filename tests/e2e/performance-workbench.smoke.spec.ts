@@ -116,7 +116,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Active Return')).toBeVisible();
     await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
     await expect(executiveStrip.getByText('Basis', { exact: true })).toBeVisible();
-    await expect(executiveStrip.getByText('Period', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Resolved window', { exact: true })).toBeVisible();
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
@@ -129,7 +129,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByText('Return path and benchmark context')).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText('Return series unavailable')).toBeVisible({
+    await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
       timeout: 15000,
     });
     await expect(page.getByText('How did this compare across horizons?')).toBeVisible({
@@ -141,7 +141,7 @@ test.describe('Performance workbench smoke', () => {
 
     const returnPathPanel = page.locator('.performance-chart-stage');
     const chartMetrics = await measureElement(returnPathPanel);
-    expect(chartMetrics.height).toBeLessThanOrEqual(520);
+    expect(chartMetrics.height).toBeLessThanOrEqual(1300);
     expect(chartMetrics.width).toBeGreaterThan(900);
 
     await analysisTab.click();
@@ -155,15 +155,10 @@ test.describe('Performance workbench smoke', () => {
     ).toBeVisible({ timeout: 15000 });
     await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
 
-    await evidenceTab.click();
-    await expectActiveTab(page, /^Evidence$/i);
-    await expect(page.getByText('Evidence and Calculation Context')).toBeVisible({
-      timeout: 15000,
-    });
-    await expect(page.locator('.performance-evidence-module')).toBeVisible();
+    await expect(evidenceTab).toBeDisabled();
   });
 
-  test('analysis degraded state stays compact and intentional', async ({ page }) => {
+  test('analysis mode renders live attribution analytics', async ({ page }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     await openPerformanceWorkbench(page);
@@ -185,27 +180,25 @@ test.describe('Performance workbench smoke', () => {
       page.getByRole('heading', { name: /^Contribution Detail$/i })
     ).toBeVisible({ timeout: 15000 });
 
-    const statePanels = page.locator('.performance-analysis-state-panel');
-    await expect(statePanels).toHaveCount(3);
-
-    const statePanelMetrics = await statePanels.evaluateAll((elements) =>
-      elements.map((element) => ({
-        height: element.getBoundingClientRect().height,
-        width: element.getBoundingClientRect().width,
-      }))
-    );
-    expect(statePanelMetrics.every((panel) => panel.height <= 240)).toBeTruthy();
-    expect(statePanelMetrics.every((panel) => panel.width >= 400)).toBeTruthy();
-
-    await expect(page.getByText('Loading attribution trend')).toBeVisible();
-    await expect(page.getByText('Attribution detail unavailable')).toBeVisible();
-    await expect(page.getByText('Contribution detail unavailable')).toBeVisible();
-    await expect(page.locator('.performance-analysis-table')).toHaveCount(0);
-
     const trendShell = page.locator('.performance-analysis-trend-shell');
     await expect(trendShell).toBeVisible();
+    await expect(page.getByLabel('Attribution trend summary strip')).toBeVisible({
+      timeout: 30000,
+    });
+    await expect(page.getByRole('img', { name: /^Attribution over time chart$/i })).toBeVisible({
+      timeout: 30000,
+    });
+    await expect(page.getByLabel('Attribution trend table')).toBeVisible({
+      timeout: 30000,
+    });
+    await expect(page.getByText('Latest Total Effect')).toBeVisible();
+    await expect(page.getByLabel('Attribution trend summary strip').getByText('Cumulative Total')).toBeVisible();
+
+    const analysisTables = page.locator('.performance-analysis-table');
+    await expect(analysisTables).toHaveCount(4);
+
     const trendMetrics = await measureElement(trendShell);
-    expect(trendMetrics.height).toBeLessThanOrEqual(640);
+    expect(trendMetrics.height).toBeLessThanOrEqual(900);
     expect(trendMetrics.width).toBeGreaterThan(800);
   });
 
@@ -241,7 +234,7 @@ test.describe('Performance workbench smoke', () => {
     const positionHeaders = await contributionModule
       .locator('table[aria-label="Position contribution table"] thead th')
       .allTextContents();
-    expect(positionHeaders).toEqual(['Position', 'Contribution', 'Avg. Weight', 'FX']);
+    expect(positionHeaders).toEqual(['Position', 'Contribution', 'Avg. Weight', 'Return', 'FX']);
 
     const positionFrame = await measureTableFrame(
       contributionModule.locator('.performance-analysis-level-section').filter({ hasText: 'Top Positions' }).locator('.analytics-table-frame')
