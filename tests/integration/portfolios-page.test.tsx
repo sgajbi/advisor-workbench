@@ -154,6 +154,17 @@ describe("PortfolioFoundationPage", () => {
       .getByRole("heading", { name: /Performance Snapshot/i })
       .closest(".portfolio-summary-module-card");
     expect(performanceSnapshotCard).toBeTruthy();
+    const insightsHeading = screen.getByRole("heading", { name: /Portfolio Insights/i });
+    const insightsSection = insightsHeading.closest(".portfolio-workspace-section");
+    expect(insightsSection?.querySelector(".portfolio-insights-summary-band")).toBeTruthy();
+    expect(
+      insightsSection?.querySelector(".portfolio-insights-summary-band .portfolio-insight-strip")
+    ).toBeTruthy();
+    expect(insightsSection?.querySelector(".portfolio-insights-summary-grid")).toBeTruthy();
+    expect(
+      performanceSnapshotCard &&
+        performanceSnapshotCard.closest(".portfolio-insights-summary-grid")
+    ).toBeTruthy();
     expect(
       within(performanceSnapshotCard as HTMLElement).getByRole("link", { name: "Open Performance" })
     ).toHaveAttribute(

@@ -926,6 +926,8 @@ function PortfolioInsightsSection({
   const showPerformanceSnapshot = isRenderableCapability(capabilities.performanceSnapshot);
   const showAllocationModule = isRenderableCapability(capabilities.allocation);
   const showTopHoldingsModule = isRenderableCapability(capabilities.topHoldings);
+  const showInsightsSummaryBand =
+    visibleInsights.length > 0 || showLiquidityModule || showPerformanceSnapshot;
   return (
     <section className="portfolio-workspace-section">
       <div className="portfolio-section-header">
@@ -934,37 +936,41 @@ function PortfolioInsightsSection({
           Allocation, concentration, liquidity, and recent activity.
         </p>
       </div>
-      <PortfolioInsightsStrip
-        insights={visibleInsights}
-        readinessIndicators={[]}
-        onDismissInsight={onDismissInsight}
-      />
-      {showLiquidityModule || showPerformanceSnapshot ? (
-        <WorkspaceGrid className="portfolio-primary-grid">
-          {showLiquidityModule ? (
-            <PortfolioLiquiditySummaryModule
-              capability={capabilities.projectedCashflow}
-              cashflowOutlook={workspace.cashflow_outlook}
-              totalCashBase={workspace.summary.total_cash_base}
-              cashWeightPct={workspace.summary.cash_weight_pct}
-              baseCurrency={workspace.portfolio.base_currency}
-              asOfDate={context.selectedAsOfDate}
-            />
+      {showInsightsSummaryBand ? (
+        <div className="portfolio-insights-summary-band workbench-summary-region">
+          <PortfolioInsightsStrip
+            insights={visibleInsights}
+            readinessIndicators={[]}
+            onDismissInsight={onDismissInsight}
+          />
+          {showLiquidityModule || showPerformanceSnapshot ? (
+            <WorkspaceGrid className="portfolio-primary-grid portfolio-insights-summary-grid">
+              {showLiquidityModule ? (
+                <PortfolioLiquiditySummaryModule
+                  capability={capabilities.projectedCashflow}
+                  cashflowOutlook={workspace.cashflow_outlook}
+                  totalCashBase={workspace.summary.total_cash_base}
+                  cashWeightPct={workspace.summary.cash_weight_pct}
+                  baseCurrency={workspace.portfolio.base_currency}
+                  asOfDate={context.selectedAsOfDate}
+                />
+              ) : null}
+              {showPerformanceSnapshot ? (
+                <PortfolioPerformanceSnapshotModule
+                  capability={capabilities.performanceSnapshot}
+                  performance={workspace.performance}
+                  rebalance={workspace.rebalance}
+                  reportingRowCount={workspace.readiness.reporting.row_count}
+                  context={context}
+                  portfolioId={workspace.portfolio.portfolio_id}
+                  selectedPeriod={context.timeWindow}
+                  expanded={getSectionExpanded("performance-snapshot")}
+                  onToggle={() => toggleSection("performance-snapshot")}
+                />
+              ) : null}
+            </WorkspaceGrid>
           ) : null}
-          {showPerformanceSnapshot ? (
-            <PortfolioPerformanceSnapshotModule
-              capability={capabilities.performanceSnapshot}
-              performance={workspace.performance}
-              rebalance={workspace.rebalance}
-              reportingRowCount={workspace.readiness.reporting.row_count}
-              context={context}
-              portfolioId={workspace.portfolio.portfolio_id}
-              selectedPeriod={context.timeWindow}
-              expanded={getSectionExpanded("performance-snapshot")}
-              onToggle={() => toggleSection("performance-snapshot")}
-            />
-          ) : null}
-        </WorkspaceGrid>
+        </div>
       ) : null}
       <WorkspaceGrid className="portfolio-primary-grid">
           {showAllocationModule ? (
