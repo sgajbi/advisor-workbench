@@ -162,8 +162,16 @@ describe("performance summary context helpers", () => {
     });
   });
 
-  it("falls back to fees when split cash flow components are unavailable", () => {
+  it("falls back to fees when split cash flow components are unavailable everywhere", () => {
     const scenario = buildSupportedPerformanceScenario();
+    const moneyWeightedReturn = scenario.workspace.money_weighted_return
+      ? {
+          ...scenario.workspace.money_weighted_return,
+          beginning_cash_flow: null,
+          ending_cash_flow: null,
+          fees: 125,
+        }
+      : null;
 
     const presentation = getPerformanceReturnPathPresentation({
       summary: {
@@ -183,6 +191,7 @@ describe("performance summary context helpers", () => {
       points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
+      moneyWeightedReturn,
       capabilities: scenario.capabilities,
       reportingCurrency: scenario.workspace.portfolio.base_currency,
     });
@@ -191,6 +200,45 @@ describe("performance summary context helpers", () => {
       label: "Net Flow",
       value: "$42,000",
       support: "Fees $125",
+      unavailable: false,
+    });
+  });
+
+  it("falls back to money-weighted economics when summary economics are absent", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const presentation = getPerformanceReturnPathPresentation({
+      summary: {
+        portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
+        benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
+        active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
+        end_market_value: null,
+        beginning_cash_flow: null,
+        ending_cash_flow: null,
+        flow_adjusted_end_market_value: null,
+        net_cash_flow: null,
+        fees: null,
+        benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+      },
+      moneyWeightedReturn: scenario.workspace.money_weighted_return,
+      points: scenario.workspace.net_chart,
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      benchmarkOptions: scenario.workspace.benchmark_options ?? [],
+      capabilities: scenario.capabilities,
+      reportingCurrency: scenario.workspace.portfolio.base_currency,
+    });
+
+    expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
+      label: "Net Flow",
+      value: "$42,000",
+      support: "BoD $50,000 • EoD -$8,000",
+      unavailable: false,
+    });
+    expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
+      label: "Ending MV",
+      value: "$1,250,000",
+      support: "Flow-adj $1,208,000",
       unavailable: false,
     });
   });

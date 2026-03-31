@@ -30,6 +30,7 @@ export type PerformanceReturnPathPresentation = {
 
 export function getPerformanceReturnPathPresentation({
   summary,
+  moneyWeightedReturn,
   benchmark,
   benchmarkOptions = [],
   capabilities,
@@ -48,6 +49,7 @@ export function getPerformanceReturnPathPresentation({
     fees?: number | null;
     benchmark_return_source?: string | null;
   };
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
   points: PerformanceChartPoint[];
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
@@ -68,6 +70,14 @@ export function getPerformanceReturnPathPresentation({
       : capabilities.benchmarkComparison.state === "partial"
         ? "partial"
         : "unavailable";
+  const resolvedNetCashFlow =
+    summary.net_cash_flow ?? moneyWeightedReturn?.net_cash_flow ?? null;
+  const resolvedEndMarketValue =
+    summary.end_market_value ?? moneyWeightedReturn?.end_market_value ?? null;
+  const resolvedFlowAdjustedEndMarketValue =
+    summary.flow_adjusted_end_market_value ??
+    moneyWeightedReturn?.flow_adjusted_end_market_value ??
+    null;
 
   return {
     benchmarkAssigned,
@@ -104,19 +114,19 @@ export function getPerformanceReturnPathPresentation({
       {
         key: "net-flow",
         label: "Net Flow",
-        value: formatCurrency(summary.net_cash_flow, reportingCurrency),
-        support: getPerformanceNetFlowSupport(summary, reportingCurrency),
-        unavailable: summary.net_cash_flow == null,
+        value: formatCurrency(resolvedNetCashFlow, reportingCurrency),
+        support: getPerformanceNetFlowSupport(summary, reportingCurrency, moneyWeightedReturn),
+        unavailable: resolvedNetCashFlow == null,
       },
       {
         key: "ending-mv",
         label: "Ending MV",
-        value: formatCurrency(summary.end_market_value, reportingCurrency),
+        value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
         support:
-          summary.flow_adjusted_end_market_value != null
-            ? `Flow-adj ${formatCurrency(summary.flow_adjusted_end_market_value, reportingCurrency)}`
+          resolvedFlowAdjustedEndMarketValue != null
+            ? `Flow-adj ${formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency)}`
             : undefined,
-        unavailable: summary.end_market_value == null,
+        unavailable: resolvedEndMarketValue == null,
       },
     ],
   };
@@ -128,15 +138,22 @@ export function getPerformanceNetFlowSupport(
     ending_cash_flow?: number | null;
     fees?: number | null;
   },
-  reportingCurrency: string
+  reportingCurrency: string,
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null
 ) {
-  if (summary.beginning_cash_flow != null || summary.ending_cash_flow != null) {
+  const beginningCashFlow =
+    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
+  const endingCashFlow =
+    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
+  const fees = summary.fees ?? moneyWeightedReturn?.fees ?? null;
+
+  if (beginningCashFlow != null || endingCashFlow != null) {
     const supportSegments = [
-      summary.beginning_cash_flow != null
-        ? `BoD ${formatCurrency(summary.beginning_cash_flow, reportingCurrency)}`
+      beginningCashFlow != null
+        ? `BoD ${formatCurrency(beginningCashFlow, reportingCurrency)}`
         : null,
-      summary.ending_cash_flow != null
-        ? `EoD ${formatCurrency(summary.ending_cash_flow, reportingCurrency)}`
+      endingCashFlow != null
+        ? `EoD ${formatCurrency(endingCashFlow, reportingCurrency)}`
         : null,
     ].filter(Boolean);
 
@@ -145,8 +162,8 @@ export function getPerformanceNetFlowSupport(
     }
   }
 
-  if (summary.fees != null) {
-    return `Fees ${formatCurrency(summary.fees, reportingCurrency)}`;
+  if (fees != null) {
+    return `Fees ${formatCurrency(fees, reportingCurrency)}`;
   }
 
   return undefined;
