@@ -165,8 +165,7 @@ export default function PortfolioPerformanceSnapshotModule({
             <>
               <span className="portfolio-performance-snapshot-kpi">Unavailable</span>
               <span className="portfolio-performance-snapshot-copy">
-                {capability.reason ??
-                  "Requires valuation history, cashflow history, and a selected reporting period."}
+                {buildCollapsedUnavailableCopy(capability.reason)}
               </span>
             </>
           )}
@@ -279,4 +278,25 @@ function buildCollapsedSnapshotCopy({
   }
 
   return `${portfolioReturn} total return • ${periodLabel}`;
+}
+
+function buildCollapsedUnavailableCopy(reason?: string | null) {
+  if (!reason) {
+    return "Awaiting valuation history, cashflow history, and a reporting period.";
+  }
+
+  const normalized = reason.toLowerCase();
+  if (
+    normalized.includes("valuation history") ||
+    normalized.includes("cashflow history") ||
+    normalized.includes("selected reporting period")
+  ) {
+    return "Awaiting valuation history, cashflow history, and a reporting period.";
+  }
+
+  if (reason.length <= 96) {
+    return reason;
+  }
+
+  return "Awaiting valuation history, cashflow history, and a reporting period.";
 }

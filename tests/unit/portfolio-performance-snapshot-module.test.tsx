@@ -43,7 +43,7 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByRole("heading", { name: "Performance Snapshot" })).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText(/Requires valuation history, cashflow history, and a selected reporting period/i)
+      screen.getByText("Awaiting valuation history, cashflow history, and a reporting period.")
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
       "href",
