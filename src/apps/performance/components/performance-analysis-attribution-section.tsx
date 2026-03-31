@@ -50,6 +50,13 @@ export default function PerformanceAnalysisAttributionSection({
     (capabilities.attributionDetail.state === "partial" &&
       hasAttributionSummaryLevels &&
       !hasDetailedAttributionRows);
+  const attributionContextItems = workspace.attribution
+    ? getAttributionDetailContextItems(workspace.attribution, workspace.benchmark_options ?? [])
+    : [];
+  const attributionSummaryItems = getAttributionDetailSummaryItems(
+    workspace.attribution,
+    workspace.benchmark_options ?? []
+  );
   const actions = (
     <PerformanceAnalysisToolbar
       context={
@@ -90,8 +97,6 @@ export default function PerformanceAnalysisAttributionSection({
     </PerformanceAnalysisToolbar>
   );
 
-  const metricItems = getAttributionDetailSummaryItems(workspace.attribution);
-
   return (
     <WorkbenchChartShell
       id="performance-attribution"
@@ -103,16 +108,16 @@ export default function PerformanceAnalysisAttributionSection({
           <WorkbenchChartContextRow
             label="Attribution detail context"
             className="performance-analysis-context-row"
-            items={getAttributionDetailContextItems(workspace.attribution)}
+            items={attributionContextItems}
           />
         ) : undefined
       }
       metricStrip={
-        metricItems.length ? (
+        attributionSummaryItems.length ? (
           <WorkbenchSummaryMetricStrip
             className="performance-analysis-metric-strip"
             ariaLabel="Attribution summary strip"
-            items={metricItems}
+            items={attributionSummaryItems}
           />
         ) : undefined
       }

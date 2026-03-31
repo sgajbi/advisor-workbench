@@ -6,7 +6,7 @@ import type {
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 
-import { formatCurrency, formatDate, formatPct } from "../formatters";
+import { formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
 
 type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
 
@@ -54,7 +54,7 @@ export function getPerformanceReturnPathPresentation({
   capabilities: PerformanceWorkspaceCapabilities;
   reportingCurrency: string;
 }): PerformanceReturnPathPresentation {
-  const benchmarkLabel = formatBenchmarkLabel(benchmark, benchmarkOptions);
+  const benchmarkLabel = getPerformanceBenchmarkLabel(benchmark, benchmarkOptions);
   const benchmarkAssigned =
     Boolean(benchmark) || benchmarkOptions.some((option) => option.is_assigned);
   const activeReturnValue =
@@ -174,7 +174,7 @@ export function getPerformanceMoneyWeightedAuditSupport({
   return `${explicitDateRange} • ${supportSegments.join(" • ")}`;
 }
 
-function formatBenchmarkLabel(
+export function getPerformanceBenchmarkLabel(
   benchmark?: string,
   benchmarkOptions: PerformanceBenchmarkOptionView[] = []
 ) {
@@ -183,7 +183,7 @@ function formatBenchmarkLabel(
   }
   return (
     benchmarkOptions.find((option) => option.benchmark_code === benchmark)?.benchmark_name ??
-    benchmark
+    formatLabel(benchmark)
   );
 }
 

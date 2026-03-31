@@ -65,6 +65,13 @@ describe("PerformanceAttributionTrendPanel", () => {
         attributionDimension="asset_class"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
+        benchmarkOptions={[
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
       />
@@ -83,6 +90,9 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
       compactPattern("Resolved window 01 Jan 2026 - 27 Mar 2026")
+    );
+    expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40")
     );
     expect(
       document.querySelectorAll(
@@ -200,6 +210,13 @@ describe("PerformanceAttributionTrendPanel", () => {
         attributionDimension="issuer"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
+        benchmarkOptions={[
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
       />
@@ -256,6 +273,13 @@ describe("PerformanceAttributionTrendPanel", () => {
         attributionDimension="issuer"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
+        benchmarkOptions={[
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
         onRequestChange={onRequestChange}

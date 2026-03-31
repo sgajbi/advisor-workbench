@@ -71,7 +71,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
-      /Benchmark\s*BMK GLOBAL BALANCED 60 40/i
+      /Benchmark\s*Global Balanced 60\/40/i
     );
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
       /Source\s*Calculated/i
@@ -86,7 +86,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
-    expect(screen.getAllByText("BMK GLOBAL BALANCED 60 40").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Global Balanced 60/40").length).toBe(2);
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);

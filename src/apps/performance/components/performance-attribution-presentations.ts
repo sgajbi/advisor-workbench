@@ -1,18 +1,21 @@
 import type {
   AttributionSummaryView,
+  PerformanceBenchmarkOptionView,
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
 import { formatDate, formatLabel, formatPct } from "../formatters";
+import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
 
 export function getAttributionDetailContextItems(
-  attribution: AttributionSummaryView | null | undefined
+  attribution: AttributionSummaryView | null | undefined,
+  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
 ) {
   return [
     {
       label: "Benchmark",
       value: attribution?.benchmark_id
-        ? formatLabel(attribution.benchmark_id)
+        ? getPerformanceBenchmarkLabel(attribution.benchmark_id, benchmarkOptions)
         : "Unassigned",
     },
     {
@@ -33,7 +36,8 @@ export function getAttributionDetailContextItems(
 }
 
 export function getAttributionDetailSummaryItems(
-  attribution: AttributionSummaryView | null | undefined
+  attribution: AttributionSummaryView | null | undefined,
+  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
 ) {
   if (!attribution?.benchmark_id) {
     return [];
@@ -42,7 +46,7 @@ export function getAttributionDetailSummaryItems(
   return [
     {
       label: "Benchmark",
-      value: formatLabel(attribution.benchmark_id),
+      value: getPerformanceBenchmarkLabel(attribution.benchmark_id, benchmarkOptions),
     },
     {
       label: "Active Return",
@@ -64,12 +68,14 @@ export function getAttributionTrendContextItems({
   detailBasis,
   attributionDimension,
   benchmark,
+  benchmarkOptions = [],
   period,
 }: {
   trend: WorkbenchPerformanceAttributionTrend | null;
   detailBasis: string;
   attributionDimension: string;
   benchmark?: string;
+  benchmarkOptions?: PerformanceBenchmarkOptionView[];
   period: string;
 }) {
   const resolvedWindowLabel =
@@ -89,9 +95,9 @@ export function getAttributionTrendContextItems({
     {
       label: "Benchmark",
       value: trend?.benchmark_code
-        ? formatLabel(trend.benchmark_code)
+        ? getPerformanceBenchmarkLabel(trend.benchmark_code, benchmarkOptions)
         : benchmark
-          ? formatLabel(benchmark)
+          ? getPerformanceBenchmarkLabel(benchmark, benchmarkOptions)
           : "Unassigned",
     },
     {

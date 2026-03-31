@@ -12,6 +12,7 @@ import {
 } from "@/design-system";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type {
+  PerformanceBenchmarkOptionView,
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
@@ -31,6 +32,7 @@ type Props = {
   attributionDimension: string;
   detailBasis: string;
   benchmark?: string;
+  benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate?: string;
   reportEndDate?: string;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
@@ -50,6 +52,7 @@ export default function PerformanceAttributionTrendPanel({
   attributionDimension,
   detailBasis,
   benchmark,
+  benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
   onRequestChange,
@@ -247,9 +250,10 @@ export default function PerformanceAttributionTrendPanel({
         detailBasis,
         attributionDimension,
         benchmark,
+        benchmarkOptions,
         period,
       }),
-    [attributionDimension, benchmark, detailBasis, period, trend]
+    [attributionDimension, benchmark, benchmarkOptions, detailBasis, period, trend]
   );
   const metricItems = useMemo(
     () => getAttributionTrendSummaryItems(trend),

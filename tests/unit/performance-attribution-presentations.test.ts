@@ -15,11 +15,17 @@ import {
 describe("performance attribution presentations", () => {
   it("builds detail context and summary items from the attribution contract", () => {
     const scenario = buildSupportedPerformanceScenario();
-    const contextItems = getAttributionDetailContextItems(scenario.workspace.attribution);
-    const summaryItems = getAttributionDetailSummaryItems(scenario.workspace.attribution);
+    const contextItems = getAttributionDetailContextItems(
+      scenario.workspace.attribution,
+      scenario.workspace.benchmark_options ?? []
+    );
+    const summaryItems = getAttributionDetailSummaryItems(
+      scenario.workspace.attribution,
+      scenario.workspace.benchmark_options ?? []
+    );
 
     expect(contextItems).toEqual([
-      { label: "Benchmark", value: "BMK GLOBAL BALANCED 60 40" },
+      { label: "Benchmark", value: "Global Balanced 60/40" },
       { label: "Source", value: "Calculated" },
       { label: "Model", value: "BF" },
       { label: "Linking", value: "Carino" },
@@ -59,14 +65,43 @@ describe("performance attribution presentations", () => {
 
   it("keeps summary-only attribution honest without inventing missing values", () => {
     const scenario = buildPartialAttributionPerformanceScenario();
-    const contextItems = getAttributionDetailContextItems(scenario.workspace.attribution);
-    const summaryItems = getAttributionDetailSummaryItems(scenario.workspace.attribution);
+    const contextItems = getAttributionDetailContextItems(
+      scenario.workspace.attribution,
+      scenario.workspace.benchmark_options ?? []
+    );
+    const summaryItems = getAttributionDetailSummaryItems(
+      scenario.workspace.attribution,
+      scenario.workspace.benchmark_options ?? []
+    );
 
     expect(contextItems[0]).toEqual({
       label: "Benchmark",
-      value: "BMK GLOBAL BALANCED 60 40",
+      value: "Global Balanced 60/40",
     });
     expect(summaryItems).toHaveLength(4);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
+  });
+
+  it("uses benchmark option labels when trend context receives them", () => {
+    const trend = buildPerformanceAttributionTrend();
+    const contextItems = getAttributionTrendContextItems({
+      trend,
+      detailBasis: "NET",
+      attributionDimension: "asset_class",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      benchmarkOptions: [
+        {
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_name: "Global Balanced 60/40",
+          is_assigned: true,
+        },
+      ],
+      period: "YTD",
+    });
+
+    expect(contextItems[2]).toEqual({
+      label: "Benchmark",
+      value: "Global Balanced 60/40",
+    });
   });
 });
