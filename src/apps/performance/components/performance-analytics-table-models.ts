@@ -110,6 +110,72 @@ export function buildPerformanceContributionTableModel({
   };
 }
 
+export function buildPerformanceContributionLevelTableModel({
+  rows,
+  contribution,
+  level,
+}: {
+  rows: ContributionRowView[];
+  contribution?: ContributionSummaryView | null;
+  level?: ContributionSummaryView["levels"][number] | null;
+}): PerformanceAnalyticsTableModel {
+  const includeLocalFxColumns =
+    contribution?.portfolio_local_contribution_pct != null ||
+    contribution?.portfolio_fx_contribution_pct != null ||
+    rows.some(
+      (row) => row.local_contribution_pct != null || row.fx_contribution_pct != null
+    );
+
+  const columns: PerformanceAnalyticsTableColumn[] = [
+    { key: "bucket", label: "Bucket" },
+    { key: "contribution", label: "Contribution", align: "right" },
+    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "return", label: "Return", align: "right" },
+    ...(includeLocalFxColumns
+      ? [
+          { key: "local", label: "Local", align: "right" as const },
+          { key: "fx", label: "FX", align: "right" as const },
+        ]
+      : []),
+  ];
+
+  return {
+    columns,
+    rows: rows.map((row) => {
+      const cellMap: Record<string, string> = {
+        bucket: row.key_label,
+        contribution: formatPct(row.contribution_pct),
+        weight: formatPct(row.weight_avg_pct),
+        return: formatPct(row.total_return_pct),
+        local: formatPct(row.local_contribution_pct),
+        fx: formatPct(row.fx_contribution_pct),
+      };
+
+      return {
+        key: row.key_label,
+        ariaLabel: `${row.key_label} contribution row`,
+        cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
+      };
+    }),
+    footer: [
+      "Total",
+      formatPct(contribution?.portfolio_contribution_pct ?? level?.total_contribution_pct ?? null),
+      formatPct(level?.total_weight_avg_pct ?? null),
+      formatPct(
+        level?.total_portfolio_return_pct ??
+          contribution?.total_portfolio_return_pct ??
+          null
+      ),
+      ...(includeLocalFxColumns
+        ? [
+            formatPct(contribution?.portfolio_local_contribution_pct ?? null),
+            formatPct(contribution?.portfolio_fx_contribution_pct ?? null),
+          ]
+        : []),
+    ],
+  };
+}
+
 export function buildPerformancePositionContributionTableModel({
   rows,
 }: {

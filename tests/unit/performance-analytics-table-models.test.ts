@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPerformanceContributionTableModel,
+  buildPerformanceContributionLevelTableModel,
   buildPerformancePositionContributionTableModel,
   buildPerformanceAttributionTrendTableModel,
   buildPerformanceHorizonVisualModel,
@@ -168,6 +169,42 @@ describe("performance analytics table models", () => {
       level: contribution?.levels?.[0] ?? null,
     });
     expect(footerModel.footer).toEqual([
+      "Total",
+      "5.42%",
+      "100.00%",
+      "5.42%",
+      "4.80%",
+      "0.62%",
+    ]);
+  });
+
+  it("builds a shared aggregate level table model for analysis contribution tables", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const contribution = scenario.workspace.contribution;
+    const level = contribution?.levels?.[0] ?? null;
+    const model = buildPerformanceContributionLevelTableModel({
+      rows: level?.rows ?? [],
+      contribution,
+      level,
+    });
+
+    expect(model.columns.map((column) => column.label)).toEqual([
+      "Bucket",
+      "Contribution",
+      "Avg. Weight",
+      "Return",
+      "Local",
+      "FX",
+    ]);
+    expect(model.rows[0]?.cells).toEqual([
+      "Equity",
+      "3.80%",
+      "61.00%",
+      "7.40%",
+      "3.40%",
+      "0.40%",
+    ]);
+    expect(model.footer).toEqual([
       "Total",
       "5.42%",
       "100.00%",

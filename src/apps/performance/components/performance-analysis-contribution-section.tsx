@@ -2,20 +2,19 @@ import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 
 import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
-import { buildPerformancePositionContributionTableModel } from "./performance-analytics-table-models";
+import {
+  buildPerformanceContributionLevelTableModel,
+  buildPerformancePositionContributionTableModel,
+} from "./performance-analytics-table-models";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
-import { formatLabel, formatPct } from "../formatters";
+import { formatLabel } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisLevelSection from "./performance-analysis-level-section";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
-import {
-  getContributionTotals,
-  inlineControlLabelSx,
-  shouldShowContributionLocalFx,
-} from "./performance-workspace-view-helpers";
+import { inlineControlLabelSx } from "./performance-workspace-view-helpers";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 
 type PerformanceAnalysisContributionSectionProps = Pick<
@@ -122,8 +121,11 @@ export default function PerformanceAnalysisContributionSection({
           <PerformanceContributionContextNote contribution={workspace.contribution} />
         ) : null}
         {workspace.contribution?.levels.map((level) => {
-          const totals = getContributionTotals(workspace, level) ?? null;
-          const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
+          const tableModel = buildPerformanceContributionLevelTableModel({
+            rows: level.rows,
+            contribution: workspace.contribution,
+            level,
+          });
           return (
             <PerformanceAnalysisLevelSection
               key={`${level.level}-${level.name}`}
@@ -133,49 +135,13 @@ export default function PerformanceAnalysisContributionSection({
                 className="performance-analysis-table"
                 dense
                 ariaLabel={`${formatLabel(level.name)} contribution table`}
-                columns={[
-                  { key: "bucket", label: "Bucket" },
-                  { key: "contribution", label: "Contribution", align: "right" },
-                  { key: "weight", label: "Avg. Weight", align: "right" },
-                  { key: "return", label: "Return", align: "right" },
-                  ...(showLocalFxColumns
-                    ? [
-                        { key: "local", label: "Local", align: "right" as const },
-                        { key: "fx", label: "FX", align: "right" as const },
-                      ]
-                    : []),
-                ]}
-                rows={level.rows.map((row) => ({
-                  key: `${level.name}-${row.key_label}`,
-                  cells: [
-                    row.key_label,
-                    formatPct(row.contribution_pct),
-                    formatPct(row.weight_avg_pct),
-                    formatPct(row.total_return_pct),
-                    ...(showLocalFxColumns
-                      ? [
-                          formatPct(row.local_contribution_pct),
-                          formatPct(row.fx_contribution_pct),
-                        ]
-                      : []),
-                  ],
+                columns={tableModel.columns}
+                rows={tableModel.rows.map((row) => ({
+                  key: `${level.name}-${row.key}`,
+                  ariaLabel: row.ariaLabel,
+                  cells: row.cells,
                 }))}
-                footer={[
-                  "Total",
-                  formatPct(totals?.portfolioContributionPct ?? level.total_contribution_pct),
-                  formatPct(level.total_weight_avg_pct ?? totals?.weightAvgPct ?? null),
-                  formatPct(
-                    level.total_portfolio_return_pct ??
-                      workspace.contribution?.total_portfolio_return_pct ??
-                      null
-                  ),
-                  ...(showLocalFxColumns
-                    ? [
-                        formatPct(totals?.localContributionPct ?? null),
-                        formatPct(totals?.fxContributionPct ?? null),
-                      ]
-                    : []),
-                ]}
+                footer={tableModel.footer}
               />
             </PerformanceAnalysisLevelSection>
           );

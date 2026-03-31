@@ -54,6 +54,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getAllByText("5.42%").length).toBeGreaterThanOrEqual(2);
   });
 
   it("keeps the position return column when upstream emits real returns and no local contribution", () => {
