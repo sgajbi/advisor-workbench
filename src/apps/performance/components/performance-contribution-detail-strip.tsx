@@ -6,6 +6,10 @@ import {
   formatPct,
   formatPerformancePositionLabel,
 } from "../formatters";
+import {
+  getContributionCoverageAssessment,
+  getContributionReconciliationAssessment,
+} from "./performance-workspace-view-helpers";
 
 function formatWeightingSchemeLabel(weightingScheme?: string | null) {
   if (!weightingScheme) {
@@ -53,6 +57,8 @@ export default function PerformanceContributionDetailStrip({
   const topDetractor = getTopDetractorRow(contribution.position_rows);
   const hasDetractor =
     topDetractor !== null && topDetractor.contribution_pct < 0;
+  const coverageAssessment = getContributionCoverageAssessment(contribution);
+  const reconciliationAssessment = getContributionReconciliationAssessment(contribution);
 
   return (
     <WorkbenchSummaryMetricStrip
@@ -84,16 +90,22 @@ export default function PerformanceContributionDetailStrip({
           key: "coverage",
           label: "Coverage MV",
           value: formatPct(contribution.coverage_mv_pct),
-          support: formatWeightingSchemeLabel(contribution.weighting_scheme),
+          support: [coverageAssessment, formatWeightingSchemeLabel(contribution.weighting_scheme)]
+            .filter(Boolean)
+            .join(" • "),
         },
         {
           key: "portfolio-contribution",
           label: "Portfolio Contribution",
           value: formatPct(contribution.portfolio_contribution_pct),
-          support:
+          support: [
             contribution.total_portfolio_return_pct != null
               ? `Return ${formatPct(contribution.total_portfolio_return_pct)}`
-              : undefined,
+              : null,
+            reconciliationAssessment,
+          ]
+            .filter(Boolean)
+            .join(" • "),
         },
       ]}
     />

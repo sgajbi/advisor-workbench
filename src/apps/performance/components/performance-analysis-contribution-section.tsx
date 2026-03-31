@@ -11,6 +11,8 @@ import PerformanceAnalysisModuleState from "./performance-analysis-module-state"
 import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import {
+  getContributionCoverageAssessment,
+  getContributionReconciliationAssessment,
   getContributionTotals,
   inlineControlLabelSx,
   shouldShowContributionLocalFx,
@@ -116,6 +118,17 @@ export default function PerformanceAnalysisContributionSection({
               }))}
             />
           </PerformanceAnalysisLevelSection>
+        ) : null}
+        {workspace.contribution && hasAggregateContributionLevels ? (
+          <div className="performance-analysis-contribution-context" role="note">
+            <strong>
+              {getContributionCoverageAssessment(workspace.contribution) ?? "Coverage unavailable"}
+            </strong>
+            <span>
+              {getContributionReconciliationAssessment(workspace.contribution) ??
+                "Contribution-to-return reconciliation unavailable for this selection."}
+            </span>
+          </div>
         ) : null}
         {workspace.contribution?.levels.map((level) => {
           const totals = getContributionTotals(workspace, level) ?? null;

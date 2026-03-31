@@ -3,7 +3,7 @@ import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
-import { formatDate, formatLabel } from "../formatters";
+import { formatDate, formatLabel, formatPct } from "../formatters";
 
 export const NOT_ADDITIVE_CELL = "—";
 
@@ -151,6 +151,50 @@ export function getPerformanceTrustStripPresentation({
       }),
     ],
   };
+}
+
+export function getContributionCoverageAssessment(
+  contribution: WorkbenchPerformanceWorkspace["contribution"]
+): string | null {
+  const coverage = contribution?.coverage_mv_pct;
+  if (coverage === null || coverage === undefined) {
+    return null;
+  }
+  if (coverage >= 99) {
+    return "Full coverage";
+  }
+  if (coverage >= 95) {
+    return "High coverage";
+  }
+  if (coverage >= 90) {
+    return "Partial coverage";
+  }
+  return "Limited coverage";
+}
+
+export function getContributionReconciliationAssessment(
+  contribution: WorkbenchPerformanceWorkspace["contribution"]
+): string | null {
+  if (!contribution) {
+    return null;
+  }
+  if (
+    contribution.portfolio_contribution_pct === null ||
+    contribution.portfolio_contribution_pct === undefined ||
+    contribution.total_portfolio_return_pct === null ||
+    contribution.total_portfolio_return_pct === undefined
+  ) {
+    return null;
+  }
+
+  const delta =
+    contribution.total_portfolio_return_pct - contribution.portfolio_contribution_pct;
+
+  if (Math.abs(delta) < 0.005) {
+    return "Reconciles to return";
+  }
+
+  return `Gap ${formatPct(delta)} vs return`;
 }
 
 export function getPerformanceControlNormalizationNotice(

@@ -41,7 +41,9 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByText("Top Detractor")).toBeInTheDocument();
     expect(screen.getByText("Coverage MV")).toBeInTheDocument();
     expect(screen.getByText("Portfolio Contribution")).toBeInTheDocument();
-    expect(screen.getByText("Average weight")).toBeInTheDocument();
+    expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
+    const detailStrip = screen.getByLabelText("Contribution detail summary strip");
+    expect(within(detailStrip).getByText(/High coverage • Average weight/)).toBeInTheDocument();
     const positionTable = screen.getByLabelText("Position contribution table");
     expect(positionTable).toBeInTheDocument();
     expect(screen.getByText("Position Ranking")).toBeInTheDocument();
@@ -95,7 +97,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(within(detailStrip).getByText("AAPL US")).toBeInTheDocument();
     expect(within(detailStrip).getByText("Top Detractor")).toBeInTheDocument();
     expect(within(detailStrip).getByText("None")).toBeInTheDocument();
-    expect(within(detailStrip).getByText("Average weight")).toBeInTheDocument();
+    expect(within(detailStrip).getByText(/High coverage • Average weight/)).toBeInTheDocument();
     expect(within(positionTable).getByText("Return")).toBeInTheDocument();
     expect(within(positionTable).queryByText("Local")).not.toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL US")).toBeInTheDocument();
@@ -228,6 +230,23 @@ describe("PerformanceAnalysisContributionSection", () => {
     );
 
     const detailStrip = screen.getByLabelText("Contribution detail summary strip");
-    expect(within(detailStrip).getByText("BOD weighting")).toBeInTheDocument();
+    expect(within(detailStrip).getByText(/High coverage • BOD weighting/)).toBeInTheDocument();
+  });
+
+  it("shows a contribution context note when aggregate rows are present", () => {
+    render(
+      <PerformanceAnalysisContributionSection
+        workspace={buildWorkspace()}
+        contributionDimension="asset_class"
+        onRequestChange={undefined}
+        isUpdating={false}
+        isDetailsPending={false}
+        capabilities={supportedCapabilities}
+      />
+    );
+
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent("High coverage");
+    expect(note).toHaveTextContent("Reconciles to return");
   });
 });

@@ -5935,6 +5935,27 @@ a:hover {
   line-height: 1.45;
 }
 
+.performance-analysis-contribution-context {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgba(52, 70, 95, 0.08);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.performance-analysis-contribution-context strong {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+
+.performance-analysis-contribution-context span {
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-support-size);
+  line-height: 1.45;
+}
+
 .performance-chart-loading-state {
   min-height: 5.25rem;
   display: grid;
