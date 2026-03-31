@@ -226,6 +226,9 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeTruthy();
     expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeTruthy();
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelectorAll(".portfolio-side-card")).toHaveLength(3);
+    expect(document.querySelector(".portfolio-context-card .portfolio-context-panel")).toBeTruthy();
+    expect(document.querySelector(".portfolio-readiness-card .portfolio-readiness-exception-list")).toBeTruthy();
     expect(document.querySelector(".portfolio-actions-card .portfolio-workflow-item")).toBeTruthy();
     expect(document.querySelector(".portfolio-actions-card .portfolio-evidence-copy")).toBeTruthy();
     expect(
