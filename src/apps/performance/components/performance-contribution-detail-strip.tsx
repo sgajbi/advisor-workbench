@@ -1,5 +1,6 @@
 import { WorkbenchSummaryMetricStrip } from "@/design-system";
 import type { ContributionSummaryView } from "@/features/workbench/types";
+import { cx } from "@/design-system/utils/cx";
 
 import {
   formatPct,
@@ -24,8 +25,12 @@ function getTopDetractorRow(rows: ContributionSummaryView["position_rows"]) {
 
 export default function PerformanceContributionDetailStrip({
   contribution,
+  ariaLabel = "Contribution detail summary strip",
+  className,
 }: {
   contribution: ContributionSummaryView;
+  ariaLabel?: string;
+  className?: string;
 }) {
   const topContributor = getTopContributorRow(contribution.position_rows);
   const topDetractor = getTopDetractorRow(contribution.position_rows);
@@ -34,8 +39,8 @@ export default function PerformanceContributionDetailStrip({
 
   return (
     <WorkbenchSummaryMetricStrip
-      className="performance-analysis-metric-strip"
-      ariaLabel="Contribution detail summary strip"
+      className={cx("performance-analysis-metric-strip", className)}
+      ariaLabel={ariaLabel}
       items={[
         {
           key: "top-contributor",

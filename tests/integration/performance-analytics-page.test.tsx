@@ -183,6 +183,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("How did this compare across horizons?")).length).toBe(1);
     expect(screen.getAllByText("What drove the result?").length).toBe(1);
+    expect(screen.getByLabelText("Contributor driver strip")).toBeInTheDocument();
     expect(document.querySelectorAll(".workbench-chart-shell").length).toBeGreaterThanOrEqual(3);
     expect(document.querySelectorAll(".performance-summary-driver-module.workbench-chart-shell")).toHaveLength(2);
     const contributorsModule =

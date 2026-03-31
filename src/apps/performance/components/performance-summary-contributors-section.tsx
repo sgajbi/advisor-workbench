@@ -5,6 +5,7 @@ import {
 } from "@/design-system";
 
 import PerformanceCapabilityNotice from "./performance-capability-notice";
+import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
 import { getPerformanceContributorsPresentation } from "./performance-summary-driver-helpers";
@@ -37,6 +38,13 @@ export default function PerformanceSummaryContributorsSection({
     >
       {presentation.mode === "supported" ? (
         <div className="performance-contributors-panel">
+          {workspace.contribution?.position_rows?.length ? (
+            <PerformanceContributionDetailStrip
+              contribution={workspace.contribution}
+              ariaLabel="Contributor driver strip"
+              className="performance-contributors-strip"
+            />
+          ) : null}
           <div className="performance-contributors-grid">
             <WorkbenchSummaryVisualCard>
               <WorkbenchRankedBarList

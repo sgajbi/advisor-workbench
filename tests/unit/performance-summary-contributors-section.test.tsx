@@ -83,11 +83,18 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-ranked-bar-list")).toHaveLength(2);
     expect(document.querySelectorAll(".workbench-ranked-bar-row")).toHaveLength(2);
+    const contributorStrip = screen.getByLabelText("Contributor driver strip");
+    expect(contributorStrip).toBeInTheDocument();
+    expect(within(contributorStrip).getByText("Top Contributor")).toBeInTheDocument();
+    expect(within(contributorStrip).getByText("Top Detractor")).toBeInTheDocument();
+    expect(within(contributorStrip).getByText("Coverage MV")).toBeInTheDocument();
+    expect(within(contributorStrip).getByText("Portfolio Contribution")).toBeInTheDocument();
     expect(screen.getByLabelText("Contributor summary")).toBeInTheDocument();
     expect(document.querySelector(".performance-contributors-table.analytics-table-frame-dense")).toBeTruthy();
-    expect(screen.getByText("Position")).toBeInTheDocument();
-    expect(screen.getAllByText("AAPL")).toHaveLength(2);
-    expect(screen.getByText("TLT")).toBeInTheDocument();
+    const contributorTable = screen.getByLabelText("Contributor summary");
+    expect(within(contributorTable).getByText("Position")).toBeInTheDocument();
+    expect(within(contributorTable).getByText("AAPL")).toBeInTheDocument();
+    expect(within(contributorTable).queryByText("TLT")).not.toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
     expect(screen.getByText("Avg. Weight 8.00%")).toBeInTheDocument();
     const rankedLists = document.querySelectorAll(".workbench-ranked-bar-list");
@@ -140,6 +147,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();

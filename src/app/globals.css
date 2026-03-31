@@ -4692,8 +4692,11 @@ a:hover {
 .performance-contributors-panel {
   display: grid;
   gap: 0.7rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 246, 248, 0.96) 100%);
+  background: #ffffff;
+}
+
+.performance-contributors-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .performance-contributors-table {
