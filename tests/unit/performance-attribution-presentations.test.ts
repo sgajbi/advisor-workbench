@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getAttributionDetailContextItems,
+  getAttributionReconciliationText,
   getAttributionDetailSummaryItems,
   getAttributionTrendContextItems,
   getAttributionTrendSummaryItems,
@@ -120,6 +121,15 @@ describe("performance attribution presentations", () => {
     expect(contextItems[2]).toEqual({
       label: "Benchmark",
       value: "Global Balanced 60/40",
+    });
+  });
+
+  it("builds attribution reconciliation text from summary values", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    expect(getAttributionReconciliationText(scenario.workspace.attribution!)).toEqual({
+      headline: "Residual remains after effects",
+      detail: "Active return 0.52% • effects sum 0.50% • residual 0.02%",
     });
   });
 

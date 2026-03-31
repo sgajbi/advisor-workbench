@@ -22,6 +22,37 @@ function getAttributionResidualAssessment(
   return "Residual remains after effects";
 }
 
+export function getAttributionReconciliationText(
+  attribution:
+    | AttributionSummaryView
+    | {
+        active_return_pct: number | null | undefined;
+        sum_of_effects_pct?: number | null | undefined;
+        total_effect_pct?: number | null | undefined;
+        residual_pct: number | null | undefined;
+      }
+) {
+  const effectsPct =
+    "sum_of_effects_pct" in attribution
+      ? attribution.sum_of_effects_pct
+      : attribution.total_effect_pct;
+
+  return {
+    headline:
+      getAttributionResidualAssessment(attribution.residual_pct) ??
+      "Attribution reconciliation unavailable",
+    detail: [
+      attribution.active_return_pct != null
+        ? `Active return ${formatPct(attribution.active_return_pct)}`
+        : null,
+      effectsPct != null ? `effects sum ${formatPct(effectsPct)}` : null,
+      attribution.residual_pct != null ? `residual ${formatPct(attribution.residual_pct)}` : null,
+    ]
+      .filter(Boolean)
+      .join(" • "),
+  };
+}
+
 function getAttributionReconciliationSupport({
   activeReturnPct,
   effectsSumPct,

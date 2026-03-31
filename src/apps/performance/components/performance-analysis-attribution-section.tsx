@@ -23,6 +23,7 @@ import {
   NOT_ADDITIVE_CELL,
 } from "./performance-workspace-view-helpers";
 import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
+import PerformanceAttributionReconciliationNote from "./performance-attribution-reconciliation-note";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import {
   getAttributionDetailContextItems,
@@ -146,6 +147,9 @@ export default function PerformanceAnalysisAttributionSection({
         }
         allowPartialContent={hasAttributionSummaryLevels}
       >
+        {workspace.attribution ? (
+          <PerformanceAttributionReconciliationNote attribution={workspace.attribution} />
+        ) : null}
         {showDetailedBreakdownChrome ? (
           <>
             <div className="performance-analytic-duo-grid">

@@ -84,6 +84,11 @@ describe("PerformanceAnalysisAttributionSection", () => {
       /Linking\s*Carino/i
     );
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    const reconciliationNote = screen.getByRole("note");
+    expect(reconciliationNote).toHaveTextContent("Residual remains after effects");
+    expect(reconciliationNote).toHaveTextContent(
+      "Active return 0.52% • effects sum 0.50% • residual 0.02%"
+    );
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
@@ -142,6 +147,11 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(
       screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
     ).toBeInTheDocument();
+    const reconciliationNote = screen.getByRole("note");
+    expect(reconciliationNote).toHaveTextContent("Residual remains after effects");
+    expect(reconciliationNote).toHaveTextContent(
+      "Active return 0.52% • effects sum 0.50% • residual 0.02%"
+    );
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
