@@ -114,9 +114,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Portfolio Return')).toBeVisible();
     await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
     await expect(executiveStrip.getByText('Active Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Basis', { exact: true })).toBeVisible();
-    await expect(executiveStrip.getByText('Resolved window', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
+    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
+    await expect(executiveStrip.getByText('Basis / Period', { exact: true })).toBeVisible();
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
@@ -126,7 +126,7 @@ test.describe('Performance workbench smoke', () => {
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
     await expectActiveTab(page, /^Summary$/i);
 
-    await expect(page.getByText('Return path and benchmark context')).toBeVisible({
+    await expect(page.getByRole('group', { name: /^Return path context$/i })).toBeVisible({
       timeout: 15000,
     });
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
@@ -151,9 +151,13 @@ test.describe('Performance workbench smoke', () => {
       page.getByRole('heading', { name: /^Attribution Detail$/i })
     ).toBeVisible({ timeout: 15000 });
     await expect(
-      page.getByRole('heading', { name: /^Contribution Detail$/i })
+      page.getByRole('heading', { name: /^What drove the result\?$/i })
     ).toBeVisible({ timeout: 15000 });
     await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
+    await expect(page.getByLabel('Contribution ranked insight panel')).toBeVisible();
+    await expect(page.getByLabel('Contribution detail grid panel')).toBeVisible();
+    await expect(page.getByLabel('Attribution ranked insight panel')).toBeVisible();
+    await expect(page.getByLabel('Attribution detail grid panel')).toBeVisible();
 
     await expect(evidenceTab).toBeDisabled();
   });
@@ -177,7 +181,7 @@ test.describe('Performance workbench smoke', () => {
       page.getByRole('heading', { name: /^Attribution Detail$/i })
     ).toBeVisible({ timeout: 15000 });
     await expect(
-      page.getByRole('heading', { name: /^Contribution Detail$/i })
+      page.getByRole('heading', { name: /^What drove the result\?$/i })
     ).toBeVisible({ timeout: 15000 });
 
     const trendShell = page.locator('.performance-analysis-trend-shell');
@@ -194,8 +198,32 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByText('Latest Total Effect')).toBeVisible();
     await expect(page.getByLabel('Attribution trend summary strip').getByText('Cumulative Total')).toBeVisible();
 
-    const analysisTables = page.locator('.performance-analysis-table');
-    await expect(analysisTables).toHaveCount(4);
+    await expect(page.getByLabel('Attribution ranked insight panel')).toBeVisible();
+    await expect(page.getByLabel('Attribution detail grid panel')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /^Relative context$/i })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect(page.getByRole('tab', { name: /^Effect breakdown$/i })).toHaveAttribute(
+      'aria-selected',
+      'false'
+    );
+    await expect(page.getByText('Total Effect Ranking')).toBeVisible();
+    await expect(page.getByText('Relative Segment Matrix')).toBeVisible();
+    await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
+
+    await page.getByRole('tab', { name: /^Effect breakdown$/i }).click();
+    await expect(page.getByRole('tab', { name: /^Effect breakdown$/i })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect(page.getByLabel('Asset Class attribution totals')).toBeVisible();
+    await expect(page.getByText('Summary-only attribution')).toBeVisible();
+    await expect(page.getByText('Relative Segment Matrix')).toHaveCount(0);
+
+    await expect(page.getByLabel('Attribution trend table')).toBeVisible();
+    await expect(page.getByLabel('Asset Class attribution totals')).toBeVisible();
+    await expect(page.getByLabel('Position contribution table')).toBeVisible();
 
     const trendMetrics = await measureElement(trendShell);
     expect(trendMetrics.height).toBeLessThanOrEqual(900);
@@ -221,15 +249,29 @@ test.describe('Performance workbench smoke', () => {
     const contributionModule = page.locator('#performance-drivers');
     await expect(contributionModule).toBeVisible({ timeout: 15000 });
     await expect(
-      contributionModule.getByRole('heading', { name: /^Contribution Detail$/i })
+      contributionModule.getByRole('heading', { name: /^What drove the result\?$/i })
     ).toBeVisible();
-    await expect(contributionModule.getByText('Top Positions')).toBeVisible();
+    await expect(contributionModule.getByLabel('Contribution ranked insight panel')).toBeVisible();
+    await expect(contributionModule.getByLabel('Contribution detail grid panel')).toBeVisible();
+    await expect(contributionModule.getByText('Ranked insight')).toBeVisible();
+    await expect(contributionModule.getByText('Top Contributor')).toBeVisible();
+    await expect(contributionModule.getByText('Top Detractor')).toBeVisible();
     await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
-    await expect(contributionModule.getByLabel('Asset Class contribution table')).toBeVisible();
-    await expect(contributionModule.getByText('AAPL US')).toBeVisible();
-    await expect(contributionModule.getByText('BLK ALLOC')).toBeVisible();
-    await expect(contributionModule.getByText('Equity')).toBeVisible();
-    await expect(contributionModule.getByText('Fund')).toBeVisible();
+    await expect(contributionModule.getByLabel('Asset Class contribution table')).toHaveCount(0);
+    await expect(
+      contributionModule.getByRole('cell', { name: 'AAPL US', exact: true })
+    ).toBeVisible();
+    await expect(
+      contributionModule.getByRole('cell', { name: 'BLK ALLOC', exact: true })
+    ).toBeVisible();
+    await expect(
+      contributionModule
+        .getByRole('tab', { name: /^Positions$/i })
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect(
+      contributionModule
+        .getByRole('tab', { name: /^Segment breakdown$/i })
+    ).toHaveAttribute('aria-selected', 'false');
 
     const positionHeaders = await contributionModule
       .locator('table[aria-label="Position contribution table"] thead th')
@@ -237,15 +279,21 @@ test.describe('Performance workbench smoke', () => {
     expect(positionHeaders).toEqual(['Position', 'Contribution', 'Avg. Weight', 'Return', 'FX']);
 
     const positionFrame = await measureTableFrame(
-      contributionModule.locator('.performance-analysis-level-section').filter({ hasText: 'Top Positions' }).locator('.analytics-table-frame')
+      contributionModule.getByLabel('Position contribution table').locator('..')
     );
     expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
 
+    await contributionModule.getByRole('tab', { name: /^Segment breakdown$/i }).click();
+    await expect(
+      contributionModule.getByRole('tab', { name: /^Segment breakdown$/i })
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
+    await expect(contributionModule.getByLabel('Asset Class contribution table')).toBeVisible();
+    await expect(contributionModule.getByText('Equity')).toBeVisible();
+    await expect(contributionModule.getByText('Fund')).toBeVisible();
+
     const aggregateFrame = await measureTableFrame(
-      contributionModule
-        .locator('.performance-analysis-level-section')
-        .filter({ hasText: 'Asset Class' })
-        .locator('.analytics-table-frame')
+      contributionModule.getByLabel('Asset Class contribution table').locator('..')
     );
     expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
 
