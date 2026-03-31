@@ -3,6 +3,7 @@ import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 import {
   AnalyticsEffectStrip,
   AnalyticsTable,
+  WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchRankedBarList,
   WorkbenchSummaryMetricStrip,
@@ -112,6 +113,40 @@ export default function PerformanceAnalysisAttributionSection({
       title="Attribution Detail"
       subtitle="Benchmark-relative decomposition across allocation, selection, and interaction effects."
       actions={actions}
+      contextRow={
+        workspace.attribution ? (
+          <WorkbenchChartContextRow
+            label="Attribution detail context"
+            className="performance-analysis-context-row"
+            items={[
+              {
+                label: "Benchmark",
+                value: workspace.attribution.benchmark_id
+                  ? formatLabel(workspace.attribution.benchmark_id)
+                  : "Unassigned",
+              },
+              {
+                label: "Source",
+                value: workspace.attribution.benchmark_return_source
+                  ? formatLabel(workspace.attribution.benchmark_return_source)
+                  : "Unavailable",
+              },
+              {
+                label: "Model",
+                value: workspace.attribution.model
+                  ? formatLabel(workspace.attribution.model)
+                  : "Unavailable",
+              },
+              {
+                label: "Linking",
+                value: workspace.attribution.linking
+                  ? formatLabel(workspace.attribution.linking)
+                  : "Unavailable",
+              },
+            ]}
+          />
+        ) : undefined
+      }
       metricStrip={
         metricItems.length ? (
           <WorkbenchSummaryMetricStrip

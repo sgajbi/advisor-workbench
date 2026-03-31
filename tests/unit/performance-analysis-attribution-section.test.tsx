@@ -69,6 +69,19 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Benchmark\s*BMK GLOBAL BALANCED 60 40/i
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Source\s*Calculated/i
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Model\s*BF/i
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Linking\s*Carino/i
+    );
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
@@ -128,6 +141,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(
       screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
     ).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(screen.getByText("Summary-only attribution")).toBeInTheDocument();

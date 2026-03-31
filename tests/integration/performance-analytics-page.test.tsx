@@ -278,6 +278,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
     expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
     expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
@@ -518,6 +519,7 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
 
     expect(await screen.findByText("Attribution Detail")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(await screen.findByText("Summary-only attribution")).toBeInTheDocument();
