@@ -2648,6 +2648,13 @@ a:hover {
   color: var(--text-muted);
 }
 
+.portfolio-performance-snapshot-support {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-subtle, #6b7280);
+  font-variant-numeric: tabular-nums;
+}
+
 .portfolio-summary-pair-panel {
   display: grid;
   gap: var(--space-3);

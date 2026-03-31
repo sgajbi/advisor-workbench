@@ -167,6 +167,12 @@ export default function PortfolioPerformanceSnapshotModule({
               <span className="portfolio-performance-snapshot-copy">
                 {buildCollapsedUnavailableCopy(capability.reason)}
               </span>
+              <span className="portfolio-performance-snapshot-support">
+                {buildCollapsedUnavailableSupport({
+                  selectedPeriod,
+                  context,
+                })}
+              </span>
             </>
           )}
         </div>
@@ -299,4 +305,19 @@ function buildCollapsedUnavailableCopy(reason?: string | null) {
   }
 
   return "Awaiting valuation history, cashflow history, and a reporting period.";
+}
+
+function buildCollapsedUnavailableSupport({
+  selectedPeriod,
+  context,
+}: {
+  selectedPeriod: PortfolioTimeWindow;
+  context: PortfolioWorkspaceContext;
+}) {
+  const periodLabel = context.periodLabel || selectedPeriod;
+  const resolvedWindow = `${formatDate(context.effectivePeriodStartDate)} - ${formatDate(
+    context.effectivePeriodEndDate
+  )}`;
+
+  return `${periodLabel} • ${resolvedWindow} • Open Performance for full requirements`;
 }

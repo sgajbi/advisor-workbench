@@ -45,6 +45,9 @@ describe("portfolio performance snapshot module", () => {
     expect(
       screen.getByText("Awaiting valuation history, cashflow history, and a reporting period.")
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("30D • 27 Feb 2026 - 28 Mar 2026 • Open Performance for full requirements")
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PORT_UI_1001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&reportStartDate=2026-02-27&reportEndDate=2026-03-28"
