@@ -296,6 +296,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeTruthy();
     expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(screen.getByLabelText("Contribution ranked insight panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail grid panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution ranked insight panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution detail grid panel")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Segment breakdown" })).toHaveAttribute(
       "aria-selected",

@@ -34,6 +34,12 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(screen.getByLabelText("Contribution ranked insight panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail grid panel")).toBeInTheDocument();
+    expect(screen.getByText("Ranked insight")).toBeInTheDocument();
+    expect(
+      screen.getByText("Prioritize the largest positive and negative contribution drivers.")
+    ).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
     expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
@@ -57,9 +63,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Ranked contributors").length).toBeGreaterThanOrEqual(1);
-    const insightPane = document.querySelector(
-      ".performance-analysis-drilldown-pane-insight"
-    ) as HTMLElement;
+    const insightPane = screen.getByLabelText("Contribution ranked insight panel");
     expect(within(insightPane).queryByLabelText("Position contribution table")).not.toBeInTheDocument();
     expect(within(insightPane).queryByText("Position")).not.toBeInTheDocument();
   });

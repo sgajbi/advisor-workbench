@@ -5035,15 +5035,29 @@ a:hover {
   min-width: 0;
 }
 
-.performance-contribution-insight-pane,
-.performance-analysis-detail-pane,
-.performance-attribution-insight-pane {
+.performance-analysis-insight-pane,
+.performance-analysis-detail-pane {
   display: grid;
   gap: 0.7rem;
   padding: 0.85rem;
   border: 1px solid rgba(221, 226, 232, 0.9);
   border-radius: 12px;
   background: #ffffff;
+}
+
+.performance-analysis-drilldown-pane-insight {
+  position: sticky;
+  top: calc(var(--space-6) + var(--space-2));
+}
+
+.performance-analysis-insight-pane {
+  align-content: start;
+}
+
+.performance-analysis-insight-pane-header,
+.performance-analysis-insight-pane-body {
+  display: grid;
+  gap: 0.7rem;
 }
 
 .performance-contribution-insight-pane .performance-analysis-metric-strip {
@@ -5055,19 +5069,20 @@ a:hover {
   gap: 0.65rem;
 }
 
-.performance-contribution-ranked-panel-copy {
-  display: grid;
-  gap: 0.18rem;
-}
-
-.performance-contribution-ranked-panel-copy strong,
+.performance-analysis-insight-pane-copy strong,
 .performance-analysis-detail-pane-copy strong {
   font-size: var(--workbench-analytic-heading-size);
   line-height: 1.2;
   color: var(--brand-strong);
 }
 
-.performance-contribution-ranked-panel-copy span,
+.performance-analysis-insight-pane-copy,
+.performance-analysis-ranked-panel {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.performance-analysis-insight-pane-copy span,
 .performance-analysis-detail-pane-copy span,
 .performance-analysis-detail-empty span {
   font-size: var(--workbench-analytic-context-value-size);
@@ -6553,6 +6568,11 @@ a:hover {
 
   .performance-analysis-drilldown-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .performance-analysis-drilldown-pane-insight {
+    position: static;
+    top: auto;
   }
 
   .performance-analysis-detail-pane-header {

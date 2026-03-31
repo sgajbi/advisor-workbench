@@ -15,6 +15,7 @@ import { formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import PerformanceAnalysisDrilldownWorkspace from "./performance-analysis-drilldown-workspace";
+import PerformanceAnalysisInsightPane from "./performance-analysis-insight-pane";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import { getAttributionRankingRows } from "./performance-analysis-view-helpers";
@@ -157,22 +158,25 @@ export default function PerformanceAnalysisAttributionSection({
         {workspace.attribution ? (
           <PerformanceAnalysisDrilldownWorkspace
             className="performance-analysis-attribution-workspace"
+            insightLabel="Attribution ranked insight panel"
+            detailLabel="Attribution detail grid panel"
             insightPane={
-              <div className="performance-attribution-insight-pane">
-                <WorkbenchChartShell
-                  title="Total Effect Ranking"
-                  subtitle="Largest benchmark-relative effects"
-                  className="performance-analysis-mini-module"
-                >
+              <PerformanceAnalysisInsightPane
+                title="Ranked insight"
+                subtitle="Prioritize the largest benchmark-relative effects before opening detailed breakdown."
+                className="performance-attribution-insight-pane"
+              >
+                <div className="performance-analysis-ranked-panel">
                   <WorkbenchRankedBarList
+                    title="Total Effect Ranking"
                     label="Benchmark-relative total effect"
                     rows={getAttributionRankingRows(topAttributionEffectRows)}
                     scale={attributionEffectScale}
                     emptyMessage="No benchmark-relative effect ranking is available for this selection."
                   />
-                </WorkbenchChartShell>
+                </div>
                 <PerformanceAnalysisEffectLegend />
-              </div>
+              </PerformanceAnalysisInsightPane>
             }
             detailPane={
               <PerformanceAnalysisDetailPane

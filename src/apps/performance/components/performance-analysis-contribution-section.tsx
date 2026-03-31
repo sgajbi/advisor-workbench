@@ -9,6 +9,7 @@ import {
 } from "./performance-analytics-table-models";
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import PerformanceAnalysisDrilldownWorkspace from "./performance-analysis-drilldown-workspace";
+import PerformanceAnalysisInsightPane from "./performance-analysis-insight-pane";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
@@ -114,14 +115,16 @@ export default function PerformanceAnalysisContributionSection({
       >
         {workspace.contribution ? (
           <PerformanceAnalysisDrilldownWorkspace
+            insightLabel="Contribution ranked insight panel"
+            detailLabel="Contribution detail grid panel"
             insightPane={
-              <div className="performance-contribution-insight-pane">
+              <PerformanceAnalysisInsightPane
+                title="Ranked insight"
+                subtitle="Prioritize the largest positive and negative contribution drivers."
+                className="performance-contribution-insight-pane"
+              >
                 <PerformanceContributionDetailStrip contribution={workspace.contribution} />
                 <div className="performance-contribution-ranked-panel">
-                  <div className="performance-contribution-ranked-panel-copy">
-                    <strong>Ranked contributors</strong>
-                    <span>Quick scan of the largest positive and negative drivers.</span>
-                  </div>
                   <WorkbenchRankedBarList
                     title="Ranked contributors"
                     label="Contribution"
@@ -137,7 +140,7 @@ export default function PerformanceAnalysisContributionSection({
                 {hasAggregateContributionLevels ? (
                   <PerformanceContributionContextNote contribution={workspace.contribution} />
                 ) : null}
-              </div>
+              </PerformanceAnalysisInsightPane>
             }
             detailPane={
               <PerformanceAnalysisDetailPane

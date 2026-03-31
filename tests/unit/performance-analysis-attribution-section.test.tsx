@@ -91,6 +91,14 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(screen.getByLabelText("Attribution ranked insight panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution detail grid panel")).toBeInTheDocument();
+    expect(screen.getByText("Ranked insight")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Prioritize the largest benchmark-relative effects before opening detailed breakdown."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
@@ -175,6 +183,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    const insightPane = screen.getByLabelText("Attribution ranked insight panel");
+    expect(within(insightPane).queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
