@@ -41,6 +41,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByText("Top Detractor")).toBeInTheDocument();
     expect(screen.getByText("Coverage MV")).toBeInTheDocument();
     expect(screen.getByText("Portfolio Contribution")).toBeInTheDocument();
+    expect(screen.getByText("Average weight")).toBeInTheDocument();
     const positionTable = screen.getByLabelText("Position contribution table");
     expect(positionTable).toBeInTheDocument();
     expect(screen.getByText("Position Ranking")).toBeInTheDocument();
@@ -94,6 +95,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(within(detailStrip).getByText("AAPL US")).toBeInTheDocument();
     expect(within(detailStrip).getByText("Top Detractor")).toBeInTheDocument();
     expect(within(detailStrip).getByText("None")).toBeInTheDocument();
+    expect(within(detailStrip).getByText("Average weight")).toBeInTheDocument();
     expect(within(positionTable).getByText("Return")).toBeInTheDocument();
     expect(within(positionTable).queryByText("Local")).not.toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL US")).toBeInTheDocument();
@@ -205,5 +207,27 @@ describe("PerformanceAnalysisContributionSection", () => {
       "aria-disabled",
       "true"
     );
+  });
+
+  it("surfaces weighting provenance when live contribution summary includes it", () => {
+    const workspace = buildWorkspace();
+    if (!workspace.contribution) {
+      throw new Error("Expected contribution detail in supported workspace fixture");
+    }
+    workspace.contribution.weighting_scheme = "BOD";
+
+    render(
+      <PerformanceAnalysisContributionSection
+        workspace={workspace}
+        contributionDimension="asset_class"
+        onRequestChange={undefined}
+        isUpdating={false}
+        isDetailsPending={false}
+        capabilities={supportedCapabilities}
+      />
+    );
+
+    const detailStrip = screen.getByLabelText("Contribution detail summary strip");
+    expect(within(detailStrip).getByText("BOD weighting")).toBeInTheDocument();
   });
 });

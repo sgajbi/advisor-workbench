@@ -7,6 +7,23 @@ import {
   formatPerformancePositionLabel,
 } from "../formatters";
 
+function formatWeightingSchemeLabel(weightingScheme?: string | null) {
+  if (!weightingScheme) {
+    return null;
+  }
+
+  switch (weightingScheme.trim().toUpperCase()) {
+    case "BOD":
+      return "BOD weighting";
+    case "EOD":
+      return "EOD weighting";
+    case "AVERAGE_WEIGHT":
+      return "Average weight";
+    default:
+      return weightingScheme;
+  }
+}
+
 function getTopContributorRow(rows: ContributionSummaryView["position_rows"]) {
   return rows.reduce<typeof rows[number] | null>(
     (best, row) =>
@@ -67,6 +84,7 @@ export default function PerformanceContributionDetailStrip({
           key: "coverage",
           label: "Coverage MV",
           value: formatPct(contribution.coverage_mv_pct),
+          support: formatWeightingSchemeLabel(contribution.weighting_scheme),
         },
         {
           key: "portfolio-contribution",
