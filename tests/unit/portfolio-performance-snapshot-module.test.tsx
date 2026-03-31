@@ -186,8 +186,8 @@ describe("portfolio performance snapshot module", () => {
       "href",
       "/performance?portfolioId=PORT_UI_1001&period=QTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
     );
-    expect(container.querySelector(".portfolio-performance-snapshot-panel")).not.toBeNull();
-    expect(container.querySelectorAll(".portfolio-performance-snapshot-stat")).toHaveLength(4);
+    expect(container.querySelector(".portfolio-summary-pair-panel")).not.toBeNull();
+    expect(container.querySelectorAll(".portfolio-summary-pair-stat")).toHaveLength(4);
     const trendRegion = container.querySelector(".portfolio-performance-snapshot-trend");
     const contextRegion = container.querySelector(".portfolio-performance-snapshot-context");
     expect(trendRegion).not.toBeNull();

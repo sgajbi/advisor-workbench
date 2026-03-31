@@ -75,22 +75,22 @@ export default function PortfolioPerformanceSnapshotModule({
     >
       {expanded ? (
         hasPerformance ? (
-          <div className="portfolio-performance-snapshot-panel">
-            <div className="portfolio-performance-snapshot-strip">
-              <SnapshotStat label="Portfolio Return" value={formatPct(performance?.return_pct)} />
-              <SnapshotStat
+          <div className="portfolio-summary-pair-panel portfolio-performance-snapshot-panel">
+            <div className="portfolio-summary-pair-strip">
+              <SummaryPairStat label="Portfolio Return" value={formatPct(performance?.return_pct)} />
+              <SummaryPairStat
                 label="Benchmark Return"
                 value={formatPct(performance?.benchmark_return_pct)}
               />
-              <SnapshotStat label="Active Return" value={formatPct(performance?.excess_return_pct)} />
-              <SnapshotStat
+              <SummaryPairStat label="Active Return" value={formatPct(performance?.excess_return_pct)} />
+              <SummaryPairStat
                 label="Money-Weighted Return"
                 value={formatPct(performance?.money_weighted_return_pct)}
               />
             </div>
-            <div className="portfolio-performance-snapshot-body">
+            <div className="portfolio-summary-pair-body">
               <div className="portfolio-performance-snapshot-trend">
-                <div className="portfolio-performance-snapshot-region-heading">
+                <div className="portfolio-summary-pair-region-heading">
                   <span>Trend</span>
                   <strong>{trendValue}</strong>
                 </div>
@@ -106,11 +106,11 @@ export default function PortfolioPerformanceSnapshotModule({
                 )}
               </div>
               <div className="portfolio-performance-snapshot-context">
-                <div className="portfolio-performance-snapshot-region-heading">
+                <div className="portfolio-summary-pair-region-heading">
                   <span>Context</span>
                   <strong>{performance?.period ?? selectedPeriod}</strong>
                 </div>
-                <div className="portfolio-performance-snapshot-context-grid">
+                <div className="portfolio-summary-pair-context-grid">
                   <MetricRow label="Resolved Window" value={resolvedWindow} />
                   <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
                   <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
@@ -123,7 +123,7 @@ export default function PortfolioPerformanceSnapshotModule({
                     }
                   />
                 </div>
-                <p className="portfolio-performance-snapshot-support">{operationalSupport}</p>
+                <p className="portfolio-summary-pair-support">{operationalSupport}</p>
               </div>
             </div>
           </div>
@@ -231,7 +231,7 @@ function buildPerformanceWorkspaceHref({
   });
 }
 
-function SnapshotStat({
+function SummaryPairStat({
   label,
   value,
 }: {
@@ -239,7 +239,7 @@ function SnapshotStat({
   value: string;
 }) {
   return (
-    <div className="portfolio-performance-snapshot-stat">
+    <div className="portfolio-summary-pair-stat">
       <span>{label}</span>
       <strong>{value}</strong>
     </div>

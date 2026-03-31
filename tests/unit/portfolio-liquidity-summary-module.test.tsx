@@ -7,7 +7,7 @@ import { supported, unavailable } from "../../src/shell/workspace-capabilities";
 
 describe("PortfolioLiquiditySummaryModule", () => {
   it("renders contract-backed liquidity metrics when projected cashflow is supported", () => {
-    render(
+    const { container } = render(
       <PortfolioLiquiditySummaryModule
         capability={supported("Projected cashflow is available in the liquidity payload.")}
         cashflowOutlook={{
@@ -35,7 +35,10 @@ describe("PortfolioLiquiditySummaryModule", () => {
     expect(screen.getByText("105,000 USD")).toBeInTheDocument();
     expect(screen.getByText("8.40%")).toBeInTheDocument();
     expect(screen.getByText("-25,000 USD")).toBeInTheDocument();
-    expect(screen.getByText("10 days")).toBeInTheDocument();
+    expect(screen.getAllByText("10 days").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Projected points included")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-summary-pair-panel")).not.toBeNull();
+    expect(container.querySelectorAll(".portfolio-summary-pair-stat")).toHaveLength(3);
     expect(screen.queryByText("Projected cashflow unavailable")).not.toBeInTheDocument();
   });
 

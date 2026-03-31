@@ -2609,18 +2609,18 @@ a:hover {
   color: var(--text-muted);
 }
 
-.portfolio-performance-snapshot-panel {
+.portfolio-summary-pair-panel {
   display: grid;
   gap: var(--space-3);
 }
 
-.portfolio-performance-snapshot-strip {
+.portfolio-summary-pair-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-2);
 }
 
-.portfolio-performance-snapshot-stat {
+.portfolio-summary-pair-stat {
   display: grid;
   gap: 2px;
   padding: var(--space-2) var(--space-3);
@@ -2629,13 +2629,13 @@ a:hover {
   background: #fff;
 }
 
-.portfolio-performance-snapshot-stat span {
+.portfolio-summary-pair-stat span {
   font-size: 12px;
   line-height: 1.4;
   color: var(--text-muted);
 }
 
-.portfolio-performance-snapshot-stat strong {
+.portfolio-summary-pair-stat strong {
   font-size: 18px;
   font-weight: 650;
   line-height: 1.2;
@@ -2643,13 +2643,14 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.portfolio-performance-snapshot-body {
+.portfolio-summary-pair-body {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
   gap: var(--space-3);
   align-items: start;
 }
 
+.portfolio-summary-pair-footer,
 .portfolio-performance-snapshot-trend,
 .portfolio-performance-snapshot-context {
   display: grid;
@@ -2657,27 +2658,27 @@ a:hover {
   min-width: 0;
 }
 
-.portfolio-performance-snapshot-region-heading {
+.portfolio-summary-pair-region-heading {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2);
 }
 
-.portfolio-performance-snapshot-region-heading span {
+.portfolio-summary-pair-region-heading span {
   font-size: 12px;
   line-height: 1.4;
   color: var(--text-muted);
 }
 
-.portfolio-performance-snapshot-region-heading strong {
+.portfolio-summary-pair-region-heading strong {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
   color: var(--text);
 }
 
-.portfolio-performance-snapshot-context-grid {
+.portfolio-summary-pair-context-grid {
   display: grid;
   gap: 1px;
   border: var(--border-subtle);
@@ -2686,14 +2687,14 @@ a:hover {
   background: rgba(38, 50, 56, 0.08);
 }
 
-.portfolio-performance-snapshot-context-grid .suite-row {
+.portfolio-summary-pair-context-grid .suite-row {
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border-top: 0;
   background: #fff;
 }
 
-.portfolio-performance-snapshot-support {
+.portfolio-summary-pair-support {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
@@ -6717,11 +6718,11 @@ a:hover {
       align-items: flex-start;
     }
 
-    .portfolio-performance-snapshot-strip {
+    .portfolio-summary-pair-strip {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .portfolio-performance-snapshot-body {
+    .portfolio-summary-pair-body {
       grid-template-columns: 1fr;
     }
 
