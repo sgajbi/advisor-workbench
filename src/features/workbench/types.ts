@@ -141,7 +141,9 @@ export type PerformanceComparativeSummary = {
   benchmark_return_source: string | null;
   begin_market_value?: number | null;
   end_market_value?: number | null;
+  flow_adjusted_end_market_value?: number | null;
   net_cash_flow?: number | null;
+  fees?: number | null;
 };
 
 export type PerformanceChartPoint = {

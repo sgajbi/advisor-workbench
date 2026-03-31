@@ -40,7 +40,9 @@ export function getPerformanceReturnPathPresentation({
     active_return_pct: number | null;
     annualized_return_pct?: number | null;
     end_market_value?: number | null;
+    flow_adjusted_end_market_value?: number | null;
     net_cash_flow?: number | null;
+    fees?: number | null;
     benchmark_return_source?: string | null;
   };
   points: PerformanceChartPoint[];
@@ -100,12 +102,18 @@ export function getPerformanceReturnPathPresentation({
         key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(summary.net_cash_flow, reportingCurrency),
+        support:
+          summary.fees != null ? `Fees ${formatCurrency(summary.fees, reportingCurrency)}` : undefined,
         unavailable: summary.net_cash_flow == null,
       },
       {
         key: "ending-mv",
         label: "Ending MV",
         value: formatCurrency(summary.end_market_value, reportingCurrency),
+        support:
+          summary.flow_adjusted_end_market_value != null
+            ? `Flow-adj ${formatCurrency(summary.flow_adjusted_end_market_value, reportingCurrency)}`
+            : undefined,
         unavailable: summary.end_market_value == null,
       },
     ],

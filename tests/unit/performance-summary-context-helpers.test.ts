@@ -18,7 +18,10 @@ describe("performance summary context helpers", () => {
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
         annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
         end_market_value: scenario.workspace.net_performance.end_market_value,
+        flow_adjusted_end_market_value:
+          scenario.workspace.net_performance.flow_adjusted_end_market_value,
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
+        fees: scenario.workspace.net_performance.fees,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
       },
       points: scenario.workspace.net_chart,
@@ -36,13 +39,24 @@ describe("performance summary context helpers", () => {
       relativeContextStatus: "available",
       benchmarkStateBody: null,
     });
-    expect(presentation.metrics).toEqual([
-      { label: "Portfolio Return", value: "5.42%", unavailable: false },
-      { label: "Benchmark Return", value: "4.91%", unavailable: false },
-      { label: "Active Return", value: "0.52%", unavailable: false },
-      { label: "Ending MV", value: "$1,250,000", unavailable: false },
-      { label: "Net Flow", value: "$42,000", unavailable: false },
-      { label: "Annualized", value: "5.42%", unavailable: false },
+    expect(presentation.metrics).toMatchObject([
+      { key: "portfolio-return", label: "Portfolio Return", value: "5.42%", unavailable: false },
+      { key: "benchmark-return", label: "Benchmark Return", value: "4.91%", unavailable: false },
+      { key: "active-return", label: "Active Return", value: "0.52%", unavailable: false },
+      {
+        key: "net-flow",
+        label: "Net Flow",
+        value: "$42,000",
+        support: "Fees $0",
+        unavailable: false,
+      },
+      {
+        key: "ending-mv",
+        label: "Ending MV",
+        value: "$1,250,000",
+        support: "Flow-adj $1,208,000",
+        unavailable: false,
+      },
     ]);
   });
 
@@ -56,7 +70,10 @@ describe("performance summary context helpers", () => {
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
         annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
         end_market_value: scenario.workspace.net_performance.end_market_value,
+        flow_adjusted_end_market_value:
+          scenario.workspace.net_performance.flow_adjusted_end_market_value,
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
+        fees: scenario.workspace.net_performance.fees,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
       },
       points: scenario.workspace.net_chart,
@@ -96,7 +113,9 @@ describe("performance summary context helpers", () => {
         active_return_pct: null,
         annualized_return_pct: null,
         end_market_value: null,
+        flow_adjusted_end_market_value: null,
         net_cash_flow: null,
+        fees: null,
         benchmark_return_source: null,
       },
       points: [
