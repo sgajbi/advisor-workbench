@@ -1,6 +1,7 @@
 import type {
   ContributionPositionView,
   ContributionRowView,
+  ContributionSummaryView,
   PerformanceChartPoint,
   PerformanceAttributionTrendRow,
   PerformanceHorizonComparisonRow,
@@ -29,6 +30,7 @@ export type PerformanceAnalyticsTableRow = {
 export type PerformanceAnalyticsTableModel = {
   columns: PerformanceAnalyticsTableColumn[];
   rows: PerformanceAnalyticsTableRow[];
+  footer?: string[];
 };
 
 export type PerformanceReturnPathTableView = "combined" | "absolute" | "relative";
@@ -54,8 +56,12 @@ export type PerformanceHorizonVisualCard = {
 
 export function buildPerformanceContributionTableModel({
   rows,
+  contribution,
+  level,
 }: {
   rows: ContributionRowView[];
+  contribution?: ContributionSummaryView | null;
+  level?: ContributionSummaryView["levels"][number] | null;
 }): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "bucket", label: "Bucket" },
@@ -84,6 +90,23 @@ export function buildPerformanceContributionTableModel({
         cells: columns.map((column) => cellMap[column.key] ?? "N/A"),
       };
     }),
+    footer:
+      contribution || level
+        ? [
+            "Total",
+            formatPct(
+              contribution?.portfolio_contribution_pct ?? level?.total_contribution_pct ?? null
+            ),
+            formatPct(level?.total_weight_avg_pct ?? null),
+            formatPct(
+              level?.total_portfolio_return_pct ??
+                contribution?.total_portfolio_return_pct ??
+                null
+            ),
+            formatPct(contribution?.portfolio_local_contribution_pct ?? null),
+            formatPct(contribution?.portfolio_fx_contribution_pct ?? null),
+          ]
+        : undefined,
   };
 }
 

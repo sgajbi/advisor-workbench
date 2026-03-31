@@ -123,6 +123,8 @@ export function getPerformanceContributorsPresentation({
         })
       : buildPerformanceContributionTableModel({
           rows: aggregateRows,
+          contribution: workspace.contribution,
+          level: workspace.contribution?.levels?.[0] ?? null,
         });
   const positiveRankedRows =
     positivePositionContributors.length > 0

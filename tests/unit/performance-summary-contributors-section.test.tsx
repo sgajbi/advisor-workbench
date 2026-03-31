@@ -106,6 +106,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(within(rankedLists[0] as HTMLElement).queryByText("Equity")).not.toBeInTheDocument();
     expect(within(rankedLists[1] as HTMLElement).getByText("TLT")).toBeInTheDocument();
     expect(within(rankedLists[1] as HTMLElement).queryByText("Rates")).not.toBeInTheDocument();
+    expect(within(contributorTable).queryByText("Total")).not.toBeInTheDocument();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {
@@ -154,8 +155,11 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(note).toHaveTextContent("High coverage");
     expect(note).toHaveTextContent("Reconciles to return");
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
+    const aggregateTable = screen.getByLabelText("Aggregate contributor summary");
+    expect(aggregateTable).toBeInTheDocument();
+    expect(within(aggregateTable).getByText("Equity")).toBeInTheDocument();
+    expect(within(aggregateTable).getByText("Total")).toBeInTheDocument();
+    expect(within(aggregateTable).getAllByText("5.42%")).toHaveLength(2);
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 });

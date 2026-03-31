@@ -142,6 +142,7 @@ describe("performance analytics table models", () => {
 
   it("builds a contribution table from aggregate contribution rows", () => {
     const scenario = buildSupportedPerformanceScenario();
+    const contribution = scenario.workspace.contribution;
     const rows = scenario.workspace.contribution?.levels?.[0]?.rows ?? [];
     const model = buildPerformanceContributionTableModel({ rows });
 
@@ -160,6 +161,19 @@ describe("performance analytics table models", () => {
       "7.40%",
       "3.40%",
       "0.40%",
+    ]);
+    const footerModel = buildPerformanceContributionTableModel({
+      rows,
+      contribution,
+      level: contribution?.levels?.[0] ?? null,
+    });
+    expect(footerModel.footer).toEqual([
+      "Total",
+      "5.42%",
+      "100.00%",
+      "5.42%",
+      "4.80%",
+      "0.62%",
     ]);
   });
 

@@ -75,6 +75,7 @@ export default function PerformanceSummaryContributorsSection({
             dense
             columns={presentation.tableModel.columns}
             rows={presentation.tableModel.rows}
+            footer={presentation.tableModel.footer}
           />
         </div>
       ) : presentation.mode === "partial" ? (
@@ -95,6 +96,7 @@ export default function PerformanceSummaryContributorsSection({
             dense
             columns={presentation.tableModel.columns}
             rows={presentation.tableModel.rows}
+            footer={presentation.tableModel.footer}
           />
         </div>
       ) : presentation.mode === "loading" ? (
