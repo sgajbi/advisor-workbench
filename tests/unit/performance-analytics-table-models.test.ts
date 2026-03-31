@@ -52,7 +52,9 @@ describe("performance analytics table models", () => {
       "Period",
       "Window",
       "Begin MV",
+      "BoD Flow",
       "End MV",
+      "EoD Flow",
       "Flow-Adj MV",
       "Net Flow",
       "Fees",
@@ -71,6 +73,8 @@ describe("performance analytics table models", () => {
     expect(model.rows.find((row) => row.key === "YTD")?.className).toBe(
       "performance-horizon-table-row-selected"
     );
+    expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("$26,000");
+    expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("-$3,500");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("$486,370");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("5.42%");
     expect(model.rows.find((row) => row.key === "YTD")?.cells).toContain("5.88%");
