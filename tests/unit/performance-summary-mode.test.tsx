@@ -174,5 +174,11 @@ describe("PerformanceSummaryMode", () => {
     expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
     expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
     expect(chartPanelMock).toHaveBeenCalledTimes(1);
+    expect(chartPanelMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        moneyWeightedReturn: scenario.workspace.money_weighted_return,
+      }),
+      undefined
+    );
   });
 });

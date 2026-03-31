@@ -46,6 +46,7 @@ function buildChartProps(
     chartFrequency: workspace.chart_frequency,
     benchmark: returnPath.benchmark,
     benchmarkOptions: returnPath.benchmarkOptions,
+    moneyWeightedReturn: workspace.money_weighted_return,
     reportingCurrency: workspace.portfolio.base_currency,
     reportStartDate: workspace.report_start_date ?? "",
     reportEndDate: workspace.report_end_date ?? "",
@@ -189,7 +190,9 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Resolved window / basis 01 Jan 2026 - 28 Feb 2026 • Net")
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
-      compactPattern("Basis / Period Net • YTD 01 Jan 2026 - 28 Feb 2026")
+      compactPattern(
+        "Basis / Period Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+      )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
@@ -246,6 +249,21 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Benchmark line Global Growth 80/20")
     );
+  });
+
+  it("falls back to plain resolved dates when money-weighted audit metadata is absent", () => {
+    render(
+      <PerformanceChartPanel
+        {...buildChartProps({
+          moneyWeightedReturn: null,
+        })}
+      />
+    );
+
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
+      compactPattern("Basis / Period Net • YTD 01 Jan 2026 - 24 Feb 2026")
+    );
+    expect(screen.getByLabelText("Executive return strip")).not.toHaveTextContent("MWR");
   });
 
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {

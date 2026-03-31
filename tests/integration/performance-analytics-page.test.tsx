@@ -177,7 +177,11 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Basis / Period")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("01 Jan 2026 - 24 Feb 2026")).toBeInTheDocument();
+    expect(executiveStrip).toHaveTextContent(
+      compactPattern(
+        "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+      )
+    );
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
@@ -234,7 +238,11 @@ describe("PerformanceAnalyticsPage", () => {
 
     const executiveStrip = await screen.findByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Basis / Period")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("01 Jan 2026 - 24 Feb 2026")).toBeInTheDocument();
+    expect(executiveStrip).toHaveTextContent(
+      compactPattern(
+        "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+      )
+    );
     expect(within(executiveStrip).getByText("Net • QTD")).toBeInTheDocument();
   });
 

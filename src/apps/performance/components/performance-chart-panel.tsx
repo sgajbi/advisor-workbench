@@ -13,6 +13,7 @@ import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
   PerformanceChartPoint,
+  MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
 import { formatDate } from "../formatters";
@@ -41,7 +42,11 @@ type ComparativeSummary = {
   active_return_pct: number | null;
   annualized_return_pct?: number | null;
   end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
+  flow_adjusted_end_market_value?: number | null;
   net_cash_flow?: number | null;
+  fees?: number | null;
   benchmark_return_source?: string | null;
 };
 
@@ -112,6 +117,7 @@ export default function PerformanceChartPanel({
   chartFrequency,
   benchmark,
   benchmarkOptions = [],
+  moneyWeightedReturn,
   reportingCurrency,
   reportStartDate,
   reportEndDate,
@@ -132,6 +138,7 @@ export default function PerformanceChartPanel({
   chartFrequency: string;
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
   reportingCurrency: string;
   reportStartDate: string;
   reportEndDate: string;
@@ -431,6 +438,17 @@ export default function PerformanceChartPanel({
     resolvedReportDates.startDate && resolvedReportDates.endDate
       ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
       : "Date range unavailable";
+  const moneyWeightedSupportSegments = [
+    moneyWeightedReturn?.method ? `MWR ${moneyWeightedReturn.method}` : null,
+    moneyWeightedReturn?.start_date && moneyWeightedReturn?.end_date
+      ? `${formatDate(moneyWeightedReturn.start_date)} - ${formatDate(moneyWeightedReturn.end_date)}`
+      : null,
+    moneyWeightedReturn?.notes?.[0] ?? null,
+  ].filter(Boolean);
+  const periodSupport =
+    moneyWeightedSupportSegments.length > 0
+      ? `${explicitDateRange} • ${moneyWeightedSupportSegments.join(" • ")}`
+      : explicitDateRange;
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -471,7 +489,7 @@ export default function PerformanceChartPanel({
       value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
         period === "EXPLICIT" ? "Explicit window" : period
       }`,
-      support: explicitDateRange,
+      support: periodSupport,
     },
   ];
 
