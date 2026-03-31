@@ -1,10 +1,14 @@
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
+import {
+  resolveGatewayBaseUrl,
+  resolveWorkbenchApiBase,
+  type ServiceRequestTarget,
+} from "@/features/platform-runtime/service-addressing";
 
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 const portfolioApiResponseCache = new Map<string, unknown>();
 const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
-type PortfolioRequestTarget = "server" | "client";
+type PortfolioRequestTarget = ServiceRequestTarget;
 
 type PortfolioWorkspaceSummaryResponse = {
   as_of_date: string;
@@ -501,14 +505,6 @@ function mapPortfolioPerformanceSummary(
   };
 }
 
-function resolveBffBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    return "/api/bff";
-  }
-
-  return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
-}
-
 function buildPortfolioApiUrl(
   target: PortfolioRequestTarget,
   path: string,
@@ -521,9 +517,9 @@ function buildPortfolioApiUrl(
 
 function resolveBffBaseUrlForTarget(target: PortfolioRequestTarget): string {
   if (target === "client") {
-    return resolveBffBaseUrl();
+    return resolveWorkbenchApiBase("client").replace(/\/api\/v1$/, "");
   }
-  return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
+  return resolveGatewayBaseUrl();
 }
 
 async function fetchPortfolioJson<T>(

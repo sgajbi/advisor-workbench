@@ -9,14 +9,14 @@ import {
   WorkbenchReportingSnapshot,
   WorkbenchSandboxState,
 } from "./types";
+import {
+  resolveBffProxyBaseUrl,
+  resolveWorkbenchApiBase,
+  type ServiceRequestTarget,
+} from "@/features/platform-runtime/service-addressing";
 
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
-const BFF_PROXY_BASE = "/api/bff/api/v1";
-type WorkbenchRequestTarget = "server" | "client";
-
-function resolveWorkbenchApiBase(target: WorkbenchRequestTarget): string {
-  return target === "client" ? BFF_PROXY_BASE : `${BFF_BASE_URL}/api/v1`;
-}
+const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
+type WorkbenchRequestTarget = ServiceRequestTarget;
 
 function buildPerformanceWorkspaceQuery(params: {
   period: string;

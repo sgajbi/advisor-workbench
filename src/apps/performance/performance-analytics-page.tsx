@@ -2,10 +2,9 @@ import {
   getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummary,
 } from "@/features/workbench/api";
+import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { WorkstationPage } from "@/design-system";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
-
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 
 type LookupEnvelope = {
   items?: Array<{ id: string; label: string }>;
@@ -16,7 +15,7 @@ const DEFAULT_BENCHMARK_ID = "BMK_GLOBAL_BALANCED_60_40";
 
 async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
   try {
-    const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=${limit}`, {
+    const response = await fetch(`${resolveGatewayBaseUrl()}/api/v1/lookups/portfolios?limit=${limit}`, {
       cache: "no-store",
     });
     if (!response.ok) {
