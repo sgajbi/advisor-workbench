@@ -25,7 +25,7 @@ describe("performance attribution presentations", () => {
     );
 
     expect(contextItems).toEqual([
-      { label: "Benchmark", value: "Global Balanced 60/40" },
+      { label: "Benchmark", value: "Global Balanced 60/40 • Calculated • Lotus Demo" },
       { label: "Source", value: "Calculated" },
       { label: "Model", value: "BF" },
       { label: "Linking", value: "Carino" },
@@ -76,7 +76,7 @@ describe("performance attribution presentations", () => {
 
     expect(contextItems[0]).toEqual({
       label: "Benchmark",
-      value: "Global Balanced 60/40",
+      value: "Global Balanced 60/40 • Calculated • Lotus Demo",
     });
     expect(summaryItems).toHaveLength(4);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
@@ -102,6 +102,30 @@ describe("performance attribution presentations", () => {
     expect(contextItems[2]).toEqual({
       label: "Benchmark",
       value: "Global Balanced 60/40",
+    });
+  });
+
+  it("includes benchmark provider provenance in trend context when option metadata is available", () => {
+    const trend = buildPerformanceAttributionTrend();
+    const contextItems = getAttributionTrendContextItems({
+      trend,
+      detailBasis: "NET",
+      attributionDimension: "asset_class",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      benchmarkOptions: [
+        {
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_name: "Global Balanced 60/40",
+          benchmark_provider: "LOTUS_DEMO",
+          is_assigned: true,
+        },
+      ],
+      period: "YTD",
+    });
+
+    expect(contextItems[2]).toEqual({
+      label: "Benchmark",
+      value: "Global Balanced 60/40 • Lotus Demo",
     });
   });
 });

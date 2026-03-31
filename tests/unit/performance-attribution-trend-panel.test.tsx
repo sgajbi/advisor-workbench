@@ -69,6 +69,7 @@ describe("PerformanceAttributionTrendPanel", () => {
           {
             benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
             benchmark_name: "Global Balanced 60/40",
+            benchmark_provider: "LOTUS_DEMO",
             is_assigned: true,
           },
         ]}
@@ -92,7 +93,7 @@ describe("PerformanceAttributionTrendPanel", () => {
       compactPattern("Resolved window 01 Jan 2026 - 27 Mar 2026")
     );
     expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
+      compactPattern("Benchmark Global Balanced 60/40 • Lotus Demo")
     );
     expect(
       document.querySelectorAll(

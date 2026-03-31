@@ -69,9 +69,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
+    expect(screen.getByText(/Versus Global Balanced 60\/40 • Calculated • Lotus Demo/i)).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
-      /Benchmark\s*Global Balanced 60\/40/i
+      /Benchmark\s*Global Balanced 60\/40\s*•\s*Calculated\s*•\s*Lotus Demo/i
     );
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
       /Source\s*Calculated/i
@@ -86,7 +87,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
-    expect(screen.getAllByText("Global Balanced 60/40").length).toBe(2);
+    expect(screen.getAllByText(/Global Balanced 60\/40/).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);

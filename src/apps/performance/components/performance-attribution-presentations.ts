@@ -5,7 +5,10 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatDate, formatLabel, formatPct } from "../formatters";
-import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
+import {
+  getPerformanceBenchmarkContextValue,
+  getPerformanceBenchmarkLabel,
+} from "./performance-summary-context-helpers";
 
 export function getAttributionDetailContextItems(
   attribution: AttributionSummaryView | null | undefined,
@@ -15,7 +18,11 @@ export function getAttributionDetailContextItems(
     {
       label: "Benchmark",
       value: attribution?.benchmark_id
-        ? getPerformanceBenchmarkLabel(attribution.benchmark_id, benchmarkOptions)
+        ? getPerformanceBenchmarkContextValue({
+            benchmark: attribution.benchmark_id,
+            benchmarkOptions,
+            benchmarkReturnSource: attribution.benchmark_return_source,
+          })
         : "Unassigned",
     },
     {
@@ -95,9 +102,15 @@ export function getAttributionTrendContextItems({
     {
       label: "Benchmark",
       value: trend?.benchmark_code
-        ? getPerformanceBenchmarkLabel(trend.benchmark_code, benchmarkOptions)
+        ? getPerformanceBenchmarkContextValue({
+            benchmark: trend.benchmark_code,
+            benchmarkOptions,
+          })
         : benchmark
-          ? getPerformanceBenchmarkLabel(benchmark, benchmarkOptions)
+          ? getPerformanceBenchmarkContextValue({
+              benchmark,
+              benchmarkOptions,
+            })
           : "Unassigned",
     },
     {

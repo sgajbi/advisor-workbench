@@ -28,6 +28,7 @@ import {
   getAttributionDetailContextItems,
   getAttributionDetailSummaryItems,
 } from "./performance-attribution-presentations";
+import { getPerformanceBenchmarkContextValue } from "./performance-summary-context-helpers";
 
 export default function PerformanceAnalysisAttributionSection({
   workspace,
@@ -62,7 +63,12 @@ export default function PerformanceAnalysisAttributionSection({
       context={
         workspace.attribution?.benchmark_id ? (
           <span className="performance-section-benchmark">
-            Versus {formatLabel(workspace.attribution.benchmark_id)}
+            Versus{" "}
+            {getPerformanceBenchmarkContextValue({
+              benchmark: workspace.attribution.benchmark_id,
+              benchmarkOptions: workspace.benchmark_options ?? [],
+              benchmarkReturnSource: workspace.attribution.benchmark_return_source,
+            })}
           </span>
         ) : undefined
       }
