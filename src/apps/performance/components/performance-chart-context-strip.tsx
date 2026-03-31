@@ -1,8 +1,7 @@
-import { WorkbenchChartContextRow } from "@/design-system";
-
 import { formatDate } from "../formatters";
 
 type PerformanceChartContextStripProps = {
+  portfolioId: string;
   period: string;
   detailBasis: string;
   benchmarkContextValue: string;
@@ -13,6 +12,7 @@ type PerformanceChartContextStripProps = {
 };
 
 export default function PerformanceChartContextStrip({
+  portfolioId,
   period,
   detailBasis,
   benchmarkContextValue,
@@ -29,27 +29,25 @@ export default function PerformanceChartContextStrip({
       : period;
 
   return (
-    <WorkbenchChartContextRow
-      className="performance-chart-context-strip"
-      label="Return path context"
-      items={[
-        { key: "portfolio", label: "Portfolio line", value: "Portfolio" },
-        {
-          key: "benchmark",
-          label: "Benchmark line",
-          value: benchmarkContextValue,
-        },
-        {
-          key: "active",
-          label: "Active context",
-          value: `${activeReturn} • ${relativeContextLabel}`,
-        },
-        {
-          key: "window",
-          label: "Resolved window / basis",
-          value: `${resolvedWindow} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`,
-        },
-      ]}
-    />
+    <div className="performance-chart-context-strip" role="group" aria-label="Return path context">
+      <span className="performance-chart-context-field">
+        <span className="performance-chart-context-label">Portfolio</span>
+        <strong className="performance-chart-context-value">{portfolioId}</strong>
+      </span>
+      <span className="performance-chart-context-field">
+        <span className="performance-chart-context-label">Benchmark</span>
+        <strong className="performance-chart-context-value">{benchmarkContextValue}</strong>
+      </span>
+      <span className="performance-chart-context-field">
+        <span className="performance-chart-context-label">Active</span>
+        <strong className="performance-chart-context-value">{`${activeReturn} • ${relativeContextLabel}`}</strong>
+      </span>
+      <span className="performance-chart-context-field">
+        <span className="performance-chart-context-label">Window / Basis</span>
+        <strong className="performance-chart-context-value">
+          {`${resolvedWindow} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`}
+        </strong>
+      </span>
+    </div>
   );
 }

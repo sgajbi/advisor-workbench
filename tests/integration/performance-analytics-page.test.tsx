@@ -145,7 +145,8 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
-    expect(mainShell?.querySelector(".performance-chart-context-strip.workbench-chart-context-row")).toBeTruthy();
+    expect(mainShell?.querySelector(".workbench-chart-shell-context")).toBeFalsy();
+    expect(mainShell?.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
     expect(chartSummaryBand).toBeTruthy();
@@ -750,10 +751,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Partial")).toBeInTheDocument();
     expect(screen.getAllByText("Relative returns incomplete").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Balanced 60/40")
+      compactPattern("Benchmark Global Balanced 60/40")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active context Unavailable • Partial")
+      compactPattern("Active Unavailable")
     );
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
@@ -839,7 +840,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Partial",
         "Relative returns incomplete",
       ],
-      contextExpectations: ["Active context Unavailable • Partial", "Benchmark line Global Balanced 60/40"],
+      contextExpectations: ["Active Unavailable", "Benchmark Global Balanced 60/40"],
       horizonExpectations: [
         "Active return Unavailable",
         "Compared against Global Balanced 60/40",
@@ -866,7 +867,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Attribution detail unavailable",
       ],
       deferredExpectations: ["Contributor ranking is partial"],
-      contextExpectations: ["Active context Unavailable • Partial"],
+      contextExpectations: ["Active Unavailable"],
       horizonExpectations: ["Active return Unavailable", "Compared against Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },

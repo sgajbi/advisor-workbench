@@ -5629,22 +5629,29 @@ a:hover {
 }
 
 .performance-analysis-control-bar {
-  display: grid;
-  grid-template-columns:
-    minmax(180px, 0.9fr)
-    minmax(360px, 1.55fr)
-    minmax(132px, 0.68fr)
-    minmax(220px, 0.95fr)
-    minmax(220px, 0.92fr)
-    minmax(160px, 0.7fr);
-  gap: 0.625rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   align-items: end;
 }
 
 .performance-analysis-control-slot {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
   min-width: 0;
+  flex: 0 1 auto;
+}
+
+.performance-analysis-control-slot-horizon {
+  flex-basis: 17rem;
+}
+
+.performance-analysis-control-slot-dates {
+  flex: 1 1 23rem;
+}
+
+.performance-analysis-control-slot-basis {
+  flex-basis: 10rem;
 }
 
 .performance-analysis-control-slot .MuiInputBase-root {
@@ -5674,7 +5681,7 @@ a:hover {
 .performance-analysis-date-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
 }
 
@@ -5687,6 +5694,40 @@ a:hover {
 .performance-outcome-strip {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.5rem;
+}
+
+.performance-chart-context-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 1rem;
+  padding: 0.1rem 0 0.25rem;
+  border-bottom: 1px solid rgba(221, 226, 232, 0.9);
+}
+
+.performance-chart-context-field {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.performance-chart-context-label {
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-label-size);
+  font-weight: 800;
+  letter-spacing: var(--workbench-analytic-label-tracking);
+  text-transform: uppercase;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.performance-chart-context-value {
+  color: var(--brand-strong);
+  font-size: var(--workbench-analytic-context-value-size);
+  font-weight: 750;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
 }
 
 .performance-outcome-strip-item {
@@ -6957,11 +6998,7 @@ a:hover {
   }
 
   .performance-analysis-control-bar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .performance-chart-context-strip {
-    grid-template-columns: 1fr;
+    gap: 0.55rem;
   }
 
   .workbench-chart-context-row {
@@ -7251,7 +7288,12 @@ a:hover {
   }
 
   .performance-analysis-control-bar {
-    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .performance-chart-context-strip {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .performance-chart-date-stack {

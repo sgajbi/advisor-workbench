@@ -496,19 +496,7 @@ export default function PerformanceChartPanel({
     <WorkbenchChartShell
       id={id}
       title={title}
-      subtitle="Primary return path and benchmark-relative comparison."
       className="performance-chart-stage workbench-summary-panel"
-      contextRow={
-        <PerformanceChartContextStrip
-          period={period}
-          detailBasis={detailBasis}
-          benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
-          activeReturn={returnPathPresentation.activeReturnValue}
-          relativeContextStatus={returnPathPresentation.relativeContextStatus}
-          reportStartDate={resolvedReportDates.startDate}
-          reportEndDate={resolvedReportDates.endDate}
-        />
-      }
       toolbar={
         <PerformanceAnalysisControlBar
           period={period}
@@ -571,6 +559,16 @@ export default function PerformanceChartPanel({
     >
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
+          <PerformanceChartContextStrip
+            portfolioId={portfolioId}
+            period={period}
+            detailBasis={detailBasis}
+            benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
+            activeReturn={returnPathPresentation.activeReturnValue}
+            relativeContextStatus={returnPathPresentation.relativeContextStatus}
+            reportStartDate={resolvedReportDates.startDate}
+            reportEndDate={resolvedReportDates.endDate}
+          />
           {returnPathPresentation.benchmarkStateBody ? (
             <div className="performance-chart-benchmark-state">
               <strong>Benchmark unassigned</strong>

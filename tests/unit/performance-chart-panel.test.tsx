@@ -165,7 +165,8 @@ describe("PerformanceChartPanel", () => {
     ).toBeTruthy();
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
-    expect(document.querySelector(".performance-chart-context-strip.workbench-chart-context-row")).toBeTruthy();
+    expect(document.querySelector(".workbench-chart-shell-context")).toBeFalsy();
+    expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
     expect(screen.getByRole("tablist", { name: "Return path view mode" })).toBeInTheDocument();
@@ -179,18 +180,18 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Portfolio line Portfolio")
+      compactPattern("Portfolio DEMO_ADV_USD_001")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern(
-        "Benchmark line Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
+        "Benchmark Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
       )
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active context 0.80% • Available")
+      compactPattern("Active 0.80%")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Resolved window / basis 01 Jan 2026 - 28 Feb 2026 • Net")
+      compactPattern("Window / Basis 01 Jan 2026 - 28 Feb 2026 • Net")
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
@@ -257,7 +258,7 @@ describe("PerformanceChartPanel", () => {
       "Global Growth 80/20 • USD • Composite"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Global Growth 80/20")
+      compactPattern("Benchmark Global Growth 80/20")
     );
   });
 
@@ -354,10 +355,10 @@ describe("PerformanceChartPanel", () => {
     expect(benchmarkState).toHaveTextContent("Benchmark unassigned");
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark line Unassigned")
+      compactPattern("Benchmark Unassigned")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active context Unavailable • Unavailable")
+      compactPattern("Active Unavailable")
     );
     expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
@@ -402,11 +403,11 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern(
-        "Benchmark line Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
+        "Benchmark Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
       )
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active context Unavailable • Partial")
+      compactPattern("Active Unavailable")
     );
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
