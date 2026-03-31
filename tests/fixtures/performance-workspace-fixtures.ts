@@ -198,11 +198,15 @@ export function buildPerformanceWorkspaceSummary(
     benchmark_options: options?.unassignedBenchmark
       ? []
       : [
-          {
-            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-            benchmark_name: "Global Balanced 60/40",
-            is_assigned: true,
-          },
+        {
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_name: "Global Balanced 60/40",
+          benchmark_currency: "USD",
+          benchmark_type: "composite",
+          benchmark_family: "multi_asset_strategic",
+          benchmark_provider: "LOTUS_DEMO",
+          is_assigned: true,
+        },
         ],
     capabilities: toContractCapabilities(capabilities),
     portfolio: {

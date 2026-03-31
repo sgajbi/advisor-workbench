@@ -187,6 +187,21 @@ export function getPerformanceBenchmarkLabel(
   );
 }
 
+export function getPerformanceBenchmarkOptionLabel(
+  option: PerformanceBenchmarkOptionView
+) {
+  const supportSegments = [
+    option.benchmark_currency ?? null,
+    option.benchmark_type ? formatLabel(option.benchmark_type) : null,
+  ].filter(Boolean);
+
+  if (supportSegments.length === 0) {
+    return option.benchmark_name;
+  }
+
+  return `${option.benchmark_name} • ${supportSegments.join(" • ")}`;
+}
+
 function formatBenchmarkSourceLabel(source?: string | null) {
   if (!source) {
     return null;

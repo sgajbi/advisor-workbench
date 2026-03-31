@@ -233,11 +233,15 @@ describe("PerformanceChartPanel", () => {
             {
               benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
               benchmark_name: "Global Balanced 60/40",
+              benchmark_currency: "USD",
+              benchmark_type: "composite",
               is_assigned: false,
             },
             {
               benchmark_code: "BMK_GLOBAL_GROWTH_80_20",
               benchmark_name: "Global Growth 80/20",
+              benchmark_currency: "USD",
+              benchmark_type: "composite",
               is_assigned: true,
             },
           ],
@@ -245,7 +249,9 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByLabelText("Compared To")).toHaveDisplayValue("Global Growth 80/20");
+    expect(screen.getByLabelText("Compared To")).toHaveDisplayValue(
+      "Global Growth 80/20 • USD • Composite"
+    );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Benchmark line Global Growth 80/20")
     );

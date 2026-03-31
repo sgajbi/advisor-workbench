@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getPerformanceBenchmarkOptionLabel,
   getPerformanceMoneyWeightedAuditSupport,
   getPerformanceReturnPathPresentation,
 } from "../../src/apps/performance/components/performance-summary-context-helpers";
@@ -214,5 +215,19 @@ describe("performance summary context helpers", () => {
         moneyWeightedReturn: null,
       })
     ).toBe("01 Jan 2026 - 24 Feb 2026");
+  });
+
+  it("builds a benchmark option label from contract metadata when available", () => {
+    expect(
+      getPerformanceBenchmarkOptionLabel({
+        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+        benchmark_name: "Global Balanced 60/40",
+        benchmark_currency: "USD",
+        benchmark_type: "composite",
+        benchmark_family: "multi_asset_strategic",
+        benchmark_provider: "LOTUS_DEMO",
+        is_assigned: true,
+      })
+    ).toBe("Global Balanced 60/40 • USD • Composite");
   });
 });

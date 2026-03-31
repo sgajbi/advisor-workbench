@@ -15,6 +15,7 @@ import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types"
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
+import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -188,7 +189,7 @@ export default function PerformanceAnalysisControlBar({
         >
           {resolvedBenchmarkOptions.map((option) => (
             <option key={option.benchmark_code} value={option.benchmark_code}>
-              {option.benchmark_name}
+              {getPerformanceBenchmarkOptionLabel(option)}
             </option>
           ))}
         </TextField>
