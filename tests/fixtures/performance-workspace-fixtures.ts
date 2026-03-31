@@ -275,6 +275,7 @@ export function buildPerformanceWorkspaceSummary(
     money_weighted_return: {
       money_weighted_return_pct: 5.12,
       annualized_return_pct: 5.12,
+      input_mode: "stateful",
       method: "XIRR",
       start_date: "2026-01-01",
       end_date: "2026-02-24",

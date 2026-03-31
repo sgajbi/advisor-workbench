@@ -183,6 +183,7 @@ export function getPerformanceMoneyWeightedAuditSupport({
     : null;
   const supportSegments = [
     moneyWeightedReturn?.method ? `MWR ${moneyWeightedReturn.method}` : null,
+    formatMoneyWeightedInputModeLabel(moneyWeightedReturn?.input_mode),
     moneyWeightedReturn?.start_date && moneyWeightedReturn?.end_date
       ? `${formatDate(moneyWeightedReturn.start_date)} - ${formatDate(moneyWeightedReturn.end_date)}`
       : null,
@@ -260,5 +261,20 @@ function formatBenchmarkSourceLabel(source?: string | null) {
         .filter(Boolean)
         .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
         .join(" ");
+  }
+}
+
+function formatMoneyWeightedInputModeLabel(inputMode?: string | null) {
+  if (!inputMode) {
+    return null;
+  }
+
+  switch (inputMode.trim().toLowerCase()) {
+    case "stateful":
+      return "Stateful inputs";
+    case "stateless":
+      return "Stateless inputs";
+    default:
+      return formatLabel(inputMode);
   }
 }

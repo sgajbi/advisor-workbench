@@ -248,6 +248,7 @@ describe("performance summary context helpers", () => {
     const scenario = buildSupportedPerformanceScenario();
 
     expect(scenario.workspace.money_weighted_return).toMatchObject({
+      input_mode: "stateful",
       begin_market_value: 1200000,
       end_market_value: 1250000,
       beginning_cash_flow: 50000,
@@ -264,7 +265,7 @@ describe("performance summary context helpers", () => {
         reportingCurrency: "USD",
       })
     ).toBe(
-      "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
+      "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • Stateful inputs • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
     );
   });
 
