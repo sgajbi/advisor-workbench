@@ -2,9 +2,10 @@
 
 import Button from "@mui/material/Button";
 
-import { AnalyticsModule, MetricRow } from "@/design-system";
+import { ActionLink, AnalyticsModule, MetricRow } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
+import { buildPerformanceHref } from "@/apps/performance/navigation";
 import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
@@ -17,6 +18,7 @@ type PerformanceSnapshotProps = {
   rebalance: PortfolioWorkspace["rebalance"];
   reportingRowCount: number;
   context: PortfolioWorkspaceContext;
+  portfolioId: string;
   expanded: boolean;
   onToggle: () => void;
   selectedPeriod: PortfolioTimeWindow;
@@ -28,6 +30,7 @@ export default function PortfolioPerformanceSnapshotModule({
   rebalance,
   reportingRowCount,
   context,
+  portfolioId,
   expanded,
   onToggle,
   selectedPeriod,
@@ -45,6 +48,12 @@ export default function PortfolioPerformanceSnapshotModule({
     performance?.sparkline_points?.length
       ? `${performance.sparkline_points.length} source-backed observations`
       : "Open Performance workspace for source-backed return path detail.";
+  const performanceWorkspaceHref = buildPerformanceWorkspaceHref({
+    portfolioId,
+    selectedPeriod,
+    context,
+    benchmarkCode: performance?.benchmark_code ?? null,
+  });
 
   return (
     <AnalyticsModule
@@ -55,9 +64,12 @@ export default function PortfolioPerformanceSnapshotModule({
         context.selectedAsOfDate
       )}.`}
       actions={
-        <Button size="small" variant="text" onClick={onToggle}>
-          {expanded ? "Collapse" : "Expand"}
-        </Button>
+        <>
+          <ActionLink href={performanceWorkspaceHref}>Open Performance</ActionLink>
+          <Button size="small" variant="text" onClick={onToggle}>
+            {expanded ? "Collapse" : "Expand"}
+          </Button>
+        </>
       }
     >
       {expanded ? (
@@ -168,4 +180,31 @@ function formatPortfolioToken(value?: string | null) {
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
     .join(" ");
+}
+
+function buildPerformanceWorkspaceHref({
+  portfolioId,
+  selectedPeriod,
+  context,
+  benchmarkCode,
+}: {
+  portfolioId: string;
+  selectedPeriod: PortfolioTimeWindow;
+  context: PortfolioWorkspaceContext;
+  benchmarkCode?: string | null;
+}) {
+  const useExplicitWindow =
+    context.usesCustomDateRange || selectedPeriod === "7D" || selectedPeriod === "30D";
+
+  return buildPerformanceHref({
+    portfolioId,
+    period: useExplicitWindow ? "EXPLICIT" : selectedPeriod,
+    detailBasis: "NET",
+    contributionDimension: "asset_class",
+    attributionDimension: "asset_class",
+    chartFrequency: "monthly",
+    benchmark: benchmarkCode ?? undefined,
+    reportStartDate: useExplicitWindow ? context.effectivePeriodStartDate : undefined,
+    reportEndDate: useExplicitWindow ? context.effectivePeriodEndDate : undefined,
+  });
 }

@@ -33,6 +33,7 @@ describe("portfolio performance snapshot module", () => {
           supportsHistoricalSnapshots: false,
           supportsReportingCurrencyRestatement: false,
         }}
+        portfolioId="PORT_UI_1001"
         selectedPeriod="30D"
         expanded={false}
         onToggle={vi.fn()}
@@ -44,6 +45,10 @@ describe("portfolio performance snapshot module", () => {
     expect(
       screen.getByText(/Requires valuation history, cashflow history, and a selected reporting period/i)
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PORT_UI_1001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&reportStartDate=2026-02-27&reportEndDate=2026-03-28"
+    );
   });
 
   it("renders expanded unsupported performance through the shared capability panel contract", () => {
@@ -73,6 +78,7 @@ describe("portfolio performance snapshot module", () => {
           supportsHistoricalSnapshots: false,
           supportsReportingCurrencyRestatement: false,
         }}
+        portfolioId="PORT_UI_1001"
         selectedPeriod="30D"
         expanded
         onToggle={vi.fn()}
@@ -85,6 +91,10 @@ describe("portfolio performance snapshot module", () => {
     ).toBeInTheDocument();
     expect(container.querySelector(".portfolio-module-state")).not.toBeNull();
     expect(container.querySelector(".module-state-panel-partial")).not.toBeNull();
+    expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PORT_UI_1001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&reportStartDate=2026-02-27&reportEndDate=2026-03-28"
+    );
   });
 
   it("renders expanded source-backed performance summary fields when performance data exists", () => {
@@ -146,6 +156,7 @@ describe("portfolio performance snapshot module", () => {
           supportsHistoricalSnapshots: false,
           supportsReportingCurrencyRestatement: false,
         }}
+        portfolioId="PORT_UI_1001"
         selectedPeriod="QTD"
         expanded
         onToggle={onToggle}
@@ -168,6 +179,10 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("Benchmark")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("2026-01 to 2026-03")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PORT_UI_1001&period=QTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
     expect(onToggle).toHaveBeenCalled();
@@ -205,6 +220,7 @@ describe("portfolio performance snapshot module", () => {
           supportsHistoricalSnapshots: false,
           supportsReportingCurrencyRestatement: false,
         }}
+        portfolioId="PORT_UI_1001"
         selectedPeriod="QTD"
         expanded={false}
         onToggle={vi.fn()}
@@ -215,6 +231,53 @@ describe("portfolio performance snapshot module", () => {
     expect(
       screen.getByText("Active 0.21% versus Global Balanced 60/40 for QTD")
     ).toBeInTheDocument();
+  });
+
+  it("uses an explicit drill-through window for short-horizon snapshot periods", () => {
+    render(
+      <PortfolioPerformanceSnapshotModule
+        capability={{ state: "supported" }}
+        performance={{
+          period: "EXPLICIT",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
+          return_pct: 5.12,
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_label: "Global Balanced 60/40",
+          benchmark_return_pct: 4.91,
+          excess_return_pct: 0.21,
+          sparkline_points: null,
+        }}
+        rebalance={null}
+        reportingRowCount={0}
+        context={{
+          selectedAsOfDate: "2026-03-28",
+          selectedReportingCurrency: "USD",
+          timeWindow: "30D",
+          periodLabel: "30D",
+          viewMode: "summary",
+          columnMode: "essential",
+          hideEmptyModules: false,
+          focusExceptions: false,
+          effectivePeriodStartDate: "2026-03-01",
+          effectivePeriodEndDate: "2026-03-28",
+          usesCustomDateRange: false,
+          hasHistoricalGap: false,
+          currencyOptions: ["USD"],
+          supportsHistoricalSnapshots: false,
+          supportsReportingCurrencyRestatement: false,
+        }}
+        portfolioId="PORT_UI_1001"
+        selectedPeriod="30D"
+        expanded={false}
+        onToggle={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PORT_UI_1001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40&reportStartDate=2026-03-01&reportEndDate=2026-03-28"
+    );
   });
 
   it("renders comparison lines only for source-backed series that exist", () => {

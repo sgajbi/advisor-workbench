@@ -958,6 +958,7 @@ function PortfolioInsightsSection({
               rebalance={workspace.rebalance}
               reportingRowCount={workspace.readiness.reporting.row_count}
               context={context}
+              portfolioId={workspace.portfolio.portfolio_id}
               selectedPeriod={context.timeWindow}
               expanded={getSectionExpanded("performance-snapshot")}
               onToggle={() => toggleSection("performance-snapshot")}

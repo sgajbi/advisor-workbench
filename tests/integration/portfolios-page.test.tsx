@@ -150,6 +150,16 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Top Holdings/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Performance Snapshot/i })).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
+    const performanceSnapshotCard = screen
+      .getByRole("heading", { name: /Performance Snapshot/i })
+      .closest(".portfolio-summary-module-card");
+    expect(performanceSnapshotCard).toBeTruthy();
+    expect(
+      within(performanceSnapshotCard as HTMLElement).getByRole("link", { name: "Open Performance" })
+    ).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PORT_UI_1001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&reportStartDate=2026-01-25&reportEndDate=2026-02-24"
+    );
     expect(screen.getByRole("heading", { name: /^Income$/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /^Activity$/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Next Actions/i })).toBeInTheDocument();
