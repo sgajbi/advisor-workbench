@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  getPortfolioCatalog,
   getPortfolioProjectedCashflow,
   getPortfolioTransactionLedger,
   getPortfolioWorkspaceDetailedDetails,
@@ -674,6 +675,28 @@ describe("portfolio api", () => {
     } finally {
       if (originalWindow) {
         vi.stubGlobal("window", originalWindow);
+      }
+    }
+  });
+
+  it("uses the gateway-backed portfolio API base during server rendering", async () => {
+    vi.stubEnv("BFF_BASE_URL", "http://gateway.dev.lotus");
+    const originalWindow = global.window;
+    vi.stubGlobal("window", undefined);
+    const fetchSpy = vi.fn(async () => jsonResponse({ items: [] }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    try {
+      await getPortfolioCatalog();
+
+      expect(String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "")).toBe(
+        "http://gateway.dev.lotus/api/v1/portfolio/portfolios"
+      );
+    } finally {
+      if (originalWindow) {
+        vi.stubGlobal("window", originalWindow);
+      } else {
+        vi.unstubAllGlobals();
       }
     }
   });

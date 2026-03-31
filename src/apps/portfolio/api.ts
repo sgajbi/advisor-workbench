@@ -10,6 +10,10 @@ const portfolioApiResponseCache = new Map<string, unknown>();
 const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
 type PortfolioRequestTarget = ServiceRequestTarget;
 
+function resolvePortfolioRequestTarget(): PortfolioRequestTarget {
+  return typeof window === "undefined" ? "server" : "client";
+}
+
 type PortfolioWorkspaceSummaryResponse = {
   as_of_date: string;
   portfolio: PortfolioWorkspace["portfolio"];
@@ -141,7 +145,7 @@ type PortfolioWorkspaceDetailedDetails = Pick<
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
   try {
     const payload = await fetchPortfolioJson<PortfolioCatalogResponse>(
-      "client",
+      resolvePortfolioRequestTarget(),
       "/portfolio/portfolios"
     );
     if (!payload) {
@@ -158,7 +162,7 @@ export async function getPortfolioWorkspaceShell(
 ): Promise<PortfolioWorkspace | null> {
   try {
     const summaryPayload = await fetchPortfolioJson<PortfolioWorkspaceSummaryResponse>(
-      "client",
+      resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
       { useCache: false }
     );
@@ -225,28 +229,28 @@ export async function getPortfolioWorkspaceSummaryDetails(
       performanceDetailsPayload,
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioAllocationResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
       ),
       fetchPortfolioJson<PortfolioPositionsResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
       ),
       fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
       ),
       fetchPortfolioJson<PortfolioActivitySummaryResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
       ),
       fetchPortfolioJson<PortfolioPerformanceSummaryResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/workbench/${encodeURIComponent(portfolioId)}/performance/summary`,
         { query: performanceQuery }
       ),
       fetchPortfolioJson<PortfolioPerformanceDetailsResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/workbench/${encodeURIComponent(portfolioId)}/performance/details`,
         { query: buildPortfolioPerformanceDetailsQuery(params) }
       ),
@@ -306,24 +310,24 @@ export async function getPortfolioWorkspaceDetailedDetails(
       workflowPayload,
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioLiquidityResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
       ),
       fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
         { query: transactionSearchParams }
       ),
       fetchPortfolioJson<PortfolioReadinessResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
       ),
       fetchPortfolioJson<PortfolioInsightsResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
       ),
       fetchPortfolioJson<PortfolioWorkflowResponse>(
-        "client",
+        resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
       ),
     ]);
@@ -376,7 +380,7 @@ export async function getPortfolioTransactionLedger(
     }
 
     return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
-      "client",
+      resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
       { query: searchParams }
     );
@@ -406,7 +410,7 @@ export async function getPortfolioProjectedCashflow(
     }
 
     const payload = await fetchPortfolioJson<PortfolioProjectedCashflowResponse>(
-      "client",
+      resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow`,
       { query: searchParams }
     );

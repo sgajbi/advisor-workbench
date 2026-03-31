@@ -1,3 +1,6 @@
+ "use client";
+
+import { useEffect, useState } from "react";
 import { WorkbenchSegmentedControl, WorkbenchStatusRow } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
@@ -106,6 +109,11 @@ export default function PerformanceWorkspaceModeSwitch({
   onChange: (value: PerformanceWorkspaceMode) => void;
   capabilities?: PerformanceWorkspaceCapabilities | null;
 }) {
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   const analysisCapability = getAnalysisCapability(capabilities ?? undefined);
   const analysisReadiness = getAnalysisReadiness(capabilities);
   const evidenceCapability = capabilities?.evidence ?? null;
@@ -145,6 +153,39 @@ export default function PerformanceWorkspaceModeSwitch({
         }
       : null,
   ].filter(Boolean) as Array<{ value: string; tone: "default" | "warn" | "danger" }>;
+
+  if (!isHydrated) {
+    return (
+      <div className="performance-workspace-mode-switch-group">
+        <div
+          className="workbench-segmented-control performance-workspace-mode-switch"
+          role="tablist"
+          aria-label="Performance workspace mode"
+          aria-busy="true"
+        >
+          {modeOptions.map((option) => (
+            <span
+              key={option.key}
+              className={
+                option.key === value
+                  ? "workbench-segmented-control-button workbench-segmented-control-button-active"
+                  : "workbench-segmented-control-button"
+              }
+            >
+              {option.label}
+            </span>
+          ))}
+        </div>
+        {modeStatusItems.length ? (
+          <WorkbenchStatusRow
+            label="Performance mode readiness"
+            items={modeStatusItems}
+            className="performance-workspace-mode-status"
+          />
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="performance-workspace-mode-switch-group">

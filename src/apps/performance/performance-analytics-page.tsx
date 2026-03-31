@@ -10,8 +10,11 @@ type LookupEnvelope = {
   items?: Array<{ id: string; label: string }>;
 };
 
-const DEFAULT_PORTFOLIO_ID = "DEMO_ADV_USD_001";
-const DEFAULT_BENCHMARK_ID = "BMK_GLOBAL_BALANCED_60_40";
+const PREFERRED_DEFAULT_PORTFOLIO_IDS = ["PB_SG_GLOBAL_BAL_001", "DEMO_ADV_USD_001"] as const;
+const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
+  PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
+  DEMO_ADV_USD_001: "BMK_GLOBAL_BALANCED_60_40",
+};
 
 async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
   try {
@@ -46,9 +49,12 @@ export default async function PerformanceAnalyticsPage({
 }) {
   const resolvedSearch = await searchParams;
   const portfolios = await getPortfolioOptions();
+  const defaultPortfolioId = PREFERRED_DEFAULT_PORTFOLIO_IDS.find((candidate) =>
+    portfolios.some((portfolio) => portfolio.id === candidate)
+  );
   const selectedPortfolioId =
     resolvedSearch.portfolioId?.trim() ||
-    portfolios.find((portfolio) => portfolio.id === DEFAULT_PORTFOLIO_ID)?.id ||
+    defaultPortfolioId ||
     portfolios[0]?.id ||
     null;
   const period = resolvedSearch.period?.trim() || "YTD";
@@ -61,7 +67,7 @@ export default async function PerformanceAnalyticsPage({
   const chartFrequency = resolvedSearch.chartFrequency?.trim() || "monthly";
   const benchmark =
     resolvedSearch.benchmark?.trim() ||
-    (selectedPortfolioId === DEFAULT_PORTFOLIO_ID ? DEFAULT_BENCHMARK_ID : undefined);
+    (selectedPortfolioId ? DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId] : undefined);
   const reportStartDate = resolvedSearch.reportStartDate?.trim() || undefined;
   const reportEndDate = resolvedSearch.reportEndDate?.trim() || undefined;
 

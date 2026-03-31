@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import {
   Button,
   TextField,
@@ -72,6 +72,44 @@ export default function PerformanceAnalysisControlBar({
   onToDateChange: (value: string) => void;
   onChartViewModeChange: (value: PerformanceChartViewMode) => void;
 }) {
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) {
+    return (
+      <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar" aria-busy="true">
+        <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
+          <Typography sx={controlLabelSx}>Horizon</Typography>
+          <div className="performance-analysis-static-value">{period}</div>
+        </div>
+        <div className="performance-analysis-control-slot performance-analysis-control-slot-dates">
+          <Typography sx={controlLabelSx}>Explicit Date Range</Typography>
+          <div className="performance-analysis-static-value">
+            {fromDate} to {toDate}
+          </div>
+        </div>
+        <div className="performance-analysis-control-slot">
+          <Typography sx={controlLabelSx}>Frequency</Typography>
+          <div className="performance-analysis-static-value">{chartFrequency}</div>
+        </div>
+        <div className="performance-analysis-control-slot">
+          <Typography sx={controlLabelSx}>Compared To</Typography>
+          <div className="performance-analysis-static-value">{benchmark ?? "Default benchmark"}</div>
+        </div>
+        <div className="performance-analysis-control-slot">
+          <Typography sx={controlLabelSx}>View Mode</Typography>
+          <div className="performance-analysis-static-value">{chartViewMode}</div>
+        </div>
+        <div className="performance-analysis-control-slot performance-analysis-control-slot-basis">
+          <Typography sx={controlLabelSx}>Basis</Typography>
+          <div className="performance-analysis-static-value">{detailBasis}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar">
       <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
@@ -81,6 +119,7 @@ export default function PerformanceAnalysisControlBar({
             <ToggleButton
               key={option}
               value={option}
+              suppressHydrationWarning
               onClick={() =>
                 onRequestChange({
                   period: option,
@@ -110,6 +149,7 @@ export default function PerformanceAnalysisControlBar({
               htmlInput: {
                 "aria-label": "From",
                 max: toDate || maxEndDate,
+                suppressHydrationWarning: true,
               },
             }}
             onChange={(event) => onFromDateChange(event.currentTarget.value)}
@@ -123,6 +163,7 @@ export default function PerformanceAnalysisControlBar({
                 "aria-label": "To",
                 min: fromDate || minEndDate,
                 max: maxEndDate,
+                suppressHydrationWarning: true,
               },
             }}
             onChange={(event) => onToDateChange(event.currentTarget.value)}
@@ -132,6 +173,7 @@ export default function PerformanceAnalysisControlBar({
             variant="contained"
             size="small"
             disableElevation
+            suppressHydrationWarning
             className="performance-analysis-apply-button"
           >
             {isUpdating ? "Updating..." : "Apply"}
@@ -154,7 +196,10 @@ export default function PerformanceAnalysisControlBar({
           sx={selectControlSx}
           SelectProps={{ native: true }}
           slotProps={{
-            htmlInput: { "aria-label": "Frequency" },
+            htmlInput: {
+              "aria-label": "Frequency",
+              suppressHydrationWarning: true,
+            },
           }}
         >
           {CHART_FREQUENCY_OPTIONS.map((option) => (
@@ -184,7 +229,10 @@ export default function PerformanceAnalysisControlBar({
           sx={selectControlSx}
           SelectProps={{ native: true }}
           slotProps={{
-            htmlInput: { "aria-label": "Compared To" },
+            htmlInput: {
+              "aria-label": "Compared To",
+              suppressHydrationWarning: true,
+            },
           }}
         >
           {resolvedBenchmarkOptions.map((option) => (
@@ -224,6 +272,7 @@ export default function PerformanceAnalysisControlBar({
             <ToggleButton
               key={option}
               value={option}
+              suppressHydrationWarning
               onClick={() =>
                 onRequestChange({
                   detailBasis: option,

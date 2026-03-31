@@ -35,6 +35,7 @@ export default function WorkbenchSegmentedControl<T extends string>({
             key={option.key}
             type="button"
             role="tab"
+            suppressHydrationWarning
             aria-selected={isActive}
             disabled={option.disabled}
             aria-disabled={option.disabled}

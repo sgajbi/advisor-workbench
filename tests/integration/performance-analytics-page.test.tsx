@@ -123,6 +123,97 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
   });
 
+  it("prefers the front-office seeded performance portfolio when it is available", async () => {
+    const summary = buildSupportedPerformanceScenario().workspace;
+    const details = buildSupportedPerformanceScenario().workspace;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [
+                { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
+                { id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" },
+              ],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...summary,
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              portfolio: { ...summary.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...details,
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              portfolio: { ...details.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+            }),
+          } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+            .toString()
+            .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
+        )
+      ).toBe(true);
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+          .toString()
+          .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")
+        )
+      ).toBe(true);
+    });
+  });
+
+  it("falls back to the demo performance portfolio when the front-office seed is unavailable", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+            .toString()
+            .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")
+        )
+      ).toBe(true);
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+            .toString()
+            .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")
+        )
+      ).toBe(true);
+    });
+    expect(await screen.findByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
+  });
+
   it("renders performance content inside the workstation shell main region", async () => {
     installPerformancePageFetchMock();
 
