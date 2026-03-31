@@ -282,7 +282,9 @@ export type PortfolioWorkspace = {
     excess_return_pct?: number | null;
     sparkline_points?: Array<{
       label: string;
-      return_pct: number | null;
+      portfolio_return_pct: number | null;
+      benchmark_return_pct?: number | null;
+      active_return_pct?: number | null;
     }> | null;
   } | null;
   rebalance: {

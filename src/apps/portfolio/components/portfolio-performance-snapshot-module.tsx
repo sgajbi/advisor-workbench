@@ -86,7 +86,10 @@ export default function PortfolioPerformanceSnapshotModule({
             />
             <MetricRow label="Trend" value={trendValue} />
             {performance?.sparkline_points?.length ? (
-              <PortfolioPerformanceSparkline points={performance.sparkline_points} />
+              <PortfolioPerformanceSparkline
+                points={performance.sparkline_points}
+                benchmarkLabel={benchmarkLabel}
+              />
             ) : null}
             <MetricRow label="Reporting Rows" value={reportingRowCount} />
             <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />

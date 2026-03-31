@@ -182,9 +182,24 @@ describe("portfolio api", () => {
       if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
         return jsonResponse({
           net_chart: [
-            { label: "2026-01", cumulative_portfolio_return_pct: 1.1 },
-            { label: "2026-02", cumulative_portfolio_return_pct: 2.9 },
-            { label: "2026-03", cumulative_portfolio_return_pct: 5.12 },
+            {
+              label: "2026-01",
+              cumulative_portfolio_return_pct: 1.1,
+              cumulative_benchmark_return_pct: 0.9,
+              cumulative_active_return_pct: 0.2,
+            },
+            {
+              label: "2026-02",
+              cumulative_portfolio_return_pct: 2.9,
+              cumulative_benchmark_return_pct: 2.5,
+              cumulative_active_return_pct: 0.4,
+            },
+            {
+              label: "2026-03",
+              cumulative_portfolio_return_pct: 5.12,
+              cumulative_benchmark_return_pct: 4.91,
+              cumulative_active_return_pct: 0.21,
+            },
           ],
         });
       }
@@ -217,9 +232,24 @@ describe("portfolio api", () => {
       benchmark_return_source: "calculated",
       benchmark_input_mode: "stateful",
       sparkline_points: [
-        { label: "2026-01", return_pct: 1.1 },
-        { label: "2026-02", return_pct: 2.9 },
-        { label: "2026-03", return_pct: 5.12 },
+        {
+          label: "2026-01",
+          portfolio_return_pct: 1.1,
+          benchmark_return_pct: 0.9,
+          active_return_pct: 0.2,
+        },
+        {
+          label: "2026-02",
+          portfolio_return_pct: 2.9,
+          benchmark_return_pct: 2.5,
+          active_return_pct: 0.4,
+        },
+        {
+          label: "2026-03",
+          portfolio_return_pct: 5.12,
+          benchmark_return_pct: 4.91,
+          active_return_pct: 0.21,
+        },
       ],
     });
     expect(details?.readiness_indicators).toBeUndefined();
@@ -496,9 +526,24 @@ describe("portfolio api", () => {
       if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
         return jsonResponse({
           net_chart: [
-            { label: "2026-01", cumulative_portfolio_return_pct: 0.8 },
-            { label: "2026-02", cumulative_portfolio_return_pct: 1.6 },
-            { label: "2026-03", cumulative_portfolio_return_pct: 2.1 },
+            {
+              label: "2026-01",
+              cumulative_portfolio_return_pct: 0.8,
+              cumulative_benchmark_return_pct: 0.6,
+              cumulative_active_return_pct: 0.2,
+            },
+            {
+              label: "2026-02",
+              cumulative_portfolio_return_pct: 1.6,
+              cumulative_benchmark_return_pct: 1.2,
+              cumulative_active_return_pct: 0.4,
+            },
+            {
+              label: "2026-03",
+              cumulative_portfolio_return_pct: 2.1,
+              cumulative_benchmark_return_pct: 1.7,
+              cumulative_active_return_pct: 0.4,
+            },
           ],
         });
       }

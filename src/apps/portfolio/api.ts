@@ -118,6 +118,8 @@ type PortfolioPerformanceDetailsResponse = {
   net_chart: Array<{
     label: string;
     cumulative_portfolio_return_pct?: number | null;
+    cumulative_benchmark_return_pct?: number | null;
+    cumulative_active_return_pct?: number | null;
   }>;
 };
 
@@ -492,7 +494,9 @@ function mapPortfolioPerformanceSummary(
     sparkline_points:
       detailsPayload?.net_chart?.map((point) => ({
         label: point.label,
-        return_pct: point.cumulative_portfolio_return_pct ?? null,
+        portfolio_return_pct: point.cumulative_portfolio_return_pct ?? null,
+        benchmark_return_pct: point.cumulative_benchmark_return_pct ?? null,
+        active_return_pct: point.cumulative_active_return_pct ?? null,
       })) ?? null,
   };
 }

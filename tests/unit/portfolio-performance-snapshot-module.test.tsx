@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PortfolioPerformanceSnapshotModule from "../../src/apps/portfolio/components/portfolio-performance-snapshot-module";
+import PortfolioPerformanceSparkline from "../../src/apps/portfolio/components/portfolio-performance-sparkline";
 
 describe("portfolio performance snapshot module", () => {
   it("renders a collapsed unavailable placeholder in summary mode", () => {
@@ -106,9 +107,24 @@ describe("portfolio performance snapshot module", () => {
           benchmark_input_mode: "stateful",
           excess_return_pct: 0.21,
           sparkline_points: [
-            { label: "2026-01", return_pct: 1.1 },
-            { label: "2026-02", return_pct: 2.9 },
-            { label: "2026-03", return_pct: 5.12 },
+            {
+              label: "2026-01",
+              portfolio_return_pct: 1.1,
+              benchmark_return_pct: 0.9,
+              active_return_pct: 0.2,
+            },
+            {
+              label: "2026-02",
+              portfolio_return_pct: 2.9,
+              benchmark_return_pct: 2.5,
+              active_return_pct: 0.4,
+            },
+            {
+              label: "2026-03",
+              portfolio_return_pct: 5.12,
+              benchmark_return_pct: 4.91,
+              active_return_pct: 0.21,
+            },
           ],
         }}
         rebalance={{ status: "READY", last_run_at_utc: null, last_rebalance_run_id: null }}
@@ -140,12 +156,17 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("4.91%")).toBeInTheDocument();
     expect(screen.getByText("0.21%")).toBeInTheDocument();
     expect(screen.getByText("4.88%")).toBeInTheDocument();
-    expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
+    expect(screen.getAllByText("Global Balanced 60/40").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
     expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
     expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
     expect(screen.getByText("01 Jan 2026 - 28 Mar 2026")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Performance snapshot sparkline" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Portfolio")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark")).toBeInTheDocument();
+    expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("2026-01 to 2026-03")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
@@ -194,5 +215,41 @@ describe("portfolio performance snapshot module", () => {
     expect(
       screen.getByText("Active 0.21% versus Global Balanced 60/40 for QTD")
     ).toBeInTheDocument();
+  });
+
+  it("renders comparison lines only for source-backed series that exist", () => {
+    const { container } = render(
+      <PortfolioPerformanceSparkline
+        benchmarkLabel="Global Balanced 60/40"
+        points={[
+          {
+            label: "2026-01",
+            portfolio_return_pct: 0.6,
+            benchmark_return_pct: 0.5,
+            active_return_pct: 0.1,
+          },
+          {
+            label: "2026-02",
+            portfolio_return_pct: 1.3,
+            benchmark_return_pct: 1.1,
+            active_return_pct: 0.2,
+          },
+          {
+            label: "2026-03",
+            portfolio_return_pct: 1.9,
+            benchmark_return_pct: 1.4,
+            active_return_pct: 0.5,
+          },
+        ]}
+      />
+    );
+
+    expect(
+      screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Portfolio")).toBeInTheDocument();
+    expect(screen.getByText("Global Balanced 60/40")).toBeInTheDocument();
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(container.querySelectorAll("path.portfolio-performance-sparkline-line")).toHaveLength(3);
   });
 });
