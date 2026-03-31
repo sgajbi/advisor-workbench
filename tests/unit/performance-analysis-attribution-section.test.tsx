@@ -89,15 +89,21 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(reconciliationNote).toHaveTextContent(
       "Active return 0.52% • effects sum 0.50% • residual 0.02%"
     );
+    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Relative context" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("tab", { name: "Effect breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
     expect(screen.getAllByText(/Global Balanced 60\/40/).length).toBeGreaterThanOrEqual(1);
-    expect(document.querySelectorAll(".performance-analysis-level-section").length).toBeGreaterThan(0);
-    expect(document.querySelectorAll(".performance-analysis-level-body").length).toBeGreaterThan(0);
-    expect(document.querySelectorAll(".performance-analysis-table").length).toBeGreaterThan(0);
-    expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
-    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
   });
 
@@ -154,21 +160,40 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(screen.queryByText("Summary-only attribution")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution totals")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
     expect(screen.getByText("Summary-only attribution")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Segment rows are unavailable for this selection. Total benchmark-relative effects remain available below."
       )
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(screen.getByText("Summary totals")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
-    expect(screen.queryByText("Total Effect Ranking")).not.toBeInTheDocument();
+    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
+  });
+
+  it("shows only one attribution detail surface at a time and switches to the effect breakdown grid", () => {
+    render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
+
+    expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
+
+    expect(screen.getByRole("tab", { name: "Effect breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
   });
 
   it("disables attribution segment options that are outside the backend capability contract", () => {

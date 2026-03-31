@@ -294,20 +294,29 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeTruthy();
+    expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(2);
     expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Segment breakdown" })).toHaveAttribute(
       "aria-selected",
       "false"
     );
     expect(document.querySelectorAll("#performance-drivers .performance-analysis-table").length).toBe(1);
+    expect(screen.getByRole("tab", { name: "Relative context" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("tab", { name: "Effect breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
+    const attributionTable = await screen.findByLabelText("Asset Class attribution table");
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
-
-    const attributionTable = screen.getByLabelText("Asset Class attribution table");
     expect(within(attributionTable).getAllByText("—")).toHaveLength(2);
     const attributionLegend = screen.getByLabelText("Attribution effect legend");
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
@@ -533,12 +542,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByText("Attribution Detail")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(screen.queryByText("Summary-only attribution")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
     expect(await screen.findByText("Summary-only attribution")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(await screen.findByText("Summary totals")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.queryByText("Relative Segment Matrix")).not.toBeInTheDocument();
-    expect(screen.queryByText("Total Effect Ranking")).not.toBeInTheDocument();
+    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
   });
 
   it.each([

@@ -5036,7 +5036,8 @@ a:hover {
 }
 
 .performance-contribution-insight-pane,
-.performance-analysis-detail-pane {
+.performance-analysis-detail-pane,
+.performance-attribution-insight-pane {
   display: grid;
   gap: 0.7rem;
   padding: 0.85rem;
@@ -5092,6 +5093,12 @@ a:hover {
 
 .performance-analysis-detail-pane-body {
   min-width: 0;
+}
+
+.performance-analysis-detail-stack,
+.performance-attribution-insight-pane {
+  display: grid;
+  gap: 0.7rem;
 }
 
 .performance-analysis-detail-empty {
