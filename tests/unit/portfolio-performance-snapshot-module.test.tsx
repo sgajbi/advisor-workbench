@@ -100,7 +100,7 @@ describe("portfolio performance snapshot module", () => {
   it("renders expanded source-backed performance summary fields when performance data exists", () => {
     const onToggle = vi.fn();
 
-    render(
+    const { container } = render(
       <PortfolioPerformanceSnapshotModule
         capability={{ state: "supported" }}
         performance={{
@@ -183,6 +183,19 @@ describe("portfolio performance snapshot module", () => {
       "href",
       "/performance?portfolioId=PORT_UI_1001&period=QTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
     );
+    expect(container.querySelector(".portfolio-performance-snapshot-panel")).not.toBeNull();
+    expect(container.querySelectorAll(".portfolio-performance-snapshot-stat")).toHaveLength(4);
+    const trendRegion = container.querySelector(".portfolio-performance-snapshot-trend");
+    const contextRegion = container.querySelector(".portfolio-performance-snapshot-context");
+    expect(trendRegion).not.toBeNull();
+    expect(contextRegion).not.toBeNull();
+    expect(
+      Boolean(
+        trendRegion &&
+          contextRegion &&
+          trendRegion.compareDocumentPosition(contextRegion) & Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
     expect(onToggle).toHaveBeenCalled();

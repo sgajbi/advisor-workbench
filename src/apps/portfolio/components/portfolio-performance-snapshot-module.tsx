@@ -74,37 +74,58 @@ export default function PortfolioPerformanceSnapshotModule({
     >
       {expanded ? (
         hasPerformance ? (
-          <div className="portfolio-mandate-grid">
-            <MetricRow label="Period" value={performance?.period ?? selectedPeriod} />
-            <MetricRow label="Resolved Window" value={resolvedWindow} />
-            <MetricRow label="Portfolio Return" value={formatPct(performance?.return_pct)} />
-            <MetricRow
-              label="Benchmark Return"
-              value={formatPct(performance?.benchmark_return_pct)}
-            />
-            <MetricRow
-              label="Active Return"
-              value={formatPct(performance?.excess_return_pct)}
-            />
-            <MetricRow
-              label="Money-Weighted Return"
-              value={formatPct(performance?.money_weighted_return_pct)}
-            />
-            <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
-            <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
-            <MetricRow
-              label="Method"
-              value={performance?.money_weighted_method ? `MWR ${performance.money_weighted_method}` : "Unavailable"}
-            />
-            <MetricRow label="Trend" value={trendValue} />
-            {performance?.sparkline_points?.length ? (
-              <PortfolioPerformanceSparkline
-                points={performance.sparkline_points}
-                benchmarkLabel={benchmarkLabel}
+          <div className="portfolio-performance-snapshot-panel">
+            <div className="portfolio-performance-snapshot-strip">
+              <SnapshotStat label="Portfolio Return" value={formatPct(performance?.return_pct)} />
+              <SnapshotStat
+                label="Benchmark Return"
+                value={formatPct(performance?.benchmark_return_pct)}
               />
-            ) : null}
-            <MetricRow label="Reporting Rows" value={reportingRowCount} />
-            <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />
+              <SnapshotStat label="Active Return" value={formatPct(performance?.excess_return_pct)} />
+              <SnapshotStat
+                label="Money-Weighted Return"
+                value={formatPct(performance?.money_weighted_return_pct)}
+              />
+            </div>
+            <div className="portfolio-performance-snapshot-body">
+              <div className="portfolio-performance-snapshot-trend">
+                <div className="portfolio-performance-snapshot-region-heading">
+                  <span>Trend</span>
+                  <strong>{trendValue}</strong>
+                </div>
+                {performance?.sparkline_points?.length ? (
+                  <PortfolioPerformanceSparkline
+                    points={performance.sparkline_points}
+                    benchmarkLabel={benchmarkLabel}
+                  />
+                ) : (
+                  <p className="portfolio-performance-snapshot-copy">
+                    Open Performance workspace for source-backed return path detail.
+                  </p>
+                )}
+              </div>
+              <div className="portfolio-performance-snapshot-context">
+                <div className="portfolio-performance-snapshot-region-heading">
+                  <span>Context</span>
+                  <strong>{performance?.period ?? selectedPeriod}</strong>
+                </div>
+                <div className="portfolio-performance-snapshot-context-grid">
+                  <MetricRow label="Resolved Window" value={resolvedWindow} />
+                  <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
+                  <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
+                  <MetricRow
+                    label="Method"
+                    value={
+                      performance?.money_weighted_method
+                        ? `MWR ${performance.money_weighted_method}`
+                        : "Unavailable"
+                    }
+                  />
+                  <MetricRow label="Reporting Rows" value={reportingRowCount} />
+                  <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <PortfolioModuleState
@@ -207,4 +228,19 @@ function buildPerformanceWorkspaceHref({
     reportStartDate: useExplicitWindow ? context.effectivePeriodStartDate : undefined,
     reportEndDate: useExplicitWindow ? context.effectivePeriodEndDate : undefined,
   });
+}
+
+function SnapshotStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="portfolio-performance-snapshot-stat">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
 }
