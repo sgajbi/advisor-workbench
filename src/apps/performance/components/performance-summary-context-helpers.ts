@@ -40,6 +40,8 @@ export function getPerformanceReturnPathPresentation({
     active_return_pct: number | null;
     annualized_return_pct?: number | null;
     end_market_value?: number | null;
+    beginning_cash_flow?: number | null;
+    ending_cash_flow?: number | null;
     flow_adjusted_end_market_value?: number | null;
     net_cash_flow?: number | null;
     fees?: number | null;
@@ -102,8 +104,7 @@ export function getPerformanceReturnPathPresentation({
         key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(summary.net_cash_flow, reportingCurrency),
-        support:
-          summary.fees != null ? `Fees ${formatCurrency(summary.fees, reportingCurrency)}` : undefined,
+        support: formatNetFlowSupport(summary, reportingCurrency),
         unavailable: summary.net_cash_flow == null,
       },
       {
@@ -118,6 +119,36 @@ export function getPerformanceReturnPathPresentation({
       },
     ],
   };
+}
+
+function formatNetFlowSupport(
+  summary: {
+    beginning_cash_flow?: number | null;
+    ending_cash_flow?: number | null;
+    fees?: number | null;
+  },
+  reportingCurrency: string
+) {
+  if (summary.beginning_cash_flow != null || summary.ending_cash_flow != null) {
+    const supportSegments = [
+      summary.beginning_cash_flow != null
+        ? `BoD ${formatCurrency(summary.beginning_cash_flow, reportingCurrency)}`
+        : null,
+      summary.ending_cash_flow != null
+        ? `EoD ${formatCurrency(summary.ending_cash_flow, reportingCurrency)}`
+        : null,
+    ].filter(Boolean);
+
+    if (supportSegments.length > 0) {
+      return supportSegments.join(" • ");
+    }
+  }
+
+  if (summary.fees != null) {
+    return `Fees ${formatCurrency(summary.fees, reportingCurrency)}`;
+  }
+
+  return undefined;
 }
 
 function formatBenchmarkLabel(

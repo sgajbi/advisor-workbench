@@ -18,6 +18,8 @@ describe("performance summary context helpers", () => {
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
         annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
         end_market_value: scenario.workspace.net_performance.end_market_value,
+        beginning_cash_flow: scenario.workspace.net_performance.beginning_cash_flow,
+        ending_cash_flow: scenario.workspace.net_performance.ending_cash_flow,
         flow_adjusted_end_market_value:
           scenario.workspace.net_performance.flow_adjusted_end_market_value,
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
@@ -47,7 +49,7 @@ describe("performance summary context helpers", () => {
         key: "net-flow",
         label: "Net Flow",
         value: "$42,000",
-        support: "Fees $0",
+        support: "BoD $50,000 • EoD -$8,000",
         unavailable: false,
       },
       {
@@ -70,6 +72,8 @@ describe("performance summary context helpers", () => {
         active_return_pct: scenario.workspace.net_performance.active_return_pct,
         annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
         end_market_value: scenario.workspace.net_performance.end_market_value,
+        beginning_cash_flow: scenario.workspace.net_performance.beginning_cash_flow,
+        ending_cash_flow: scenario.workspace.net_performance.ending_cash_flow,
         flow_adjusted_end_market_value:
           scenario.workspace.net_performance.flow_adjusted_end_market_value,
         net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
@@ -151,6 +155,39 @@ describe("performance summary context helpers", () => {
       label: "Benchmark Return",
       value: "Unavailable",
       unavailable: true,
+    });
+  });
+
+  it("falls back to fees when split cash flow components are unavailable", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const presentation = getPerformanceReturnPathPresentation({
+      summary: {
+        portfolio_return_pct: scenario.workspace.net_performance.portfolio_return_pct,
+        benchmark_return_pct: scenario.workspace.net_performance.benchmark_return_pct,
+        active_return_pct: scenario.workspace.net_performance.active_return_pct,
+        annualized_return_pct: scenario.workspace.net_performance.annualized_return_pct,
+        end_market_value: scenario.workspace.net_performance.end_market_value,
+        beginning_cash_flow: null,
+        ending_cash_flow: null,
+        flow_adjusted_end_market_value:
+          scenario.workspace.net_performance.flow_adjusted_end_market_value,
+        net_cash_flow: scenario.workspace.net_performance.net_cash_flow,
+        fees: 125,
+        benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
+      },
+      points: scenario.workspace.net_chart,
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      benchmarkOptions: scenario.workspace.benchmark_options ?? [],
+      capabilities: scenario.capabilities,
+      reportingCurrency: scenario.workspace.portfolio.base_currency,
+    });
+
+    expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
+      label: "Net Flow",
+      value: "$42,000",
+      support: "Fees $125",
+      unavailable: false,
     });
   });
 });

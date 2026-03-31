@@ -141,6 +141,8 @@ export type PerformanceComparativeSummary = {
   benchmark_return_source: string | null;
   begin_market_value?: number | null;
   end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
   flow_adjusted_end_market_value?: number | null;
   net_cash_flow?: number | null;
   fees?: number | null;
@@ -267,6 +269,8 @@ export type PerformanceHorizonComparisonRow = {
   period_end?: string | null;
   begin_market_value?: number | null;
   end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
   flow_adjusted_end_market_value?: number | null;
   net_cash_flow?: number | null;
   fees?: number | null;
