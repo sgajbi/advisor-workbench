@@ -1911,12 +1911,12 @@ a:hover {
 
 .portfolio-hero {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-5);
   width: 100%;
   min-width: 0;
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-6);
   background: #ffffff;
 }
 
@@ -1925,21 +1925,23 @@ a:hover {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-2);
+  align-content: flex-start;
 }
 
 .portfolio-hero-content {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .portfolio-hero h2 {
   margin: 0;
-  font-size: 1.875rem;
+  font-size: 2rem;
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.04em;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  color: var(--brand-strong);
 }
 
 .portfolio-hero-meta {
@@ -1951,8 +1953,8 @@ a:hover {
 }
 
 .portfolio-hero-meta span {
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 550;
   line-height: 1.45;
   color: var(--text-muted);
 }
@@ -1969,7 +1971,7 @@ a:hover {
 }
 
 .portfolio-hero-status {
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
   background: #eef3f8;
   color: var(--text);
 }
@@ -1981,9 +1983,10 @@ a:hover {
 
 .portfolio-hero-toolbar {
   flex: 0 0 auto;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  max-width: min(32rem, 42%);
 }
 
 .portfolio-action-link {
@@ -2297,45 +2300,45 @@ a:hover {
 }
 
 .portfolio-book-hero {
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .portfolio-summary-band {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--space-2);
-  padding: var(--space-5) var(--space-6);
+  gap: 1px;
+  padding: 0;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   background: #ffffff;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .portfolio-summary-band-item {
   min-width: 0;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  background: #ffffff;
 }
 
 .kpi-stat-tile {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-width: 0;
   min-height: 100%;
   width: 100%;
 }
 
 .kpi-stat-tile-interactive:hover {
-  background: #f8fbff;
-  border-radius: 10px;
+  background: transparent;
 }
 
 .kpi-stat-label {
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   line-height: 1.45;
   color: var(--text-muted);
 }
@@ -2344,9 +2347,9 @@ a:hover {
   display: block;
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 1.625rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: -0.03em;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -6739,6 +6742,7 @@ a:hover {
 
   .portfolio-hero {
     flex-direction: column;
+    padding: var(--space-5);
   }
 
   .performance-hero,
@@ -6806,6 +6810,11 @@ a:hover {
 
   .portfolio-hero-actions {
     justify-content: flex-start;
+    max-width: none;
+  }
+
+  .portfolio-summary-band {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .workspace-side,
