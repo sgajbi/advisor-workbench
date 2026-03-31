@@ -172,16 +172,21 @@ export function getPerformanceNetFlowSupport(
 export function getPerformanceMoneyWeightedAuditSupport({
   explicitDateRange,
   moneyWeightedReturn,
+  reportingCurrency,
 }: {
   explicitDateRange: string;
   moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
+  reportingCurrency?: string;
 }) {
+  const economicsSupport = reportingCurrency
+    ? getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, reportingCurrency)
+    : null;
   const supportSegments = [
     moneyWeightedReturn?.method ? `MWR ${moneyWeightedReturn.method}` : null,
     moneyWeightedReturn?.start_date && moneyWeightedReturn?.end_date
       ? `${formatDate(moneyWeightedReturn.start_date)} - ${formatDate(moneyWeightedReturn.end_date)}`
       : null,
-    moneyWeightedReturn?.notes?.[0] ?? null,
+    economicsSupport ?? moneyWeightedReturn?.notes?.[0] ?? null,
   ].filter(Boolean);
 
   if (supportSegments.length === 0) {
@@ -189,6 +194,24 @@ export function getPerformanceMoneyWeightedAuditSupport({
   }
 
   return `${explicitDateRange} • ${supportSegments.join(" • ")}`;
+}
+
+export function getPerformanceMoneyWeightedEconomicsSupport(
+  moneyWeightedReturn: MoneyWeightedReturnSummary | null | undefined,
+  reportingCurrency: string
+) {
+  if (moneyWeightedReturn?.flow_adjusted_end_market_value != null) {
+    return `Flow-adj ${formatCurrency(
+      moneyWeightedReturn.flow_adjusted_end_market_value,
+      reportingCurrency
+    )}`;
+  }
+
+  if (moneyWeightedReturn?.net_cash_flow != null) {
+    return `Net flow ${formatCurrency(moneyWeightedReturn.net_cash_flow, reportingCurrency)}`;
+  }
+
+  return null;
 }
 
 export function getPerformanceBenchmarkLabel(

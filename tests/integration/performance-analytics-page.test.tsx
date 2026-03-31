@@ -80,7 +80,7 @@ type PerformanceWorkspaceScenarioMatrix = {
 };
 
 function compactPattern(text: string) {
-  return new RegExp(text.replaceAll(" ", "\\s*"));
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(" ", "\\s*"));
 }
 
 async function expectTextPresent(text: string) {
@@ -179,7 +179,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Basis / Period")).toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern(
-        "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+        "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
       )
     );
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
@@ -240,7 +240,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Basis / Period")).toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern(
-        "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+        "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
       )
     );
     expect(within(executiveStrip).getByText("Net • QTD")).toBeInTheDocument();

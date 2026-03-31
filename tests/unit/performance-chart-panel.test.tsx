@@ -22,7 +22,7 @@ vi.mock("echarts-for-react", () => ({
 }));
 
 function compactPattern(text: string) {
-  return new RegExp(text.replaceAll(" ", "\\s*"));
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(" ", "\\s*"));
 }
 
 function buildChartProps(
@@ -191,7 +191,7 @@ describe("PerformanceChartPanel", () => {
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
-        "Basis / Period Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+        "Basis / Period Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
       )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");

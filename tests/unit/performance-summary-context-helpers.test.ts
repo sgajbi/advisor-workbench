@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getPerformanceBenchmarkOptionLabel,
+  getPerformanceMoneyWeightedEconomicsSupport,
   getPerformanceMoneyWeightedAuditSupport,
   getPerformanceReturnPathPresentation,
 } from "../../src/apps/performance/components/performance-summary-context-helpers";
@@ -260,9 +261,10 @@ describe("performance summary context helpers", () => {
       getPerformanceMoneyWeightedAuditSupport({
         explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
         moneyWeightedReturn: scenario.workspace.money_weighted_return,
+        reportingCurrency: "USD",
       })
     ).toBe(
-      "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • cash-flow aware"
+      "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
     );
   });
 
@@ -271,8 +273,23 @@ describe("performance summary context helpers", () => {
       getPerformanceMoneyWeightedAuditSupport({
         explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
         moneyWeightedReturn: null,
+        reportingCurrency: "USD",
       })
     ).toBe("01 Jan 2026 - 24 Feb 2026");
+  });
+
+  it("falls back to net flow when flow-adjusted market value is unavailable", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const moneyWeightedReturn = scenario.workspace.money_weighted_return
+      ? {
+          ...scenario.workspace.money_weighted_return,
+          flow_adjusted_end_market_value: null,
+        }
+      : null;
+
+    expect(getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, "USD")).toBe(
+      "Net flow $42,000"
+    );
   });
 
   it("builds a benchmark option label from contract metadata when available", () => {

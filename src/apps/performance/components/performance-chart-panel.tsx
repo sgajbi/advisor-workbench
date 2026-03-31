@@ -445,6 +445,7 @@ export default function PerformanceChartPanel({
   const periodSupport = getPerformanceMoneyWeightedAuditSupport({
     explicitDateRange,
     moneyWeightedReturn,
+    reportingCurrency,
   });
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
