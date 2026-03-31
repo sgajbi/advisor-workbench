@@ -36,6 +36,15 @@ describe("performance attribution presentations", () => {
       "Effects Sum",
       "Residual",
     ]);
+    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
+      "Effects 0.50% + Residual 0.02%"
+    );
+    expect(summaryItems.find((item) => item.label === "Effects Sum")?.support).toBe(
+      "Residual remains after effects • Active 0.52%"
+    );
+    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBe(
+      "Residual remains after effects • Active 0.52% • Effects 0.50%"
+    );
   });
 
   it("builds trend context and latest-row summary from the trend contract", () => {
@@ -61,6 +70,12 @@ describe("performance attribution presentations", () => {
       "Cumulative Total",
       "Residual",
     ]);
+    expect(summaryItems.find((item) => item.label === "Latest Total Effect")?.support).toBe(
+      "Residual de minimis • Active 0.22%"
+    );
+    expect(summaryItems.find((item) => item.label === "Latest Active Return")?.support).toBe(
+      "Effects 0.22% + Residual 0.00%"
+    );
   });
 
   it("keeps summary-only attribution honest without inventing missing values", () => {
@@ -80,6 +95,9 @@ describe("performance attribution presentations", () => {
     });
     expect(summaryItems).toHaveLength(4);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
+    expect(summaryItems.find((item) => item.label === "Residual")?.support).toContain(
+      "Residual remains after effects"
+    );
   });
 
   it("uses benchmark option labels when trend context receives them", () => {
