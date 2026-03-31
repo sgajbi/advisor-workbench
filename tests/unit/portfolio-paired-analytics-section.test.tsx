@@ -201,6 +201,8 @@ describe("PortfolioPairedAnalyticsSection", () => {
     );
 
     expect(container.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
+    expect(container.querySelector(".portfolio-paired-analytics-module-primary")).toBeTruthy();
+    expect(container.querySelector(".portfolio-paired-analytics-module-secondary")).toBeTruthy();
     expect(container.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
     expect(container.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(container.querySelectorAll("[data-analytics-module]")).toHaveLength(2);

@@ -680,10 +680,19 @@ a:hover {
 
 .portfolio-paired-analytics-grid {
   align-items: start;
+  gap: var(--space-4);
 }
 
 .portfolio-paired-analytics-grid > * {
   height: 100%;
+}
+
+.portfolio-paired-analytics-grid > .portfolio-paired-analytics-module-primary {
+  grid-column: span 7;
+}
+
+.portfolio-paired-analytics-grid > .portfolio-paired-analytics-module-secondary {
+  grid-column: span 5;
 }
 
 .portfolio-paired-analytics-grid-detailed {
@@ -701,14 +710,21 @@ a:hover {
 .portfolio-analytics-summary-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
+  gap: 1px;
+  padding: 0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(226, 232, 240, 0.9);
 }
 
 .portfolio-analytics-summary-stat {
   display: grid;
-  gap: 0.125rem;
+  gap: 0.25rem;
   min-width: 0;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid rgba(217, 224, 231, 0.8);
+  padding: var(--space-3);
+  border-bottom: 0;
+  background: #ffffff;
 }
 
 .portfolio-analytics-summary-stat span {
@@ -733,6 +749,8 @@ a:hover {
 
 .portfolio-chart-module-toolbar {
   min-width: 0;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .portfolio-chart-toggle-group {
@@ -761,7 +779,7 @@ a:hover {
 .portfolio-chart-module-body {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-  gap: 1rem;
+  gap: var(--space-3);
   align-items: start;
 }
 
@@ -774,7 +792,9 @@ a:hover {
 }
 
 .portfolio-chart-card-analytic {
-  padding-top: 0;
+  padding-top: var(--space-1);
+  border-color: rgba(226, 232, 240, 0.78);
+  background: #fcfdff;
 }
 
 .portfolio-chart-card-compact {
@@ -994,7 +1014,7 @@ a:hover {
 
 .portfolio-stacked-bar-group-hovered,
 .portfolio-grouped-bar-group-hovered {
-  background: #f8fbff;
+  background: rgba(248, 251, 255, 0.9);
 }
 
 .portfolio-stacked-bar-group-selected {

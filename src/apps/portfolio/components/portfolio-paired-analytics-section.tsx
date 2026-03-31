@@ -100,7 +100,7 @@ export default function PortfolioPairedAnalyticsSection({
     >
       {showIncomeModule ? (
         <PortfolioCollapsibleModule
-          className="portfolio-summary-module-card"
+          className="portfolio-summary-module-card portfolio-paired-analytics-module portfolio-paired-analytics-module-primary"
           compact={!isDetailedView}
           title="Income"
           subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
@@ -119,7 +119,7 @@ export default function PortfolioPairedAnalyticsSection({
 
       {showActivityModule ? (
         <PortfolioCollapsibleModule
-          className="portfolio-summary-module-card"
+          className="portfolio-summary-module-card portfolio-paired-analytics-module portfolio-paired-analytics-module-secondary"
           compact={!isDetailedView}
           title="Activity"
           subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
