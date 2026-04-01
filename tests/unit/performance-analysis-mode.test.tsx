@@ -41,14 +41,17 @@ describe("PerformanceAnalysisMode", () => {
 
     expect(screen.getByTestId("attribution-trend")).toBeInTheDocument();
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Contribution Detail" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
-    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", { name: "Top / Bottom Contributors panel" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Contribution Detail panel" })).toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "AAPL" })).toBeInTheDocument();
   });
 
   it("shows the shared loading state when analysis detail is still pending", () => {
@@ -149,7 +152,13 @@ describe("PerformanceAnalysisMode", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.getAllByText("Position ranking unavailable").length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText(
+        "Open Segment breakdown to inspect grouped contribution for the selected segment."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Segment breakdown (1)" })).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
