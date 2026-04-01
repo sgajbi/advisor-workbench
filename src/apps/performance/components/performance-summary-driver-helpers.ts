@@ -9,6 +9,7 @@ import type { PerformanceSummaryContributorsSectionProps } from "./performance-w
 import {
   buildPerformanceContributionTableModel,
   buildPerformancePositionContributionTableModel,
+  type PerformanceAnalyticsTableColumn,
   type PerformanceAnalyticsTableModel,
 } from "./performance-analytics-table-models";
 import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
@@ -258,6 +259,7 @@ export function getPerformanceHorizonPresentation({
 }: {
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  detailBasis?: string;
   period: string;
   loadingBody?: string;
   emptyBody?: string;
