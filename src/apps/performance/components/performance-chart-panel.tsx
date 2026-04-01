@@ -58,11 +58,11 @@ type PerformanceChartViewMode = "combined" | "absolute" | "relative";
 
 const CHART_COLORS = {
   portfolio: "#da1e28",
-  benchmark: "#2d3748",
-  active: "#315d8a",
-  portfolioBar: "rgba(218, 30, 40, 0.18)",
-  benchmarkBar: "rgba(45, 55, 72, 0.16)",
-  activeBar: "rgba(49, 93, 138, 0.18)",
+  benchmark: "#1f2e45",
+  active: "#2f5f97",
+  portfolioBar: "rgba(218, 30, 40, 0.28)",
+  benchmarkBar: "rgba(31, 46, 69, 0.24)",
+  activeBar: "rgba(47, 95, 151, 0.24)",
 };
 
 function toNumeric(value: number | null | undefined): number | null {
@@ -265,7 +265,7 @@ export default function PerformanceChartPanel({
       grid: {
         left: 66,
         right: 28,
-        top: 28,
+        top: 24,
         bottom: 58,
         containLabel: true,
       },
@@ -312,7 +312,7 @@ export default function PerformanceChartPanel({
       xAxis: {
         type: "category" as const,
         data: categories,
-        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.14)", width: 1 } },
+        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.22)", width: 1 } },
         axisTick: { show: false },
         axisLabel: {
           color: "#637083",
@@ -334,7 +334,8 @@ export default function PerformanceChartPanel({
           axisTick: { show: false },
           splitLine: {
             lineStyle: {
-              color: "rgba(52, 70, 95, 0.08)",
+              color: "rgba(52, 70, 95, 0.12)",
+              width: 1,
             },
           },
         },
@@ -353,12 +354,15 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: portfolioPeriodic,
-                barWidth: 7,
-                barGap: "20%",
+                barWidth: 10,
+                barGap: "12%",
+                barCategoryGap: "42%",
                 z: 1,
                 itemStyle: {
-                  color: "rgba(218, 30, 40, 0.12)",
-                  borderRadius: [6, 6, 0, 0],
+                  color: CHART_COLORS.portfolioBar,
+                  borderRadius: [3, 3, 0, 0],
+                  borderColor: "rgba(218, 30, 40, 0.42)",
+                  borderWidth: 1,
                 },
               },
             ]
@@ -370,11 +374,13 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: benchmarkPeriodic,
-                barWidth: 7,
+                barWidth: 10,
                 z: 1,
                 itemStyle: {
-                  color: "rgba(45, 55, 72, 0.1)",
-                  borderRadius: [6, 6, 0, 0],
+                  color: CHART_COLORS.benchmarkBar,
+                  borderRadius: [3, 3, 0, 0],
+                  borderColor: "rgba(31, 46, 69, 0.38)",
+                  borderWidth: 1,
                 },
               },
             ]
@@ -386,11 +392,13 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: activePeriodic,
-                barWidth: 7,
+                barWidth: 10,
                 z: 1,
                 itemStyle: {
-                  color: "rgba(49, 93, 138, 0.11)",
-                  borderRadius: [6, 6, 0, 0],
+                  color: CHART_COLORS.activeBar,
+                  borderRadius: [3, 3, 0, 0],
+                  borderColor: "rgba(47, 95, 151, 0.38)",
+                  borderWidth: 1,
                 },
               },
             ]
@@ -401,16 +409,18 @@ export default function PerformanceChartPanel({
                 name: "Portfolio Return",
                 type: "line" as const,
                 data: portfolioCumulative,
-                smooth: true,
+                smooth: 0.2,
                 symbol: "none",
                 connectNulls: true,
-                z: 3,
+                z: 4,
                 lineStyle: {
-                  width: 3,
+                  width: 3.5,
                   color: CHART_COLORS.portfolio,
+                  cap: "round" as const,
+                  join: "round" as const,
                 },
                 areaStyle: {
-                  color: "rgba(218, 30, 40, 0.035)",
+                  color: "rgba(218, 30, 40, 0.045)",
                 },
               },
             ]
@@ -421,13 +431,15 @@ export default function PerformanceChartPanel({
                 name: returnPathPresentation.benchmarkLabel,
                 type: "line" as const,
                 data: benchmarkCumulative,
-                smooth: true,
+                smooth: 0.2,
                 symbol: "none",
                 connectNulls: true,
-                z: 3,
+                z: 4,
                 lineStyle: {
-                  width: 3,
+                  width: 3.25,
                   color: CHART_COLORS.benchmark,
+                  cap: "round" as const,
+                  join: "round" as const,
                 },
               },
             ]
@@ -438,14 +450,16 @@ export default function PerformanceChartPanel({
                 name: "Active Cumulative",
                 type: "line" as const,
                 data: activeCumulative,
-                smooth: true,
+                smooth: 0.2,
                 symbol: "none",
                 connectNulls: true,
-                z: 3,
+                z: 4,
                 lineStyle: {
-                  width: 2,
+                  width: 2.5,
                   type: "dashed" as const,
                   color: CHART_COLORS.active,
+                  cap: "round" as const,
+                  join: "round" as const,
                 },
               },
             ]

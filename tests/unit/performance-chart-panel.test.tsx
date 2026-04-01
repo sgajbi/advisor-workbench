@@ -82,6 +82,18 @@ describe("PerformanceChartPanel", () => {
     let activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
     expect(activePeriodSeries?.type).toBe("bar");
     expect(activePeriodSeries?.data).toEqual([0.3]);
+    expect(activePeriodSeries?.barWidth).toBe(10);
+    expect(activePeriodSeries?.itemStyle).toMatchObject({
+      borderWidth: 1,
+      borderRadius: [3, 3, 0, 0],
+    });
+
+    const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio Return");
+    expect(portfolioReturnSeries?.lineStyle).toMatchObject({
+      width: 3.5,
+      cap: "round",
+      join: "round",
+    });
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
 
@@ -208,6 +220,12 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-02")).toBeInTheDocument();
+    expect(lastChartOption?.xAxis).toMatchObject({
+      axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.22)", width: 1 } },
+    });
+    expect(Array.isArray(lastChartOption?.yAxis) ? lastChartOption?.yAxis?.[0] : undefined).toMatchObject({
+      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.12)", width: 1 } },
+    });
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {
