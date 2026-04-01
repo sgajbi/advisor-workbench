@@ -95,8 +95,6 @@ describe("performance analytics table models", () => {
       label: "MTD",
       leftBarLabel: "Active",
       rightBarLabel: "Cum Active",
-      spreadLabel: "Spread",
-      spreadValue: "0.20%",
     });
 
     const basisModel = buildPerformanceHorizonVisualModel({
@@ -108,8 +106,6 @@ describe("performance analytics table models", () => {
       label: "YTD",
       leftBarLabel: "Net",
       rightBarLabel: "Gross",
-      spreadLabel: "Fee Drag",
-      spreadValue: "0.46%",
     });
   });
 

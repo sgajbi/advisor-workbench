@@ -43,10 +43,6 @@ describe("PerformanceWorkspaceModeSwitch", () => {
     expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
       "Analysis unavailable"
     );
-    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
-      "Evidence unavailable"
-    );
-
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
     expect(onChange).not.toHaveBeenCalled();

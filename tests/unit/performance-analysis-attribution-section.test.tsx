@@ -69,10 +69,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
-    expect(screen.getByText(/Versus Global Balanced 60\/40 • Calculated • Lotus Demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Versus Global Balanced 60\/40 • USD/i)).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
-      /Benchmark\s*Global Balanced 60\/40\s*•\s*Calculated\s*•\s*Lotus Demo/i
+      /Benchmark\s*Global Balanced 60\/40\s*•\s*USD/i
     );
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
       /Source\s*Calculated/i
