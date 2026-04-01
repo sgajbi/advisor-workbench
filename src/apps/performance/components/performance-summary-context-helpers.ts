@@ -238,6 +238,8 @@ export function getPerformanceBenchmarkContextValue({
 }: {
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  benchmarkReturnSource?: string | null;
+  benchmarkInputMode?: string | null;
 }) {
   if (!benchmark) {
     return "Unassigned";
