@@ -1,6 +1,21 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('UI smoke checks', () => {
+  const mobileOverflowChecks = [
+    {
+      path: '/portfolios',
+      readyName: /^Portfolio$|^Portfolio unavailable$/i,
+    },
+    {
+      path: '/intake',
+      readyName: /Portfolio Intake Operations Console/i,
+    },
+    {
+      path: '/workbench/DEMO_ADV_USD_001',
+      readyName: /^Advisor Workbench: DEMO_ADV_USD_001$/i,
+    },
+  ] as const;
+
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
     await expect(
@@ -30,23 +45,22 @@ test.describe('UI smoke checks', () => {
     await expect(page.getByRole('heading', { name: /Add Market Data Workspace/i })).toBeVisible();
   });
 
-  test('proposals simulate page renders core controls', async ({ page }) => {
-    await page.goto('/proposals/simulate', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Advisory Proposals/i })).toBeVisible();
-    await expect(page.getByLabel(/Portfolio ID/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /Simulate Proposal/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Save Draft/i })).toBeVisible();
-  });
-
   test('workbench page renders shell and message', async ({ page }) => {
-    await page.goto('/workbench', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText(/Decision Console|Advisor Workbench/i)).toBeVisible();
+    test.setTimeout(90000);
+    await page.goto('/workbench/DEMO_ADV_USD_001', { waitUntil: 'commit', timeout: 60000 });
+    await expect(
+      page.getByRole('heading', { name: /^Advisor Workbench: DEMO_ADV_USD_001$/i })
+    ).toBeVisible({ timeout: 60000 });
   });
 
   test('mobile layout has no horizontal overflow on key pages', async ({ page }) => {
+    test.setTimeout(120000);
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ['/portfolios', '/intake', '/proposals/simulate', '/workbench']) {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
+    for (const { path, readyName } of mobileOverflowChecks) {
+      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await expect(page.getByRole('heading', { name: readyName })).toBeVisible({
+        timeout: 60000,
+      });
       const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
       expect(hasOverflow, `horizontal overflow detected on ${path}`).toBeFalsy();
     }

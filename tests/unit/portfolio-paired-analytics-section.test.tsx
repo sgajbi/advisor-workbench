@@ -201,6 +201,8 @@ describe("PortfolioPairedAnalyticsSection", () => {
     );
 
     expect(container.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
+    expect(container.querySelector(".portfolio-paired-analytics-module-primary")).toBeTruthy();
+    expect(container.querySelector(".portfolio-paired-analytics-module-secondary")).toBeTruthy();
     expect(container.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
     expect(container.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(container.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
@@ -242,8 +244,10 @@ describe("PortfolioPairedAnalyticsSection", () => {
       expect(screen.getByTestId("portfolio-income-panel")).toHaveTextContent("detailed");
       expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
     });
+    expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeTruthy();
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
+    expect(document.querySelectorAll(".portfolio-analytics-table.analytics-table-frame-dense")).toHaveLength(2);
   });
 
   it("renders capability-driven partial and unavailable states intentionally", () => {

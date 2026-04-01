@@ -1,113 +1,28 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceAnalysisAttributionSection from "../../src/apps/performance/components/performance-analysis-attribution-section";
 import type { PerformanceAnalysisAttributionSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+import {
+  buildPerformanceCapabilities,
+  buildPartialAttributionPerformanceScenario,
+  buildSupportedPerformanceScenario,
+  buildUnavailableAttributionPerformanceScenario,
+} from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("../../src/apps/performance/components/performance-relative-segment-panel", () => ({
   default: () => <div>Relative Segment Panel</div>,
 }));
 
-const supportedCapabilities: PerformanceWorkspaceCapabilities = {
-  summaryKpis: { state: "supported" },
-  returnPath: { state: "supported" },
-  benchmarkComparison: { state: "supported" },
-  multiHorizonReturns: { state: "supported" },
-  contributionRanking: { state: "supported" },
-  attributionDetail: { state: "supported" },
-  contributionDetail: { state: "supported" },
-  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
-};
+const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildProps(
   overrides: Partial<PerformanceAnalysisAttributionSectionProps> = {}
 ): PerformanceAnalysisAttributionSectionProps {
+  const workspace = buildSupportedPerformanceScenario().workspace;
   return {
-    workspace: {
-      correlation_id: "corr",
-      contract_version: "v1",
-      portfolio_id: "PF_1001",
-      as_of_date: "2026-03-29",
-      period: "YTD",
-      report_start_date: "2026-01-01",
-      report_end_date: "2026-03-29",
-      chart_frequency: "monthly",
-      contribution_dimension: "asset_class",
-      attribution_dimension: "asset_class",
-      detail_basis: "NET",
-      segment: "asset_class",
-      benchmark_code: "BMK_1",
-      benchmark_options: [],
-      portfolio: {
-        portfolio_id: "PF_1001",
-        client_id: "CIF_1",
-        base_currency: "USD",
-        booking_center_code: "SG",
-      },
-      overview: {
-        market_value_base: 1000000,
-        cash_weight_pct: 5,
-        position_count: 3,
-      },
-      net_performance: {
-        metric_basis: "NET",
-        portfolio_return_pct: 1.25,
-        benchmark_return_pct: 1,
-        active_return_pct: 0.25,
-        annualized_return_pct: 1.25,
-        benchmark_id: "BMK_1",
-        benchmark_return_source: "calculated",
-      },
-      gross_performance: {
-        metric_basis: "GROSS",
-        portfolio_return_pct: 1.4,
-        benchmark_return_pct: 1,
-        active_return_pct: 0.4,
-        annualized_return_pct: 1.4,
-        benchmark_id: "BMK_1",
-        benchmark_return_source: "calculated",
-      },
-      money_weighted_return: null,
-      net_chart: [],
-      gross_chart: [],
-      contribution: null,
-      attribution: {
-        metric_basis: "NET",
-        model: "BF",
-        linking: "carino",
-        benchmark_id: "BMK_GLOBAL_BALANCED_60_40",
-        benchmark_return_source: "calculated",
-        active_return_pct: 0.52,
-        sum_of_effects_pct: 0.5,
-        residual_pct: 0.02,
-        levels: [
-          {
-            dimension: "asset_class",
-            allocation_total_pct: 0.18,
-            selection_total_pct: 0.24,
-            interaction_total_pct: 0.03,
-            total_effect_pct: 0.45,
-            rows: [
-              {
-                key_label: "Equity",
-                portfolio_weight_avg_pct: 61,
-                benchmark_weight_avg_pct: 58,
-                portfolio_return_pct: 7.4,
-                benchmark_return_pct: 6.8,
-                allocation_pct: 0.18,
-                selection_pct: 0.24,
-                interaction_pct: 0.03,
-                total_effect_pct: 0.45,
-              },
-            ],
-          },
-        ],
-      },
-      warnings: [],
-      partial_failures: [],
-    },
+    workspace,
     attributionDimension: "asset_class",
     onRequestChange: vi.fn(),
     isUpdating: false,
@@ -150,25 +65,64 @@ describe("PerformanceAnalysisAttributionSection", () => {
   it("renders benchmark-relative attribution detail and effect ranking", () => {
     render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
 
-    expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
+    expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
+    expect(screen.getByText(/Versus Global Balanced 60\/40 • Calculated • Lotus Demo/i)).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Benchmark\s*Global Balanced 60\/40\s*•\s*Calculated\s*•\s*Lotus Demo/i
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Source\s*Calculated/i
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Model\s*BF/i
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
+      /Linking\s*Carino/i
+    );
+    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    const reconciliationNote = screen.getByRole("note");
+    expect(reconciliationNote).toHaveTextContent("Residual remains after effects");
+    expect(reconciliationNote).toHaveTextContent(
+      "Active return 0.52% • effects sum 0.50% • residual 0.02%"
+    );
+    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(screen.getByLabelText("Top Effects panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution Detail panel")).toBeInTheDocument();
+    expect(screen.getByText("Top Effects")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Prioritize the largest benchmark-relative effects before opening detailed breakdown."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
-    expect(screen.getAllByText("BMK GLOBAL BALANCED 60 40").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
+    expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+    expect(screen.getAllByText(/Global Balanced 60\/40/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
   });
 
   it("renders an actionable fallback when attribution detail is unavailable", () => {
+    const scenario = buildUnavailableAttributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
-          capabilities: {
-            ...supportedCapabilities,
-            attributionDetail: {
-              state: "unavailable",
-              reason: "Attribution detail is not available for the current selection.",
-            },
-          },
+          workspace: scenario.workspace,
+          capabilities: scenario.capabilities,
           relativeSegmentRows: [],
           topAttributionEffectRows: [],
         })}
@@ -176,20 +130,22 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
 
     expect(screen.getByText("Attribution detail unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Attribution detail is not available for the current selection.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Attribution detail is not available for the current selection.")
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
   });
 
   it("renders a partial-state panel when attribution coverage is incomplete", () => {
+    const scenario = buildPartialAttributionPerformanceScenario();
+
     render(
       <PerformanceAnalysisAttributionSection
         {...buildProps({
-          capabilities: {
-            ...supportedCapabilities,
-            attributionDetail: {
-              state: "partial",
-              reason: "Benchmark-relative attribution is incomplete for the current selection.",
-            },
-          },
+          workspace: scenario.workspace,
+          capabilities: scenario.capabilities,
           relativeSegmentRows: [],
           topAttributionEffectRows: [],
         })}
@@ -197,6 +153,89 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
 
     expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark-relative attribution is incomplete for the current selection.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Benchmark-relative attribution is available only at summary level for the current selection."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
+    ).toBeInTheDocument();
+    const reconciliationNote = screen.getByRole("note");
+    expect(reconciliationNote).toHaveTextContent("Residual remains after effects");
+    expect(reconciliationNote).toHaveTextContent(
+      "Active return 0.52% • effects sum 0.50% • residual 0.02%"
+    );
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution totals")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Effect Breakdown" }));
+    expect(screen.getByText("Attribution Summary")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Segment rows are unavailable for this selection. Total benchmark-relative effects remain available below."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(screen.getByText("Summary totals")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
+    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    const insightPane = screen.getByLabelText("Top Effects panel");
+    expect(within(insightPane).queryByText("Relative Segment Panel")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
+    ).toBeTruthy();
+  });
+
+  it("shows only one attribution detail surface at a time and switches to the effect breakdown grid", () => {
+    render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
+
+    expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Effect Breakdown" }));
+
+    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
+  });
+
+  it("disables attribution segment options that are outside the backend capability contract", () => {
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({
+          capabilities: buildPerformanceCapabilities({
+            attributionDetail: {
+              state: "supported",
+              supportedDimensions: ["asset_class", "country"],
+              supportedFrequencies: ["monthly"],
+            },
+          }),
+        })}
+      />
+    );
+
+    fireEvent.mouseDown(screen.getByRole("combobox"));
+    const options = within(screen.getByRole("listbox")).getAllByRole("option");
+    expect(options.find((option) => option.textContent === "Asset Class")).not.toHaveAttribute(
+      "aria-disabled"
+    );
+    expect(options.find((option) => option.textContent === "Country")).not.toHaveAttribute(
+      "aria-disabled"
+    );
+    expect(options.find((option) => option.textContent === "Sector")).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
+    expect(options.find((option) => option.textContent === "Currency")).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
   });
 });

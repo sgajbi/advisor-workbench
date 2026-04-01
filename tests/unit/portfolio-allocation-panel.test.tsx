@@ -39,6 +39,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tab", { name: "Currency" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Sector" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+    expect(document.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("tab", { name: "Currency" }));
@@ -107,6 +108,7 @@ describe("PortfolioAllocationPanel", () => {
 
     expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-toolbar.workbench-summary-toolbar")).toBeTruthy();
+    expect(container.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
     expect(
       container.querySelector(".portfolio-allocation-chart-card.workbench-summary-visual-card")
     ).toBeTruthy();

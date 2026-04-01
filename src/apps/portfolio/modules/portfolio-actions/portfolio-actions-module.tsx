@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionListCard, Panel } from "@/design-system";
+import { ActionListCard, WorkbenchRailCard } from "@/design-system";
 
 import type { PortfolioWorkflowAction } from "../../types";
 
@@ -10,7 +10,7 @@ export default function PortfolioActionsModule({
   actions: PortfolioWorkflowAction[];
 }) {
   return (
-    <Panel className="portfolio-side-card workbench-rail-card portfolio-actions-card">
+    <WorkbenchRailCard className="portfolio-side-card portfolio-actions-card">
       <ActionListCard
         title="Next Actions"
         subtitle="Recommended front-office follow-up for this book."
@@ -25,7 +25,7 @@ export default function PortfolioActionsModule({
           recommended: action.recommended,
         }))}
       />
-    </Panel>
+    </WorkbenchRailCard>
   );
 }
 

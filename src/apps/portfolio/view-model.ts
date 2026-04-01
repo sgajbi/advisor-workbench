@@ -2,6 +2,7 @@ import {
   getWorkflowTaskLabel,
   WORKFLOW_DISPLAY_ORDER,
 } from "./workspace-config";
+import { formatDate } from "./formatters";
 import type {
   PortfolioActivitySummaryView,
   PortfolioExceptionSummary,
@@ -328,6 +329,7 @@ export function resolveTimeWindowStartDate(
       break;
     case "1Y":
       start.setUTCFullYear(start.getUTCFullYear() - 1);
+      start.setUTCDate(start.getUTCDate() + 1);
       break;
     case "SI":
       return inceptionDate ?? asOfDate;
@@ -482,16 +484,63 @@ export function getBookReadinessStatus(workspace: PortfolioWorkspace): "Not Read
 
 export function getBookReadinessSupport(workspace: PortfolioWorkspace): string {
   const status = getBookReadinessStatus(workspace);
+  const reportingFreshness = getReportingFreshnessSupport(workspace);
+
+  if (workspace.operations?.controls_blocking) {
+    return "Blocking controls active";
+  }
+
+  if (workspace.operations?.publish_allowed === false) {
+    return "Publication currently blocked";
+  }
 
   if (status === "Ready") {
-    return "Reportable and publishable";
+    return reportingFreshness;
   }
 
   if (status === "Not Ready") {
     return "Missing core book coverage";
   }
 
+  if (workspace.readiness.reporting.row_count > 0) {
+    return reportingFreshness;
+  }
+
+  if (workspace.operations?.latest_booked_transaction_date) {
+    return `Latest booking ${formatDate(workspace.operations.latest_booked_transaction_date)}`;
+  }
+
   return `${workspace.partial_failures.length} active exception${workspace.partial_failures.length === 1 ? "" : "s"}`;
+}
+
+export function getReportingFreshnessSupport(workspace: PortfolioWorkspace): string {
+  const reportingStatus = getReportingReadinessStatus(workspace);
+  const rowCount = workspace.readiness.reporting.row_count;
+  const generatedAt = workspace.readiness.reporting.generated_at_utc;
+  const rowLabel = `${rowCount} report row${rowCount === 1 ? "" : "s"}`;
+
+  if (reportingStatus === "Ready") {
+    if (generatedAt && rowCount > 0) {
+      return `Generated ${formatDate(generatedAt)} • ${rowLabel}`;
+    }
+    if (rowCount > 0) {
+      return `${rowLabel} published`;
+    }
+    return "Published output ready";
+  }
+
+  if (reportingStatus === "Partial") {
+    if (rowCount > 0) {
+      return `${rowLabel} published`;
+    }
+    return "Reporting output pending";
+  }
+
+  if (reportingStatus === "Empty") {
+    return "No published report rows";
+  }
+
+  return "Reporting output missing";
 }
 
 export function getBookReadinessTone(workspace: PortfolioWorkspace): PortfolioUiTone {
@@ -737,7 +786,10 @@ export function buildPortfolioInsights(workspace: PortfolioWorkspace): Portfolio
 }
 
 export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): PortfolioWorkflowCue[] {
+  const supportedWorkflowKeys = new Set<string>(WORKFLOW_DISPLAY_ORDER);
+
   return [...workspace.workflow_cues]
+    .filter((cue) => supportedWorkflowKeys.has(cue.key))
     .filter(
       (cue, index, cues) => cues.findIndex((candidate) => candidate.key === cue.key) === index
     )
@@ -1102,8 +1154,6 @@ function getWorkflowImpactLabel(key: string): string {
       return "Review portfolio return, benchmark context, and contribution once the book is valued.";
     case "risk":
       return "Validate suitability, exposure, and mandate fit before the next client action.";
-    case "proposal":
-      return "Prepare the next recommended portfolio action or client proposal.";
     default:
       return "Open the next available workflow for this portfolio.";
   }

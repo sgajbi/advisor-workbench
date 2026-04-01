@@ -1,78 +1,23 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
 import type { PerformanceSummaryContributorsSectionProps } from "../../src/apps/performance/components/performance-workspace-types";
+import {
+  buildAggregateContributionPerformanceScenario,
+  buildPerformanceCapabilities,
+  buildSupportedPerformanceScenario,
+} from "../fixtures/performance-workspace-fixtures";
 
-const supportedCapabilities: PerformanceWorkspaceCapabilities = {
-  summaryKpis: { state: "supported" },
-  returnPath: { state: "supported" },
-  benchmarkComparison: { state: "supported" },
-  multiHorizonReturns: { state: "supported" },
-  contributionRanking: { state: "supported" },
-  attributionDetail: { state: "supported" },
-  contributionDetail: { state: "supported" },
-  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
-};
+const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildProps(
   overrides: Partial<PerformanceSummaryContributorsSectionProps> = {}
 ): PerformanceSummaryContributorsSectionProps {
+  const workspace = buildSupportedPerformanceScenario().workspace;
   return {
-    workspace: {
-      correlation_id: "corr",
-      contract_version: "v1",
-      portfolio_id: "PF_1001",
-      as_of_date: "2026-03-29",
-      period: "YTD",
-      report_start_date: "2026-01-01",
-      report_end_date: "2026-03-29",
-      chart_frequency: "monthly",
-      contribution_dimension: "asset_class",
-      attribution_dimension: "asset_class",
-      detail_basis: "NET",
-      segment: "asset_class",
-      benchmark_code: "BMK_1",
-      benchmark_options: [],
-      portfolio: {
-        portfolio_id: "PF_1001",
-        client_id: "CIF_1",
-        base_currency: "USD",
-        booking_center_code: "SG",
-      },
-      overview: {
-        market_value_base: 1000000,
-        cash_weight_pct: 5,
-        position_count: 3,
-      },
-      net_performance: {
-        metric_basis: "NET",
-        portfolio_return_pct: 1.25,
-        benchmark_return_pct: 1,
-        active_return_pct: 0.25,
-        annualized_return_pct: 1.25,
-        benchmark_id: "BMK_1",
-        benchmark_return_source: "calculated",
-      },
-      gross_performance: {
-        metric_basis: "GROSS",
-        portfolio_return_pct: 1.4,
-        benchmark_return_pct: 1,
-        active_return_pct: 0.4,
-        annualized_return_pct: 1.4,
-        benchmark_id: "BMK_1",
-        benchmark_return_source: "calculated",
-      },
-      money_weighted_return: null,
-      net_chart: [],
-      gross_chart: [],
-      contribution: null,
-      attribution: null,
-      warnings: [],
-      partial_failures: [],
-    },
+    workspace,
     capabilities: supportedCapabilities,
     contributorScale: 1.5,
     positivePositionContributors: [
@@ -95,6 +40,28 @@ function buildProps(
         fx_contribution_pct: 0,
       },
     ],
+    topContributors: [
+      {
+        key_label: "Equity",
+        contribution_pct: 3.8,
+        weight_avg_pct: 61,
+        total_return_pct: 7.4,
+        local_contribution_pct: 3.4,
+        fx_contribution_pct: 0.4,
+        is_other: false,
+      },
+    ],
+    bottomContributors: [
+      {
+        key_label: "Rates",
+        contribution_pct: -0.6,
+        weight_avg_pct: 18,
+        total_return_pct: -1.9,
+        local_contribution_pct: -0.5,
+        fx_contribution_pct: -0.1,
+        is_other: false,
+      },
+    ],
     isDetailsPending: false,
     ...overrides,
   };
@@ -104,18 +71,33 @@ describe("PerformanceSummaryContributorsSection", () => {
   it("renders positive and negative ranked contributors when position ranking exists", () => {
     render(<PerformanceSummaryContributorsSection {...buildProps()} />);
 
-    expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
-    expect(screen.getByText("Highest")).toBeInTheDocument();
-    expect(screen.getByText("Lowest")).toBeInTheDocument();
-    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
-    expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
-    expect(screen.getByText("AAPL")).toBeInTheDocument();
-    expect(screen.getByText("TLT")).toBeInTheDocument();
-    expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
-    expect(screen.getByText("Avg. Weight 8.00%")).toBeInTheDocument();
+    expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
+    expect(screen.getByText("YTD contributor ranking")).toBeInTheDocument();
+    expect(screen.getByText("Top contributors")).toBeInTheDocument();
+    expect(screen.getByText("Top detractors")).toBeInTheDocument();
+    expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
+
+    const contributorsTable = screen.getByLabelText("Top contributors table");
+    expect(contributorsTable).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Instrument")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Contribution")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Weight")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Return")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("AAPL")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("1.50%")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("24.00%")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("8.00%")).toBeInTheDocument();
+
+    const detractorsTable = screen.getByLabelText("Top detractors table");
+    expect(detractorsTable).toBeInTheDocument();
+    expect(within(detractorsTable).getByText("TLT")).toBeInTheDocument();
+    expect(within(detractorsTable).getByText("-0.20%")).toBeInTheDocument();
+    expect(within(detractorsTable).getByText("-2.00%")).toBeInTheDocument();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {
@@ -137,26 +119,38 @@ describe("PerformanceSummaryContributorsSection", () => {
 
     expect(screen.getByText("Contributor ranking unavailable")).toBeInTheDocument();
     expect(screen.getByText("Contributor ranking is not available for the current selection.")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Aggregate contributor summary")).not.toBeInTheDocument();
   });
 
-  it("renders a partial-state panel when only aggregate contributor support exists", () => {
+  it("renders a partial-state panel with an aggregate table when only aggregate contributor support exists", () => {
+    const scenario = buildAggregateContributionPerformanceScenario();
+
     render(
       <PerformanceSummaryContributorsSection
         {...buildProps({
-          capabilities: {
-            ...supportedCapabilities,
-            contributionRanking: {
-              state: "partial",
-              reason: "Contribution exists, but only aggregate rows are available.",
-            },
-          },
+          capabilities: scenario.capabilities,
           positivePositionContributors: [],
           negativePositionContributors: [],
+          topContributors: scenario.workspace.contribution?.levels?.[0]?.rows ?? [],
+          bottomContributors: [],
         })}
       />
     );
 
     expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
+    ).toBeInTheDocument();
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent("High coverage");
+    expect(note).toHaveTextContent("Reconciles to return");
+    expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
+    const aggregateTable = screen.getByLabelText("Aggregate contributor summary");
+    expect(aggregateTable).toBeInTheDocument();
+    expect(within(aggregateTable).getByText("Equity")).toBeInTheDocument();
+    expect(within(aggregateTable).getByText("Total")).toBeInTheDocument();
+    expect(within(aggregateTable).getAllByText("5.42%")).toHaveLength(2);
+    expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 });

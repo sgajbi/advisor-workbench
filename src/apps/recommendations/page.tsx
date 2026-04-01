@@ -7,7 +7,7 @@ export default async function RecommendationsAppPage({
 }) {
   const resolvedSearch = await searchParams;
   if (resolvedSearch.portfolioId) {
-    redirect(`/proposals/simulate?portfolioId=${encodeURIComponent(resolvedSearch.portfolioId)}`);
+    redirect(`/performance?portfolioId=${encodeURIComponent(resolvedSearch.portfolioId)}`);
   }
-  redirect("/proposals");
+  redirect("/portfolio");
 }

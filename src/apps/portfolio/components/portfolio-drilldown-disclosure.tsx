@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react";
 
-import { WorkspaceCapabilityPanel } from "@/design-system";
 import {
   isRenderableCapability,
   isSupportedCapability,
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
+import PortfolioModuleState from "./portfolio-module-state";
 
 type PortfolioDrilldownDisclosureProps = {
   title: string;
@@ -51,23 +51,35 @@ export default function PortfolioDrilldownDisclosure({
       onToggle={(event) => onToggle((event.currentTarget as HTMLDetailsElement).open)}
     >
       <summary>
-        <div>
-          <strong>{title}</strong>
-          <span>{summary}</span>
+        <div className="portfolio-disclosure-header">
+          <div className="portfolio-disclosure-heading">
+            <strong>{title}</strong>
+            <span>{summary}</span>
+          </div>
+          <span className="portfolio-disclosure-action-copy">
+            {expanded ? "Collapse detail" : "Open detail"}
+          </span>
         </div>
-        <span className="portfolio-disclosure-chevron" aria-hidden="true">▾</span>
+        <div className="portfolio-disclosure-toggle" aria-hidden="true">
+          <span className="portfolio-disclosure-toggle-label">
+            {expanded ? "Collapse" : "Expand"}
+          </span>
+          <span className="portfolio-disclosure-chevron">▾</span>
+        </div>
       </summary>
       <div className="portfolio-disclosure-content">
         {expanded ? (
           isSupportedCapability(capability) ? (
             children
           ) : (
-            <WorkspaceCapabilityPanel
+            <PortfolioModuleState
+              variant="capability"
               capability={capability}
               partialTitle={partialTitle}
               unavailableTitle={unavailableTitle}
               body={body}
-              hint={hint}
+              partialHint={hint}
+              unavailableHint={hint}
               why={why}
             />
           )

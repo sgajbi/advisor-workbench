@@ -8,6 +8,13 @@ export { default as AnalyticsTable } from "./components/analytics-table";
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
 export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";
+export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
+export { default as WorkbenchSegmentedControl } from "./components/workbench-segmented-control";
+export type { WorkbenchSegmentedControlOption } from "./components/workbench-segmented-control";
+export { default as WorkbenchChartContextRow } from "./components/workbench-chart-context-row";
+export type { WorkbenchChartContextRowItem } from "./components/workbench-chart-context-row";
+export { default as WorkbenchChartShell } from "./components/workbench-chart-shell";
+export { default as WorkbenchDataGridFrame } from "./components/workbench-data-grid-frame";
 export { default as PageToolbar } from "./components/page-toolbar";
 export { default as ContextCard } from "./components/context-card";
 export { default as KpiStatTile } from "./components/kpi-stat-tile";
@@ -39,6 +46,23 @@ export {
 export { default as WorkspaceRailLink } from "./components/workspace-rail-link";
 export { default as WorkspaceHeader } from "./components/workspace-header";
 export { default as WorkbenchPageHeader } from "./components/workbench-page-header";
+export {
+  WorkbenchPageFrame,
+  WorkbenchSectionStack,
+} from "./components/workbench-page-frame";
+export { default as WorkbenchRailCard } from "./components/workbench-rail-card";
+export { default as WorkbenchRankedBarList } from "./components/workbench-ranked-bar-list";
+export type { WorkbenchRankedBarRow } from "./components/workbench-ranked-bar-list";
+export { default as WorkbenchStatusRow } from "./components/workbench-status-row";
+export type { WorkbenchStatusRowItem } from "./components/workbench-status-row";
+export { default as WorkbenchStatusStrip } from "./components/workbench-status-strip";
+export type { WorkbenchStatusStripItem } from "./components/workbench-status-strip";
+export { default as WorkbenchSummaryMetricStrip } from "./components/workbench-summary-metric-strip";
+export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-summary-metric-strip";
+export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
+export { default as WorkbenchInlineRefreshNote } from "./components/workbench-inline-refresh-note";
+export { default as WorkbenchToolbarPlaceholder } from "./components/workbench-toolbar-placeholder";
+export type { WorkbenchToolbarPlaceholderField } from "./components/workbench-toolbar-placeholder";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";
 export { default as WorkspaceStatusPanel } from "./components/workspace-status-panel";
 export {

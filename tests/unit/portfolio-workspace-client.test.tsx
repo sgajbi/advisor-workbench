@@ -144,6 +144,12 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-02-26",
+      reportEndDate: "2026-03-28",
+      usesCustomDateRange: false,
+    });
     expect(getDetailedDetailsMock).toHaveBeenCalledTimes(0);
 
     await act(async () => {

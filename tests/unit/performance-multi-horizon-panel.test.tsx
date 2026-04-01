@@ -1,15 +1,30 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceMultiHorizonPanel from "../../src/apps/performance/components/performance-multi-horizon-panel";
+import type { WorkbenchPerformanceHorizonComparison } from "../../src/features/workbench/types";
+import { buildPerformanceHorizonComparison } from "../fixtures/performance-workspace-fixtures";
 
 const getHorizonComparisonClientMock = vi.fn();
+
+function compactPattern(text: string) {
+  return new RegExp(text.replaceAll(" ", "\\s*"));
+}
 
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchPerformanceHorizonComparisonClient: (...args: unknown[]) =>
     getHorizonComparisonClientMock(...args),
 }));
+
+function buildHorizonComparison(
+  overrides: Partial<WorkbenchPerformanceHorizonComparison> = {}
+): WorkbenchPerformanceHorizonComparison {
+  return {
+    ...buildPerformanceHorizonComparison(),
+    ...overrides,
+  } as WorkbenchPerformanceHorizonComparison;
+}
 
 describe("PerformanceMultiHorizonPanel", () => {
   afterEach(() => {
@@ -18,61 +33,22 @@ describe("PerformanceMultiHorizonPanel", () => {
 
   it("loads standard horizons from the dedicated horizon comparison contract", async () => {
     getHorizonComparisonClientMock.mockImplementation(
-      async (_portfolioId: string, params: { detailBasis: string; benchmark?: string }) => ({
-        correlation_id: "corr",
-        contract_version: "v1",
-        portfolio_id: "PF_1001",
-        as_of_date: "2026-03-27",
-        detail_basis: params.detailBasis,
-        benchmark_code: params.benchmark ?? "BMK_GLOBAL_BALANCED_60_40",
-        benchmark_options: [
-          {
-            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-            benchmark_name: "Global Balanced 60/40",
-            is_assigned: true,
-          },
-        ],
-        rows: [
-          {
-            period: "MTD",
-            portfolio_return_pct: 1.2,
-            benchmark_return_pct: 1.0,
-            active_return_pct: 0.2,
-            annualized_return_pct: 1.2,
-          },
-          {
-            period: "QTD",
-            portfolio_return_pct: 2.8,
-            benchmark_return_pct: 2.4,
-            active_return_pct: 0.4,
-            annualized_return_pct: 2.8,
-          },
-          {
-            period: "YTD",
-            portfolio_return_pct: 5.4,
-            benchmark_return_pct: 4.9,
-            active_return_pct: 0.5,
-            annualized_return_pct: 5.4,
-          },
-          {
-            period: "1Y",
-            portfolio_return_pct: 12.1,
-            benchmark_return_pct: 10.7,
-            active_return_pct: 1.4,
-            annualized_return_pct: 12.1,
-          },
-        ],
-        warnings: [],
-        partial_failures: [],
-      })
+      async (_portfolioId: string, params: { detailBasis: string; benchmark?: string }) =>
+        buildHorizonComparison({
+          detail_basis: params.detailBasis,
+          benchmark_code: params.benchmark ?? "BMK_GLOBAL_BALANCED_60_40",
+        })
     );
 
     render(
       <PerformanceMultiHorizonPanel
         portfolioId="PF_1001"
+        period="YTD"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
         benchmarkOptions={[
           {
             benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
@@ -83,68 +59,258 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(screen.getByText("Loading comparative horizon summaries.")).toBeInTheDocument();
+    expect(screen.getByText("Loading horizon comparison.")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText("Multi-Horizon Returns")).toBeInTheDocument();
+      expect(screen.getByText("Horizon Comparison")).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
+      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
 
+    expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+    );
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Active Return 0.51%")
+    );
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40")
+    );
+    expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
+    expect(screen.queryByText("Portfolio vs Global Balanced 60/40")).not.toBeInTheDocument();
+    expect(screen.queryByText("NET")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
-    expect(screen.getByText("MTD")).toBeInTheDocument();
-    expect(screen.getByText("QTD")).toBeInTheDocument();
-    expect(screen.getByText("YTD")).toBeInTheDocument();
-    expect(screen.getByText("1Y")).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
+    expect(screen.getAllByText("Active Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Portfolio vs Benchmark").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Cumulative:/).length).toBeGreaterThan(0);
+    const horizonTable = screen.getByLabelText("Multi-horizon return table");
+    expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("BoD Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("EoD Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-Adj MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Fee Drag")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(horizonTable).getAllByText("$450,000")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("$26,000")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("-$3,500")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("$486,370")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("$22,500")).toHaveLength(2);
+    expect(within(horizonTable).getAllByText("5.88%").length).toBeGreaterThan(0);
+    expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("MTD")).toHaveLength(2);
+    expect(screen.getAllByText("QTD")).toHaveLength(2);
+    expect(screen.getAllByText("YTD")).toHaveLength(2);
+    expect(screen.getAllByText("1Y")).toHaveLength(2);
+    expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
+    expect(within(horizonTable).queryByText("Begin MV")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("BoD Flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("EoD Flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Flow-Adj MV")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net Flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
+    expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("BoD Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("EoD Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-Adj MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Benchmark")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cum Active")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
+    expect(screen.getAllByText("Series: Active vs cumulative").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Cum Active")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Net" }));
+    expect(within(horizonTable).getByText("Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Gross")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cum Gross")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
+    expect(screen.getAllByText("Fee Drag").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Net vs Gross").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
+    expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cum Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Ann. Gross")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cum Net")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledWith("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      chartFrequency: "monthly",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-03-27",
+    });
   });
 
   it("reuses cached horizon data when rerendered with the same analytical inputs", async () => {
-    getHorizonComparisonClientMock.mockResolvedValue({
-      correlation_id: "corr",
-      contract_version: "v1",
-      portfolio_id: "PF_1001",
-      as_of_date: "2026-03-27",
-      detail_basis: "NET",
-      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_options: [],
-      rows: [
-        {
-          period: "YTD",
-          portfolio_return_pct: 5.4,
-          benchmark_return_pct: 4.9,
-          active_return_pct: 0.5,
-          annualized_return_pct: 5.4,
-        },
-      ],
-      warnings: [],
-      partial_failures: [],
-    });
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        detail_basis: "NET",
+        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+        benchmark_options: [],
+        rows: [
+          {
+            period: "YTD",
+            portfolio_return_pct: 5.4,
+            benchmark_return_pct: 4.9,
+            active_return_pct: 0.5,
+            annualized_return_pct: 5.4,
+          },
+        ],
+      })
+    );
 
     const view = render(
       <PerformanceMultiHorizonPanel
         portfolioId="PF_1001"
+        period="YTD"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         chartFrequency="monthly"
       />
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("YTD")).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+        compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+        );
+      });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
 
     view.rerender(
       <PerformanceMultiHorizonPanel
         portfolioId="PF_1001"
+        period="YTD"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         chartFrequency="monthly"
       />
     );
 
-    expect(screen.getByText("YTD")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+    );
+    expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps benchmark context honest when the selected-period active return is unavailable", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        detail_basis: "NET",
+        benchmark_code: null,
+        benchmark_options: [],
+        rows: [
+          {
+            period: "YTD",
+            portfolio_return_pct: 5.4,
+            benchmark_return_pct: null,
+            active_return_pct: null,
+            annualized_return_pct: 5.4,
+          },
+        ],
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        chartFrequency="monthly"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Active Return Unavailable")
+    );
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Benchmark Not assigned")
+    );
+  });
+
+  it("shows a normalization notice when the horizon endpoint adjusts an unsupported frequency", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        chart_frequency: "monthly",
+        requested_chart_frequency_supported: false,
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="weekly"
+      />
+    );
+
+    const notice = await screen.findByRole("status", {
+      name: "Horizon comparison normalization",
+    });
+    expect(notice).toHaveTextContent("Selection adjusted");
+    expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
+  });
+
+  it("pushes the resolved horizon frequency back through the shared request handler", async () => {
+    const onRequestChange = vi.fn();
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        chart_frequency: "monthly",
+        requested_chart_frequency_supported: false,
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="weekly"
+        onRequestChange={onRequestChange}
+      />
+    );
+
+    await waitFor(() => {
+      expect(onRequestChange).toHaveBeenCalledWith({ chartFrequency: "monthly" });
+    });
   });
 });

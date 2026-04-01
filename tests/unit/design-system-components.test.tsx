@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -10,6 +10,7 @@ import {
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
+  DeferredModulePlaceholder,
   DegradedStatePanel,
   EmptyStatePanel,
   FilterBar,
@@ -30,8 +31,18 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkbenchDeferredSection,
+  WorkbenchInlineRefreshNote,
+  WorkbenchSegmentedControl,
+  WorkbenchPageFrame,
   WorkbenchPageHeader,
+  WorkbenchLoadingState,
+  WorkbenchRailCard,
+  WorkbenchStatusRow,
+  WorkbenchSectionStack,
+  WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
+  WorkbenchToolbarPlaceholder,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,
   WorkbenchSummaryVisualLabel,
@@ -120,6 +131,43 @@ describe("design-system components", () => {
     expect(document.querySelector(".workstation-shell-side-comfortable")).toBeTruthy();
   });
 
+  it("renders the shared workbench page frame with shared header and section stack", () => {
+    render(
+      <WorkstationPage>
+        <WorkbenchPageFrame
+          title="Portfolio"
+          subtitle="Front-office portfolio context"
+          actions={<StatusChip>Catalog live</StatusChip>}
+        >
+          <WorkbenchSectionStack>
+            <Panel>Summary Section</Panel>
+          </WorkbenchSectionStack>
+        </WorkbenchPageFrame>
+      </WorkstationPage>
+    );
+
+    expect(document.querySelector(".workbench-page-frame")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
+    expect(document.querySelector(".workbench-section-stack")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
+    expect(screen.getByText("Catalog live")).toHaveClass("status-chip");
+  });
+
+  it("renders the shared workbench rail card primitive", () => {
+    render(
+      <WorkbenchRailCard className="portfolio-context-card">
+        <div className="portfolio-card-header">
+          <h3 className="portfolio-side-card-title">Portfolio Context</h3>
+          <p className="portfolio-card-subtitle">Identity and setup.</p>
+        </div>
+      </WorkbenchRailCard>
+    );
+
+    expect(document.querySelector(".workbench-rail-card.portfolio-context-card")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Portfolio Context" })).toBeInTheDocument();
+  });
+
   it("renders degraded state and rail link primitives", () => {
     render(
       <>
@@ -165,6 +213,7 @@ describe("design-system components", () => {
   it("renders analytics tables with aligned numeric columns and totals", () => {
     render(
       <AnalyticsTable
+        className="analysis-table"
         ariaLabel="Allocation summary"
         columns={[
           { key: "bucket", label: "Bucket" },
@@ -180,9 +229,27 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("table", { name: "Allocation summary" })).toBeInTheDocument();
+    expect(document.querySelector(".analytics-table-frame.analysis-table")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Market Value" })).toBeInTheDocument();
     expect(screen.getByText("$800,000")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
+  });
+
+  it("renders dense analytics tables through the shared frame contract", () => {
+    render(
+      <AnalyticsTable
+        dense
+        ariaLabel="Dense allocation summary"
+        columns={[
+          { key: "bucket", label: "Bucket" },
+          { key: "value", label: "Market Value", align: "right" },
+        ]}
+        rows={[{ key: "row-1", cells: ["Equity", "$500,000"] }]}
+      />
+    );
+
+    expect(screen.getByRole("table", { name: "Dense allocation summary" })).toBeInTheDocument();
+    expect(document.querySelector(".analytics-table-frame.analytics-table-frame-dense")).toBeTruthy();
   });
 
   it("supports keyboard activation for interactive analytics table rows", () => {
@@ -406,5 +473,229 @@ describe("design-system components", () => {
     ).toHaveClass("workbench-page-header-subtitle");
     expect(screen.getByRole("button", { name: "Header Action" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-actions")).toBeTruthy();
+  });
+
+  it("renders the shared workbench status strip with consistent item structure", () => {
+    render(
+      <WorkbenchStatusStrip
+        label="Capability status"
+        className="performance-trust-strip"
+        gridClassName="performance-trust-strip-grid"
+        itemClassName="performance-trust-item"
+        itemLabelClassName="performance-trust-item-label"
+        itemBodyClassName="performance-trust-item-body"
+        itemChipClassName="performance-trust-item-chip"
+        itemSupportClassName="performance-trust-item-support"
+        items={[
+          {
+            label: "Benchmark",
+            value: "Assigned",
+            support: "Relative analytics are active.",
+            tone: "success",
+          },
+          {
+            label: "Evidence",
+            value: "Pending",
+            support: "Evidence is not yet exposed.",
+            tone: "default",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByLabelText("Capability status")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark")).toHaveClass("performance-trust-item-label");
+    expect(screen.getByText("Assigned")).toHaveClass("performance-trust-item-chip");
+    expect(screen.getByText("Relative analytics are active.")).toHaveClass(
+      "performance-trust-item-support"
+    );
+    expect(screen.getByText("Pending")).toHaveClass("performance-trust-item-chip");
+  });
+
+  it("renders the shared workbench status row with compact status chips", () => {
+    render(
+      <WorkbenchStatusRow
+        label="Observation status"
+        className="performance-observation-strip"
+        items={[
+          { value: "As of 2026-03-29" },
+          { value: "USD" },
+          { value: "2 observations", tone: "success" },
+          { value: "Relative measurement", tone: "success" },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("group", { name: "Observation status" })).toBeInTheDocument();
+    expect(screen.getByText("As of 2026-03-29")).toHaveClass("status-chip");
+    expect(screen.getByText("2 observations")).toHaveClass("status-chip", "success");
+    expect(screen.getByText("Relative measurement")).toHaveClass("status-chip", "success");
+  });
+
+  it("renders a reusable deferred workbench section with shared heading structure", () => {
+    render(
+      <WorkbenchDeferredSection
+        className="performance-summary-context-section"
+        title="Return vs Benchmark"
+        subtitle="How the portfolio tracked against the selected benchmark over the current period."
+        loadingTitle="Loading return path"
+        loadingMessage="Return path is loading after first paint."
+      >
+        <div>Deferred content</div>
+      </WorkbenchDeferredSection>
+    );
+
+    expect(document.querySelector(".performance-summary-context-section")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Return vs Benchmark" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "How the portfolio tracked against the selected benchmark over the current period."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Loading return path")).toBeInTheDocument();
+    expect(screen.getByText("Return path is loading after first paint.")).toBeInTheDocument();
+  });
+
+  it("renders the shared deferred placeholder class contract with optional extension classes", () => {
+    render(
+      <DeferredModulePlaceholder
+        title="Loading analysis"
+        message="Analysis is loading after first paint."
+        className="performance-analysis-loading"
+      />
+    );
+
+    const placeholder = screen.getByRole("status");
+    expect(placeholder).toHaveClass(
+      "deferred-module-placeholder",
+      "workbench-deferred-placeholder",
+      "performance-analysis-loading"
+    );
+    expect(within(placeholder).getByText("Loading analysis")).toBeInTheDocument();
+    expect(within(placeholder).getByText("Analysis is loading after first paint.")).toBeInTheDocument();
+  });
+
+  it("renders the shared segmented control with tab semantics and active-state classes", () => {
+    const onChange = vi.fn();
+
+    render(
+      <WorkbenchSegmentedControl
+        value="summary"
+        onChange={onChange}
+        ariaLabel="Workbench mode"
+        className="performance-mode-switch"
+        options={[
+          { key: "summary", label: "Summary" },
+          { key: "analysis", label: "Analysis" },
+          { key: "evidence", label: "Evidence" },
+        ]}
+      />
+    );
+
+    const tablist = screen.getByRole("tablist", { name: "Workbench mode" });
+    expect(tablist).toHaveClass("workbench-segmented-control", "performance-mode-switch");
+    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
+      "workbench-segmented-control-button",
+      "workbench-segmented-control-button-active"
+    );
+    expect(screen.getByRole("tab", { name: "Analysis" })).toHaveClass(
+      "workbench-segmented-control-button"
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+    expect(onChange).toHaveBeenCalledWith("evidence");
+  });
+
+  it("supports disabled segmented-control options with shared semantics", () => {
+    render(
+      <WorkbenchSegmentedControl
+        value="asset_class"
+        onChange={() => {}}
+        ariaLabel="Allocation dimensions"
+        options={[
+          { key: "asset_class", label: "Asset Class" },
+          { key: "region", label: "Region", disabled: true, title: "Region pending source support" },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
+    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Region" })).toHaveAttribute(
+      "title",
+      "Region pending source support"
+    );
+  });
+
+  it("renders the shared workbench toolbar placeholder with generic field widths", () => {
+    render(
+      <WorkbenchToolbarPlaceholder
+        className="portfolio-workspace-toolbar"
+        contextMessage="Loading workspace controls…"
+        fields={[
+          { key: "as-of", label: "As of" },
+          { key: "view", label: "View", width: "wide" },
+          { key: "period", label: "Period", width: "period" },
+        ]}
+      />
+    );
+
+    expect(document.querySelector(".workbench-toolbar-placeholder.portfolio-workspace-toolbar"))
+      .toBeTruthy();
+    expect(document.querySelector(".workbench-toolbar-placeholder-row")).toBeTruthy();
+    expect(document.querySelectorAll(".workbench-toolbar-placeholder-field")).toHaveLength(3);
+    expect(screen.getByText("As of")).toHaveClass("workbench-toolbar-placeholder-label");
+    expect(document.querySelector(".workbench-toolbar-placeholder-control-wide")).toBeTruthy();
+    expect(document.querySelector(".workbench-toolbar-placeholder-control-period")).toBeTruthy();
+    expect(screen.getByText("Loading workspace controls…")).toBeInTheDocument();
+  });
+
+  it("renders the shared workbench loading state with explicit copy and skeleton", () => {
+    render(
+      <WorkbenchLoadingState
+        title="Loading transactions"
+        message="Transaction ledger detail is loading for the selected window."
+        rows={5}
+      />
+    );
+
+    const loadingState = screen.getByRole("status");
+    expect(loadingState).toHaveClass("workbench-loading-state");
+    expect(within(loadingState).getByText("Loading transactions")).toBeInTheDocument();
+    expect(
+      within(loadingState).getByText("Transaction ledger detail is loading for the selected window.")
+    ).toBeInTheDocument();
+    expect(loadingState.querySelector(".module-skeleton")).toBeTruthy();
+  });
+
+  it("renders the shared inline refresh note with polite status semantics", () => {
+    render(<WorkbenchInlineRefreshNote message="Refreshing transactions…" />);
+
+    const refreshNote = screen.getByRole("status");
+    expect(refreshNote).toHaveClass("workbench-inline-refresh-note");
+    expect(refreshNote).toHaveTextContent("Refreshing transactions…");
+  });
+
+  it("can defer content without rendering a duplicate wrapper header", async () => {
+    render(
+      <WorkbenchDeferredSection
+        className="performance-summary-driver-section"
+        title="Performance Drivers"
+        subtitle="Top contributors and detractors for the current performance outcome."
+        loadingTitle="Loading contributors"
+        loadingMessage="Contributor ranking is loading after first paint."
+        deferHeader
+        hideHeader
+        placeholder={null}
+      >
+        <div>Deferred driver content</div>
+      </WorkbenchDeferredSection>
+    );
+
+    expect(document.querySelector(".performance-summary-driver-section")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Performance Drivers" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Deferred driver content")).toBeInTheDocument();
+    });
   });
 });

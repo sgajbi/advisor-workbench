@@ -11,6 +11,8 @@ Keep Lotus workbench cleanup and hardening evidence-based.
 3. app package structure
 4. degraded-state and resilience behavior
 5. test and documentation coverage
+6. gateway contract ownership and upstream supportability
+7. latency-sensitive UI fetch patterns and deferred rendering discipline
 
 ## Status Model
 
@@ -31,4 +33,9 @@ A scope is not signed off unless it has:
 
 ## Current Focus
 
-The current review focus is RFC-0016 foundation completion quality in `lotus-workbench`.
+The current review focus is Portfolio and Performance production hardening:
+
+1. only expose Gateway-backed features that are actually implemented upstream,
+2. keep business shaping in Gateway/domain services rather than page components,
+3. remove dead or duplicated API surfaces,
+4. improve latency realism and browser-level validation for critical workbench flows.

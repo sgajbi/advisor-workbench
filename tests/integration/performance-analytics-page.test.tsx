@@ -3,10 +3,31 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
+import {
+  buildPerformanceAttributionTrend,
+  buildAggregateContributionPerformanceScenario,
+  buildBenchmarkUnassignedPerformanceScenario,
+  buildCombinedPartialPerformanceScenario,
+  buildNormalizedControlsPerformanceScenario,
+  buildPartialAttributionPerformanceScenario,
+  buildPartialBenchmarkPerformanceScenario,
+  buildPerformancePresentationScenario,
+  buildPerformanceHorizonComparison,
+  buildSupportedPerformanceScenario,
+  buildUnavailableAttributionPerformanceScenario,
+  buildUnavailableContributionPerformanceScenario,
+  type PerformancePresentationScenario,
+} from "../fixtures/performance-workspace-fixtures";
+import {
+  installPerformancePageFetchMock,
+  installPerformancePageFetchScenario,
+} from "../fixtures/performance-workspace-server-fixtures";
+
+const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    replace: vi.fn(),
+    replace: replaceMock,
   }),
 }));
 
@@ -37,351 +58,39 @@ vi.mock("echarts-for-react", () => ({
   ),
 }));
 
-function installPerformancePageFetchMock(options?: {
-  unassignedBenchmark?: boolean;
-  unavailableSummarySeries?: boolean;
-}) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (input: string | URL) => {
-      const url = input.toString();
-      if (url.includes("/api/v1/lookups/portfolios")) {
-        return {
-          ok: true,
-          json: async () => ({
-            items: [
-              { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
-              { id: "PF_1001", label: "Global Balanced Mandate" },
-            ],
-          }),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
-        return {
-          ok: true,
-          json: async () => buildSummary("DEMO_ADV_USD_001", options),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
-        return {
-          ok: true,
-          json: async () => buildDetails("DEMO_ADV_USD_001", options),
-        } as Response;
-      }
-      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
-        return {
-          ok: true,
-          json: async () => buildHorizonComparison("DEMO_ADV_USD_001"),
-        } as Response;
-      }
-      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
-        return {
-          ok: true,
-          json: async () => buildAttributionTrend("DEMO_ADV_USD_001"),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
-        return {
-          ok: true,
-          json: async () => buildSummary("PF_1001"),
-        } as Response;
-      }
-      if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
-        return {
-          ok: true,
-          json: async () => buildDetails("PF_1001"),
-        } as Response;
-      }
-      return { ok: false, json: async () => ({}) } as Response;
-    })
-  );
+type PerformanceSummaryScenario = {
+  name: string;
+  scenario: PerformancePresentationScenario;
+  executiveExpectations?: string[];
+  trustExpectations?: string[];
+  deferredExpectations?: string[];
+  contextExpectations?: string[];
+  horizonExpectations?: string[];
+  absentTexts?: string[];
+};
+
+type PerformanceWorkspaceScenarioMatrix = {
+  name: string;
+  scenario: PerformancePresentationScenario;
+  summaryExpectations: string[];
+  analysisExpectations: string[];
+  evidenceExpectations?: string[];
+  summaryAbsent?: string[];
+  analysisAbsent?: string[];
+};
+
+function compactPattern(text: string) {
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(" ", "\\s*"));
 }
 
-function buildSummary(
-  portfolioId: string,
-  options?: { unassignedBenchmark?: boolean; unavailableSummarySeries?: boolean }
-) {
-  return {
-    correlation_id: "corr-performance",
-    contract_version: "v1",
-    portfolio_id: portfolioId,
-    as_of_date: "2026-02-24",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-02-24",
-    chart_frequency: "monthly",
-    detail_basis: "NET",
-    benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
-    benchmark_options: options?.unassignedBenchmark
-      ? []
-      : [
-          {
-            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-            benchmark_name: "Global Balanced 60/40",
-            is_assigned: true,
-          },
-        ],
-    portfolio: {
-      portfolio_id: portfolioId,
-      client_id: "CIF_1001",
-      base_currency: "USD",
-      booking_center_code: "SG",
-    },
-    overview: {
-      market_value_base: 1250000,
-      cash_weight_pct: 6.8,
-      position_count: 18,
-    },
-    net_performance: {
-      metric_basis: "NET",
-      portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.42,
-      benchmark_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 4.91,
-      active_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 0.52,
-      annualized_return_pct: options?.unavailableSummarySeries ? null : 5.42,
-      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
-      begin_market_value: 1200000,
-      end_market_value: 1250000,
-      net_cash_flow: 42000,
-    },
-    gross_performance: {
-      metric_basis: "GROSS",
-      portfolio_return_pct: options?.unavailableSummarySeries ? null : 5.88,
-      benchmark_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 5.12,
-      active_return_pct:
-        options?.unassignedBenchmark || options?.unavailableSummarySeries ? null : 0.76,
-      annualized_return_pct: options?.unavailableSummarySeries ? null : 5.88,
-      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
-      begin_market_value: 1200000,
-      end_market_value: 1250000,
-      net_cash_flow: 42000,
-    },
-    money_weighted_return: {
-      money_weighted_return_pct: 5.12,
-      annualized_return_pct: 5.12,
-      method: "XIRR",
-      start_date: "2026-01-01",
-      end_date: "2026-02-24",
-      notes: ["cash-flow aware"],
-    },
-    warnings: [],
-    partial_failures: [],
-  };
-}
-
-function buildDetails(
-  portfolioId: string,
-  options?: { unassignedBenchmark?: boolean; unavailableSummarySeries?: boolean }
-) {
-  return {
-    correlation_id: "corr-performance",
-    contract_version: "v1",
-    portfolio_id: portfolioId,
-    as_of_date: "2026-02-24",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-02-24",
-    chart_frequency: "monthly",
-    contribution_dimension: "asset_class",
-    attribution_dimension: "asset_class",
-    detail_basis: "NET",
-    segment: "asset_class",
-    benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
-    net_chart: options?.unavailableSummarySeries
-      ? []
-      : [
-          {
-            label: "2026-01",
-            frequency: "monthly",
-            period_start: "2026-01-01",
-            period_end: "2026-01-31",
-            portfolio_return_pct: 2.2,
-            benchmark_return_pct: 1.9,
-            active_return_pct: 0.3,
-            cumulative_portfolio_return_pct: 2.2,
-            cumulative_benchmark_return_pct: 1.9,
-            cumulative_active_return_pct: 0.3,
-          },
-        ],
-    gross_chart: [
-      {
-        label: "2026-01",
-        frequency: "monthly",
-        period_start: "2026-01-01",
-        period_end: "2026-01-31",
-        portfolio_return_pct: 2.4,
-        benchmark_return_pct: 2.0,
-        active_return_pct: 0.4,
-        cumulative_portfolio_return_pct: 2.4,
-        cumulative_benchmark_return_pct: 2.0,
-        cumulative_active_return_pct: 0.4,
-      },
-    ],
-    contribution: {
-      metric_basis: "NET",
-      weighting_scheme: "average_weight",
-      portfolio_contribution_pct: 5.42,
-      total_portfolio_return_pct: 5.42,
-      coverage_mv_pct: 98.7,
-      portfolio_local_contribution_pct: 4.8,
-      portfolio_fx_contribution_pct: 0.62,
-      position_rows: [
-        {
-          position_id: "AAPL",
-          contribution_pct: 1.55,
-          weight_avg_pct: 24.1,
-          total_return_pct: 8.2,
-          local_contribution_pct: 1.18,
-          fx_contribution_pct: 0.37,
-        },
-      ],
-      levels: [
-        {
-          level: 1,
-          name: "asset_class",
-          total_contribution_pct: 5,
-          total_weight_avg_pct: 100,
-          total_portfolio_return_pct: 5.42,
-          rows: [
-            {
-              key_label: "Equity",
-              contribution_pct: 3.8,
-              weight_avg_pct: 61,
-              total_return_pct: 7.4,
-              local_contribution_pct: 3.4,
-              fx_contribution_pct: 0.4,
-              is_other: false,
-            },
-          ],
-        },
-      ],
-    },
-    attribution: {
-      metric_basis: "NET",
-      model: "BF",
-      linking: "carino",
-      benchmark_id: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_return_source: options?.unassignedBenchmark ? null : "calculated",
-      active_return_pct: 0.52,
-      sum_of_effects_pct: 0.5,
-      residual_pct: 0.02,
-      levels: [
-        {
-          dimension: "asset_class",
-          allocation_total_pct: 0.18,
-          selection_total_pct: 0.24,
-          interaction_total_pct: 0.03,
-          total_effect_pct: 0.45,
-          rows: [
-            {
-              key_label: "Equity",
-              portfolio_weight_avg_pct: 61,
-              benchmark_weight_avg_pct: 58,
-              portfolio_return_pct: 7.4,
-              benchmark_return_pct: 6.8,
-              allocation_pct: 0.18,
-              selection_pct: 0.24,
-              interaction_pct: 0.03,
-              total_effect_pct: 0.45,
-            },
-          ],
-        },
-      ],
-    },
-    warnings: [],
-    partial_failures: [],
-  };
-}
-
-function buildHorizonComparison(portfolioId: string) {
-  return {
-    correlation_id: "corr-performance",
-    contract_version: "v1",
-    portfolio_id: portfolioId,
-    as_of_date: "2026-02-24",
-    detail_basis: "NET",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    benchmark_options: [
-      {
-        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-        benchmark_name: "Global Balanced 60/40",
-        is_assigned: true,
-      },
-    ],
-    rows: [
-      {
-        period: "MTD",
-        portfolio_return_pct: 1.2,
-        benchmark_return_pct: 1.0,
-        active_return_pct: 0.2,
-        annualized_return_pct: 1.2,
-      },
-      {
-        period: "QTD",
-        portfolio_return_pct: 2.8,
-        benchmark_return_pct: 2.4,
-        active_return_pct: 0.4,
-        annualized_return_pct: 2.8,
-      },
-      {
-        period: "YTD",
-        portfolio_return_pct: 5.42,
-        benchmark_return_pct: 4.91,
-        active_return_pct: 0.51,
-        annualized_return_pct: 5.42,
-      },
-      {
-        period: "1Y",
-        portfolio_return_pct: 12.1,
-        benchmark_return_pct: 10.7,
-        active_return_pct: 1.4,
-        annualized_return_pct: 12.1,
-      },
-    ],
-    warnings: [],
-    partial_failures: [],
-  };
-}
-
-function buildAttributionTrend(portfolioId: string) {
-  return {
-    correlation_id: "corr-performance",
-    contract_version: "v1",
-    portfolio_id: portfolioId,
-    as_of_date: "2026-02-24",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-02-24",
-    chart_frequency: "monthly",
-    detail_basis: "NET",
-    attribution_dimension: "asset_class",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    rows: [
-      {
-        period_label: "2026-01",
-        period_start: "2026-01-01",
-        period_end: "2026-01-31",
-        frequency: "monthly",
-        allocation_pct: 0.12,
-        selection_pct: 0.08,
-        interaction_pct: 0.02,
-        total_effect_pct: 0.22,
-        cumulative_total_effect_pct: 0.22,
-        active_return_pct: 0.22,
-        residual_pct: 0,
-      },
-    ],
-    warnings: [],
-    partial_failures: [],
-  };
+async function expectTextPresent(text: string) {
+  const matches = await screen.findAllByText(text);
+  expect(matches.length).toBeGreaterThan(0);
 }
 
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
+    replaceMock.mockReset();
     vi.unstubAllGlobals();
   });
 
@@ -393,17 +102,111 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(document.querySelector("main.workstation-page.performance-page")).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
+    expect(document.querySelector(".workbench-page-frame.performance-page-frame")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
+    expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
+    expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact.performance-summary-stage")).toBeTruthy();
+    expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Benchmark-aware portfolio performance, attribution, and contribution analysis"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
+    expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
+      .toBeTruthy();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
+  });
+
+  it("prefers the front-office seeded performance portfolio when it is available", async () => {
+    const summary = buildSupportedPerformanceScenario().workspace;
+    const details = buildSupportedPerformanceScenario().workspace;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [
+                { id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" },
+                { id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" },
+              ],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...summary,
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              portfolio: { ...summary.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...details,
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              portfolio: { ...details.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+            }),
+          } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+            .toString()
+            .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
+        )
+      ).toBe(true);
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+          .toString()
+          .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")
+        )
+      ).toBe(true);
+    });
+  });
+
+  it("falls back to the demo performance portfolio when the front-office seed is unavailable", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+            .toString()
+            .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")
+        )
+      ).toBe(true);
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input
+            .toString()
+            .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")
+        )
+      ).toBe(true);
+    });
+    expect(await screen.findByLabelText("Benchmark")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 
   it("renders performance content inside the workstation shell main region", async () => {
@@ -413,16 +216,33 @@ describe("PerformanceAnalyticsPage", () => {
 
     const mainShell = document.querySelector(".workstation-shell-main");
     expect(mainShell).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
-      expect(mainShell).toContainElement(screen.getByText("Multi-Horizon Returns"));
+      expect(screen.getAllByText("Horizon Comparison")).toHaveLength(1);
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
+      expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
+      expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
+      expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
+        compactPattern("Active Return 0.51%")
+      );
+      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
-    expect(mainShell?.querySelector(".performance-chart-stage.workbench-summary-card")).toBeTruthy();
+    expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
+    expect(mainShell?.querySelector(".workbench-chart-shell-context")).toBeFalsy();
+    expect(mainShell?.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
-    expect(mainShell?.querySelector(".performance-chart-summary-band.workbench-summary-metric-strip")).toBeTruthy();
+    const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
+    expect(chartSummaryBand).toBeTruthy();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Active Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Ending Market Value")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Period / Basis")).toBeInTheDocument();
+    expect(screen.getByLabelText("Return path observation table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 
@@ -432,30 +252,110 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "DEMO_ADV_USD_001" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
-    expect(await screen.findByText("Multi-Horizon Returns")).toBeInTheDocument();
-    expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
-    expect(document.querySelectorAll(".performance-summary-module-card").length).toBeGreaterThanOrEqual(3);
-    const contributorsModule = screen
-      .getByText("Top / Bottom Contributors")
-      .closest(".performance-summary-module-card");
+    expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
+    const executiveStrip = screen.getByLabelText("Executive return strip");
+    expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Ending Market Value")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
+    expect(executiveStrip).toHaveTextContent(
+      compactPattern(
+        "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-adjusted value $1,208,000"
+      )
+    );
+    expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
+    expect(screen.getByText("Assigned")).toBeInTheDocument();
+    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
+    expect((await screen.findAllByText("Horizon Comparison")).length).toBe(1);
+    expect(screen.getAllByText("Performance Drivers").length).toBe(1);
+    expect(document.querySelectorAll(".workbench-chart-shell").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".performance-summary-driver-module.workbench-chart-shell")).toHaveLength(2);
+    const contributorsModule =
+      screen
+        .getAllByText("Performance Drivers")
+        .map((node) => node.closest(".workbench-chart-shell"))
+        .find(Boolean) ?? null;
     expect(contributorsModule).toBeTruthy();
-    expect(
-      contributorsModule?.querySelectorAll(".workbench-summary-visual-card").length
-    ).toBe(2);
-    expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
-    expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-label")).toBeTruthy();
-    expect(document.querySelector(".performance-summary-kpi-card .workbench-summary-metric-value")).toBeTruthy();
+    expect(contributorsModule?.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(within(contributorsModule as HTMLElement).getByLabelText("Top contributors table")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByLabelText("Top detractors table")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getAllByText("Instrument").length).toBeGreaterThanOrEqual(2);
+    expect(within(contributorsModule as HTMLElement).getAllByText("Weight").length).toBeGreaterThanOrEqual(2);
+    expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
+    expect(contributorsModule?.querySelectorAll(".performance-contributors-table")).toHaveLength(2);
     expect(screen.queryByText("Attribution Over Time")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
+  });
+
+  it("honors query param period on initial page entry", async () => {
+    installPerformancePageFetchScenario(
+      buildPerformancePresentationScenario({
+        workspaceOverrides: {
+          period: "QTD",
+          report_start_date: "2026-01-01",
+          report_end_date: "2026-02-24",
+        },
+      }),
+      { portfolioId: "PF_1001" }
+    );
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PF_1001",
+          period: "QTD",
+          detailBasis: "NET",
+          contributionDimension: "asset_class",
+          attributionDimension: "asset_class",
+          chartFrequency: "monthly",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        }),
+      })
+    );
+
+    const executiveStrip = await screen.findByLabelText("Executive return strip");
+    expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
+    expect(executiveStrip).toHaveTextContent(
+      compactPattern(
+        "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-adjusted value $1,208,000"
+      )
+    );
+    expect(within(executiveStrip).getByText("Net • QTD")).toBeInTheDocument();
+  });
+
+  it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
+    installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect((await screen.findAllByText("Unassigned")).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("N/A")).not.toBeInTheDocument();
+  });
+
+  it("renders the compact top analysis zone with chart-first hierarchy on first paint", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
+    expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
+    expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
 
   it("shows analysis modules and hides summary-only modules when analysis mode is selected", async () => {
@@ -466,14 +366,45 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
 
     expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
-    expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
-    expect(screen.getByText("Contribution Detail")).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
+    expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
+    expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+    expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
+    expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeTruthy();
+    expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(2);
+    expect(screen.getByLabelText("Top / Bottom Contributors panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution Detail panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top Effects panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution Detail panel")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /^Segment breakdown/ })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+    expect(document.querySelectorAll("#performance-drivers .performance-analysis-table").length).toBe(1);
+    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("tab", { name: /^Effect Breakdown/ })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
-    expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
+    const attributionTable = await screen.findByLabelText("Asset Class attribution table");
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Multi-Horizon Returns")).not.toBeInTheDocument();
-
-    const attributionTable = screen.getByLabelText("Asset Class attribution table");
+    expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
     expect(within(attributionTable).getAllByText("—")).toHaveLength(2);
     const attributionLegend = screen.getByLabelText("Attribution effect legend");
     expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
@@ -481,43 +412,394 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
   });
 
-  it("renders an evidence placeholder when evidence mode is selected", async () => {
+  it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {
+    installPerformancePageFetchScenario(buildNormalizedControlsPerformanceScenario());
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          chartFrequency: "weekly",
+          contributionDimension: "currency",
+          attributionDimension: "issuer",
+        }),
+      })
+    );
+
+    const normalizationNotice = await screen.findByRole("status", {
+      name: "Performance control normalization",
+    });
+    expect(normalizationNotice).toHaveTextContent("Selection adjusted");
+    expect(normalizationNotice).toHaveTextContent("frequency reset to Monthly");
+    expect(normalizationNotice).toHaveTextContent(
+      "contribution view reset to Asset Class"
+    );
+    expect(normalizationNotice).toHaveTextContent(
+      "attribution view reset to Asset Class"
+    );
+    expect(document.querySelector(".performance-control-normalization-note")).toBeTruthy();
+  });
+
+  it("converges a stale deep link through deferred attribution-trend normalization", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const rawWorkspace = {
+      ...buildSupportedPerformanceScenario().workspace,
+      portfolio_id: "DEMO_ADV_USD_001",
+      portfolio: {
+        ...buildSupportedPerformanceScenario().workspace.portfolio,
+        portfolio_id: "DEMO_ADV_USD_001",
+      },
+      chart_frequency: "monthly",
+      attribution_dimension: "issuer",
+      requested_chart_frequency_supported: true,
+      requested_attribution_dimension_supported: true,
+    };
+    const normalizedTrend = {
+      ...buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
+      chart_frequency: "monthly",
+      attribution_dimension: "asset_class",
+      requested_chart_frequency_supported: true,
+      requested_attribution_dimension_supported: false,
+      warnings: ["PERFORMANCE_ATTRIBUTION_TREND_DIMENSION_NORMALIZED"],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
+              chart_frequency: "monthly",
+              requested_chart_frequency_supported: true,
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
+          return { ok: true, json: async () => normalizedTrend } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    try {
+      render(
+        await PerformanceAnalyticsPage({
+          searchParams: Promise.resolve({
+            attributionDimension: "issuer",
+            chartFrequency: "monthly",
+          }),
+        })
+      );
+
+      fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          { scroll: false }
+        );
+      });
+
+      const notice = await screen.findByRole("status", {
+        name: "Attribution trend normalization",
+      });
+      expect(notice).toHaveTextContent("segment reset to Asset Class");
+    } finally {
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
+  it("converges a stale deep link through deferred horizon normalization", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const rawWorkspace = {
+      ...buildSupportedPerformanceScenario().workspace,
+      portfolio_id: "DEMO_ADV_USD_001",
+      portfolio: {
+        ...buildSupportedPerformanceScenario().workspace.portfolio,
+        portfolio_id: "DEMO_ADV_USD_001",
+      },
+      chart_frequency: "weekly",
+      requested_chart_frequency_supported: true,
+    };
+    const normalizedHorizon = {
+      ...buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
+      chart_frequency: "monthly",
+      requested_chart_frequency_supported: false,
+      warnings: ["PERFORMANCE_HORIZON_CHART_FREQUENCY_NORMALIZED"],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          return { ok: true, json: async () => rawWorkspace } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
+          return { ok: true, json: async () => normalizedHorizon } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
+          return {
+            ok: true,
+            json: async () => buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
+          } as Response;
+        }
+        return { ok: false, json: async () => ({}) } as Response;
+      })
+    );
+
+    try {
+      render(
+        await PerformanceAnalyticsPage({
+          searchParams: Promise.resolve({
+            chartFrequency: "weekly",
+          }),
+        })
+      );
+
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          { scroll: false }
+        );
+      });
+
+      const notice = await screen.findByRole("status", {
+        name: "Horizon comparison normalization",
+      });
+      expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
+    } finally {
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
+  it("uses the shared analysis state panel when attribution detail is unavailable", async () => {
+    installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+    expect(await screen.findByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(
+      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+    ).toBeTruthy();
+    expect(document.querySelectorAll(".performance-analysis-state-panel").length).toBeGreaterThanOrEqual(1);
+    expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
+    expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
+  });
+
+  it("renders summary-only attribution totals when detailed rows are unavailable", async () => {
+    installPerformancePageFetchScenario(buildPartialAttributionPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+    expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
+    expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
+    expect(await screen.findByText("Attribution Summary")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
+    expect(await screen.findByText("Summary totals")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    expect(screen.queryByText("Relative Segment Matrix")).not.toBeInTheDocument();
+    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+  });
+
+  it.each([
+    {
+      name: "supported analysis",
+      scenario: buildSupportedPerformanceScenario(),
+      expectations: ["Attribution Over Time", "Attribution Detail", "Performance Drivers"],
+      absent: ["Attribution detail unavailable", "Contribution detail unavailable"],
+    },
+    {
+      name: "unavailable attribution analysis",
+      scenario: buildUnavailableAttributionPerformanceScenario(),
+      expectations: ["Attribution detail unavailable"],
+      absent: ["Relative Segment Matrix"],
+    },
+    {
+      name: "unavailable contribution analysis",
+      scenario: buildUnavailableContributionPerformanceScenario(),
+      expectations: [
+        "Contribution detail unavailable",
+        "Contribution detail is not available for the current selection.",
+      ],
+      absent: ["AAPL", "Contribution detail is partial"],
+    },
+    {
+      name: "combined partial analysis",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      expectations: [
+        "Attribution detail unavailable",
+        "Performance Drivers",
+        "Equity",
+      ],
+      absent: ["AAPL"],
+    },
+  ])(
+    "renders a contract-backed analysis scenario matrix for $name",
+    async ({ scenario, expectations, absent }) => {
+      installPerformancePageFetchScenario(scenario);
+
+      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+      fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+
+      for (const text of expectations) {
+        await expectTextPresent(text);
+      }
+
+      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(1);
+
+      for (const text of absent) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+    }
+  );
+
+  it("disables evidence mode and keeps the page on the current supported surface", async () => {
     installPerformancePageFetchMock();
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
+    const evidenceTab = await screen.findByRole("tab", { name: "Evidence" });
+    expect(evidenceTab).toBeDisabled();
+    fireEvent.click(evidenceTab);
 
-    expect(await screen.findByText("Evidence unavailable")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract/i
-      )
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/not exposed by the current gateway contract/i)
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
-    expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
+    expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeFalsy();
+    expect(document.querySelector(".performance-evidence-module")).toBeFalsy();
+    expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
 
+  it.each<PerformanceWorkspaceScenarioMatrix>([
+    {
+      name: "supported workspace",
+      scenario: buildSupportedPerformanceScenario(),
+      summaryExpectations: ["Portfolio Return", "Horizon Comparison"],
+      analysisExpectations: ["Attribution Over Time", "Performance Drivers"],
+      evidenceExpectations: [],
+      summaryAbsent: ["Benchmark not assigned"],
+      analysisAbsent: ["Attribution detail unavailable", "Contribution detail unavailable"],
+    },
+    {
+      name: "unavailable attribution workspace",
+      scenario: buildUnavailableAttributionPerformanceScenario(),
+      summaryExpectations: ["Attribution", "Unavailable"],
+      analysisExpectations: ["Attribution detail unavailable", "Performance Drivers"],
+      evidenceExpectations: [],
+      analysisAbsent: ["Relative Segment Matrix"],
+    },
+    {
+      name: "unavailable contribution workspace",
+      scenario: buildUnavailableContributionPerformanceScenario(),
+      summaryExpectations: ["Contribution", "Unavailable"],
+      analysisExpectations: [
+        "Attribution Over Time",
+        "Contribution detail unavailable",
+      ],
+      evidenceExpectations: [],
+      analysisAbsent: ["Contribution detail is partial"],
+    },
+    {
+      name: "combined partial workspace",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      summaryExpectations: ["Relative returns incomplete", "Attribution detail unavailable"],
+      analysisExpectations: [
+        "Attribution detail unavailable",
+        "Performance Drivers",
+        "Equity",
+      ],
+      evidenceExpectations: [],
+      analysisAbsent: ["AAPL"],
+    },
+  ])(
+    "renders a contract-backed workspace mode matrix for $name",
+    async ({
+      scenario,
+      summaryExpectations,
+      analysisExpectations,
+      evidenceExpectations = [],
+      summaryAbsent = [],
+      analysisAbsent = [],
+    }) => {
+      installPerformancePageFetchScenario(scenario);
+
+      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+      expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+      for (const text of summaryExpectations) {
+        await expectTextPresent(text);
+      }
+      expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
+      for (const text of summaryAbsent) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+
+      fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+      for (const text of analysisExpectations) {
+        await expectTextPresent(text);
+      }
+      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      for (const text of analysisAbsent) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+
+      const evidenceTab = screen.getByRole("tab", { name: "Evidence" });
+      expect(evidenceTab).toBeDisabled();
+      for (const text of evidenceExpectations) {
+        await expectTextPresent(text);
+      }
+      fireEvent.click(evidenceTab);
+      expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeFalsy();
+    }
+  );
+
   it("renders compact unavailable summary states when benchmark and return series are missing", async () => {
-    installPerformancePageFetchMock({
-      unassignedBenchmark: true,
-      unavailableSummarySeries: true,
-    });
+    installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(
-      document.querySelector(".performance-summary-status-card .performance-summary-kpi-value")
-        ?.textContent
-    ).toBe("Unassigned");
-    expect(
-      screen.getByText("Assign a benchmark to enable relative analytics.")
-    ).toBeInTheDocument();
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText("Unassigned").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Benchmark not assigned").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
       expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
       expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
@@ -525,6 +807,206 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
+
+  it("renders attribution as unavailable in the trust strip when attribution detail is missing", async () => {
+    installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const trustStrip = await screen.findByLabelText("Trust and completeness strip");
+    expect(within(trustStrip).getByText("Attribution")).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Unavailable")).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Evidence")).toBeInTheDocument();
+    expect(within(trustStrip).getByText("Pending")).toBeInTheDocument();
+    expect(trustStrip.querySelectorAll(".performance-trust-item .status-chip")).toHaveLength(5);
+  });
+
+  it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
+    installPerformancePageFetchScenario(buildPartialBenchmarkPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(screen.getAllByText("Relative returns incomplete").length).toBeGreaterThanOrEqual(1);
+    expect(await screen.findByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40")
+    );
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Active Return Unavailable")
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
+  });
+
+  it("renders a contributor-ranking partial state when only aggregate contribution rows are available", async () => {
+    installPerformancePageFetchScenario(buildAggregateContributionPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
+    expect(await screen.findByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect(
+      screen.getByText("Contribution exists, but only aggregate rows are available.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("High coverage")).toBeInTheDocument();
+    expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
+    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
+  });
+
+  it("keeps deferred horizon and contributor modules coherent when multiple support gaps exist", async () => {
+    installPerformancePageFetchScenario(buildCombinedPartialPerformanceScenario());
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+
+    const trustStrip = screen.getByLabelText("Trust and completeness strip");
+    expect(within(trustStrip).getAllByText("Partial").length).toBeGreaterThan(0);
+    expect(within(trustStrip).getAllByText("Unavailable").length).toBeGreaterThan(0);
+
+    const horizonTitles = await screen.findAllByText("Horizon Comparison");
+    expect(horizonTitles).toHaveLength(1);
+    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Active Return Unavailable")
+    );
+    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40")
+    );
+    expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
+
+    expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
+    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
+    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
+    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
+  });
+
+  it.each<PerformanceSummaryScenario>([
+    {
+      name: "benchmark-unassigned and return-series-unavailable",
+      scenario: buildBenchmarkUnassignedPerformanceScenario(),
+      executiveExpectations: [],
+      trustExpectations: [
+        "Benchmark not assigned",
+        "Published observations unavailable",
+        "Unavailable",
+      ],
+      deferredExpectations: [
+        "Return series unavailable",
+        "Horizon comparison is unavailable for this mandate.",
+      ],
+      absentTexts: ["Relative Segment Context Partial"],
+    },
+    {
+      name: "assigned benchmark with partial relative comparison",
+      scenario: buildPartialBenchmarkPerformanceScenario(),
+      executiveExpectations: ["Period / Basis", "Portfolio Return"],
+      trustExpectations: [
+        "Partial",
+        "Relative returns incomplete",
+      ],
+      contextExpectations: ["Active Return Unavailable", "Benchmark Global Balanced 60/40"],
+      horizonExpectations: [
+        "Active Return Unavailable",
+        "Benchmark Global Balanced 60/40",
+      ],
+      absentTexts: ["Benchmark unassigned"],
+    },
+    {
+      name: "aggregate-only contribution ranking",
+      scenario: buildAggregateContributionPerformanceScenario(),
+      executiveExpectations: ["Period / Basis", "Portfolio Return"],
+      trustExpectations: [],
+      deferredExpectations: ["Contributor ranking is partial"],
+      horizonExpectations: ["Active Return 0.51%", "Benchmark Global Balanced 60/40"],
+      absentTexts: ["AAPL"],
+    },
+    {
+      name: "combined benchmark, attribution, and contributor support gaps",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      executiveExpectations: ["Period / Basis", "Portfolio Return"],
+      trustExpectations: [
+        "Partial",
+        "Unavailable",
+        "Relative returns incomplete",
+        "Attribution detail unavailable",
+      ],
+      deferredExpectations: ["Contributor ranking is partial"],
+      contextExpectations: ["Active Return Unavailable"],
+      horizonExpectations: ["Active Return Unavailable", "Benchmark Global Balanced 60/40"],
+      absentTexts: ["Benchmark unassigned", "AAPL"],
+    },
+  ])(
+    "renders a contract-backed summary supportability matrix for $name",
+    async ({
+      scenario,
+      executiveExpectations = [],
+      trustExpectations = [],
+      deferredExpectations = [],
+      contextExpectations = [],
+      horizonExpectations = [],
+      absentTexts = [],
+    }) => {
+      installPerformancePageFetchScenario(scenario);
+
+      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+      expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+
+      const executiveStrip = screen.queryByLabelText("Executive return strip");
+      const trustStrip = screen.getByLabelText("Trust and completeness strip");
+
+      if (executiveExpectations.length) {
+        expect(executiveStrip).toBeInTheDocument();
+        for (const text of executiveExpectations) {
+          expect(within(executiveStrip as HTMLElement).queryAllByText(text).length).toBeGreaterThan(0);
+        }
+      } else {
+        expect(executiveStrip).not.toBeInTheDocument();
+      }
+
+      for (const text of trustExpectations) {
+        expect(within(trustStrip).queryAllByText(text).length).toBeGreaterThan(0);
+      }
+
+      for (const text of deferredExpectations) {
+        expect(await screen.findByText(text)).toBeInTheDocument();
+      }
+
+      if (contextExpectations.length) {
+        const returnPathContext = await screen.findByRole("group", { name: "Return vs Benchmark" });
+        for (const text of contextExpectations) {
+          expect(returnPathContext).toHaveTextContent(compactPattern(text));
+        }
+      }
+
+      if (horizonExpectations.length) {
+        const horizonContext = await screen.findByRole("group", { name: "Horizon comparison context" });
+        for (const text of horizonExpectations) {
+          expect(horizonContext).toHaveTextContent(compactPattern(text));
+        }
+      }
+
+      for (const text of absentTexts) {
+        expect(screen.queryByText(text)).not.toBeInTheDocument();
+      }
+    }
+  );
 
   it("passes a selected benchmark through to summary and details requests", async () => {
     installPerformancePageFetchMock();
@@ -554,6 +1036,6 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(summaryCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
     expect(detailsCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
-    expect(await screen.findByLabelText("Compared To")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
+    expect(await screen.findByLabelText("Benchmark")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 });

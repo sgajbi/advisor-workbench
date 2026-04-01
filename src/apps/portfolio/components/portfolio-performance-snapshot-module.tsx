@@ -2,12 +2,15 @@
 
 import Button from "@mui/material/Button";
 
-import { AnalyticsModule, MetricRow, WorkspaceCapabilityPanel } from "@/design-system";
+import { ActionLink, AnalyticsModule, MetricRow } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
+import { buildPerformanceHref } from "@/apps/performance/navigation";
 import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
+import PortfolioModuleState from "./portfolio-module-state";
+import PortfolioPerformanceSparkline from "./portfolio-performance-sparkline";
 
 type PerformanceSnapshotProps = {
   capability: WorkspaceCapability;
@@ -15,28 +18,43 @@ type PerformanceSnapshotProps = {
   rebalance: PortfolioWorkspace["rebalance"];
   reportingRowCount: number;
   context: PortfolioWorkspaceContext;
+  portfolioId: string;
   expanded: boolean;
   onToggle: () => void;
   selectedPeriod: PortfolioTimeWindow;
 };
 
-/**
- * Portfolio insights performance module.
- * Uses the current lightweight portfolio performance contract when available,
- * while reserving API shape for future benchmark/excess/sparkline support.
- */
 export default function PortfolioPerformanceSnapshotModule({
   capability,
   performance,
   rebalance,
   reportingRowCount,
   context,
+  portfolioId,
   expanded,
   onToggle,
   selectedPeriod,
 }: PerformanceSnapshotProps) {
   const hasPerformance = capability.state === "supported" && Boolean(performance);
   const compact = context.viewMode === "summary";
+  const benchmarkLabel =
+    performance?.benchmark_label ?? formatPortfolioToken(performance?.benchmark_code);
+  const resolvedWindow =
+    performance?.report_start_date && performance?.report_end_date
+      ? `${formatDate(performance.report_start_date)} - ${formatDate(performance.report_end_date)}`
+      : `${formatDate(context.effectivePeriodStartDate)} - ${formatDate(context.effectivePeriodEndDate)}`;
+  const benchmarkProvenance = getBenchmarkProvenance(performance);
+  const trendValue =
+    performance?.sparkline_points?.length
+      ? `${performance.sparkline_points.length} source-backed observations`
+      : "Open Performance workspace for source-backed return path detail.";
+  const operationalSupport = getOperationalSupportLine(reportingRowCount, rebalance?.status ?? null);
+  const performanceWorkspaceHref = buildPerformanceWorkspaceHref({
+    portfolioId,
+    selectedPeriod,
+    context,
+    benchmarkCode: performance?.benchmark_code ?? null,
+  });
 
   return (
     <AnalyticsModule
@@ -47,31 +65,71 @@ export default function PortfolioPerformanceSnapshotModule({
         context.selectedAsOfDate
       )}.`}
       actions={
-        <Button size="small" variant="text" onClick={onToggle}>
-          {expanded ? "Collapse" : "Expand"}
-        </Button>
+        <>
+          <ActionLink href={performanceWorkspaceHref}>Open Performance</ActionLink>
+          <Button size="small" variant="text" onClick={onToggle}>
+            {expanded ? "Collapse" : "Expand"}
+          </Button>
+        </>
       }
     >
       {expanded ? (
         hasPerformance ? (
-          <div className="portfolio-mandate-grid">
-            <MetricRow label="Period" value={performance?.period ?? selectedPeriod} />
-            <MetricRow label="Portfolio Return" value={formatPct(performance?.return_pct)} />
-            <MetricRow
-              label="Benchmark Return"
-              value={formatPct(performance?.benchmark_return_pct)}
-            />
-            <MetricRow
-              label="Excess Return"
-              value={formatPct(performance?.excess_return_pct)}
-            />
-            <MetricRow label="Reporting Rows" value={reportingRowCount} />
-            <MetricRow label="Rebalance Status" value={rebalance?.status ?? "N/A"} />
-            <MetricRow label="Sparkline" value="Pending source-backed series" />
-            <MetricRow label="Period Selector" value="Uses page period context" />
+          <div className="portfolio-summary-pair-panel portfolio-performance-snapshot-panel">
+            <div className="portfolio-summary-pair-strip">
+              <SummaryPairStat label="Portfolio Return" value={formatPct(performance?.return_pct)} />
+              <SummaryPairStat
+                label="Benchmark Return"
+                value={formatPct(performance?.benchmark_return_pct)}
+              />
+              <SummaryPairStat label="Active Return" value={formatPct(performance?.excess_return_pct)} />
+              <SummaryPairStat
+                label="Money-Weighted Return"
+                value={formatPct(performance?.money_weighted_return_pct)}
+              />
+            </div>
+            <div className="portfolio-summary-pair-body">
+              <div className="portfolio-performance-snapshot-trend">
+                <div className="portfolio-summary-pair-region-heading">
+                  <span>Trend</span>
+                  <strong>{trendValue}</strong>
+                </div>
+                {performance?.sparkline_points?.length ? (
+                  <PortfolioPerformanceSparkline
+                    points={performance.sparkline_points}
+                    benchmarkLabel={benchmarkLabel}
+                  />
+                ) : (
+                  <p className="portfolio-performance-snapshot-copy">
+                    Open Performance workspace for source-backed return path detail.
+                  </p>
+                )}
+              </div>
+              <div className="portfolio-performance-snapshot-context">
+                <div className="portfolio-summary-pair-region-heading">
+                  <span>Context</span>
+                  <strong>{performance?.period ?? selectedPeriod}</strong>
+                </div>
+                <div className="portfolio-summary-pair-context-grid">
+                  <MetricRow label="Resolved Window" value={resolvedWindow} />
+                  <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
+                  <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
+                  <MetricRow
+                    label="Method"
+                    value={
+                      performance?.money_weighted_method
+                        ? `MWR ${performance.money_weighted_method}`
+                        : "Unavailable"
+                    }
+                  />
+                </div>
+                <p className="portfolio-summary-pair-support">{operationalSupport}</p>
+              </div>
+            </div>
           </div>
         ) : (
-          <WorkspaceCapabilityPanel
+          <PortfolioModuleState
+            variant="capability"
             capability={capability}
             partialTitle="Performance not available yet"
             unavailableTitle="Performance not available yet"
@@ -79,7 +137,8 @@ export default function PortfolioPerformanceSnapshotModule({
               capability.reason ??
               "Performance analytics are not available for this portfolio context."
             }
-            hint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
+            partialHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
+            unavailableHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
             why={{
               body:
                 "Performance requires valuation history, cashflow history, and a selected reporting period so returns can be calculated on a time-aware basis.",
@@ -95,15 +154,24 @@ export default function PortfolioPerformanceSnapshotModule({
                 {formatPct(performance?.return_pct)}
               </span>
               <span className="portfolio-performance-snapshot-copy">
-                Portfolio return for {selectedPeriod}
+                {buildCollapsedSnapshotCopy({
+                  performance,
+                  selectedPeriod,
+                  benchmarkLabel,
+                })}
               </span>
             </>
           ) : (
             <>
               <span className="portfolio-performance-snapshot-kpi">Unavailable</span>
               <span className="portfolio-performance-snapshot-copy">
-                {capability.reason ??
-                  "Requires valuation history, cashflow history, and a selected reporting period."}
+                {buildCollapsedUnavailableCopy(capability.reason)}
+              </span>
+              <span className="portfolio-performance-snapshot-support">
+                {buildCollapsedUnavailableSupport({
+                  selectedPeriod,
+                  context,
+                })}
               </span>
             </>
           )}
@@ -111,4 +179,145 @@ export default function PortfolioPerformanceSnapshotModule({
       )}
     </AnalyticsModule>
   );
+}
+
+function getBenchmarkProvenance(performance: PortfolioWorkspace["performance"]) {
+  if (!performance?.benchmark_code) {
+    return "Unassigned";
+  }
+
+  const segments = [
+    performance.benchmark_return_source
+      ? formatPortfolioToken(performance.benchmark_return_source)
+      : null,
+    performance.benchmark_input_mode
+      ? `${formatPortfolioToken(performance.benchmark_input_mode)} benchmark`
+      : null,
+  ].filter(Boolean);
+
+  return segments.length > 0 ? segments.join(" • ") : "Assigned benchmark";
+}
+
+function formatPortfolioToken(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function buildPerformanceWorkspaceHref({
+  portfolioId,
+  selectedPeriod,
+  context,
+  benchmarkCode,
+}: {
+  portfolioId: string;
+  selectedPeriod: PortfolioTimeWindow;
+  context: PortfolioWorkspaceContext;
+  benchmarkCode?: string | null;
+}) {
+  const useExplicitWindow =
+    context.usesCustomDateRange || selectedPeriod === "7D" || selectedPeriod === "30D";
+
+  return buildPerformanceHref({
+    portfolioId,
+    period: useExplicitWindow ? "EXPLICIT" : selectedPeriod,
+    detailBasis: "NET",
+    contributionDimension: "asset_class",
+    attributionDimension: "asset_class",
+    chartFrequency: "monthly",
+    benchmark: benchmarkCode ?? undefined,
+    reportStartDate: useExplicitWindow ? context.effectivePeriodStartDate : undefined,
+    reportEndDate: useExplicitWindow ? context.effectivePeriodEndDate : undefined,
+  });
+}
+
+function SummaryPairStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="portfolio-summary-pair-stat">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function getOperationalSupportLine(
+  reportingRowCount: number,
+  rebalanceStatus: string | null
+) {
+  const parts = [`${reportingRowCount} report row${reportingRowCount === 1 ? "" : "s"}`];
+
+  if (rebalanceStatus) {
+    parts.push(`Rebalance ${formatPortfolioToken(rebalanceStatus)}`);
+  }
+
+  return parts.join(" • ");
+}
+
+function buildCollapsedSnapshotCopy({
+  performance,
+  selectedPeriod,
+  benchmarkLabel,
+}: {
+  performance: PortfolioWorkspace["performance"];
+  selectedPeriod: PortfolioTimeWindow;
+  benchmarkLabel: string | null;
+}) {
+  const periodLabel = performance?.period ?? selectedPeriod;
+  const portfolioReturn = formatPct(performance?.return_pct);
+
+  if (performance?.benchmark_return_pct != null && performance?.excess_return_pct != null) {
+    return `${portfolioReturn} total return • active ${formatPct(
+      performance.excess_return_pct
+    )} vs ${benchmarkLabel ?? "assigned benchmark"} • ${periodLabel}`;
+  }
+
+  return `${portfolioReturn} total return • ${periodLabel}`;
+}
+
+function buildCollapsedUnavailableCopy(reason?: string | null) {
+  if (!reason) {
+    return "Awaiting valuation history, cashflow history, and a reporting period.";
+  }
+
+  const normalized = reason.toLowerCase();
+  if (
+    normalized.includes("valuation history") ||
+    normalized.includes("cashflow history") ||
+    normalized.includes("selected reporting period")
+  ) {
+    return "Awaiting valuation history, cashflow history, and a reporting period.";
+  }
+
+  if (reason.length <= 96) {
+    return reason;
+  }
+
+  return "Awaiting valuation history, cashflow history, and a reporting period.";
+}
+
+function buildCollapsedUnavailableSupport({
+  selectedPeriod,
+  context,
+}: {
+  selectedPeriod: PortfolioTimeWindow;
+  context: PortfolioWorkspaceContext;
+}) {
+  const periodLabel = context.periodLabel || selectedPeriod;
+  const resolvedWindow = `${formatDate(context.effectivePeriodStartDate)} - ${formatDate(
+    context.effectivePeriodEndDate
+  )}`;
+
+  return `${periodLabel} • ${resolvedWindow} • Open Performance for full requirements`;
 }

@@ -72,13 +72,13 @@ export default function SuitePage() {
             Client Advisor Journey
           </Typography>
           <Typography className="muted" sx={{ mb: 1 }}>
-            Intake data, review analytics context, simulate recommendation, then progress approvals.
+            Intake data, review portfolio context, assess performance, and progress the next decision-ready action.
           </Typography>
           <div className="journey-steps">
             {renderRouteAction("1. Portfolio Intake", "/intake", navFlags.portfolio_intake !== false)}
-            {renderRouteAction("2. Analytics Context", "/performance", navFlags.analytics_studio !== false)}
-            {renderRouteAction("3. Simulate Proposal", "/proposals/simulate", navFlags.scenario_builder !== false)}
-            {renderRouteAction("4. Submit And Track", "/proposals", navFlags.advisory_pipeline !== false)}
+            {renderRouteAction("2. Portfolio Review", "/portfolio", navFlags.command_center !== false)}
+            {renderRouteAction("3. Analytics Context", "/performance", navFlags.analytics_studio !== false)}
+            {renderRouteAction("4. Decision Console", "/workbench", navFlags.decision_console !== false)}
           </div>
         </Paper>
 
@@ -91,8 +91,8 @@ export default function SuitePage() {
           </Typography>
           <div className="journey-steps">
             {renderRouteAction("1. Decision Console", "/workbench", navFlags.decision_console !== false)}
-            {renderRouteAction("2. Review Pipeline", "/proposals", navFlags.advisory_pipeline !== false)}
-            {renderRouteAction("3. Approval Chain", "/proposals", navFlags.advisory_pipeline !== false)}
+            {renderRouteAction("2. Performance Review", "/performance", navFlags.analytics_studio !== false)}
+            {renderRouteAction("3. Portfolio Review", "/portfolio", navFlags.command_center !== false)}
             {renderRouteAction("4. Command Center Metrics", "/suite", navFlags.command_center !== false)}
           </div>
         </Paper>
@@ -195,8 +195,8 @@ export default function SuitePage() {
           ))}
           {rolePriorities.length === 0 ? <Typography className="muted">No active items for this role.</Typography> : null}
           <div className="toolbar">
-            <Link href="/proposals" className="nav-link">
-              Open Proposal Pipeline
+            <Link href="/performance" className="nav-link">
+              Open Performance Workspace
             </Link>
             <Link href="/workbench" className="nav-link">
               Open Decision Console
@@ -231,22 +231,22 @@ export default function SuitePage() {
             Workflow Execution Controls
           </Typography>
           <div className="suite-row">
-            <span>New Recommendation</span>
-            {navFlags.scenario_builder === false ? (
-              <span className="nav-link nav-link-disabled">Launch Simulation</span>
+            <span>Portfolio Review</span>
+            {navFlags.command_center === false ? (
+              <span className="nav-link nav-link-disabled">Open Portfolio</span>
             ) : (
-              <Link href="/proposals/simulate" className="nav-link">
-                Launch Simulation
+              <Link href="/portfolio" className="nav-link">
+                Open Portfolio
               </Link>
             )}
           </div>
           <div className="suite-row">
-            <span>Review Existing Proposals</span>
-            {navFlags.advisory_pipeline === false ? (
-              <span className="nav-link nav-link-disabled">Open Pipeline</span>
+            <span>Performance Review</span>
+            {navFlags.analytics_studio === false ? (
+              <span className="nav-link nav-link-disabled">Open Performance</span>
             ) : (
-              <Link href="/proposals" className="nav-link">
-                Open Pipeline
+              <Link href="/performance" className="nav-link">
+                Open Performance
               </Link>
             )}
           </div>
@@ -317,8 +317,8 @@ export default function SuitePage() {
             </div>
           ))}
           <div className="toolbar">
-            <Link href="/proposals" className="nav-link">
-              Open Proposal Pipeline
+            <Link href="/portfolio" className="nav-link">
+              Open Portfolio Workspace
             </Link>
             <Link href="/workbench" className="nav-link">
               Open Decision Console

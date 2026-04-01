@@ -11,10 +11,10 @@ describe("resolveShellApp", () => {
 
   it("maps structured advisor routes correctly", () => {
     expect(resolveShellApp("/performance").id).toBe("performance");
-    expect(resolveShellApp("/recommendations").id).toBe("recommendations");
-    expect(resolveShellApp("/proposals/simulate").id).toBe("recommendations");
     expect(resolveShellApp("/workbench/PORT001").id).toBe("operations");
     expect(resolveShellApp("/suite").id).toBe("operations");
+    expect(resolveShellApp("/recommendations").id).toBe("home");
+    expect(resolveShellApp("/proposals/simulate").id).toBe("home");
   });
 
   it("falls back to Home for unknown paths", () => {

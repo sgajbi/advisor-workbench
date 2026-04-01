@@ -1,11 +1,10 @@
 "use client";
 
-import { Typography } from "@mui/material";
-
-import { AnalyticsModule } from "@/design-system";
+import { WorkbenchChartShell } from "@/design-system";
 import type { AttributionRowView } from "@/features/workbench/types";
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
+import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
 type RelativeSegmentRow = AttributionRowView & {
   active_weight_pct: number;
@@ -19,14 +18,17 @@ export default function PerformanceRelativeSegmentPanel({
 }) {
   if (!rows.length) {
     return (
-      <AnalyticsModule
+      <WorkbenchChartShell
         title="Relative Segment Matrix"
         subtitle="Portfolio versus benchmark by selected segment"
+        className="performance-analysis-mini-module performance-relative-segment-module"
       >
-        <Typography className="muted">
-          Segment-level relative weight and return context is not available for this selection.
-        </Typography>
-      </AnalyticsModule>
+        <PerformanceAnalysisStatePanel
+          state="unavailable"
+          title="Relative segment context unavailable"
+          body="Segment-level relative weight and return context is not available for this selection."
+        />
+      </WorkbenchChartShell>
     );
   }
 
@@ -34,9 +36,10 @@ export default function PerformanceRelativeSegmentPanel({
   const returnScale = Math.max(0.01, ...rows.map((row) => Math.abs(row.active_return_pct)));
 
   return (
-    <AnalyticsModule
+    <WorkbenchChartShell
       title="Relative Segment Matrix"
       subtitle="Portfolio versus benchmark by selected segment"
+      className="performance-analysis-mini-module performance-relative-segment-module"
     >
       <div className="performance-relative-matrix">
         {rows.map((row) => (
@@ -106,6 +109,6 @@ export default function PerformanceRelativeSegmentPanel({
           </div>
         ))}
       </div>
-    </AnalyticsModule>
+    </WorkbenchChartShell>
   );
 }

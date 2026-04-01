@@ -4,6 +4,7 @@ type PerformanceSummaryMetricCardProps = {
   support?: string;
   emphasize?: boolean;
   unavailable?: boolean;
+  priority?: "primary" | "comparison" | "supporting" | "utility";
   className?: string;
 };
 
@@ -13,6 +14,7 @@ export default function PerformanceSummaryMetricCard({
   support,
   emphasize = false,
   unavailable = false,
+  priority = "supporting",
   className = "",
 }: PerformanceSummaryMetricCardProps) {
   return (
@@ -22,6 +24,7 @@ export default function PerformanceSummaryMetricCard({
         "workbench-summary-metric-card",
         emphasize ? "performance-summary-kpi-card-primary" : "",
         unavailable ? "performance-summary-kpi-card-unavailable" : "",
+        `performance-summary-kpi-card-${priority}`,
         className,
       ]
         .filter(Boolean)

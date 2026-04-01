@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  getPortfolioCatalog,
   getPortfolioProjectedCashflow,
   getPortfolioTransactionLedger,
   getPortfolioWorkspaceDetailedDetails,
@@ -152,16 +153,106 @@ describe("portfolio api", () => {
         });
       }
 
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+        return jsonResponse({
+          period: "EXPLICIT",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          benchmark_options: [
+            {
+              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+              benchmark_name: "Global Balanced 60/40",
+              is_assigned: true,
+            },
+          ],
+          net_performance: {
+            portfolio_return_pct: 5.12,
+            benchmark_return_pct: 4.91,
+            active_return_pct: 0.21,
+            benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
+          },
+          money_weighted_return: {
+            money_weighted_return_pct: 4.88,
+            method: "XIRR",
+          },
+        });
+      }
+
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
+        return jsonResponse({
+          net_chart: [
+            {
+              label: "2026-01",
+              cumulative_portfolio_return_pct: 1.1,
+              cumulative_benchmark_return_pct: 0.9,
+              cumulative_active_return_pct: 0.2,
+            },
+            {
+              label: "2026-02",
+              cumulative_portfolio_return_pct: 2.9,
+              cumulative_benchmark_return_pct: 2.5,
+              cumulative_active_return_pct: 0.4,
+            },
+            {
+              label: "2026-03",
+              cumulative_portfolio_return_pct: 5.12,
+              cumulative_benchmark_return_pct: 4.91,
+              cumulative_active_return_pct: 0.21,
+            },
+          ],
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchSpy);
 
-    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
 
     expect(details?.allocation_views?.[0].dimension).toBe("asset_class");
     expect(details?.top_positions[0].market_value_base).toBe(147000);
     expect(details?.positions[0].market_value_local).toBe(147000);
     expect(details?.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);
+    expect(details?.performance).toMatchObject({
+      period: "EXPLICIT",
+      report_start_date: "2026-03-01",
+      report_end_date: "2026-03-28",
+      return_pct: 5.12,
+      benchmark_return_pct: 4.91,
+      excess_return_pct: 0.21,
+      money_weighted_return_pct: 4.88,
+      money_weighted_method: "XIRR",
+      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_label: "Global Balanced 60/40",
+      benchmark_return_source: "calculated",
+      benchmark_input_mode: "stateful",
+      sparkline_points: [
+        {
+          label: "2026-01",
+          portfolio_return_pct: 1.1,
+          benchmark_return_pct: 0.9,
+          active_return_pct: 0.2,
+        },
+        {
+          label: "2026-02",
+          portfolio_return_pct: 2.9,
+          benchmark_return_pct: 2.5,
+          active_return_pct: 0.4,
+        },
+        {
+          label: "2026-03",
+          portfolio_return_pct: 5.12,
+          benchmark_return_pct: 4.91,
+          active_return_pct: 0.21,
+        },
+      ],
+    });
     expect(details?.readiness_indicators).toBeUndefined();
     expect(details?.insights).toBeUndefined();
     expect(details?.exception_summaries).toBeUndefined();
@@ -173,6 +264,23 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?") &&
+          url.includes("period=EXPLICIT") &&
+          url.includes("report_start_date=2026-03-01") &&
+          url.includes("report_end_date=2026-03-28")
+      )
+    ).toBe(true);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/workbench/MANUAL_PB_USD_001/performance/details?") &&
+          url.includes("contribution_dimension=asset_class") &&
+          url.includes("attribution_dimension=asset_class")
+      )
+    ).toBe(true);
   });
 
   it("loads detailed ledger and liquidity slices only when detailed modules need them", async () => {
@@ -400,6 +508,47 @@ describe("portfolio api", () => {
         return jsonResponse(null);
       }
 
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+        return jsonResponse({
+          period: "EXPLICIT",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
+          benchmark_code: null,
+          benchmark_options: [],
+          net_performance: {
+            portfolio_return_pct: 2.1,
+            benchmark_return_pct: null,
+            active_return_pct: null,
+          },
+          money_weighted_return: null,
+        });
+      }
+
+      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
+        return jsonResponse({
+          net_chart: [
+            {
+              label: "2026-01",
+              cumulative_portfolio_return_pct: 0.8,
+              cumulative_benchmark_return_pct: 0.6,
+              cumulative_active_return_pct: 0.2,
+            },
+            {
+              label: "2026-02",
+              cumulative_portfolio_return_pct: 1.6,
+              cumulative_benchmark_return_pct: 1.2,
+              cumulative_active_return_pct: 0.4,
+            },
+            {
+              label: "2026-03",
+              cumulative_portfolio_return_pct: 2.1,
+              cumulative_benchmark_return_pct: 1.7,
+              cumulative_active_return_pct: 0.4,
+            },
+          ],
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchSpy);
@@ -417,8 +566,16 @@ describe("portfolio api", () => {
       limit: 200,
     });
 
-    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
-    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001");
+    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+    await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
@@ -426,6 +583,49 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(1);
+  });
+
+  it("coalesces identical in-flight ledger requests into a single fetch", async () => {
+    const pendingRequest: { resolve?: (value: Response) => void } = {};
+    const fetchSpy = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          pendingRequest.resolve = resolve;
+        })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const firstRequest = getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      limit: 200,
+    });
+    const secondRequest = getPortfolioTransactionLedger("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+      limit: 200,
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    if (pendingRequest.resolve) {
+      pendingRequest.resolve(
+        jsonResponse({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [{ transaction_id: "TX_1" }],
+        })
+      );
+    }
+
+    const [firstResult, secondResult] = await Promise.all([firstRequest, secondRequest]);
+    expect(firstResult).toEqual(secondResult);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it("requests projected cashflow with the selected horizon", async () => {
@@ -455,6 +655,50 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("as_of_date=2026-03-28");
     expect(requestUrl).toContain("horizon_days=30");
     expect(requestUrl).toContain("include_projected=true");
+  });
+
+  it("uses the proxied portfolio API base in the browser", async () => {
+    const originalWindow = global.window;
+    vi.stubGlobal("window", {
+      location: { href: "http://localhost:3000/portfolio" },
+    });
+    const fetchSpy = vi.fn(async () => jsonResponse({ items: [] }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    try {
+      await import("../../src/apps/portfolio/api").then(({ getPortfolioCatalog }) =>
+        getPortfolioCatalog()
+      );
+      expect(String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "")).toContain(
+        "/api/bff/api/v1/portfolio/portfolios"
+      );
+    } finally {
+      if (originalWindow) {
+        vi.stubGlobal("window", originalWindow);
+      }
+    }
+  });
+
+  it("uses the gateway-backed portfolio API base during server rendering", async () => {
+    vi.stubEnv("BFF_BASE_URL", "http://gateway.dev.lotus");
+    const originalWindow = global.window;
+    vi.stubGlobal("window", undefined);
+    const fetchSpy = vi.fn(async () => jsonResponse({ items: [] }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    try {
+      await getPortfolioCatalog();
+
+      expect(String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "")).toBe(
+        "http://gateway.dev.lotus/api/v1/portfolio/portfolios"
+      );
+    } finally {
+      if (originalWindow) {
+        vi.stubGlobal("window", originalWindow);
+      } else {
+        vi.unstubAllGlobals();
+      }
+    }
   });
 });
 

@@ -130,18 +130,20 @@ describe("app route entrypoints", () => {
       await PerformanceAppPage({ searchParams: Promise.resolve({ portfolioId: "PORT_1001" }) })
     );
 
-    expect(await screen.findByRole("heading", { name: "PORT_1001" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Performance" })
+    ).toBeInTheDocument();
   });
 
-  it("routes recommendations into proposal simulation when portfolio context exists", async () => {
+  it("routes recommendations into performance when portfolio context exists", async () => {
     await expect(
       RecommendationsAppPage({ searchParams: Promise.resolve({ portfolioId: "PORT_1001" }) })
-    ).rejects.toThrowError("REDIRECT:/proposals/simulate?portfolioId=PORT_1001");
+    ).rejects.toThrowError("REDIRECT:/performance?portfolioId=PORT_1001");
   });
 
-  it("routes recommendations into the list workspace when no portfolio is selected", async () => {
+  it("routes recommendations into portfolio when no portfolio is selected", async () => {
     await expect(
       RecommendationsAppPage({ searchParams: Promise.resolve({}) })
-    ).rejects.toThrowError("REDIRECT:/proposals");
+    ).rejects.toThrowError("REDIRECT:/portfolio");
   });
 });

@@ -53,9 +53,14 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://workbench.dev.lotus`.
 
-Set `BFF_BASE_URL` to point to `lotus-gateway`.
+Preferred local entry points follow the RFC-0071 service identity model:
+
+- Workbench: `http://workbench.dev.lotus`
+- Gateway: `http://gateway.dev.lotus`
+
+Set `BFF_BASE_URL` to the environment-scoped gateway URL, for example `http://gateway.dev.lotus`.
 
 ## Quality Gate
 
@@ -105,12 +110,12 @@ CI must pass before merge.
 
 The current flagship demo path is the benchmark-aware performance workstation:
 
-- UI: `http://127.0.0.1:3000/performance`
-- Gateway: `http://127.0.0.1:8100`
+- UI: `http://workbench.dev.lotus/performance`
+- Gateway: `http://gateway.dev.lotus`
 - Required upstreams:
-  - `lotus-core` query: `http://127.0.0.1:8201`
-  - `lotus-core` control plane: `http://127.0.0.1:8202`
-  - `lotus-performance`: `http://127.0.0.1:8002`
+  - `lotus-core` query: `http://core-query.dev.lotus`
+  - `lotus-core` ingestion: `http://core-ingestion.dev.lotus`
+  - `lotus-performance`: `http://performance.dev.lotus`
 
 Flagship seeded mandate and benchmarks:
 

@@ -1,8 +1,18 @@
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "./types";
+import type { PortfolioTimeWindow } from "./view-model";
+import {
+  resolveGatewayBaseUrl,
+  resolveWorkbenchApiBase,
+  type ServiceRequestTarget,
+} from "@/features/platform-runtime/service-addressing";
 
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
 const portfolioApiResponseCache = new Map<string, unknown>();
 const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
+type PortfolioRequestTarget = ServiceRequestTarget;
+
+function resolvePortfolioRequestTarget(): PortfolioRequestTarget {
+  return typeof window === "undefined" ? "server" : "client";
+}
 
 type PortfolioWorkspaceSummaryResponse = {
   as_of_date: string;
@@ -82,11 +92,44 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "positions"
   | "income_summary"
   | "activity_summary"
+  | "performance"
   | "readiness_indicators"
   | "exception_summaries"
   | "insights"
   | "workflow_actions"
 >;
+
+type PortfolioPerformanceSummaryResponse = {
+  period: string;
+  report_start_date: string;
+  report_end_date: string;
+  benchmark_code: string | null;
+  benchmark_options?: Array<{
+    benchmark_code: string;
+    benchmark_name: string;
+    is_assigned: boolean;
+  }>;
+  net_performance: {
+    portfolio_return_pct: number | null;
+    benchmark_return_pct: number | null;
+    active_return_pct: number | null;
+    benchmark_return_source?: string | null;
+    benchmark_input_mode?: string | null;
+  };
+  money_weighted_return: {
+    money_weighted_return_pct: number | null;
+    method?: string | null;
+  } | null;
+};
+
+type PortfolioPerformanceDetailsResponse = {
+  net_chart: Array<{
+    label: string;
+    cumulative_portfolio_return_pct?: number | null;
+    cumulative_benchmark_return_pct?: number | null;
+    cumulative_active_return_pct?: number | null;
+  }>;
+};
 
 type PortfolioWorkspaceDetailedDetails = Pick<
   PortfolioWorkspace,
@@ -101,8 +144,9 @@ type PortfolioWorkspaceDetailedDetails = Pick<
 
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
   try {
-    const payload = await fetchBffJson<PortfolioCatalogResponse>(
-      `${resolveBffBaseUrl()}/api/v1/portfolio/portfolios`
+    const payload = await fetchPortfolioJson<PortfolioCatalogResponse>(
+      resolvePortfolioRequestTarget(),
+      "/portfolio/portfolios"
     );
     if (!payload) {
       return [];
@@ -117,9 +161,9 @@ export async function getPortfolioWorkspaceShell(
   portfolioId: string
 ): Promise<PortfolioWorkspace | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
-    const summaryPayload = await fetchBffJson<PortfolioWorkspaceSummaryResponse>(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
+    const summaryPayload = await fetchPortfolioJson<PortfolioWorkspaceSummaryResponse>(
+      resolvePortfolioRequestTarget(),
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
       { useCache: false }
     );
     if (!summaryPayload) {
@@ -166,27 +210,49 @@ export async function getPortfolioWorkspaceShell(
 }
 
 export async function getPortfolioWorkspaceSummaryDetails(
-  portfolioId: string
+  portfolioId: string,
+  params: {
+    timeWindow: PortfolioTimeWindow;
+    reportStartDate: string;
+    reportEndDate: string;
+    usesCustomDateRange?: boolean;
+  }
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
+    const performanceQuery = buildPortfolioPerformanceSummaryQuery(params);
     const [
       allocationsPayload,
       positionsPayload,
       incomePayload,
       activityPayload,
+      performancePayload,
+      performanceDetailsPayload,
     ] = await Promise.all([
-      fetchBffJson<PortfolioAllocationResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
+      fetchPortfolioJson<PortfolioAllocationResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
       ),
-      fetchBffJson<PortfolioPositionsResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
+      fetchPortfolioJson<PortfolioPositionsResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
       ),
-      fetchBffJson<PortfolioIncomeSummaryResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
+      fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
       ),
-      fetchBffJson<PortfolioActivitySummaryResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
+      fetchPortfolioJson<PortfolioActivitySummaryResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
+      ),
+      fetchPortfolioJson<PortfolioPerformanceSummaryResponse>(
+        resolvePortfolioRequestTarget(),
+        `/workbench/${encodeURIComponent(portfolioId)}/performance/summary`,
+        { query: performanceQuery }
+      ),
+      fetchPortfolioJson<PortfolioPerformanceDetailsResponse>(
+        resolvePortfolioRequestTarget(),
+        `/workbench/${encodeURIComponent(portfolioId)}/performance/details`,
+        { query: buildPortfolioPerformanceDetailsQuery(params) }
       ),
     ]);
 
@@ -209,6 +275,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       positions: positionsPayload.positions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
+      performance: mapPortfolioPerformanceSummary(performancePayload, performanceDetailsPayload),
     };
   } catch {
     return null;
@@ -224,7 +291,6 @@ export async function getPortfolioWorkspaceDetailedDetails(
   } = {}
 ): Promise<PortfolioWorkspaceDetailedDetails | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const transactionSearchParams = new URLSearchParams();
     transactionSearchParams.set("limit", "200");
     if (params.asOfDate) {
@@ -243,20 +309,26 @@ export async function getPortfolioWorkspaceDetailedDetails(
       insightsPayload,
       workflowPayload,
     ] = await Promise.all([
-      fetchBffJson<PortfolioLiquidityResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
+      fetchPortfolioJson<PortfolioLiquidityResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
       ),
-      fetchBffJson<PortfolioTransactionLedgerResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${transactionSearchParams.toString()}`
+      fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
+        { query: transactionSearchParams }
       ),
-      fetchBffJson<PortfolioReadinessResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
+      fetchPortfolioJson<PortfolioReadinessResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
       ),
-      fetchBffJson<PortfolioInsightsResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
+      fetchPortfolioJson<PortfolioInsightsResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
       ),
-      fetchBffJson<PortfolioWorkflowResponse>(
-        `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
+      fetchPortfolioJson<PortfolioWorkflowResponse>(
+        resolvePortfolioRequestTarget(),
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
       ),
     ]);
 
@@ -290,7 +362,6 @@ export async function getPortfolioTransactionLedger(
   } = {}
 ): Promise<PortfolioTransactionLedgerResponse | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const searchParams = new URLSearchParams();
     searchParams.set("limit", String(params.limit ?? 200));
     searchParams.set("skip", String(params.skip ?? 0));
@@ -308,8 +379,10 @@ export async function getPortfolioTransactionLedger(
       searchParams.set("transaction_type", params.transactionType);
     }
 
-    return await fetchBffJson<PortfolioTransactionLedgerResponse>(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions?${searchParams.toString()}`
+    return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
+      resolvePortfolioRequestTarget(),
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
+      { query: searchParams }
     );
   } catch {
     return null;
@@ -325,7 +398,6 @@ export async function getPortfolioProjectedCashflow(
   } = {}
 ): Promise<PortfolioWorkspace["cashflow_outlook"] | null> {
   try {
-    const baseUrl = resolveBffBaseUrl();
     const searchParams = new URLSearchParams();
     if (params.asOfDate) {
       searchParams.set("as_of_date", params.asOfDate);
@@ -337,8 +409,10 @@ export async function getPortfolioProjectedCashflow(
       searchParams.set("include_projected", String(params.includeProjected));
     }
 
-    const payload = await fetchBffJson<PortfolioProjectedCashflowResponse>(
-      `${baseUrl}/api/v1/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow?${searchParams.toString()}`
+    const payload = await fetchPortfolioJson<PortfolioProjectedCashflowResponse>(
+      resolvePortfolioRequestTarget(),
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow`,
+      { query: searchParams }
     );
     if (!payload) {
       return null;
@@ -365,21 +439,103 @@ export function mergePortfolioWorkspace(
   };
 }
 
-function resolveBffBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    return "/api/bff";
+function buildPortfolioPerformanceSummaryQuery(params: {
+  timeWindow: PortfolioTimeWindow;
+  reportStartDate: string;
+  reportEndDate: string;
+  usesCustomDateRange?: boolean;
+}) {
+  const query = new URLSearchParams();
+  const useExplicitWindow =
+    params.usesCustomDateRange || params.timeWindow === "7D" || params.timeWindow === "30D";
+
+  query.set("period", useExplicitWindow ? "EXPLICIT" : params.timeWindow);
+  query.set("detail_basis", "NET");
+  query.set("chart_frequency", "monthly");
+  query.set("report_end_date", params.reportEndDate);
+
+  if (useExplicitWindow) {
+    query.set("report_start_date", params.reportStartDate);
   }
 
-  return process.env.BFF_BASE_URL ?? BFF_BASE_URL;
+  return query;
 }
 
-async function fetchBffJson<T>(
-  url: string,
+function buildPortfolioPerformanceDetailsQuery(params: {
+  timeWindow: PortfolioTimeWindow;
+  reportStartDate: string;
+  reportEndDate: string;
+  usesCustomDateRange?: boolean;
+}) {
+  const query = buildPortfolioPerformanceSummaryQuery(params);
+  query.set("contribution_dimension", "asset_class");
+  query.set("attribution_dimension", "asset_class");
+  return query;
+}
+
+function mapPortfolioPerformanceSummary(
+  payload: PortfolioPerformanceSummaryResponse | null,
+  detailsPayload?: PortfolioPerformanceDetailsResponse | null
+): PortfolioWorkspace["performance"] {
+  if (!payload) {
+    return null;
+  }
+
+  const selectedBenchmark =
+    payload.benchmark_options?.find((option) => option.benchmark_code === payload.benchmark_code) ??
+    payload.benchmark_options?.find((option) => option.is_assigned) ??
+    null;
+
+  return {
+    period: payload.period,
+    report_start_date: payload.report_start_date,
+    report_end_date: payload.report_end_date,
+    return_pct: payload.net_performance.portfolio_return_pct,
+    money_weighted_return_pct: payload.money_weighted_return?.money_weighted_return_pct ?? null,
+    money_weighted_method: payload.money_weighted_return?.method ?? null,
+    benchmark_code: payload.benchmark_code,
+    benchmark_label: selectedBenchmark?.benchmark_name ?? null,
+    benchmark_return_pct: payload.net_performance.benchmark_return_pct,
+    benchmark_return_source: payload.net_performance.benchmark_return_source ?? null,
+    benchmark_input_mode: payload.net_performance.benchmark_input_mode ?? null,
+    excess_return_pct: payload.net_performance.active_return_pct,
+    sparkline_points:
+      detailsPayload?.net_chart?.map((point) => ({
+        label: point.label,
+        portfolio_return_pct: point.cumulative_portfolio_return_pct ?? null,
+        benchmark_return_pct: point.cumulative_benchmark_return_pct ?? null,
+        active_return_pct: point.cumulative_active_return_pct ?? null,
+      })) ?? null,
+  };
+}
+
+function buildPortfolioApiUrl(
+  target: PortfolioRequestTarget,
+  path: string,
+  query?: URLSearchParams
+): string {
+  const baseUrl = resolveBffBaseUrlForTarget(target);
+  const suffix = query?.toString();
+  return suffix ? `${baseUrl}/api/v1${path}?${suffix}` : `${baseUrl}/api/v1${path}`;
+}
+
+function resolveBffBaseUrlForTarget(target: PortfolioRequestTarget): string {
+  if (target === "client") {
+    return resolveWorkbenchApiBase("client").replace(/\/api\/v1$/, "");
+  }
+  return resolveGatewayBaseUrl();
+}
+
+async function fetchPortfolioJson<T>(
+  target: PortfolioRequestTarget,
+  path: string,
   options: {
     useCache?: boolean;
+    query?: URLSearchParams;
   } = {}
 ): Promise<T | null> {
   const useCache = options.useCache ?? true;
+  const url = buildPortfolioApiUrl(target, path, options.query);
 
   if (useCache && portfolioApiResponseCache.has(url)) {
     return portfolioApiResponseCache.get(url) as T;

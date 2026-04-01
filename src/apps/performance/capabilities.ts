@@ -5,6 +5,7 @@ import {
   unavailable,
 } from "@/shell/workspace-capabilities";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
+import type { PerformanceModuleCapability } from "@/features/workbench/types";
 
 import {
   hasBenchmarkContext,
@@ -24,9 +25,61 @@ export type PerformanceWorkspaceCapabilities = {
   evidence: WorkspaceCapability;
 };
 
+function mapBackendCapability(
+  capability?: PerformanceModuleCapability
+): WorkspaceCapability | null {
+  if (!capability) {
+    return null;
+  }
+  if (capability.state === "supported") {
+    return {
+      ...supported(capability.reason ?? "Supported by the current performance contract."),
+      coverageLevel: capability.coverage_level ?? undefined,
+      fallbackAvailable: capability.fallback_available ?? undefined,
+      earliestAvailableDate: capability.earliest_available_date ?? undefined,
+      latestAvailableDate: capability.latest_available_date ?? undefined,
+      supportedDimensions: capability.supported_dimensions ?? undefined,
+      supportedFrequencies: capability.supported_frequencies ?? undefined,
+    };
+  }
+  if (capability.state === "partial") {
+    return {
+      ...partial(capability.reason ?? "Available with partial coverage."),
+      coverageLevel: capability.coverage_level ?? undefined,
+      fallbackAvailable: capability.fallback_available ?? undefined,
+      earliestAvailableDate: capability.earliest_available_date ?? undefined,
+      latestAvailableDate: capability.latest_available_date ?? undefined,
+      supportedDimensions: capability.supported_dimensions ?? undefined,
+      supportedFrequencies: capability.supported_frequencies ?? undefined,
+    };
+  }
+  return {
+    ...unavailable(capability.reason ?? "Unavailable for the current selection."),
+    coverageLevel: capability.coverage_level ?? undefined,
+    fallbackAvailable: capability.fallback_available ?? undefined,
+    earliestAvailableDate: capability.earliest_available_date ?? undefined,
+    latestAvailableDate: capability.latest_available_date ?? undefined,
+    supportedDimensions: capability.supported_dimensions ?? undefined,
+    supportedFrequencies: capability.supported_frequencies ?? undefined,
+  };
+}
+
 export function getPerformanceWorkspaceCapabilities(
   workspace: WorkbenchPerformanceWorkspace
 ): PerformanceWorkspaceCapabilities {
+  if (workspace.capabilities) {
+    return {
+      summaryKpis: mapBackendCapability(workspace.capabilities.summary_kpis)!,
+      returnPath: mapBackendCapability(workspace.capabilities.return_path)!,
+      benchmarkComparison: mapBackendCapability(workspace.capabilities.benchmark_comparison)!,
+      multiHorizonReturns: mapBackendCapability(workspace.capabilities.multi_horizon_returns)!,
+      contributionRanking: mapBackendCapability(workspace.capabilities.contribution_ranking)!,
+      attributionDetail: mapBackendCapability(workspace.capabilities.attribution_detail)!,
+      contributionDetail: mapBackendCapability(workspace.capabilities.contribution_detail)!,
+      evidence: mapBackendCapability(workspace.capabilities.evidence)!,
+    };
+  }
+
   const hasBenchmark = hasBenchmarkContext(workspace);
   const hasHistory = workspace.net_chart.length > 0;
   const hasAttribution = hasUsableAttribution(workspace);

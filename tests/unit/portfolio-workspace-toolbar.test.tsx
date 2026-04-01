@@ -73,6 +73,8 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(screen.getByText(/As of 29 Mar 2026\./i)).toBeInTheDocument();
     expect(screen.getByText(/Reporting currency restatement is pending source support\./i)).toBeInTheDocument();
     expect(screen.getByText(/Period 30D: 01 Mar 2026 to 29 Mar 2026\./i)).toBeInTheDocument();
+    expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
+      .toBeTruthy();
 
     fireEvent.click(screen.getByRole("tab", { name: "YTD" }));
     expect(onControlsChange).toHaveBeenCalledWith({ timeWindow: "YTD" });

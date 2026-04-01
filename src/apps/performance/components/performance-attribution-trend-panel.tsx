@@ -3,11 +3,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { EChartsOption } from "echarts";
 import ReactECharts from "echarts-for-react";
-import { Typography } from "@mui/material";
 
-import { AnalyticsModule } from "@/design-system";
+import {
+  AnalyticsTable,
+  WorkbenchChartContextRow,
+  WorkbenchChartShell,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
-import type { PerformanceAttributionTrendRow } from "@/features/workbench/types";
+import type {
+  PerformanceBenchmarkOptionView,
+  WorkbenchPerformanceAttributionTrend,
+} from "@/features/workbench/types";
+
+import { formatLabel } from "../formatters";
+import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
+import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
+import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
+import {
+  getAttributionTrendContextItems,
+  getAttributionTrendSummaryItems,
+} from "./performance-attribution-presentations";
 
 type Props = {
   portfolioId: string;
@@ -16,8 +32,10 @@ type Props = {
   attributionDimension: string;
   detailBasis: string;
   benchmark?: string;
+  benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate?: string;
   reportEndDate?: string;
+  onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 };
 
 const ATTRIBUTION_TREND_COLORS = {
@@ -34,13 +52,15 @@ export default function PerformanceAttributionTrendPanel({
   attributionDimension,
   detailBasis,
   benchmark,
+  benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
+  onRequestChange,
 }: Props) {
-  const [rows, setRows] = useState<PerformanceAttributionTrendRow[] | null>(null);
+  const [trend, setTrend] = useState<WorkbenchPerformanceAttributionTrend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const requestIdRef = useRef(0);
-  const cacheRef = useRef<Map<string, PerformanceAttributionTrendRow[]>>(new Map());
+  const cacheRef = useRef<Map<string, WorkbenchPerformanceAttributionTrend>>(new Map());
 
   useEffect(() => {
     const cacheKey = JSON.stringify({
@@ -55,7 +75,7 @@ export default function PerformanceAttributionTrendPanel({
     });
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {
-      setRows(cached);
+      setTrend(cached);
       setIsLoading(false);
       return;
     }
@@ -77,14 +97,31 @@ export default function PerformanceAttributionTrendPanel({
         if (requestIdRef.current !== requestId) {
           return;
         }
-        cacheRef.current.set(cacheKey, result.rows);
-        setRows(result.rows);
+        cacheRef.current.set(cacheKey, result);
+        setTrend(result);
       })
       .catch(() => {
         if (requestIdRef.current !== requestId) {
           return;
         }
-        setRows([]);
+        setTrend({
+          correlation_id: "",
+          contract_version: "v1",
+          portfolio_id: portfolioId,
+          as_of_date: "",
+          period,
+          report_start_date: reportStartDate ?? "",
+          report_end_date: reportEndDate ?? "",
+          chart_frequency: chartFrequency,
+          detail_basis: detailBasis,
+          attribution_dimension: attributionDimension,
+          requested_chart_frequency_supported: true,
+          requested_attribution_dimension_supported: true,
+          benchmark_code: benchmark ?? null,
+          rows: [],
+          warnings: [],
+          partial_failures: [],
+        });
       })
       .finally(() => {
         if (requestIdRef.current === requestId) {
@@ -101,6 +138,7 @@ export default function PerformanceAttributionTrendPanel({
     reportEndDate,
     reportStartDate,
   ]);
+  const rows = trend?.rows ?? null;
 
   const chartOption = useMemo<EChartsOption | null>(() => {
     if (!rows || rows.length === 0) {
@@ -201,44 +239,137 @@ export default function PerformanceAttributionTrendPanel({
     };
   }, [rows]);
 
+  const tableModel = useMemo(
+    () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
+    [rows]
+  );
+  const contextItems = useMemo(
+    () =>
+      getAttributionTrendContextItems({
+        trend,
+        detailBasis,
+        attributionDimension,
+        benchmark,
+        benchmarkOptions,
+        period,
+      }),
+    [attributionDimension, benchmark, benchmarkOptions, detailBasis, period, trend]
+  );
+  const metricItems = useMemo(
+    () => getAttributionTrendSummaryItems(trend),
+    [trend]
+  );
+  const normalizationMessages: string[] = [];
+  if (trend?.requested_chart_frequency_supported === false) {
+    normalizationMessages.push(
+      `frequency reset to ${formatLabel(trend.chart_frequency)}`
+    );
+  }
+  if (trend?.requested_attribution_dimension_supported === false) {
+    normalizationMessages.push(
+      `segment reset to ${formatLabel(trend.attribution_dimension)}`
+    );
+  }
+
+  useEffect(() => {
+    if (!trend || !onRequestChange) {
+      return;
+    }
+
+    const patch: PerformanceWorkspaceRequestPatch = {};
+    if (
+      trend.requested_chart_frequency_supported === false &&
+      trend.chart_frequency !== chartFrequency
+    ) {
+      patch.chartFrequency = trend.chart_frequency;
+    }
+    if (
+      trend.requested_attribution_dimension_supported === false &&
+      trend.attribution_dimension !== attributionDimension
+    ) {
+      patch.attributionDimension = trend.attribution_dimension;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      onRequestChange(patch);
+    }
+  }, [attributionDimension, chartFrequency, onRequestChange, trend]);
+
   return (
-    <AnalyticsModule
+    <WorkbenchChartShell
       title="Attribution Over Time"
-      subtitle={`${detailBasis} benchmark-relative effect path`}
+      subtitle="Benchmark-relative effect path across the selected window."
+      className="performance-analysis-module performance-analysis-trend-shell"
       actions={
-        <Typography
-          component="span"
-          sx={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "text.secondary",
-          }}
-        >
-          {chartFrequency}
-        </Typography>
+        <span className="performance-analysis-shell-action">
+          {trend?.chart_frequency ?? chartFrequency}
+        </span>
+      }
+      contextRow={
+        <WorkbenchChartContextRow
+          label="Attribution trend context"
+          className="performance-analysis-context-row"
+          items={contextItems}
+        />
+      }
+      metricStrip={
+        metricItems.length ? (
+          <WorkbenchSummaryMetricStrip
+            className="performance-analysis-metric-strip"
+            ariaLabel="Attribution trend summary strip"
+            items={metricItems}
+          />
+        ) : undefined
       }
     >
-      {isLoading ? (
-        <p className="muted">Loading attribution effect trend.</p>
-      ) : chartOption ? (
+      {normalizationMessages.length > 0 ? (
         <div
-          className="performance-chart-library-frame"
-          role="img"
-          aria-label="Attribution over time chart"
+          className="performance-control-normalization-note"
+          role="status"
+          aria-label="Attribution trend normalization"
         >
-          <ReactECharts
-            option={chartOption}
-            style={{ width: "100%", height: "320px" }}
-            opts={{ renderer: "svg" }}
-            notMerge
-            lazyUpdate
-          />
+          <p className="performance-control-normalization-note-title">Selection adjusted</p>
+          <p className="performance-control-normalization-note-message">
+            Unsupported controls were replaced with supported defaults: {normalizationMessages.join(" • ")}.
+          </p>
         </div>
+      ) : null}
+      {isLoading ? (
+        <PerformanceAnalysisStatePanel
+          state="loading"
+          title="Loading attribution trend"
+          body="Loading attribution effect trend."
+        />
+      ) : chartOption ? (
+        <>
+          <div
+            className="performance-chart-library-frame"
+            role="img"
+            aria-label="Attribution over time chart"
+          >
+            <ReactECharts
+              option={chartOption}
+              style={{ width: "100%", height: "320px" }}
+              opts={{ renderer: "svg" }}
+              notMerge
+              lazyUpdate
+            />
+          </div>
+          <AnalyticsTable
+            ariaLabel="Attribution trend table"
+            columns={tableModel.columns}
+            rows={tableModel.rows}
+            dense
+            className="performance-analysis-table performance-attribution-trend-table"
+          />
+        </>
       ) : (
-        <p className="muted">Attribution trend is not available for the current selection.</p>
+        <PerformanceAnalysisStatePanel
+          state="unavailable"
+          title="Attribution trend unavailable"
+          body="Attribution trend is not available for the current selection."
+        />
       )}
-    </AnalyticsModule>
+    </WorkbenchChartShell>
   );
 }

@@ -5,14 +5,18 @@ import {
   WorkbenchPerformanceHorizonComparison,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
-  WorkbenchPerformanceWorkspace,
   WorkbenchPortfolio360,
   WorkbenchReportingSnapshot,
   WorkbenchSandboxState,
 } from "./types";
+import {
+  resolveBffProxyBaseUrl,
+  resolveWorkbenchApiBase,
+  type ServiceRequestTarget,
+} from "@/features/platform-runtime/service-addressing";
 
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
-const BFF_PROXY_BASE = "/api/bff/api/v1";
+const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
+type WorkbenchRequestTarget = ServiceRequestTarget;
 
 function buildPerformanceWorkspaceQuery(params: {
   period: string;
@@ -42,30 +46,79 @@ function buildPerformanceWorkspaceQuery(params: {
   return query.toString();
 }
 
-export async function getWorkbenchOverview(portfolioId: string): Promise<WorkbenchOverview> {
-  const response = await fetch(`${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/overview`, {
-    cache: "no-store",
-  });
-
+async function fetchWorkbenchJson<T>(url: string, errorLabel: string): Promise<T> {
+  const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) {
-    throw new Error(`Failed to fetch overview (${response.status})`);
+    throw new Error(`Failed to fetch ${errorLabel} (${response.status})`);
   }
+  return (await response.json()) as T;
+}
 
-  return (await response.json()) as WorkbenchOverview;
+function buildWorkbenchUrl(
+  target: WorkbenchRequestTarget,
+  path: string,
+  query?: URLSearchParams | string
+): string {
+  const baseUrl = resolveWorkbenchApiBase(target);
+  const suffix =
+    query instanceof URLSearchParams ? query.toString() : query;
+  return suffix ? `${baseUrl}${path}?${suffix}` : `${baseUrl}${path}`;
+}
+
+async function fetchWorkbenchResource<T>(
+  target: WorkbenchRequestTarget,
+  path: string,
+  errorLabel: string,
+  query?: URLSearchParams | string
+): Promise<T> {
+  return await fetchWorkbenchJson<T>(buildWorkbenchUrl(target, path, query), errorLabel);
+}
+
+function buildPerformanceWorkspaceUrl(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  },
+  pathSuffix: string,
+  target: WorkbenchRequestTarget
+): string {
+  const query = buildPerformanceWorkspaceQuery(params);
+  return buildWorkbenchUrl(
+    target,
+    `/workbench/${portfolioId}/performance${pathSuffix}`,
+    query
+  );
+}
+
+export async function getWorkbenchOverview(portfolioId: string): Promise<WorkbenchOverview> {
+  return await fetchWorkbenchResource<WorkbenchOverview>(
+    "server",
+    `/workbench/${portfolioId}/overview`,
+    "overview"
+  );
 }
 
 export async function getPortfolio360(
   portfolioId: string,
   sessionId?: string
 ): Promise<WorkbenchPortfolio360> {
-  const query = sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : "";
-  const response = await fetch(`${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/portfolio-360${query}`, {
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch portfolio 360 (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPortfolio360;
+  const query = sessionId
+    ? new URLSearchParams({ session_id: sessionId })
+    : undefined;
+  return await fetchWorkbenchResource<WorkbenchPortfolio360>(
+    "server",
+    `/workbench/${portfolioId}/portfolio-360`,
+    "portfolio 360"
+    ,
+    query
+  );
 }
 
 export async function createSandboxSession(
@@ -131,65 +184,12 @@ export async function getWorkbenchAnalytics(
   if (params.sessionId) {
     query.set("session_id", params.sessionId);
   }
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/analytics?${query.toString()}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchResource<WorkbenchAnalytics>(
+    "server",
+    `/workbench/${portfolioId}/analytics`,
+    "workbench analytics",
+    query
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch workbench analytics (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchAnalytics;
-}
-
-export async function getWorkbenchPerformanceWorkspace(
-  portfolioId: string,
-  params: {
-    period: string;
-    chartFrequency: string;
-    contributionDimension: string;
-    attributionDimension: string;
-    detailBasis: string;
-    benchmark?: string;
-    reportStartDate?: string;
-    reportEndDate?: string;
-  }
-): Promise<WorkbenchPerformanceWorkspace> {
-  const query = buildPerformanceWorkspaceQuery(params);
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance?${query}`,
-    {
-      cache: "no-store",
-    }
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance workspace (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceWorkspace;
-}
-
-export async function getWorkbenchPerformanceWorkspaceClient(
-  portfolioId: string,
-  params: {
-    period: string;
-    chartFrequency: string;
-    contributionDimension: string;
-    attributionDimension: string;
-    detailBasis: string;
-    benchmark?: string;
-    reportStartDate?: string;
-    reportEndDate?: string;
-  }
-): Promise<WorkbenchPerformanceWorkspace> {
-  const query = buildPerformanceWorkspaceQuery(params);
-  const response = await fetch(`${BFF_PROXY_BASE}/workbench/${portfolioId}/performance?${query}`, {
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance workspace (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceWorkspace;
 }
 
 export async function getWorkbenchPerformanceWorkspaceSummary(
@@ -205,17 +205,10 @@ export async function getWorkbenchPerformanceWorkspaceSummary(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
-  const query = buildPerformanceWorkspaceQuery(params);
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance/summary?${query}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
+    buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "server"),
+    "performance workspace summary"
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance workspace summary (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceWorkspaceSummary;
 }
 
 export async function getWorkbenchPerformanceWorkspaceDetails(
@@ -231,17 +224,10 @@ export async function getWorkbenchPerformanceWorkspaceDetails(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
-  const query = buildPerformanceWorkspaceQuery(params);
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/workbench/${portfolioId}/performance/details?${query}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
+    buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "server"),
+    "performance workspace details"
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance workspace details (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceWorkspaceDetails;
 }
 
 export async function getWorkbenchPerformanceWorkspaceSummaryClient(
@@ -257,17 +243,10 @@ export async function getWorkbenchPerformanceWorkspaceSummaryClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
-  const query = buildPerformanceWorkspaceQuery(params);
-  const response = await fetch(
-    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/summary?${query}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
+    buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "client"),
+    "performance workspace summary"
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance workspace summary (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceWorkspaceSummary;
 }
 
 export async function getWorkbenchPerformanceWorkspaceDetailsClient(
@@ -283,43 +262,44 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
-  const query = buildPerformanceWorkspaceQuery(params);
-  const response = await fetch(
-    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/details?${query}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
+    buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "client"),
+    "performance workspace details"
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance workspace details (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceWorkspaceDetails;
 }
 
 export async function getWorkbenchPerformanceHorizonComparisonClient(
   portfolioId: string,
   params: {
+    period?: string;
     detailBasis: string;
     benchmark?: string;
     chartFrequency?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceHorizonComparison> {
   const query = new URLSearchParams();
+  if (params.period) {
+    query.set("period", params.period);
+  }
   query.set("detail_basis", params.detailBasis);
   query.set("chart_frequency", params.chartFrequency ?? "monthly");
   if (params.benchmark) {
     query.set("benchmark_code", params.benchmark);
   }
-  const response = await fetch(
-    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/horizon-comparison?${query.toString()}`,
-    {
-      cache: "no-store",
-    }
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance horizon comparison (${response.status})`);
+  if (params.reportStartDate) {
+    query.set("report_start_date", params.reportStartDate);
   }
-  return (await response.json()) as WorkbenchPerformanceHorizonComparison;
+  if (params.reportEndDate) {
+    query.set("report_end_date", params.reportEndDate);
+  }
+  return await fetchWorkbenchResource<WorkbenchPerformanceHorizonComparison>(
+    "client",
+    `/workbench/${portfolioId}/performance/horizon-comparison`,
+    "performance horizon comparison",
+    query
+  );
 }
 
 export async function getWorkbenchPerformanceAttributionTrendClient(
@@ -348,16 +328,12 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
   }
-  const response = await fetch(
-    `${BFF_PROXY_BASE}/workbench/${portfolioId}/performance/attribution-trend?${query.toString()}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchResource<WorkbenchPerformanceAttributionTrend>(
+    "client",
+    `/workbench/${portfolioId}/performance/attribution-trend`,
+    "performance attribution trend",
+    query
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch performance attribution trend (${response.status})`);
-  }
-  return (await response.json()) as WorkbenchPerformanceAttributionTrend;
 }
 
 export async function getReportingSnapshot(
@@ -366,17 +342,10 @@ export async function getReportingSnapshot(
 ): Promise<WorkbenchReportingSnapshot> {
   const query = new URLSearchParams();
   query.set("asOfDate", asOfDate);
-
-  const response = await fetch(
-    `${BFF_BASE_URL}/api/v1/reports/${portfolioId}/snapshot?${query.toString()}`,
-    {
-      cache: "no-store",
-    }
+  return await fetchWorkbenchResource<WorkbenchReportingSnapshot>(
+    "server",
+    `/reports/${portfolioId}/snapshot`,
+    "reporting snapshot",
+    query
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch reporting snapshot (${response.status})`);
-  }
-
-  return (await response.json()) as WorkbenchReportingSnapshot;
 }

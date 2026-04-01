@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
+import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 const WORKBENCH_FALLBACK_PORTFOLIO_IDS =
   process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ??
   "DEMO_DPM_EUR_001,DEMO_INCOME_CHF_001,DEMO_BALANCED_SGD_001,DEMO_REBAL_USD_001,DEMO_ADV_USD_001";
@@ -16,7 +15,9 @@ type LookupEnvelope = {
 
 async function getDefaultPortfolioId(): Promise<string | null> {
   try {
-    const response = await fetch(`${BFF_BASE_URL}/api/v1/lookups/portfolios?limit=1`, { cache: "no-store" });
+    const response = await fetch(`${resolveGatewayBaseUrl()}/api/v1/lookups/portfolios?limit=1`, {
+      cache: "no-store",
+    });
     if (!response.ok) {
       return null;
     }

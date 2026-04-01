@@ -15,7 +15,7 @@ describe("AdvisorSummaryCard", () => {
     );
     expect(screen.getByText("BLOCKED")).toBeInTheDocument();
     expect(
-      screen.getByText(/Resolve upstream exceptions before generating proposal artifacts/i)
+      screen.getByText(/Resolve upstream exceptions before progressing client-ready actions/i)
     ).toBeInTheDocument();
   });
 });

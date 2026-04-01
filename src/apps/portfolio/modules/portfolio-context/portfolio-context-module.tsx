@@ -1,6 +1,6 @@
 "use client";
 
-import { ContextCard, Panel } from "@/design-system";
+import { ContextCard, WorkbenchRailCard } from "@/design-system";
 
 import { formatDate } from "../../formatters";
 import type { PortfolioWorkspace } from "../../types";
@@ -18,7 +18,7 @@ export default function PortfolioContextModule({
   onCopy: (key: string, value: string | null | undefined) => void;
 }) {
   return (
-    <Panel className="portfolio-side-card workbench-rail-card portfolio-context-card">
+    <WorkbenchRailCard className="portfolio-side-card portfolio-context-card">
       <ContextCard
         title="Portfolio Context"
         subtitle="Identity and book setup at the current page context."
@@ -73,6 +73,6 @@ export default function PortfolioContextModule({
           },
         ]}
       />
-    </Panel>
+    </WorkbenchRailCard>
   );
 }

@@ -88,6 +88,101 @@ Feature dependencies:
   - future execution / lineage / calculation evidence surfaces
   - currently unavailable by contract
 
+## Current live Gateway-backed usage
+
+The current `lotus-workbench` UI consumes these Performance contracts directly:
+
+- `GET /workbench/{portfolio_id}/performance/summary`
+- `GET /workbench/{portfolio_id}/performance/details`
+- `GET /workbench/{portfolio_id}/performance/horizon-comparison`
+- `GET /workbench/{portfolio_id}/performance/attribution-trend`
+
+The UI no longer consumes a monolithic `GET /workbench/{portfolio_id}/performance` helper path.
+Local repo scanning found no remaining monolithic consumer outside `lotus-gateway` router/service
+definitions and Gateway unit tests. Any retirement decision for that endpoint now depends on
+deployment-edge or external-consumer verification rather than any in-repo Workbench dependency.
+
+The current Portfolio UI consumes a decomposed workspace contract shape:
+
+- `GET /portfolio/portfolios/{portfolio_id}/workspace`
+- `GET /portfolio/portfolios/{portfolio_id}/allocations`
+- `GET /portfolio/portfolios/{portfolio_id}/positions`
+- `GET /portfolio/portfolios/{portfolio_id}/income-summary`
+- `GET /portfolio/portfolios/{portfolio_id}/activity-summary`
+- `GET /portfolio/portfolios/{portfolio_id}/liquidity`
+- `GET /portfolio/portfolios/{portfolio_id}/transactions`
+- `GET /portfolio/portfolios/{portfolio_id}/readiness`
+- `GET /portfolio/portfolios/{portfolio_id}/insights`
+- `GET /portfolio/portfolios/{portfolio_id}/workflow`
+- `GET /portfolio/portfolios/{portfolio_id}/projected-cashflow`
+
+## High-value upstream-backed attributes now surfaced
+
+The UI now explicitly exposes these contract fields because they improve front-office trust without
+expanding the API surface:
+
+- Performance benchmark provenance
+  - `net_performance.benchmark_return_source`
+  - `gross_performance.benchmark_return_source`
+  - shown in the return-path benchmark context
+- Performance benchmark option context
+  - `benchmark_options`
+  - used for benchmark label resolution and benchmark selection controls
+- Performance money-weighted return
+  - `money_weighted_return`
+  - shown only when the contract actually provides it
+- Portfolio reporting freshness
+  - `readiness.reporting.generated_at_utc`
+  - `readiness.reporting.row_count`
+  - shown in the summary-first readiness signal
+- Portfolio operational trust signals
+  - `operations.controls_blocking`
+  - `operations.publish_allowed`
+  - `operations.latest_booked_transaction_date`
+  - used in readiness support messaging with explicit precedence
+
+## Keep-or-retire decisions still open
+
+These items still need an explicit governance decision rather than silent drift:
+
+- Gateway monolithic Performance endpoint
+  - local repo evidence shows no current in-repo consumer outside Gateway internals/tests
+  - keep only if a deployed or external consumer still depends on it
+  - otherwise retire after external-consumer confirmation
+- Performance Evidence contract
+  - currently unavailable by design
+  - add only when Gateway can expose real lineage/evidence data
+- Portfolio historical snapshots and reporting-currency restatement
+  - UI remains explicit that these are pending source support
+  - do not fake support from client-side transforms
+
+## Measured Performance latency baseline
+
+Local browser-side timing against the active BFF routes now provides a concrete baseline for the
+Performance hot path. Three-run averages collected on 2026-03-30 were:
+
+- `summary`
+  - total `app`: `3896.95ms`
+  - dominant phase: `perf-summary=2566.71ms`
+- `details`
+  - total `app`: `3547.88ms`
+  - dominant phase: `perf-summary=2516.66ms`
+- `horizon-comparison`
+  - total `app`: `5064.89ms`
+  - dominant phase: `perf-horizon=3437.31ms`
+- `attribution-trend`
+  - total `app`: `4123.56ms`
+  - dominant phase: `perf-attribution=3147.84ms`
+
+Interpretation:
+
+- Gateway overhead is visible but no longer dominant after the recent benchmark-catalog and
+  overview-fanout reductions.
+- The next material latency wins should come from upstream analytics workloads, especially the
+  summary, horizon-comparison, and attribution computations.
+- Future optimization work should be measured against these phase timings rather than inferred from
+  code inspection alone.
+
 ## Ownership boundaries
 
 Backend ownership:

@@ -119,6 +119,7 @@ describe("portfolio chart panels", () => {
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
     expect(screen.getByText("Inflows")).toBeInTheDocument();
     expect(screen.getByText("Dividend")).toBeInTheDocument();
+    expect(screen.getByText("Window inflow")).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("listitem", {
@@ -195,6 +196,41 @@ describe("portfolio chart panels", () => {
     expect(screen.queryByText("Window inflow")).not.toBeInTheDocument();
     expect(screen.getByText("Gross 2,500 USD")).toBeInTheDocument();
     expect(screen.queryByText("Deductions 200 USD")).not.toBeInTheDocument();
+  });
+
+  it("uses bucket-aware activity copy for non-inflow rows", () => {
+    render(
+      <PortfolioActivityPanel
+        selectedBucket={null}
+        summary={{
+          reporting_currency: "USD",
+          window_start_date: "2026-01-01",
+          window_end_date: "2026-01-31",
+          buckets: [
+            {
+              bucket: "OUTFLOWS",
+              requested_window: { reporting_currency_amount: 1000, transaction_count: 1 },
+              year_to_date: { reporting_currency_amount: 2500, transaction_count: 2 },
+            },
+            {
+              bucket: "FEES",
+              requested_window: { reporting_currency_amount: 250, transaction_count: 1 },
+              year_to_date: { reporting_currency_amount: 450, transaction_count: 2 },
+            },
+            {
+              bucket: "TAXES",
+              requested_window: { reporting_currency_amount: 81.75, transaction_count: 1 },
+              year_to_date: { reporting_currency_amount: 81.75, transaction_count: 1 },
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByText("Window outflow")).toBeInTheDocument();
+    expect(screen.getByText("Window fees")).toBeInTheDocument();
+    expect(screen.getByText("Window taxes")).toBeInTheDocument();
+    expect(screen.queryByText("Window activity")).not.toBeInTheDocument();
   });
 });
 

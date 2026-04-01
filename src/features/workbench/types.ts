@@ -139,9 +139,14 @@ export type PerformanceComparativeSummary = {
   annualized_return_pct: number | null;
   benchmark_id: string | null;
   benchmark_return_source: string | null;
+  benchmark_input_mode?: string | null;
   begin_market_value?: number | null;
   end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
+  flow_adjusted_end_market_value?: number | null;
   net_cash_flow?: number | null;
+  fees?: number | null;
 };
 
 export type PerformanceChartPoint = {
@@ -160,9 +165,17 @@ export type PerformanceChartPoint = {
 export type MoneyWeightedReturnSummary = {
   money_weighted_return_pct: number | null;
   annualized_return_pct: number | null;
+  input_mode?: string | null;
   method: string | null;
   start_date: string | null;
   end_date: string | null;
+  begin_market_value?: number | null;
+  end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
+  flow_adjusted_end_market_value?: number | null;
+  net_cash_flow?: number | null;
+  fees?: number | null;
   notes: string[];
 };
 
@@ -237,11 +250,50 @@ export type PerformanceBenchmarkOptionView = {
   is_assigned: boolean;
 };
 
+export type PerformanceModuleCapability = {
+  state: "supported" | "partial" | "unavailable" | "hidden";
+  reason?: string | null;
+  coverage_level?: string | null;
+  fallback_available?: boolean | null;
+  earliest_available_date?: string | null;
+  latest_available_date?: string | null;
+  supported_dimensions?: string[] | null;
+  supported_frequencies?: string[] | null;
+};
+
+export type WorkbenchPerformanceCapabilities = {
+  summary_kpis: PerformanceModuleCapability;
+  return_path: PerformanceModuleCapability;
+  benchmark_comparison: PerformanceModuleCapability;
+  multi_horizon_returns: PerformanceModuleCapability;
+  contribution_ranking: PerformanceModuleCapability;
+  attribution_detail: PerformanceModuleCapability;
+  contribution_detail: PerformanceModuleCapability;
+  evidence: PerformanceModuleCapability;
+};
+
 export type PerformanceHorizonComparisonRow = {
   period: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  begin_market_value?: number | null;
+  end_market_value?: number | null;
+  beginning_cash_flow?: number | null;
+  ending_cash_flow?: number | null;
+  flow_adjusted_end_market_value?: number | null;
+  net_cash_flow?: number | null;
+  fees?: number | null;
+  net_return_pct?: number | null;
+  gross_return_pct?: number | null;
   portfolio_return_pct: number | null;
   benchmark_return_pct: number | null;
   active_return_pct: number | null;
+  cumulative_net_return_pct?: number | null;
+  cumulative_gross_return_pct?: number | null;
+  cumulative_benchmark_return_pct?: number | null;
+  cumulative_active_return_pct?: number | null;
+  annualized_net_return_pct?: number | null;
+  annualized_gross_return_pct?: number | null;
   annualized_return_pct: number | null;
 };
 
@@ -250,7 +302,13 @@ export type WorkbenchPerformanceHorizonComparison = {
   contract_version: string;
   portfolio_id: string;
   as_of_date: string;
+  period: string;
+  report_start_date: string;
+  report_end_date: string;
+  reporting_currency?: string | null;
   detail_basis: string;
+  chart_frequency: string;
+  requested_chart_frequency_supported?: boolean;
   benchmark_code: string | null;
   benchmark_options: PerformanceBenchmarkOptionView[];
   rows: PerformanceHorizonComparisonRow[];
@@ -283,6 +341,8 @@ export type WorkbenchPerformanceAttributionTrend = {
   chart_frequency: string;
   detail_basis: string;
   attribution_dimension: string;
+  requested_chart_frequency_supported?: boolean;
+  requested_attribution_dimension_supported?: boolean;
   benchmark_code: string | null;
   rows: PerformanceAttributionTrendRow[];
   warnings: string[];
@@ -313,9 +373,13 @@ export type WorkbenchPerformanceWorkspace = {
   contribution_dimension: string;
   attribution_dimension: string;
   detail_basis: string;
+  requested_chart_frequency_supported?: boolean;
+  requested_contribution_dimension_supported?: boolean;
+  requested_attribution_dimension_supported?: boolean;
   segment?: string;
   benchmark_code: string | null;
   benchmark_options?: PerformanceBenchmarkOptionView[];
+  capabilities?: WorkbenchPerformanceCapabilities;
   portfolio: WorkbenchOverview["portfolio"];
   overview: WorkbenchOverview["overview"];
   net_performance: PerformanceComparativeSummary;
@@ -340,8 +404,12 @@ export type WorkbenchPerformanceWorkspaceSummary = Pick<
   | "report_end_date"
   | "chart_frequency"
   | "detail_basis"
+  | "requested_chart_frequency_supported"
+  | "requested_contribution_dimension_supported"
+  | "requested_attribution_dimension_supported"
   | "benchmark_code"
   | "benchmark_options"
+  | "capabilities"
   | "portfolio"
   | "overview"
   | "net_performance"
@@ -364,8 +432,12 @@ export type WorkbenchPerformanceWorkspaceDetails = Pick<
   | "contribution_dimension"
   | "attribution_dimension"
   | "detail_basis"
+  | "requested_chart_frequency_supported"
+  | "requested_contribution_dimension_supported"
+  | "requested_attribution_dimension_supported"
   | "segment"
   | "benchmark_code"
+  | "capabilities"
   | "net_chart"
   | "gross_chart"
   | "contribution"

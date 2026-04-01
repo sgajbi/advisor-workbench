@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 
-import { ModuleSkeleton, WorkspaceCapabilityPanel } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 import { isSupportedCapability } from "@/shell/workspace-capabilities";
+import PortfolioModuleState from "./portfolio-module-state";
 
 export default function PortfolioAnalyticsCapabilityBody<T>({
   capability,
@@ -28,7 +28,15 @@ export default function PortfolioAnalyticsCapabilityBody<T>({
   children: (data: NonNullable<T>) => ReactNode;
 }) {
   if (detailsLoading) {
-    return <ModuleSkeleton chart rows={4} />;
+    return (
+      <PortfolioModuleState
+        variant="loading"
+        title="Loading analytics"
+        message="Analytical detail is loading for the selected portfolio context."
+        chart
+        rows={4}
+      />
+    );
   }
 
   if (isSupportedCapability(capability) && supportedData) {
@@ -36,12 +44,14 @@ export default function PortfolioAnalyticsCapabilityBody<T>({
   }
 
   return (
-    <WorkspaceCapabilityPanel
+    <PortfolioModuleState
+      variant="capability"
       capability={capability}
       partialTitle={partialTitle}
       unavailableTitle={unavailableTitle}
       body={body}
-      hint={capability.state === "partial" ? partialHint : unavailableHint}
+      partialHint={partialHint}
+      unavailableHint={unavailableHint}
     />
   );
 }

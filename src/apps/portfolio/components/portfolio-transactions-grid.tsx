@@ -12,14 +12,20 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { ModuleSkeleton } from "@/design-system";
+import {
+  WorkbenchInlineRefreshNote,
+} from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
-import PortfolioDetailGridState from "./portfolio-detail-grid-state";
+import {
+  PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
+  shouldPinPortfolioGridLeadColumns,
+} from "./portfolio-grid-helpers";
+import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -73,6 +79,7 @@ export default function PortfolioTransactionsGrid({
   const [loadError, setLoadError] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [showExpandedColumns, setShowExpandedColumns] = useState(false);
+  const gridDensity = showExpandedColumns ? "expanded" : "essential";
 
   useEffect(() => {
     setStartDate(defaultStartDate);
@@ -180,59 +187,59 @@ export default function PortfolioTransactionsGrid({
       buildTransactionColumn({
         field: "tradeDate",
         headerName: "Trade Date",
-        pinned: "left",
-        minWidth: 130,
+        pinned: shouldPinPortfolioGridLeadColumns(gridDensity) ? "left" : null,
+        minWidth: 118,
         valueFormatter: ({ value }) => formatDate(value),
       }),
       buildTransactionColumn({
         field: "type",
         headerName: "Type",
-        minWidth: 120,
+        minWidth: 104,
       }),
       buildTransactionColumn({
         field: "instrument",
         headerName: "Instrument",
-        minWidth: 140,
+        minWidth: 126,
         flex: 1.2,
       }),
       buildTransactionColumn({
         field: "quantity",
         headerName: "Quantity",
-        minWidth: 120,
+        minWidth: 104,
         type: "numericColumn",
         valueFormatter: ({ value }) => formatQuantity(value),
       }),
       buildTransactionColumn({
         field: "amount",
         headerName: "Amount",
-        minWidth: 135,
+        minWidth: 126,
         type: "numericColumn",
         valueFormatter: ({ value, data }) => formatCurrency(value, data?.currency ?? baseCurrency),
       }),
       buildTransactionColumn({
         field: "currency",
         headerName: "Currency",
-        minWidth: 110,
+        minWidth: 92,
       }),
       buildTransactionColumn({
         field: "status",
         headerName: "Status",
-        minWidth: 120,
+        minWidth: 106,
       }),
       buildTransactionColumn({
         field: "componentType",
         headerName: "Component Type",
-        minWidth: 140,
+        minWidth: 126,
         hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
         field: "transactionId",
         headerName: "Transaction ID",
-        minWidth: 160,
+        minWidth: 146,
         hide: !showExpandedColumns,
       }),
     ],
-    [baseCurrency, showExpandedColumns]
+    [baseCurrency, gridDensity, showExpandedColumns]
   );
 
   return (
@@ -324,10 +331,16 @@ export default function PortfolioTransactionsGrid({
       ) : null}
 
       {loading && !rowData.length ? (
-        <ModuleSkeleton rows={5} />
+        <PortfolioModuleState
+          variant="loading"
+          title="Loading transactions"
+          message="Transaction ledger detail is loading for the selected window."
+          rows={5}
+        />
       ) : rowData.length ? (
         <>
-          <PortfolioDetailGridState
+          <PortfolioModuleState
+            variant="status"
             state="partial"
             title="Transaction lifecycle detail is limited"
             body="Trade activity is available, but the current contract does not expose settlement dates."
@@ -341,6 +354,7 @@ export default function PortfolioTransactionsGrid({
             rowData={rowData}
             columnDefs={columnDefs}
             theme="legacy"
+            autoSizeStrategy={PORTFOLIO_GRID_AUTO_SIZE_STRATEGY}
             defaultColDef={DEFAULT_GRID_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"
@@ -357,37 +371,42 @@ export default function PortfolioTransactionsGrid({
         </div>
         </>
       ) : loadError ? (
-        <PortfolioDetailGridState
+        <PortfolioModuleState
+          variant="status"
           state="error"
           title="Transaction history unavailable"
           body="We could not load the transaction ledger for the selected period."
           hint="Retry the request or narrow the date window. If the issue persists, check upstream ledger availability."
         />
       ) : externalFilter ? (
-        <PortfolioDetailGridState
+        <PortfolioModuleState
+          variant="status"
           state="empty"
           title="No matching transactions in view"
           body="The current drill-down does not match any transactions in the selected ledger window."
           hint="Clear the drill-down or widen the period to inspect a broader transaction history."
-          actions={
+          action={
             <Button size="small" variant="text" onClick={onClearExternalFilter}>
               Clear drill-down
             </Button>
           }
         />
       ) : (
-        <PortfolioDetailGridState
+        <PortfolioModuleState
+          variant="status"
           state="empty"
           title="No transactions booked"
           body="No funding, trading, or cash activity has been recorded in the selected window."
           hint="Start with a funding entry or the first trade."
-          actions={
+          action={
             <a href={`/workbench?portfolioId=${encodeURIComponent(portfolioId)}`}>Book first transaction</a>
           }
         />
       )}
 
-      {loading && rowData.length ? <p className="portfolio-inline-note muted">Refreshing transactions…</p> : null}
+      {loading && rowData.length ? (
+        <WorkbenchInlineRefreshNote message="Refreshing transactions…" />
+      ) : null}
     </div>
   );
 }

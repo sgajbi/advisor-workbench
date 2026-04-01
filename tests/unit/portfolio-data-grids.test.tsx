@@ -88,6 +88,8 @@ describe("portfolio data grids", () => {
     expect(screen.getByRole("button", { name: "Show expanded holdings columns" })).toBeInTheDocument();
     expect(screen.getByText("Instrument")).toBeInTheDocument();
     expect(screen.getByText("Market Value")).toBeInTheDocument();
+    expect(screen.getByText("Weight")).toBeInTheDocument();
+    expect(screen.getByText("Unrealized P&L")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear filter/i }));
     expect(onClearFilter).toHaveBeenCalled();
 
@@ -163,6 +165,9 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
+    expect(screen.getByText("Amount")).toBeInTheDocument();
+    expect(screen.getByText("Currency")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
     expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
     expect(
@@ -226,7 +231,7 @@ describe("portfolio data grids", () => {
   });
 
   it("shows an empty-state CTA for holdings with no rows", () => {
-    render(
+    const { container } = render(
       <PortfolioHoldingsGrid
         portfolioId="MANUAL_PB_USD_001"
         positions={[]}
@@ -238,11 +243,13 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
+    expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
   it("shows a partial state when some holdings are unpriced", () => {
-    render(
+    const { container } = render(
       <PortfolioHoldingsGrid
         portfolioId="MANUAL_PB_USD_001"
         positions={[
@@ -264,7 +271,11 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("Holdings partially valued")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
+    expect(container.querySelector(".module-state-panel-partial")).toBeTruthy();
     expect(screen.getByTestId("mock-grid")).toBeInTheDocument();
+    expect(screen.getByText("Instrument")).toBeInTheDocument();
+    expect(screen.getByText("Weight")).toBeInTheDocument();
   });
 
   it("shows an actionable error state when transactions cannot be loaded", async () => {
@@ -273,7 +284,7 @@ describe("portfolio data grids", () => {
       vi.fn(async () => new Response("{}", { status: 500 }))
     );
 
-    render(
+    const { container } = render(
       <PortfolioTransactionsGrid
         portfolioId="MANUAL_PB_USD_001"
         baseCurrency="USD"
@@ -287,6 +298,8 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Transaction history unavailable")).toBeInTheDocument();
     });
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
+    expect(container.querySelector(".module-state-panel-error")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
   });
 
@@ -307,12 +320,17 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Transactions" })).toBeInTheDocument();
+    expect(screen.getByText("Loading transactions")).toBeInTheDocument();
+    expect(
+      screen.getByText("Transaction ledger detail is loading for the selected window.")
+    ).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-module-state")).toBeTruthy();
     await waitFor(() => expect(fetchMock).not.toHaveBeenCalled());
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("shows an empty drill-down state without mounting the transactions grid", async () => {
-    render(
+    const { container } = render(
       <PortfolioTransactionsGrid
         portfolioId="MANUAL_PB_USD_001"
         baseCurrency="USD"
@@ -341,6 +359,124 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
+    expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
+  });
+
+  it("shows a shared refresh note while transactions reload over existing rows", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            transaction_type: "BUY",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Transaction start date"), {
+      target: { value: "2026-03-05" },
+    });
+
+    expect(screen.getByText("Refreshing transactions…")).toBeInTheDocument();
+    expect(document.querySelector(".workbench-inline-refresh-note")).toBeTruthy();
+  });
+
+  it("keeps supported holdings and transactions on the shared grid frame path", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            total: 1,
+            skip: 0,
+            limit: 200,
+            transactions: [
+              {
+                transaction_id: "TX_1",
+                transaction_date: "2026-03-20T00:00:00Z",
+                transaction_type: "BUY",
+                component_type: "TRADE",
+                security_id: "EQ_1",
+                instrument_id: "AAPL",
+                quantity: 50,
+                net_cost_base: 9000,
+                currency: "USD",
+                settlement_status: "SETTLED",
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    const { container } = render(
+      <>
+        <PortfolioHoldingsGrid
+          portfolioId="MANUAL_PB_USD_001"
+          positions={[
+            {
+              security_id: "EQ_1",
+              instrument_name: "Apple Inc.",
+              asset_class: "Equities",
+              quantity: 700,
+              market_price: 210,
+              market_value_base: 147000,
+              unrealized_gain_loss_base: 12000,
+              weight_pct: 14.67,
+              currency: "USD",
+            },
+          ]}
+          baseCurrency="USD"
+          asOfDate="2026-03-28"
+          columnMode="expanded"
+        />
+        <PortfolioTransactionsGrid
+          portfolioId="MANUAL_PB_USD_001"
+          baseCurrency="USD"
+          asOfDate="2026-03-28"
+          defaultStartDate="2026-03-01"
+          defaultEndDate="2026-03-28"
+          initialTransactions={[
+            {
+              transaction_id: "TX_1",
+              transaction_date: "2026-03-20T00:00:00Z",
+              transaction_type: "BUY",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 50,
+              net_cost_base: 9000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+            },
+          ]}
+        />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Trade Date")).toBeInTheDocument();
+    });
+
+    expect(container.querySelectorAll(".portfolio-data-grid").length).toBeGreaterThanOrEqual(2);
+    expect(container.querySelectorAll(".portfolio-data-grid .portfolio-module-state")).toHaveLength(0);
+    expect(screen.getAllByTestId("mock-grid")).toHaveLength(2);
   });
 });

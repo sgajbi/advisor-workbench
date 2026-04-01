@@ -1,16 +1,30 @@
+import { useMemo, useState } from "react";
+
 import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 
-import { AnalyticsTable, Panel } from "@/design-system";
+import { AnalyticsTable, WorkbenchDataGridFrame, WorkbenchRankedBarList } from "@/design-system";
 
-import { formatLabel, formatPct } from "../formatters";
-import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
-import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import {
-  getContributionTotals,
-  inlineControlLabelSx,
-  shouldShowContributionLocalFx,
-} from "./performance-workspace-view-helpers";
-import PerformanceCapabilityNotice from "./performance-capability-notice";
+  buildPerformancePositionContributionTableModel,
+} from "./performance-analytics-table-models";
+import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
+import PerformanceAnalysisDrilldownWorkspace from "./performance-analysis-drilldown-workspace";
+import PerformanceAnalysisInsightPane from "./performance-analysis-insight-pane";
+import { getContributionDetailOptions } from "./performance-analysis-detail-options";
+import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
+import PerformanceContributionContextNote from "./performance-contribution-context-note";
+import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
+import { formatLabel } from "../formatters";
+import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
+import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
+import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
+import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
+import { inlineControlLabelSx } from "./performance-workspace-view-helpers";
+import { isCapabilityOptionSupported } from "./performance-capability-options";
+import { formatPct, formatPerformancePositionLabel } from "../formatters";
+import type { ContributionRowView, WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
+
+type ContributionDetailView = "positions" | "segments";
 
 type PerformanceAnalysisContributionSectionProps = Pick<
   PerformanceAnalysisModeProps,
@@ -30,104 +44,197 @@ export default function PerformanceAnalysisContributionSection({
   isDetailsPending,
   capabilities,
 }: PerformanceAnalysisContributionSectionProps) {
-  return (
-    <Panel id="performance-drivers" className="performance-detail-panel-wide">
-      <div className="performance-section-heading">
-        <h3>Contribution Detail</h3>
-        <FormControl size="small" sx={{ minWidth: 180 }}>
-          <Typography component="label" sx={inlineControlLabelSx}>
-            Segment
-          </Typography>
-          <Select
-            aria-label="Contribution Segment"
-            value={contributionDimension}
-            onChange={(event) =>
-              onRequestChange?.({
-                contributionDimension: event.target.value,
-              })
-            }
-            disabled={isUpdating}
-          >
-            {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {formatLabel(option)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </div>
-      {capabilities.contributionDetail.state === "supported" ? (
-        workspace.contribution?.levels.map((level) => {
-          const totals = getContributionTotals(workspace, level) ?? null;
-          const showLocalFxColumns = shouldShowContributionLocalFx(level, workspace);
-          return (
-            <div key={`${level.level}-${level.name}`} className="performance-detail-block">
-              <div className="performance-level-heading">
-                <strong>{formatLabel(level.name)}</strong>
-              </div>
-              <AnalyticsTable
-                ariaLabel={`${formatLabel(level.name)} contribution table`}
-                columns={[
-                  { key: "bucket", label: "Bucket" },
-                  { key: "contribution", label: "Contribution", align: "right" },
-                  { key: "weight", label: "Avg. Weight", align: "right" },
-                  { key: "return", label: "Return", align: "right" },
-                  ...(showLocalFxColumns
-                    ? [
-                        { key: "local", label: "Local", align: "right" as const },
-                        { key: "fx", label: "FX", align: "right" as const },
-                      ]
-                    : []),
-                ]}
-                rows={level.rows.map((row) => ({
-                  key: `${level.name}-${row.key_label}`,
-                  cells: [
-                    row.key_label,
-                    formatPct(row.contribution_pct),
-                    formatPct(row.weight_avg_pct),
-                    formatPct(row.total_return_pct),
-                    ...(showLocalFxColumns
-                      ? [
-                          formatPct(row.local_contribution_pct),
-                          formatPct(row.fx_contribution_pct),
-                        ]
-                      : []),
-                  ],
-                }))}
-                footer={[
-                  "Total",
-                  formatPct(totals?.portfolioContributionPct ?? level.total_contribution_pct),
-                  formatPct(level.total_weight_avg_pct ?? totals?.weightAvgPct ?? null),
-                  formatPct(
-                    level.total_portfolio_return_pct ??
-                      workspace.contribution?.total_portfolio_return_pct ??
-                      null
-                  ),
-                  ...(showLocalFxColumns
-                    ? [
-                        formatPct(totals?.localContributionPct ?? null),
-                        formatPct(totals?.fxContributionPct ?? null),
-                      ]
-                    : []),
-                ]}
-              />
-            </div>
-          );
-        })
-      ) : isDetailsPending ? (
-        <p className="muted">Loading contribution detail for the selected segment and horizon.</p>
-      ) : (
-        <PerformanceCapabilityNotice
-          capability={capabilities.contributionDetail}
-          partialTitle="Contribution detail is partial"
-          unavailableTitle="Contribution detail unavailable"
-          body={
-            capabilities.contributionDetail.reason ??
-            "Contribution detail is not available for the current selection."
-          }
-          hint="Contribution detail requires source-backed contribution levels for the selected segment and horizon."
-        />
-      )}
-    </Panel>
+  const [detailView, setDetailView] = useState<ContributionDetailView>("positions");
+  const hasAggregateContributionLevels = (workspace.contribution?.levels?.length ?? 0) > 0;
+  const hasPositionContributionRows = (workspace.contribution?.position_rows?.length ?? 0) > 0;
+  const positionTableModel = hasPositionContributionRows
+    ? buildPerformancePositionContributionTableModel({
+        rows: workspace.contribution?.position_rows ?? [],
+      })
+    : null;
+  const rankedRows = useMemo(
+    () => getContributionInsightRows(workspace),
+    [workspace]
   );
+  const segmentLevel = workspace.contribution?.levels?.[0] ?? null;
+  const actions = (
+    <PerformanceAnalysisToolbar>
+      <FormControl size="small" sx={{ minWidth: 180 }}>
+        <Typography component="label" sx={inlineControlLabelSx}>
+          Segment
+        </Typography>
+        <Select
+          aria-label="Contribution Segment"
+          value={contributionDimension}
+          onChange={(event) =>
+            onRequestChange?.({
+              contributionDimension: event.target.value,
+            })
+          }
+          disabled={isUpdating}
+        >
+          {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
+            <MenuItem
+              key={option}
+              value={option}
+              disabled={
+                !isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
+              }
+            >
+              {formatLabel(option)}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </PerformanceAnalysisToolbar>
+  );
+
+  return (
+    <WorkbenchDataGridFrame
+      id="performance-drivers"
+      title="Performance Drivers"
+      subtitle="Contribution drivers for the selected horizon."
+      actions={actions}
+      className="performance-detail-panel-wide performance-analysis-module"
+    >
+      <PerformanceAnalysisModuleState
+        capability={capabilities.contributionDetail}
+        isDetailsPending={isDetailsPending}
+        loadingText="Loading contribution detail for the selected segment and horizon."
+        partialTitle="Contribution detail is partial"
+        unavailableTitle="Contribution detail unavailable"
+        body={
+          capabilities.contributionDetail.reason ??
+          "Contribution detail is not available for the current selection."
+        }
+        hint={
+          hasAggregateContributionLevels
+            ? "Aggregate contribution remains available even when position-level ranking is absent."
+            : "Contribution detail requires source-backed contribution levels for the selected segment and horizon."
+        }
+        allowPartialContent={hasAggregateContributionLevels}
+      >
+        {workspace.contribution ? (
+          <PerformanceAnalysisDrilldownWorkspace
+            insightLabel="Top / Bottom Contributors panel"
+            detailLabel="Contribution Detail panel"
+            insightPane={
+              <PerformanceAnalysisInsightPane
+                title="Top / Bottom Contributors"
+                subtitle="Prioritize the largest positive and negative contribution drivers."
+                className="performance-contribution-insight-pane"
+              >
+                <PerformanceContributionDetailStrip contribution={workspace.contribution} />
+                <div className="performance-contribution-ranked-panel">
+                  <WorkbenchRankedBarList
+                    title="Ranked contributors"
+                    label="Contribution"
+                    rows={rankedRows}
+                    scale={
+                      rankedRows.length > 0
+                        ? Math.max(...rankedRows.map((row) => row.magnitudePct))
+                        : 0
+                    }
+                    emptyMessage="No ranked contribution insight is available for this selection."
+                  />
+                </div>
+                {hasAggregateContributionLevels ? (
+                  <PerformanceContributionContextNote contribution={workspace.contribution} />
+                ) : null}
+              </PerformanceAnalysisInsightPane>
+            }
+            detailPane={
+              <PerformanceAnalysisDetailPane
+                title="Contribution Detail"
+                subtitle="Inspect either position-level detail or grouped segment contribution."
+                value={detailView}
+                onChange={setDetailView}
+                options={getContributionDetailOptions({
+                  positionCount: workspace.contribution.position_rows.length,
+                  segmentCount: segmentLevel?.rows.length ?? 0,
+                  hasSegmentBreakdown: hasAggregateContributionLevels,
+                })}
+              >
+                {detailView === "positions" ? (
+                  positionTableModel ? (
+                    <AnalyticsTable
+                      className="performance-analysis-table"
+                      dense
+                      ariaLabel="Position contribution table"
+                      columns={positionTableModel.columns}
+                      rows={positionTableModel.rows.map((row) => ({
+                        key: row.key,
+                        ariaLabel: row.ariaLabel,
+                        cells: row.cells,
+                      }))}
+                    />
+                  ) : (
+                    <div
+                      className="performance-analysis-detail-empty"
+                      aria-label="Position contribution detail unavailable"
+                    >
+                      <strong>Position ranking unavailable</strong>
+                      <span>
+                        Open Segment breakdown to inspect grouped contribution for the selected
+                        segment.
+                      </span>
+                    </div>
+                  )
+                ) : segmentLevel ? (
+                  <PerformanceContributionAggregateTable
+                    className="performance-analysis-table"
+                    contribution={workspace.contribution}
+                    level={segmentLevel}
+                    ariaLabel={`${formatLabel(segmentLevel.name)} contribution table`}
+                    rowKeyPrefix={segmentLevel.name}
+                  />
+                ) : (
+                  <div
+                    className="performance-analysis-detail-empty"
+                    aria-label="Segment contribution detail unavailable"
+                  >
+                    <strong>Segment breakdown unavailable</strong>
+                    <span>
+                      Grouped contribution is not available for the current selection and horizon.
+                    </span>
+                  </div>
+                )}
+              </PerformanceAnalysisDetailPane>
+            }
+          />
+        ) : null}
+      </PerformanceAnalysisModuleState>
+    </WorkbenchDataGridFrame>
+  );
+}
+
+function getContributionInsightRows(workspace: WorkbenchPerformanceWorkspace) {
+  const positionRows = [...(workspace.contribution?.position_rows ?? [])]
+    .sort((left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct))
+    .slice(0, 6)
+    .map((row) => ({
+      key: `position-${row.position_id}`,
+      title: formatPerformancePositionLabel(row.position_id),
+      subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+      value: formatPct(row.contribution_pct),
+      magnitudePct: Math.abs(row.contribution_pct ?? 0),
+      tone: row.contribution_pct < 0 ? ("negative" as const) : ("positive" as const),
+    }));
+
+  if (positionRows.length > 0) {
+    return positionRows;
+  }
+
+  const aggregateRows = [...(workspace.contribution?.levels?.[0]?.rows ?? [])]
+    .sort((left, right) => Math.abs(right.contribution_pct) - Math.abs(left.contribution_pct))
+    .slice(0, 6);
+
+  return aggregateRows.map((row: ContributionRowView) => ({
+    key: `segment-${row.key_label}`,
+    title: row.key_label,
+    subtitle: row.weight_avg_pct == null ? "Grouped contribution" : `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
+    value: formatPct(row.contribution_pct),
+    magnitudePct: Math.abs(row.contribution_pct ?? 0),
+    tone: row.contribution_pct < 0 ? ("negative" as const) : ("positive" as const),
+  }));
 }

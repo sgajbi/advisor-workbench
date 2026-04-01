@@ -395,4 +395,70 @@ describe("performance view model", () => {
     expect(partialCapabilities.benchmarkComparison.state).toBe("partial");
     expect(partialCapabilities.contributionRanking.state).toBe("partial");
   });
+
+  it("prefers backend-owned capability metadata when the contract provides it", () => {
+    const capabilities = getPerformanceWorkspaceCapabilities(
+      buildWorkspace({
+        capabilities: {
+          summary_kpis: { state: "supported", reason: "Summary supported." },
+          return_path: {
+            state: "unavailable",
+            reason: "No published return history.",
+            supported_frequencies: ["monthly", "quarterly"],
+          },
+          benchmark_comparison: { state: "partial", reason: "Benchmark-relative returns incomplete." },
+          multi_horizon_returns: { state: "supported", reason: "Horizon comparison available." },
+          contribution_ranking: {
+            state: "partial",
+            reason: "Only aggregate contribution rows are available.",
+            supported_dimensions: ["asset_class", "sector", "country"],
+          },
+          attribution_detail: {
+            state: "unavailable",
+            reason: "Attribution detail unavailable.",
+            supported_dimensions: ["asset_class", "sector", "country", "currency"],
+            supported_frequencies: ["monthly", "quarterly"],
+          },
+          contribution_detail: {
+            state: "partial",
+            reason: "Contribution detail is aggregate-only.",
+            supported_dimensions: ["asset_class", "sector", "country"],
+          },
+          evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
+        },
+      })
+    );
+
+    expect(capabilities.returnPath).toMatchObject({
+      state: "unavailable",
+      reason: "No published return history.",
+    });
+    expect(capabilities.benchmarkComparison).toMatchObject({
+      state: "partial",
+      reason: "Benchmark-relative returns incomplete.",
+    });
+    expect(capabilities.contributionRanking).toMatchObject({
+      state: "partial",
+      reason: "Only aggregate contribution rows are available.",
+    });
+    expect(capabilities.attributionDetail).toMatchObject({
+      state: "unavailable",
+      reason: "Attribution detail unavailable.",
+    });
+    expect(capabilities.contributionRanking.supportedDimensions).toEqual([
+      "asset_class",
+      "sector",
+      "country",
+    ]);
+    expect(capabilities.attributionDetail.supportedDimensions).toEqual([
+      "asset_class",
+      "sector",
+      "country",
+      "currency",
+    ]);
+    expect(capabilities.attributionDetail.supportedFrequencies).toEqual([
+      "monthly",
+      "quarterly",
+    ]);
+  });
 });

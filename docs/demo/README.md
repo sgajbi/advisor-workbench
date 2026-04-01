@@ -9,16 +9,16 @@ Run deterministic UI walkthroughs for:
 
 ## Prerequisites
 
-- lotus-manage running at `http://127.0.0.1:8000`
-- lotus-gateway running at `http://127.0.0.1:8100`
-- UI running at `http://127.0.0.1:3000`
-- lotus-core query running at `http://127.0.0.1:8201`
-- lotus-core control plane running at `http://127.0.0.1:8202`
-- lotus-performance running at `http://127.0.0.1:8002`
+- lotus-manage running at `http://manage.dev.lotus`
+- lotus-gateway running at `http://gateway.dev.lotus`
+- UI running at `http://workbench.dev.lotus`
+- lotus-core query running at `http://core-query.dev.lotus`
+- lotus-core ingestion running at `http://core-ingestion.dev.lotus`
+- lotus-performance running at `http://performance.dev.lotus`
 
 ## Performance Workstation Walkthrough
 
-Open `http://127.0.0.1:3000/performance`.
+Open `http://workbench.dev.lotus/performance`.
 
 Expected seeded runtime context:
 

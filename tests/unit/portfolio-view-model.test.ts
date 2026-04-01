@@ -18,6 +18,7 @@ import {
   derivePortfolioWorkspace,
   getBookReadinessStatus,
   getBookReadinessSupport,
+  getReportingFreshnessSupport,
   getBookReadinessTone,
   getNetFlowTone,
   getReadinessTone,
@@ -214,6 +215,7 @@ describe("portfolio view model", () => {
     expect(resolveTimeWindowStartDate("2026-02-24", "MTD", "2024-01-01")).toBe("2026-02-01");
     expect(resolveTimeWindowStartDate("2026-05-24", "QTD", "2024-01-01")).toBe("2026-04-01");
     expect(resolveTimeWindowStartDate("2026-02-24", "YTD", "2024-01-01")).toBe("2026-01-01");
+    expect(resolveTimeWindowStartDate("2026-02-24", "1Y", "2024-01-01")).toBe("2025-02-25");
     expect(resolveTimeWindowStartDate("2026-02-24", "SI", "2024-01-01")).toBe("2024-01-01");
   });
 
@@ -436,7 +438,7 @@ describe("portfolio view model", () => {
     expect(getYearToDateActivityCount(workspace)).toBe(5);
     expect(getNetFlowTone(workspace)).toBe("success");
     expect(getBookReadinessStatus(workspace)).toBe("Ready");
-    expect(getBookReadinessSupport(workspace)).toBe("Reportable and publishable");
+    expect(getBookReadinessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
     expect(getBookReadinessTone(workspace)).toBe("success");
 
     expect(buildPortfolioReadinessIndicators(workspace, "summary")).toEqual([
@@ -528,6 +530,43 @@ describe("portfolio view model", () => {
     ]);
     expect(getReadinessTone("Missing")).toBe("danger");
     expect(getReadinessTone("Empty")).toBe("warn");
+  });
+
+  it("formats reporting freshness support from published row evidence", () => {
+    const workspace = buildWorkspace();
+
+    expect(getReportingFreshnessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
+    expect(getBookReadinessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
+
+    workspace.readiness.reporting.generated_at_utc = null;
+    expect(getReportingFreshnessSupport(workspace)).toBe("14 report rows published");
+
+    workspace.readiness.reporting.status = "PENDING";
+    expect(getReportingFreshnessSupport(workspace)).toBe("14 report rows published");
+
+    workspace.readiness.reporting.status = "EMPTY";
+    workspace.readiness.reporting.row_count = 0;
+    expect(getReportingFreshnessSupport(workspace)).toBe("No published report rows");
+  });
+
+  it("prioritizes operational control and booking support in book readiness messaging", () => {
+    const workspace = buildWorkspace();
+    workspace.readiness.reporting.status = "PENDING";
+    workspace.readiness.reporting.row_count = 0;
+    workspace.operations = {
+      publish_allowed: false,
+      controls_blocking: true,
+      latest_booked_transaction_date: "2026-02-20",
+    };
+
+    expect(getBookReadinessSupport(workspace)).toBe("Blocking controls active");
+
+    workspace.operations.controls_blocking = false;
+    expect(getBookReadinessSupport(workspace)).toBe("Publication currently blocked");
+
+    workspace.operations.publish_allowed = null;
+    workspace.readiness.has_positions = true;
+    expect(getBookReadinessSupport(workspace)).toBe("Latest booking 20 Feb 2026");
   });
 
   it("builds active filter chips for removable business filters", () => {

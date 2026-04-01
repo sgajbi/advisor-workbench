@@ -7,6 +7,8 @@ import TableFooter from "@mui/material/TableFooter";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 
+import { cx } from "../utils/cx";
+
 type AnalyticsTableColumn = {
   key: string;
   label: string;
@@ -28,16 +30,21 @@ export default function AnalyticsTable({
   columns,
   rows,
   footer,
+  className,
+  dense = false,
 }: {
   ariaLabel: string;
   columns: AnalyticsTableColumn[];
   rows: AnalyticsTableRow[];
   footer?: React.ReactNode[];
+  className?: string;
+  dense?: boolean;
 }) {
   return (
     <TableContainer
       component={Paper}
       variant="outlined"
+      className={cx("analytics-table-frame", dense && "analytics-table-frame-dense", className)}
       sx={{
         borderRadius: 3,
         borderColor: "divider",
@@ -67,7 +74,7 @@ export default function AnalyticsTable({
               <TableCell
                 key={column.key}
                 align={column.align ?? "left"}
-                sx={tableHeaderCellSx}
+                sx={dense ? tableHeaderCellDenseSx : tableHeaderCellSx}
               >
                 {column.label}
               </TableCell>
@@ -112,7 +119,7 @@ export default function AnalyticsTable({
                 <TableCell
                   key={`${row.key}-${columns[index]?.key ?? index}`}
                   align={columns[index]?.align ?? "left"}
-                  sx={tableBodyCellSx}
+                  sx={dense ? tableBodyCellDenseSx : tableBodyCellSx}
                 >
                   {cell}
                 </TableCell>
@@ -127,7 +134,7 @@ export default function AnalyticsTable({
                 <TableCell
                   key={`footer-${columns[index]?.key ?? index}`}
                   align={columns[index]?.align ?? "left"}
-                  sx={tableFooterCellSx}
+                  sx={dense ? tableFooterCellDenseSx : tableFooterCellSx}
                 >
                   {cell}
                 </TableCell>
@@ -172,4 +179,22 @@ const tableFooterCellSx = {
   borderTopColor: "divider",
   bgcolor: "rgba(247, 249, 251, 0.98)",
   whiteSpace: "nowrap",
+} as const;
+
+const tableHeaderCellDenseSx = {
+  ...tableHeaderCellSx,
+  py: 1,
+  fontSize: "0.6875rem",
+} as const;
+
+const tableBodyCellDenseSx = {
+  ...tableBodyCellSx,
+  py: 0.85,
+  fontSize: "0.8125rem",
+} as const;
+
+const tableFooterCellDenseSx = {
+  ...tableFooterCellSx,
+  py: 0.95,
+  fontSize: "0.8125rem",
 } as const;

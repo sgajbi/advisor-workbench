@@ -47,7 +47,16 @@ export type PerformanceSummaryModeProps = PerformanceWorkspaceControls & {
   contributorScale: number;
   positivePositionContributors: ContributionPositionView[];
   negativePositionContributors: ContributionPositionView[];
+  topContributors: ContributionRowView[];
+  bottomContributors: ContributionRowView[];
 };
+
+export type PerformanceControlNormalizationHandler = (
+  patch: Pick<
+    PerformanceWorkspaceRequestPatch,
+    "chartFrequency" | "attributionDimension"
+  >
+) => void;
 
 export type PerformanceSummaryHeaderSectionProps = Pick<
   PerformanceSummaryModeProps,
@@ -57,7 +66,6 @@ export type PerformanceSummaryHeaderSectionProps = Pick<
   | "selectedBenchmarkCode"
   | "selectedBenchmarkLabel"
   | "selectedPerformance"
-  | "primaryDriver"
   | "hasMoneyWeightedReturn"
   | "suspiciousMoneyWeightedReturn"
 >;
@@ -69,6 +77,8 @@ export type PerformanceSummaryContributorsSectionProps = Pick<
   | "contributorScale"
   | "positivePositionContributors"
   | "negativePositionContributors"
+  | "topContributors"
+  | "bottomContributors"
   | "isDetailsPending"
 >;
 

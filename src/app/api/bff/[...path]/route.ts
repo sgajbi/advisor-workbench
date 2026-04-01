@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const BFF_BASE_URL = process.env.BFF_BASE_URL ?? "http://localhost:8100";
+import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 
 async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamPath = params.path.join("/");
   const search = request.nextUrl.search;
-  const url = `${BFF_BASE_URL}/${upstreamPath}${search}`;
+  const url = `${resolveGatewayBaseUrl()}/${upstreamPath}${search}`;
 
   const headers = new Headers();
   request.headers.forEach((value, key) => {

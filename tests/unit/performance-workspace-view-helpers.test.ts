@@ -1,173 +1,102 @@
 import { describe, expect, it } from "vitest";
 
-import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
-import { getPerformanceSummaryHeaderPresentation } from "../../src/apps/performance/components/performance-workspace-view-helpers";
-import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench/types";
+import {
+  getPerformanceTrustStripPresentation,
+} from "../../src/apps/performance/components/performance-workspace-view-helpers";
+import {
+  buildBenchmarkUnassignedPerformanceScenario,
+  buildCombinedPartialPerformanceScenario,
+  buildPartialBenchmarkPerformanceScenario,
+  buildPerformancePresentationScenario,
+} from "../fixtures/performance-workspace-fixtures";
 
-const supportedCapabilities: PerformanceWorkspaceCapabilities = {
-  summaryKpis: { state: "supported" },
-  returnPath: { state: "supported" },
-  benchmarkComparison: { state: "supported" },
-  multiHorizonReturns: { state: "supported" },
-  contributionRanking: { state: "supported" },
-  attributionDetail: { state: "supported" },
-  contributionDetail: { state: "supported" },
-  evidence: { state: "unavailable", reason: "Evidence contract unavailable." },
-};
-
-function buildWorkspace(): WorkbenchPerformanceWorkspace {
-  return {
-    correlation_id: "corr",
-    contract_version: "v1",
-    portfolio_id: "PF_1001",
-    as_of_date: "2026-03-29",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-03-29",
-    chart_frequency: "monthly",
-    contribution_dimension: "asset_class",
-    attribution_dimension: "asset_class",
-    detail_basis: "NET",
-    segment: "asset_class",
-    benchmark_code: "BMK_1",
-    benchmark_options: [],
-    portfolio: {
-      portfolio_id: "PF_1001",
-      client_id: "CIF_1",
-      base_currency: "USD",
-      booking_center_code: "SG",
-    },
-    overview: {
-      market_value_base: 1000000,
-      cash_weight_pct: 5,
-      position_count: 3,
-    },
-    net_performance: {
-      metric_basis: "NET",
-      portfolio_return_pct: 1.25,
-      benchmark_return_pct: 1,
-      active_return_pct: 0.25,
-      annualized_return_pct: 1.25,
-      benchmark_id: "BMK_1",
-      benchmark_return_source: "calculated",
-      begin_market_value: 950000,
-      end_market_value: 1000000,
-      net_cash_flow: 20000,
-    },
-    gross_performance: {
-      metric_basis: "GROSS",
-      portfolio_return_pct: 1.4,
-      benchmark_return_pct: 1,
-      active_return_pct: 0.4,
-      annualized_return_pct: 1.4,
-      benchmark_id: "BMK_1",
-      benchmark_return_source: "calculated",
-      begin_market_value: 950000,
-      end_market_value: 1000000,
-      net_cash_flow: 20000,
-    },
-    money_weighted_return: {
-      money_weighted_return_pct: 1.1,
-      annualized_return_pct: 1.1,
-      method: "XIRR",
-      start_date: "2026-01-01",
-      end_date: "2026-03-29",
-      notes: [],
-    },
-    net_chart: [
-      {
-        label: "2026-01",
-        frequency: "monthly",
-        period_start: "2026-01-01",
-        period_end: "2026-01-31",
-        portfolio_return_pct: 1,
-        benchmark_return_pct: 0.8,
-        active_return_pct: 0.2,
-        cumulative_portfolio_return_pct: 1,
-        cumulative_benchmark_return_pct: 0.8,
-        cumulative_active_return_pct: 0.2,
-      },
-    ],
-    gross_chart: [],
-    contribution: null,
-    attribution: null,
-    warnings: [],
-    partial_failures: [],
-  } as WorkbenchPerformanceWorkspace;
-}
-
-describe("getPerformanceSummaryHeaderPresentation", () => {
-  it("builds benchmark-unassigned presentation honestly when relative analytics are unavailable", () => {
-    const workspace = buildWorkspace();
-    workspace.benchmark_code = null;
-    workspace.money_weighted_return = null;
-    workspace.net_chart = [];
-
-    const presentation = getPerformanceSummaryHeaderPresentation({
-      workspace,
-      detailBasis: "NET",
-      capabilities: {
-        ...supportedCapabilities,
-        returnPath: { state: "unavailable", reason: "Return observations unavailable." },
-        benchmarkComparison: {
-          state: "unavailable",
-          reason: "No benchmark is assigned to this mandate.",
+describe("performance first-paint helper contracts", () => {
+  it("maps compact trust-strip statuses from backend-backed capabilities", () => {
+    const scenario = buildPerformancePresentationScenario({
+      capabilityOverrides: {
+        contributionDetail: {
+          state: "partial",
+          reason: "Contribution exists, but only aggregate rows are available.",
+          coverageLevel: "aggregate",
+          fallbackAvailable: true,
         },
       },
-      selectedBenchmarkCode: undefined,
-      selectedBenchmarkLabel: null,
-      selectedPerformance: {
-        ...workspace.net_performance,
-        portfolio_return_pct: null,
-        benchmark_return_pct: null,
-        active_return_pct: null,
-        annualized_return_pct: null,
-        benchmark_id: null,
-        benchmark_return_source: null,
-        begin_market_value: null,
-        end_market_value: null,
-        net_cash_flow: null,
-      },
-      primaryDriver: null,
-      hasMoneyWeightedReturn: false,
-      suspiciousMoneyWeightedReturn: false,
     });
 
-    expect(presentation.hasBenchmark).toBe(false);
-    expect(presentation.hasHistory).toBe(false);
-    expect(presentation.benchmarkValue).toBe("Unassigned");
-    expect(presentation.benchmarkHint).toBe("Assign a benchmark to enable relative analytics.");
-    expect(presentation.primaryReturnCard.value).toBe("Unavailable");
-    expect(presentation.benchmarkCard.unavailable).toBe(true);
-    expect(presentation.activeCard.support).toBe("No benchmark is assigned to this mandate.");
-    expect(presentation.moneyWeightedCard.value).toBe("Unavailable");
-    expect(presentation.contextCards.find((card) => card.label === "Primary Contributor")?.value).toBe("Unavailable");
+    const presentation = getPerformanceTrustStripPresentation({
+      capabilities: scenario.capabilities,
+    });
+
+    expect(presentation.items.find((item) => item.label === "Benchmark")).toMatchObject({
+      value: "Assigned",
+      tone: "default",
+      support: "Benchmark context through 24 Feb 2026",
+    });
+    expect(presentation.items.find((item) => item.label === "Contribution")).toMatchObject({
+      value: "Partial",
+      tone: "warn",
+      support: "Aggregate fallback ready",
+    });
+    expect(presentation.items.find((item) => item.label === "Evidence")).toMatchObject({
+      value: "Pending",
+      tone: "default",
+      support: "Evidence not exposed by contract",
+    });
   });
 
-  it("builds relative performance presentation when benchmark analytics are supported", () => {
-    const workspace = buildWorkspace();
-
-    const presentation = getPerformanceSummaryHeaderPresentation({
-      workspace,
-      detailBasis: "NET",
-      capabilities: supportedCapabilities,
-      selectedBenchmarkCode: "BMK_1",
-      selectedBenchmarkLabel: "Global Balanced 60/40",
-      selectedPerformance: workspace.net_performance,
-      primaryDriver: {
-        key_label: "Equity",
-        contribution_pct: 0.9,
-      },
-      hasMoneyWeightedReturn: true,
-      suspiciousMoneyWeightedReturn: false,
+  it.each([
+    {
+      name: "supported state",
+      scenario: buildPerformancePresentationScenario(),
+      expectedBenchmark: { value: "Assigned", tone: "default" },
+      expectedHistory: { value: "Ready", tone: "default" },
+      expectedAttribution: { value: "Ready", tone: "default" },
+    },
+    {
+      name: "partial benchmark comparison",
+      scenario: buildPartialBenchmarkPerformanceScenario(),
+      expectedBenchmark: { value: "Partial", tone: "warn" },
+      expectedHistory: { value: "Ready", tone: "default" },
+      expectedAttribution: { value: "Ready", tone: "default" },
+    },
+    {
+      name: "combined support gaps",
+      scenario: buildCombinedPartialPerformanceScenario(),
+      expectedBenchmark: { value: "Partial", tone: "warn" },
+      expectedHistory: { value: "Ready", tone: "default" },
+      expectedAttribution: { value: "Unavailable", tone: "danger" },
+    },
+    {
+      name: "benchmark unassigned and history unavailable",
+      scenario: buildBenchmarkUnassignedPerformanceScenario(),
+      expectedBenchmark: { value: "Unassigned", tone: "danger" },
+      expectedHistory: { value: "Unavailable", tone: "danger" },
+      expectedAttribution: { value: "Ready", tone: "default" },
+    },
+  ])("builds a consistent first-paint contract for $name", ({ scenario, expectedBenchmark, expectedHistory, expectedAttribution }) => {
+    const presentation = getPerformanceTrustStripPresentation({
+      capabilities: scenario.capabilities,
     });
 
-    expect(presentation.hasBenchmark).toBe(true);
-    expect(presentation.benchmarkValue).toBe("Global Balanced 60/40");
-    expect(presentation.primaryReturnCard.support).toContain("Active 0.25%");
-    expect(presentation.benchmarkCard.value).toBe("1.00%");
-    expect(presentation.activeCard.value).toBe("0.25%");
-    expect(presentation.moneyWeightedCard.support).toContain("Annualized 1.10%");
-    expect(presentation.contextCards.find((card) => card.label === "Primary Contributor")?.support).toContain("Contribution 0.90%");
+    expect(
+      presentation.items.find((item) => item.label === "Benchmark")
+    ).toMatchObject(expectedBenchmark);
+    expect(
+      presentation.items.find((item) => item.label === "Return History")
+    ).toMatchObject(expectedHistory);
+    if (expectedHistory.value === "Ready") {
+      expect(
+        presentation.items.find((item) => item.label === "Return History")
+      ).toMatchObject({
+        support: "Published through 24 Feb 2026",
+      });
+    }
+    expect(
+      presentation.items.find((item) => item.label === "Attribution")
+    ).toMatchObject(expectedAttribution);
+    expect(presentation.items.find((item) => item.label === "Evidence")).toMatchObject({
+      value: "Pending",
+      tone: "default",
+    });
   });
 });

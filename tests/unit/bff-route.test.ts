@@ -1,11 +1,18 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 import { GET, POST } from "@/app/api/bff/[...path]/route";
 
 describe("BFF proxy route", () => {
+  const originalBffBaseUrl = process.env.BFF_BASE_URL;
+
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
+    delete process.env.BFF_BASE_URL;
+  });
+
+  afterEach(() => {
+    process.env.BFF_BASE_URL = originalBffBaseUrl;
   });
 
   it("forwards GET requests to the configured upstream without the host header", async () => {
@@ -36,6 +43,7 @@ describe("BFF proxy route", () => {
     const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
     const parsedUpstreamUrl = new URL(String(upstreamUrl));
 
+    expect(parsedUpstreamUrl.origin).toBe("http://gateway.dev.lotus");
     expect(parsedUpstreamUrl.pathname).toBe("/api/v1/lookups/portfolios");
     expect(parsedUpstreamUrl.search).toBe("?limit=1");
     expect(upstreamInit).toEqual(
@@ -70,6 +78,7 @@ describe("BFF proxy route", () => {
     const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
     const parsedUpstreamUrl = new URL(String(upstreamUrl));
 
+    expect(parsedUpstreamUrl.origin).toBe("http://gateway.dev.lotus");
     expect(parsedUpstreamUrl.pathname).toBe("/api/v1/intake/portfolio-bundle");
     expect(upstreamInit).toEqual(
       expect.objectContaining({

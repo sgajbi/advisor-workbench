@@ -19,12 +19,12 @@ function readinessState(props: Props): "BLOCKED" | "CAUTION" | "READY" {
 
 function recommendation(state: "BLOCKED" | "CAUTION" | "READY"): string {
   if (state === "BLOCKED") {
-    return "Resolve upstream exceptions before generating proposal artifacts.";
+    return "Resolve upstream exceptions before progressing client-ready actions.";
   }
   if (state === "CAUTION") {
-    return "Review warnings and validate simulation assumptions before submit.";
+    return "Review warnings and validate assumptions before progressing the next action.";
   }
-  return "Proceed to proposal generation and approval workflow.";
+  return "Proceed to portfolio review and performance follow-up.";
 }
 
 export default function AdvisorSummaryCard(props: Props) {
@@ -53,12 +53,12 @@ export default function AdvisorSummaryCard(props: Props) {
       <div className="toolbar">
         <Link
           className="nav-link"
-          href={`/proposals/simulate?portfolioId=${encodeURIComponent(props.portfolioId)}`}
+          href={`/performance?portfolioId=${encodeURIComponent(props.portfolioId)}`}
         >
-          Open Proposal Simulation
+          Open Performance Workspace
         </Link>
-        <Link className="nav-link" href="/proposals">
-          Open Proposal Workspace
+        <Link className="nav-link" href={`/portfolio?portfolioId=${encodeURIComponent(props.portfolioId)}`}>
+          Open Portfolio Workspace
         </Link>
       </div>
     </section>
