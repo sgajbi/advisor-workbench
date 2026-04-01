@@ -159,11 +159,11 @@ export default function PerformanceAnalysisAttributionSection({
         {workspace.attribution ? (
           <PerformanceAnalysisDrilldownWorkspace
             className="performance-analysis-attribution-workspace"
-            insightLabel="Attribution ranked insight panel"
-            detailLabel="Attribution detail grid panel"
+            insightLabel="Top Effects panel"
+            detailLabel="Attribution Detail panel"
             insightPane={
               <PerformanceAnalysisInsightPane
-                title="Ranked insight"
+                title="Top Effects"
                 subtitle="Prioritize the largest benchmark-relative effects before opening detailed breakdown."
                 className="performance-attribution-insight-pane"
               >
@@ -181,7 +181,7 @@ export default function PerformanceAnalysisAttributionSection({
             }
             detailPane={
               <PerformanceAnalysisDetailPane
-                title="Detail view"
+                title="Attribution Detail"
                 subtitle="Inspect relative segment context or benchmark-relative effect breakdown."
                 value={detailView}
                 onChange={setDetailView}
@@ -258,7 +258,7 @@ export default function PerformanceAnalysisAttributionSection({
                         className="performance-analysis-summary-fallback"
                       >
                         <div className="performance-analysis-summary-fallback-copy">
-                          <strong>Summary-only attribution</strong>
+                          <strong>Attribution Summary</strong>
                           <span>
                             Segment rows are unavailable for this selection. Total benchmark-relative
                             effects remain available below.

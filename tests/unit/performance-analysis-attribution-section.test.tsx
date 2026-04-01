@@ -65,7 +65,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
   it("renders benchmark-relative attribution detail and effect ranking", () => {
     render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
 
-    expect(screen.getByText("Attribution Detail")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
@@ -91,9 +91,9 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
-    expect(screen.getByLabelText("Attribution ranked insight panel")).toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution detail grid panel")).toBeInTheDocument();
-    expect(screen.getByText("Ranked insight")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top Effects panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution Detail panel")).toBeInTheDocument();
+    expect(screen.getByText("Top Effects")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Prioritize the largest benchmark-relative effects before opening detailed breakdown."
@@ -102,11 +102,11 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Relative context" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
       "aria-selected",
       "true"
     );
-    expect(screen.getByRole("tab", { name: "Effect breakdown" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
       "aria-selected",
       "false"
     );
@@ -168,10 +168,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
     );
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(screen.queryByText("Summary-only attribution")).not.toBeInTheDocument();
+    expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution totals")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown (summary only)" }));
-    expect(screen.getByText("Summary-only attribution")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Effect Breakdown" }));
+    expect(screen.getByText("Attribution Summary")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Segment rows are unavailable for this selection. Total benchmark-relative effects remain available below."
@@ -183,7 +183,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
-    const insightPane = screen.getByLabelText("Attribution ranked insight panel");
+    const insightPane = screen.getByLabelText("Top Effects panel");
     expect(within(insightPane).queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
@@ -196,9 +196,9 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Effect breakdown" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Effect Breakdown" }));
 
-    expect(screen.getByRole("tab", { name: "Effect breakdown" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
       "aria-selected",
       "true"
     );

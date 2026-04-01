@@ -131,7 +131,7 @@ describe("app route entrypoints", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Performance Workbench" })
+      await screen.findByRole("heading", { name: "Performance" })
     ).toBeInTheDocument();
   });
 

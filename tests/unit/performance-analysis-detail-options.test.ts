@@ -58,11 +58,11 @@ describe("performance analysis detail options", () => {
     ).toEqual([
       expect.objectContaining({
         key: "relative",
-        label: "Relative context",
+        label: "Relative Segment Context",
       }),
       expect.objectContaining({
         key: "breakdown",
-        label: "Effect breakdown (summary only)",
+        label: "Effect Breakdown",
         title: "Only summary-level benchmark-relative effects are available",
       }),
     ]);

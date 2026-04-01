@@ -4,8 +4,8 @@ export default function PerformanceAnalysisDrilldownWorkspace({
   className,
   insightPane,
   detailPane,
-  insightLabel = "Ranked insight panel",
-  detailLabel = "Detail grid panel",
+  insightLabel = "Performance highlights panel",
+  detailLabel = "Performance detail panel",
 }: {
   className?: string;
   insightPane: React.ReactNode;

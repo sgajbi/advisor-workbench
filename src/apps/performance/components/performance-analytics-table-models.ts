@@ -42,7 +42,9 @@ export type PerformanceHorizonVisualCard = {
   key: string;
   label: string;
   primaryValue: string;
+  secondaryLabel: string;
   secondaryValue: string;
+  tertiaryLabel?: string;
   tertiaryValue?: string;
   leftBarLabel: string;
   leftBarHeightPct: number;
@@ -50,8 +52,8 @@ export type PerformanceHorizonVisualCard = {
   rightBarLabel: string;
   rightBarHeightPct: number;
   rightBarClassName: string;
-  spreadLabel: string;
-  spreadValue: string;
+  footerLabel: string;
+  footerValue: string;
 };
 
 export function buildPerformanceContributionTableModel({
@@ -471,16 +473,18 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(row.active_return_pct),
-        secondaryValue: `Cum ${formatPct(row.cumulative_active_return_pct)}`,
-        tertiaryValue: `Benchmark ${formatPct(row.benchmark_return_pct)}`,
+        secondaryLabel: "Benchmark",
+        secondaryValue: formatPct(row.benchmark_return_pct),
+        tertiaryLabel: "Cumulative",
+        tertiaryValue: formatPct(row.cumulative_active_return_pct),
         leftBarLabel: "Active",
         leftBarHeightPct: Math.abs((row.active_return_pct ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-active",
         rightBarLabel: "Cum Active",
         rightBarHeightPct: Math.abs((row.cumulative_active_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-active-soft",
-        spreadLabel: "Spread",
-        spreadValue: formatPct(row.active_return_pct),
+        footerLabel: "Series",
+        footerValue: "Active vs cumulative",
       };
     }
 
@@ -489,21 +493,21 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(netReturn),
-        secondaryValue: `Gross ${formatPct(grossReturn)}`,
-        tertiaryValue: `Cum ${formatPct(
-          basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
-        )}`,
+        secondaryLabel: "Gross",
+        secondaryValue: formatPct(grossReturn),
+        tertiaryLabel: "Fee Drag",
+        tertiaryValue:
+          grossReturn != null && netReturn != null ? formatPct(grossReturn - netReturn) : "N/A",
         leftBarLabel: "Net",
         leftBarHeightPct: Math.abs((netReturn ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
         rightBarLabel: "Gross",
         rightBarHeightPct: Math.abs((grossReturn ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-gross",
-        spreadLabel: "Fee Drag",
-        spreadValue:
-          grossReturn != null && netReturn != null
-            ? formatPct(grossReturn - netReturn)
-            : "N/A",
+        footerLabel: "Cumulative",
+        footerValue: formatPct(
+          basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
+        ),
       };
     }
 
@@ -511,18 +515,20 @@ export function buildPerformanceHorizonVisualModel({
       key: row.period,
       label: row.period,
       primaryValue: formatPct(basisReturn),
-      secondaryValue: `Benchmark ${formatPct(row.benchmark_return_pct)}`,
-      tertiaryValue: `Cum ${formatPct(
-        basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
-      )}`,
+      secondaryLabel: "Benchmark",
+      secondaryValue: formatPct(row.benchmark_return_pct),
+      tertiaryLabel: "Active Return",
+      tertiaryValue: formatPct(row.active_return_pct),
       leftBarLabel: basisView === "gross" ? "Gross" : "Portfolio",
       leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
       leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
       rightBarLabel: "Benchmark",
       rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
       rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
-      spreadLabel: "Active",
-      spreadValue: formatPct(row.active_return_pct),
+      footerLabel: "Cumulative",
+      footerValue: formatPct(
+        basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
+      ),
     };
   });
 }

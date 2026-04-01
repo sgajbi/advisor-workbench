@@ -44,6 +44,7 @@ describe("RootLayout", () => {
 
     const body = tree.props.children;
     expect(body.type).toBe("body");
+    expect(body.props.suppressHydrationWarning).toBe(true);
 
     render(body.props.children);
 

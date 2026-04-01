@@ -69,7 +69,7 @@ function buildContributorProps(
 }
 
 describe("performance summary driver helpers", () => {
-  it("builds supported contributor ranking rows for summary-mode cards", () => {
+  it("builds supported contributor tables for summary mode", () => {
     const presentation = getPerformanceContributorsPresentation(buildContributorProps());
 
     expect(presentation.mode).toBe("supported");
@@ -77,20 +77,20 @@ describe("performance summary driver helpers", () => {
       throw new Error("expected supported presentation");
     }
     expect(presentation.frame).toMatchObject({
-      title: "What drove the result?",
+      title: "Performance Drivers",
       subtitle: "YTD contributor ranking",
     });
-    expect(presentation.positiveRows[0]).toMatchObject({
-      title: "AAPL",
-      subtitle: "Avg. Weight 24.00%",
-      value: "1.50%",
-      tone: "positive",
+    expect(presentation.positiveTableModel.columns.map((column) => column.label)).toEqual([
+      "Instrument",
+      "Contribution",
+      "Weight",
+      "Return",
+    ]);
+    expect(presentation.positiveTableModel.rows[0]).toMatchObject({
+      cells: ["AAPL", "1.50%", "24.00%", "8.00%"],
     });
-    expect(presentation.negativeRows[0]).toMatchObject({
-      title: "TLT",
-      subtitle: "Avg. Weight 8.00%",
-      value: "-0.20%",
-      tone: "negative",
+    expect(presentation.negativeTableModel.rows[0]).toMatchObject({
+      cells: ["TLT", "-0.20%", "8.00%", "-2.00%"],
     });
     expect(presentation.tableModel.columns[0]?.label).toBe("Position");
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("AAPL");
@@ -108,13 +108,18 @@ describe("performance summary driver helpers", () => {
     if (presentation.mode !== "supported") {
       throw new Error("expected supported presentation");
     }
-    expect(presentation.positiveRows).toEqual([]);
-    expect(presentation.negativeRows).toEqual([]);
+    expect(presentation.positiveTableModel.rows[0]?.cells[0]).toBe("AAPL");
+    expect(presentation.negativeTableModel.columns.map((column) => column.label)).toEqual([
+      "Instrument",
+      "Contribution",
+      "Weight",
+      "Return",
+    ]);
     expect(presentation.tableModel.columns[0]?.label).toBe("Position");
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("AAPL");
   });
 
-  it("enforces contributor sign rules for ranked cards", () => {
+  it("enforces contributor sign rules for the side-by-side tables", () => {
     const presentation = getPerformanceContributorsPresentation(
       buildContributorProps({
         positivePositionContributors: [
@@ -161,8 +166,8 @@ describe("performance summary driver helpers", () => {
       throw new Error("expected supported presentation");
     }
 
-    expect(presentation.positiveRows.map((row) => row.title)).toEqual(["CASH"]);
-    expect(presentation.negativeRows.map((row) => row.title)).toEqual(["REAL NEG"]);
+    expect(presentation.positiveTableModel.rows.map((row) => row.cells[0])).toEqual(["CASH"]);
+    expect(presentation.negativeTableModel.rows.map((row) => row.cells[0])).toEqual(["REAL NEG"]);
   });
 
   it("builds a loading contributor presentation while detailed support is pending", () => {
@@ -217,21 +222,17 @@ describe("performance summary driver helpers", () => {
         period: "YTD",
       })
     ).toMatchObject({
-      title: "What drove the result?",
+      title: "Performance Drivers",
       subtitle: "YTD contributor ranking",
     });
 
     expect(
       getPerformanceSummaryDriverModuleFrame({
         kind: "horizons",
-        benchmarkAssigned: true,
-        benchmarkLabel: "Global Balanced 60/40",
-        detailBasis: "NET",
       })
     ).toMatchObject({
-      title: "How did this compare across horizons?",
-      subtitle: "Portfolio vs Global Balanced 60/40",
-      actionLabel: "NET",
+      title: "Horizon Comparison",
+      subtitle: "",
     });
   });
 
@@ -255,9 +256,8 @@ describe("performance summary driver helpers", () => {
       })
     ).toMatchObject({
       frame: {
-        title: "How did this compare across horizons?",
-        subtitle: "Portfolio vs Global Balanced 60/40",
-        actionLabel: "NET",
+        title: "Horizon Comparison",
+        subtitle: "",
       },
       selectedPeriodLabel: supportedScenario.workspace.period,
       activeReturnLabel: "0.52%",
@@ -283,9 +283,8 @@ describe("performance summary driver helpers", () => {
       })
     ).toMatchObject({
       frame: {
-        title: "How did this compare across horizons?",
-        subtitle: "Portfolio vs Global Balanced 60/40",
-        actionLabel: "NET",
+        title: "Horizon Comparison",
+        subtitle: "",
       },
       selectedPeriodLabel: partialScenario.workspace.period,
       activeReturnLabel: "Unavailable",

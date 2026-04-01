@@ -6,7 +6,7 @@ import type {
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 
-import { formatCurrency, formatDate, formatLabel, formatPct } from "../formatters";
+import { formatCurrency, formatLabel, formatPct } from "../formatters";
 
 type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
 
@@ -128,11 +128,11 @@ export function getPerformanceReturnPathPresentation({
       },
       {
         key: "ending-mv",
-        label: "Ending MV",
+        label: "Ending Market Value",
         value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
         support:
           resolvedFlowAdjustedEndMarketValue != null
-            ? `Flow-adj ${formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency)}`
+            ? `Flow-adjusted value ${formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency)}`
             : undefined,
         unavailable: resolvedEndMarketValue == null,
       },
@@ -158,10 +158,10 @@ export function getPerformanceNetFlowSupport(
   if (beginningCashFlow != null || endingCashFlow != null) {
     const supportSegments = [
       beginningCashFlow != null
-        ? `BoD ${formatCurrency(beginningCashFlow, reportingCurrency)}`
+        ? `Opening cash ${formatCurrency(beginningCashFlow, reportingCurrency)}`
         : null,
       endingCashFlow != null
-        ? `EoD ${formatCurrency(endingCashFlow, reportingCurrency)}`
+        ? `Closing cash ${formatCurrency(endingCashFlow, reportingCurrency)}`
         : null,
     ].filter(Boolean);
 
@@ -190,11 +190,7 @@ export function getPerformanceMoneyWeightedAuditSupport({
     ? getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, reportingCurrency)
     : null;
   const supportSegments = [
-    moneyWeightedReturn?.method ? `MWR ${moneyWeightedReturn.method}` : null,
-    formatMoneyWeightedInputModeLabel(moneyWeightedReturn?.input_mode),
-    moneyWeightedReturn?.start_date && moneyWeightedReturn?.end_date
-      ? `${formatDate(moneyWeightedReturn.start_date)} - ${formatDate(moneyWeightedReturn.end_date)}`
-      : null,
+    moneyWeightedReturn?.method ? `MWR (${moneyWeightedReturn.method})` : null,
     economicsSupport ?? moneyWeightedReturn?.notes?.[0] ?? null,
   ].filter(Boolean);
 
@@ -210,7 +206,7 @@ export function getPerformanceMoneyWeightedEconomicsSupport(
   reportingCurrency: string
 ) {
   if (moneyWeightedReturn?.flow_adjusted_end_market_value != null) {
-    return `Flow-adj ${formatCurrency(
+    return `Flow-adjusted value ${formatCurrency(
       moneyWeightedReturn.flow_adjusted_end_market_value,
       reportingCurrency
     )}`;
@@ -239,13 +235,9 @@ export function getPerformanceBenchmarkLabel(
 export function getPerformanceBenchmarkContextValue({
   benchmark,
   benchmarkOptions = [],
-  benchmarkReturnSource,
-  benchmarkInputMode,
 }: {
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
-  benchmarkReturnSource?: string | null;
-  benchmarkInputMode?: string | null;
 }) {
   if (!benchmark) {
     return "Unassigned";
@@ -253,11 +245,7 @@ export function getPerformanceBenchmarkContextValue({
 
   const selectedOption = benchmarkOptions.find((option) => option.benchmark_code === benchmark);
   const supportSegments = [
-    formatBenchmarkSourceLabel(benchmarkReturnSource),
-    formatBenchmarkInputModeLabel(benchmarkInputMode),
-    selectedOption?.benchmark_provider
-      ? formatProvenanceLabel(selectedOption.benchmark_provider)
-      : null,
+    selectedOption?.benchmark_currency ?? null,
   ].filter(Boolean);
 
   const benchmarkLabel =
@@ -304,42 +292,4 @@ function formatBenchmarkSourceLabel(source?: string | null) {
         .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
         .join(" ");
   }
-}
-
-function formatBenchmarkInputModeLabel(inputMode?: string | null) {
-  if (!inputMode) {
-    return null;
-  }
-
-  switch (inputMode.trim().toLowerCase()) {
-    case "stateful":
-      return "Stateful benchmark";
-    case "stateless":
-      return "Stateless benchmark";
-    default:
-      return `${formatLabel(inputMode)} benchmark`;
-  }
-}
-
-function formatMoneyWeightedInputModeLabel(inputMode?: string | null) {
-  if (!inputMode) {
-    return null;
-  }
-
-  switch (inputMode.trim().toLowerCase()) {
-    case "stateful":
-      return "Stateful inputs";
-    case "stateless":
-      return "Stateless inputs";
-    default:
-      return formatLabel(inputMode);
-  }
-}
-
-function formatProvenanceLabel(value: string) {
-  return value
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
-    .join(" ");
 }

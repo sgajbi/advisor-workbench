@@ -135,21 +135,16 @@ export default function PerformanceWorkspaceModeSwitch({
     return mode;
   });
   const modeStatusItems = [
-    analysisReadiness
+    analysisReadiness && analysisReadiness.tone !== "default"
       ? {
           value: analysisReadiness.value,
           tone: analysisReadiness.tone,
         }
       : null,
-    evidenceCapability
+    evidenceCapability?.state === "partial"
       ? {
           value: getEvidenceReadinessLabel(evidenceCapability),
-          tone:
-            evidenceCapability.state === "supported"
-              ? ("default" as const)
-              : evidenceCapability.state === "partial"
-                ? ("warn" as const)
-                : ("danger" as const),
+          tone: "warn" as const,
         }
       : null,
   ].filter(Boolean) as Array<{ value: string; tone: "default" | "warn" | "danger" }>;

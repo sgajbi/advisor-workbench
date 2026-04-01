@@ -44,12 +44,12 @@ export function getAttributionDetailOptions({
   return [
     {
       key: "relative",
-      label: "Relative context",
+      label: "Relative Segment Context",
       title: "Relative segment context for the selected attribution dimension",
     },
     {
       key: "breakdown",
-      label: hasSummaryOnlyBreakdown ? "Effect breakdown (summary only)" : "Effect breakdown",
+      label: "Effect Breakdown",
       title: hasSummaryOnlyBreakdown
         ? "Only summary-level benchmark-relative effects are available"
         : "Detailed benchmark-relative effect breakdown",

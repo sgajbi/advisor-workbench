@@ -151,8 +151,7 @@ export default function PerformanceWorkspaceView({
           <WorkbenchPageFrame
             className="performance-page-frame"
             bodyClassName="performance-page-frame-body"
-            title="Performance Workbench"
-            subtitle="Benchmark-aware portfolio performance, attribution, and contribution analysis"
+            title="Performance"
             actions={
               <PerformanceWorkspaceModeSwitch
                 value={mode}

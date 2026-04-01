@@ -12,7 +12,7 @@ async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
     waitUntil: 'domcontentloaded',
   });
 
-  const workbenchHeading = page.getByRole('heading', { name: /^Performance Workbench$/i });
+  const workbenchHeading = page.getByRole('heading', { name: /^Performance$/i });
   const unavailableHeading = page.getByRole('heading', {
     name: /^Performance data unavailable$/i,
   });
@@ -115,8 +115,8 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
     await expect(executiveStrip.getByText('Active Return')).toBeVisible();
     await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
-    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
-    await expect(executiveStrip.getByText('Basis / Period', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Ending Market Value')).toBeVisible();
+    await expect(executiveStrip.getByText('Period / Basis', { exact: true })).toBeVisible();
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
@@ -126,16 +126,16 @@ test.describe('Performance workbench smoke', () => {
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
     await expectActiveTab(page, /^Summary$/i);
 
-    await expect(page.getByRole('group', { name: /^Return path context$/i })).toBeVisible({
+    await expect(page.getByRole('group', { name: /^Return vs Benchmark$/i })).toBeVisible({
       timeout: 15000,
     });
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText('How did this compare across horizons?')).toBeVisible({
+    await expect(page.getByText('Horizon Comparison')).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText('What drove the result?')).toBeVisible({
+    await expect(page.getByText('Performance Drivers')).toBeVisible({
       timeout: 15000,
     });
 
@@ -151,13 +151,13 @@ test.describe('Performance workbench smoke', () => {
       page.getByRole('heading', { name: /^Attribution Detail$/i })
     ).toBeVisible({ timeout: 15000 });
     await expect(
-      page.getByRole('heading', { name: /^What drove the result\?$/i })
+      page.getByRole('heading', { name: /^Performance Drivers$/i })
     ).toBeVisible({ timeout: 15000 });
     await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
-    await expect(page.getByLabel('Contribution ranked insight panel')).toBeVisible();
-    await expect(page.getByLabel('Contribution detail grid panel')).toBeVisible();
-    await expect(page.getByLabel('Attribution ranked insight panel')).toBeVisible();
-    await expect(page.getByLabel('Attribution detail grid panel')).toBeVisible();
+    await expect(page.getByLabel('Top / Bottom Contributors panel')).toBeVisible();
+    await expect(page.getByLabel('Contribution Detail panel')).toBeVisible();
+    await expect(page.getByLabel('Top Effects panel')).toBeVisible();
+    await expect(page.getByLabel('Attribution Detail panel')).toBeVisible();
 
     await expect(evidenceTab).toBeDisabled();
   });
@@ -181,7 +181,7 @@ test.describe('Performance workbench smoke', () => {
       page.getByRole('heading', { name: /^Attribution Detail$/i })
     ).toBeVisible({ timeout: 15000 });
     await expect(
-      page.getByRole('heading', { name: /^What drove the result\?$/i })
+      page.getByRole('heading', { name: /^Performance Drivers$/i })
     ).toBeVisible({ timeout: 15000 });
 
     const trendShell = page.locator('.performance-analysis-trend-shell');
@@ -198,9 +198,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByText('Latest Total Effect')).toBeVisible();
     await expect(page.getByLabel('Attribution trend summary strip').getByText('Cumulative Total')).toBeVisible();
 
-    await expect(page.getByLabel('Attribution ranked insight panel')).toBeVisible();
-    await expect(page.getByLabel('Attribution detail grid panel')).toBeVisible();
-    await expect(page.getByRole('tab', { name: /^Relative context$/i })).toHaveAttribute(
+    await expect(page.getByLabel('Top Effects panel')).toBeVisible();
+    await expect(page.getByLabel('Attribution Detail panel')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /^Relative Segment Context$/i })).toHaveAttribute(
       'aria-selected',
       'true'
     );
@@ -218,7 +218,7 @@ test.describe('Performance workbench smoke', () => {
       'true'
     );
     await expect(page.getByLabel('Asset Class attribution totals')).toBeVisible();
-    await expect(page.getByText('Summary-only attribution')).toBeVisible();
+    await expect(page.getByText('Attribution Summary')).toBeVisible();
     await expect(page.getByText('Relative Segment Matrix')).toHaveCount(0);
 
     await expect(page.getByLabel('Attribution trend table')).toBeVisible();
@@ -247,7 +247,7 @@ test.describe('Performance workbench smoke', () => {
     ).toBeVisible();
     await expect(contributionModule.getByLabel('Contribution ranked insight panel')).toBeVisible();
     await expect(contributionModule.getByLabel('Contribution detail grid panel')).toBeVisible();
-    await expect(contributionModule.getByText('Ranked insight')).toBeVisible();
+    await expect(contributionModule.getByText('Top / Bottom Contributors')).toBeVisible();
     await expect(contributionModule.getByText('Top Contributor')).toBeVisible();
     await expect(contributionModule.getByText('Top Detractor')).toBeVisible();
     await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();

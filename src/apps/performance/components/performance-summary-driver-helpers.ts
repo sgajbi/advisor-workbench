@@ -27,15 +27,14 @@ export type PerformanceContributorRankedItem = {
 export type PerformanceSummaryDriverModuleFrame = {
   title: string;
   subtitle: string;
-  actionLabel?: string;
 };
 
 export type PerformanceContributorsPresentation =
   | {
       mode: "supported";
       frame: PerformanceSummaryDriverModuleFrame;
-      positiveRows: PerformanceContributorRankedItem[];
-      negativeRows: PerformanceContributorRankedItem[];
+      positiveTableModel: PerformanceAnalyticsTableModel;
+      negativeTableModel: PerformanceAnalyticsTableModel;
       tableModel: PerformanceAnalyticsTableModel;
     }
   | {
@@ -71,30 +70,21 @@ export type PerformanceHorizonPresentation = {
 
 export function getPerformanceSummaryDriverModuleFrame({
   kind,
-  benchmarkAssigned,
-  benchmarkLabel,
-  detailBasis,
   period,
 }: {
   kind: "contributors" | "horizons";
-  benchmarkAssigned?: boolean;
-  benchmarkLabel?: string;
-  detailBasis?: string;
   period?: string;
 }): PerformanceSummaryDriverModuleFrame {
   if (kind === "contributors") {
     return {
-      title: "What drove the result?",
+      title: "Performance Drivers",
       subtitle: `${period ?? "Selected period"} contributor ranking`,
     };
   }
 
   return {
-    title: "How did this compare across horizons?",
-    subtitle: benchmarkAssigned
-      ? `Portfolio vs ${benchmarkLabel ?? "Benchmark"}`
-      : "Portfolio comparison across standard reporting windows",
-    actionLabel: detailBasis,
+    title: "Horizon Comparison",
+    subtitle: "",
   };
 }
 
@@ -126,39 +116,25 @@ export function getPerformanceContributorsPresentation({
           contribution: workspace.contribution,
           level: workspace.contribution?.levels?.[0] ?? null,
         });
-  const positiveRankedRows =
+  const positiveRows = getContributorSideRows(
     positivePositionContributors.length > 0
       ? positivePositionContributors
-          .filter((row) => row.contribution_pct >= 0)
-          .map((row) => ({
-          key: `top-position-${row.position_id}`,
-          title: formatPerformancePositionLabel(row.position_id),
-          subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
-          value: formatPct(row.contribution_pct),
-          magnitudePct: Math.abs(row.contribution_pct ?? 0),
-          tone: "positive" as const,
-        }))
-      : [];
-  const negativeRankedRows =
+      : positionRows.filter((row) => row.contribution_pct >= 0),
+    "positive"
+  );
+  const negativeRows = getContributorSideRows(
     negativePositionContributors.length > 0
       ? negativePositionContributors
-          .filter((row) => row.contribution_pct < 0)
-          .map((row) => ({
-          key: `bottom-position-${row.position_id}`,
-          title: formatPerformancePositionLabel(row.position_id),
-          subtitle: `Avg. Weight ${formatPct(row.weight_avg_pct)}`,
-          value: formatPct(row.contribution_pct),
-          magnitudePct: Math.abs(row.contribution_pct ?? 0),
-          tone: "negative" as const,
-        }))
-      : [];
+      : positionRows.filter((row) => row.contribution_pct < 0),
+    "negative"
+  );
 
   if (capabilities.contributionRanking.state === "supported") {
     return {
       mode: "supported",
       frame,
-      positiveRows: positiveRankedRows,
-      negativeRows: negativeRankedRows,
+      positiveTableModel: buildPerformanceSummaryContributorTableModel(positiveRows),
+      negativeTableModel: buildPerformanceSummaryContributorTableModel(negativeRows),
       tableModel,
     };
   }
@@ -229,6 +205,49 @@ function getAggregateContributorRows(
   );
 }
 
+function getContributorSideRows(
+  rows: ContributionPositionView[],
+  direction: "positive" | "negative"
+): ContributionPositionView[] {
+  const filteredRows = rows.filter((row) =>
+    direction === "positive" ? row.contribution_pct >= 0 : row.contribution_pct < 0
+  );
+
+  return [...filteredRows].sort((left, right) =>
+    direction === "positive"
+      ? right.contribution_pct - left.contribution_pct
+      : left.contribution_pct - right.contribution_pct
+  );
+}
+
+function buildPerformanceSummaryContributorTableModel(
+  rows: ContributionPositionView[]
+): PerformanceAnalyticsTableModel {
+  const columns: PerformanceAnalyticsTableColumn[] = [
+    { key: "instrument", label: "Instrument" },
+    { key: "contribution", label: "Contribution", align: "right" },
+    { key: "weight", label: "Weight", align: "right" },
+    { key: "return", label: "Return", align: "right" },
+  ];
+
+  return {
+    columns,
+    rows: rows.map((row) => {
+      const instrumentLabel = formatPerformancePositionLabel(row.position_id);
+      return {
+        key: row.position_id,
+        ariaLabel: `${instrumentLabel} contributor row`,
+        cells: [
+          instrumentLabel,
+          formatPct(row.contribution_pct),
+          formatPct(row.weight_avg_pct),
+          formatPct(row.total_return_pct),
+        ],
+      };
+    }),
+  };
+}
+
 export function getPerformanceHorizonPresentation({
   benchmark,
   benchmarkOptions = [],
@@ -253,9 +272,6 @@ export function getPerformanceHorizonPresentation({
   return {
     frame: getPerformanceSummaryDriverModuleFrame({
       kind: "horizons",
-      benchmarkAssigned,
-      benchmarkLabel,
-      detailBasis,
     }),
     selectedPeriodLabel: period,
     activeReturnLabel:
@@ -263,7 +279,7 @@ export function getPerformanceHorizonPresentation({
       selectedPeriodRow?.active_return_pct === undefined
         ? "Unavailable"
         : formatPct(selectedPeriodRow.active_return_pct),
-    benchmarkLabel,
+    benchmarkLabel: benchmarkAssigned ? benchmarkLabel : "Not assigned",
     benchmarkLegendLabel: benchmarkAssigned ? benchmarkLabel : "Benchmark",
     loadingBody,
     emptyBody,

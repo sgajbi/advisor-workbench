@@ -62,7 +62,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByText("Loading horizon comparison.")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText("How did this compare across horizons?")).toBeInTheDocument();
+      expect(screen.getByText("Horizon Comparison")).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
@@ -70,23 +70,25 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Resolved window 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active return 0.51%")
+      compactPattern("Active Return 0.51%")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Compared against Global Balanced 60/40")
+      compactPattern("Benchmark Global Balanced 60/40")
     );
     expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
-    expect(screen.getByText("Portfolio vs Global Balanced 60/40")).toBeInTheDocument();
-    expect(screen.getByText("NET")).toBeInTheDocument();
+    expect(screen.queryByText("Portfolio vs Global Balanced 60/40")).not.toBeInTheDocument();
+    expect(screen.queryByText("NET")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
-    expect(screen.getByText("Active 0.20%")).toBeInTheDocument();
+    expect(screen.getAllByText("Active Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Portfolio vs Benchmark").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Cumulative:/).length).toBeGreaterThan(0);
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
     expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("BoD Flow")).toBeInTheDocument();
@@ -133,8 +135,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Cum Active")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
-    expect(screen.getByText("Spread 0.20%")).toBeInTheDocument();
-    expect(screen.getAllByText("Cum 0.51%").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Series: Active vs cumulative").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Cum Active")).toBeInTheDocument();
 
@@ -148,7 +150,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
-    expect(screen.getByText("Fee Drag 0.02%")).toBeInTheDocument();
+    expect(screen.getAllByText("Fee Drag").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Net vs Gross").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
 
@@ -200,7 +203,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-        compactPattern("Resolved window 01 Jan 2026 - 24 Feb 2026")
+        compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
         );
       });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
@@ -216,7 +219,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Resolved window 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
@@ -253,12 +256,11 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Portfolio comparison across standard reporting windows")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active return Unavailable")
+      compactPattern("Active Return Unavailable")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Compared against Benchmark")
+      compactPattern("Benchmark Not assigned")
     );
   });
 

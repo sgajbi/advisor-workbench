@@ -71,37 +71,33 @@ describe("PerformanceSummaryContributorsSection", () => {
   it("renders positive and negative ranked contributors when position ranking exists", () => {
     render(<PerformanceSummaryContributorsSection {...buildProps()} />);
 
-    expect(screen.getByText("What drove the result?")).toBeInTheDocument();
+    expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
     expect(screen.getByText("YTD contributor ranking")).toBeInTheDocument();
     expect(screen.getByText("Top contributors")).toBeInTheDocument();
     expect(screen.getByText("Top detractors")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
-    expect(document.querySelector(".workbench-summary-visual-heading")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
-    expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
-    expect(document.querySelectorAll(".workbench-ranked-bar-list")).toHaveLength(2);
-    expect(document.querySelectorAll(".workbench-ranked-bar-row")).toHaveLength(2);
-    const contributorStrip = screen.getByLabelText("Contributor driver strip");
-    expect(contributorStrip).toBeInTheDocument();
-    expect(within(contributorStrip).getByText("Top Contributor")).toBeInTheDocument();
-    expect(within(contributorStrip).getByText("Top Detractor")).toBeInTheDocument();
-    expect(within(contributorStrip).getByText("Coverage MV")).toBeInTheDocument();
-    expect(within(contributorStrip).getByText("Portfolio Contribution")).toBeInTheDocument();
-    const note = screen.getByRole("note");
-    expect(note).toHaveTextContent("High coverage");
-    expect(note).toHaveTextContent("Reconciles to return");
-    expect(screen.queryByLabelText("Contributor summary")).not.toBeInTheDocument();
-    expect(document.querySelector(".performance-contributors-table.analytics-table-frame-dense")).toBeFalsy();
-    expect(screen.getByText("Avg. Weight 24.00%")).toBeInTheDocument();
-    expect(screen.getByText("Avg. Weight 8.00%")).toBeInTheDocument();
-    const rankedLists = document.querySelectorAll(".workbench-ranked-bar-list");
-    expect(rankedLists).toHaveLength(2);
-    expect(within(rankedLists[0] as HTMLElement).getByText("AAPL")).toBeInTheDocument();
-    expect(within(rankedLists[0] as HTMLElement).queryByText("Equity")).not.toBeInTheDocument();
-    expect(within(rankedLists[1] as HTMLElement).getByText("TLT")).toBeInTheDocument();
-    expect(within(rankedLists[1] as HTMLElement).queryByText("Rates")).not.toBeInTheDocument();
+    expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
+
+    const contributorsTable = screen.getByLabelText("Top contributors table");
+    expect(contributorsTable).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Instrument")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Contribution")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Weight")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Return")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("AAPL")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("1.50%")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("24.00%")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("8.00%")).toBeInTheDocument();
+
+    const detractorsTable = screen.getByLabelText("Top detractors table");
+    expect(detractorsTable).toBeInTheDocument();
+    expect(within(detractorsTable).getByText("TLT")).toBeInTheDocument();
+    expect(within(detractorsTable).getByText("-0.20%")).toBeInTheDocument();
+    expect(within(detractorsTable).getByText("-2.00%")).toBeInTheDocument();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {

@@ -536,7 +536,7 @@ describe("design-system components", () => {
     render(
       <WorkbenchDeferredSection
         className="performance-summary-context-section"
-        title="Return path and benchmark context"
+        title="Return vs Benchmark"
         subtitle="How the portfolio tracked against the selected benchmark over the current period."
         loadingTitle="Loading return path"
         loadingMessage="Return path is loading after first paint."
@@ -546,7 +546,7 @@ describe("design-system components", () => {
     );
 
     expect(document.querySelector(".performance-summary-context-section")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Return path and benchmark context" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Return vs Benchmark" })).toBeInTheDocument();
     expect(
       screen.getByText(
         "How the portfolio tracked against the selected benchmark over the current period."
@@ -680,7 +680,7 @@ describe("design-system components", () => {
     render(
       <WorkbenchDeferredSection
         className="performance-summary-driver-section"
-        title="What drove the result?"
+        title="Performance Drivers"
         subtitle="Top contributors and detractors for the current performance outcome."
         loadingTitle="Loading contributors"
         loadingMessage="Contributor ranking is loading after first paint."
@@ -693,7 +693,7 @@ describe("design-system components", () => {
     );
 
     expect(document.querySelector(".performance-summary-driver-section")).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "What drove the result?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Performance Drivers" })).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Deferred driver content")).toBeInTheDocument();
     });

@@ -253,6 +253,7 @@ export default function PerformanceChartPanel({
 
     return {
       animation: false,
+      backgroundColor: "transparent",
       color: [
         CHART_COLORS.portfolio,
         CHART_COLORS.benchmark,
@@ -262,21 +263,21 @@ export default function PerformanceChartPanel({
         CHART_COLORS.activeBar,
       ],
       grid: {
-        left: 58,
-        right: 24,
-        top: 24,
-        bottom: 52,
+        left: 66,
+        right: 28,
+        top: 28,
+        bottom: 58,
         containLabel: true,
       },
       legend: {
-        bottom: 6,
+        bottom: 8,
         left: "center",
         itemWidth: 18,
         itemHeight: 8,
         textStyle: {
-          color: "#586377",
+          color: "#5f6b7c",
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 600,
         },
         data: [
           ...(includeAbsoluteSeries ? ["Portfolio Return"] : []),
@@ -290,6 +291,14 @@ export default function PerformanceChartPanel({
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "cross" },
+        backgroundColor: "rgba(255,255,255,0.98)",
+        borderColor: "rgba(32, 44, 61, 0.12)",
+        borderWidth: 1,
+        textStyle: {
+          color: "#1f2937",
+          fontSize: 12,
+        },
+        padding: [10, 12],
         valueFormatter: (value: unknown) => {
           if (typeof value === "number") {
             return `${value.toFixed(2)}%`;
@@ -303,10 +312,10 @@ export default function PerformanceChartPanel({
       xAxis: {
         type: "category" as const,
         data: categories,
-        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.18)" } },
+        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.14)", width: 1 } },
         axisTick: { show: false },
         axisLabel: {
-          color: "#5a6476",
+          color: "#637083",
           fontSize: 11,
           fontWeight: 600,
         },
@@ -316,13 +325,16 @@ export default function PerformanceChartPanel({
           type: "value" as const,
           min: cumulativeBounds.min,
           max: cumulativeBounds.max,
+          splitNumber: 5,
           axisLabel: {
-            color: "#5a6476",
+            color: "#637083",
             formatter: (value: number) => `${value}%`,
           },
+          axisLine: { show: false },
+          axisTick: { show: false },
           splitLine: {
             lineStyle: {
-              color: "rgba(52, 70, 95, 0.1)",
+              color: "rgba(52, 70, 95, 0.08)",
             },
           },
         },
@@ -341,12 +353,12 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: portfolioPeriodic,
-                barWidth: 10,
+                barWidth: 7,
                 barGap: "20%",
                 z: 1,
                 itemStyle: {
-                  color: CHART_COLORS.portfolioBar,
-                  borderRadius: [4, 4, 0, 0],
+                  color: "rgba(218, 30, 40, 0.12)",
+                  borderRadius: [6, 6, 0, 0],
                 },
               },
             ]
@@ -358,11 +370,11 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: benchmarkPeriodic,
-                barWidth: 10,
+                barWidth: 7,
                 z: 1,
                 itemStyle: {
-                  color: CHART_COLORS.benchmarkBar,
-                  borderRadius: [4, 4, 0, 0],
+                  color: "rgba(45, 55, 72, 0.1)",
+                  borderRadius: [6, 6, 0, 0],
                 },
               },
             ]
@@ -374,11 +386,11 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: activePeriodic,
-                barWidth: 10,
+                barWidth: 7,
                 z: 1,
                 itemStyle: {
-                  color: CHART_COLORS.activeBar,
-                  borderRadius: [4, 4, 0, 0],
+                  color: "rgba(49, 93, 138, 0.11)",
+                  borderRadius: [6, 6, 0, 0],
                 },
               },
             ]
@@ -391,13 +403,14 @@ export default function PerformanceChartPanel({
                 data: portfolioCumulative,
                 smooth: true,
                 symbol: "none",
+                connectNulls: true,
                 z: 3,
                 lineStyle: {
-                  width: 4,
+                  width: 3,
                   color: CHART_COLORS.portfolio,
                 },
                 areaStyle: {
-                  color: "rgba(218, 30, 40, 0.05)",
+                  color: "rgba(218, 30, 40, 0.035)",
                 },
               },
             ]
@@ -410,6 +423,7 @@ export default function PerformanceChartPanel({
                 data: benchmarkCumulative,
                 smooth: true,
                 symbol: "none",
+                connectNulls: true,
                 z: 3,
                 lineStyle: {
                   width: 3,
@@ -426,6 +440,7 @@ export default function PerformanceChartPanel({
                 data: activeCumulative,
                 smooth: true,
                 symbol: "none",
+                connectNulls: true,
                 z: 3,
                 lineStyle: {
                   width: 2,
@@ -484,7 +499,7 @@ export default function PerformanceChartPanel({
     returnPathPresentation.metrics[4],
     {
       key: "basis-period-summary",
-      label: "Basis / Period",
+      label: "Period / Basis",
       value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
         period === "EXPLICIT" ? "Explicit window" : period
       }`,
@@ -565,7 +580,6 @@ export default function PerformanceChartPanel({
             detailBasis={detailBasis}
             benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
             activeReturn={returnPathPresentation.activeReturnValue}
-            relativeContextStatus={returnPathPresentation.relativeContextStatus}
             reportStartDate={resolvedReportDates.startDate}
             reportEndDate={resolvedReportDates.endDate}
           />

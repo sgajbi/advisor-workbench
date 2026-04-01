@@ -92,9 +92,7 @@ describe("PerformanceWorkspaceView", () => {
     );
 
     expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
-    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
-      "Evidence pending contract"
-    );
+    expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
 
   it("disables unavailable evidence mode instead of mounting a dead panel", async () => {
@@ -187,16 +185,11 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Performance Workbench" })).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Benchmark-aware portfolio performance, attribution, and contribution analysis"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Performance mode readiness" })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
       "workbench-segmented-control-button-active"
     );

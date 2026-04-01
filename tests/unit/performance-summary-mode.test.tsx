@@ -161,8 +161,8 @@ describe("PerformanceSummaryMode", () => {
     );
     expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();
-    expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
-    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
+    expect(screen.queryByText("Performance Drivers")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
@@ -171,8 +171,8 @@ describe("PerformanceSummaryMode", () => {
       expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
     });
 
-    expect(screen.queryByText("How did this compare across horizons?")).not.toBeInTheDocument();
-    expect(screen.queryByText("What drove the result?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
+    expect(screen.queryByText("Performance Drivers")).not.toBeInTheDocument();
     expect(chartPanelMock).toHaveBeenCalledTimes(1);
     expect(chartPanelMock).toHaveBeenCalledWith(
       expect.objectContaining({

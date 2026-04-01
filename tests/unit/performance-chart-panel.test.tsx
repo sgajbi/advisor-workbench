@@ -169,33 +169,35 @@ describe("PerformanceChartPanel", () => {
     expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
-    expect(screen.getByRole("tablist", { name: "Return path view mode" })).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Return")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
-    expect(screen.getByText("Active Return")).toBeInTheDocument();
-    expect(screen.getByText("Net Flow")).toBeInTheDocument();
-    expect(screen.getByText("Ending MV")).toBeInTheDocument();
-    expect(screen.getByText("Basis / Period")).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
+    const executiveStrip = screen.getByLabelText("Executive return strip");
+    expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Ending Market Value")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Portfolio DEMO_ADV_USD_001")
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern(
-        "Benchmark Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
-      )
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40 • USD")
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active 0.80%")
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Active Return 0.80%")
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Window / Basis 01 Jan 2026 - 28 Feb 2026 • Net")
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).not.toHaveTextContent(
+      "Available"
+    );
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Period / Basis 01 Jan 2026 - 28 Feb 2026 • Net")
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
-        "Basis / Period Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR XIRR • Stateful inputs • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
+        "Period / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-adjusted value $1,208,000"
       )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
@@ -254,10 +256,10 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByLabelText("Compared To")).toHaveDisplayValue(
+    expect(screen.getByLabelText("Benchmark")).toHaveDisplayValue(
       "Global Growth 80/20 • USD • Composite"
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Benchmark Global Growth 80/20")
     );
   });
@@ -272,7 +274,7 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
-      compactPattern("Basis / Period Net • YTD 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Period / Basis Net • YTD 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByLabelText("Executive return strip")).not.toHaveTextContent("MWR");
   });
@@ -354,11 +356,11 @@ describe("PerformanceChartPanel", () => {
     expect(benchmarkState).not.toBeNull();
     expect(benchmarkState).toHaveTextContent("Benchmark unassigned");
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Benchmark Unassigned")
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active Unavailable")
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Active Return Unavailable")
     );
     expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
@@ -401,13 +403,11 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern(
-        "Benchmark Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo"
-      )
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40 • USD")
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Active Unavailable")
+    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+      compactPattern("Active Return Unavailable")
     );
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);

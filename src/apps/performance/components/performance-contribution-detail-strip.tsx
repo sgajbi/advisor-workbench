@@ -88,7 +88,7 @@ export default function PerformanceContributionDetailStrip({
         },
         {
           key: "coverage",
-          label: "Coverage MV",
+          label: "Contribution Coverage",
           value: formatPct(contribution.coverage_mv_pct),
           support: [coverageAssessment, formatWeightingSchemeLabel(contribution.weighting_scheme)]
             .filter(Boolean)
@@ -96,7 +96,7 @@ export default function PerformanceContributionDetailStrip({
         },
         {
           key: "portfolio-contribution",
-          label: "Portfolio Contribution",
+          label: "Total Contribution",
           value: formatPct(contribution.portfolio_contribution_pct),
           support: [
             contribution.total_portfolio_return_pct != null

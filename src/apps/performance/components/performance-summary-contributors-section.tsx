@@ -1,13 +1,10 @@
 import {
   AnalyticsTable,
-  WorkbenchRankedBarList,
-  WorkbenchSummaryVisualCard,
 } from "@/design-system";
 
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
-import PerformanceContributionDetailStrip from "./performance-contribution-detail-strip";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
 import { getPerformanceContributorsPresentation } from "./performance-summary-driver-helpers";
@@ -40,35 +37,31 @@ export default function PerformanceSummaryContributorsSection({
     >
       {presentation.mode === "supported" ? (
         <div className="performance-contributors-panel">
-          {workspace.contribution?.position_rows?.length ? (
-            <PerformanceContributionDetailStrip
-              contribution={workspace.contribution}
-              ariaLabel="Contributor driver strip"
-              className="performance-contributors-strip"
-            />
-          ) : null}
-          {workspace.contribution?.levels?.length ? (
-            <PerformanceContributionContextNote contribution={workspace.contribution} />
-          ) : null}
-          <div className="performance-contributors-grid">
-            <WorkbenchSummaryVisualCard>
-              <WorkbenchRankedBarList
-                title="Top contributors"
-                label="Contribution"
-                scale={contributorScale}
-                rows={presentation.positiveRows}
-                emptyMessage="No positive contributors are present for the selected analytical slice."
+          <div className="performance-contributors-compare-grid">
+            <section className="performance-contributors-table-card">
+              <div className="performance-contributors-table-header">
+                <strong>Top contributors</strong>
+              </div>
+              <AnalyticsTable
+                ariaLabel="Top contributors table"
+                className="performance-contributors-table"
+                dense
+                columns={presentation.positiveTableModel.columns}
+                rows={presentation.positiveTableModel.rows}
               />
-            </WorkbenchSummaryVisualCard>
-            <WorkbenchSummaryVisualCard>
-              <WorkbenchRankedBarList
-                title="Top detractors"
-                label="Contribution"
-                scale={contributorScale}
-                rows={presentation.negativeRows}
-                emptyMessage="No detractors are present for the selected analytical slice."
+            </section>
+            <section className="performance-contributors-table-card">
+              <div className="performance-contributors-table-header">
+                <strong>Top detractors</strong>
+              </div>
+              <AnalyticsTable
+                ariaLabel="Top detractors table"
+                className="performance-contributors-table"
+                dense
+                columns={presentation.negativeTableModel.columns}
+                rows={presentation.negativeTableModel.rows}
               />
-            </WorkbenchSummaryVisualCard>
+            </section>
           </div>
         </div>
       ) : presentation.mode === "partial" ? (

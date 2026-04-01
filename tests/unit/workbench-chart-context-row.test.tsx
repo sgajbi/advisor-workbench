@@ -8,7 +8,7 @@ describe("WorkbenchChartContextRow", () => {
   it("renders compact labeled analytical context items", () => {
     render(
       <WorkbenchChartContextRow
-        label="Return path context"
+        label="Return vs Benchmark"
         items={[
           { key: "basis", label: "Basis", value: "Net" },
           { key: "benchmark", label: "Benchmark", value: "Global Balanced 60/40" },
@@ -16,7 +16,7 @@ describe("WorkbenchChartContextRow", () => {
       />
     );
 
-    const row = screen.getByRole("group", { name: "Return path context" });
+    const row = screen.getByRole("group", { name: "Return vs Benchmark" });
     expect(row).toBeInTheDocument();
     expect(row).toHaveTextContent("BasisNet");
     expect(row).toHaveTextContent("BenchmarkGlobal Balanced 60/40");

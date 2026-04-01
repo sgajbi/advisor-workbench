@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Typography } from "@mui/material";
 
 import {
   AnalyticsTable,
@@ -204,22 +203,7 @@ export default function PerformanceMultiHorizonPanel({
     <PerformanceSummaryDriverModule
       title={presentation.frame.title}
       subtitle={presentation.frame.subtitle}
-      actions={
-        presentation.frame.actionLabel ? (
-          <Typography
-            component="span"
-            sx={{
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "text.secondary",
-            }}
-          >
-            {presentation.frame.actionLabel}
-          </Typography>
-        ) : null
-      }
+      actions={null}
     >
       {isLoading ? (
         <p className="muted">{presentation.loadingBody}</p>
@@ -246,17 +230,17 @@ export default function PerformanceMultiHorizonPanel({
             items={[
                 {
                   key: "resolved-window",
-                  label: "Resolved window",
+                  label: "Window",
                   value: resolvedWindowLabel,
                 },
               {
                 key: "active-return",
-                label: "Active return",
+                label: "Active Return",
                 value: presentation.activeReturnLabel,
               },
               {
                 key: "benchmark",
-                label: "Compared against",
+                label: "Benchmark",
                 value: presentation.benchmarkLabel,
               },
             ]}
@@ -319,11 +303,26 @@ export default function PerformanceMultiHorizonPanel({
                 className="performance-horizon-bar-group workbench-summary-visual-card"
               >
                 <div className="performance-horizon-bar-values">
-                  <WorkbenchSummaryVisualMeta>{card.primaryValue}</WorkbenchSummaryVisualMeta>
-                  <WorkbenchSummaryVisualMeta>{card.secondaryValue}</WorkbenchSummaryVisualMeta>
-                  {card.tertiaryValue ? (
-                    <WorkbenchSummaryVisualMeta>{card.tertiaryValue}</WorkbenchSummaryVisualMeta>
-                  ) : null}
+                  <span className="performance-horizon-bar-period">{card.label}</span>
+                  <WorkbenchSummaryVisualValue className="performance-horizon-bar-primary">
+                    {card.primaryValue}
+                  </WorkbenchSummaryVisualValue>
+                  <div className="performance-horizon-bar-support-grid">
+                    <div className="performance-horizon-bar-support-item">
+                      <WorkbenchSummaryVisualMeta>{card.secondaryLabel}</WorkbenchSummaryVisualMeta>
+                      <WorkbenchSummaryVisualValue>
+                        {card.secondaryValue}
+                      </WorkbenchSummaryVisualValue>
+                    </div>
+                    {card.tertiaryLabel && card.tertiaryValue ? (
+                      <div className="performance-horizon-bar-support-item">
+                        <WorkbenchSummaryVisualMeta>{card.tertiaryLabel}</WorkbenchSummaryVisualMeta>
+                        <WorkbenchSummaryVisualValue>
+                          {card.tertiaryValue}
+                        </WorkbenchSummaryVisualValue>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="performance-horizon-bar-track">
                   <div
@@ -342,9 +341,11 @@ export default function PerformanceMultiHorizonPanel({
                   />
                 </div>
                 <div className="performance-horizon-bar-footer">
-                  <WorkbenchSummaryVisualValue>{card.label}</WorkbenchSummaryVisualValue>
                   <WorkbenchSummaryVisualMeta>
-                    {card.spreadLabel} {card.spreadValue}
+                    {card.leftBarLabel} vs {card.rightBarLabel}
+                  </WorkbenchSummaryVisualMeta>
+                  <WorkbenchSummaryVisualMeta>
+                    {card.footerLabel}: {card.footerValue}
                   </WorkbenchSummaryVisualMeta>
                 </div>
               </WorkbenchSummaryVisualCard>

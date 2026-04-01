@@ -43,8 +43,7 @@ describe("performance summary context helpers", () => {
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
       benchmarkSourceLabel: "Calculated",
-      benchmarkContextValue:
-        "Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo",
+      benchmarkContextValue: "Global Balanced 60/40 • USD",
       activeReturnValue: "0.52%",
       relativeContextStatus: "available",
       benchmarkStateBody: null,
@@ -57,14 +56,14 @@ describe("performance summary context helpers", () => {
         key: "net-flow",
         label: "Net Flow",
         value: "$42,000",
-        support: "BoD $50,000 • EoD -$8,000",
+        support: "Opening cash $50,000 • Closing cash -$8,000",
         unavailable: false,
       },
       {
         key: "ending-mv",
-        label: "Ending MV",
+        label: "Ending Market Value",
         value: "$1,250,000",
-        support: "Flow-adj $1,208,000",
+        support: "Flow-adjusted value $1,208,000",
         unavailable: false,
       },
     ]);
@@ -100,8 +99,7 @@ describe("performance summary context helpers", () => {
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
       benchmarkSourceLabel: "Calculated",
-      benchmarkContextValue:
-        "Global Balanced 60/40 • Calculated • Stateful benchmark • Lotus Demo",
+      benchmarkContextValue: "Global Balanced 60/40 • USD",
       activeReturnValue: "Unavailable",
       relativeContextStatus: "partial",
       benchmarkStateBody: null,
@@ -242,13 +240,13 @@ describe("performance summary context helpers", () => {
     expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
       label: "Net Flow",
       value: "$42,000",
-      support: "BoD $50,000 • EoD -$8,000",
+      support: "Opening cash $50,000 • Closing cash -$8,000",
       unavailable: false,
     });
     expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
-      label: "Ending MV",
+      label: "Ending Market Value",
       value: "$1,250,000",
-      support: "Flow-adj $1,208,000",
+      support: "Flow-adjusted value $1,208,000",
       unavailable: false,
     });
   });
@@ -274,7 +272,7 @@ describe("performance summary context helpers", () => {
         reportingCurrency: "USD",
       })
     ).toBe(
-      "01 Jan 2026 - 24 Feb 2026 • MWR XIRR • Stateful inputs • 01 Jan 2026 - 24 Feb 2026 • Flow-adj $1,208,000"
+      "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-adjusted value $1,208,000"
     );
   });
 
@@ -316,7 +314,7 @@ describe("performance summary context helpers", () => {
     ).toBe("Global Balanced 60/40 • USD • Composite");
   });
 
-  it("includes benchmark input provenance when comparative summary exposes it", () => {
+  it("keeps benchmark context focused on benchmark identity and market metadata", () => {
     const scenario = buildSupportedPerformanceScenario();
 
     const presentation = getPerformanceReturnPathPresentation({
@@ -342,6 +340,9 @@ describe("performance summary context helpers", () => {
       reportingCurrency: scenario.workspace.portfolio.base_currency,
     });
 
-    expect(presentation.benchmarkContextValue).toContain("Stateful benchmark");
+    expect(presentation.benchmarkContextValue).toBe("Global Balanced 60/40 • USD");
+    expect(presentation.benchmarkContextValue).not.toContain("Stateful benchmark");
+    expect(presentation.benchmarkContextValue).not.toContain("Lotus Demo");
+    expect(presentation.benchmarkContextValue).not.toContain("Composite");
   });
 });

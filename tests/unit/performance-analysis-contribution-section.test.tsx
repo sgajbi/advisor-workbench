@@ -29,14 +29,14 @@ describe("PerformanceAnalysisContributionSection", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "What drove the result?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
-    expect(screen.getByLabelText("Contribution ranked insight panel")).toBeInTheDocument();
-    expect(screen.getByLabelText("Contribution detail grid panel")).toBeInTheDocument();
-    expect(screen.getByText("Ranked insight")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top / Bottom Contributors panel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contribution Detail panel")).toBeInTheDocument();
+    expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(
       screen.getByText("Prioritize the largest positive and negative contribution drivers.")
     ).toBeInTheDocument();
@@ -45,8 +45,8 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
     expect(screen.getByText("Top Contributor")).toBeInTheDocument();
     expect(screen.getByText("Top Detractor")).toBeInTheDocument();
-    expect(screen.getByText("Coverage MV")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Contribution")).toBeInTheDocument();
+    expect(screen.getByText("Contribution Coverage")).toBeInTheDocument();
+    expect(screen.getByText("Total Contribution")).toBeInTheDocument();
     expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
     const detailStrip = screen.getByLabelText("Contribution detail summary strip");
     expect(within(detailStrip).getByText(/High coverage • Average weight/)).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Ranked contributors").length).toBeGreaterThanOrEqual(1);
-    const insightPane = screen.getByLabelText("Contribution ranked insight panel");
+    const insightPane = screen.getByLabelText("Top / Bottom Contributors panel");
     expect(within(insightPane).queryByLabelText("Position contribution table")).not.toBeInTheDocument();
     expect(within(insightPane).queryByText("Position")).not.toBeInTheDocument();
   });

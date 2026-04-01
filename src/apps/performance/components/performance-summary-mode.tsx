@@ -103,7 +103,7 @@ export default function PerformanceSummaryMode({
       <WorkspaceGrid className="performance-detail-grid performance-secondary-zone workbench-summary-region">
         <WorkbenchDeferredSection
           className="performance-summary-driver-section"
-          title="How did this compare across horizons?"
+          title="Horizon Comparison"
           subtitle="Benchmark-aware return comparison across standard reporting windows."
           loadingTitle="Loading horizons"
           loadingMessage="Horizon comparisons are loading after first paint."
@@ -123,7 +123,7 @@ export default function PerformanceSummaryMode({
         </WorkbenchDeferredSection>
         <WorkbenchDeferredSection
           className="performance-summary-driver-section performance-summary-contributors-section"
-          title="What drove the result?"
+          title="Performance Drivers"
           subtitle="Top contributors and detractors for the current performance outcome."
           loadingTitle="Loading contributors"
           loadingMessage="Contributor ranking is loading after first paint."

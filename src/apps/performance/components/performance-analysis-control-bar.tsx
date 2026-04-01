@@ -95,11 +95,11 @@ export default function PerformanceAnalysisControlBar({
           <div className="performance-analysis-static-value">{chartFrequency}</div>
         </div>
         <div className="performance-analysis-control-slot">
-          <Typography sx={controlLabelSx}>Compared To</Typography>
+          <Typography sx={controlLabelSx}>Benchmark</Typography>
           <div className="performance-analysis-static-value">{benchmark ?? "Default benchmark"}</div>
         </div>
         <div className="performance-analysis-control-slot">
-          <Typography sx={controlLabelSx}>View Mode</Typography>
+          <Typography sx={controlLabelSx}>Return View</Typography>
           <div className="performance-analysis-static-value">{chartViewMode}</div>
         </div>
         <div className="performance-analysis-control-slot performance-analysis-control-slot-basis">
@@ -215,7 +215,7 @@ export default function PerformanceAnalysisControlBar({
       </div>
 
       <div className="performance-analysis-control-slot">
-        <Typography sx={controlLabelSx}>Compared To</Typography>
+        <Typography sx={controlLabelSx}>Benchmark</Typography>
         <TextField
           select
           size="small"
@@ -230,7 +230,7 @@ export default function PerformanceAnalysisControlBar({
           SelectProps={{ native: true }}
           slotProps={{
             htmlInput: {
-              "aria-label": "Compared To",
+              "aria-label": "Benchmark",
               suppressHydrationWarning: true,
             },
           }}
@@ -244,9 +244,9 @@ export default function PerformanceAnalysisControlBar({
       </div>
 
       <div className="performance-analysis-control-slot">
-        <Typography sx={controlLabelSx}>View Mode</Typography>
+        <Typography sx={controlLabelSx}>Return View</Typography>
         <WorkbenchSegmentedControl
-          ariaLabel="Return path view mode"
+          ariaLabel="Return view"
           className="performance-analysis-view-control"
           value={chartViewMode}
           onChange={onChartViewModeChange}
