@@ -251,7 +251,6 @@ function buildPerformanceSummaryContributorTableModel(
 export function getPerformanceHorizonPresentation({
   benchmark,
   benchmarkOptions = [],
-  detailBasis,
   period,
   loadingBody = "Loading horizon comparison.",
   emptyBody = "Horizon comparison is unavailable for this mandate.",
@@ -259,7 +258,6 @@ export function getPerformanceHorizonPresentation({
 }: {
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
-  detailBasis: string;
   period: string;
   loadingBody?: string;
   emptyBody?: string;
