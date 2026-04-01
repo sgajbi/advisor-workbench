@@ -7,11 +7,33 @@ import {
   setLocalStorageBeforeNavigation,
 } from './workbench-smoke-helpers';
 
-async function openSummaryPortfolio(page: import('@playwright/test').Page) {
+async function resolveSmokePortfolioId(request: import('@playwright/test').APIRequestContext) {
+  const response = await request.get('http://127.0.0.1:3000/api/bff/api/v1/foundation/portfolios', {
+    timeout: 30000,
+  });
+  expect(response.status()).toBe(200);
+  const payload = (await response.json()) as {
+    items?: Array<{ portfolio_id: string }>;
+  };
+  const portfolioIds = payload.items?.map((item) => item.portfolio_id) ?? [];
+  return (
+    portfolioIds.find((candidate) => candidate === 'PB_SG_GLOBAL_BAL_001') ??
+    portfolioIds.find((candidate) => candidate === 'DEMO_ADV_USD_001') ??
+    portfolioIds[0]
+  );
+}
+
+async function openSummaryPortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
   await setLocalStorageBeforeNavigation(page, {
     'lotus:portfolio:view-mode': 'summary',
   });
-  await page.goto('/portfolio', {
+  const portfolioId = await resolveSmokePortfolioId(request);
+  expect(portfolioId).toBeTruthy();
+
+  await page.goto(`/portfolio?portfolioId=${portfolioId}`, {
     waitUntil: 'domcontentloaded',
   });
 
@@ -19,9 +41,14 @@ async function openSummaryPortfolio(page: import('@playwright/test').Page) {
   const summaryViewButton = page.getByRole('button', { name: /^Summary$/i });
   await expect(summaryViewButton).toBeVisible();
   await expect(summaryViewButton).toHaveAttribute('aria-pressed', 'true');
+
+  return portfolioId;
 }
 
-async function openDetailedPortfolio(page: import('@playwright/test').Page) {
+async function openDetailedPortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
   await setLocalStorageBeforeNavigation(page, {
     'lotus:portfolio:view-mode': 'detailed',
     'lotus:portfolio:section:income': 'true',
@@ -30,7 +57,10 @@ async function openDetailedPortfolio(page: import('@playwright/test').Page) {
     'lotus:portfolio:section:transactions': 'true',
     'lotus:portfolio:section:projected-cashflow': 'true',
   });
-  await page.goto('/portfolio', { waitUntil: 'domcontentloaded' });
+  const portfolioId = await resolveSmokePortfolioId(request);
+  expect(portfolioId).toBeTruthy();
+
+  await page.goto(`/portfolio?portfolioId=${portfolioId}`, { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
 
   const detailedViewButton = page.getByRole('button', { name: /^Detailed$/i });
@@ -45,12 +75,14 @@ async function openDetailedPortfolio(page: import('@playwright/test').Page) {
   await expect(
     page.getByLabel(/Projected cashflow chart in /i)
   ).toBeVisible({ timeout: 15000 });
+
+  return portfolioId;
 }
 
 test.describe('Portfolio workbench smoke', () => {
-  test('summary stays summary-first and does not mount detailed drilldowns', async ({ page }) => {
+  test('summary stays summary-first and does not mount detailed drilldowns', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
-    await openSummaryPortfolio(page);
+    await openSummaryPortfolio(page, request);
 
     await expect(page.getByRole('heading', { name: /Portfolio Allocation/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Top Holdings/i })).toBeVisible();
@@ -74,9 +106,9 @@ test.describe('Portfolio workbench smoke', () => {
     expect(pairedAnalyticsMetrics.width).toBeGreaterThan(900);
   });
 
-  test('detailed analytics keep grids usable and analytical surfaces proportionate', async ({ page }) => {
+  test('detailed analytics keep grids usable and analytical surfaces proportionate', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
-    await openDetailedPortfolio(page);
+    await openDetailedPortfolio(page, request);
 
     const detailedAnalyticsGrid = page.locator('.portfolio-paired-analytics-grid-detailed');
     await expect(detailedAnalyticsGrid).toBeVisible();
