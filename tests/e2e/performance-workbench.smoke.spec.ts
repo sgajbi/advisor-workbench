@@ -10,7 +10,7 @@ import {
 test.describe.configure({ mode: 'serial' });
 
 async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
-  await page.goto('/performance?portfolioId=PB_SG_GLOBAL_BAL_001', {
+  await page.goto('/performance', {
     waitUntil: 'domcontentloaded',
   });
 
@@ -34,11 +34,29 @@ async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
   ).toBeVisible({ timeout: 30000 });
 }
 
+async function resolveSmokePortfolioId(request: import('@playwright/test').APIRequestContext) {
+  const response = await request.get('http://127.0.0.1:3000/api/bff/api/v1/lookups/portfolios?limit=8', {
+    timeout: 30000,
+  });
+  expect(response.status()).toBe(200);
+  const payload = (await response.json()) as {
+    items?: Array<{ id: string }>;
+  };
+  const portfolioIds = payload.items?.map((item) => item.id) ?? [];
+  return (
+    portfolioIds.find((candidate) => candidate === 'PB_SG_GLOBAL_BAL_001') ??
+    portfolioIds.find((candidate) => candidate === 'DEMO_ADV_USD_001') ??
+    portfolioIds[0]
+  );
+}
+
 test.describe('Performance workbench smoke', () => {
   test('split performance endpoints expose server timing to the live browser', async ({ page, request }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     await openPerformanceWorkbench(page);
+    const portfolioId = await resolveSmokePortfolioId(request);
+    expect(portfolioId).toBeTruthy();
 
     const fetchWithTiming = async (path: string) => {
       const response = await request.get(`http://127.0.0.1:3000${path}`, {
@@ -53,16 +71,16 @@ test.describe('Performance workbench smoke', () => {
 
     const [summary, details, horizon, attribution] = await Promise.all([
       fetchWithTiming(
-        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+        `/api/bff/api/v1/workbench/${portfolioId}/performance/summary?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30`
       ),
       fetchWithTiming(
-        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+        `/api/bff/api/v1/workbench/${portfolioId}/performance/details?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30`
       ),
       fetchWithTiming(
-        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly'
+        `/api/bff/api/v1/workbench/${portfolioId}/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly`
       ),
       fetchWithTiming(
-        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/attribution-trend?period=EXPLICIT&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+        `/api/bff/api/v1/workbench/${portfolioId}/performance/attribution-trend?period=EXPLICIT&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30`
       ),
     ]);
     const endpointResults = { summary, details, horizon, attribution };

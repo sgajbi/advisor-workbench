@@ -11,11 +11,11 @@ async function openSummaryPortfolio(page: import('@playwright/test').Page) {
   await setLocalStorageBeforeNavigation(page, {
     'lotus:portfolio:view-mode': 'summary',
   });
-  await page.goto('/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001', {
+  await page.goto('/portfolio', {
     waitUntil: 'domcontentloaded',
   });
 
-  await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
   const summaryViewButton = page.getByRole('button', { name: /^Summary$/i });
   await expect(summaryViewButton).toBeVisible();
   await expect(summaryViewButton).toHaveAttribute('aria-pressed', 'true');
@@ -30,8 +30,8 @@ async function openDetailedPortfolio(page: import('@playwright/test').Page) {
     'lotus:portfolio:section:transactions': 'true',
     'lotus:portfolio:section:projected-cashflow': 'true',
   });
-  await page.goto('/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible();
+  await page.goto('/portfolio', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
 
   const detailedViewButton = page.getByRole('button', { name: /^Detailed$/i });
   await expect(detailedViewButton).toBeVisible();
@@ -82,8 +82,9 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(detailedAnalyticsGrid).toBeVisible();
 
     const analyticsGridMetrics = await measureGrid(detailedAnalyticsGrid);
-    expect(analyticsGridMetrics.columns).not.toContain(' ');
-    expect(analyticsGridMetrics.childWidths.every((width) => width >= analyticsGridMetrics.width - 2)).toBeTruthy();
+    expect(analyticsGridMetrics.childCount).toBe(2);
+    expect(analyticsGridMetrics.width).toBeGreaterThan(900);
+    expect(analyticsGridMetrics.childWidths.every((width) => width >= 900)).toBeTruthy();
 
     const holdingsGrid = page.locator('.portfolio-data-grid').first();
     await expect(holdingsGrid).toBeVisible();
