@@ -536,7 +536,7 @@ export default function PerformanceChartPanel({
         />
       }
       metricStrip={
-        capabilities.returnPath.state === "supported" && points.length ? (
+        capabilities.summaryKpis.state !== "unavailable" ? (
           <PerformanceOutcomeStrip
             items={outcomeItems.map((metric) => ({
               key: metric.key,

@@ -101,7 +101,10 @@ export function getPerformanceReturnPathPresentation({
       {
         key: "portfolio-return",
         label: "Portfolio Return",
-        value: formatPct(summary.portfolio_return_pct),
+        value:
+          summary.portfolio_return_pct != null
+            ? formatPct(summary.portfolio_return_pct)
+            : "Unavailable",
         unavailable: summary.portfolio_return_pct == null,
       },
       {

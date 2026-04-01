@@ -208,6 +208,47 @@ describe("PerformanceWorkspaceClient", () => {
     expect(getSummaryClientMock).not.toHaveBeenCalled();
   });
 
+  it("treats summary-only first paint as detail-pending and hydrates details after mount", async () => {
+    let resolveDetails:
+      | ((value: WorkbenchPerformanceWorkspaceDetails) => void)
+      | null = null;
+    const detailsPromise = new Promise<WorkbenchPerformanceWorkspaceDetails>((resolve) => {
+      resolveDetails = resolve;
+    });
+    getDetailsClientMock.mockImplementationOnce(() => detailsPromise);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("true");
+    });
+
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(1);
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveDetails?.(buildDetails());
+      await detailsPromise;
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+  });
+
   it("normalizes stale initial control params to the server-resolved detail controls", async () => {
     render(
       <PerformanceWorkspaceClient

@@ -83,6 +83,10 @@ function compactPattern(text: string) {
   return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(" ", "\\s*"));
 }
 
+function isServerDetailsCall(url: string, portfolioId: string) {
+  return url.includes(`gateway.dev.lotus/api/v1/workbench/${portfolioId}/performance/details`);
+}
+
 async function expectTextPresent(text: string) {
   const matches = await screen.findAllByText(text);
   expect(matches.length).toBeGreaterThan(0);
@@ -148,7 +152,7 @@ describe("PerformanceAnalyticsPage", () => {
             }),
           } as Response;
         }
-        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")) {
+        if (url.includes("/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")) {
           return {
             ok: true,
             json: async () => ({
@@ -176,9 +180,14 @@ describe("PerformanceAnalyticsPage", () => {
       ).toBe(true);
       expect(
         fetchMock.mock.calls.some(([input]) =>
+          isServerDetailsCall(input.toString(), "PB_SG_GLOBAL_BAL_001")
+        )
+      ).toBe(false);
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
           input
-          .toString()
-          .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")
+            .toString()
+            .includes("/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")
         )
       ).toBe(true);
     });
@@ -200,9 +209,14 @@ describe("PerformanceAnalyticsPage", () => {
       ).toBe(true);
       expect(
         fetchMock.mock.calls.some(([input]) =>
+          isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001")
+        )
+      ).toBe(false);
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
           input
             .toString()
-            .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")
+            .includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")
         )
       ).toBe(true);
     });
@@ -478,7 +492,7 @@ describe("PerformanceAnalyticsPage", () => {
         if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
-        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
@@ -562,7 +576,7 @@ describe("PerformanceAnalyticsPage", () => {
         if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
-        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+        if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
@@ -900,7 +914,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "benchmark-unassigned and return-series-unavailable",
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
-      executiveExpectations: [],
+      executiveExpectations: ["Portfolio Return", "Period / Basis"],
       trustExpectations: [
         "Benchmark not assigned",
         "Published observations unavailable",
@@ -1008,7 +1022,7 @@ describe("PerformanceAnalyticsPage", () => {
     }
   );
 
-  it("passes a selected benchmark through to summary and details requests", async () => {
+  it("passes a selected benchmark through to summary and deferred details requests", async () => {
     installPerformancePageFetchMock();
 
     render(
@@ -1027,15 +1041,20 @@ describe("PerformanceAnalyticsPage", () => {
     await waitFor(() => {
       expect(
         fetchMock.mock.calls.some(([input]) =>
-          input.toString().includes("/api/v1/workbench/PF_1001/performance/details")
+          input.toString().includes("/api/bff/api/v1/workbench/PF_1001/performance/details")
         )
       ).toBe(true);
     });
     const detailsCall = fetchMock.mock.calls.find(([input]) =>
-      input.toString().includes("/api/v1/workbench/PF_1001/performance/details")
+      input.toString().includes("/api/bff/api/v1/workbench/PF_1001/performance/details")
     );
     expect(summaryCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
     expect(detailsCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        isServerDetailsCall(input.toString(), "PF_1001")
+      )
+    ).toBe(false);
     expect(await screen.findByLabelText("Benchmark")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 });

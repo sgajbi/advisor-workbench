@@ -41,6 +41,8 @@ type PerformanceControlState = {
   reportEndDate?: string;
 };
 
+type PerformanceDetailsStatus = "idle" | "loading" | "ready" | "failed";
+
 export default function PerformanceWorkspaceClient({
   initialSummary,
   initialDetails,
@@ -105,7 +107,6 @@ export default function PerformanceWorkspaceClient({
     initialDetails ?? null
   );
   const [isSummaryUpdating, setIsSummaryUpdating] = useState(false);
-  const [isDetailsUpdating, setIsDetailsUpdating] = useState(false);
   const [controls, setControls] = useState<PerformanceControlState | null>(
     initialControls
   );
@@ -113,21 +114,22 @@ export default function PerformanceWorkspaceClient({
   const initialDetailsRequestedRef = useRef(false);
 
   const initialDetailsKey = useMemo(
-    () =>
-      initialControls
-        ? buildDetailsCacheKey(initialControls)
-        : null,
+    () => (initialControls && initialDetails ? buildDetailsCacheKey(initialControls) : null),
     [
+      initialDetails,
       initialControls,
     ]
   );
   const [detailsKey, setDetailsKey] = useState<string | null>(initialDetailsKey ?? null);
+  const [detailsStatus, setDetailsStatus] = useState<PerformanceDetailsStatus>(
+    initialDetails ? "ready" : initialSummary ? "idle" : "failed"
+  );
 
   const summaryCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceSummary | null>>(
     initialSummaryKey ? new Map([[initialSummaryKey, initialSummary]]) : new Map()
   );
-  const detailsCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceDetails | null>>(
-    initialDetailsKey ? new Map([[initialDetailsKey, initialDetails ?? null]]) : new Map()
+  const detailsCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceDetails>>(
+    initialDetailsKey && initialDetails ? new Map([[initialDetailsKey, initialDetails]]) : new Map()
   );
 
   const workspace = useMemo<WorkbenchPerformanceWorkspace | null>(() => {
@@ -138,10 +140,13 @@ export default function PerformanceWorkspaceClient({
   }, [details, summary]);
   const isUpdating = isSummaryUpdating;
   const expectedDetailsKey = controls ? buildDetailsCacheKey(controls) : null;
+  const hasExpectedDetails =
+    Boolean(details) && detailsStatus === "ready" && detailsKey === expectedDetailsKey;
   const isDetailsPending =
     Boolean(summary) &&
-    (isSummaryUpdating || isDetailsUpdating) &&
-    detailsKey !== expectedDetailsKey;
+    Boolean(expectedDetailsKey) &&
+    !hasExpectedDetails &&
+    (detailsStatus === "idle" || detailsStatus === "loading" || detailsKey !== expectedDetailsKey);
 
   useEffect(() => {
     if (!initialControls || !initialPortfolioId) {
@@ -186,9 +191,9 @@ export default function PerformanceWorkspaceClient({
     }
 
     initialDetailsRequestedRef.current = true;
+    setDetailsStatus("loading");
     void fetchDetailsForControls(controls, {
       requestId: requestSequenceRef.current,
-      markLoading: true,
     });
   }, [controls, details, summary]);
 
@@ -236,10 +241,10 @@ export default function PerformanceWorkspaceClient({
       if (cachedDetails) {
         setDetails(cachedDetails);
         setDetailsKey(detailsKey);
+        setDetailsStatus("ready");
       }
       await fetchDetailsForControls(nextControls, {
         requestId,
-        markLoading: true,
       });
       return;
     }
@@ -253,6 +258,7 @@ export default function PerformanceWorkspaceClient({
     if (cachedDetails) {
       setDetails(cachedDetails);
       setDetailsKey(detailsKey);
+      setDetailsStatus("ready");
     }
     setIsSummaryUpdating(true);
 
@@ -302,7 +308,6 @@ export default function PerformanceWorkspaceClient({
         },
         {
           requestId,
-          markLoading: true,
         }
       );
     } catch {
@@ -318,20 +323,21 @@ export default function PerformanceWorkspaceClient({
 
   async function fetchDetailsForControls(
     nextControls: PerformanceControlState,
-    options: { requestId: number; markLoading: boolean }
+    options: { requestId: number }
   ) {
     const detailsKey = buildDetailsCacheKey(nextControls);
     const cachedDetails = detailsCacheRef.current.get(detailsKey);
-    if (cachedDetails) {
+    if (cachedDetails !== undefined) {
       if (requestSequenceRef.current === options.requestId) {
         setDetails(cachedDetails);
         setDetailsKey(detailsKey);
+        setDetailsStatus("ready");
       }
       return;
     }
 
-    if (options.markLoading) {
-      setIsDetailsUpdating(true);
+    if (requestSequenceRef.current === options.requestId) {
+      setDetailsStatus("loading");
     }
 
     try {
@@ -355,6 +361,7 @@ export default function PerformanceWorkspaceClient({
       }
       setDetails(resolvedDetails);
       setDetailsKey(detailsKey);
+      setDetailsStatus("ready");
       setControls((current) =>
         current
           ? {
@@ -371,12 +378,9 @@ export default function PerformanceWorkspaceClient({
       );
     } catch {
       if (requestSequenceRef.current === options.requestId) {
-        setDetails((currentDetails) => currentDetails);
+        setDetailsStatus("failed");
       }
     } finally {
-      if (options.markLoading && requestSequenceRef.current === options.requestId) {
-        setIsDetailsUpdating(false);
-      }
     }
   }
 

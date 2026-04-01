@@ -48,6 +48,12 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
           json: async () => buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
         } as Response;
       }
+      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+        return {
+          ok: true,
+          json: async () => buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
+        } as Response;
+      }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
         return {
           ok: true,
@@ -67,6 +73,12 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
+        return {
+          ok: true,
+          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
+        } as Response;
+      }
+      if (url.includes("/api/bff/api/v1/workbench/PF_1001/performance/details")) {
         return {
           ok: true,
           json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
@@ -105,6 +117,12 @@ export function installPerformancePageFetchScenario(
         } as Response;
       }
       if (url.includes(`/api/v1/workbench/${portfolioId}/performance/details`)) {
+        return {
+          ok: true,
+          json: async () => workspace,
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/details`)) {
         return {
           ok: true,
           json: async () => workspace,
