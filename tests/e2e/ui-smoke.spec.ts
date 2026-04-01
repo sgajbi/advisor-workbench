@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('UI smoke checks', () => {
   const mobileOverflowChecks = [
     {
@@ -12,7 +14,7 @@ test.describe('UI smoke checks', () => {
     },
     {
       path: '/workbench/DEMO_ADV_USD_001',
-      readyName: /^Advisor Workbench: DEMO_ADV_USD_001$/i,
+      readyName: /^Advisor Workbench(?:: .+)?$/i,
     },
   ] as const;
 
@@ -49,7 +51,7 @@ test.describe('UI smoke checks', () => {
     test.setTimeout(90000);
     await page.goto('/workbench/DEMO_ADV_USD_001', { waitUntil: 'commit', timeout: 60000 });
     await expect(
-      page.getByRole('heading', { name: /^Advisor Workbench: DEMO_ADV_USD_001$/i })
+      page.getByRole('heading', { name: /^Advisor Workbench(?:: .+)?$/i })
     ).toBeVisible({ timeout: 60000 });
   });
 

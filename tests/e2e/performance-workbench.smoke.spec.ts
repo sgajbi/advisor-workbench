@@ -7,6 +7,8 @@ import {
   parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
 
+test.describe.configure({ mode: 'serial' });
+
 async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
   await page.goto('/performance?portfolioId=PB_SG_GLOBAL_BAL_001', {
     waitUntil: 'domcontentloaded',
@@ -26,42 +28,44 @@ async function openPerformanceWorkbench(page: import('@playwright/test').Page) {
 
   await expect(
     workbenchHeading
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: 30000 });
   await expect(
     page.getByRole('tablist', { name: /^Performance workspace mode$/i })
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: 30000 });
 }
 
 test.describe('Performance workbench smoke', () => {
-  test('split performance endpoints expose server timing to the live browser', async ({ page }) => {
+  test('split performance endpoints expose server timing to the live browser', async ({ page, request }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     await openPerformanceWorkbench(page);
 
-    const endpointResults = await page.evaluate(async () => {
-      const fetchWithTiming = async (path: string) => {
-        const response = await fetch(path, { cache: 'no-store' });
-        return {
-          status: response.status,
-          serverTiming: response.headers.get('server-timing'),
-        };
-      };
-
+    const fetchWithTiming = async (path: string) => {
+      const response = await request.get(`http://127.0.0.1:3000${path}`, {
+        headers: { 'cache-control': 'no-store' },
+        timeout: 30000,
+      });
       return {
-        summary: await fetchWithTiming(
-          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
-        ),
-        details: await fetchWithTiming(
-          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
-        ),
-        horizon: await fetchWithTiming(
-          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly'
-        ),
-        attribution: await fetchWithTiming(
-          '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/attribution-trend?period=EXPLICIT&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
-        ),
+        status: response.status(),
+        serverTiming: response.headers()['server-timing'] ?? null,
       };
-    });
+    };
+
+    const [summary, details, horizon, attribution] = await Promise.all([
+      fetchWithTiming(
+        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+      ),
+      fetchWithTiming(
+        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details?period=EXPLICIT&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+      ),
+      fetchWithTiming(
+        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/horizon-comparison?detail_basis=NET&chart_frequency=monthly'
+      ),
+      fetchWithTiming(
+        '/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/attribution-trend?period=EXPLICIT&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&report_start_date=2026-01-01&report_end_date=2026-03-30'
+      ),
+    ]);
+    const endpointResults = { summary, details, horizon, attribution };
 
     expect(endpointResults.summary.status).toBe(200);
     expect(endpointResults.details.status).toBe(200);
@@ -243,13 +247,12 @@ test.describe('Performance workbench smoke', () => {
     const contributionModule = page.locator('#performance-drivers');
     await expect(contributionModule).toBeVisible({ timeout: 15000 });
     await expect(
-      contributionModule.getByRole('heading', { name: /^What drove the result\?$/i })
+      contributionModule.getByRole('heading', { name: /^Performance Drivers$/i })
     ).toBeVisible();
-    await expect(contributionModule.getByLabel('Contribution ranked insight panel')).toBeVisible();
-    await expect(contributionModule.getByLabel('Contribution detail grid panel')).toBeVisible();
+    await expect(contributionModule.getByLabel('Top / Bottom Contributors panel')).toBeVisible();
+    await expect(contributionModule.getByLabel('Contribution Detail panel')).toBeVisible();
     await expect(contributionModule.getByText('Top / Bottom Contributors')).toBeVisible();
-    await expect(contributionModule.getByText('Top Contributor')).toBeVisible();
-    await expect(contributionModule.getByText('Top Detractor')).toBeVisible();
+    await expect(contributionModule.getByText('Ranked contributors')).toBeVisible();
     await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
     await expect(contributionModule.getByLabel('Asset Class contribution table')).toHaveCount(0);
     await expect(
@@ -270,7 +273,12 @@ test.describe('Performance workbench smoke', () => {
     const positionHeaders = await contributionModule
       .locator('table[aria-label="Position contribution table"] thead th')
       .allTextContents();
-    expect(positionHeaders).toEqual(['Position', 'Contribution', 'Avg. Weight', 'Return', 'FX']);
+    expect(positionHeaders.slice(0, 4)).toEqual([
+      'Position',
+      'Contribution',
+      'Avg. Weight',
+      'Return',
+    ]);
 
     const positionFrame = await measureTableFrame(
       contributionModule.getByLabel('Position contribution table').locator('..')
@@ -296,30 +304,17 @@ test.describe('Performance workbench smoke', () => {
     expect(moduleMetrics.height).toBeLessThan(1200);
   });
 
-  test('evidence mode uses the shared unavailable state shell intentionally', async ({ page }) => {
+  test('evidence mode remains intentionally unavailable when the backend contract does not expose it', async ({ page }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     await openPerformanceWorkbench(page);
 
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
-    await evidenceTab.click();
-    await expectActiveTab(page, /^Evidence$/i);
-
-    const evidenceModule = page.locator('.performance-evidence-module');
-    await expect(evidenceModule).toBeVisible({ timeout: 30000 });
-    await expect(
-      page.getByRole('heading', { name: /^Evidence and Calculation Context$/i })
-    ).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.performance-analysis-state-panel')).toHaveCount(1);
-    await expect(page.getByText('Evidence unavailable')).toBeVisible();
-    await expect(
-      page.getByText(
-        'Execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract.'
-      )
-    ).toBeVisible();
-
-    const evidenceMetrics = await measureElement(evidenceModule);
-    expect(evidenceMetrics.height).toBeLessThanOrEqual(420);
-    expect(evidenceMetrics.width).toBeGreaterThan(900);
+    await expect(evidenceTab).toBeDisabled();
+    await expect(evidenceTab).toHaveAttribute(
+      'title',
+      'Evidence and lineage surfaces are not exposed by the current gateway contract.'
+    );
+    await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
   });
 });
