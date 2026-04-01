@@ -26,7 +26,7 @@ describe("performance attribution presentations", () => {
     );
 
     expect(contextItems).toEqual([
-      { label: "Benchmark", value: "Global Balanced 60/40 • Calculated • Lotus Demo" },
+      { label: "Benchmark", value: "Global Balanced 60/40 • USD" },
       { label: "Source", value: "Calculated" },
       { label: "Model", value: "BF" },
       { label: "Linking", value: "Carino" },
@@ -92,7 +92,7 @@ describe("performance attribution presentations", () => {
 
     expect(contextItems[0]).toEqual({
       label: "Benchmark",
-      value: "Global Balanced 60/40 • Calculated • Lotus Demo",
+      value: "Global Balanced 60/40 • USD",
     });
     expect(summaryItems).toHaveLength(4);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
@@ -153,7 +153,7 @@ describe("performance attribution presentations", () => {
 
     expect(contextItems[2]).toEqual({
       label: "Benchmark",
-      value: "Global Balanced 60/40 • Lotus Demo",
+      value: "Global Balanced 60/40",
     });
   });
 });

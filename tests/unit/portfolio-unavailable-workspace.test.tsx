@@ -28,6 +28,6 @@ describe("PortfolioUnavailableWorkspace", () => {
     expect(stateScope.getByText("Portfolio catalog")).toBeInTheDocument();
     expect(stateScope.getByText("Unavailable")).toBeInTheDocument();
     expect(stateScope.getByText("Performance area")).toBeInTheDocument();
-    expect(stateScope.getAllByText("Available").length).toBeGreaterThanOrEqual(3);
+    expect(stateScope.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
   });
 });

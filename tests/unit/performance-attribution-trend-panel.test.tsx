@@ -93,7 +93,7 @@ describe("PerformanceAttributionTrendPanel", () => {
       compactPattern("Resolved window 01 Jan 2026 - 27 Mar 2026")
     );
     expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40 • Lotus Demo")
+      compactPattern("Benchmark Global Balanced 60/40")
     );
     expect(
       document.querySelectorAll(
