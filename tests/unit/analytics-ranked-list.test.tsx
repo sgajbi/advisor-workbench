@@ -34,7 +34,7 @@ describe("AnalyticsRankedList", () => {
     const heading = screen.getByText("Top contributors");
     expect(heading).toHaveClass("workbench-summary-visual-heading");
     expect(screen.getByText("Contribution")).toHaveClass("workbench-summary-visual-meta");
-    expect(container.querySelector(".performance-ranked-bar-track")).not.toBeNull();
+    expect(container.querySelector(".workbench-ranked-bar-track")).not.toBeNull();
 
     const microsoftLabel = screen.getByText("Microsoft");
     const microsoftRow = microsoftLabel.parentElement?.parentElement;
@@ -49,7 +49,7 @@ describe("AnalyticsRankedList", () => {
       "workbench-summary-visual-value"
     );
     expect(container.querySelectorAll(".workbench-summary-visual-track")).toHaveLength(2);
-    expect(container.querySelectorAll(".performance-ranked-value")).toHaveLength(2);
+    expect(container.querySelectorAll(".workbench-ranked-bar-value")).toHaveLength(2);
   });
 
   it("renders an explicit empty message when no ranked rows are available", () => {
