@@ -233,7 +233,7 @@ describe("performance analytics table models", () => {
     ]);
   });
 
-  it("omits empty position contribution columns when the live contract provides no values", () => {
+  it("keeps Local and FX together when the live contract emits an FX leg and zero Local contribution", () => {
     const model = buildPerformancePositionContributionTableModel({
       rows: [
         {
@@ -259,12 +259,14 @@ describe("performance analytics table models", () => {
       "Position",
       "Contribution",
       "Average Weight",
+      "Local",
       "FX",
     ]);
     expect(model.rows[0]?.cells).toEqual([
       "AAPL US",
       "0.30%",
       "7.44%",
+      "0.00%",
       "0.30%",
     ]);
   });
@@ -296,6 +298,7 @@ describe("performance analytics table models", () => {
       "Contribution",
       "Average Weight",
       "Return",
+      "Local",
       "FX",
     ]);
     expect(model.rows[0]?.cells).toEqual([
@@ -303,6 +306,7 @@ describe("performance analytics table models", () => {
       "0.30%",
       "7.44%",
       "4.81%",
+      "0.00%",
       "0.30%",
     ]);
   });

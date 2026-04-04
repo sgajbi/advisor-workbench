@@ -5,6 +5,19 @@ import {
   getContributionReconciliationAssessment,
 } from "./performance-workspace-view-helpers";
 
+function formatContributionWeightingScheme(weightingScheme?: string | null) {
+  switch (weightingScheme?.trim().toUpperCase()) {
+    case "BOD":
+      return "BOD weighting";
+    case "EOD":
+      return "EOD weighting";
+    case "AVERAGE_WEIGHT":
+      return "Average weight";
+    default:
+      return weightingScheme?.trim() || null;
+  }
+}
+
 export default function PerformanceContributionContextNote({
   contribution,
   className = "performance-contribution-context-note",
@@ -12,11 +25,16 @@ export default function PerformanceContributionContextNote({
   contribution: ContributionSummaryView;
   className?: string;
 }) {
+  const coverageText = [
+    getContributionCoverageAssessment(contribution) ?? "Coverage unavailable",
+    formatContributionWeightingScheme(contribution.weighting_scheme),
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
   return (
     <div className={className} role="note">
-      <strong>
-        {getContributionCoverageAssessment(contribution) ?? "Coverage unavailable"}
-      </strong>
+      <strong>{coverageText}</strong>
       <span>
         {getContributionReconciliationAssessment(contribution) ??
           "Contribution-to-return reconciliation unavailable for this selection."}

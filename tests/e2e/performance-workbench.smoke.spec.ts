@@ -240,8 +240,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
     await expect(page.getByLabel('Top / Bottom Contributors panel')).toBeVisible();
     await expect(page.getByLabel('Contribution Detail panel')).toBeVisible();
-    await expect(page.getByLabel('Top Effects panel')).toBeVisible();
-    await expect(page.getByLabel('Attribution Detail panel')).toBeVisible();
+    await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
+    await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
+    await expect(page.getByText('Segment Attribution')).toBeVisible();
 
     await expect(evidenceTab).toBeDisabled();
   });
@@ -284,8 +285,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(attributionTrendStrip.getByText('Total Effect', { exact: true })).toBeVisible();
     await expect(attributionTrendStrip.getByText('Cumulative Total', { exact: true })).toBeVisible();
 
-    await expect(page.getByLabel('Top Effects panel')).toBeVisible();
-    await expect(page.getByLabel('Attribution Detail panel')).toBeVisible();
+    await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
+    await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
+    await expect(page.getByText('Segment Attribution')).toBeVisible();
     await expect(page.getByRole('tab', { name: /^Relative Segment Context$/i })).toHaveAttribute(
       'aria-selected',
       'true'
@@ -294,7 +296,7 @@ test.describe('Performance workbench smoke', () => {
       'aria-selected',
       'false'
     );
-    await expect(page.getByText('Top Active Effects')).toBeVisible();
+    await expect(page.getByText('Top Active Effects')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toBeVisible();
     await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
 
@@ -305,6 +307,7 @@ test.describe('Performance workbench smoke', () => {
     );
     await expect(page.getByLabel('Asset Class attribution totals')).toBeVisible();
     await expect(page.getByText('Attribution Summary')).toBeVisible();
+    await expect(page.getByLabel('Attribution effect legend')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toHaveCount(0);
 
     await expect(page.getByLabel('Attribution trend table')).toBeVisible();
@@ -332,10 +335,11 @@ test.describe('Performance workbench smoke', () => {
     await expect(
       contributionModule.getByRole('heading', { name: /^Performance Drivers$/i })
     ).toBeVisible();
-    await expect(contributionModule.getByLabel('Top / Bottom Contributors panel')).toBeVisible();
-    await expect(contributionModule.getByLabel('Contribution Detail panel')).toBeVisible();
-    await expect(contributionModule.getByText('Top / Bottom Contributors')).toBeVisible();
-    await expect(contributionModule.getByText('Contributor Ranking')).toBeVisible();
+    await expect(contributionModule.getByLabel('Top / Bottom Contributors panel')).toHaveCount(0);
+    await expect(contributionModule.getByLabel('Contribution Detail panel')).toHaveCount(0);
+    await expect(contributionModule.getByText('Top / Bottom Contributors')).toHaveCount(0);
+    await expect(contributionModule.getByText('Contributor Ranking')).toHaveCount(0);
+    await expect(contributionModule.getByText('Positions and Segments')).toBeVisible();
     await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
     await expect(contributionModule.getByLabel('Asset Class contribution table')).toHaveCount(0);
     await expect(

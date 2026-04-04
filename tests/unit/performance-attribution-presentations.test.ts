@@ -27,24 +27,18 @@ describe("performance attribution presentations", () => {
 
     expect(contextItems).toEqual([
       { label: "Benchmark", value: "Global Balanced 60/40 • USD" },
-      { label: "Source", value: "Calculated" },
-      { label: "Model", value: "BF" },
-      { label: "Linking", value: "Carino" },
+      { label: "Benchmark Source", value: "Calculated" },
+      { label: "Attribution Model", value: "Brinson-Fachler" },
+      { label: "Linking Method", value: "Carino" },
     ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
       "Active Return",
       "Effects Sum",
       "Residual",
     ]);
-    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
-      "Effects 0.50% + Residual 0.02%"
-    );
-    expect(summaryItems.find((item) => item.label === "Effects Sum")?.support).toBe(
-      "Residual remains after effects • Active 0.52%"
-    );
-    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBe(
-      "Residual remains after effects • Active 0.52% • Effects 0.50%"
-    );
+    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBeUndefined();
+    expect(summaryItems.find((item) => item.label === "Effects Sum")?.support).toBeUndefined();
+    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBeUndefined();
   });
 
   it("builds trend context and latest-row summary from the trend contract", () => {
@@ -95,9 +89,7 @@ describe("performance attribution presentations", () => {
     });
     expect(summaryItems).toHaveLength(3);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
-    expect(summaryItems.find((item) => item.label === "Residual")?.support).toContain(
-      "Residual remains after effects"
-    );
+    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBeUndefined();
   });
 
   it("uses benchmark option labels when trend context receives them", () => {

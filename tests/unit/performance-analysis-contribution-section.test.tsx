@@ -32,26 +32,23 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
-    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(2);
-    expect(screen.getByLabelText("Top / Bottom Contributors panel")).toBeInTheDocument();
-    expect(screen.getByLabelText("Contribution Detail panel")).toBeInTheDocument();
-    expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeFalsy();
+    expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(0);
+    expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution Detail panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
+    expect(screen.getByText("Positions and Segments")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Largest positive and negative position contributions for the selected period."
-      )
+      screen.getByText("Position-level and segment-level contribution for the selected period.")
     ).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
-    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
-    expect(screen.getByText("Top Contributor")).toBeInTheDocument();
-    expect(screen.getByText("Top Detractor")).toBeInTheDocument();
-    expect(screen.getByText("Contribution Coverage")).toBeInTheDocument();
-    expect(screen.getByText("Total Contribution")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
+    expect(screen.queryByText("Top Contributor")).not.toBeInTheDocument();
+    expect(screen.queryByText("Top Detractor")).not.toBeInTheDocument();
+    expect(screen.queryByText("Contribution Coverage")).not.toBeInTheDocument();
+    expect(screen.queryByText("Total Contribution")).not.toBeInTheDocument();
     expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
-    const detailStrip = screen.getByLabelText("Contribution detail summary strip");
-    expect(within(detailStrip).getByText(/High coverage • Average weight/)).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
       "aria-selected",
@@ -64,11 +61,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Contributor Ranking").length).toBeGreaterThanOrEqual(1);
-    const insightPane = screen.getByLabelText("Top / Bottom Contributors panel");
-    expect(within(insightPane).queryByLabelText("Position contribution table")).not.toBeInTheDocument();
-    expect(within(insightPane).queryByText("Position")).not.toBeInTheDocument();
-    expect(within(insightPane).queryByText("Ranked contributors")).not.toBeInTheDocument();
+    expect(screen.queryByText("Contributor Ranking")).not.toBeInTheDocument();
   });
 
   it("keeps the position return column when upstream emits real returns and no local contribution", () => {
@@ -107,16 +100,13 @@ describe("PerformanceAnalysisContributionSection", () => {
     );
 
     const positionTable = screen.getByLabelText("Position contribution table");
-    const detailStrip = screen.getByLabelText("Contribution detail summary strip");
-    expect(within(detailStrip).getByText("Top Contributor")).toBeInTheDocument();
-    expect(within(detailStrip).getByText("AAPL US")).toBeInTheDocument();
-    expect(within(detailStrip).getByText("Top Detractor")).toBeInTheDocument();
-    expect(within(detailStrip).getByText("None")).toBeInTheDocument();
-    expect(within(detailStrip).getByText(/High coverage • Average weight/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(within(positionTable).getByText("Return")).toBeInTheDocument();
-    expect(within(positionTable).queryByText("Local")).not.toBeInTheDocument();
+    expect(within(positionTable).getByText("Local")).toBeInTheDocument();
+    expect(within(positionTable).getByText("FX")).toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL US")).toBeInTheDocument();
     expect(within(positionTable).getByText("4.31%")).toBeInTheDocument();
+    expect(within(positionTable).getAllByText("0.00%").length).toBeGreaterThanOrEqual(1);
     expect(within(positionTable).getAllByText("0.30%")).toHaveLength(2);
   });
 
@@ -186,10 +176,17 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Position contribution detail unavailable")).toBeInTheDocument();
-    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Positions" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+    expect(screen.getByRole("tab", { name: "Segment Contribution (1)" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.queryByLabelText("Position contribution detail unavailable")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();
@@ -269,8 +266,7 @@ describe("PerformanceAnalysisContributionSection", () => {
       />
     );
 
-    const detailStrip = screen.getByLabelText("Contribution detail summary strip");
-    expect(within(detailStrip).getByText(/High coverage • BOD weighting/)).toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("High coverage • BOD weighting");
   });
 
   it("shows a contribution context note when aggregate rows are present", () => {
@@ -287,6 +283,7 @@ describe("PerformanceAnalysisContributionSection", () => {
 
     const note = screen.getByRole("note");
     expect(note).toHaveTextContent("High coverage");
+    expect(note).toHaveTextContent("Average weight");
     expect(note).toHaveTextContent("Reconciles to return");
   });
 });

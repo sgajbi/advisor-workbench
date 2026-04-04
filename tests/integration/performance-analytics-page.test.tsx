@@ -395,18 +395,20 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
-    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeTruthy();
-    expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(2);
-    expect(screen.getByLabelText("Top / Bottom Contributors panel")).toBeInTheDocument();
-    expect(screen.getByLabelText("Contribution Detail panel")).toBeInTheDocument();
-    expect(screen.getByLabelText("Top Effects panel")).toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution Detail panel")).toBeInTheDocument();
+    expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeFalsy();
+    expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(0);
+    expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution Detail panel")).not.toBeInTheDocument();
+    expect(screen.getByText("Positions and Segments")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
+    expect(screen.getByText("Segment Attribution")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
       "aria-selected",
@@ -664,7 +666,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       screen.queryByRole("heading", { name: "Relative Segment Context" })
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Top Active Effects")).toBeInTheDocument();
+    expect(screen.queryByText("Top Active Effects")).not.toBeInTheDocument();
   });
 
   it.each([
@@ -883,7 +885,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
-    expect(screen.getByText("High coverage")).toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("High coverage");
+    expect(screen.getByRole("note")).toHaveTextContent("Average weight");
     expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
     expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
