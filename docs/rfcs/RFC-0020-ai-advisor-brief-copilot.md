@@ -26,6 +26,60 @@ banking-grade brief backed by source metrics from `lotus-gateway`, `lotus-core`,
 `lotus-performance`, and `lotus-ai`, with every claim traceable to a cited source metric or
 contract field.
 
+## Cross-Repo Reality and Architecture Baseline
+
+This RFC must extend existing Lotus AI and BFF patterns instead of inventing a parallel AI stack.
+
+### Current repo reality this RFC builds on
+
+| Repo | Current reality | Implication for RFC-0020 |
+| --- | --- | --- |
+| `lotus-workbench` | `Performance` already uses split Gateway contracts: `summary`, `details`, `horizon-comparison`, and `attribution-trend`. | Advisor Brief should be added as another source-backed Workbench mode without coupling the existing Summary/Analysis panels into one mega-fetch. |
+| `lotus-gateway` | Gateway is already the Workbench BFF and owns orchestration, partial-failure semantics, and canonical upstream routing. There is no Advisor Brief endpoint yet. | The new Advisor Brief contract belongs in Gateway, not as a direct Workbench→`lotus-ai` browser call. |
+| `lotus-ai` | `POST /ai/tasks/execute` is the canonical bounded task API. `explain.v1` returns `EXPLANATION_ONLY`; `generate_structured.v1` returns `DRAFT`. Task requests require `caller`, `context.summary`, `context.payload`, and `context.source_refs`, and responses return `result`, `audit`, and `evidence`. | RFC-0020 should reuse the existing task API and preserve `audit` + `evidence` in Gateway responses. It should not invent a one-off `lotus-ai` advisor endpoint. |
+| `lotus-ai` RFC-0024 | The Portfolio Narrative Copilot architecture says narrative assembly stays in the domain app, `lotus-ai` only transforms a bounded fact bundle, and output must be structured, grounded, and refusal-capable. | RFC-0020 should adopt the same boundary: Gateway assembles an advisor fact bundle from Workbench source APIs; `lotus-ai` narrates that bounded bundle only. |
+| `lotus-core` / `lotus-performance` | They remain authoritative for holdings, benchmark, return, contribution, attribution, and lineage facts. | AI output is commentary over source-owned facts, not a new source of portfolio truth. |
+
+### Architectural decision pattern
+
+Use a **Workbench UI → Gateway Advisor Brief BFF → lotus-ai Task Adapter** design.
+
+The right implementation pattern is:
+
+1. **Presentation container in Workbench**
+   - `Advisor Brief` is a first-class mode with its own view model, state machine, and drill-down actions.
+   - Workbench renders source chips and navigation, but does not assemble or narrate portfolio facts.
+2. **BFF contract and domain fact-bundle assembler in Gateway**
+   - Gateway fetches portfolio/performance facts from existing source APIs,
+   - maps those facts into one bounded advisor fact bundle,
+   - calls `lotus-ai` through `POST /ai/tasks/execute`,
+   - maps the AI response into a Workbench-friendly Advisor Brief contract,
+   - preserves supportability, source references, `audit`, and `evidence`.
+3. **Bounded task adapter in `lotus-ai`**
+   - `lotus-ai` receives only caller-supplied structured context,
+   - produces constrained narrative/structured output,
+   - refuses unsupported claims instead of inventing missing analytics,
+   - returns audit and evidence metadata for operator review.
+
+### Why this is the right architecture
+
+1. **Production trust boundary**
+   - Browser clients do not call `lotus-ai` directly.
+   - Advisor identity, correlation IDs, tenant markers, and supportability policy stay at the Gateway/API layer.
+2. **Domain ownership stays intact**
+   - `lotus-performance` and `lotus-core` remain the source of analytics truth.
+   - `lotus-ai` explains bounded facts; it does not recompute returns, attribution, or benchmarks.
+3. **Micro-frontend behavior is preserved**
+   - Summary, Analysis, and Advisor Brief remain independent UI modules.
+   - Backend-side request coalescing or caching can still reduce duplicate upstream work without coupling front-end panels.
+4. **Reusable contract pattern**
+   - The same `fact bundle → task execution → cited response → source-drilldown view model` pattern can be reused later for Portfolio, Suitability, and Reporting AI surfaces.
+5. **Testability**
+   - Each layer has a strict contract seam:
+     - Workbench view-model tests,
+     - Gateway contract/integration tests,
+     - `lotus-ai` task schema, grounding, and refusal tests.
+
 ## Why This RFC Exists
 
 Front-office advisors often need to answer the same questions before client conversations:
@@ -119,6 +173,24 @@ The product contract should be:
 4. **Workbench remains workflow-first**: every brief section should support a drill-down back to
    the source panel or source metric set.
 
+## Relationship to `lotus-ai` RFC-0024
+
+RFC-0020 should be treated as the **Workbench and Gateway adoption RFC** for the narrative-copilot
+direction already defined in `lotus-ai` RFC-0024.
+
+That means:
+
+1. do **not** create a disconnected advisor-chat contract in `lotus-workbench`,
+2. reuse RFC-0024’s bounded narrative-fact-bundle model and explanation-only discipline,
+3. keep audience modes explicit, but start with one `advisor_brief` audience preset if necessary,
+4. let Gateway assemble the bounded fact bundle from source APIs instead of pushing raw analytics
+   sprawl into `lotus-ai`,
+5. preserve `lotus-ai` runtime `audit` and `evidence` metadata so Workbench can expose supportability
+   and operators can debug generation quality.
+
+If `lotus-ai` RFC-0024 evolves the pack schema, RFC-0020 should track that contract instead of
+forking a Workbench-only narrative shape.
+
 ## UX and Interaction Requirements
 
 ### Advisor Brief surface
@@ -195,7 +267,11 @@ facts; it should not replace them.
 
 ## Proposed Contract Shape
 
-The first workbench-facing contract can start as a gateway endpoint shaped like:
+The Workbench-facing contract should start as a Gateway endpoint, for example:
+
+`GET /api/v1/workbench/{portfolio_id}/advisor-brief?period=YTD&benchmark_code=...`
+
+The response shape should be:
 
 ```json
 {
@@ -245,17 +321,109 @@ The first workbench-facing contract can start as a gateway endpoint shaped like:
     "performance_context": "ready",
     "ai_generation": "ready",
     "evidence": "partial"
+  },
+  "ai_audit": {
+    "request_id": "ai-task-request-id",
+    "task_id": "explain.v1",
+    "output_label": "EXPLANATION_ONLY",
+    "prompt_version": "foundation.explain.v1",
+    "provider_mode": "stubbed_or_live",
+    "generated_at": "2026-04-04T08:00:00Z",
+    "stubbed": true
+  },
+  "ai_evidence": {
+    "source_refs": [
+      "lotus-performance:calculation:abc123"
+    ]
   }
 }
 ```
 
-The exact backend field names can still be refined in the gateway and `lotus-ai` RFCs, but the UI
-slice should use a contract-shaped fixture that mirrors this structure so the screen can be
-reviewed early without painting itself into a fake-data corner.
+### Gateway → `lotus-ai` task request contract
+
+Gateway should call the existing bounded task API, not a new custom `lotus-ai` endpoint:
+
+`POST /ai/tasks/execute`
+
+Initial request shape:
+
+```json
+{
+  "task_id": "explain.v1",
+  "input_mode": "STRUCTURED_CONTEXT",
+  "caller": {
+    "caller_app": "lotus-gateway",
+    "correlation_id": "workbench-request-correlation-id",
+    "requested_by": "advisor@lotus",
+    "tenant_id": "tenant-sg-001"
+  },
+  "context": {
+    "summary": "Generate a source-grounded advisor brief for portfolio YTD performance and key client discussion points.",
+    "payload": {
+      "audience_mode": "advisor_brief",
+      "portfolio_context": {
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+        "base_currency": "USD"
+      },
+      "period_window": {
+        "period": "YTD",
+        "start_date": "2026-01-01",
+        "end_date": "2026-04-04"
+      },
+      "performance_summary": {
+        "portfolio_return_pct": 1.25,
+        "benchmark_return_pct": 7.93,
+        "active_return_pct": -6.68,
+        "money_weighted_return_pct": 1.25,
+        "net_flow": 14725,
+        "ending_market_value": 1087461
+      },
+      "contribution_highlights": {
+        "top_contributors": [],
+        "top_detractors": []
+      },
+      "attribution_highlights": {
+        "allocation_effect_pct": null,
+        "selection_effect_pct": null,
+        "interaction_effect_pct": null,
+        "residual_pct": null
+      },
+      "diagnostic_findings": [],
+      "material_findings": []
+    },
+    "source_refs": [
+      "lotus-gateway:workbench:PB_SG_GLOBAL_BAL_001:performance-summary:YTD",
+      "lotus-performance:calculation:abc123"
+    ]
+  },
+  "expected_output_label": "EXPLANATION_ONLY"
+}
+```
+
+### Contract rules
+
+1. Use `explain.v1` + `EXPLANATION_ONLY` for the first implementation slice because that matches
+   the current governed `lotus-ai` task contract and first-use-case rollout posture.
+2. `generate_structured.v1` can be introduced later only if `lotus-ai` formalizes a stable
+   advisor-brief structured-output schema and the output is clearly labeled `DRAFT`.
+3. Gateway must map `result.message`, `result.structured_output`, `audit`, and `evidence` into the
+   Workbench-facing contract without dropping traceability metadata.
+4. If source analytics are partial, stale, or unavailable, Gateway must return a truthful
+   `supportability` state and suppress unsupported talking points.
+5. The UI slice may use a contract-shaped fixture, but that fixture must mirror the Gateway
+   response envelope above, including `supportability`, `ai_audit`, and `ai_evidence`.
 
 ## Implementation Slices
 
 ### Slice 1: UI-first Advisor Brief prototype in Workbench
+
+Status:
+
+- Implemented on branch `feat/rfc0020-advisor-brief-copilot`.
+- Current scope is fixture-backed, contract-shaped UI only. Gateway/`lotus-ai` live wiring remains
+  Slice 2-4 work by design.
+- Validation currently covers the Advisor Brief view model, Advisor Brief component behavior,
+  Performance mode switching, source drill-down intents, and ready/loading/partial/empty states.
 
 Outcome:
 
@@ -280,22 +448,25 @@ Rules for Slice 1:
 Outcome:
 
 1. expose a workbench-facing advisor-brief endpoint in `lotus-gateway`,
-2. assemble portfolio, performance, benchmark, holdings, contribution, and attribution facts from
-   existing gateway/source APIs,
+2. assemble portfolio, performance, benchmark, holdings, contribution, attribution, diagnostics,
+   and lineage facts from existing Gateway/source APIs,
 3. normalize source facts into a single AI input payload,
-4. return a strict response schema with supportability and evidence references,
-5. add integration and contract tests proving no unsupported claims are fabricated when source
+4. call `lotus-ai` through `POST /ai/tasks/execute` with `explain.v1`,
+5. return a strict response schema with `supportability`, `ai_audit`, and `ai_evidence`,
+6. add integration and contract tests proving no unsupported claims are fabricated when source
    slices are partial.
 
 ### Slice 3: `lotus-ai` brief generation service
 
 Outcome:
 
-1. implement a constrained `lotus-ai` capability for advisor brief generation,
-2. accept structured portfolio/performance facts from gateway,
-3. return a deterministic JSON response with talking points, actions, risks, citations, and status,
+1. first reuse the existing `explain.v1` task path for source-grounded advisor commentary,
+2. extend the portfolio narrative pack only if RFC-0024 requires additional audience-mode or
+   section-structure fields,
+3. accept structured portfolio/performance facts from Gateway without recomputing analytics,
 4. enforce schema validation and refusal behavior for unsupported statements,
-5. add high-value tests for grounding, refusal, formatting, and partial-data behavior.
+5. add high-value tests for grounding, refusal, formatting, audit propagation, and partial-data
+   behavior.
 
 ### Slice 4: Workbench live integration and source-linked navigation
 
@@ -332,15 +503,33 @@ Outcome:
 
 ### Gateway
 
-1. Contract tests for the advisor-brief response schema.
-2. Integration tests proving source facts are assembled from real upstream contracts.
-3. Negative tests for partial source data and AI service failures.
+1. Contract tests for the advisor-brief response schema, including `supportability`, `ai_audit`,
+   and `ai_evidence`.
+2. Integration tests proving source facts are assembled from real upstream contracts and mapped to
+   the `lotus-ai` task request envelope correctly.
+3. Negative tests for partial source data, AI refusals, timeout/failure paths, and unsupported
+   benchmark/period combinations.
+4. Regression tests proving Advisor Brief does not break existing `summary`, `details`,
+   `horizon-comparison`, or `attribution-trend` routes.
 
 ### `lotus-ai`
 
-1. Schema validation tests for generated responses.
-2. Grounding tests proving every generated statement references allowed evidence.
-3. Refusal tests for insufficient or conflicting source facts.
+1. Schema validation tests for task request/response handling through `POST /ai/tasks/execute`.
+2. Grounding tests proving every generated statement stays within caller-supplied facts and source
+   references.
+3. Refusal tests for insufficient, conflicting, or caveat-heavy source facts.
+4. Audit/evidence propagation tests proving downstream apps can inspect how a brief was generated.
+
+## Implementation Traceability and Remaining Gaps
+
+| Requirement | Current evidence | Gap status |
+| --- | --- | --- |
+| Stable Portfolio / Performance source screens exist in Workbench | `Portfolio` and split `Performance` modes are already live in `lotus-workbench`. | Ready as source drill-down targets. |
+| Gateway BFF owns Workbench orchestration | Existing `/api/v1/workbench/{portfolio_id}/performance/*` routes in `lotus-gateway`. | Advisor Brief route still missing. |
+| `lotus-ai` has a bounded task API | `POST /ai/tasks/execute`, `TaskExecutionRequest`, `TaskExecutionResponse`, `audit`, `evidence`. | Must define the advisor fact bundle and response mapping. |
+| `lotus-ai` narrative architecture exists | RFC-0024 defines bounded portfolio narrative copilot over source-owned facts. | RFC-0020 must align to RFC-0024 and avoid a parallel chat contract. |
+| Source-grounded drill-down UX exists | Workbench can deep-link to Performance and Portfolio route states. | Advisor Brief source-chip and route-intent model still needs implementation. |
+| Gold-standard failure semantics | Gateway and Workbench already model partial/unavailable states in Performance. | Need equivalent Advisor Brief supportability states and tests. |
 
 ## Acceptance Criteria
 
@@ -358,10 +547,15 @@ Outcome:
 
 ## Open Questions
 
-1. Should `Advisor Brief` live only under `Performance` initially, or also under `Portfolio` in
-   the first release?
-2. Should generated briefs be persisted per portfolio and period, or generated on demand only?
-3. Should the first version include a compliance disclaimer and explicit “internal use only”
-   labeling?
-4. What is the minimum accepted evidence policy for a generated talking point when one of the
-   source slices is partial?
+1. Should Slice 1 ship the visible `Advisor Brief` mode under `Performance` only, then reuse the
+   same brief component under `Portfolio` once the Gateway portfolio fact bundle is available?
+2. Should generated briefs be recomputed on demand for every request, or should Gateway persist a
+   short-lived brief cache keyed by portfolio, period, benchmark, and source-fact hash?
+3. Should the first version show explicit “internal use only” and “AI-generated draft” labeling in
+   the brief toolbar and copied note output?
+4. What minimum evidence policy should Gateway enforce before a talking point is eligible for
+   display: at least one metric source ref, one drill-down route, and one source-system provenance
+   ref?
+5. Should `advisor_brief` start on `explain.v1` only, or should RFC-0024 first introduce a
+   dedicated portfolio-narrative pack so Workbench can consume a richer structured response with
+   stable section IDs?

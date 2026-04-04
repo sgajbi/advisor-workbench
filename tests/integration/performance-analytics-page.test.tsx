@@ -439,6 +439,45 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
   });
 
+  it("shows Advisor Brief as a first-class mode and allows source drilldown back to Summary and Analysis", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Advisor Brief" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
+    expect(screen.getByLabelText("Advisor brief supportability")).toHaveTextContent(
+      "Advisor Brief: Preview Ready"
+    );
+    expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
+      "Portfolio delivered 5.42% versus benchmark 4.91%."
+    );
+    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
+    expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+
+    fireEvent.click(
+      within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
+        name: /Open Return Path/,
+      })
+    );
+
+    expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Advisor Brief" }));
+    fireEvent.click(
+      within(screen.getByLabelText("Client Talking Points")).getByRole("button", {
+        name: /Top Contributor/,
+      })
+    );
+
+    expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
+  });
+
   it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {
     installPerformancePageFetchScenario(buildNormalizedControlsPerformanceScenario());
 
@@ -811,6 +850,12 @@ describe("PerformanceAnalyticsPage", () => {
       for (const text of analysisAbsent) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
+
+      fireEvent.click(screen.getByRole("tab", { name: "Advisor Brief" }));
+      expect(
+        await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText("Source Metrics")).toBeInTheDocument();
 
       const evidenceTab = screen.getByRole("tab", { name: "Evidence" });
       expect(evidenceTab).toBeDisabled();

@@ -4832,6 +4832,343 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-advisor-brief-stage {
+  width: 100%;
+}
+
+.performance-advisor-brief-shell,
+.performance-advisor-brief-supportability-panel {
+  border-radius: 12px;
+  border-color: rgba(32, 44, 61, 0.08);
+  background: #ffffff;
+}
+
+.performance-advisor-brief-shell {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.performance-advisor-brief-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+  padding: 1.1rem 1.2rem 0.95rem;
+  border-bottom: 1px solid rgba(32, 44, 61, 0.08);
+}
+
+.performance-advisor-brief-copy {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-eyebrow,
+.performance-advisor-brief-metric-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.performance-advisor-brief-title,
+.performance-advisor-brief-section h3,
+.performance-advisor-brief-rail-heading,
+.performance-advisor-brief-item h4,
+.performance-advisor-brief-audit-grid dd {
+  margin: 0;
+  color: var(--brand-strong);
+}
+
+.performance-advisor-brief-title {
+  font-size: clamp(1.55rem, 1.8vw, 2rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.performance-advisor-brief-summary,
+.performance-advisor-brief-context-line,
+.performance-advisor-brief-item p,
+.performance-advisor-brief-metric-support,
+.performance-advisor-brief-empty-note,
+.performance-advisor-brief-audit-drawer summary,
+.performance-advisor-brief-audit-grid dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.performance-advisor-brief-context-line {
+  color: var(--brand-strong);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-advisor-brief-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1.2rem;
+  border-bottom: 1px solid rgba(32, 44, 61, 0.08);
+  background: linear-gradient(180deg, rgba(251, 252, 253, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+}
+
+.performance-advisor-brief-toolbar-status,
+.performance-advisor-brief-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.performance-advisor-brief-toolbar-button {
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  background: #ffffff;
+  color: var(--brand-strong);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.performance-advisor-brief-support-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-body-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.42fr) minmax(21rem, 0.8fr);
+  align-items: start;
+}
+
+.performance-advisor-brief-main-column,
+.performance-advisor-brief-side-column {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem 1.2rem 1.1rem;
+}
+
+.performance-advisor-brief-side-column {
+  border-left: 1px solid rgba(32, 44, 61, 0.08);
+  background: #fbfcfd;
+}
+
+.performance-advisor-brief-section,
+.performance-advisor-brief-supportability-panel {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-section h3,
+.performance-advisor-brief-rail-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.performance-advisor-brief-item-list,
+.performance-advisor-brief-metric-list,
+.performance-advisor-brief-action-list {
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-item,
+.performance-advisor-brief-metric-card,
+.performance-advisor-brief-action,
+.performance-advisor-brief-empty-note {
+  border-radius: 12px;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  background: #f8fafc;
+}
+
+.performance-advisor-brief-item {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 0.95rem;
+}
+
+.performance-advisor-brief-item-header {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.performance-advisor-brief-item h4 {
+  font-size: 0.92rem;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+}
+
+.performance-advisor-brief-evidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.performance-advisor-brief-evidence-chip {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  background: #ffffff;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.performance-advisor-brief-evidence-chip strong,
+.performance-advisor-brief-metric-value {
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-advisor-brief-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1rem;
+  color: var(--brand-strong);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.performance-advisor-brief-action:hover,
+.performance-advisor-brief-evidence-chip:hover,
+.performance-advisor-brief-metric-card:hover {
+  border-color: rgba(148, 90, 119, 0.24);
+  background: #ffffff;
+}
+
+.performance-advisor-brief-action:hover {
+  transform: translateY(-1px);
+}
+
+.performance-advisor-brief-supportability-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.95rem;
+}
+
+.performance-advisor-brief-metric-card {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.performance-advisor-brief-metric-value {
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.performance-advisor-brief-empty-note {
+  padding: 0.9rem 0.95rem;
+}
+
+.performance-advisor-brief-audit-drawer {
+  border-top: 1px solid rgba(32, 44, 61, 0.08);
+  background: #ffffff;
+}
+
+.performance-advisor-brief-audit-drawer summary {
+  list-style: none;
+  padding: 0.95rem 1.2rem;
+  cursor: pointer;
+  color: var(--brand-strong);
+  font-weight: 700;
+}
+
+.performance-advisor-brief-audit-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.performance-advisor-brief-audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0 1.2rem 1rem;
+}
+
+.performance-advisor-brief-audit-grid div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-audit-grid dt {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.performance-advisor-brief-audit-grid dd {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.24;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1100px) {
+  .performance-advisor-brief-body-grid,
+  .performance-advisor-brief-audit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-advisor-brief-side-column {
+    border-left: 0;
+    border-top: 1px solid rgba(32, 44, 61, 0.08);
+  }
+}
+
+@media (max-width: 640px) {
+  .performance-advisor-brief-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .performance-advisor-brief-toolbar-actions,
+  .performance-advisor-brief-toolbar-button {
+    width: 100%;
+  }
+
+  .performance-advisor-brief-main-column,
+  .performance-advisor-brief-side-column {
+    padding: 1rem;
+  }
+
+  .performance-advisor-brief-title {
+    font-size: 1.45rem;
+  }
+}
+
 .performance-analysis-module {
   height: 100%;
 }

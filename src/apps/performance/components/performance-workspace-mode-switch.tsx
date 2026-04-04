@@ -10,11 +10,16 @@ import {
 } from "@/shell/workspace-capabilities";
 import { formatDate } from "../formatters";
 
-export type PerformanceWorkspaceMode = "summary" | "analysis" | "evidence";
+export type PerformanceWorkspaceMode =
+  | "summary"
+  | "analysis"
+  | "advisor"
+  | "evidence";
 
 const WORKSPACE_MODES: Array<{ key: PerformanceWorkspaceMode; label: string }> = [
   { key: "summary", label: "Summary" },
   { key: "analysis", label: "Analysis" },
+  { key: "advisor", label: "Advisor Brief" },
   { key: "evidence", label: "Evidence" },
 ];
 
