@@ -11,7 +11,7 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
   className,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   value: T;
   onChange: (value: T) => void;
   options: Array<WorkbenchSegmentedControlOption<T>>;
@@ -23,7 +23,7 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
       <div className="performance-analysis-detail-pane-header">
         <div className="performance-analysis-detail-pane-copy">
           <strong>{title}</strong>
-          <span>{subtitle}</span>
+          {subtitle ? <span>{subtitle}</span> : null}
         </div>
         <WorkbenchSegmentedControl
           value={value}

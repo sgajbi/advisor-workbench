@@ -72,9 +72,9 @@ describe("PerformanceSummaryContributorsSection", () => {
     render(<PerformanceSummaryContributorsSection {...buildProps()} />);
 
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
-    expect(screen.getByText("YTD contributor ranking")).toBeInTheDocument();
-    expect(screen.getByText("Top contributors")).toBeInTheDocument();
-    expect(screen.getByText("Top detractors")).toBeInTheDocument();
+    expect(screen.getByText("YTD Contribution Ranking")).toBeInTheDocument();
+    expect(screen.getByText("Top Contributors")).toBeInTheDocument();
+    expect(screen.getByText("Top Detractors")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
@@ -82,8 +82,11 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
 
-    const contributorsTable = screen.getByLabelText("Top contributors table");
+    const contributorsTable = screen.getByLabelText("Top Contributors table");
     expect(contributorsTable).toBeInTheDocument();
+    expect(
+      contributorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
+    ).toBeTruthy();
     expect(within(contributorsTable).getByText("Instrument")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Contribution")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Weight")).toBeInTheDocument();
@@ -93,8 +96,11 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(within(contributorsTable).getByText("24.00%")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("8.00%")).toBeInTheDocument();
 
-    const detractorsTable = screen.getByLabelText("Top detractors table");
+    const detractorsTable = screen.getByLabelText("Top Detractors table");
     expect(detractorsTable).toBeInTheDocument();
+    expect(
+      detractorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
+    ).toBeTruthy();
     expect(within(detractorsTable).getByText("TLT")).toBeInTheDocument();
     expect(within(detractorsTable).getByText("-0.20%")).toBeInTheDocument();
     expect(within(detractorsTable).getByText("-2.00%")).toBeInTheDocument();
@@ -148,6 +154,9 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     const aggregateTable = screen.getByLabelText("Aggregate contributor summary");
     expect(aggregateTable).toBeInTheDocument();
+    expect(
+      aggregateTable.closest(".performance-contributors-table.performance-chart-observation-table")
+    ).toBeTruthy();
     expect(within(aggregateTable).getByText("Equity")).toBeInTheDocument();
     expect(within(aggregateTable).getByText("Total")).toBeInTheDocument();
     expect(within(aggregateTable).getAllByText("5.42%")).toHaveLength(2);

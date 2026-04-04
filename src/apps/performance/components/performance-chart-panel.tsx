@@ -16,15 +16,11 @@ import type {
   MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
-import { formatDate } from "../formatters";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
-import {
-  getPerformanceMoneyWeightedAuditSupport,
-  getPerformanceReturnPathPresentation,
-} from "./performance-summary-context-helpers";
+import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
 
 type PerformanceControlPatch = {
@@ -359,14 +355,14 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: portfolioPeriodic,
-                barWidth: 10,
-                barGap: "12%",
-                barCategoryGap: "42%",
+                barWidth: 14,
+                barGap: "18%",
+                barCategoryGap: "34%",
                 z: 1,
                 itemStyle: {
-                  color: "rgba(218, 30, 40, 0.34)",
-                  borderRadius: [2, 2, 0, 0],
-                  borderColor: "rgba(218, 30, 40, 0.58)",
+                  color: "rgba(218, 30, 40, 0.38)",
+                  borderRadius: [3, 3, 0, 0],
+                  borderColor: "rgba(218, 30, 40, 0.66)",
                   borderWidth: 1,
                 },
               },
@@ -379,12 +375,12 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: benchmarkPeriodic,
-                barWidth: 10,
+                barWidth: 14,
                 z: 1,
                 itemStyle: {
-                  color: "rgba(31, 46, 69, 0.3)",
-                  borderRadius: [2, 2, 0, 0],
-                  borderColor: "rgba(31, 46, 69, 0.5)",
+                  color: "rgba(31, 46, 69, 0.36)",
+                  borderRadius: [3, 3, 0, 0],
+                  borderColor: "rgba(31, 46, 69, 0.6)",
                   borderWidth: 1,
                 },
               },
@@ -397,12 +393,12 @@ export default function PerformanceChartPanel({
                 type: "bar" as const,
                 yAxisIndex: 1,
                 data: activePeriodic,
-                barWidth: 10,
+                barWidth: 14,
                 z: 1,
                 itemStyle: {
-                  color: "rgba(47, 95, 151, 0.28)",
-                  borderRadius: [2, 2, 0, 0],
-                  borderColor: "rgba(47, 95, 151, 0.5)",
+                  color: "rgba(47, 95, 151, 0.34)",
+                  borderRadius: [3, 3, 0, 0],
+                  borderColor: "rgba(47, 95, 151, 0.58)",
                   borderWidth: 1,
                 },
               },
@@ -414,8 +410,10 @@ export default function PerformanceChartPanel({
                 name: "Portfolio Return",
                 type: "line" as const,
                 data: portfolioCumulative,
-                smooth: 0.2,
-                symbol: "none",
+                smooth: false,
+                symbol: "circle",
+                symbolSize: 6,
+                showSymbol: true,
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
@@ -436,8 +434,10 @@ export default function PerformanceChartPanel({
                 name: returnPathPresentation.benchmarkLabel,
                 type: "line" as const,
                 data: benchmarkCumulative,
-                smooth: 0.2,
-                symbol: "none",
+                smooth: false,
+                symbol: "circle",
+                symbolSize: 6,
+                showSymbol: true,
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
@@ -455,8 +455,10 @@ export default function PerformanceChartPanel({
                 name: "Active Cumulative",
                 type: "line" as const,
                 data: activeCumulative,
-                smooth: 0.2,
-                symbol: "none",
+                smooth: false,
+                symbol: "circle",
+                symbolSize: 6,
+                showSymbol: true,
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
@@ -472,16 +474,6 @@ export default function PerformanceChartPanel({
       ],
     } satisfies EChartsOption;
   }, [chartViewMode, hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
-
-  const explicitDateRange =
-    resolvedReportDates.startDate && resolvedReportDates.endDate
-      ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
-      : "Date range unavailable";
-  const periodSupport = getPerformanceMoneyWeightedAuditSupport({
-    explicitDateRange,
-    moneyWeightedReturn,
-    reportingCurrency,
-  });
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -510,21 +502,7 @@ export default function PerformanceChartPanel({
     });
   }
 
-  const outcomeItems = [
-    returnPathPresentation.metrics[0],
-    returnPathPresentation.metrics[1],
-    returnPathPresentation.metrics[2],
-    returnPathPresentation.metrics[3],
-    returnPathPresentation.metrics[4],
-    {
-      key: "basis-period-summary",
-      label: "Period / Basis",
-      value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
-        period === "EXPLICIT" ? "Explicit window" : period
-      }`,
-      support: periodSupport,
-    },
-  ];
+  const outcomeItems = returnPathPresentation.metrics;
 
   return (
     <WorkbenchChartShell
@@ -579,8 +557,8 @@ export default function PerformanceChartPanel({
           <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
             <PerformanceCapabilityNotice
               capability={capabilities.returnPath}
-              partialTitle="Return series is partial"
-              unavailableTitle="Return series unavailable"
+              partialTitle="Return History Is Partial"
+              unavailableTitle="Return History Unavailable"
               body={
                 capabilities.returnPath.reason ??
                 "The resolved window does not currently have published performance observations for this mandate."

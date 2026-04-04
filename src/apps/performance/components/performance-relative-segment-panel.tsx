@@ -19,8 +19,8 @@ export default function PerformanceRelativeSegmentPanel({
   if (!rows.length) {
     return (
       <WorkbenchChartShell
-        title="Relative Segment Matrix"
-        subtitle="Portfolio versus benchmark by selected segment"
+        title="Relative Segment Context"
+        subtitle="Portfolio and benchmark weights and returns by selected segment."
         className="performance-analysis-mini-module performance-relative-segment-module"
       >
         <PerformanceAnalysisStatePanel
@@ -37,8 +37,8 @@ export default function PerformanceRelativeSegmentPanel({
 
   return (
     <WorkbenchChartShell
-      title="Relative Segment Matrix"
-      subtitle="Portfolio versus benchmark by selected segment"
+      title="Relative Segment Context"
+      subtitle="Portfolio and benchmark weights and returns by selected segment."
       className="performance-analysis-mini-module performance-relative-segment-module"
     >
       <div className="performance-relative-matrix">
@@ -47,10 +47,12 @@ export default function PerformanceRelativeSegmentPanel({
             <div className="performance-relative-meta">
               <strong>{formatLabel(row.key_label)}</strong>
               <span>
-                Wt {formatPct(row.portfolio_weight_avg_pct)} vs {formatPct(row.benchmark_weight_avg_pct)}
+                Portfolio Weight {formatPct(row.portfolio_weight_avg_pct)} • Benchmark Weight{" "}
+                {formatPct(row.benchmark_weight_avg_pct)}
               </span>
               <span>
-                Ret {formatPct(row.portfolio_return_pct)} vs {formatPct(row.benchmark_return_pct)}
+                Portfolio Return {formatPct(row.portfolio_return_pct)} • Benchmark Return{" "}
+                {formatPct(row.benchmark_return_pct)}
               </span>
             </div>
 
@@ -102,7 +104,7 @@ export default function PerformanceRelativeSegmentPanel({
               <label>Total Effect</label>
               <strong>{formatPct(row.total_effect_pct)}</strong>
               <span>
-                Alloc {formatCompactPct(row.allocation_pct)} / Select{" "}
+                Allocation {formatCompactPct(row.allocation_pct)} • Selection{" "}
                 {formatCompactPct(row.selection_pct)}
               </span>
             </div>

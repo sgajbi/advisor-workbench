@@ -34,7 +34,11 @@ export type PerformanceReturnPathScenarioData = {
     | "benchmark_return_pct"
     | "active_return_pct"
     | "annualized_return_pct"
+    | "begin_market_value"
     | "end_market_value"
+    | "beginning_cash_flow"
+    | "ending_cash_flow"
+    | "flow_adjusted_end_market_value"
     | "net_cash_flow"
     | "benchmark_input_mode"
   >;
@@ -709,7 +713,11 @@ export function buildPerformanceReturnPathScenarioData(
       benchmark_return_pct: summary.benchmark_return_pct,
       active_return_pct: summary.active_return_pct,
       annualized_return_pct: summary.annualized_return_pct,
+      begin_market_value: summary.begin_market_value,
       end_market_value: summary.end_market_value,
+      beginning_cash_flow: summary.beginning_cash_flow,
+      ending_cash_flow: summary.ending_cash_flow,
+      flow_adjusted_end_market_value: summary.flow_adjusted_end_market_value,
       net_cash_flow: summary.net_cash_flow,
     },
     benchmark: scenario.workspace.benchmark_code ?? undefined,

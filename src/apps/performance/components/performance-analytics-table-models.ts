@@ -66,9 +66,9 @@ export function buildPerformanceContributionTableModel({
   level?: ContributionSummaryView["levels"][number] | null;
 }): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
-    { key: "bucket", label: "Bucket" },
+    { key: "bucket", label: "Segment" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "weight", label: "Average Weight", align: "right" },
     { key: "return", label: "Return", align: "right" },
     { key: "local", label: "Local", align: "right" },
     { key: "fx", label: "FX", align: "right" },
@@ -129,9 +129,9 @@ export function buildPerformanceContributionLevelTableModel({
     );
 
   const columns: PerformanceAnalyticsTableColumn[] = [
-    { key: "bucket", label: "Bucket" },
+    { key: "bucket", label: "Segment" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "weight", label: "Average Weight", align: "right" },
     { key: "return", label: "Return", align: "right" },
     ...(includeLocalFxColumns
       ? [
@@ -184,16 +184,21 @@ export function buildPerformancePositionContributionTableModel({
   rows: ContributionPositionView[];
 }): PerformanceAnalyticsTableModel {
   const includeReturnColumn = rows.some((row) => isMeaningfulValue(row.total_return_pct));
-  const includeLocalColumn = rows.some((row) => isMeaningfulValue(row.local_contribution_pct));
-  const includeFxColumn = rows.some((row) => isMeaningfulValue(row.fx_contribution_pct));
+  const includeLocalFxColumns = rows.some(
+    (row) => row.local_contribution_pct != null || row.fx_contribution_pct != null
+  );
 
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "position", label: "Position" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "weight", label: "Average Weight", align: "right" },
     ...(includeReturnColumn ? [{ key: "return", label: "Return", align: "right" as const }] : []),
-    ...(includeLocalColumn ? [{ key: "local", label: "Local", align: "right" as const }] : []),
-    ...(includeFxColumn ? [{ key: "fx", label: "FX", align: "right" as const }] : []),
+    ...(includeLocalFxColumns
+      ? [
+          { key: "local", label: "Local", align: "right" as const },
+          { key: "fx", label: "FX", align: "right" as const },
+        ]
+      : []),
   ];
 
   return {
@@ -229,13 +234,13 @@ export function buildPerformanceAttributionTrendTableModel({
 }): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "period", label: "Period" },
-    { key: "window", label: "Window" },
+    { key: "window", label: "Period Range" },
     { key: "allocation", label: "Allocation", align: "right" },
     { key: "selection", label: "Selection", align: "right" },
     { key: "interaction", label: "Interaction", align: "right" },
-    { key: "total", label: "Total", align: "right" },
-    { key: "cumulativeTotal", label: "Cum Total", align: "right" },
-    { key: "active", label: "Active", align: "right" },
+    { key: "total", label: "Effect Total", align: "right" },
+    { key: "cumulativeTotal", label: "Cumulative Effect", align: "right" },
+    { key: "active", label: "Active Return", align: "right" },
     { key: "residual", label: "Residual", align: "right" },
   ];
 
@@ -268,7 +273,7 @@ export function buildPerformanceAttributionTrendTableModel({
 
 const LEADING_COLUMNS: PerformanceAnalyticsTableColumn[] = [
   { key: "period", label: "Period" },
-  { key: "window", label: "Window" },
+  { key: "window", label: "Period Range" },
 ];
 
 export function buildPerformanceReturnPathTableModel({
@@ -283,19 +288,19 @@ export function buildPerformanceReturnPathTableModel({
   includeActiveSeries: boolean;
 }): PerformanceAnalyticsTableModel {
   const absoluteColumns: PerformanceAnalyticsTableColumn[] = [
-    { key: "portfolioPeriod", label: "Portfolio", align: "right" },
+    { key: "portfolioPeriod", label: "Portfolio Return", align: "right" },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkPeriod", label: "Benchmark", align: "right" as const }]
+      ? [{ key: "benchmarkPeriod", label: "Benchmark Return", align: "right" as const }]
       : []),
-    { key: "portfolioCumulative", label: "Cum Portfolio", align: "right" },
+    { key: "portfolioCumulative", label: "Cumulative Portfolio", align: "right" },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkCumulative", label: "Cum Benchmark", align: "right" as const }]
+      ? [{ key: "benchmarkCumulative", label: "Cumulative Benchmark", align: "right" as const }]
       : []),
   ];
   const relativeColumns: PerformanceAnalyticsTableColumn[] = includeActiveSeries
     ? [
-        { key: "activePeriod", label: "Active", align: "right" },
-        { key: "activeCumulative", label: "Cum Active", align: "right" },
+        { key: "activePeriod", label: "Active Return", align: "right" },
+        { key: "activeCumulative", label: "Cumulative Active", align: "right" },
       ]
     : [];
   const columns =
@@ -347,37 +352,37 @@ export function buildPerformanceHorizonTableModel({
   const basisReturnColumns =
     basisView === "net"
       ? [
-          { key: "netReturn", label: "Net", align: "right" as const },
-          { key: "cumulativeNet", label: "Cum Net", align: "right" as const },
-          { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
+          { key: "netReturn", label: "Net Return", align: "right" as const },
+          { key: "cumulativeNet", label: "Cumulative Net", align: "right" as const },
+          { key: "annualizedNet", label: "Annualized Net", align: "right" as const },
         ]
       : basisView === "gross"
         ? [
-            { key: "grossReturn", label: "Gross", align: "right" as const },
-            { key: "cumulativeGross", label: "Cum Gross", align: "right" as const },
-            { key: "annualizedGross", label: "Ann. Gross", align: "right" as const },
+            { key: "grossReturn", label: "Gross Return", align: "right" as const },
+            { key: "cumulativeGross", label: "Cumulative Gross", align: "right" as const },
+            { key: "annualizedGross", label: "Annualized Gross", align: "right" as const },
           ]
         : [
-            { key: "netReturn", label: "Net", align: "right" as const },
-            { key: "grossReturn", label: "Gross", align: "right" as const },
+            { key: "netReturn", label: "Net Return", align: "right" as const },
+            { key: "grossReturn", label: "Gross Return", align: "right" as const },
             { key: "feeDrag", label: "Fee Drag", align: "right" as const },
-            { key: "cumulativeNet", label: "Cum Net", align: "right" as const },
-            { key: "cumulativeGross", label: "Cum Gross", align: "right" as const },
-            { key: "annualizedNet", label: "Ann. Net", align: "right" as const },
-            { key: "annualizedGross", label: "Ann. Gross", align: "right" as const },
+            { key: "cumulativeNet", label: "Cumulative Net", align: "right" as const },
+            { key: "cumulativeGross", label: "Cumulative Gross", align: "right" as const },
+            { key: "annualizedNet", label: "Annualized Net", align: "right" as const },
+            { key: "annualizedGross", label: "Annualized Gross", align: "right" as const },
           ];
   const relativeColumns = [
-    { key: "benchmarkReturn", label: "Benchmark", align: "right" as const },
-    { key: "activeReturn", label: "Active", align: "right" as const },
-    { key: "cumulativeBenchmark", label: "Cum Benchmark", align: "right" as const },
-    { key: "cumulativeActive", label: "Cum Active", align: "right" as const },
+    { key: "benchmarkReturn", label: "Benchmark Return", align: "right" as const },
+    { key: "activeReturn", label: "Active Return", align: "right" as const },
+    { key: "cumulativeBenchmark", label: "Cumulative Benchmark", align: "right" as const },
+    { key: "cumulativeActive", label: "Cumulative Active", align: "right" as const },
   ];
   const economicsColumns = [
-    { key: "beginMv", label: "Begin MV", align: "right" as const },
-    { key: "beginningCashFlow", label: "BoD Flow", align: "right" as const },
-    { key: "endMv", label: "End MV", align: "right" as const },
-    { key: "endingCashFlow", label: "EoD Flow", align: "right" as const },
-    { key: "flowAdjustedEndMv", label: "Flow-Adj MV", align: "right" as const },
+    { key: "beginMv", label: "Opening MV", align: "right" as const },
+    { key: "beginningCashFlow", label: "Opening Cash Flow", align: "right" as const },
+    { key: "endMv", label: "Ending MV", align: "right" as const },
+    { key: "endingCashFlow", label: "Closing Cash Flow", align: "right" as const },
+    { key: "flowAdjustedEndMv", label: "Flow-Adjusted MV", align: "right" as const },
     { key: "netCashFlow", label: "Net Flow", align: "right" as const },
     { key: "fees", label: "Fees", align: "right" as const },
   ];
@@ -473,18 +478,18 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(row.active_return_pct),
-        secondaryLabel: "Benchmark",
+        secondaryLabel: "Benchmark Return",
         secondaryValue: formatPct(row.benchmark_return_pct),
-        tertiaryLabel: "Cumulative",
+        tertiaryLabel: "Cumulative Active",
         tertiaryValue: formatPct(row.cumulative_active_return_pct),
-        leftBarLabel: "Active",
+        leftBarLabel: "Active Return",
         leftBarHeightPct: Math.abs((row.active_return_pct ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-active",
-        rightBarLabel: "Cum Active",
+        rightBarLabel: "Cumulative Active",
         rightBarHeightPct: Math.abs((row.cumulative_active_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-active-soft",
-        footerLabel: "Series",
-        footerValue: "Active vs cumulative",
+        footerLabel: "Comparison",
+        footerValue: "Active Return vs Cumulative Active",
       };
     }
 
@@ -493,18 +498,18 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(netReturn),
-        secondaryLabel: "Gross",
+        secondaryLabel: "Gross Return",
         secondaryValue: formatPct(grossReturn),
         tertiaryLabel: "Fee Drag",
         tertiaryValue:
           grossReturn != null && netReturn != null ? formatPct(grossReturn - netReturn) : "N/A",
-        leftBarLabel: "Net",
+        leftBarLabel: "Net Return",
         leftBarHeightPct: Math.abs((netReturn ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
-        rightBarLabel: "Gross",
+        rightBarLabel: "Gross Return",
         rightBarHeightPct: Math.abs((grossReturn ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-gross",
-        footerLabel: "Cumulative",
+        footerLabel: "Cumulative Return",
         footerValue: formatPct(
           basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
         ),
@@ -513,22 +518,22 @@ export function buildPerformanceHorizonVisualModel({
 
     return {
       key: row.period,
-      label: row.period,
-      primaryValue: formatPct(basisReturn),
-      secondaryLabel: "Benchmark",
-      secondaryValue: formatPct(row.benchmark_return_pct),
-      tertiaryLabel: "Active Return",
-      tertiaryValue: formatPct(row.active_return_pct),
-      leftBarLabel: basisView === "gross" ? "Gross" : "Portfolio",
-      leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
-      leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
-      rightBarLabel: "Benchmark",
-      rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
-      rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
-      footerLabel: "Cumulative",
-      footerValue: formatPct(
-        basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
-      ),
+        label: row.period,
+        primaryValue: formatPct(basisReturn),
+        secondaryLabel: "Benchmark Return",
+        secondaryValue: formatPct(row.benchmark_return_pct),
+        tertiaryLabel: "Active Return",
+        tertiaryValue: formatPct(row.active_return_pct),
+        leftBarLabel: basisView === "gross" ? "Gross Return" : "Portfolio Return",
+        leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
+        leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
+        rightBarLabel: "Benchmark Return",
+        rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
+        rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
+        footerLabel: "Cumulative Return",
+        footerValue: formatPct(
+          basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
+        ),
     };
   });
 }

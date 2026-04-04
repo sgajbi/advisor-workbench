@@ -42,13 +42,16 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getByTestId("attribution-trend")).toBeInTheDocument();
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Contribution detail summary strip")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
+    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
     expect(
-      screen.getByRole("complementary", { name: "Top / Bottom Contributors panel" })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Contribution Detail panel" })).toBeInTheDocument();
+      screen.queryByRole("complementary", { name: "Top / Bottom Contributors panel" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "Contribution Detail panel" })
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("cell", { name: "AAPL" })).toBeInTheDocument();
@@ -152,13 +155,16 @@ describe("PerformanceAnalysisMode", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Position ranking unavailable").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Position ranking unavailable")).not.toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Open Segment breakdown to inspect grouped contribution for the selected segment."
+      screen.queryByText(
+        "Open Segment Contribution to inspect grouped contribution for the selected segment."
       )
-    ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Segment breakdown (1)" })).toBeInTheDocument();
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Segment Contribution (1)" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")

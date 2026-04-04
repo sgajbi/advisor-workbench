@@ -230,7 +230,7 @@ export default function PerformanceMultiHorizonPanel({
             items={[
                 {
                   key: "resolved-window",
-                  label: "Window",
+                  label: "Period Range",
                   value: resolvedWindowLabel,
                 },
               {
@@ -307,22 +307,6 @@ export default function PerformanceMultiHorizonPanel({
                   <WorkbenchSummaryVisualValue className="performance-horizon-bar-primary">
                     {card.primaryValue}
                   </WorkbenchSummaryVisualValue>
-                  <div className="performance-horizon-bar-support-grid">
-                    <div className="performance-horizon-bar-support-item">
-                      <WorkbenchSummaryVisualMeta>{card.secondaryLabel}</WorkbenchSummaryVisualMeta>
-                      <WorkbenchSummaryVisualValue>
-                        {card.secondaryValue}
-                      </WorkbenchSummaryVisualValue>
-                    </div>
-                    {card.tertiaryLabel && card.tertiaryValue ? (
-                      <div className="performance-horizon-bar-support-item">
-                        <WorkbenchSummaryVisualMeta>{card.tertiaryLabel}</WorkbenchSummaryVisualMeta>
-                        <WorkbenchSummaryVisualValue>
-                          {card.tertiaryValue}
-                        </WorkbenchSummaryVisualValue>
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
                 <div className="performance-horizon-bar-track">
                   <div
@@ -356,7 +340,7 @@ export default function PerformanceMultiHorizonPanel({
             columns={tableModel.columns}
             rows={tableModel.rows}
             dense
-            className="performance-horizon-table"
+            className="performance-horizon-table performance-chart-observation-table"
           />
         </>
       ) : (

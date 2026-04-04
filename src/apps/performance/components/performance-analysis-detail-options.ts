@@ -27,11 +27,11 @@ export function getContributionDetailOptions({
     },
     {
       key: "segments",
-      label: formatCountLabel("Segment breakdown", segmentCount),
+      label: formatCountLabel("Segment Contribution", segmentCount),
       disabled: !hasSegmentBreakdown,
       title: hasSegmentBreakdown
         ? `${segmentCount} grouped segment rows available`
-        : "Grouped segment breakdown is unavailable for this selection",
+        : "Grouped segment contribution is unavailable for this selection",
     },
   ];
 }

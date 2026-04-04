@@ -11,8 +11,18 @@ function compactPattern(text: string) {
 }
 
 vi.mock("echarts-for-react", () => ({
-  default: ({ style }: { style?: React.CSSProperties }) => (
-    <div data-testid="performance-attribution-trend-chart" style={style} />
+  default: ({
+    option,
+    style,
+  }: {
+    option?: Record<string, unknown>;
+    style?: React.CSSProperties;
+  }) => (
+    <div
+      data-testid="performance-attribution-trend-chart"
+      data-option={JSON.stringify(option)}
+      style={style}
+    />
   ),
 }));
 
@@ -90,7 +100,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Resolved window 01 Jan 2026 - 27 Mar 2026")
+      compactPattern("Period Range 01 Jan 2026 - 27 Mar 2026")
     );
     expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40")
@@ -100,19 +110,45 @@ describe("PerformanceAttributionTrendPanel", () => {
         ".performance-analysis-context-row .workbench-chart-context-row-item"
       )
     ).toHaveLength(4);
-    expect(screen.getByLabelText("Attribution trend summary strip")).toBeInTheDocument();
-    expect(screen.getByText("Latest Total Effect")).toBeInTheDocument();
-    expect(screen.getByText("Latest Active Return")).toBeInTheDocument();
+    const trendSummaryStrip = screen.getByLabelText("Attribution trend summary strip");
+    expect(trendSummaryStrip).toBeInTheDocument();
+    expect(screen.getByText("Total Effect")).toBeInTheDocument();
+    expect(within(trendSummaryStrip).getByText("Active Return")).toBeInTheDocument();
     expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
     expect(
-      within(screen.getByLabelText("Attribution trend summary strip")).getByText("Residual")
+      within(trendSummaryStrip).getByText("Residual")
     ).toBeInTheDocument();
     expect(screen.getByTestId("performance-attribution-trend-chart")).toBeInTheDocument();
+    const chartOption = JSON.parse(
+      screen.getByTestId("performance-attribution-trend-chart").getAttribute("data-option") ?? "{}"
+    ) as {
+      series?: Array<{
+        barWidth?: number;
+        smooth?: boolean;
+        symbol?: string;
+        symbolSize?: number;
+        lineStyle?: { cap?: string; join?: string };
+      }>;
+      tooltip?: {
+        backgroundColor?: string;
+        textStyle?: { color?: string };
+      };
+    };
+    expect(chartOption.series?.[0]?.barWidth).toBe(14);
+    expect(chartOption.series?.[3]?.smooth).toBe(false);
+    expect(chartOption.series?.[3]?.symbol).toBe("circle");
+    expect(chartOption.series?.[3]?.symbolSize).toBe(6);
+    expect(chartOption.series?.[3]?.lineStyle).toMatchObject({
+      cap: "round",
+      join: "round",
+    });
+    expect(chartOption.tooltip?.backgroundColor).toBe("rgba(255, 255, 255, 0.98)");
+    expect(chartOption.tooltip?.textStyle?.color).toBe("#172033");
     const trendTable = screen.getByLabelText("Attribution trend table");
     expect(within(trendTable).getByText("Allocation")).toBeInTheDocument();
     expect(within(trendTable).getByText("Selection")).toBeInTheDocument();
     expect(within(trendTable).getByText("Interaction")).toBeInTheDocument();
-    expect(within(trendTable).getByText("Cum Total")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Cumulative Effect")).toBeInTheDocument();
     expect(within(trendTable).getByText("Residual")).toBeInTheDocument();
     expect(within(trendTable).getByText("2026-01")).toBeInTheDocument();
     expect(getTrendMock).toHaveBeenCalledWith("PF_1001", {

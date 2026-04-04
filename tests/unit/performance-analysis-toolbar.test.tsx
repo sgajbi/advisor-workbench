@@ -7,17 +7,21 @@ import PerformanceAnalysisToolbar from "../../src/apps/performance/components/pe
 describe("PerformanceAnalysisToolbar", () => {
   it("renders a shared toolbar with controls and optional context", () => {
     render(
-      <PerformanceAnalysisToolbar context={<span>Versus Benchmark</span>}>
+      <PerformanceAnalysisToolbar context={<span>Benchmark Global Balanced 60/40 • USD</span>}>
         <button type="button">Segment</button>
       </PerformanceAnalysisToolbar>
     );
 
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
+    expect(screen.getByLabelText("Analysis context")).toBeInTheDocument();
     expect(screen.getByText("Segment")).toBeInTheDocument();
-    expect(screen.getByText("Versus Benchmark")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Global Balanced 60/40 • USD")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-toolbar-context")?.textContent).toContain(
-      "Versus Benchmark"
+      "Benchmark Global Balanced 60/40 • USD"
     );
+    expect(
+      document.querySelector(".performance-analysis-toolbar-context")?.textContent
+    ).not.toContain("Versus");
   });
 });

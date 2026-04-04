@@ -64,6 +64,17 @@ export default function PerformanceSummaryMode({
 }: PerformanceSummaryModeProps) {
   return (
     <>
+      <PerformanceSummaryHeaderSection
+        workspace={workspace}
+        detailBasis={detailBasis}
+        capabilities={capabilities}
+        selectedBenchmarkCode={selectedBenchmarkCode}
+        selectedBenchmarkLabel={selectedBenchmarkLabel}
+        selectedPerformance={selectedPerformance}
+        hasMoneyWeightedReturn={hasMoneyWeightedReturn}
+        suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
+      />
+
       <WorkspaceGrid className="performance-chart-grid workbench-summary-region performance-analysis-top-region">
         <PerformanceChartPanel
           title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
@@ -88,17 +99,6 @@ export default function PerformanceSummaryMode({
           id="performance-trend"
         />
       </WorkspaceGrid>
-
-      <PerformanceSummaryHeaderSection
-        workspace={workspace}
-        detailBasis={detailBasis}
-        capabilities={capabilities}
-        selectedBenchmarkCode={selectedBenchmarkCode}
-        selectedBenchmarkLabel={selectedBenchmarkLabel}
-        selectedPerformance={selectedPerformance}
-        hasMoneyWeightedReturn={hasMoneyWeightedReturn}
-        suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
-      />
 
       <WorkspaceGrid className="performance-detail-grid performance-secondary-zone workbench-summary-region">
         <WorkbenchDeferredSection

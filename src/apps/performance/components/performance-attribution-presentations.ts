@@ -7,7 +7,6 @@ import type {
 import { formatDate, formatLabel, formatPct } from "../formatters";
 import {
   getPerformanceBenchmarkContextValue,
-  getPerformanceBenchmarkLabel,
 } from "./performance-summary-context-helpers";
 
 function getAttributionResidualAssessment(
@@ -20,6 +19,24 @@ function getAttributionResidualAssessment(
     return "Residual de minimis";
   }
   return "Residual remains after effects";
+}
+
+function formatAttributionModelLabel(model?: string | null) {
+  switch (model?.trim().toUpperCase()) {
+    case "BF":
+      return "Brinson-Fachler";
+    default:
+      return model ? formatLabel(model) : "Unavailable";
+  }
+}
+
+function formatAttributionLinkingLabel(linking?: string | null) {
+  switch (linking?.trim().toUpperCase()) {
+    case "CARINO":
+      return "Carino";
+    default:
+      return linking ? formatLabel(linking) : "Unavailable";
+  }
 }
 
 export function getAttributionReconciliationText(
@@ -108,55 +125,44 @@ export function getAttributionDetailContextItems(
         : "Unassigned",
     },
     {
-      label: "Source",
+      label: "Benchmark Source",
       value: attribution?.benchmark_return_source
         ? formatLabel(attribution.benchmark_return_source)
         : "Unavailable",
     },
     {
-      label: "Model",
-      value: attribution?.model ? formatLabel(attribution.model) : "Unavailable",
+      label: "Attribution Model",
+      value: formatAttributionModelLabel(attribution?.model),
     },
     {
-      label: "Linking",
-      value: attribution?.linking ? formatLabel(attribution.linking) : "Unavailable",
+      label: "Linking Method",
+      value: formatAttributionLinkingLabel(attribution?.linking),
     },
   ];
 }
 
 export function getAttributionDetailSummaryItems(
   attribution: AttributionSummaryView | null | undefined,
-  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
+  _benchmarkOptions: PerformanceBenchmarkOptionView[] = []
 ) {
+  void _benchmarkOptions;
+
   if (!attribution?.benchmark_id) {
     return [];
   }
 
-  const reconciliationSupport = getAttributionReconciliationSupport({
-    activeReturnPct: attribution.active_return_pct,
-    effectsSumPct: attribution.sum_of_effects_pct,
-    residualPct: attribution.residual_pct,
-  });
-
   return [
-    {
-      label: "Benchmark",
-      value: getPerformanceBenchmarkLabel(attribution.benchmark_id, benchmarkOptions),
-    },
     {
       label: "Active Return",
       value: formatPct(attribution.active_return_pct),
-      support: reconciliationSupport.activeReturnSupport,
     },
     {
       label: "Effects Sum",
       value: formatPct(attribution.sum_of_effects_pct),
-      support: reconciliationSupport.effectsSumSupport,
     },
     {
       label: "Residual",
       value: formatPct(attribution.residual_pct),
-      support: reconciliationSupport.residualSupport,
     },
   ];
 }
@@ -183,7 +189,7 @@ export function getAttributionTrendContextItems({
 
   return [
     {
-      label: "Resolved window",
+      label: "Period Range",
       value: resolvedWindowLabel,
     },
     {
@@ -227,12 +233,12 @@ export function getAttributionTrendSummaryItems(
 
   return [
     {
-      label: "Latest Total Effect",
+      label: "Total Effect",
       value: formatPct(latestRow.total_effect_pct),
       support: reconciliationSupport.effectsSumSupport,
     },
     {
-      label: "Latest Active Return",
+      label: "Active Return",
       value: formatPct(latestRow.active_return_pct),
       support: reconciliationSupport.activeReturnSupport,
     },

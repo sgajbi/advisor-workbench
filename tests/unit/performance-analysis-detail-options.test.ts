@@ -21,7 +21,7 @@ describe("performance analysis detail options", () => {
       }),
       expect.objectContaining({
         key: "segments",
-        label: "Segment breakdown (4)",
+        label: "Segment Contribution (4)",
         disabled: false,
         title: "4 grouped segment rows available",
       }),
@@ -43,9 +43,9 @@ describe("performance analysis detail options", () => {
       }),
       expect.objectContaining({
         key: "segments",
-        label: "Segment breakdown",
+        label: "Segment Contribution",
         disabled: true,
-        title: "Grouped segment breakdown is unavailable for this selection",
+        title: "Grouped segment contribution is unavailable for this selection",
       }),
     ]);
   });

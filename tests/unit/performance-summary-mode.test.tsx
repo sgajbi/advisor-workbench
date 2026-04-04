@@ -154,6 +154,12 @@ describe("PerformanceSummaryMode", () => {
       scenario.selectedBenchmarkLabel ?? "no benchmark"
     );
     expect(screen.getByText("Trust and completeness strip")).toBeInTheDocument();
+    expect(
+      screen
+        .getByTestId("summary-header")
+        .compareDocumentPosition(screen.getByTestId("chart-panel")) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(screen.getByTestId("chart-panel")).toHaveTextContent(

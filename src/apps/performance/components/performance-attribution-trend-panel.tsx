@@ -163,10 +163,11 @@ export default function PerformanceAttributionTrendPanel({
       legend: {
         bottom: 6,
         left: "center",
-        itemWidth: 16,
+        itemWidth: 18,
         itemHeight: 8,
+        itemGap: 16,
         textStyle: {
-          color: "#586377",
+          color: "#485668",
           fontSize: 12,
           fontWeight: 700,
         },
@@ -174,6 +175,14 @@ export default function PerformanceAttributionTrendPanel({
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "cross" },
+        borderColor: "rgba(36, 50, 70, 0.14)",
+        backgroundColor: "rgba(255, 255, 255, 0.98)",
+        padding: [10, 12],
+        textStyle: {
+          color: "#172033",
+          fontSize: 12,
+          fontWeight: 700,
+        },
         valueFormatter: (value: unknown) =>
           typeof value === "number" ? `${value.toFixed(2)}%` : "",
       },
@@ -183,9 +192,9 @@ export default function PerformanceAttributionTrendPanel({
         axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.18)" } },
         axisTick: { show: false },
         axisLabel: {
-          color: "#5a6476",
+          color: "#5f6c7f",
           fontSize: 11,
-          fontWeight: 600,
+          fontWeight: 700,
         },
       },
       yAxis: [
@@ -197,7 +206,7 @@ export default function PerformanceAttributionTrendPanel({
           },
           splitLine: {
             lineStyle: {
-              color: "rgba(52, 70, 95, 0.1)",
+              color: "rgba(126, 140, 158, 0.16)",
             },
           },
         },
@@ -208,31 +217,46 @@ export default function PerformanceAttributionTrendPanel({
           type: "bar",
           stack: "effects",
           data: rows.map((row) => row.allocation_pct),
-          barWidth: 12,
+          barWidth: 14,
+          itemStyle: {
+            borderColor: "rgba(54, 95, 139, 0.5)",
+            borderWidth: 1,
+          },
         },
         {
           name: "Selection",
           type: "bar",
           stack: "effects",
           data: rows.map((row) => row.selection_pct),
-          barWidth: 12,
+          barWidth: 14,
+          itemStyle: {
+            borderColor: "rgba(37, 110, 70, 0.5)",
+            borderWidth: 1,
+          },
         },
         {
           name: "Interaction",
           type: "bar",
           stack: "effects",
           data: rows.map((row) => row.interaction_pct),
-          barWidth: 12,
+          barWidth: 14,
+          itemStyle: {
+            borderColor: "rgba(169, 26, 41, 0.48)",
+            borderWidth: 1,
+          },
         },
         {
           name: "Cumulative Total",
           type: "line",
           data: rows.map((row) => row.cumulative_total_effect_pct),
-          smooth: true,
-          symbol: "none",
+          smooth: false,
+          symbol: "circle",
+          symbolSize: 6,
           lineStyle: {
             width: 3,
             color: ATTRIBUTION_TREND_COLORS.total,
+            cap: "round",
+            join: "round",
           },
         },
       ],
@@ -298,7 +322,7 @@ export default function PerformanceAttributionTrendPanel({
   return (
     <WorkbenchChartShell
       title="Attribution Over Time"
-      subtitle="Benchmark-relative effect path across the selected window."
+      subtitle="Benchmark-relative active-effect path across the selected period."
       className="performance-analysis-module performance-analysis-trend-shell"
       actions={
         <span className="performance-analysis-shell-action">

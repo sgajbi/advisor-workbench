@@ -27,9 +27,9 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Window",
-      "Active",
-      "Cum Active",
+      "Period Range",
+      "Active Return",
+      "Cumulative Active",
     ]);
     expect(model.rows[0]?.cells).toEqual([
       "2026-01",
@@ -51,25 +51,25 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Window",
-      "Begin MV",
-      "BoD Flow",
-      "End MV",
-      "EoD Flow",
-      "Flow-Adj MV",
+      "Period Range",
+      "Opening MV",
+      "Opening Cash Flow",
+      "Ending MV",
+      "Closing Cash Flow",
+      "Flow-Adjusted MV",
       "Net Flow",
       "Fees",
-      "Net",
-      "Gross",
+      "Net Return",
+      "Gross Return",
       "Fee Drag",
-      "Cum Net",
-      "Cum Gross",
-      "Ann. Net",
-      "Ann. Gross",
-      "Benchmark",
-      "Active",
-      "Cum Benchmark",
-      "Cum Active",
+      "Cumulative Net",
+      "Cumulative Gross",
+      "Annualized Net",
+      "Annualized Gross",
+      "Benchmark Return",
+      "Active Return",
+      "Cumulative Benchmark",
+      "Cumulative Active",
     ]);
     expect(model.rows.find((row) => row.key === "YTD")?.className).toBe(
       "performance-horizon-table-row-selected"
@@ -93,8 +93,8 @@ describe("performance analytics table models", () => {
     });
     expect(relativeModel[0]).toMatchObject({
       label: "MTD",
-      leftBarLabel: "Active",
-      rightBarLabel: "Cum Active",
+      leftBarLabel: "Active Return",
+      rightBarLabel: "Cumulative Active",
     });
 
     const basisModel = buildPerformanceHorizonVisualModel({
@@ -104,8 +104,8 @@ describe("performance analytics table models", () => {
     });
     expect(basisModel[2]).toMatchObject({
       label: "YTD",
-      leftBarLabel: "Net",
-      rightBarLabel: "Gross",
+      leftBarLabel: "Net Return",
+      rightBarLabel: "Gross Return",
     });
   });
 
@@ -115,13 +115,13 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Window",
+      "Period Range",
       "Allocation",
       "Selection",
       "Interaction",
-      "Total",
-      "Cum Total",
-      "Active",
+      "Effect Total",
+      "Cumulative Effect",
+      "Active Return",
       "Residual",
     ]);
     expect(model.rows[0]?.cells).toEqual([
@@ -144,9 +144,9 @@ describe("performance analytics table models", () => {
     const model = buildPerformanceContributionTableModel({ rows });
 
     expect(model.columns.map((column) => column.label)).toEqual([
-      "Bucket",
+      "Segment",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "Local",
       "FX",
@@ -185,9 +185,9 @@ describe("performance analytics table models", () => {
     });
 
     expect(model.columns.map((column) => column.label)).toEqual([
-      "Bucket",
+      "Segment",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "Local",
       "FX",
@@ -218,7 +218,7 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "Local",
       "FX",
@@ -233,7 +233,7 @@ describe("performance analytics table models", () => {
     ]);
   });
 
-  it("omits empty position contribution columns when the live contract provides no values", () => {
+  it("keeps Local and FX together when the live contract emits an FX leg and zero Local contribution", () => {
     const model = buildPerformancePositionContributionTableModel({
       rows: [
         {
@@ -258,13 +258,15 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
+      "Local",
       "FX",
     ]);
     expect(model.rows[0]?.cells).toEqual([
       "AAPL US",
       "0.30%",
       "7.44%",
+      "0.00%",
       "0.30%",
     ]);
   });
@@ -294,8 +296,9 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
+      "Local",
       "FX",
     ]);
     expect(model.rows[0]?.cells).toEqual([
@@ -303,6 +306,7 @@ describe("performance analytics table models", () => {
       "0.30%",
       "7.44%",
       "4.81%",
+      "0.00%",
       "0.30%",
     ]);
   });

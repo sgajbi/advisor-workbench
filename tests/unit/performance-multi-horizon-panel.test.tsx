@@ -70,7 +70,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       compactPattern("Active Return 0.51%")
@@ -83,24 +83,32 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
+    expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
-    expect(screen.getAllByText("Active Return").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Portfolio vs Benchmark").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Cumulative:/).length).toBeGreaterThan(0);
+    expect(
+      within(screen.getByRole("group", { name: "Horizon comparison context" })).getByText(
+        "Active Return"
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Portfolio Return vs Benchmark Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Cumulative Return:/).length).toBeGreaterThan(0);
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
-    expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("BoD Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("EoD Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Flow-Adj MV")).toBeInTheDocument();
+    expect(
+      horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")
+    ).toBeTruthy();
+    expect(within(horizonTable).getByText("Opening MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening Cash Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Closing Cash Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-Adjusted MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Fee Drag")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Gross")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Active")).toBeInTheDocument();
     expect(within(horizonTable).getAllByText("$450,000")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("$26,000")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("-$3,500")).toHaveLength(2);
@@ -115,52 +123,50 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
-    expect(within(horizonTable).queryByText("Begin MV")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("BoD Flow")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("EoD Flow")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Flow-Adj MV")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Opening MV")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Opening Cash Flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Closing Cash Flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Flow-Adjusted MV")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Net Flow")).not.toBeInTheDocument();
-    expect(within(horizonTable).getByText("Benchmark")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Benchmark")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Annualized Net")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
-    expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("BoD Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("EoD Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Flow-Adj MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening MV")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening Cash Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Closing Cash Flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-Adjusted MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Benchmark")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cum Active")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Benchmark Return")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
-    expect(screen.getAllByText("Series: Active vs cumulative").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
-    expect(screen.getByLabelText("MTD Cum Active")).toBeInTheDocument();
+    expect(screen.getAllByText("Comparison: Active Return vs Cumulative Active").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Active Return")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Cumulative Active")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
     fireEvent.click(screen.getByRole("tab", { name: "Net" }));
-    expect(within(horizonTable).getByText("Net")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Net")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Ann. Net")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Gross")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cum Gross")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net Return")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Annualized Net")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Gross Return")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative Gross")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
-    expect(screen.getAllByText("Fee Drag").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Net vs Gross").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
-    expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
+    expect(screen.getAllByText("Net Return vs Gross Return").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Net Return")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Gross Return")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
-    expect(within(horizonTable).getByText("Gross")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cum Gross")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Ann. Gross")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Net")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cum Net")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative Gross")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Annualized Gross")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net Return")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative Net")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
     expect(getHorizonComparisonClientMock).toHaveBeenCalledWith("PF_1001", {
@@ -203,7 +209,7 @@ describe("PerformanceMultiHorizonPanel", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-        compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+        compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
         );
       });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
@@ -219,7 +225,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);

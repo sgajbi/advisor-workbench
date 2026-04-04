@@ -24,7 +24,7 @@ describe("PerformanceChartContextStrip", () => {
     expect(context).toHaveTextContent(compactPattern("Portfolio PB_SG_GLOBAL_BAL_001"));
     expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40 • USD"));
     expect(context).toHaveTextContent(compactPattern("Active Return 0.80%"));
-    expect(context).toHaveTextContent(compactPattern("Period / Basis YTD • Net"));
+    expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Net"));
     expect(context).not.toHaveTextContent("Available");
     expect(context.querySelectorAll(".performance-chart-context-field")).toHaveLength(4);
     expect(context.querySelectorAll(".workbench-chart-context-row-item")).toHaveLength(0);
@@ -44,7 +44,7 @@ describe("PerformanceChartContextStrip", () => {
     const context = screen.getByRole("group", { name: "Return vs Benchmark" });
     expect(context).toHaveTextContent(compactPattern("Benchmark Unassigned"));
     expect(context).toHaveTextContent(compactPattern("Active Return Unavailable"));
-    expect(context).toHaveTextContent(compactPattern("Period / Basis YTD • Net"));
+    expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Net"));
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {
@@ -61,6 +61,6 @@ describe("PerformanceChartContextStrip", () => {
     const context = screen.getByRole("group", { name: "Return vs Benchmark" });
     expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40"));
     expect(context).toHaveTextContent(compactPattern("Active Return Unavailable"));
-    expect(context).toHaveTextContent(compactPattern("Period / Basis YTD • Gross"));
+    expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Gross"));
   });
 });

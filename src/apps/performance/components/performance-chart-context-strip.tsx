@@ -39,7 +39,7 @@ export default function PerformanceChartContextStrip({
         <strong className="performance-chart-context-value">{activeReturn}</strong>
       </div>
       <div className="performance-chart-context-field">
-        <span className="performance-chart-context-label">Period / Basis</span>
+        <span className="performance-chart-context-label">Period Range / Basis</span>
         <strong className="performance-chart-context-value">
           {`${resolvedWindow} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`}
         </strong>

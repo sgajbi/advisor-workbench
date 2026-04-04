@@ -27,25 +27,20 @@ describe("performance attribution presentations", () => {
 
     expect(contextItems).toEqual([
       { label: "Benchmark", value: "Global Balanced 60/40 • USD" },
-      { label: "Source", value: "Calculated" },
-      { label: "Model", value: "BF" },
-      { label: "Linking", value: "Carino" },
+      { label: "Benchmark Source", value: "Calculated" },
+      { label: "Attribution Model", value: "Brinson-Fachler" },
+      { label: "Linking Method", value: "Carino" },
     ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
-      "Benchmark",
       "Active Return",
       "Effects Sum",
       "Residual",
     ]);
-    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
-      "Effects 0.50% + Residual 0.02%"
-    );
-    expect(summaryItems.find((item) => item.label === "Effects Sum")?.support).toBe(
-      "Residual remains after effects • Active 0.52%"
-    );
-    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBe(
-      "Residual remains after effects • Active 0.52% • Effects 0.50%"
-    );
+    expect(summaryItems).toEqual([
+      { label: "Active Return", value: "0.52%" },
+      { label: "Effects Sum", value: "0.50%" },
+      { label: "Residual", value: "0.02%" },
+    ]);
   });
 
   it("builds trend context and latest-row summary from the trend contract", () => {
@@ -60,21 +55,21 @@ describe("performance attribution presentations", () => {
     const summaryItems = getAttributionTrendSummaryItems(trend);
 
     expect(contextItems).toEqual([
-      { label: "Resolved window", value: "01 Jan 2026 - 24 Feb 2026" },
+      { label: "Period Range", value: "01 Jan 2026 - 24 Feb 2026" },
       { label: "Basis", value: "NET" },
       { label: "Benchmark", value: "BMK GLOBAL BALANCED 60 40" },
       { label: "Segment", value: "Asset Class" },
     ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
-      "Latest Total Effect",
-      "Latest Active Return",
+      "Total Effect",
+      "Active Return",
       "Cumulative Total",
       "Residual",
     ]);
-    expect(summaryItems.find((item) => item.label === "Latest Total Effect")?.support).toBe(
+    expect(summaryItems.find((item) => item.label === "Total Effect")?.support).toBe(
       "Residual de minimis • Active 0.22%"
     );
-    expect(summaryItems.find((item) => item.label === "Latest Active Return")?.support).toBe(
+    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
       "Effects 0.22% + Residual 0.00%"
     );
   });
@@ -94,11 +89,13 @@ describe("performance attribution presentations", () => {
       label: "Benchmark",
       value: "Global Balanced 60/40 • USD",
     });
-    expect(summaryItems).toHaveLength(4);
+    expect(summaryItems).toHaveLength(3);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
-    expect(summaryItems.find((item) => item.label === "Residual")?.support).toContain(
-      "Residual remains after effects"
-    );
+    expect(summaryItems).toEqual([
+      { label: "Active Return", value: "0.52%" },
+      { label: "Effects Sum", value: "0.50%" },
+      { label: "Residual", value: "0.02%" },
+    ]);
   });
 
   it("uses benchmark option labels when trend context receives them", () => {
