@@ -36,9 +36,11 @@ describe("performance attribution presentations", () => {
       "Effects Sum",
       "Residual",
     ]);
-    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBeUndefined();
-    expect(summaryItems.find((item) => item.label === "Effects Sum")?.support).toBeUndefined();
-    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBeUndefined();
+    expect(summaryItems).toEqual([
+      { label: "Active Return", value: "0.52%" },
+      { label: "Effects Sum", value: "0.50%" },
+      { label: "Residual", value: "0.02%" },
+    ]);
   });
 
   it("builds trend context and latest-row summary from the trend contract", () => {
@@ -89,7 +91,11 @@ describe("performance attribution presentations", () => {
     });
     expect(summaryItems).toHaveLength(3);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
-    expect(summaryItems.find((item) => item.label === "Residual")?.support).toBeUndefined();
+    expect(summaryItems).toEqual([
+      { label: "Active Return", value: "0.52%" },
+      { label: "Effects Sum", value: "0.50%" },
+      { label: "Residual", value: "0.02%" },
+    ]);
   });
 
   it("uses benchmark option labels when trend context receives them", () => {
