@@ -468,6 +468,18 @@ Outcome:
 
 ### Slice 3: `lotus-ai` brief generation service
 
+Status:
+
+- Implemented in `lotus-ai` on branch `feat/rfc0020-advisor-brief-task`.
+- Added a source-bounded advisor-brief specialization on the existing `explain.v1` stub provider
+  path for Gateway fact bundles while preserving the generic `explain.v1` behavior for ordinary
+  non-advisor payloads.
+- Added a dedicated `lotus-gateway` caller policy in both in-memory and SQL-backed access-control
+  stores so the BFF can invoke advisor brief generation without browser-direct AI access.
+- Validation covered direct provider-unit tests, caller authorization tests, SQL policy seeding,
+  task API contract tests, the full `tests/unit` suite (`827 passed`), and every
+  `tests/integration/test_*.py` file individually.
+
 Outcome:
 
 1. first reuse the existing `explain.v1` task path for source-grounded advisor commentary,
@@ -535,8 +547,8 @@ Outcome:
 | Requirement | Current evidence | Gap status |
 | --- | --- | --- |
 | Stable Portfolio / Performance source screens exist in Workbench | `Portfolio` and split `Performance` modes are already live in `lotus-workbench`. | Ready as source drill-down targets. |
-| Gateway BFF owns Workbench orchestration | Existing `/api/v1/workbench/{portfolio_id}/performance/*` routes in `lotus-gateway`. | Advisor Brief route still missing. |
-| `lotus-ai` has a bounded task API | `POST /ai/tasks/execute`, `TaskExecutionRequest`, `TaskExecutionResponse`, `audit`, `evidence`. | Must define the advisor fact bundle and response mapping. |
+| Gateway BFF owns Workbench orchestration | Existing `/api/v1/workbench/{portfolio_id}/performance/*` routes plus the new Advisor Brief route/service in `lotus-gateway`. | Slice 2 Gateway contract is implemented; Slice 4 still needs Workbench live wiring. |
+| `lotus-ai` has a bounded task API | `POST /ai/tasks/execute`, `TaskExecutionRequest`, `TaskExecutionResponse`, `audit`, `evidence`, and the Slice 3 advisor fact-bundle specialization over `explain.v1`. | Slice 3 task execution support is implemented; Slice 4 still needs end-to-end Workbench consumption. |
 | `lotus-ai` narrative architecture exists | RFC-0024 defines bounded portfolio narrative copilot over source-owned facts. | RFC-0020 must align to RFC-0024 and avoid a parallel chat contract. |
 | Source-grounded drill-down UX exists | Workbench can deep-link to Performance and Portfolio route states. | Advisor Brief source-chip and route-intent model still needs implementation. |
 | Gold-standard failure semantics | Gateway and Workbench already model partial/unavailable states in Performance. | Need equivalent Advisor Brief supportability states and tests. |
