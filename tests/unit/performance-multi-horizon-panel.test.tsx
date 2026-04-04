@@ -90,6 +90,9 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("Portfolio vs Benchmark").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Cumulative:/).length).toBeGreaterThan(0);
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
+    expect(
+      horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")
+    ).toBeTruthy();
     expect(within(horizonTable).getByText("Begin MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("BoD Flow")).toBeInTheDocument();
     expect(within(horizonTable).getByText("EoD Flow")).toBeInTheDocument();

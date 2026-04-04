@@ -356,7 +356,7 @@ export default function PerformanceMultiHorizonPanel({
             columns={tableModel.columns}
             rows={tableModel.rows}
             dense
-            className="performance-horizon-table"
+            className="performance-horizon-table performance-chart-observation-table"
           />
         </>
       ) : (

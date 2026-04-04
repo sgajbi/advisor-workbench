@@ -280,7 +280,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern(
-        "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-adjusted $1,208,000"
+        "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
       )
     );
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
@@ -346,7 +346,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern(
-        "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-adjusted $1,208,000"
+        "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
       )
     );
     expect(within(executiveStrip).getByText("Net • QTD")).toBeInTheDocument();

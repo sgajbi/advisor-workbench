@@ -56,14 +56,14 @@ describe("performance summary context helpers", () => {
         key: "net-flow",
         label: "Net Flow",
         value: "$42,000",
-        support: "Opening $50,000 • Closing -$8,000",
+        support: "Opening Cash $50,000 • Closing Cash -$8,000",
         unavailable: false,
       },
       {
         key: "ending-mv",
         label: "Ending Market Value",
         value: "$1,250,000",
-        support: "Flow-adjusted $1,208,000",
+        support: "Flow-Adjusted MV $1,208,000",
         unavailable: false,
       },
     ]);
@@ -240,13 +240,13 @@ describe("performance summary context helpers", () => {
     expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
       label: "Net Flow",
       value: "$42,000",
-      support: "Opening $50,000 • Closing -$8,000",
+      support: "Opening Cash $50,000 • Closing Cash -$8,000",
       unavailable: false,
     });
     expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
       label: "Ending Market Value",
       value: "$1,250,000",
-      support: "Flow-adjusted $1,208,000",
+      support: "Flow-Adjusted MV $1,208,000",
       unavailable: false,
     });
   });
@@ -272,7 +272,7 @@ describe("performance summary context helpers", () => {
         reportingCurrency: "USD",
       })
     ).toBe(
-      "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-adjusted $1,208,000"
+      "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
     );
   });
 

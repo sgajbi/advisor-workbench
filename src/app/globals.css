@@ -5725,15 +5725,18 @@ a:hover {
 
 .performance-analysis-date-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(20rem, 30rem) auto;
   gap: 0.5rem;
   align-items: stretch;
+  justify-content: start;
 }
 
 .performance-analysis-date-inputs {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(10rem, 14rem));
   gap: 0.4rem;
+  width: fit-content;
+  max-width: 100%;
   padding: 0.3rem;
   border: 1px solid rgba(34, 44, 59, 0.1);
   border-radius: 11px;

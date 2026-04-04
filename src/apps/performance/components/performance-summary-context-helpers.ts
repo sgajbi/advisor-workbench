@@ -135,7 +135,10 @@ export function getPerformanceReturnPathPresentation({
         value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
         support:
           resolvedFlowAdjustedEndMarketValue != null
-            ? `Flow-adjusted ${formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency)}`
+            ? `Flow-Adjusted MV ${formatCurrency(
+                resolvedFlowAdjustedEndMarketValue,
+                reportingCurrency
+              )}`
             : undefined,
         unavailable: resolvedEndMarketValue == null,
       },
@@ -161,10 +164,10 @@ export function getPerformanceNetFlowSupport(
   if (beginningCashFlow != null || endingCashFlow != null) {
     const supportSegments = [
       beginningCashFlow != null
-        ? `Opening ${formatCurrency(beginningCashFlow, reportingCurrency)}`
+        ? `Opening Cash ${formatCurrency(beginningCashFlow, reportingCurrency)}`
         : null,
       endingCashFlow != null
-        ? `Closing ${formatCurrency(endingCashFlow, reportingCurrency)}`
+        ? `Closing Cash ${formatCurrency(endingCashFlow, reportingCurrency)}`
         : null,
     ].filter(Boolean);
 
@@ -209,7 +212,7 @@ export function getPerformanceMoneyWeightedEconomicsSupport(
   reportingCurrency: string
 ) {
   if (moneyWeightedReturn?.flow_adjusted_end_market_value != null) {
-    return `Flow-adjusted ${formatCurrency(
+    return `Flow-Adjusted MV ${formatCurrency(
       moneyWeightedReturn.flow_adjusted_end_market_value,
       reportingCurrency
     )}`;

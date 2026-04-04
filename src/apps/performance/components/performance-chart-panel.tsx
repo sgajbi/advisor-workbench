@@ -520,7 +520,7 @@ export default function PerformanceChartPanel({
       key: "basis-period-summary",
       label: "Period / Basis",
       value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
-        period === "EXPLICIT" ? "Explicit window" : period
+        period === "EXPLICIT" ? "Explicit Period" : period
       }`,
       support: periodSupport,
     },
