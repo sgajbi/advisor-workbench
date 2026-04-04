@@ -175,7 +175,7 @@ export default function PerformanceAnalysisContributionSection({
                     >
                       <strong>Position ranking unavailable</strong>
                       <span>
-                        Open Segment breakdown to inspect grouped contribution for the selected
+                        Open Segment Contribution to inspect grouped contribution for the selected
                         segment.
                       </span>
                     </div>

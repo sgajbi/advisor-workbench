@@ -144,9 +144,9 @@ describe("performance analytics table models", () => {
     const model = buildPerformanceContributionTableModel({ rows });
 
     expect(model.columns.map((column) => column.label)).toEqual([
-      "Bucket",
+      "Segment",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "Local",
       "FX",
@@ -185,9 +185,9 @@ describe("performance analytics table models", () => {
     });
 
     expect(model.columns.map((column) => column.label)).toEqual([
-      "Bucket",
+      "Segment",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "Local",
       "FX",
@@ -218,7 +218,7 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "Local",
       "FX",
@@ -258,7 +258,7 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "FX",
     ]);
     expect(model.rows[0]?.cells).toEqual([
@@ -294,7 +294,7 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Avg. Weight",
+      "Average Weight",
       "Return",
       "FX",
     ]);

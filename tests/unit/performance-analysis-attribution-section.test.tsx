@@ -179,7 +179,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
-    expect(screen.getByText("Summary totals")).toBeInTheDocument();
+    expect(screen.getByText("Summary Total")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();

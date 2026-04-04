@@ -215,11 +215,11 @@ export default function PerformanceAnalysisAttributionSection({
                           dense
                           ariaLabel={`${formatLabel(level.dimension)} attribution table`}
                           columns={[
-                            { key: "bucket", label: "Bucket" },
-                            { key: "portWt", label: "Port Wt", align: "right" },
-                            { key: "bmkWt", label: "Bmk Wt", align: "right" },
-                            { key: "portRet", label: "Port Return", align: "right" },
-                            { key: "bmkRet", label: "Bmk Return", align: "right" },
+                            { key: "bucket", label: "Segment" },
+                            { key: "portWt", label: "Portfolio Weight", align: "right" },
+                            { key: "bmkWt", label: "Benchmark Weight", align: "right" },
+                            { key: "portRet", label: "Portfolio Return", align: "right" },
+                            { key: "bmkRet", label: "Benchmark Return", align: "right" },
                             { key: "allocation", label: "Allocation", align: "right" },
                             { key: "selection", label: "Selection", align: "right" },
                             { key: "interaction", label: "Interaction", align: "right" },
@@ -269,7 +269,7 @@ export default function PerformanceAnalysisAttributionSection({
                           dense
                           ariaLabel={`${formatLabel(level.dimension)} attribution totals`}
                           columns={[
-                            { key: "view", label: "View" },
+                            { key: "view", label: "Metric" },
                             { key: "allocation", label: "Allocation", align: "right" },
                             { key: "selection", label: "Selection", align: "right" },
                             { key: "interaction", label: "Interaction", align: "right" },
@@ -279,7 +279,7 @@ export default function PerformanceAnalysisAttributionSection({
                             {
                               key: `${level.dimension}-summary`,
                               cells: [
-                                "Summary totals",
+                                "Summary Total",
                                 formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
                                 formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
                                 formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),

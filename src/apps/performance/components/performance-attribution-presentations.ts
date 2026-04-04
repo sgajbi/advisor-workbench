@@ -7,7 +7,6 @@ import type {
 import { formatDate, formatLabel, formatPct } from "../formatters";
 import {
   getPerformanceBenchmarkContextValue,
-  getPerformanceBenchmarkLabel,
 } from "./performance-summary-context-helpers";
 
 function getAttributionResidualAssessment(
@@ -126,8 +125,10 @@ export function getAttributionDetailContextItems(
 
 export function getAttributionDetailSummaryItems(
   attribution: AttributionSummaryView | null | undefined,
-  benchmarkOptions: PerformanceBenchmarkOptionView[] = []
+  _benchmarkOptions: PerformanceBenchmarkOptionView[] = []
 ) {
+  void _benchmarkOptions;
+
   if (!attribution?.benchmark_id) {
     return [];
   }
@@ -139,10 +140,6 @@ export function getAttributionDetailSummaryItems(
   });
 
   return [
-    {
-      label: "Benchmark",
-      value: getPerformanceBenchmarkLabel(attribution.benchmark_id, benchmarkOptions),
-    },
     {
       label: "Active Return",
       value: formatPct(attribution.active_return_pct),

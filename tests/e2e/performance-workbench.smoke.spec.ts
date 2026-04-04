@@ -295,7 +295,7 @@ test.describe('Performance workbench smoke', () => {
       'false'
     );
     await expect(page.getByText('Top Active Effects')).toBeVisible();
-    await expect(page.getByText('Relative Segment Matrix')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toBeVisible();
     await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
 
     await page.getByRole('tab', { name: /^Effect breakdown/i }).click();
@@ -305,7 +305,7 @@ test.describe('Performance workbench smoke', () => {
     );
     await expect(page.getByLabel('Asset Class attribution totals')).toBeVisible();
     await expect(page.getByText('Attribution Summary')).toBeVisible();
-    await expect(page.getByText('Relative Segment Matrix')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toHaveCount(0);
 
     await expect(page.getByLabel('Attribution trend table')).toBeVisible();
     await expect(page.getByLabel('Asset Class attribution totals')).toBeVisible();
@@ -350,7 +350,7 @@ test.describe('Performance workbench smoke', () => {
     ).toHaveAttribute('aria-selected', 'true');
     await expect(
       contributionModule
-        .getByRole('tab', { name: /^Segment breakdown/i })
+        .getByRole('tab', { name: /^Segment Contribution/i })
     ).toHaveAttribute('aria-selected', 'false');
 
     const positionHeaders = await contributionModule
@@ -359,7 +359,7 @@ test.describe('Performance workbench smoke', () => {
     expect(positionHeaders.slice(0, 4)).toEqual([
       'Position',
       'Contribution',
-      'Avg. Weight',
+      'Average Weight',
       'Return',
     ]);
 
@@ -368,9 +368,9 @@ test.describe('Performance workbench smoke', () => {
     );
     expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
 
-    await contributionModule.getByRole('tab', { name: /^Segment breakdown/i }).click();
+    await contributionModule.getByRole('tab', { name: /^Segment Contribution/i }).click();
     await expect(
-      contributionModule.getByRole('tab', { name: /^Segment breakdown/i })
+      contributionModule.getByRole('tab', { name: /^Segment Contribution/i })
     ).toHaveAttribute('aria-selected', 'true');
     await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
     await expect(contributionModule.getByLabel('Asset Class contribution table')).toBeVisible();

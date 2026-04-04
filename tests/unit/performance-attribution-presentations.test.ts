@@ -32,7 +32,6 @@ describe("performance attribution presentations", () => {
       { label: "Linking", value: "Carino" },
     ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
-      "Benchmark",
       "Active Return",
       "Effects Sum",
       "Residual",
@@ -94,7 +93,7 @@ describe("performance attribution presentations", () => {
       label: "Benchmark",
       value: "Global Balanced 60/40 • USD",
     });
-    expect(summaryItems).toHaveLength(4);
+    expect(summaryItems).toHaveLength(3);
     expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
     expect(summaryItems.find((item) => item.label === "Residual")?.support).toContain(
       "Residual remains after effects"

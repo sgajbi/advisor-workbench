@@ -66,9 +66,9 @@ export function buildPerformanceContributionTableModel({
   level?: ContributionSummaryView["levels"][number] | null;
 }): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
-    { key: "bucket", label: "Bucket" },
+    { key: "bucket", label: "Segment" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "weight", label: "Average Weight", align: "right" },
     { key: "return", label: "Return", align: "right" },
     { key: "local", label: "Local", align: "right" },
     { key: "fx", label: "FX", align: "right" },
@@ -129,9 +129,9 @@ export function buildPerformanceContributionLevelTableModel({
     );
 
   const columns: PerformanceAnalyticsTableColumn[] = [
-    { key: "bucket", label: "Bucket" },
+    { key: "bucket", label: "Segment" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "weight", label: "Average Weight", align: "right" },
     { key: "return", label: "Return", align: "right" },
     ...(includeLocalFxColumns
       ? [
@@ -190,7 +190,7 @@ export function buildPerformancePositionContributionTableModel({
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "position", label: "Position" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Avg. Weight", align: "right" },
+    { key: "weight", label: "Average Weight", align: "right" },
     ...(includeReturnColumn ? [{ key: "return", label: "Return", align: "right" as const }] : []),
     ...(includeLocalColumn ? [{ key: "local", label: "Local", align: "right" as const }] : []),
     ...(includeFxColumn ? [{ key: "fx", label: "FX", align: "right" as const }] : []),

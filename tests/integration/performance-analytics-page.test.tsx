@@ -408,7 +408,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Top Effects panel")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution Detail panel")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: /^Segment breakdown/ })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
       "aria-selected",
       "false"
     );
@@ -422,7 +422,9 @@ describe("PerformanceAnalyticsPage", () => {
       "false"
     );
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Relative Segment Context" })
+    ).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
     const attributionTable = await screen.findByLabelText("Asset Class attribution table");
@@ -657,9 +659,11 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
     expect(await screen.findByText("Attribution Summary")).toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
-    expect(await screen.findByText("Summary totals")).toBeInTheDocument();
+    expect(await screen.findByText("Summary Total")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
-    expect(screen.queryByText("Relative Segment Matrix")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Relative Segment Context" })
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Top Active Effects")).toBeInTheDocument();
   });
 
@@ -674,7 +678,7 @@ describe("PerformanceAnalyticsPage", () => {
       name: "unavailable attribution analysis",
       scenario: buildUnavailableAttributionPerformanceScenario(),
       expectations: ["Attribution detail unavailable"],
-      absent: ["Relative Segment Matrix"],
+      absent: ["Relative Segment Context"],
     },
     {
       name: "unavailable contribution analysis",
@@ -747,7 +751,7 @@ describe("PerformanceAnalyticsPage", () => {
       summaryExpectations: ["Attribution", "Unavailable"],
       analysisExpectations: ["Attribution detail unavailable", "Performance Drivers"],
       evidenceExpectations: [],
-      analysisAbsent: ["Relative Segment Matrix"],
+      analysisAbsent: ["Relative Segment Context"],
     },
     {
       name: "unavailable contribution workspace",

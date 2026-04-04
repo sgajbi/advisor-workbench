@@ -29,14 +29,18 @@ describe("PerformanceRelativeSegmentPanel", () => {
     expect(
       document.querySelector(".performance-relative-segment-module.workbench-chart-shell")
     ).toBeTruthy();
-    expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
+    expect(screen.getByText("Relative Segment Context")).toBeInTheDocument();
     expect(screen.getByText("Active Weight")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();
     expect(screen.getByText("Total Effect")).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-relative-row")).toHaveLength(1);
-    expect(screen.getByText("Wt 61.00% vs 58.00%")).toBeInTheDocument();
-    expect(screen.getByText("Ret 7.40% vs 6.80%")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Portfolio Weight\s*61\.00%\s*•\s*Benchmark Weight\s*58\.00%/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Portfolio Return\s*7\.40%\s*•\s*Benchmark Return\s*6\.80%/)
+    ).toBeInTheDocument();
   });
 
   it("renders a compact empty state inside the shared chart shell", () => {
@@ -45,7 +49,7 @@ describe("PerformanceRelativeSegmentPanel", () => {
     expect(
       document.querySelector(".performance-relative-segment-module.workbench-chart-shell")
     ).toBeTruthy();
-    expect(screen.getByText("Relative Segment Matrix")).toBeInTheDocument();
+    expect(screen.getByText("Relative Segment Context")).toBeInTheDocument();
     expect(screen.getByText("Relative segment context unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(

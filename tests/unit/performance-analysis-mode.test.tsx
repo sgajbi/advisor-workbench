@@ -155,10 +155,10 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getAllByText("Position ranking unavailable").length).toBeGreaterThanOrEqual(1);
     expect(
       screen.getByText(
-        "Open Segment breakdown to inspect grouped contribution for the selected segment."
+        "Open Segment Contribution to inspect grouped contribution for the selected segment."
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Segment breakdown (1)" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Segment Contribution (1)" })).toBeInTheDocument();
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
