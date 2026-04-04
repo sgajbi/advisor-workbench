@@ -1,4 +1,10 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { Panel } from "@/design-system";
+import { getWorkbenchPerformanceAdvisorBriefClient } from "@/features/workbench/api";
+import type { WorkbenchPerformanceAdvisorBrief } from "@/features/workbench/types";
 
 import { buildPerformanceAdvisorBriefViewModel } from "../advisor-brief-view-model";
 import { formatDate } from "../formatters";
@@ -23,8 +29,94 @@ export default function PerformanceAdvisorBriefMode({
   isDetailsPending,
   onSelectMode,
 }: PerformanceAdvisorBriefModeProps) {
+  const [advisorBrief, setAdvisorBrief] =
+    useState<WorkbenchPerformanceAdvisorBrief | null>(null);
+  const [advisorBriefUnavailable, setAdvisorBriefUnavailable] = useState(false);
+  const requestSequenceRef = useRef(0);
+  const advisorBriefRequestKey = useMemo(
+    () =>
+      JSON.stringify({
+        portfolioId: workspace.portfolio.portfolio_id,
+        period,
+        detailBasis,
+        contributionDimension,
+        attributionDimension,
+        chartFrequency,
+        benchmark: workspace.benchmark_code ?? benchmark ?? null,
+        reportStartDate: workspace.report_start_date,
+        reportEndDate: workspace.report_end_date,
+      }),
+    [
+      attributionDimension,
+      benchmark,
+      chartFrequency,
+      contributionDimension,
+      detailBasis,
+      period,
+      workspace.benchmark_code,
+      workspace.portfolio.portfolio_id,
+      workspace.report_end_date,
+      workspace.report_start_date,
+    ]
+  );
+
+  useEffect(() => {
+    setAdvisorBrief(null);
+    setAdvisorBriefUnavailable(false);
+
+    if (isDetailsPending) {
+      return;
+    }
+
+    const requestId = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestId;
+
+    void getWorkbenchPerformanceAdvisorBriefClient(
+      workspace.portfolio.portfolio_id,
+      {
+        period,
+        chartFrequency,
+        contributionDimension,
+        attributionDimension,
+        detailBasis,
+        benchmark: workspace.benchmark_code ?? benchmark,
+        reportStartDate: workspace.report_start_date,
+        reportEndDate: workspace.report_end_date,
+      }
+    )
+      .then((response) => {
+        if (requestSequenceRef.current !== requestId) {
+          return;
+        }
+        setAdvisorBrief(response);
+        setAdvisorBriefUnavailable(false);
+      })
+      .catch(() => {
+        if (requestSequenceRef.current !== requestId) {
+          return;
+        }
+        setAdvisorBrief(null);
+        setAdvisorBriefUnavailable(true);
+      });
+  }, [
+    advisorBriefRequestKey,
+    isDetailsPending,
+    attributionDimension,
+    benchmark,
+    chartFrequency,
+    contributionDimension,
+    detailBasis,
+    period,
+    workspace.benchmark_code,
+    workspace.portfolio.portfolio_id,
+    workspace.report_end_date,
+    workspace.report_start_date,
+  ]);
+
   const brief = buildPerformanceAdvisorBriefViewModel({
     workspace,
+    advisorBrief,
+    advisorBriefUnavailable,
     capabilities,
     period,
     detailBasis,
@@ -32,7 +124,7 @@ export default function PerformanceAdvisorBriefMode({
     attributionDimension,
     chartFrequency,
     benchmark,
-    isDetailsPending,
+    isDetailsPending: isDetailsPending || (!advisorBrief && !advisorBriefUnavailable),
   });
 
   return (

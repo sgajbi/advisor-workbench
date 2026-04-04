@@ -492,6 +492,18 @@ Outcome:
 
 ### Slice 4: Workbench live integration and source-linked navigation
 
+Status:
+
+- Implemented on branch `feat/rfc0020-advisor-brief-copilot`.
+- Added the client-side Gateway adapter for
+  `/api/v1/workbench/{portfolio_id}/performance/advisor-brief` and mapped that response into the
+  existing Advisor Brief view model.
+- `Advisor Brief` now fetches the live BFF contract only when the mode is mounted, keeps the
+  previous source-derived fallback for loading/unavailable states, and clears stale brief data
+  when controls change while details are pending.
+- Tests now verify the advisor-brief client route, Gateway-backed brief rendering,
+  Summary/Analysis drill-down actions, and the pending-state fetch guard.
+
 Outcome:
 
 1. replace the Slice 1 fixture adapter with the real gateway contract,

@@ -1,6 +1,7 @@
 import type {
   ContributionPositionView,
   ContributionRowView,
+  WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceWorkspace,
 } from "@/features/workbench/types";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
@@ -85,6 +86,8 @@ export type PerformanceAdvisorBriefViewModel = {
 
 export function buildPerformanceAdvisorBriefViewModel({
   workspace,
+  advisorBrief,
+  advisorBriefUnavailable,
   capabilities,
   period,
   detailBasis,
@@ -95,6 +98,8 @@ export function buildPerformanceAdvisorBriefViewModel({
   isDetailsPending,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
+  advisorBrief?: WorkbenchPerformanceAdvisorBrief | null;
+  advisorBriefUnavailable?: boolean;
   capabilities: PerformanceWorkspaceCapabilities;
   period: string;
   detailBasis: string;
@@ -104,6 +109,10 @@ export function buildPerformanceAdvisorBriefViewModel({
   benchmark?: string;
   isDetailsPending: boolean;
 }): PerformanceAdvisorBriefViewModel {
+  if (advisorBrief) {
+    return buildGatewayAdvisorBriefViewModel(advisorBrief, workspace);
+  }
+
   const selectedPerformance =
     detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance;
   const route = buildPerformanceHref({
@@ -142,6 +151,7 @@ export function buildPerformanceAdvisorBriefViewModel({
   });
   const status = resolveAdvisorBriefStatus({
     capabilities,
+    advisorBriefUnavailable: advisorBriefUnavailable ?? false,
     isDetailsPending,
     hasTalkingPoints: talkingPoints.length > 0,
   });
@@ -183,7 +193,7 @@ export function buildPerformanceAdvisorBriefViewModel({
       topDetractorLabel: topDetractor?.label,
       attributionLabel: topEffect?.key_label,
     }),
-    talkingPoints,
+    talkingPoints: status === "unavailable" ? [] : talkingPoints,
     recommendedActions: [
       {
         label: "Open Return Path",
@@ -204,6 +214,7 @@ export function buildPerformanceAdvisorBriefViewModel({
     risksAndExceptions: buildRisksAndExceptions({
       capabilities,
       route,
+      advisorBriefUnavailable: advisorBriefUnavailable ?? false,
       isDetailsPending,
     }),
     sourceMetrics: [
@@ -252,16 +263,85 @@ export function buildPerformanceAdvisorBriefViewModel({
   };
 }
 
+function buildGatewayAdvisorBriefViewModel(
+  advisorBrief: WorkbenchPerformanceAdvisorBrief,
+  workspace: WorkbenchPerformanceWorkspace
+): PerformanceAdvisorBriefViewModel {
+  return {
+    status: advisorBrief.status,
+    title: `Advisor Brief • ${advisorBrief.portfolio_id}`,
+    summary: advisorBrief.summary,
+    talkingPoints: advisorBrief.talking_points.map((item) => ({
+      headline: item.headline,
+      detail: item.detail,
+      tone: item.tone,
+      evidenceRefs: item.evidence_refs.map((evidenceRef) => ({
+        metricLabel: evidenceRef.metric_label,
+        metricValue: evidenceRef.metric_value,
+        sourceSurface: evidenceRef.source_surface,
+        route: evidenceRef.route,
+        targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
+      })),
+    })),
+    recommendedActions: advisorBrief.recommended_actions.map((action) => ({
+      label: action.label,
+      route: action.route,
+      targetMode: normalizeAdvisorTargetMode(action.target_mode),
+    })),
+    risksAndExceptions: advisorBrief.risks_and_exceptions.map((item) => ({
+      headline: item.headline,
+      detail: item.detail,
+      tone: item.tone,
+      evidenceRefs: item.evidence_refs.map((evidenceRef) => ({
+        metricLabel: evidenceRef.metric_label,
+        metricValue: evidenceRef.metric_value,
+        sourceSurface: evidenceRef.source_surface,
+        route: evidenceRef.route,
+        targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
+      })),
+    })),
+    sourceMetrics: advisorBrief.source_metrics.map((metric) => ({
+      label: metric.label,
+      value: metric.value,
+      supportingText: metric.support_label,
+      route: metric.route,
+      targetMode: normalizeAdvisorTargetMode(metric.target_mode),
+    })),
+    supportability: advisorBrief.supportability.map((item) => ({
+      label: item.label,
+      value: item.value,
+      tone: normalizeSupportabilityTone(item.tone, item.value),
+    })),
+    audit: {
+      taskId: advisorBrief.ai_audit.task_id ?? "explain.v1",
+      outputLabel: advisorBrief.ai_audit.output_label ?? "EXPLANATION_ONLY",
+      promptVersion: advisorBrief.ai_audit.prompt_version ?? "foundation.explain.v1",
+      providerMode: advisorBrief.ai_audit.provider_mode ?? "unknown",
+      generatedAt:
+        advisorBrief.ai_audit.generated_at ??
+        advisorBrief.as_of_date ??
+        workspace.as_of_date,
+      stubbed: advisorBrief.ai_audit.stubbed ?? true,
+      sourceRefs:
+        advisorBrief.ai_evidence.source_refs ??
+        advisorBrief.ai_audit.source_refs ??
+        [`lotus-gateway:workbench:${advisorBrief.portfolio_id}:performance-advisor-brief:${advisorBrief.period}`],
+    },
+  };
+}
+
 function resolveAdvisorBriefStatus({
   capabilities,
+  advisorBriefUnavailable,
   isDetailsPending,
   hasTalkingPoints,
 }: {
   capabilities: PerformanceWorkspaceCapabilities;
+  advisorBriefUnavailable: boolean;
   isDetailsPending: boolean;
   hasTalkingPoints: boolean;
 }): PerformanceAdvisorBriefStatus {
-  if (capabilities.summaryKpis.state === "unavailable") {
+  if (advisorBriefUnavailable || capabilities.summaryKpis.state === "unavailable") {
     return "unavailable";
   }
   if (isDetailsPending) {
@@ -443,13 +523,35 @@ function buildTalkingPoints({
 function buildRisksAndExceptions({
   capabilities,
   route,
+  advisorBriefUnavailable,
   isDetailsPending,
 }: {
   capabilities: PerformanceWorkspaceCapabilities;
   route: string;
+  advisorBriefUnavailable: boolean;
   isDetailsPending: boolean;
 }): PerformanceAdvisorBriefItem[] {
   const risks: PerformanceAdvisorBriefItem[] = [];
+  if (advisorBriefUnavailable) {
+    return [
+      {
+        headline: "Advisor brief generation is unavailable.",
+        detail:
+          "Source metrics remain available in Summary and Analysis, but the Gateway advisor brief contract could not be loaded.",
+        tone: "warning",
+        evidenceRefs: [
+          {
+            metricLabel: "Advisor Brief",
+            metricValue: "Unavailable",
+            sourceSurface: "performance.advisor_brief",
+            route,
+            targetMode: "summary",
+          },
+        ],
+      },
+    ];
+  }
+
   if (isDetailsPending) {
     risks.push({
       headline: "Analysis details are still loading.",
@@ -521,6 +623,33 @@ function buildRisksAndExceptions({
   }
 
   return risks;
+}
+
+function normalizeAdvisorTargetMode(targetMode: string): PerformanceWorkspaceMode {
+  return targetMode === "analysis"
+    ? "analysis"
+    : targetMode === "advisor"
+      ? "advisor"
+      : targetMode === "evidence"
+        ? "evidence"
+        : "summary";
+}
+
+function normalizeSupportabilityTone(
+  tone: string | undefined,
+  value: string
+): PerformanceAdvisorBriefSupportabilityItem["tone"] {
+  if (tone === "success" || tone === "warn" || tone === "danger") {
+    return tone;
+  }
+  const normalizedValue = value.toLowerCase();
+  if (normalizedValue.includes("ready")) {
+    return "success";
+  }
+  if (normalizedValue.includes("partial") || normalizedValue.includes("loading")) {
+    return "warn";
+  }
+  return "danger";
 }
 
 function getPrimaryContributor(workspace: WorkbenchPerformanceWorkspace) {
