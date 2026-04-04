@@ -38,7 +38,9 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByLabelText("Contribution Detail panel")).toBeInTheDocument();
     expect(screen.getByText("Top / Bottom Contributors")).toBeInTheDocument();
     expect(
-      screen.getByText("Prioritize the largest positive and negative contribution drivers.")
+      screen.getByText(
+        "Largest positive and negative position contributions for the selected period."
+      )
     ).toBeInTheDocument();
     expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
@@ -62,10 +64,11 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Ranked contributors").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Contributor Ranking").length).toBeGreaterThanOrEqual(1);
     const insightPane = screen.getByLabelText("Top / Bottom Contributors panel");
     expect(within(insightPane).queryByLabelText("Position contribution table")).not.toBeInTheDocument();
     expect(within(insightPane).queryByText("Position")).not.toBeInTheDocument();
+    expect(within(insightPane).queryByText("Ranked contributors")).not.toBeInTheDocument();
   });
 
   it("keeps the position return column when upstream emits real returns and no local contribution", () => {

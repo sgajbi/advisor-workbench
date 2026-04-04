@@ -280,8 +280,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Attribution trend table')).toBeVisible({
       timeout: 30000,
     });
-    await expect(page.getByText('Latest Total Effect')).toBeVisible();
-    await expect(page.getByLabel('Attribution trend summary strip').getByText('Cumulative Total')).toBeVisible();
+    const attributionTrendStrip = page.getByLabel('Attribution trend summary strip');
+    await expect(attributionTrendStrip.getByText('Total Effect', { exact: true })).toBeVisible();
+    await expect(attributionTrendStrip.getByText('Cumulative Total', { exact: true })).toBeVisible();
 
     await expect(page.getByLabel('Top Effects panel')).toBeVisible();
     await expect(page.getByLabel('Attribution Detail panel')).toBeVisible();
@@ -293,7 +294,7 @@ test.describe('Performance workbench smoke', () => {
       'aria-selected',
       'false'
     );
-    await expect(page.getByText('Total Effect Ranking')).toBeVisible();
+    await expect(page.getByText('Top Active Effects')).toBeVisible();
     await expect(page.getByText('Relative Segment Matrix')).toBeVisible();
     await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
 
@@ -334,7 +335,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(contributionModule.getByLabel('Top / Bottom Contributors panel')).toBeVisible();
     await expect(contributionModule.getByLabel('Contribution Detail panel')).toBeVisible();
     await expect(contributionModule.getByText('Top / Bottom Contributors')).toBeVisible();
-    await expect(contributionModule.getByText('Ranked contributors')).toBeVisible();
+    await expect(contributionModule.getByText('Contributor Ranking')).toBeVisible();
     await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
     await expect(contributionModule.getByLabel('Asset Class contribution table')).toHaveCount(0);
     await expect(

@@ -69,7 +69,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-toolbar-context")).toBeTruthy();
-    expect(screen.getByText(/Versus Global Balanced 60\/40 • USD/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Analysis context")).toHaveTextContent(
+      /Benchmark Global Balanced 60\/40 • USD/i
+    );
+    expect(screen.queryByText(/^Versus /i)).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
       /Benchmark\s*Global Balanced 60\/40\s*•\s*USD/i
@@ -95,12 +98,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByLabelText("Attribution Detail panel")).toBeInTheDocument();
     expect(screen.getByText("Top Effects")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Prioritize the largest benchmark-relative effects before opening detailed breakdown."
-      )
+      screen.getByText("Largest positive and negative active effects for the selected segment.")
     ).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
-    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    expect(screen.getByText("Top Active Effects")).toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
       "aria-selected",
@@ -182,7 +183,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
-    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    expect(screen.getByText("Top Active Effects")).toBeInTheDocument();
     const insightPane = screen.getByLabelText("Top Effects panel");
     expect(within(insightPane).queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(

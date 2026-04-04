@@ -4829,7 +4829,7 @@ a:hover {
 
 .performance-analysis-stage {
   align-items: start;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .performance-analysis-module {
@@ -4893,17 +4893,17 @@ a:hover {
 }
 
 .performance-analysis-toolbar-context {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.18rem 0.55rem;
-  border: 1px solid rgba(34, 44, 59, 0.08);
-  border-radius: 999px;
-  background: #f8fafc;
-  color: var(--text-muted);
+  display: grid;
+  gap: 0.15rem;
+  min-height: 2.8rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(34, 44, 59, 0.07);
+  border-radius: 10px;
+  background: rgba(249, 250, 252, 0.96);
+  color: var(--brand-strong);
   font-size: var(--workbench-analytic-label-size);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.24;
 }
 
 .performance-analysis-shell-action {
@@ -5048,8 +5048,8 @@ a:hover {
 
 .performance-analysis-drilldown-workspace {
   display: grid;
-  grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
-  gap: 0.85rem;
+  grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr);
+  gap: 0.75rem;
   align-items: start;
 }
 
@@ -5060,9 +5060,9 @@ a:hover {
 .performance-analysis-insight-pane,
 .performance-analysis-detail-pane {
   display: grid;
-  gap: 0.7rem;
-  padding: 0.85rem;
-  border: 1px solid rgba(221, 226, 232, 0.9);
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(219, 224, 232, 0.92);
   border-radius: 12px;
   background: #ffffff;
 }
@@ -5141,12 +5141,12 @@ a:hover {
 .performance-analysis-detail-empty {
   display: grid;
   gap: 0.24rem;
-  min-height: 16rem;
+  min-height: 14rem;
   align-content: center;
   padding: 0.95rem;
   border: 1px dashed rgba(195, 204, 214, 0.95);
   border-radius: 10px;
-  background: #fbfcfd;
+  background: rgba(249, 250, 252, 0.96);
 }
 
 .performance-analysis-detail-empty strong {

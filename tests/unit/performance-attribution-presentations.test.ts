@@ -60,21 +60,21 @@ describe("performance attribution presentations", () => {
     const summaryItems = getAttributionTrendSummaryItems(trend);
 
     expect(contextItems).toEqual([
-      { label: "Resolved window", value: "01 Jan 2026 - 24 Feb 2026" },
+      { label: "Period Range", value: "01 Jan 2026 - 24 Feb 2026" },
       { label: "Basis", value: "NET" },
       { label: "Benchmark", value: "BMK GLOBAL BALANCED 60 40" },
       { label: "Segment", value: "Asset Class" },
     ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
-      "Latest Total Effect",
-      "Latest Active Return",
+      "Total Effect",
+      "Active Return",
       "Cumulative Total",
       "Residual",
     ]);
-    expect(summaryItems.find((item) => item.label === "Latest Total Effect")?.support).toBe(
+    expect(summaryItems.find((item) => item.label === "Total Effect")?.support).toBe(
       "Residual de minimis • Active 0.22%"
     );
-    expect(summaryItems.find((item) => item.label === "Latest Active Return")?.support).toBe(
+    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
       "Effects 0.22% + Residual 0.00%"
     );
   });

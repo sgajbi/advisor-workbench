@@ -93,7 +93,7 @@ export default function PerformanceAnalysisContributionSection({
     <WorkbenchDataGridFrame
       id="performance-drivers"
       title="Performance Drivers"
-      subtitle="Contribution drivers for the selected horizon."
+      subtitle="Contribution drivers and position-level drill-down for the selected period."
       actions={actions}
       className="performance-detail-panel-wide performance-analysis-module"
     >
@@ -121,13 +121,13 @@ export default function PerformanceAnalysisContributionSection({
             insightPane={
               <PerformanceAnalysisInsightPane
                 title="Top / Bottom Contributors"
-                subtitle="Prioritize the largest positive and negative contribution drivers."
+                subtitle="Largest positive and negative position contributions for the selected period."
                 className="performance-contribution-insight-pane"
               >
                 <PerformanceContributionDetailStrip contribution={workspace.contribution} />
                 <div className="performance-contribution-ranked-panel">
                   <WorkbenchRankedBarList
-                    title="Ranked contributors"
+                    title="Contributor Ranking"
                     label="Contribution"
                     rows={rankedRows}
                     scale={
@@ -146,7 +146,7 @@ export default function PerformanceAnalysisContributionSection({
             detailPane={
               <PerformanceAnalysisDetailPane
                 title="Contribution Detail"
-                subtitle="Inspect either position-level detail or grouped segment contribution."
+                subtitle="Inspect position-level contributions or grouped segment contribution."
                 value={detailView}
                 onChange={setDetailView}
                 options={getContributionDetailOptions({

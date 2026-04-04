@@ -183,7 +183,7 @@ export function getAttributionTrendContextItems({
 
   return [
     {
-      label: "Resolved window",
+      label: "Period Range",
       value: resolvedWindowLabel,
     },
     {
@@ -227,12 +227,12 @@ export function getAttributionTrendSummaryItems(
 
   return [
     {
-      label: "Latest Total Effect",
+      label: "Total Effect",
       value: formatPct(latestRow.total_effect_pct),
       support: reconciliationSupport.effectsSumSupport,
     },
     {
-      label: "Latest Active Return",
+      label: "Active Return",
       value: formatPct(latestRow.active_return_pct),
       support: reconciliationSupport.activeReturnSupport,
     },

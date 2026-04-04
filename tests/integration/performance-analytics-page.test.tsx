@@ -660,7 +660,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByText("Summary totals")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.queryByText("Relative Segment Matrix")).not.toBeInTheDocument();
-    expect(screen.getByText("Total Effect Ranking")).toBeInTheDocument();
+    expect(screen.getByText("Top Active Effects")).toBeInTheDocument();
   });
 
   it.each([

@@ -70,7 +70,7 @@ export default function PerformanceAnalysisAttributionSection({
       context={
         workspace.attribution?.benchmark_id ? (
           <span className="performance-section-benchmark">
-            Versus{" "}
+            Benchmark{" "}
             {getPerformanceBenchmarkContextValue({
               benchmark: workspace.attribution.benchmark_id,
               benchmarkOptions: workspace.benchmark_options ?? [],
@@ -114,7 +114,7 @@ export default function PerformanceAnalysisAttributionSection({
     <WorkbenchChartShell
       id="performance-attribution"
       title="Attribution Detail"
-      subtitle="Benchmark-relative decomposition across allocation, selection, and interaction effects."
+      subtitle="Benchmark-relative allocation, selection, and interaction effects by segment."
       actions={actions}
       contextRow={
         workspace.attribution ? (
@@ -162,15 +162,15 @@ export default function PerformanceAnalysisAttributionSection({
             insightLabel="Top Effects panel"
             detailLabel="Attribution Detail panel"
             insightPane={
-              <PerformanceAnalysisInsightPane
-                title="Top Effects"
-                subtitle="Prioritize the largest benchmark-relative effects before opening detailed breakdown."
-                className="performance-attribution-insight-pane"
-              >
-                <div className="performance-analysis-ranked-panel">
-                  <WorkbenchRankedBarList
-                    title="Total Effect Ranking"
-                    label="Benchmark-relative total effect"
+                <PerformanceAnalysisInsightPane
+                  title="Top Effects"
+                  subtitle="Largest positive and negative active effects for the selected segment."
+                  className="performance-attribution-insight-pane"
+                >
+                  <div className="performance-analysis-ranked-panel">
+                    <WorkbenchRankedBarList
+                      title="Top Active Effects"
+                      label="Benchmark-relative total effect"
                     rows={getAttributionRankingRows(topAttributionEffectRows)}
                     scale={attributionEffectScale}
                     emptyMessage="No benchmark-relative effect ranking is available for this selection."
@@ -182,7 +182,7 @@ export default function PerformanceAnalysisAttributionSection({
             detailPane={
               <PerformanceAnalysisDetailPane
                 title="Attribution Detail"
-                subtitle="Inspect relative segment context or benchmark-relative effect breakdown."
+                subtitle="Inspect relative segment context or the effect breakdown table."
                 value={detailView}
                 onChange={setDetailView}
                 options={getAttributionDetailOptions({
