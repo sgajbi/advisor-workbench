@@ -18,6 +18,10 @@ type ChartSeriesProbe = {
   name?: string;
   type?: string;
   data?: unknown[];
+  smooth?: boolean | number;
+  symbol?: string;
+  symbolSize?: number;
+  showSymbol?: boolean;
   barWidth?: number;
   itemStyle?: {
     borderWidth?: number;
@@ -100,13 +104,17 @@ describe("PerformanceChartPanel", () => {
     let activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
     expect(activePeriodSeries?.type).toBe("bar");
     expect(activePeriodSeries?.data).toEqual([0.3]);
-    expect(activePeriodSeries?.barWidth).toBe(10);
+    expect(activePeriodSeries?.barWidth).toBe(14);
     expect(activePeriodSeries?.itemStyle).toMatchObject({
       borderWidth: 1,
-      borderRadius: [2, 2, 0, 0],
+      borderRadius: [3, 3, 0, 0],
     });
 
     const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio Return");
+    expect(portfolioReturnSeries?.smooth).toBe(false);
+    expect(portfolioReturnSeries?.symbol).toBe("circle");
+    expect(portfolioReturnSeries?.symbolSize).toBe(6);
+    expect(portfolioReturnSeries?.showSymbol).toBe(true);
     expect(portfolioReturnSeries?.lineStyle).toMatchObject({
       width: 3.5,
       cap: "round",
