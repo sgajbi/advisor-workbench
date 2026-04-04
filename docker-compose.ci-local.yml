@@ -10,7 +10,7 @@ services:
       [
         "sh",
         "-lc",
-        "npm ci && npm run lint && npm run typecheck && npm run test && npm run build"
+        "npm config set fetch-retries 5 && npm config set fetch-retry-maxtimeout 120000 && npm config set fetch-timeout 300000 && npm ci --no-audit --no-fund && npm run lint && npm run typecheck && npm run test && npm run build"
       ]
     environment:
       - BFF_BASE_URL=http://host.docker.internal:8100

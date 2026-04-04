@@ -14,6 +14,22 @@ import {
 
 let lastChartOption: EChartsOption | null = null;
 
+type ChartSeriesProbe = {
+  name?: string;
+  type?: string;
+  data?: unknown[];
+  barWidth?: number;
+  itemStyle?: {
+    borderWidth?: number;
+    borderRadius?: number[];
+  };
+  lineStyle?: {
+    width?: number;
+    cap?: string;
+    join?: string;
+  };
+};
+
 vi.mock("echarts-for-react", () => ({
   default: ({ style, option }: { style?: React.CSSProperties; option?: EChartsOption }) => {
     lastChartOption = option ?? null;
@@ -60,7 +76,9 @@ describe("PerformanceChartPanel", () => {
   it("switches between combined, relative, and absolute return-path views", () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
-    let series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    let series: ChartSeriesProbe[] = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
     let seriesNames = series.map((entry) => entry?.name);
     const observationTable = screen.getByLabelText("Return path observation table");
 
@@ -82,10 +100,24 @@ describe("PerformanceChartPanel", () => {
     let activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
     expect(activePeriodSeries?.type).toBe("bar");
     expect(activePeriodSeries?.data).toEqual([0.3]);
+    expect(activePeriodSeries?.barWidth).toBe(10);
+    expect(activePeriodSeries?.itemStyle).toMatchObject({
+      borderWidth: 1,
+      borderRadius: [2, 2, 0, 0],
+    });
+
+    const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio Return");
+    expect(portfolioReturnSeries?.lineStyle).toMatchObject({
+      width: 3.5,
+      cap: "round",
+      join: "round",
+    });
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
 
-    series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    series = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
     seriesNames = series.map((entry) => entry?.name);
     expect(seriesNames).toContain("Active Period");
     expect(seriesNames).toContain("Active Cumulative");
@@ -100,7 +132,9 @@ describe("PerformanceChartPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Absolute" }));
 
-    series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    series = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
     seriesNames = series.map((entry) => entry?.name);
     expect(seriesNames).toContain("Portfolio Return");
     expect(seriesNames).toContain("Benchmark Period");
@@ -164,6 +198,7 @@ describe("PerformanceChartPanel", () => {
       )
     ).toBeTruthy();
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-date-inputs")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(document.querySelector(".workbench-chart-shell-context")).toBeFalsy();
     expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
@@ -197,7 +232,7 @@ describe("PerformanceChartPanel", () => {
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
-        "Period / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-adjusted value $1,208,000"
+        "Period / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-adjusted $1,208,000"
       )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
@@ -208,6 +243,22 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-02")).toBeInTheDocument();
+    expect(lastChartOption?.xAxis).toMatchObject({
+      axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
+    });
+    expect(Array.isArray(lastChartOption?.yAxis) ? lastChartOption?.yAxis?.[0] : undefined).toMatchObject({
+      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.14)", width: 1 } },
+    });
+    expect(lastChartOption?.legend).toMatchObject({
+      icon: "roundRect",
+      itemGap: 18,
+      textStyle: { color: "#435164", fontWeight: 700 },
+    });
+    expect(lastChartOption?.tooltip).toMatchObject({
+      backgroundColor: "rgba(19, 30, 43, 0.96)",
+      borderColor: "rgba(117, 143, 173, 0.48)",
+      textStyle: { color: "#f8fafc", fontWeight: 600 },
+    });
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {

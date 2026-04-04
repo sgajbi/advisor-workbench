@@ -1,5 +1,4 @@
 import {
-  getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummary,
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
@@ -70,33 +69,27 @@ export default async function PerformanceAnalyticsPage({
     (selectedPortfolioId ? DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId] : undefined);
   const reportStartDate = resolvedSearch.reportStartDate?.trim() || undefined;
   const reportEndDate = resolvedSearch.reportEndDate?.trim() || undefined;
+  const workspaceRequest = {
+    period,
+    chartFrequency,
+    contributionDimension,
+    attributionDimension,
+    detailBasis,
+    benchmark,
+    reportStartDate,
+    reportEndDate,
+  };
 
   let workspaceSummary = null;
   let workspaceDetails = null;
   if (selectedPortfolioId) {
     try {
-      [workspaceSummary, workspaceDetails] = await Promise.all([
-        getWorkbenchPerformanceWorkspaceSummary(selectedPortfolioId, {
-          period,
-          chartFrequency,
-          contributionDimension,
-          attributionDimension,
-          detailBasis,
-          benchmark,
-          reportStartDate,
-          reportEndDate,
-        }),
-        getWorkbenchPerformanceWorkspaceDetails(selectedPortfolioId, {
-          period,
-          chartFrequency,
-          contributionDimension,
-          attributionDimension,
-          detailBasis,
-          benchmark,
-          reportStartDate,
-          reportEndDate,
-        }),
-      ]);
+      // First paint is summary-first by design. Deep analytics hydrate after mount.
+      workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(
+        selectedPortfolioId,
+        workspaceRequest
+      );
+      workspaceDetails = null;
     } catch {
       workspaceSummary = null;
       workspaceDetails = null;
