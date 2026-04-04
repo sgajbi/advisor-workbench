@@ -445,6 +445,16 @@ Rules for Slice 1:
 
 ### Slice 2: Gateway advisor-brief contract and source-fact assembly
 
+Status:
+
+- Implemented in `lotus-gateway` on branch `feat/rfc0020-advisor-brief-contract`.
+- Added the workbench-facing performance advisor-brief route, a dedicated `LotusAiClient`, and a
+  modular `AdvisorBriefService` that assembles source facts from the performance workspace
+  contract and preserves `ai_audit` / `ai_evidence`.
+- Non-live unit, integration, and workflow tests are green. The live platform-capabilities probe is
+  still environment-dependent on local upstream health and is not part of the advisor-brief route
+  contract.
+
 Outcome:
 
 1. expose a workbench-facing advisor-brief endpoint in `lotus-gateway`,
