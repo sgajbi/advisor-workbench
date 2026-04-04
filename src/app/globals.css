@@ -5039,11 +5039,43 @@ a:hover {
 
 .performance-analysis-table {
   border-radius: 12px;
-  border-color: rgba(221, 226, 232, 0.9);
+  border-color: rgba(32, 44, 61, 0.08);
+  background: #fbfcfd;
 }
 
 .performance-analysis-table.analytics-table-frame-dense {
-  border-radius: 10px;
+  border-radius: 12px;
+}
+
+.performance-analysis-table.analytics-table-frame .MuiTableHead-root .MuiTableCell-root {
+  background: #f5f7fa;
+  color: #4f5d70;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.performance-analysis-table.analytics-table-frame .MuiTableBody-root .MuiTableCell-root,
+.performance-analysis-table.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root {
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+  border-bottom-color: rgba(221, 226, 232, 0.58);
+  color: #1f2937;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-analysis-table.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
+  background: rgba(247, 249, 251, 0.82);
+}
+
+.performance-analysis-table.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root {
+  background: #f5f7fa;
+  color: #172234;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-top: 1px solid rgba(190, 198, 209, 0.84);
 }
 
 .performance-analysis-drilldown-workspace {
