@@ -114,8 +114,10 @@ The current flagship demo path is the benchmark-aware performance workstation:
 - Gateway: `http://gateway.dev.lotus`
 - Required upstreams:
   - `lotus-core` query: `http://core-query.dev.lotus`
+  - `lotus-core` control plane: `http://core-control.dev.lotus`
   - `lotus-core` ingestion: `http://core-ingestion.dev.lotus`
   - `lotus-performance`: `http://performance.dev.lotus`
+  - `lotus-ai`: `http://ai.dev.lotus`
 
 Flagship seeded mandate and benchmarks:
 
@@ -130,6 +132,9 @@ Expected live behavior:
 - the lower analytical canvas refreshes independently for heavy analytical modules
 - the multi-horizon comparison module shows `MTD`, `QTD`, `YTD`, and `1Y`
 - attribution-over-time, contribution, and relative segment analytics use real gateway data
+- `Advisor Brief` is a third Performance mode that fetches a source-grounded brief from Gateway,
+  shows evidence-backed talking points and drill-down actions, and degrades to truthful partial
+  or unavailable states when `lotus-ai` or source analytics are not ready
 
 ## Current Routes
 
