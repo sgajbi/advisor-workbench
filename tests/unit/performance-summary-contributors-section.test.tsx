@@ -72,7 +72,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     render(<PerformanceSummaryContributorsSection {...buildProps()} />);
 
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
-    expect(screen.getByText("YTD contributor ranking")).toBeInTheDocument();
+    expect(screen.getByText("YTD Contribution Ranking")).toBeInTheDocument();
     expect(screen.getByText("Top Contributors")).toBeInTheDocument();
     expect(screen.getByText("Top Detractors")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();

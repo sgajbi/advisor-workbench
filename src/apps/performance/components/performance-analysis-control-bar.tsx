@@ -85,7 +85,7 @@ export default function PerformanceAnalysisControlBar({
           <div className="performance-analysis-static-value">{period}</div>
         </div>
         <div className="performance-analysis-control-slot performance-analysis-control-slot-dates">
-          <Typography sx={controlLabelSx}>Explicit Date Range</Typography>
+          <Typography sx={controlLabelSx}>Period Range</Typography>
           <div className="performance-analysis-static-value">
             {fromDate} to {toDate}
           </div>
@@ -139,7 +139,7 @@ export default function PerformanceAnalysisControlBar({
         className="performance-analysis-control-slot performance-analysis-control-slot-dates"
         onSubmit={onApplyExplicitDates}
       >
-        <Typography sx={controlLabelSx}>Explicit Date Range</Typography>
+        <Typography sx={controlLabelSx}>Period Range</Typography>
         <div className="performance-analysis-date-row">
           <div className="performance-analysis-date-inputs">
             <TextField

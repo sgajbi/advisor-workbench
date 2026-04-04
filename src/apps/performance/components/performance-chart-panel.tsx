@@ -524,7 +524,7 @@ export default function PerformanceChartPanel({
     returnPathPresentation.metrics[4],
     {
       key: "basis-period-summary",
-      label: "Period / Basis",
+      label: "Period Range / Basis",
       value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
         period === "EXPLICIT" ? "Explicit Period" : period
       }`,
@@ -585,8 +585,8 @@ export default function PerformanceChartPanel({
           <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
             <PerformanceCapabilityNotice
               capability={capabilities.returnPath}
-              partialTitle="Return series is partial"
-              unavailableTitle="Return series unavailable"
+              partialTitle="Return History Is Partial"
+              unavailableTitle="Return History Unavailable"
               body={
                 capabilities.returnPath.reason ??
                 "The resolved window does not currently have published performance observations for this mandate."

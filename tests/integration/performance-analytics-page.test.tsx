@@ -255,7 +255,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(chartSummaryBand as HTMLElement).getByText("Active Return")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Ending Market Value")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Period / Basis")).toBeInTheDocument();
+    expect(
+      within(chartSummaryBand as HTMLElement).getByText("Period Range / Basis")
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Return path observation table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
@@ -277,7 +279,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Ending Market Value")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Period Range / Basis")).toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern(
         "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
@@ -343,7 +345,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     const executiveStrip = await screen.findByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Period Range / Basis")).toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern(
         "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
@@ -822,7 +824,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
       expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
-      expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+      expect(screen.getByText("Return History Unavailable")).toBeInTheDocument();
     });
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
@@ -920,14 +922,14 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "benchmark-unassigned and return-series-unavailable",
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
-      executiveExpectations: ["Portfolio Return", "Period / Basis"],
+      executiveExpectations: ["Portfolio Return", "Period Range / Basis"],
       trustExpectations: [
         "Benchmark not assigned",
         "Published observations unavailable",
         "Unavailable",
       ],
       deferredExpectations: [
-        "Return series unavailable",
+        "Return History Unavailable",
         "Horizon comparison is unavailable for this mandate.",
       ],
       absentTexts: ["Relative Segment Context Partial"],
@@ -935,7 +937,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "assigned benchmark with partial relative comparison",
       scenario: buildPartialBenchmarkPerformanceScenario(),
-      executiveExpectations: ["Period / Basis", "Portfolio Return"],
+      executiveExpectations: ["Period Range / Basis", "Portfolio Return"],
       trustExpectations: [
         "Partial",
         "Relative returns incomplete",
@@ -950,7 +952,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "aggregate-only contribution ranking",
       scenario: buildAggregateContributionPerformanceScenario(),
-      executiveExpectations: ["Period / Basis", "Portfolio Return"],
+      executiveExpectations: ["Period Range / Basis", "Portfolio Return"],
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
       horizonExpectations: ["Active Return 0.51%", "Benchmark Global Balanced 60/40"],
@@ -959,7 +961,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "combined benchmark, attribution, and contributor support gaps",
       scenario: buildCombinedPartialPerformanceScenario(),
-      executiveExpectations: ["Period / Basis", "Portfolio Return"],
+      executiveExpectations: ["Period Range / Basis", "Portfolio Return"],
       trustExpectations: [
         "Partial",
         "Unavailable",

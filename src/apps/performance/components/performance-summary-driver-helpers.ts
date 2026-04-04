@@ -79,7 +79,7 @@ export function getPerformanceSummaryDriverModuleFrame({
   if (kind === "contributors") {
     return {
       title: "Performance Drivers",
-      subtitle: `${period ?? "Selected period"} contributor ranking`,
+      subtitle: `${period ?? "Selected Period"} Contribution Ranking`,
     };
   }
 
@@ -144,7 +144,7 @@ export function getPerformanceContributorsPresentation({
     return {
       mode: "loading",
       frame,
-      body: "Loading contributor ranking.",
+      body: "Loading contribution ranking.",
     };
   }
 

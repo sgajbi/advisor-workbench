@@ -90,12 +90,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Active Cumulative");
     expect(seriesNames).toContain("Portfolio Return");
     expect(seriesNames).toContain("Benchmark Period");
-    expect(within(observationTable).getByText("Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Active Return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Active")).toBeInTheDocument();
 
     let activeCumulativeSeries = series.find((entry) => entry?.name === "Active Cumulative");
     expect(activeCumulativeSeries?.type).toBe("line");
@@ -131,12 +131,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Active Cumulative");
     expect(seriesNames).not.toContain("Portfolio Return");
     expect(seriesNames).not.toContain("Benchmark Period");
-    expect(within(observationTable).queryByText("Portfolio")).not.toBeInTheDocument();
-    expect(within(observationTable).queryByText("Benchmark")).not.toBeInTheDocument();
-    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
-    expect(within(observationTable).queryByText("Cum Portfolio")).not.toBeInTheDocument();
-    expect(within(observationTable).queryByText("Cum Benchmark")).not.toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Portfolio Return")).not.toBeInTheDocument();
+    expect(within(observationTable).queryByText("Benchmark Return")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Active Return")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cumulative Portfolio")).not.toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cumulative Benchmark")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Active")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Absolute" }));
 
@@ -148,12 +148,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Benchmark Period");
     expect(seriesNames).not.toContain("Active Period");
     expect(seriesNames).not.toContain("Active Cumulative");
-    expect(within(observationTable).getByText("Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).queryByText("Active")).not.toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).queryByText("Cum Active")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Active Return")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
   });
 
   it("falls back to chart point dates when report dates are missing", () => {
@@ -219,7 +219,7 @@ describe("PerformanceChartPanel", () => {
     expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Ending Market Value")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Period / Basis")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Period Range / Basis")).toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
@@ -236,19 +236,19 @@ describe("PerformanceChartPanel", () => {
       "Available"
     );
     expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Period / Basis 01 Jan 2026 - 28 Feb 2026 • Net")
+      compactPattern("Period Range / Basis 01 Jan 2026 - 28 Feb 2026 • Net")
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
-        "Period / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
+        "Period Range / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
       )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
     const observationTable = screen.getByLabelText("Return path observation table");
-    expect(within(observationTable).getByText("Cum Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Portfolio")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Active")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-02")).toBeInTheDocument();
     expect(lastChartOption?.xAxis).toMatchObject({
@@ -333,7 +333,7 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
-      compactPattern("Period / Basis Net • YTD 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Period Range / Basis Net • YTD 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByLabelText("Executive return strip")).not.toHaveTextContent("MWR");
   });
@@ -355,7 +355,7 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Return series unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Return History Unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Published return observations are not available for the selected horizon."
@@ -496,7 +496,7 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByText("Return series is partial")).toBeInTheDocument();
+    expect(screen.getByText("Return History Is Partial")).toBeInTheDocument();
     expect(
       screen.getByText("Return observations are only partially published for the selected horizon.")
     ).toBeInTheDocument();

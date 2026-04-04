@@ -27,9 +27,9 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Window",
-      "Active",
-      "Cum Active",
+      "Period Range",
+      "Active Return",
+      "Cumulative Active",
     ]);
     expect(model.rows[0]?.cells).toEqual([
       "2026-01",
@@ -51,25 +51,25 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Window",
-      "Begin MV",
-      "BoD Flow",
-      "End MV",
-      "EoD Flow",
-      "Flow-Adj MV",
+      "Period Range",
+      "Opening MV",
+      "Opening Cash Flow",
+      "Ending MV",
+      "Closing Cash Flow",
+      "Flow-Adjusted MV",
       "Net Flow",
       "Fees",
-      "Net",
-      "Gross",
+      "Net Return",
+      "Gross Return",
       "Fee Drag",
-      "Cum Net",
-      "Cum Gross",
-      "Ann. Net",
-      "Ann. Gross",
-      "Benchmark",
-      "Active",
-      "Cum Benchmark",
-      "Cum Active",
+      "Cumulative Net",
+      "Cumulative Gross",
+      "Annualized Net",
+      "Annualized Gross",
+      "Benchmark Return",
+      "Active Return",
+      "Cumulative Benchmark",
+      "Cumulative Active",
     ]);
     expect(model.rows.find((row) => row.key === "YTD")?.className).toBe(
       "performance-horizon-table-row-selected"
@@ -93,8 +93,8 @@ describe("performance analytics table models", () => {
     });
     expect(relativeModel[0]).toMatchObject({
       label: "MTD",
-      leftBarLabel: "Active",
-      rightBarLabel: "Cum Active",
+      leftBarLabel: "Active Return",
+      rightBarLabel: "Cumulative Active",
     });
 
     const basisModel = buildPerformanceHorizonVisualModel({
@@ -104,8 +104,8 @@ describe("performance analytics table models", () => {
     });
     expect(basisModel[2]).toMatchObject({
       label: "YTD",
-      leftBarLabel: "Net",
-      rightBarLabel: "Gross",
+      leftBarLabel: "Net Return",
+      rightBarLabel: "Gross Return",
     });
   });
 
@@ -115,13 +115,13 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Window",
+      "Period Range",
       "Allocation",
       "Selection",
       "Interaction",
-      "Total",
-      "Cum Total",
-      "Active",
+      "Effect Total",
+      "Cumulative Effect",
+      "Active Return",
       "Residual",
     ]);
     expect(model.rows[0]?.cells).toEqual([

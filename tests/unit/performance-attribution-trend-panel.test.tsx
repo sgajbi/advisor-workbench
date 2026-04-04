@@ -112,7 +112,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(within(trendTable).getByText("Allocation")).toBeInTheDocument();
     expect(within(trendTable).getByText("Selection")).toBeInTheDocument();
     expect(within(trendTable).getByText("Interaction")).toBeInTheDocument();
-    expect(within(trendTable).getByText("Cum Total")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Cumulative Effect")).toBeInTheDocument();
     expect(within(trendTable).getByText("Residual")).toBeInTheDocument();
     expect(within(trendTable).getByText("2026-01")).toBeInTheDocument();
     expect(getTrendMock).toHaveBeenCalledWith("PF_1001", {

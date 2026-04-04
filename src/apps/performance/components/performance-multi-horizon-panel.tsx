@@ -230,7 +230,7 @@ export default function PerformanceMultiHorizonPanel({
             items={[
                 {
                   key: "resolved-window",
-                  label: "Window",
+                  label: "Period Range",
                   value: resolvedWindowLabel,
                 },
               {

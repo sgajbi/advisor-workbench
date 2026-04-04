@@ -78,7 +78,7 @@ describe("performance summary driver helpers", () => {
     }
     expect(presentation.frame).toMatchObject({
       title: "Performance Drivers",
-      subtitle: "YTD contributor ranking",
+      subtitle: "YTD Contribution Ranking",
     });
     expect(presentation.positiveTableModel.columns.map((column) => column.label)).toEqual([
       "Instrument",
@@ -185,7 +185,7 @@ describe("performance summary driver helpers", () => {
 
     expect(presentation).toMatchObject({
       mode: "loading",
-      body: "Loading contributor ranking.",
+      body: "Loading contribution ranking.",
     });
   });
 
@@ -223,7 +223,7 @@ describe("performance summary driver helpers", () => {
       })
     ).toMatchObject({
       title: "Performance Drivers",
-      subtitle: "YTD contributor ranking",
+      subtitle: "YTD Contribution Ranking",
     });
 
     expect(

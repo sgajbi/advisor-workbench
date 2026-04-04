@@ -153,7 +153,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Active Return')).toBeVisible();
     await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
     await expect(executiveStrip.getByText('Ending Market Value')).toBeVisible();
-    await expect(executiveStrip.getByText('Period / Basis', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Period Range / Basis', { exact: true })).toBeVisible();
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
