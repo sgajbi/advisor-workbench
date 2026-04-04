@@ -21,9 +21,11 @@ function formatContributionWeightingScheme(weightingScheme?: string | null) {
 export default function PerformanceContributionContextNote({
   contribution,
   className = "performance-contribution-context-note",
+  showReconciliation = true,
 }: {
   contribution: ContributionSummaryView;
   className?: string;
+  showReconciliation?: boolean;
 }) {
   const coverageText = [
     getContributionCoverageAssessment(contribution) ?? "Coverage unavailable",
@@ -35,10 +37,12 @@ export default function PerformanceContributionContextNote({
   return (
     <div className={className} role="note">
       <strong>{coverageText}</strong>
-      <span>
-        {getContributionReconciliationAssessment(contribution) ??
-          "Contribution-to-return reconciliation unavailable for this selection."}
-      </span>
+      {showReconciliation ? (
+        <span>
+          {getContributionReconciliationAssessment(contribution) ??
+            "Contribution-to-return reconciliation unavailable for this selection."}
+        </span>
+      ) : null}
     </div>
   );
 }

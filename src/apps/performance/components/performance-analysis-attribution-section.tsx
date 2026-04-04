@@ -41,10 +41,13 @@ export default function PerformanceAnalysisAttributionSection({
   capabilities,
   relativeSegmentRows,
 }: PerformanceAnalysisAttributionSectionProps) {
-  const [detailView, setDetailView] = useState<AttributionDetailView>("relative");
   const hasAttributionSummaryLevels = (workspace.attribution?.levels?.length ?? 0) > 0;
   const hasDetailedAttributionRows =
     workspace.attribution?.levels?.some((level) => level.rows.length > 0) ?? false;
+  const hasRelativeSegmentRows = relativeSegmentRows.length > 0;
+  const [detailView, setDetailView] = useState<AttributionDetailView>(
+    hasRelativeSegmentRows ? "relative" : "breakdown"
+  );
   const disableAttributionSegmentControl =
     isUpdating ||
     (capabilities.attributionDetail.state === "partial" &&

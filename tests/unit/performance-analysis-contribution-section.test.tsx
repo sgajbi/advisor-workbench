@@ -37,10 +37,10 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution Detail panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
-    expect(screen.getByText("Positions and Segments")).toBeInTheDocument();
+    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
     expect(
-      screen.getByText("Position-level and segment-level contribution for the selected period.")
-    ).toBeInTheDocument();
+      screen.queryByText("Position-level and segment-level contribution for the selected period.")
+    ).not.toBeInTheDocument();
     expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
     expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByText("Top Detractor")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Coverage")).not.toBeInTheDocument();
     expect(screen.queryByText("Total Contribution")).not.toBeInTheDocument();
-    expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
+    expect(screen.queryByText("Reconciles to return")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
       "aria-selected",
@@ -284,6 +284,6 @@ describe("PerformanceAnalysisContributionSection", () => {
     const note = screen.getByRole("note");
     expect(note).toHaveTextContent("High coverage");
     expect(note).toHaveTextContent("Average weight");
-    expect(note).toHaveTextContent("Reconciles to return");
+    expect(note).not.toHaveTextContent("Reconciles to return");
   });
 });

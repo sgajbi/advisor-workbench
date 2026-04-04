@@ -405,7 +405,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(0);
     expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution Detail panel")).not.toBeInTheDocument();
-    expect(screen.getByText("Positions and Segments")).toBeInTheDocument();
+    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
     expect(screen.getByText("Segment Attribution")).toBeInTheDocument();
@@ -657,8 +657,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
+    expect(screen.getByRole("tab", { name: /^Effect Breakdown/ })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
     expect(await screen.findByText("Attribution Summary")).toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(await screen.findByText("Summary Total")).toBeInTheDocument();

@@ -86,7 +86,6 @@ export default function PerformanceAnalysisContributionSection({
     <WorkbenchDataGridFrame
       id="performance-drivers"
       title="Performance Drivers"
-      subtitle="Contribution drivers and position-level drill-down for the selected period."
       actions={actions}
       className="performance-detail-panel-wide performance-analysis-module"
     >
@@ -109,8 +108,7 @@ export default function PerformanceAnalysisContributionSection({
       >
         {workspace.contribution ? (
           <PerformanceAnalysisDetailPane
-            title="Positions and Segments"
-            subtitle="Position-level and segment-level contribution for the selected period."
+            title="Contribution Breakdown"
             value={detailView}
             onChange={setDetailView}
             options={getContributionDetailOptions({
@@ -121,7 +119,10 @@ export default function PerformanceAnalysisContributionSection({
             className="performance-analysis-contribution-detail-pane"
           >
             {hasAggregateContributionLevels ? (
-              <PerformanceContributionContextNote contribution={workspace.contribution} />
+              <PerformanceContributionContextNote
+                contribution={workspace.contribution}
+                showReconciliation={false}
+              />
             ) : null}
             {detailView === "positions" ? (
               positionTableModel ? (
