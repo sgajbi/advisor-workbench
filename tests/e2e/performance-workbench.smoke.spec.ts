@@ -169,12 +169,45 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText('Horizon Comparison')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: /^Horizon Comparison$/i })
+    ).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText('Performance Drivers')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: /^Performance Drivers$/i })
+    ).toBeVisible({
       timeout: 15000,
     });
+
+    const horizonModule = page
+      .getByRole('heading', { name: /^Horizon Comparison$/i })
+      .locator('xpath=ancestor::*[contains(@class, "performance-summary-driver-section")][1]');
+    const driversModule = page
+      .getByRole('heading', { name: /^Performance Drivers$/i })
+      .locator('xpath=ancestor::*[contains(@class, "performance-summary-driver-section")][1]');
+    const [horizonBox, driversBox] = await Promise.all([
+      horizonModule.boundingBox(),
+      driversModule.boundingBox(),
+    ]);
+    expect(horizonBox?.width ?? 0).toBeGreaterThan(520);
+    expect(driversBox?.width ?? 0).toBeGreaterThan(420);
+    expect(Math.abs((horizonBox?.y ?? 0) - (driversBox?.y ?? 9999))).toBeLessThanOrEqual(24);
+
+    const topContributorsCard = page
+      .getByText('Top contributors', { exact: true })
+      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
+    const topDetractorsCard = page
+      .getByText('Top detractors', { exact: true })
+      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
+    const [contributorsBox, detractorsBox] = await Promise.all([
+      topContributorsCard.boundingBox(),
+      topDetractorsCard.boundingBox(),
+    ]);
+    expect(contributorsBox?.width ?? 0).toBeGreaterThan(180);
+    expect(detractorsBox?.width ?? 0).toBeGreaterThan(180);
+    expect((detractorsBox?.x ?? 0) - (contributorsBox?.x ?? 0)).toBeGreaterThan(160);
+    expect(Math.abs((contributorsBox?.y ?? 0) - (detractorsBox?.y ?? 9999))).toBeLessThanOrEqual(24);
 
     const returnPathPanel = page.locator('.performance-chart-stage');
     const chartMetrics = await measureElement(returnPathPanel);
