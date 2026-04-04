@@ -25,4 +25,5 @@ Governance boundary:
 | RFC-0017 | Foundation App First-Production Surface | IMPLEMENTED | `docs/rfcs/RFC-0017-foundation-app-first-production-surface.md` |
 | RFC-0018 | Performance Workspace Summary and Benchmark-Aware Presentation | IMPLEMENTED | `docs/rfcs/RFC-0018-performance-workspace-summary-benchmark-aware-presentation.md` |
 | RFC-0019 | Modular Portfolio Book and Ledger Experience | PROPOSED | `docs/rfcs/RFC-0019-modular-portfolio-book-and-ledger-experience.md` |
+| RFC-0020 | AI Advisor Brief Copilot for Portfolio and Performance | PROPOSED | `docs/rfcs/RFC-0020-ai-advisor-brief-copilot.md` |
 
