@@ -297,13 +297,19 @@ describe("PerformanceAnalyticsPage", () => {
         .find(Boolean) ?? null;
     expect(contributorsModule).toBeTruthy();
     expect(contributorsModule?.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
-    expect(within(contributorsModule as HTMLElement).getByLabelText("Top contributors table")).toBeInTheDocument();
-    expect(within(contributorsModule as HTMLElement).getByLabelText("Top detractors table")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByText("Top Contributors")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByText("Top Detractors")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors table")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors table")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getAllByText("Instrument").length).toBeGreaterThanOrEqual(2);
     expect(within(contributorsModule as HTMLElement).getAllByText("Weight").length).toBeGreaterThanOrEqual(2);
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
-    expect(contributorsModule?.querySelectorAll(".performance-contributors-table")).toHaveLength(2);
+    expect(
+      contributorsModule?.querySelectorAll(
+        ".performance-contributors-table.performance-chart-observation-table"
+      )
+    ).toHaveLength(2);
     expect(screen.queryByText("Attribution Over Time")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Detail")).not.toBeInTheDocument();

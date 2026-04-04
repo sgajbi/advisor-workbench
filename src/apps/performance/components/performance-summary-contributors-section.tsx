@@ -40,11 +40,11 @@ export default function PerformanceSummaryContributorsSection({
           <div className="performance-contributors-compare-grid">
             <section className="performance-contributors-table-card">
               <div className="performance-contributors-table-header">
-                <strong>Top contributors</strong>
+                <strong>Top Contributors</strong>
               </div>
               <AnalyticsTable
-                ariaLabel="Top contributors table"
-                className="performance-contributors-table"
+                ariaLabel="Top Contributors table"
+                className="performance-contributors-table performance-chart-observation-table"
                 dense
                 columns={presentation.positiveTableModel.columns}
                 rows={presentation.positiveTableModel.rows}
@@ -52,11 +52,11 @@ export default function PerformanceSummaryContributorsSection({
             </section>
             <section className="performance-contributors-table-card">
               <div className="performance-contributors-table-header">
-                <strong>Top detractors</strong>
+                <strong>Top Detractors</strong>
               </div>
               <AnalyticsTable
-                ariaLabel="Top detractors table"
-                className="performance-contributors-table"
+                ariaLabel="Top Detractors table"
+                className="performance-contributors-table performance-chart-observation-table"
                 dense
                 columns={presentation.negativeTableModel.columns}
                 rows={presentation.negativeTableModel.rows}
@@ -81,12 +81,12 @@ export default function PerformanceSummaryContributorsSection({
               contribution={workspace.contribution}
               level={workspace.contribution.levels[0]}
               ariaLabel="Aggregate contributor summary"
-              className="performance-contributors-table"
+              className="performance-contributors-table performance-chart-observation-table"
             />
           ) : (
             <AnalyticsTable
               ariaLabel="Aggregate contributor summary"
-              className="performance-contributors-table"
+              className="performance-contributors-table performance-chart-observation-table"
               dense
               columns={presentation.tableModel.columns}
               rows={presentation.tableModel.rows}

@@ -194,13 +194,17 @@ test.describe('Performance workbench smoke', () => {
     expect(driversBox?.width ?? 0).toBeGreaterThan(420);
     expect(Math.abs((horizonBox?.y ?? 0) - (driversBox?.y ?? 9999))).toBeLessThanOrEqual(24);
 
+    const topContributorsHeading = page.getByText('Top Contributors', { exact: true });
+    const topDetractorsHeading = page.getByText('Top Detractors', { exact: true });
     const topContributorsCard = page
-      .getByText('Top contributors', { exact: true })
+      .getByText('Top Contributors', { exact: true })
       .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
     const topDetractorsCard = page
-      .getByText('Top detractors', { exact: true })
+      .getByText('Top Detractors', { exact: true })
       .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
-    const [contributorsBox, detractorsBox] = await Promise.all([
+    const [contributorsHeadingBox, detractorsHeadingBox, contributorsBox, detractorsBox] = await Promise.all([
+      topContributorsHeading.boundingBox(),
+      topDetractorsHeading.boundingBox(),
       topContributorsCard.boundingBox(),
       topDetractorsCard.boundingBox(),
     ]);
@@ -208,6 +212,9 @@ test.describe('Performance workbench smoke', () => {
     expect(detractorsBox?.width ?? 0).toBeGreaterThan(180);
     expect((detractorsBox?.x ?? 0) - (contributorsBox?.x ?? 0)).toBeGreaterThan(160);
     expect(Math.abs((contributorsBox?.y ?? 0) - (detractorsBox?.y ?? 9999))).toBeLessThanOrEqual(24);
+    expect(
+      Math.abs((contributorsHeadingBox?.y ?? 0) - (detractorsHeadingBox?.y ?? 9999))
+    ).toBeLessThanOrEqual(4);
 
     const returnPathPanel = page.locator('.performance-chart-stage');
     const chartMetrics = await measureElement(returnPathPanel);
