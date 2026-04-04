@@ -14,6 +14,22 @@ import {
 
 let lastChartOption: EChartsOption | null = null;
 
+type ChartSeriesProbe = {
+  name?: string;
+  type?: string;
+  data?: unknown[];
+  barWidth?: number;
+  itemStyle?: {
+    borderWidth?: number;
+    borderRadius?: number[];
+  };
+  lineStyle?: {
+    width?: number;
+    cap?: string;
+    join?: string;
+  };
+};
+
 vi.mock("echarts-for-react", () => ({
   default: ({ style, option }: { style?: React.CSSProperties; option?: EChartsOption }) => {
     lastChartOption = option ?? null;
@@ -60,7 +76,9 @@ describe("PerformanceChartPanel", () => {
   it("switches between combined, relative, and absolute return-path views", () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
-    let series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    let series: ChartSeriesProbe[] = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
     let seriesNames = series.map((entry) => entry?.name);
     const observationTable = screen.getByLabelText("Return path observation table");
 
@@ -97,7 +115,9 @@ describe("PerformanceChartPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
 
-    series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    series = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
     seriesNames = series.map((entry) => entry?.name);
     expect(seriesNames).toContain("Active Period");
     expect(seriesNames).toContain("Active Cumulative");
@@ -112,7 +132,9 @@ describe("PerformanceChartPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Absolute" }));
 
-    series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
+    series = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
     seriesNames = series.map((entry) => entry?.name);
     expect(seriesNames).toContain("Portfolio Return");
     expect(seriesNames).toContain("Benchmark Period");
