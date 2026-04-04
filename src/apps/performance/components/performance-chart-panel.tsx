@@ -16,15 +16,11 @@ import type {
   MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
-import { formatDate } from "../formatters";
 import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
-import {
-  getPerformanceMoneyWeightedAuditSupport,
-  getPerformanceReturnPathPresentation,
-} from "./performance-summary-context-helpers";
+import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
 
 type PerformanceControlPatch = {
@@ -479,16 +475,6 @@ export default function PerformanceChartPanel({
     } satisfies EChartsOption;
   }, [chartViewMode, hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
 
-  const explicitDateRange =
-    resolvedReportDates.startDate && resolvedReportDates.endDate
-      ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
-      : "Date range unavailable";
-  const periodSupport = getPerformanceMoneyWeightedAuditSupport({
-    explicitDateRange,
-    moneyWeightedReturn,
-    reportingCurrency,
-  });
-
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!fromDate || !toDate) {
@@ -516,21 +502,7 @@ export default function PerformanceChartPanel({
     });
   }
 
-  const outcomeItems = [
-    returnPathPresentation.metrics[0],
-    returnPathPresentation.metrics[1],
-    returnPathPresentation.metrics[2],
-    returnPathPresentation.metrics[3],
-    returnPathPresentation.metrics[4],
-    {
-      key: "basis-period-summary",
-      label: "Period Range / Basis",
-      value: `${detailBasis === "GROSS" ? "Gross" : "Net"} • ${
-        period === "EXPLICIT" ? "Explicit Period" : period
-      }`,
-      support: periodSupport,
-    },
-  ];
+  const outcomeItems = returnPathPresentation.metrics;
 
   return (
     <WorkbenchChartShell

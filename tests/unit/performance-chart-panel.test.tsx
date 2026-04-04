@@ -217,9 +217,14 @@ describe("PerformanceChartPanel", () => {
     expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Ending Market Value")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Period Range / Basis")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Closing Cash Flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
+    expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
@@ -240,7 +245,7 @@ describe("PerformanceChartPanel", () => {
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
-        "Period Range / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
+        "Money-Weighted Return 5.12% Opening MV $1,200,000 Opening Cash Flow $50,000 Closing Cash Flow -$8,000 Net Flow $42,000 Ending MV $1,250,000 Flow-Adjusted MV $1,208,000"
       )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
@@ -333,9 +338,14 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
-      compactPattern("Period Range / Basis Net • YTD 01 Jan 2026 - 24 Feb 2026")
+      compactPattern("Money-Weighted Return Unavailable")
     );
-    expect(screen.getByLabelText("Executive return strip")).not.toHaveTextContent("MWR");
+    expect(
+      within(screen.getByLabelText("Executive return strip")).getByText(
+        "Money-Weighted Return"
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).not.toHaveTextContent("XIRR");
   });
 
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {

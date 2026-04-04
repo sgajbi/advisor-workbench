@@ -151,9 +151,16 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Portfolio Return')).toBeVisible();
     await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
     await expect(executiveStrip.getByText('Active Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
+    await expect(executiveStrip.getByText('Opening MV')).toBeVisible();
+    await expect(executiveStrip.getByText('Opening Cash Flow')).toBeVisible();
+    await expect(executiveStrip.getByText('Closing Cash Flow')).toBeVisible();
     await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
-    await expect(executiveStrip.getByText('Ending Market Value')).toBeVisible();
-    await expect(executiveStrip.getByText('Period Range / Basis', { exact: true })).toBeVisible();
+    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
+    await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
+    await expect(
+      executiveStrip.getByText('Period Range / Basis', { exact: true })
+    ).toHaveCount(0);
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);

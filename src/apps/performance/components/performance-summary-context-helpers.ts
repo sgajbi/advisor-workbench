@@ -42,6 +42,7 @@ export function getPerformanceReturnPathPresentation({
     benchmark_return_pct: number | null;
     active_return_pct: number | null;
     annualized_return_pct?: number | null;
+    begin_market_value?: number | null;
     end_market_value?: number | null;
     beginning_cash_flow?: number | null;
     ending_cash_flow?: number | null;
@@ -74,8 +75,14 @@ export function getPerformanceReturnPathPresentation({
         : "unavailable";
   const resolvedNetCashFlow =
     summary.net_cash_flow ?? moneyWeightedReturn?.net_cash_flow ?? null;
+  const resolvedBeginMarketValue =
+    summary.begin_market_value ?? moneyWeightedReturn?.begin_market_value ?? null;
   const resolvedEndMarketValue =
     summary.end_market_value ?? moneyWeightedReturn?.end_market_value ?? null;
+  const resolvedOpeningCashFlow =
+    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
+  const resolvedClosingCashFlow =
+    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
   const resolvedFlowAdjustedEndMarketValue =
     summary.flow_adjusted_end_market_value ??
     moneyWeightedReturn?.flow_adjusted_end_market_value ??
@@ -123,24 +130,49 @@ export function getPerformanceReturnPathPresentation({
         unavailable: activeReturnValue === "Unavailable",
       },
       {
+        key: "mwrr",
+        label: "Money-Weighted Return",
+        value:
+          moneyWeightedReturn?.money_weighted_return_pct != null
+            ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
+            : "Unavailable",
+        unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
+      },
+      {
+        key: "opening-mv",
+        label: "Opening MV",
+        value: formatCurrency(resolvedBeginMarketValue, reportingCurrency),
+        unavailable: resolvedBeginMarketValue == null,
+      },
+      {
+        key: "opening-cash-flow",
+        label: "Opening Cash Flow",
+        value: formatCurrency(resolvedOpeningCashFlow, reportingCurrency),
+        unavailable: resolvedOpeningCashFlow == null,
+      },
+      {
+        key: "closing-cash-flow",
+        label: "Closing Cash Flow",
+        value: formatCurrency(resolvedClosingCashFlow, reportingCurrency),
+        unavailable: resolvedClosingCashFlow == null,
+      },
+      {
         key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(resolvedNetCashFlow, reportingCurrency),
-        support: getPerformanceNetFlowSupport(summary, reportingCurrency, moneyWeightedReturn),
         unavailable: resolvedNetCashFlow == null,
       },
       {
         key: "ending-mv",
-        label: "Ending Market Value",
+        label: "Ending MV",
         value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
-        support:
-          resolvedFlowAdjustedEndMarketValue != null
-            ? `Flow-Adjusted MV ${formatCurrency(
-                resolvedFlowAdjustedEndMarketValue,
-                reportingCurrency
-              )}`
-            : undefined,
         unavailable: resolvedEndMarketValue == null,
+      },
+      {
+        key: "flow-adjusted-mv",
+        label: "Flow-Adjusted MV",
+        value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
+        unavailable: resolvedFlowAdjustedEndMarketValue == null,
       },
     ],
   };
@@ -185,26 +217,12 @@ export function getPerformanceNetFlowSupport(
 
 export function getPerformanceMoneyWeightedAuditSupport({
   explicitDateRange,
-  moneyWeightedReturn,
-  reportingCurrency,
 }: {
   explicitDateRange: string;
   moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
   reportingCurrency?: string;
 }) {
-  const economicsSupport = reportingCurrency
-    ? getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, reportingCurrency)
-    : null;
-  const supportSegments = [
-    moneyWeightedReturn?.method ? `MWR (${moneyWeightedReturn.method})` : null,
-    economicsSupport ?? moneyWeightedReturn?.notes?.[0] ?? null,
-  ].filter(Boolean);
-
-  if (supportSegments.length === 0) {
-    return explicitDateRange;
-  }
-
-  return `${explicitDateRange} • ${supportSegments.join(" • ")}`;
+  return explicitDateRange;
 }
 
 export function getPerformanceMoneyWeightedEconomicsSupport(
@@ -219,7 +237,7 @@ export function getPerformanceMoneyWeightedEconomicsSupport(
   }
 
   if (moneyWeightedReturn?.net_cash_flow != null) {
-    return `Net flow ${formatCurrency(moneyWeightedReturn.net_cash_flow, reportingCurrency)}`;
+    return `Net Flow ${formatCurrency(moneyWeightedReturn.net_cash_flow, reportingCurrency)}`;
   }
 
   return null;

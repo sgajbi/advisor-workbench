@@ -33,6 +33,7 @@ describe("performance summary context helpers", () => {
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       points: scenario.workspace.net_chart,
+      moneyWeightedReturn: scenario.workspace.money_weighted_return,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
@@ -53,17 +54,45 @@ describe("performance summary context helpers", () => {
       { key: "benchmark-return", label: "Benchmark Return", value: "4.91%", unavailable: false },
       { key: "active-return", label: "Active Return", value: "0.52%", unavailable: false },
       {
+        key: "mwrr",
+        label: "Money-Weighted Return",
+        value: "5.12%",
+        unavailable: false,
+      },
+      {
+        key: "opening-mv",
+        label: "Opening MV",
+        value: "$1,200,000",
+        unavailable: false,
+      },
+      {
+        key: "opening-cash-flow",
+        label: "Opening Cash Flow",
+        value: "$50,000",
+        unavailable: false,
+      },
+      {
+        key: "closing-cash-flow",
+        label: "Closing Cash Flow",
+        value: "-$8,000",
+        unavailable: false,
+      },
+      {
         key: "net-flow",
         label: "Net Flow",
         value: "$42,000",
-        support: "Opening Cash $50,000 • Closing Cash -$8,000",
         unavailable: false,
       },
       {
         key: "ending-mv",
-        label: "Ending Market Value",
+        label: "Ending MV",
         value: "$1,250,000",
-        support: "Flow-Adjusted MV $1,208,000",
+        unavailable: false,
+      },
+      {
+        key: "flow-adjusted-mv",
+        label: "Flow-Adjusted MV",
+        value: "$1,208,000",
         unavailable: false,
       },
     ]);
@@ -206,7 +235,6 @@ describe("performance summary context helpers", () => {
     expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
       label: "Net Flow",
       value: "$42,000",
-      support: "Fees $125",
       unavailable: false,
     });
   });
@@ -240,13 +268,18 @@ describe("performance summary context helpers", () => {
     expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
       label: "Net Flow",
       value: "$42,000",
-      support: "Opening Cash $50,000 • Closing Cash -$8,000",
       unavailable: false,
     });
     expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
-      label: "Ending Market Value",
+      label: "Ending MV",
       value: "$1,250,000",
-      support: "Flow-Adjusted MV $1,208,000",
+      unavailable: false,
+    });
+    expect(
+      presentation.metrics.find((metric) => metric.key === "flow-adjusted-mv")
+    ).toMatchObject({
+      label: "Flow-Adjusted MV",
+      value: "$1,208,000",
       unavailable: false,
     });
   });
@@ -271,9 +304,7 @@ describe("performance summary context helpers", () => {
         moneyWeightedReturn: scenario.workspace.money_weighted_return,
         reportingCurrency: "USD",
       })
-    ).toBe(
-      "01 Jan 2026 - 24 Feb 2026 • MWR (XIRR) • Flow-Adjusted MV $1,208,000"
-    );
+    ).toBe("01 Jan 2026 - 24 Feb 2026");
   });
 
   it("falls back to the plain resolved window when money-weighted audit metadata is absent", () => {
@@ -296,7 +327,7 @@ describe("performance summary context helpers", () => {
       : null;
 
     expect(getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, "USD")).toBe(
-      "Net flow $42,000"
+      "Net Flow $42,000"
     );
   });
 
