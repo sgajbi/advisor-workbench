@@ -83,10 +83,11 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
+    expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
-    expect(screen.getAllByText("Active Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Active Return")).toHaveLength(1);
     expect(screen.getAllByText("Portfolio vs Benchmark").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Cumulative:/).length).toBeGreaterThan(0);
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
@@ -139,7 +140,6 @@ describe("PerformanceMultiHorizonPanel", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
     expect(screen.getAllByText("Series: Active vs cumulative").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Cum Active")).toBeInTheDocument();
 
@@ -153,7 +153,6 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
-    expect(screen.getAllByText("Fee Drag").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Net vs Gross").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
