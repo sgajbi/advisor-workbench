@@ -26,24 +26,24 @@ export default function PerformanceChartContextStrip({
 
   return (
     <div className="performance-chart-context-strip" role="group" aria-label="Return vs Benchmark">
-      <span className="performance-chart-context-field">
+      <div className="performance-chart-context-field">
         <span className="performance-chart-context-label">Portfolio</span>
         <strong className="performance-chart-context-value">{portfolioId}</strong>
-      </span>
-      <span className="performance-chart-context-field">
+      </div>
+      <div className="performance-chart-context-field">
         <span className="performance-chart-context-label">Benchmark</span>
         <strong className="performance-chart-context-value">{benchmarkContextValue}</strong>
-      </span>
-      <span className="performance-chart-context-field">
+      </div>
+      <div className="performance-chart-context-field">
         <span className="performance-chart-context-label">Active Return</span>
         <strong className="performance-chart-context-value">{activeReturn}</strong>
-      </span>
-      <span className="performance-chart-context-field">
+      </div>
+      <div className="performance-chart-context-field">
         <span className="performance-chart-context-label">Period / Basis</span>
         <strong className="performance-chart-context-value">
           {`${resolvedWindow} • ${detailBasis === "GROSS" ? "Gross" : "Net"}`}
         </strong>
-      </span>
+      </div>
     </div>
   );
 }

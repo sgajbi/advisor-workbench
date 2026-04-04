@@ -85,7 +85,7 @@ describe("PerformanceChartPanel", () => {
     expect(activePeriodSeries?.barWidth).toBe(10);
     expect(activePeriodSeries?.itemStyle).toMatchObject({
       borderWidth: 1,
-      borderRadius: [3, 3, 0, 0],
+      borderRadius: [2, 2, 0, 0],
     });
 
     const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio Return");
@@ -176,6 +176,7 @@ describe("PerformanceChartPanel", () => {
       )
     ).toBeTruthy();
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-date-inputs")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(document.querySelector(".workbench-chart-shell-context")).toBeFalsy();
     expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
@@ -209,7 +210,7 @@ describe("PerformanceChartPanel", () => {
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
-        "Period / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-adjusted value $1,208,000"
+        "Period / Basis Net • YTD 01 Jan 2026 - 28 Feb 2026 • MWR (XIRR) • Flow-adjusted $1,208,000"
       )
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
@@ -221,10 +222,20 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-02")).toBeInTheDocument();
     expect(lastChartOption?.xAxis).toMatchObject({
-      axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.22)", width: 1 } },
+      axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
     });
     expect(Array.isArray(lastChartOption?.yAxis) ? lastChartOption?.yAxis?.[0] : undefined).toMatchObject({
-      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.12)", width: 1 } },
+      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.14)", width: 1 } },
+    });
+    expect(lastChartOption?.legend).toMatchObject({
+      icon: "roundRect",
+      itemGap: 18,
+      textStyle: { color: "#435164", fontWeight: 700 },
+    });
+    expect(lastChartOption?.tooltip).toMatchObject({
+      backgroundColor: "rgba(19, 30, 43, 0.96)",
+      borderColor: "rgba(117, 143, 173, 0.48)",
+      textStyle: { color: "#f8fafc", fontWeight: 600 },
     });
   });
 

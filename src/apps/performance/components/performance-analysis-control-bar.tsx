@@ -141,33 +141,35 @@ export default function PerformanceAnalysisControlBar({
       >
         <Typography sx={controlLabelSx}>Explicit Date Range</Typography>
         <div className="performance-analysis-date-row">
-          <TextField
-            size="small"
-            type="date"
-            value={fromDate}
-            slotProps={{
-              htmlInput: {
-                "aria-label": "From",
-                max: toDate || maxEndDate,
-                suppressHydrationWarning: true,
-              },
-            }}
-            onChange={(event) => onFromDateChange(event.currentTarget.value)}
-          />
-          <TextField
-            size="small"
-            type="date"
-            value={toDate}
-            slotProps={{
-              htmlInput: {
-                "aria-label": "To",
-                min: fromDate || minEndDate,
-                max: maxEndDate,
-                suppressHydrationWarning: true,
-              },
-            }}
-            onChange={(event) => onToDateChange(event.currentTarget.value)}
-          />
+          <div className="performance-analysis-date-inputs">
+            <TextField
+              size="small"
+              type="date"
+              value={fromDate}
+              slotProps={{
+                htmlInput: {
+                  "aria-label": "From",
+                  max: toDate || maxEndDate,
+                  suppressHydrationWarning: true,
+                },
+              }}
+              onChange={(event) => onFromDateChange(event.currentTarget.value)}
+            />
+            <TextField
+              size="small"
+              type="date"
+              value={toDate}
+              slotProps={{
+                htmlInput: {
+                  "aria-label": "To",
+                  min: fromDate || minEndDate,
+                  max: maxEndDate,
+                  suppressHydrationWarning: true,
+                },
+              }}
+              onChange={(event) => onToDateChange(event.currentTarget.value)}
+            />
+          </div>
           <Button
             type="submit"
             variant="contained"

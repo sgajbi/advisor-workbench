@@ -273,11 +273,13 @@ export default function PerformanceChartPanel({
         bottom: 8,
         left: "center",
         itemWidth: 18,
-        itemHeight: 8,
+        itemHeight: 10,
+        itemGap: 18,
+        icon: "roundRect",
         textStyle: {
-          color: "#5f6b7c",
+          color: "#435164",
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 700,
         },
         data: [
           ...(includeAbsoluteSeries ? ["Portfolio Return"] : []),
@@ -291,14 +293,17 @@ export default function PerformanceChartPanel({
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "cross" },
-        backgroundColor: "rgba(255,255,255,0.98)",
-        borderColor: "rgba(32, 44, 61, 0.12)",
+        backgroundColor: "rgba(19, 30, 43, 0.96)",
+        borderColor: "rgba(117, 143, 173, 0.48)",
         borderWidth: 1,
         textStyle: {
-          color: "#1f2937",
+          color: "#f8fafc",
           fontSize: 12,
+          fontWeight: 600,
         },
-        padding: [10, 12],
+        extraCssText:
+          "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.24); border-radius: 10px;",
+        padding: [12, 14],
         valueFormatter: (value: unknown) => {
           if (typeof value === "number") {
             return `${value.toFixed(2)}%`;
@@ -312,12 +317,12 @@ export default function PerformanceChartPanel({
       xAxis: {
         type: "category" as const,
         data: categories,
-        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.22)", width: 1 } },
+        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
         axisTick: { show: false },
         axisLabel: {
-          color: "#637083",
+          color: "#5a6779",
           fontSize: 11,
-          fontWeight: 600,
+          fontWeight: 700,
         },
       },
       yAxis: [
@@ -334,7 +339,7 @@ export default function PerformanceChartPanel({
           axisTick: { show: false },
           splitLine: {
             lineStyle: {
-              color: "rgba(52, 70, 95, 0.12)",
+              color: "rgba(52, 70, 95, 0.14)",
               width: 1,
             },
           },
@@ -359,9 +364,9 @@ export default function PerformanceChartPanel({
                 barCategoryGap: "42%",
                 z: 1,
                 itemStyle: {
-                  color: CHART_COLORS.portfolioBar,
-                  borderRadius: [3, 3, 0, 0],
-                  borderColor: "rgba(218, 30, 40, 0.42)",
+                  color: "rgba(218, 30, 40, 0.34)",
+                  borderRadius: [2, 2, 0, 0],
+                  borderColor: "rgba(218, 30, 40, 0.58)",
                   borderWidth: 1,
                 },
               },
@@ -377,9 +382,9 @@ export default function PerformanceChartPanel({
                 barWidth: 10,
                 z: 1,
                 itemStyle: {
-                  color: CHART_COLORS.benchmarkBar,
-                  borderRadius: [3, 3, 0, 0],
-                  borderColor: "rgba(31, 46, 69, 0.38)",
+                  color: "rgba(31, 46, 69, 0.3)",
+                  borderRadius: [2, 2, 0, 0],
+                  borderColor: "rgba(31, 46, 69, 0.5)",
                   borderWidth: 1,
                 },
               },
@@ -395,9 +400,9 @@ export default function PerformanceChartPanel({
                 barWidth: 10,
                 z: 1,
                 itemStyle: {
-                  color: CHART_COLORS.activeBar,
-                  borderRadius: [3, 3, 0, 0],
-                  borderColor: "rgba(47, 95, 151, 0.38)",
+                  color: "rgba(47, 95, 151, 0.28)",
+                  borderRadius: [2, 2, 0, 0],
+                  borderColor: "rgba(47, 95, 151, 0.5)",
                   borderWidth: 1,
                 },
               },
