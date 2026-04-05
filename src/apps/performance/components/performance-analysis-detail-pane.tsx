@@ -1,5 +1,7 @@
-import { WorkbenchSegmentedControl, type WorkbenchSegmentedControlOption } from "@/design-system";
+import type { WorkbenchSegmentedControlOption } from "@/design-system";
 import { cx } from "@/design-system/utils/cx";
+
+import LotusModeTabs from "./advisor-brief/lotus-mode-tabs";
 
 export default function PerformanceAnalysisDetailPane<T extends string>({
   title,
@@ -25,7 +27,7 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
           <strong>{title}</strong>
           {subtitle ? <span>{subtitle}</span> : null}
         </div>
-        <WorkbenchSegmentedControl
+        <LotusModeTabs
           value={value}
           onChange={onChange}
           options={options}

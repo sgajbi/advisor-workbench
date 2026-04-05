@@ -157,7 +157,7 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <WorkbenchPageFrame
-            className="performance-page-frame"
+            className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
             title="Performance"
             actions={

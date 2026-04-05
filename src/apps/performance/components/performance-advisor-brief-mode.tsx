@@ -10,14 +10,14 @@ import { buildPerformanceAdvisorBriefViewModel } from "../advisor-brief-view-mod
 import { formatDate } from "../formatters";
 import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
 
-import AdvisorBriefHeader from "./advisor-brief/advisor-brief-header";
-import AdvisorBriefSynopsis from "./advisor-brief/advisor-brief-synopsis";
-import AdvisorBriefToolbar from "./advisor-brief/advisor-brief-toolbar";
-import BriefProvenanceStrip from "./advisor-brief/brief-provenance-strip";
-import DrilldownActionList from "./advisor-brief/drilldown-action-list";
-import SourceMetricPanel from "./advisor-brief/source-metric-panel";
-import SupportabilityPanel from "./advisor-brief/supportability-panel";
-import TalkingPointCard from "./advisor-brief/talking-point-card";
+import LotusAuditStrip from "./advisor-brief/lotus-audit-strip";
+import LotusDrilldownList from "./advisor-brief/lotus-drilldown-list";
+import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
+import LotusPageHeader from "./advisor-brief/lotus-page-header";
+import LotusStatusBar from "./advisor-brief/lotus-status-bar";
+import LotusSupportabilityPanel from "./advisor-brief/lotus-supportability-panel";
+import LotusSynopsisBand from "./advisor-brief/lotus-synopsis-band";
+import LotusTalkingPointCard from "./advisor-brief/lotus-talking-point-card";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
 
 export default function PerformanceAdvisorBriefMode({
@@ -134,7 +134,7 @@ export default function PerformanceAdvisorBriefMode({
   return (
     <section className="performance-advisor-brief-stage" aria-label="Advisor Brief">
       <Panel className="performance-advisor-brief-shell">
-        <AdvisorBriefHeader
+        <LotusPageHeader
           portfolioId={workspace.portfolio.portfolio_id}
           benchmarkLabel={getPerformanceBenchmarkLabel(
             workspace.benchmark_code ?? benchmark,
@@ -143,9 +143,9 @@ export default function PerformanceAdvisorBriefMode({
           asOfDate={formatDate(workspace.as_of_date)}
           period={period}
         />
-        <AdvisorBriefSynopsis summary={brief.summary} />
+        <LotusSynopsisBand summary={brief.summary} />
 
-        <AdvisorBriefToolbar
+        <LotusStatusBar
           status={brief.status}
           noteText={toAdvisorNoteCopy(brief)}
           onRefresh={() => onSelectMode("advisor")}
@@ -157,7 +157,7 @@ export default function PerformanceAdvisorBriefMode({
             aria-label="Advisor brief narrative"
           >
             <section
-              className="performance-advisor-brief-section"
+              className="performance-advisor-brief-section performance-advisor-brief-section-narrative"
               aria-label="Client Talking Points"
             >
               <div className="performance-advisor-brief-section-heading">
@@ -169,7 +169,7 @@ export default function PerformanceAdvisorBriefMode({
               <div className="performance-advisor-brief-item-list">
                 {brief.talkingPoints.length ? (
                   brief.talkingPoints.map((item) => (
-                    <TalkingPointCard
+                    <LotusTalkingPointCard
                       key={item.headline}
                       item={item}
                       onSelectMode={onSelectMode}
@@ -184,7 +184,7 @@ export default function PerformanceAdvisorBriefMode({
             </section>
 
             <section
-              className="performance-advisor-brief-section"
+              className="performance-advisor-brief-section performance-advisor-brief-section-workflow"
               aria-label="Recommended Actions"
             >
               <div className="performance-advisor-brief-section-heading">
@@ -193,7 +193,7 @@ export default function PerformanceAdvisorBriefMode({
                   Next advisor workflow steps from the current brief.
                 </p>
               </div>
-              <DrilldownActionList
+              <LotusDrilldownList
                 actions={brief.recommendedActions}
                 onSelectMode={onSelectMode}
                 variant="workflow"
@@ -201,7 +201,7 @@ export default function PerformanceAdvisorBriefMode({
             </section>
 
             <section
-              className="performance-advisor-brief-section"
+              className="performance-advisor-brief-section performance-advisor-brief-section-risk"
               aria-label="Risks and Exceptions"
             >
               <div className="performance-advisor-brief-section-heading">
@@ -213,10 +213,11 @@ export default function PerformanceAdvisorBriefMode({
               {brief.risksAndExceptions.length ? (
                 <div className="performance-advisor-brief-item-list">
                   {brief.risksAndExceptions.map((item) => (
-                    <TalkingPointCard
+                    <LotusTalkingPointCard
                       key={item.headline}
                       item={item}
                       onSelectMode={onSelectMode}
+                      variant="risk"
                     />
                   ))}
                 </div>
@@ -229,18 +230,13 @@ export default function PerformanceAdvisorBriefMode({
           </section>
 
           <aside
-            className="performance-advisor-brief-side-column"
+            className="performance-advisor-brief-side-column performance-advisor-brief-sidecar"
             aria-label="Advisor brief source evidence"
           >
-            <section
-              className="performance-advisor-brief-rail-panel"
-              aria-label="Source metrics rail"
-            >
-              <SourceMetricPanel metrics={brief.sourceMetrics} onSelectMode={onSelectMode} />
-            </section>
+            <LotusMetricPanel metrics={brief.sourceMetrics} onSelectMode={onSelectMode} />
 
             <section
-              className="performance-advisor-brief-section"
+              className="performance-advisor-brief-section performance-advisor-brief-section-drilldown performance-advisor-brief-sidecar-section"
               aria-label="Drill-down Actions"
             >
               <div className="performance-advisor-brief-section-heading">
@@ -249,14 +245,14 @@ export default function PerformanceAdvisorBriefMode({
                   Open the supporting analysis surfaces directly.
                 </p>
               </div>
-              <DrilldownActionList actions={drilldownActions} onSelectMode={onSelectMode} />
+              <LotusDrilldownList actions={drilldownActions} onSelectMode={onSelectMode} />
             </section>
 
-            <SupportabilityPanel items={brief.supportability} />
+            <LotusSupportabilityPanel items={brief.supportability} />
           </aside>
         </div>
 
-        <BriefProvenanceStrip audit={brief.audit} />
+        <LotusAuditStrip audit={brief.audit} />
       </Panel>
     </section>
   );

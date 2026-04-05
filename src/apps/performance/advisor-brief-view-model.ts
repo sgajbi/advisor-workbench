@@ -7,7 +7,12 @@ import type {
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import type { PerformanceWorkspaceCapabilities } from "./capabilities";
-import { formatCurrency, formatDate, formatPct } from "./formatters";
+import {
+  formatCurrency,
+  formatDate,
+  formatPct,
+  formatPerformancePositionLabel,
+} from "./formatters";
 import { buildPerformanceHref } from "./navigation";
 import { getPerformanceBenchmarkLabel } from "./components/performance-summary-context-helpers";
 import {
@@ -750,7 +755,10 @@ function toContributionSummary(
   }
 
   return {
-    label: "position_id" in row ? row.position_id : row.key_label,
+    label:
+      "position_id" in row
+        ? formatPerformancePositionLabel(row.position_id)
+        : row.key_label,
     value: formatPct(row.contribution_pct),
   };
 }

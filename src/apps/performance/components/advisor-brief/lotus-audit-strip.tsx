@@ -2,13 +2,13 @@ import type { PerformanceAdvisorBriefAudit } from "../../advisor-brief-view-mode
 
 import AuditMetadataDrawer from "./audit-metadata-drawer";
 
-export default function BriefProvenanceStrip({
+export default function LotusAuditStrip({
   audit,
 }: {
   audit: PerformanceAdvisorBriefAudit;
 }) {
   return (
-    <section className="performance-advisor-brief-provenance-strip" aria-label="Brief provenance">
+    <section className="lotus-audit-strip performance-advisor-brief-provenance-strip" aria-label="Brief provenance">
       <div className="performance-advisor-brief-provenance-summary">
         <span>Generated {audit.generatedAt}</span>
         <span>Provider {audit.providerMode}</span>

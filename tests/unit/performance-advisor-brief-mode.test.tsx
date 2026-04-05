@@ -122,7 +122,12 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Advisor Brief");
       expect(supportability).toHaveTextContent("Ready");
     });
+    expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
+      "Gateway advisor brief is ready with source-grounded talking points."
+    );
     expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy Note" })).toBeInTheDocument();
     expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
@@ -130,7 +135,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       "No material supportability exceptions are flagged"
     );
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
-    expect(screen.getByText("View audit metadata")).toBeInTheDocument();
+    expect(screen.getByText("Audit metadata")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByText("EXPLANATION_ONLY")).not.toBeInTheDocument();
 

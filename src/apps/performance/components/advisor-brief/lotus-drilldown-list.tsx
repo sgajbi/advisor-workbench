@@ -12,7 +12,7 @@ function resolveActionLabel(action: PerformanceAdvisorBriefAction) {
   return action.label || MODE_LABELS[action.targetMode];
 }
 
-export default function DrilldownActionList({
+export default function LotusDrilldownList({
   actions,
   onSelectMode,
   variant = "rail",
@@ -35,8 +35,8 @@ export default function DrilldownActionList({
           type="button"
           className={
             variant === "workflow"
-              ? "performance-advisor-brief-workflow-action"
-              : "performance-advisor-brief-drilldown-action"
+              ? "lotus-drilldown-item performance-advisor-brief-workflow-action"
+              : "lotus-drilldown-item performance-advisor-brief-drilldown-action"
           }
           onClick={() => onSelectMode(action.targetMode)}
         >
@@ -56,4 +56,3 @@ export default function DrilldownActionList({
     </div>
   );
 }
-

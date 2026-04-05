@@ -11,7 +11,7 @@ export default function PerformanceCapabilityTrustStrip({
     <WorkbenchStatusStrip
       label="Trust and completeness strip"
       items={presentation.items}
-      className="performance-trust-strip workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card"
+      className="performance-trust-strip performance-lotus-trust-strip workbench-summary-panel workbench-summary-card workbench-summary-card-compact workbench-summary-module-card"
       gridClassName="performance-trust-strip-grid"
       itemClassName="performance-trust-item"
       itemLabelClassName="performance-trust-item-label"
