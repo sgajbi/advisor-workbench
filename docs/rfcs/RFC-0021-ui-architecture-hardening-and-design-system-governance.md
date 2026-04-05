@@ -1,6 +1,6 @@
 # RFC-0021: UI Architecture Hardening and Design-System Governance
 
-- Status: PROPOSED
+- Status: IMPLEMENTED
 - Date: 2026-04-05
 - Owners:
   - lotus-workbench maintainers
@@ -822,6 +822,25 @@ RFC-0021 should only be marked `IMPLEMENTED` when all of the following are true:
 4. the documentation and ledger make future UI work reviewable against the system,
 5. local and CI validation for the affected shared layer and migrated screens are green,
 6. the resulting codebase is cleaner and less duplicated than the baseline that started this RFC.
+
+## Implementation Closeout
+
+RFC-0021 is now implemented.
+
+Delivered outcomes:
+
+1. the token baseline and theme contract were normalized,
+2. typography and financial formatting were moved onto shared primitives,
+3. page composition primitives became the default shell for `Portfolio` and `Performance`,
+4. mode navigation, semantic badges, action hierarchy, and disclosure seams are now shared,
+5. tables, screen states, and capability states are governed through the shared layer,
+6. naming drift and overlapping primitive APIs were materially reduced,
+7. the product now has an explicit usage guide for future contributors.
+
+Primary implementation evidence:
+
+1. [UI-ARCHITECTURE-AUDIT-LEDGER.md](C:/Users/Sandeep/projects/lotus-workbench/docs/architecture/UI-ARCHITECTURE-AUDIT-LEDGER.md)
+2. [workbench-ui-system-usage-guide.md](C:/Users/Sandeep/projects/lotus-workbench/docs/architecture/workbench-ui-system-usage-guide.md)
 
 ## Approval Requested
 

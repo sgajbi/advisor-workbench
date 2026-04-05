@@ -371,3 +371,57 @@ Slice 1 is considered complete when:
    - The shared primitives are now materially clearer and less overlapping, but the product still
      needs the final governed usage guide and RFC closure artifacts.
    - Target slice: Slice 8.
+
+## Pre-Slice 8 Closure Item
+
+### Closed before Slice 8
+
+1. **Panel disclosure behavior still drifted between portfolio modules**
+   - `Holdings` and `Transactions` used a coherent disclosure seam, while several summary and
+     drilldown modules still used feature-local expand/collapse actions and mismatched wording.
+   - The shared behavior is now governed through:
+     - `DisclosureToggleButton`
+     - a shared `Expand / Collapse` vocabulary
+     - a shared summary-card header contract that keeps disclosure actions aligned on the title row
+   - This reduced one more repeated local pattern before RFC closure.
+
+## Slice 8 Findings
+
+### Closed in Slice 8
+
+1. **No governed usage guide existed for the strengthened shared system**
+   - Earlier slices created real shared primitives, but the repo still lacked a concise guide that
+     told contributors which primitives to use, which naming rules apply, and which patterns are
+     now product standards.
+   - Slice 8 closes this with:
+     - [workbench-ui-system-usage-guide.md](C:/Users/Sandeep/projects/lotus-workbench/docs/architecture/workbench-ui-system-usage-guide.md)
+
+2. **RFC-0021 and the RFC index still showed the work as proposed**
+   - The implementation had materially advanced, but the governance artifacts did not yet reflect
+     that the planned slices had been executed.
+   - Slice 8 closes this by updating the RFC status and index status to `IMPLEMENTED`.
+
+3. **Closure evidence was present in code, but not summarized in governance artifacts**
+   - The ledger recorded slice-by-slice findings, but there was no final closeout section stating
+     what is now governed by the shared system.
+   - Slice 8 closes this by recording the final governed areas and the expected contribution rules.
+
+### Governed Areas After Slice 8
+
+The following areas are now governed through the shared layer and documented as product standards:
+
+1. token baseline and theme contract
+2. typography variants and numeric presentation
+3. page-shell and section composition primitives
+4. navigation and action hierarchy
+5. tables and table-state behavior
+6. screen-state and capability-state handling
+7. shared naming and primitive APIs
+8. panel disclosure behavior and vocabulary
+
+### Deferred Follow-Up
+
+No additional RFC-0021 slices remain open.
+
+Future work may extend the shared system, but those changes should be treated as incremental
+follow-on work rather than unfinished RFC-0021 baseline delivery.
