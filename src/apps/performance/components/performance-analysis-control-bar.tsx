@@ -2,14 +2,16 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import {
-  Button,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
 } from "@mui/material";
 
-import { WorkbenchSegmentedControl } from "@/design-system";
+import {
+  ActionButton,
+  FieldLabel,
+  Text,
+  WorkbenchSegmentedControl,
+} from "@/design-system";
+import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
 
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
@@ -81,30 +83,40 @@ export default function PerformanceAnalysisControlBar({
     return (
       <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar" aria-busy="true">
         <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
-          <Typography sx={controlLabelSx}>Horizon</Typography>
-          <div className="performance-analysis-static-value">{period}</div>
+          <FieldLabel>Horizon</FieldLabel>
+          <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+            {period}
+          </Text>
         </div>
         <div className="performance-analysis-control-slot performance-analysis-control-slot-dates">
-          <Typography sx={controlLabelSx}>Period Range</Typography>
-          <div className="performance-analysis-static-value">
+          <FieldLabel>Period Range</FieldLabel>
+          <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
             {fromDate} to {toDate}
-          </div>
+          </Text>
         </div>
         <div className="performance-analysis-control-slot">
-          <Typography sx={controlLabelSx}>Frequency</Typography>
-          <div className="performance-analysis-static-value">{chartFrequency}</div>
+          <FieldLabel>Frequency</FieldLabel>
+          <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+            {chartFrequency}
+          </Text>
         </div>
         <div className="performance-analysis-control-slot">
-          <Typography sx={controlLabelSx}>Benchmark</Typography>
-          <div className="performance-analysis-static-value">{benchmark ?? "Default benchmark"}</div>
+          <FieldLabel>Benchmark</FieldLabel>
+          <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+            {benchmark ?? "Default benchmark"}
+          </Text>
         </div>
         <div className="performance-analysis-control-slot">
-          <Typography sx={controlLabelSx}>Return View</Typography>
-          <div className="performance-analysis-static-value">{chartViewMode}</div>
+          <FieldLabel>Return View</FieldLabel>
+          <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+            {chartViewMode}
+          </Text>
         </div>
         <div className="performance-analysis-control-slot performance-analysis-control-slot-basis">
-          <Typography sx={controlLabelSx}>Basis</Typography>
-          <div className="performance-analysis-static-value">{detailBasis}</div>
+          <FieldLabel>Basis</FieldLabel>
+          <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+            {detailBasis}
+          </Text>
         </div>
       </div>
     );
@@ -113,33 +125,31 @@ export default function PerformanceAnalysisControlBar({
   return (
     <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar">
       <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
-        <Typography sx={controlLabelSx}>Horizon</Typography>
-        <ToggleButtonGroup exclusive size="small" value={period} aria-label="Horizon" sx={toggleGroupSx}>
-          {PERIOD_OPTIONS.map((option) => (
-            <ToggleButton
-              key={option}
-              value={option}
-              suppressHydrationWarning
-              onClick={() =>
-                onRequestChange({
-                  period: option,
-                  reportStartDate: undefined,
-                  reportEndDate: undefined,
-                })
-              }
-              disabled={isUpdating && option === period}
-            >
-              {option}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+        <FieldLabel>Horizon</FieldLabel>
+        <WorkbenchSegmentedControl
+          value={period}
+          onChange={(value) =>
+            onRequestChange({
+              period: value,
+              reportStartDate: undefined,
+              reportEndDate: undefined,
+            })
+          }
+          ariaLabel="Horizon"
+          className="performance-analysis-control-segmented"
+          options={PERIOD_OPTIONS.map((option) => ({
+            key: option,
+            label: option,
+            disabled: isUpdating && option === period,
+          }))}
+        />
       </div>
 
       <form
         className="performance-analysis-control-slot performance-analysis-control-slot-dates"
         onSubmit={onApplyExplicitDates}
       >
-        <Typography sx={controlLabelSx}>Period Range</Typography>
+        <FieldLabel>Period Range</FieldLabel>
         <div className="performance-analysis-date-row">
           <div className="performance-analysis-date-inputs">
             <TextField
@@ -170,21 +180,19 @@ export default function PerformanceAnalysisControlBar({
               onChange={(event) => onToDateChange(event.currentTarget.value)}
             />
           </div>
-          <Button
+          <ActionButton
             type="submit"
-            variant="contained"
-            size="small"
-            disableElevation
-            suppressHydrationWarning
+            priority="primary"
+            disabled={isUpdating}
             className="performance-analysis-apply-button"
           >
             {isUpdating ? "Updating..." : "Apply"}
-          </Button>
+          </ActionButton>
         </div>
       </form>
 
       <div className="performance-analysis-control-slot">
-        <Typography sx={controlLabelSx}>Frequency</Typography>
+        <FieldLabel>Frequency</FieldLabel>
         <TextField
           select
           size="small"
@@ -217,7 +225,7 @@ export default function PerformanceAnalysisControlBar({
       </div>
 
       <div className="performance-analysis-control-slot">
-        <Typography sx={controlLabelSx}>Benchmark</Typography>
+        <FieldLabel>Benchmark</FieldLabel>
         <TextField
           select
           size="small"
@@ -246,7 +254,7 @@ export default function PerformanceAnalysisControlBar({
       </div>
 
       <div className="performance-analysis-control-slot">
-        <Typography sx={controlLabelSx}>Return View</Typography>
+        <FieldLabel>Return View</FieldLabel>
         <WorkbenchSegmentedControl
           ariaLabel="Return view"
           className="performance-analysis-view-control"
@@ -268,68 +276,35 @@ export default function PerformanceAnalysisControlBar({
       </div>
 
       <div className="performance-analysis-control-slot performance-analysis-control-slot-basis">
-        <Typography sx={controlLabelSx}>Basis</Typography>
-        <ToggleButtonGroup exclusive size="small" value={detailBasis} aria-label="Basis" sx={toggleGroupSx}>
-          {BASIS_OPTIONS.map((option) => (
-            <ToggleButton
-              key={option}
-              value={option}
-              suppressHydrationWarning
-              onClick={() =>
-                onRequestChange({
-                  detailBasis: option,
-                })
-              }
-              disabled={isUpdating && option === detailBasis}
-            >
-              {option}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+        <FieldLabel>Basis</FieldLabel>
+        <WorkbenchSegmentedControl
+          value={detailBasis}
+          onChange={(value) =>
+            onRequestChange({
+              detailBasis: value,
+            })
+          }
+          ariaLabel="Basis"
+          className="performance-analysis-control-segmented"
+          options={BASIS_OPTIONS.map((option) => ({
+            key: option,
+            label: option,
+            disabled: isUpdating && option === detailBasis,
+          }))}
+        />
       </div>
     </div>
   );
 }
 
-const controlLabelSx = {
-  mb: 0.25,
-  fontSize: "0.6875rem",
-  fontWeight: 800,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "text.secondary",
-} as const;
-
-const toggleGroupSx = {
-  flexWrap: "nowrap",
-  gap: 0.375,
-  "& .MuiToggleButtonGroup-grouped": {
-    borderRadius: "8px !important",
-    border: "1px solid rgba(31, 39, 51, 0.1) !important",
-    px: 0.95,
-    py: 0.4,
-    color: "text.secondary",
-    textTransform: "none",
-    fontWeight: 700,
-    fontSize: "0.78rem",
-    minHeight: 36,
-    backgroundColor: "#ffffff",
-    whiteSpace: "nowrap",
-  },
-  "& .Mui-selected": {
-    bgcolor: "#1f2733 !important",
-    color: "#fff !important",
-  },
-} as const;
-
 const selectControlSx = {
   minWidth: "100%",
   "& .MuiInputBase-root": {
-    minHeight: 36,
+    minHeight: lotusThemeTokens.control.height.compactToolbar,
   },
   "& .MuiInputBase-input": {
-    fontSize: "0.8125rem",
+    fontSize: lotusThemeTokens.typography.workbench.textCompactStrong,
     fontWeight: 600,
-    py: 0.95,
+    py: lotusThemeTokens.spacing.step3,
   },
 } as const;

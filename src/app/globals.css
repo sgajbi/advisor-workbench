@@ -254,6 +254,11 @@ a:hover {
   color: var(--text-muted);
 }
 
+.workbench-field-label {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
 .ui-text-eyebrow,
 .ui-text-badge,
 .ui-text-button {
@@ -6336,8 +6341,8 @@ a:hover {
   font-weight: 600;
 }
 
-.performance-analysis-toolbar .MuiTypography-root {
-  margin-bottom: 0.18rem;
+.performance-analysis-toolbar .workbench-field-label {
+  margin-bottom: var(--space-1);
 }
 
 .performance-evidence-status-grid {
@@ -6743,13 +6748,13 @@ a:hover {
 .performance-analysis-control-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem 0.875rem;
+  gap: var(--space-3) var(--space-4);
   align-items: flex-end;
 }
 
 .performance-analysis-control-slot {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-1);
   min-width: 0;
   flex: 0 1 auto;
 }
@@ -6776,7 +6781,6 @@ a:hover {
   font-weight: 650;
 }
 
-.performance-analysis-control-slot .MuiToggleButtonGroup-root,
 .performance-analysis-control-slot .workbench-segmented-control {
   min-height: 36px;
 }
@@ -6794,7 +6798,7 @@ a:hover {
 .performance-analysis-date-row {
   display: grid;
   grid-template-columns: minmax(20rem, 30rem) auto;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: stretch;
   justify-content: start;
 }
@@ -6811,7 +6815,7 @@ a:hover {
   background: linear-gradient(180deg, rgba(250, 251, 253, 0.98) 0%, #ffffff 100%);
 }
 
-.performance-analysis-apply-button.MuiButton-root {
+.performance-analysis-apply-button.action-button {
   min-height: 42px;
   padding-inline: 1rem;
   white-space: nowrap;

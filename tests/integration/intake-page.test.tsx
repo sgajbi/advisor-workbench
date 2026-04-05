@@ -64,19 +64,19 @@ describe("IntakePage", () => {
       expect(getCurrencyLookupsMock).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /^Add Positions$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Add Positions$/i }));
     expect(screen.getByRole("heading", { name: "Add Positions Workspace" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Add Transactions$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Add Transactions$/i }));
     expect(screen.getByRole("heading", { name: "Add Transactions Workspace" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Add Instruments$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Add Instruments$/i }));
     expect(screen.getByRole("heading", { name: "Add Instruments Workspace" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Add Market Data$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Add Market Data$/i }));
     expect(screen.getByRole("heading", { name: "Add Market Data Workspace" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Create Portfolio$/i }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Create Portfolio$/i }));
     expect(screen.getByRole("heading", { name: "Create Portfolio Workspace" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Submit Operation" }));

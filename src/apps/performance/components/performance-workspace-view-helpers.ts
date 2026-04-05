@@ -7,26 +7,6 @@ import { formatDate, formatLabel, formatPct } from "../formatters";
 
 export const NOT_ADDITIVE_CELL = "—";
 
-export const summaryLabelSx = {
-  display: "block",
-  mb: 1,
-  fontSize: "0.6875rem",
-  fontWeight: 800,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "text.secondary",
-} as const;
-
-export const inlineControlLabelSx = {
-  display: "block",
-  mb: 0.5,
-  fontSize: "0.6875rem",
-  fontWeight: 800,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "text.secondary",
-} as const;
-
 export function shouldShowContributionLocalFx(
   level: NonNullable<WorkbenchPerformanceWorkspace["contribution"]>["levels"][number],
   workspace: WorkbenchPerformanceWorkspace

@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { FormControl, MenuItem, Select, Typography } from "@mui/material";
+import { FormControl, MenuItem, Select } from "@mui/material";
 
-import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
+import { AnalyticsTable, FieldLabel, WorkbenchDataGridFrame } from "@/design-system";
 
 import {
   buildPerformancePositionContributionTableModel,
@@ -16,7 +16,6 @@ import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
-import { inlineControlLabelSx } from "./performance-workspace-view-helpers";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 
 type ContributionDetailView = "positions" | "segments";
@@ -53,9 +52,7 @@ export default function PerformanceAnalysisContributionSection({
   const actions = (
     <PerformanceAnalysisToolbar>
       <FormControl size="small" sx={{ minWidth: 180 }}>
-        <Typography component="label" sx={inlineControlLabelSx}>
-          Segment
-        </Typography>
+        <FieldLabel>Segment</FieldLabel>
         <Select
           aria-label="Contribution Segment"
           value={contributionDimension}

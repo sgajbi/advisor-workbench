@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-import { FormControl, MenuItem, Select, Typography } from "@mui/material";
+import { FormControl, MenuItem, Select } from "@mui/material";
 
 import {
   AnalyticsEffectStrip,
   AnalyticsTable,
+  FieldLabel,
   WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
@@ -20,7 +21,6 @@ import PerformanceRelativeSegmentPanel from "./performance-relative-segment-pane
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import {
   getAttributionTotals,
-  inlineControlLabelSx,
   NOT_ADDITIVE_CELL,
 } from "./performance-workspace-view-helpers";
 import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
@@ -63,9 +63,7 @@ export default function PerformanceAnalysisAttributionSection({
   const actions = (
     <PerformanceAnalysisToolbar>
       <FormControl size="small" sx={{ minWidth: 180 }}>
-        <Typography component="label" sx={inlineControlLabelSx}>
-          Segment
-        </Typography>
+        <FieldLabel>Segment</FieldLabel>
         <Select
           aria-label="Attribution Segment"
           value={attributionDimension}

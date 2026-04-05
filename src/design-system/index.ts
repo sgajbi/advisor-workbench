@@ -32,6 +32,7 @@ export { default as ActionListCard } from "./components/action-list-card";
 export { default as ChartCard } from "./components/chart-card";
 export { default as DataGridCard } from "./components/data-grid-card";
 export { default as EmptyStatePanel } from "./components/empty-state-panel";
+export { default as FieldLabel } from "./components/field-label";
 export { default as ModuleStatePanel } from "./components/module-state-panel";
 export { default as ModuleSkeleton } from "./components/module-skeleton";
 export { default as StateInfoHint } from "./components/state-info-hint";

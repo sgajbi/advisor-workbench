@@ -6,8 +6,6 @@ import {
   Autocomplete,
   Alert,
   Box,
-  Button,
-  Chip,
   CircularProgress,
   Divider,
   Grid,
@@ -20,13 +18,19 @@ import {
   TableHead,
   TableRow,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 
+import {
+  ActionButton,
+  ModeTabs,
+  SectionBlock,
+  SemanticBadge,
+  Text,
+  WorkbenchPageFrame,
+  WorkbenchSectionStack,
+} from "@/design-system";
 import { ingestPortfolioBundle } from "@/features/intake/api";
 import { parseIntakeCsvToBundle } from "@/features/intake/csv-parser";
 import { getCurrencyLookups, getInstrumentLookups, getPortfolioLookups } from "@/features/intake/lookups-api";
@@ -122,17 +126,33 @@ function catalogLabel(name: string, state: CatalogState, count: number): string 
   return `${name} manual`;
 }
 
-function catalogColor(state: CatalogState): "default" | "primary" | "warning" | "success" {
+function catalogBadgeTone(state: CatalogState): "default" | "success" | "warn" {
   if (state === "online") {
     return "success";
   }
-  if (state === "loading") {
-    return "primary";
-  }
   if (state === "fallback") {
-    return "warning";
+    return "warn";
   }
   return "default";
+}
+
+function RowActionBar({
+  addLabel,
+  removeLabel,
+  onAdd,
+  onRemove,
+}: {
+  addLabel: string;
+  removeLabel: string;
+  onAdd: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="toolbar">
+      <ActionButton onClick={onAdd}>{addLabel}</ActionButton>
+      <ActionButton onClick={onRemove}>{removeLabel}</ActionButton>
+    </div>
+  );
 }
 
 export default function IntakePage() {
@@ -451,49 +471,49 @@ export default function IntakePage() {
 
   return (
     <main className="page-container">
-      <section className="page-header">
-        <Typography variant="h4" component="h1" className="page-title">
-          Portfolio Intake Operations Console
-        </Typography>
-        <Typography className="page-subtitle">
-          Execute one intake intent at a time with list-based entity submission and governed selector catalogs.
-        </Typography>
-      </section>
-
-      <Paper className="section-card" elevation={0}>
+      <WorkbenchPageFrame
+        title="Portfolio Intake Operations Console"
+        subtitle="Execute one intake intent at a time with list-based entity submission and governed selector catalogs."
+        actions={
+          <>
+            <SemanticBadge tone={canSubmit ? "success" : "warn"}>
+              {canSubmit ? "Operation ready" : "Action required"}
+            </SemanticBadge>
+            <SemanticBadge>{`Step ${activeOperationIndex + 1} of ${OPERATION_ORDER.length}`}</SemanticBadge>
+          </>
+        }
+      >
+      <WorkbenchSectionStack>
+      <SectionBlock title="Workflow Guidance" subtitle={activeCopy.objective}>
         <Stack spacing={1}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={1} justifyContent="space-between">
-            <Box>
-              <Typography variant="h6">Workflow Guidance</Typography>
-              <Typography className="muted">{activeCopy.objective}</Typography>
-            </Box>
-            <Chip
-              size="small"
-              color={canSubmit ? "success" : "warning"}
-              label={`Step ${activeOperationIndex + 1} of ${OPERATION_ORDER.length}`}
-            />
+            <div className="toolbar">
+              <SemanticBadge tone={canSubmit ? "success" : "warn"}>
+                {`Step ${activeOperationIndex + 1} of ${OPERATION_ORDER.length}`}
+              </SemanticBadge>
+            </div>
           </Stack>
           <Stack direction={{ xs: "column", md: "row" }} spacing={0.8} flexWrap="wrap">
             {OPERATION_ORDER.map((item, index) => (
-              <Chip
+              <SemanticBadge
                 key={item}
-                size="small"
-                label={`${index + 1}. ${OPERATION_COPY[item].title.replace(" Workspace", "")}`}
-                color={item === operation ? "primary" : "default"}
-                variant={item === operation ? "filled" : "outlined"}
-              />
+                tone={item === operation ? "success" : "default"}
+                emphasis={item === operation ? "strong" : "subtle"}
+              >
+                {`${index + 1}. ${OPERATION_COPY[item].title.replace(" Workspace", "")}`}
+              </SemanticBadge>
             ))}
           </Stack>
-          <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
+          <Text variant="body" as="div" className="muted">
             Checkpoint: {activeCopy.checkpoint}
-          </Typography>
+          </Text>
           {!canSubmit ? (
             <Alert severity="info">
               {validationGaps.length > 0 ? validationGaps[0] : "Complete required fields before submitting this operation."}
             </Alert>
           ) : null}
         </Stack>
-      </Paper>
+      </SectionBlock>
 
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
@@ -502,58 +522,43 @@ export default function IntakePage() {
         <Alert severity="warning">Selector catalog degraded. Using local fallback suggestions and manual entry.</Alert>
       ) : null}
 
-      <Paper className="section-card" elevation={0}>
+      <SectionBlock title="Intake Operation">
         <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={1}>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <Typography variant="h6">Intake Operation</Typography>
-            <Chip size="small" color="success" label="Ingestion Pipeline Live" />
-            <Chip size="small" label={`Readiness ${readiness}%`} color={canSubmit ? "success" : "warning"} />
-            <Chip
-              size="small"
-              label={
-                operation === "ADD_POSITIONS"
-                  ? `${positions.length} position rows`
-                  : operation === "ADD_TRANSACTIONS"
-                    ? `${transactions.length} transaction rows`
-                    : operation === "ADD_INSTRUMENTS"
-                      ? `${instruments.length} instrument rows`
-                      : operation === "ADD_MARKET_DATA"
-                        ? `${marketData.length} market rows`
-                        : "portfolio profile"
-              }
-            />
-            <Chip
-              size="small"
-              color={catalogColor(catalogSummaryState)}
-              label={
-                catalogSummaryState === "online"
-                  ? "Selector Catalog Online"
-                  : catalogSummaryState === "loading"
-                    ? "Selector Catalog Loading"
-                    : catalogSummaryState === "fallback"
-                      ? "Selector Catalog Fallback"
-                      : "Selector Catalog Manual"
-              }
-            />
-            <Chip
-              size="small"
-              color={catalogColor(portfolioCatalogState)}
-              label={catalogLabel("Portfolios", portfolioCatalogState, portfolioOptionValues.length)}
-            />
-            <Chip
-              size="small"
-              color={catalogColor(instrumentCatalogState)}
-              label={catalogLabel("Instruments", instrumentCatalogState, instrumentOptionValues.length)}
-            />
-            <Chip
-              size="small"
-              color={catalogColor(currencyCatalogState)}
-              label={catalogLabel("Currencies", currencyCatalogState, currencyOptionValues.length)}
-            />
+            <SemanticBadge tone="success">Ingestion Pipeline Live</SemanticBadge>
+            <SemanticBadge tone={canSubmit ? "success" : "warn"}>{`Readiness ${readiness}%`}</SemanticBadge>
+            <SemanticBadge>
+              {operation === "ADD_POSITIONS"
+                ? `${positions.length} position rows`
+                : operation === "ADD_TRANSACTIONS"
+                  ? `${transactions.length} transaction rows`
+                  : operation === "ADD_INSTRUMENTS"
+                    ? `${instruments.length} instrument rows`
+                    : operation === "ADD_MARKET_DATA"
+                      ? `${marketData.length} market rows`
+                      : "portfolio profile"}
+            </SemanticBadge>
+            <SemanticBadge tone={catalogBadgeTone(catalogSummaryState)}>
+              {catalogSummaryState === "online"
+                ? "Selector Catalog Online"
+                : catalogSummaryState === "loading"
+                  ? "Selector Catalog Loading"
+                  : catalogSummaryState === "fallback"
+                    ? "Selector Catalog Fallback"
+                    : "Selector Catalog Manual"}
+            </SemanticBadge>
+            <SemanticBadge tone={catalogBadgeTone(portfolioCatalogState)}>
+              {catalogLabel("Portfolios", portfolioCatalogState, portfolioOptionValues.length)}
+            </SemanticBadge>
+            <SemanticBadge tone={catalogBadgeTone(instrumentCatalogState)}>
+              {catalogLabel("Instruments", instrumentCatalogState, instrumentOptionValues.length)}
+            </SemanticBadge>
+            <SemanticBadge tone={catalogBadgeTone(currencyCatalogState)}>
+              {catalogLabel("Currencies", currencyCatalogState, currencyOptionValues.length)}
+            </SemanticBadge>
           </Stack>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
-            <Button
-              variant="outlined"
+            <ActionButton
               onClick={() => {
                 setLookupEnabled(true);
                 void portfolioLookupQuery.refetch();
@@ -561,26 +566,22 @@ export default function IntakePage() {
                 void currencyLookupQuery.refetch();
               }}
               disabled={lookupEnabled && (portfolioLookupQuery.isLoading || instrumentLookupQuery.isLoading || currencyLookupQuery.isLoading)}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
             >
               {lookupEnabled ? "Refresh Selector Catalog" : "Load Selector Catalog"}
-            </Button>
-            <Button
-              variant="outlined"
+            </ActionButton>
+            <ActionButton
               onClick={() => csvInputRef.current?.click()}
               disabled={isSubmitting}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
             >
               Upload CSV Bundle
-            </Button>
-            <Button
-              variant="contained"
+            </ActionButton>
+            <ActionButton
+              priority="primary"
               onClick={submitCurrentOperation}
               disabled={isSubmitting || !canSubmit}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
             >
               Submit Operation
-            </Button>
+            </ActionButton>
             {isSubmitting ? <CircularProgress size={22} /> : null}
           </Stack>
         </Stack>
@@ -588,43 +589,26 @@ export default function IntakePage() {
           <LinearProgress variant="determinate" value={readiness} />
         </Box>
         <Box sx={{ mt: 1 }}>
-          <ToggleButtonGroup
-            exclusive
+          <ModeTabs
             value={operation}
-            onChange={(_e, next: IntakeOperation | null) => next && setOperation(next)}
-            size="small"
-            sx={{
-              width: "100%",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 0.6,
-              "& .MuiToggleButton-root": {
-                textAlign: "center",
-                whiteSpace: "nowrap",
-                flex: {
-                  xs: "1 1 100%",
-                  sm: "1 1 calc(50% - 8px)",
-                  lg: "1 1 calc(20% - 8px)",
-                },
-              },
-            }}
-          >
-            <ToggleButton value="CREATE_PORTFOLIO">Create Portfolio</ToggleButton>
-            <ToggleButton value="ADD_POSITIONS">Add Positions</ToggleButton>
-            <ToggleButton value="ADD_TRANSACTIONS">Add Transactions</ToggleButton>
-            <ToggleButton value="ADD_INSTRUMENTS">Add Instruments</ToggleButton>
-            <ToggleButton value="ADD_MARKET_DATA">Add Market Data</ToggleButton>
-          </ToggleButtonGroup>
+            onChange={setOperation}
+            ariaLabel="Intake operation"
+            className="intake-operation-tabs"
+            options={[
+              { key: "CREATE_PORTFOLIO", label: "Create Portfolio" },
+              { key: "ADD_POSITIONS", label: "Add Positions" },
+              { key: "ADD_TRANSACTIONS", label: "Add Transactions" },
+              { key: "ADD_INSTRUMENTS", label: "Add Instruments" },
+              { key: "ADD_MARKET_DATA", label: "Add Market Data" },
+            ]}
+          />
         </Box>
         <input ref={csvInputRef} type="file" accept=".csv,text/csv" onChange={handleCsvSelected} style={{ display: "none" }} />
-      </Paper>
+      </SectionBlock>
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, lg: 9, xl: 10 }}>
-          <Paper className="section-card" elevation={0}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              {activeCopy.title}
-            </Typography>
+          <SectionBlock title={activeCopy.title}>
             <Divider sx={{ mb: 1 }} />
 
             {operation === "CREATE_PORTFOLIO" ? (
@@ -700,9 +684,9 @@ export default function IntakePage() {
                   <Stack spacing={1}>
                     {positions.map((row, index) => (
                       <Paper key={`pos-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                        <Text variant="cardTitle" as="p" className="workbench-compact-card-title">
                           Position Row {index + 1}
-                        </Typography>
+                        </Text>
                         <Grid container spacing={1}>
                           <Grid size={{ xs: 12 }}>
                             <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setPositions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
@@ -764,17 +748,12 @@ export default function IntakePage() {
                     </Table>
                   </Box>
                 )}
-                <div className="toolbar">
-                  <Button variant="outlined" onClick={() => setPositions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
-                    Add Position Row
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setPositions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
-                  >
-                    Remove Last Row
-                  </Button>
-                </div>
+                <RowActionBar
+                  addLabel="Add Position Row"
+                  removeLabel="Remove Last Row"
+                  onAdd={() => setPositions((prev) => [...prev, { ...prev[prev.length - 1] }])}
+                  onRemove={() => setPositions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                />
               </>
             ) : null}
 
@@ -800,9 +779,9 @@ export default function IntakePage() {
                   <Stack spacing={1}>
                     {transactions.map((row, index) => (
                       <Paper key={`txn-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                        <Text variant="cardTitle" as="p" className="workbench-compact-card-title">
                           Transaction Row {index + 1}
-                        </Typography>
+                        </Text>
                         <Grid container spacing={1}>
                           <Grid size={{ xs: 12 }}>
                             <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setTransactions((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
@@ -849,19 +828,12 @@ export default function IntakePage() {
                     </Table>
                   </Box>
                 )}
-                <div className="toolbar">
-                  <Button variant="outlined" onClick={() => setTransactions((prev) => [...prev, { ...prev[prev.length - 1] }])}>
-                    Add Transaction Row
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() =>
-                      setTransactions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
-                    }
-                  >
-                    Remove Last Row
-                  </Button>
-                </div>
+                <RowActionBar
+                  addLabel="Add Transaction Row"
+                  removeLabel="Remove Last Row"
+                  onAdd={() => setTransactions((prev) => [...prev, { ...prev[prev.length - 1] }])}
+                  onRemove={() => setTransactions((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                />
               </>
             ) : null}
 
@@ -871,9 +843,9 @@ export default function IntakePage() {
                   <Stack spacing={1}>
                     {instruments.map((row, index) => (
                       <Paper key={`ins-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                        <Text variant="cardTitle" as="p" className="workbench-compact-card-title">
                           Instrument Row {index + 1}
-                        </Typography>
+                        </Text>
                         <Grid container spacing={1}>
                           <Grid size={{ xs: 12 }}>
                             <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setInstruments((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
@@ -920,17 +892,12 @@ export default function IntakePage() {
                     </Table>
                   </Box>
                 )}
-                <div className="toolbar">
-                  <Button variant="outlined" onClick={() => setInstruments((prev) => [...prev, { ...prev[prev.length - 1] }])}>
-                    Add Instrument Row
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setInstruments((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
-                  >
-                    Remove Last Row
-                  </Button>
-                </div>
+                <RowActionBar
+                  addLabel="Add Instrument Row"
+                  removeLabel="Remove Last Row"
+                  onAdd={() => setInstruments((prev) => [...prev, { ...prev[prev.length - 1] }])}
+                  onRemove={() => setInstruments((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                />
               </>
             ) : null}
 
@@ -940,9 +907,9 @@ export default function IntakePage() {
                   <Stack spacing={1}>
                     {marketData.map((row, index) => (
                       <Paper key={`mkt-${index}`} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 0.8 }}>
+                        <Text variant="cardTitle" as="p" className="workbench-compact-card-title">
                           Market Data Row {index + 1}
-                        </Typography>
+                        </Text>
                         <Grid container spacing={1}>
                           <Grid size={{ xs: 12 }}>
                             <Autocomplete freeSolo options={instrumentOptionValues} value={row.securityId} onInputChange={(_e, value) => setMarketData((prev) => prev.map((x, i) => (i === index ? { ...x, securityId: value } : x)))} renderInput={(params) => <TextField {...params} label="Security" size="small" />} />
@@ -984,40 +951,36 @@ export default function IntakePage() {
                     </Table>
                   </Box>
                 )}
-                <div className="toolbar">
-                  <Button variant="outlined" onClick={() => setMarketData((prev) => [...prev, { ...prev[prev.length - 1] }])}>
-                    Add Market Data Row
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setMarketData((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
-                  >
-                    Remove Last Row
-                  </Button>
-                </div>
+                <RowActionBar
+                  addLabel="Add Market Data Row"
+                  removeLabel="Remove Last Row"
+                  onAdd={() => setMarketData((prev) => [...prev, { ...prev[prev.length - 1] }])}
+                  onRemove={() => setMarketData((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))}
+                />
               </>
             ) : null}
-          </Paper>
+          </SectionBlock>
         </Grid>
 
         <Grid size={{ xs: 12, lg: 3, xl: 2 }}>
-          <Paper className="section-card" elevation={0}>
-            <Typography variant="h6">Private Banking UX Notes</Typography>
-            <Typography className="muted" sx={{ mt: 1 }}>
+          <SectionBlock title="Private Banking UX Notes">
+            <Text variant="secondary" className="muted">
               Each operation owns one responsibility and can be submitted independently without forcing full payload duplication.
-            </Typography>
-            <Typography className="muted">
+            </Text>
+            <Text variant="secondary" className="muted">
               Existing portfolio enrichment flows support list-based row entry for operations teams.
-            </Typography>
-            <Typography className="muted">
+            </Text>
+            <Text variant="secondary" className="muted">
               Selector catalog:{" "}
               {!lookupEnabled
                 ? "manual mode active (load catalog for governed suggestions)."
                 : `${portfolioOptionValues.length} portfolios, ${instrumentOptionValues.length} instruments, ${currencyOptionValues.length} currencies.`}
-            </Typography>
-          </Paper>
+            </Text>
+          </SectionBlock>
         </Grid>
       </Grid>
+      </WorkbenchSectionStack>
+      </WorkbenchPageFrame>
     </main>
   );
 }

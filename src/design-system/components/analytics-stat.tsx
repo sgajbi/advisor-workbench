@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 
+import { lotusThemeTokens } from "../theme/tokens";
 import { cx } from "../utils/cx";
 import Text from "./text";
 
@@ -32,14 +33,14 @@ export default function AnalyticsStat({
       title={typeof definition === "string" ? definition : undefined}
       sx={{
         display: "grid",
-        gap: 1,
+        gap: lotusThemeTokens.spacing.step2,
         minWidth: 0,
-        minHeight: 44,
-        px: emphasize ? 3 : 0,
-        py: emphasize ? 2 : 0,
-        borderRadius: emphasize ? "12px" : 0,
+        minHeight: Number.parseInt(lotusThemeTokens.control.height.touchTarget, 10),
+        px: emphasize ? lotusThemeTokens.spacing.step6 : 0,
+        py: emphasize ? lotusThemeTokens.spacing.step4 : 0,
+        borderRadius: emphasize ? `${lotusThemeTokens.radius.md}px` : 0,
         border: "none",
-        background: emphasize ? "#ffffff" : "transparent",
+        background: emphasize ? lotusThemeTokens.color.surface.panel : "transparent",
         textAlign: "left",
         cursor: onClick ? "pointer" : "default",
         outline: "none",

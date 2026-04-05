@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 
+import { lotusThemeTokens } from "../theme/tokens";
 import Text from "./text";
 
 type AnalyticsEffectRow = {
@@ -17,21 +18,28 @@ export default function AnalyticsEffectStrip({
   rows: AnalyticsEffectRow[];
 }) {
   return (
-    <Box sx={{ display: "grid", gap: 0.75 }}>
+    <Box sx={{ display: "grid", gap: lotusThemeTokens.spacing.step2 }}>
       {rows.map((row) => (
         <Box
           key={row.key}
           sx={{
             display: "grid",
             gridTemplateColumns: "minmax(120px, 1fr) minmax(0, 1.7fr) 72px",
-            gap: 1,
+            gap: lotusThemeTokens.spacing.step2,
             alignItems: "center",
           }}
         >
           <Text variant="subsectionTitle" as="div" className="analytics-effect-strip-label">
             {row.label}
           </Text>
-          <Box sx={{ display: "flex", gap: 0.5, alignItems: "center", minHeight: 10 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: lotusThemeTokens.spacing.step1,
+              alignItems: "center",
+              minHeight: 10,
+            }}
+          >
             <EffectBar value={row.allocationPct} color="#5b9bd5" />
             <EffectBar value={row.selectionPct} color="#7fa65a" />
             <EffectBar value={row.interactionPct} color="#b07a8e" />

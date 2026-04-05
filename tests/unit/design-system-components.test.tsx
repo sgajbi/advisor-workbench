@@ -16,6 +16,7 @@ import {
   DisclosureToggleButton,
   DegradedStatePanel,
   EmptyStatePanel,
+  FieldLabel,
   FilterBar,
   InsightCallout,
   KpiStatTile,
@@ -571,6 +572,14 @@ describe("design-system components", () => {
     expect(header).toContainElement(title);
     expect(header).not.toContainElement(subtitle);
     expect(title.closest(".MuiBox-root")?.parentElement).toContainElement(action);
+  });
+
+  it("renders field labels through the shared typography contract", () => {
+    render(<FieldLabel htmlFor="benchmark-select">Benchmark</FieldLabel>);
+
+    expect(screen.getByText("Benchmark")).toHaveClass("workbench-field-label", "ui-text-label");
+    expect(screen.getByText("Benchmark").tagName).toBe("LABEL");
+    expect(screen.getByText("Benchmark")).toHaveAttribute("for", "benchmark-select");
   });
 
   it("renders ranked analytics content with shared summary visual typography classes", () => {

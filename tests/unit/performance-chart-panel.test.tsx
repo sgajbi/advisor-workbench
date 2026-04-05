@@ -212,7 +212,9 @@ describe("PerformanceChartPanel", () => {
     expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
+    expect(screen.getByRole("tablist", { name: "Horizon" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Basis" })).toBeInTheDocument();
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();

@@ -425,3 +425,79 @@ No additional RFC-0021 slices remain open.
 
 Future work may extend the shared system, but those changes should be treated as incremental
 follow-on work rather than unfinished RFC-0021 baseline delivery.
+
+## Post-Closure Tightening Review
+
+### Closed After Slice 8
+
+1. **Performance Analysis still had local control-label and segmented-control drift**
+   - `PerformanceAnalysisControlBar`, `PerformanceAnalysisContributionSection`, and
+     `PerformanceAnalysisAttributionSection` still defined control labels through local MUI
+     typography and still mixed shared segmented controls with route-local toggle groups.
+   - This was tightened by introducing:
+     - `FieldLabel`
+     - shared segmented controls for `Horizon` and `Basis`
+     - shared primary action treatment for the explicit-date `Apply` action
+
+2. **Shared analytics primitives still carried inline spacing drift**
+   - `AnalyticsModule`, `AnalyticsStat`, and `AnalyticsEffectStrip` still used inline fractional
+     spacing and surface values rather than the governed token baseline.
+   - This was tightened by moving those spacing and surface decisions onto
+     `lotusThemeTokens`.
+
+3. **One remaining chart-refresh overlay bypassed the shared text system**
+   - The return-path refresh overlay still used route-local `Typography`.
+   - This was tightened by moving the overlay copy onto the shared `Text` contract.
+
+### Closure Assessment After Tightening
+
+No additional RFC-0021 slice is required.
+
+The remaining drift after Slice 8 was narrow and shared-layer focused. It was resolved through a
+targeted tightening pass rather than a new architectural slice. At this point, the remaining work
+for Workbench UI consistency is incremental evolution, not unfinished RFC-0021 foundation work.
+
+## Whole-Product Closure Hardening
+
+### Closed After Initial Closure Review
+
+1. **`intake` still used route-local navigation, action, and typography seams**
+   - The page had already adopted the shared frame, but it still relied on older route-local
+     control vocabulary and action hierarchy around operation switching and row-level workflow
+     controls.
+   - This was closed by standardizing `intake` on:
+     - `ModeTabs` for operation switching
+     - `ActionButton` for governed workflow actions
+     - shared `Text` variants for compact record headings and operational notes
+
+2. **`suite` still presented older MUI-heavy page composition**
+   - The route still used legacy `Paper`, `Chip`, and `ToggleButtonGroup` seams even though the
+     same product concepts are now governed elsewhere through the shared layer.
+   - This was closed by migrating `suite` onto:
+     - `WorkbenchPageFrame`
+     - `WorkbenchSectionStack`
+     - `SectionBlock`
+     - `ModeTabs`
+     - `SemanticBadge`
+     - `ActionLink`
+
+3. **Whole-product closure evidence was incomplete**
+   - Earlier closure language was honest for `Portfolio` and `Performance`, but it still left
+     `intake` and `suite` as explicit exceptions.
+   - This was closed by refactoring both routes and validating them against the same shared-system
+     expectations as the main workstation surfaces.
+
+### Final Closure Assessment
+
+No additional RFC-0021 slice is required.
+
+The Workbench product now uses the shared UI system across:
+
+1. `Portfolio`
+2. `Performance`
+3. `Advisor Brief`
+4. `Intake`
+5. `Suite`
+
+Any further work should be treated as incremental product evolution, not unfinished RFC-0021
+delivery.

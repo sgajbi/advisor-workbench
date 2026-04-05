@@ -3,13 +3,15 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 
 import {
   AnalyticsTable,
   CapabilityStatePanel,
+  Text,
   WorkbenchChartShell,
 } from "@/design-system";
+import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
@@ -605,19 +607,19 @@ export default function PerformanceChartPanel({
               <Box
                 sx={{
                   position: "absolute",
-                  top: 12,
-                  right: 12,
-                  px: 1.25,
-                  py: 0.5,
+                  top: lotusThemeTokens.spacing.step3,
+                  right: lotusThemeTokens.spacing.step3,
+                  px: lotusThemeTokens.spacing.step3,
+                  py: lotusThemeTokens.spacing.step1,
                   borderRadius: 999,
                   bgcolor: "rgba(255,255,255,0.92)",
                   border: "1px solid rgba(31,39,51,0.08)",
                   boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
                 }}
               >
-                <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "text.secondary" }}>
+                <Text variant="metadata" as="span">
                   Refreshing analytical series
-                </Typography>
+                </Text>
               </Box>
             ) : null}
           </div>

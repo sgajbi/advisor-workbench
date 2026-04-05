@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 
+import { lotusThemeTokens } from "../theme/tokens";
 import { cx } from "../utils/cx";
 import Text from "./text";
 
@@ -30,23 +31,33 @@ export default function AnalyticsModule({
       )}
       sx={{
         display: "grid",
-        gap: compact ? 1.5 : 2,
+        gap: compact
+          ? lotusThemeTokens.spacing.step3
+          : lotusThemeTokens.layout.workbenchSectionGap,
         minWidth: 0,
-        p: compact ? { xs: 2.25, md: 2.5 } : { xs: 2.5, md: 3 },
-        borderRadius: "12px",
-        border: "1px solid #e5e7eb",
-        background: "#ffffff",
+        p: compact
+          ? {
+              xs: lotusThemeTokens.layout.workbenchCardPaddingCompact,
+              md: lotusThemeTokens.layout.workbenchCardPadding,
+            }
+          : {
+              xs: lotusThemeTokens.layout.workbenchCardPadding,
+              md: lotusThemeTokens.layout.workbenchCardPadding,
+            },
+        borderRadius: `${lotusThemeTokens.radius.md}px`,
+        border: lotusThemeTokens.color.border.subtle,
+        background: lotusThemeTokens.color.surface.panel,
         boxShadow: "none",
       }}
     >
       {title || subtitle || actions ? (
-        <Box sx={{ display: "grid", gap: 0.75, minWidth: 0 }}>
+        <Box sx={{ display: "grid", gap: lotusThemeTokens.spacing.step2, minWidth: 0 }}>
           <Box
             sx={{
               display: "flex",
               alignItems: "flex-start",
               justifyContent: "space-between",
-              gap: 1,
+              gap: lotusThemeTokens.spacing.step2,
               minWidth: 0,
             }}
           >
