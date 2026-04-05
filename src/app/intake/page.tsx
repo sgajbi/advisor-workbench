@@ -45,6 +45,7 @@ import {
   PositionInput,
   TransactionInput,
 } from "@/features/intake/payload-builder";
+import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
 type IntakeOperation =
   | "CREATE_PORTFOLIO"
@@ -225,22 +226,19 @@ export default function IntakePage() {
     queryKey: ["intake-lookups", "portfolios"],
     queryFn: async () => await getPortfolioLookups({ cifId, bookingCenter, limit: 500 }),
     enabled: lookupEnabled,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
   const instrumentLookupQuery = useQuery({
     queryKey: ["intake-lookups", "instruments"],
     queryFn: async () => await getInstrumentLookups({ limit: 500 }),
     enabled: lookupEnabled,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
   const currencyLookupQuery = useQuery({
     queryKey: ["intake-lookups", "currencies"],
     queryFn: async () => await getCurrencyLookups({ source: "ALL", limit: 100 }),
     enabled: lookupEnabled,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
   const activeOperationIndex = OPERATION_ORDER.indexOf(operation);
 

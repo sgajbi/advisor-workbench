@@ -1,6 +1,6 @@
 "use client";
 
-import { Paper, Typography } from "@mui/material";
+import { SectionBlock, WorkbenchSummaryMetricStrip } from "@/design-system";
 
 type Props = {
   marketValueBase: number;
@@ -11,24 +11,27 @@ type Props = {
 
 export default function OverviewCards(props: Props) {
   return (
-    <Paper className="section-card">
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Portfolio Overview
-      </Typography>
-      <div className="kpi-grid">
-        <div className="kpi-box">
-          <p className="kpi-label">Market Value ({props.baseCurrency})</p>
-          <p className="kpi-value">{props.marketValueBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-        </div>
-        <div className="kpi-box">
-          <p className="kpi-label">Cash Weight</p>
-          <p className="kpi-value">{(props.cashWeightPct * 100).toFixed(2)}%</p>
-        </div>
-        <div className="kpi-box">
-          <p className="kpi-label">Positions</p>
-          <p className="kpi-value">{props.positionCount}</p>
-        </div>
-      </div>
-    </Paper>
+    <SectionBlock title="Portfolio Overview">
+      <WorkbenchSummaryMetricStrip
+        ariaLabel="Portfolio overview metrics"
+        items={[
+          {
+            key: "market-value",
+            label: `Market Value (${props.baseCurrency})`,
+            value: props.marketValueBase.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+          },
+          {
+            key: "cash-weight",
+            label: "Cash Weight",
+            value: `${(props.cashWeightPct * 100).toFixed(2)}%`,
+          },
+          {
+            key: "positions",
+            label: "Positions",
+            value: String(props.positionCount),
+          },
+        ]}
+      />
+    </SectionBlock>
   );
 }

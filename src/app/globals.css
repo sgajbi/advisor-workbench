@@ -5446,7 +5446,7 @@ a:hover {
   display: flex;
   gap: 0.75rem;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .performance-advisor-brief-item-copy {

@@ -229,13 +229,18 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getByText(/Valuation is not available for this portfolio yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Backend analytics endpoint is unavailable/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Backend analytics endpoint is unavailable\. Portfolio analytics panels will populate once the API is online\./i)
+      screen.getByText(/Portfolio analytics panels will populate once the API is online\./i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/Reporting service is unavailable/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Reporting service is unavailable\. This panel will populate when reporting aggregation is online\./i)
+      screen.getByText(/This panel will populate when reporting aggregation is online\./i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/No current positions available in snapshot\./i)).toBeInTheDocument();
+    expect(screen.getByText(/No current positions available/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No current positions are available in the latest portfolio snapshot\./i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Create and update a sandbox session to see projected holdings\./i)).toBeInTheDocument();
   });
 });

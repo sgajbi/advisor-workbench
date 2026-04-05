@@ -1,3 +1,5 @@
+import { SectionBlock, SemanticBadge, Text } from "@/design-system";
+
 type Failure = {
   source_service: string;
   error_code: string;
@@ -11,28 +13,27 @@ type Props = {
 
 export default function ExceptionQueue(props: Props) {
   return (
-    <section className="section-card">
-      <h3>Exception Queue</h3>
+    <SectionBlock title="Exception Queue">
       {props.warnings.length === 0 && props.partialFailures.length === 0 ? (
-        <p className="muted">No active warnings or upstream failures.</p>
+        <Text variant="secondary" className="muted">No active warnings or upstream failures.</Text>
       ) : (
         <div className="exception-list">
           {props.warnings.map((warning) => (
             <div className="exception-item warn" key={warning}>
-              <strong>Warning</strong>
+              <SemanticBadge tone="warn">Warning</SemanticBadge>
               <span>{warning}</span>
             </div>
           ))}
           {props.partialFailures.map((item) => (
             <div className="exception-item fail" key={`${item.source_service}-${item.error_code}`}>
-              <strong>
+              <SemanticBadge tone="danger">
                 {item.source_service} - {item.error_code}
-              </strong>
+              </SemanticBadge>
               <span>{item.detail}</span>
             </div>
           ))}
         </div>
       )}
-    </section>
+    </SectionBlock>
   );
 }

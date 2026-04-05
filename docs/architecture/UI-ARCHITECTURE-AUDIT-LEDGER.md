@@ -501,3 +501,47 @@ The Workbench product now uses the shared UI system across:
 
 Any further work should be treated as incremental product evolution, not unfinished RFC-0021
 delivery.
+
+## Active Surface Audit After Closure
+
+### Closed in the Active-Surface Audit
+
+1. **`workbench` still diverged from the shared system in active operational flows**
+   - The operations route still used older route-local seams for:
+     - summary metrics
+     - section shells
+     - partial-failure messaging
+     - analytics and reporting empty states
+     - sandbox/analytics control layout
+     - query caching defaults
+   - This was closed by migrating the surfaced `workbench` route and its supporting components onto:
+     - `WorkbenchPageFrame`
+     - `WorkbenchSectionStack`
+     - `SectionBlock`
+     - `WorkbenchSummaryMetricStrip`
+     - `AnalyticsTable`
+     - `ScreenStatePanel`
+     - `DegradedStatePanel`
+     - shared query-policy defaults
+
+2. **Query caching and refetch posture still drifted across route families**
+   - `intake` and proposal-facing client views still managed query timing and cache posture locally.
+   - This was closed by introducing a shared platform runtime query policy and migrating the
+     affected query entry points to the shared defaults.
+
+3. **Integration tests still asserted legacy route-local copy instead of shared-state contracts**
+   - The active `workbench` integration suite expected concatenated fallback text from the older
+     route-local implementation.
+   - This was closed by aligning the tests to the governed state-panel and table-state contract.
+
+### Explicitly Out of the Active Surface Baseline
+
+1. **Proposal list/detail legacy components remain in the repo but are not currently shell-exposed**
+   - `src/shell/app-registry.ts` defines the active shell surfaces as:
+     - `Portfolio`
+     - `Performance`
+     - `Operations` (`/workbench`, `/suite`)
+   - The older proposal list/detail views remain as implementation artifacts and test fixtures, but
+     they are not part of the active shell navigation baseline for RFC-0021 closure.
+   - Any future modernization of those dormant views should be tracked as follow-on product work,
+     not as unfinished RFC-0021 delivery.

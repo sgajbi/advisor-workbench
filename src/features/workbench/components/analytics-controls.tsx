@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { MenuItem, Stack, TextField } from "@mui/material";
+import { ActionButton, SectionBlock, Text } from "@/design-system";
 
 type Props = {
   sessionId: string | null;
@@ -10,6 +11,13 @@ type Props = {
   benchmark: string;
   preset: string;
 };
+
+const BENCHMARK_OPTIONS = ["MODEL_60_40", "MSCI_ACWI", "CUSTOM"] as const;
+const PRESET_OPTIONS = ["EXEC_SUMMARY", "RISK_FOCUS", "ATTRIBUTION"] as const;
+
+function normalizeSelection<T extends readonly string[]>(value: string, allowed: T, fallback: T[number]) {
+  return allowed.includes(value as T[number]) ? (value as T[number]) : fallback;
+}
 
 function updateQuery(
   query: URLSearchParams,
@@ -24,10 +32,11 @@ function updateQuery(
 export default function AnalyticsControls(props: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const benchmarkValue = normalizeSelection(props.benchmark, BENCHMARK_OPTIONS, "MODEL_60_40");
+  const presetValue = normalizeSelection(props.preset, PRESET_OPTIONS, "EXEC_SUMMARY");
 
   return (
-    <section className="section-card analytics-controls">
-      <Typography variant="h6">Analytics Controls</Typography>
+    <SectionBlock title="Analytics Controls" className="analytics-controls">
       <Stack direction={{ xs: "column", lg: "row" }} spacing={1} sx={{ mt: 1 }}>
         <TextField
           label="Period"
@@ -55,7 +64,7 @@ export default function AnalyticsControls(props: Props) {
           label="Benchmark"
           size="small"
           select
-          value={props.benchmark}
+          value={benchmarkValue}
           onChange={(event) => router.push(updateQuery(new URLSearchParams(searchParams.toString()), "benchmark", event.target.value))}
         >
           <MenuItem value="MODEL_60_40">Model 60/40</MenuItem>
@@ -66,20 +75,20 @@ export default function AnalyticsControls(props: Props) {
           label="Preset"
           size="small"
           select
-          value={props.preset}
+          value={presetValue}
           onChange={(event) => router.push(updateQuery(new URLSearchParams(searchParams.toString()), "preset", event.target.value))}
         >
           <MenuItem value="EXEC_SUMMARY">Executive Summary</MenuItem>
           <MenuItem value="RISK_FOCUS">Risk Focus</MenuItem>
           <MenuItem value="ATTRIBUTION">Attribution</MenuItem>
         </TextField>
-        <Button variant="outlined" onClick={() => window.print()}>
+        <ActionButton onClick={() => window.print()}>
           Export Print View
-        </Button>
+        </ActionButton>
       </Stack>
-      <Typography className="muted" sx={{ mt: 1 }}>
+      <Text variant="secondary" className="muted">
         Active sandbox session: {props.sessionId ?? "none"}.
-      </Typography>
-    </section>
+      </Text>
+    </SectionBlock>
   );
 }

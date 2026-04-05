@@ -1,6 +1,6 @@
 "use client";
 
-import { Paper, Typography } from "@mui/material";
+import { AnalyticsTable, SectionBlock } from "@/design-system";
 
 type Props = {
   asOfDate: string;
@@ -23,37 +23,32 @@ function renderValue(value: unknown): string {
 
 export default function ReportingSnapshotPanel(props: Props) {
   return (
-    <Paper className="section-card">
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Reporting Snapshot
-      </Typography>
-      <Typography className="muted" sx={{ mb: 1 }}>
-        As of {props.asOfDate}. Source: {props.sourceService}
-      </Typography>
-      {props.rows.length === 0 ? (
-        <p className="muted">No report rows were returned by the reporting service.</p>
-      ) : (
-        <div className="table-wrap">
-          <table className="position-table">
-            <thead>
-              <tr>
-                <th align="left">Bucket</th>
-                <th align="left">Metric</th>
-                <th align="right">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {props.rows.map((row, index) => (
-                <tr key={`${String(row.bucket ?? "row")}-${String(row.metric ?? index)}-${index}`}>
-                  <td>{renderValue(row.bucket ?? row.dimension ?? "TOTAL")}</td>
-                  <td>{renderValue(row.metric ?? row.name ?? "value")}</td>
-                  <td align="right">{renderValue(row.value)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </Paper>
+    <SectionBlock
+      title="Reporting Snapshot"
+      subtitle={`As of ${props.asOfDate}. Source: ${props.sourceService}`}
+    >
+      <AnalyticsTable
+        ariaLabel="Reporting snapshot"
+        variant="portfolio"
+        density="comfortable"
+        columns={[
+          { key: "bucket", label: "Bucket" },
+          { key: "metric", label: "Metric" },
+          { key: "value", label: "Value", align: "right" },
+        ]}
+        rows={props.rows.map((row, index) => ({
+          key: `${String(row.bucket ?? "row")}-${String(row.metric ?? index)}-${index}`,
+          cells: [
+            renderValue(row.bucket ?? row.dimension ?? "TOTAL"),
+            renderValue(row.metric ?? row.name ?? "value"),
+            renderValue(row.value),
+          ],
+        }))}
+        emptyState={{
+          title: "No report rows were returned",
+          body: "The reporting service returned no observation rows for this as-of date.",
+        }}
+      />
+    </SectionBlock>
   );
 }

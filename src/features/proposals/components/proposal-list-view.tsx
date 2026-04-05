@@ -19,6 +19,7 @@ import {
 
 import { listProposals } from "../api";
 import { ProposalSummary } from "../types";
+import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
 const STAGES = ["DRAFT", "RISK_REVIEW", "COMPLIANCE_REVIEW", "AWAITING_CLIENT_CONSENT", "EXECUTION_READY"] as const;
 type Stage = (typeof STAGES)[number];
@@ -114,8 +115,7 @@ export default function ProposalListView() {
         createdBy: createdByFilter || undefined,
       }),
     enabled: liveMode,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
 
   const items = useMemo(() => (liveMode ? data?.items ?? [] : DEMO_PROPOSALS), [data?.items, liveMode]);
