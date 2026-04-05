@@ -1,5 +1,6 @@
 import {
   WorkbenchAnalytics,
+  WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceAttributionTrend,
   WorkbenchOverview,
   WorkbenchPerformanceHorizonComparison,
@@ -333,6 +334,27 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
     `/workbench/${portfolioId}/performance/attribution-trend`,
     "performance attribution trend",
     query
+  );
+}
+
+export async function getWorkbenchPerformanceAdvisorBriefClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  }
+): Promise<WorkbenchPerformanceAdvisorBrief> {
+  return await fetchWorkbenchResource<WorkbenchPerformanceAdvisorBrief>(
+    "client",
+    `/workbench/${portfolioId}/performance/advisor-brief`,
+    "performance advisor brief",
+    buildPerformanceWorkspaceQuery(params)
   );
 }
 

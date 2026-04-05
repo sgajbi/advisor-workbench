@@ -19,7 +19,7 @@ export default function PerformanceEvidenceMode({
         id="performance-evidence"
         title={title}
         subtitle={subtitle}
-        className="performance-detail-panel-wide performance-analysis-module performance-evidence-module"
+        className="performance-detail-panel-wide performance-analysis-module performance-evidence-module performance-lotus-stage performance-lotus-stage-evidence"
       >
         <PerformanceAnalysisStatePanel
           state={capability.state === "partial" ? "partial" : "unavailable"}
@@ -36,7 +36,7 @@ export default function PerformanceEvidenceMode({
       id="performance-evidence"
       title={title}
       subtitle={subtitle}
-      className="performance-detail-panel-wide performance-analysis-module performance-evidence-module"
+      className="performance-detail-panel-wide performance-analysis-module performance-evidence-module performance-lotus-stage performance-lotus-stage-evidence"
     >
       <WorkbenchStatusStrip
         label="Evidence support status"

@@ -75,7 +75,7 @@ export default function PerformanceSummaryMode({
         suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
       />
 
-      <WorkspaceGrid className="performance-chart-grid workbench-summary-region performance-analysis-top-region">
+      <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
         <PerformanceChartPanel
           title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
           points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
@@ -100,7 +100,7 @@ export default function PerformanceSummaryMode({
         />
       </WorkspaceGrid>
 
-      <WorkspaceGrid className="performance-detail-grid performance-secondary-zone workbench-summary-region">
+      <WorkspaceGrid className="performance-detail-grid performance-secondary-zone performance-lotus-stage performance-lotus-stage-secondary workbench-summary-region">
         <WorkbenchDeferredSection
           className="performance-summary-driver-section"
           title="Horizon Comparison"

@@ -51,6 +51,10 @@ Verify:
    - `Attribution Detail`
    - `Relative Segment Matrix`
    - `Contribution Detail`
+5. `Advisor Brief` shows bounded provider provenance without opening browser dev tools:
+   - provenance strip includes execution mode and source-ref count
+   - audit drawer exposes provider mode, provider id, adapter kind, and model id
+   - the same brief contract should render whether the upstream author was managed OpenAI or a local OpenAI-compatible model
 
 ## Proposal Workflow Walkthrough
 

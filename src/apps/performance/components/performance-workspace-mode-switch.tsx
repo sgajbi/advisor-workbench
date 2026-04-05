@@ -1,7 +1,7 @@
  "use client";
 
 import { useEffect, useState } from "react";
-import { WorkbenchSegmentedControl, WorkbenchStatusRow } from "@/design-system";
+import { WorkbenchStatusRow } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
   isPartialCapability,
@@ -9,12 +9,18 @@ import {
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
 import { formatDate } from "../formatters";
+import LotusModeTabs from "./advisor-brief/lotus-mode-tabs";
 
-export type PerformanceWorkspaceMode = "summary" | "analysis" | "evidence";
+export type PerformanceWorkspaceMode =
+  | "summary"
+  | "analysis"
+  | "advisor"
+  | "evidence";
 
 const WORKSPACE_MODES: Array<{ key: PerformanceWorkspaceMode; label: string }> = [
   { key: "summary", label: "Summary" },
   { key: "analysis", label: "Analysis" },
+  { key: "advisor", label: "Advisor Brief" },
   { key: "evidence", label: "Evidence" },
 ];
 
@@ -151,9 +157,16 @@ export default function PerformanceWorkspaceModeSwitch({
 
   if (!isHydrated) {
     return (
-      <div className="performance-workspace-mode-switch-group">
+      <div
+        className={[
+          "performance-workspace-mode-switch-group",
+          value === "advisor" ? "performance-workspace-mode-switch-group-advisor-active" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <div
-          className="workbench-segmented-control performance-workspace-mode-switch"
+          className="workbench-segmented-control performance-workspace-mode-switch lotus-mode-tabs"
           role="tablist"
           aria-label="Performance workspace mode"
           aria-busy="true"
@@ -183,8 +196,15 @@ export default function PerformanceWorkspaceModeSwitch({
   }
 
   return (
-    <div className="performance-workspace-mode-switch-group">
-      <WorkbenchSegmentedControl
+    <div
+      className={[
+        "performance-workspace-mode-switch-group",
+        value === "advisor" ? "performance-workspace-mode-switch-group-advisor-active" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <LotusModeTabs
         value={value}
         onChange={onChange}
         options={modeOptions}

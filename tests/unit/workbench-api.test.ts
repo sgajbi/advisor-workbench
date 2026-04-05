@@ -6,6 +6,7 @@ import {
   getReportingSnapshot,
   getWorkbenchAnalytics,
   getWorkbenchPerformanceAttributionTrendClient,
+  getWorkbenchPerformanceAdvisorBriefClient,
   getWorkbenchPerformanceHorizonComparisonClient,
   getWorkbenchPerformanceWorkspaceDetailsClient,
   getWorkbenchPerformanceWorkspaceDetails,
@@ -607,6 +608,64 @@ describe("workbench api", () => {
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/attribution-trend?period=YTD&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+    );
+  });
+
+  it("calls the client-side advisor brief endpoint", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-advisor-brief",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            portfolio: {
+              portfolio_id: "PF_1001",
+              client_id: "CIF_1",
+              base_currency: "USD",
+              booking_center_code: "SG",
+            },
+            as_of_date: "2026-02-24",
+            period: "YTD",
+            report_start_date: "2026-01-01",
+            report_end_date: "2026-02-24",
+            detail_basis: "NET",
+            chart_frequency: "monthly",
+            contribution_dimension: "asset_class",
+            attribution_dimension: "asset_class",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            status: "ready",
+            summary: "Advisor brief ready.",
+            talking_points: [],
+            recommended_actions: [],
+            risks_and_exceptions: [],
+            source_metrics: [],
+            supportability: [],
+            ai_audit: {},
+            ai_evidence: {},
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceAdvisorBriefClient("PF_1001", {
+      period: "YTD",
+      chartFrequency: "monthly",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-02-24",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
     );
   });
 

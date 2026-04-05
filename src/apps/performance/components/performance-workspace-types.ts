@@ -103,6 +103,12 @@ export type PerformanceAnalysisAttributionSectionProps = Pick<
   | "attributionEffectScale"
 >;
 
+export type PerformanceAdvisorBriefModeProps = PerformanceWorkspaceControls & {
+  workspace: WorkbenchPerformanceWorkspace;
+  capabilities: PerformanceWorkspaceCapabilities;
+  onSelectMode: (mode: PerformanceWorkspaceMode) => void;
+};
+
 export type PerformanceWorkspaceViewProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;

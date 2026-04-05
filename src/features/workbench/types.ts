@@ -446,6 +446,85 @@ export type WorkbenchPerformanceWorkspaceDetails = Pick<
   | "partial_failures"
 >;
 
+export type WorkbenchAdvisorBriefStatus = "ready" | "partial" | "unavailable";
+
+export type WorkbenchAdvisorBriefEvidenceRef = {
+  metric_label: string;
+  metric_value: string;
+  source_surface: string;
+  target_mode: string;
+  route: string;
+};
+
+export type WorkbenchAdvisorBriefNarrativeItem = {
+  headline: string;
+  detail: string;
+  tone: "positive" | "neutral" | "warning";
+  evidence_refs: WorkbenchAdvisorBriefEvidenceRef[];
+};
+
+export type WorkbenchAdvisorBriefActionItem = {
+  label: string;
+  target_mode: string;
+  route: string;
+};
+
+export type WorkbenchAdvisorBriefSourceMetric = {
+  label: string;
+  value: string;
+  support_label: string;
+  target_mode: string;
+  route: string;
+  state?: string;
+};
+
+export type WorkbenchAdvisorBriefSupportabilityItem = {
+  label: string;
+  value: string;
+  tone?: string;
+  reason?: string | null;
+};
+
+export type WorkbenchPerformanceAdvisorBrief = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  portfolio: WorkbenchOverview["portfolio"];
+  as_of_date: string;
+  period: string;
+  report_start_date: string;
+  report_end_date: string;
+  detail_basis: string;
+  chart_frequency: string;
+  contribution_dimension: string;
+  attribution_dimension: string;
+  benchmark_code: string | null;
+  status: WorkbenchAdvisorBriefStatus;
+  summary: string;
+  talking_points: WorkbenchAdvisorBriefNarrativeItem[];
+  recommended_actions: WorkbenchAdvisorBriefActionItem[];
+  risks_and_exceptions: WorkbenchAdvisorBriefNarrativeItem[];
+  source_metrics: WorkbenchAdvisorBriefSourceMetric[];
+  supportability: WorkbenchAdvisorBriefSupportabilityItem[];
+  ai_audit: {
+    task_id?: string;
+    output_label?: string;
+    prompt_version?: string;
+    provider_mode?: string;
+    provider_id?: string | null;
+    adapter_kind?: string | null;
+    model_id?: string | null;
+    generated_at?: string;
+    stubbed?: boolean;
+    source_refs?: string[];
+  };
+  ai_evidence: {
+    source_refs?: string[];
+  };
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+};
+
 export type WorkbenchReportingSnapshot = {
   correlationId: string;
   contractVersion: string;

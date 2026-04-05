@@ -17,6 +17,7 @@ import {
 import PerformanceWorkspaceModeSwitch, {
   type PerformanceWorkspaceMode,
 } from "./performance-workspace-mode-switch";
+import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import type {
   PerformanceWorkspaceControls,
@@ -122,6 +123,13 @@ export default function PerformanceWorkspaceView({
         attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
       />
     </DeferredWorkbenchMount>
+  ) : mode === "advisor" ? (
+    <PerformanceAdvisorBriefMode
+      workspace={workspace}
+      {...controls}
+      capabilities={capabilities!}
+      onSelectMode={setMode}
+    />
   ) : (
     <DeferredWorkbenchMount
       placeholder={
@@ -149,7 +157,7 @@ export default function PerformanceWorkspaceView({
           </Panel>
         ) : (
           <WorkbenchPageFrame
-            className="performance-page-frame"
+            className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
             title="Performance"
             actions={

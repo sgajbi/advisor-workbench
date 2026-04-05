@@ -23,7 +23,10 @@ export default function PerformanceSummaryHeaderSection({
   });
 
   return (
-    <section id="performance-overview" className="performance-summary-stage">
+    <section
+      id="performance-overview"
+      className="performance-summary-stage performance-lotus-stage performance-lotus-stage-summary"
+    >
       <PerformanceCapabilityTrustStrip presentation={presentation} />
     </section>
   );
