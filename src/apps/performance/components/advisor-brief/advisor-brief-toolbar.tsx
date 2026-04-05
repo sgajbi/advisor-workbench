@@ -21,11 +21,32 @@ export default function AdvisorBriefToolbar({
   return (
     <div className="performance-advisor-brief-toolbar" aria-label="Advisor brief toolbar">
       <div className="performance-advisor-brief-toolbar-status">
-        <StatusChip tone={status === "ready" ? "success" : "warn"}>
-          {status === "loading" ? "Refreshing" : status === "ready" ? "Ready" : "Review"}
+        <StatusChip
+          tone={
+            status === "ready"
+              ? "success"
+              : status === "partial" || status === "loading"
+                ? "warn"
+                : "default"
+          }
+          className="performance-advisor-brief-toolbar-chip performance-advisor-brief-toolbar-chip-primary"
+        >
+          {status === "loading"
+            ? "Refreshing"
+            : status === "ready"
+              ? "Ready"
+              : status === "partial"
+                ? "Review"
+                : status === "empty"
+                  ? "No Material Brief"
+                  : "Unavailable"}
         </StatusChip>
-        <StatusChip>Source-grounded</StatusChip>
-        {status === "partial" ? <StatusChip tone="warn">Partial Evidence</StatusChip> : null}
+        <StatusChip className="performance-advisor-brief-toolbar-chip">Source-grounded</StatusChip>
+        {status === "partial" ? (
+          <StatusChip tone="warn" className="performance-advisor-brief-toolbar-chip">
+            Partial Evidence
+          </StatusChip>
+        ) : null}
       </div>
       <div className="performance-advisor-brief-toolbar-actions">
         <button
@@ -37,7 +58,7 @@ export default function AdvisorBriefToolbar({
         </button>
         <button
           type="button"
-          className="performance-advisor-brief-toolbar-button"
+          className="performance-advisor-brief-toolbar-button performance-advisor-brief-toolbar-button-primary"
           onClick={() => void handleCopyNote()}
         >
           Copy Note

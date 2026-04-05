@@ -7,7 +7,7 @@ export default function AuditMetadataDrawer({
 }) {
   return (
     <details className="performance-advisor-brief-audit-drawer">
-      <summary>Brief provenance</summary>
+      <summary>View audit metadata</summary>
       <dl className="performance-advisor-brief-audit-grid">
         <div>
           <dt>Generated</dt>

@@ -15,8 +15,12 @@ export default function EvidenceChip({
       onClick={() => onSelectMode(evidenceRef.targetMode)}
       title={evidenceRef.sourceSurface}
     >
-      <span>{evidenceRef.metricLabel}</span>
-      <strong>{evidenceRef.metricValue}</strong>
+      <span className="performance-advisor-brief-evidence-chip-label">
+        {evidenceRef.metricLabel}
+      </span>
+      <strong className="performance-advisor-brief-evidence-chip-value">
+        {evidenceRef.metricValue}
+      </strong>
     </button>
   );
 }

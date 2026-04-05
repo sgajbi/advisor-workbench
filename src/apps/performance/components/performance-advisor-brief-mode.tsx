@@ -8,11 +8,14 @@ import type { WorkbenchPerformanceAdvisorBrief } from "@/features/workbench/type
 
 import { buildPerformanceAdvisorBriefViewModel } from "../advisor-brief-view-model";
 import { formatDate } from "../formatters";
+import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
 
 import AdvisorBriefHeader from "./advisor-brief/advisor-brief-header";
+import AdvisorBriefSynopsis from "./advisor-brief/advisor-brief-synopsis";
 import AdvisorBriefToolbar from "./advisor-brief/advisor-brief-toolbar";
-import AuditMetadataDrawer from "./advisor-brief/audit-metadata-drawer";
-import MetricEvidenceCard from "./advisor-brief/metric-evidence-card";
+import BriefProvenanceStrip from "./advisor-brief/brief-provenance-strip";
+import DrilldownActionList from "./advisor-brief/drilldown-action-list";
+import SourceMetricPanel from "./advisor-brief/source-metric-panel";
 import SupportabilityPanel from "./advisor-brief/supportability-panel";
 import TalkingPointCard from "./advisor-brief/talking-point-card";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
@@ -126,18 +129,21 @@ export default function PerformanceAdvisorBriefMode({
     benchmark,
     isDetailsPending: isDetailsPending || (!advisorBrief && !advisorBriefUnavailable),
   });
+  const drilldownActions = dedupeAdvisorActions(brief.recommendedActions);
 
   return (
     <section className="performance-advisor-brief-stage" aria-label="Advisor Brief">
       <Panel className="performance-advisor-brief-shell">
         <AdvisorBriefHeader
-          title="Performance > Advisor Brief"
-          summary={brief.summary}
           portfolioId={workspace.portfolio.portfolio_id}
-          benchmarkLabel={workspace.benchmark_code ?? "Unassigned"}
+          benchmarkLabel={getPerformanceBenchmarkLabel(
+            workspace.benchmark_code ?? benchmark,
+            workspace.benchmark_options ?? []
+          )}
           asOfDate={formatDate(workspace.as_of_date)}
           period={period}
         />
+        <AdvisorBriefSynopsis summary={brief.summary} />
 
         <AdvisorBriefToolbar
           status={brief.status}
@@ -154,7 +160,12 @@ export default function PerformanceAdvisorBriefMode({
               className="performance-advisor-brief-section"
               aria-label="Client Talking Points"
             >
-              <h3>Client Talking Points</h3>
+              <div className="performance-advisor-brief-section-heading">
+                <h3>Client Talking Points</h3>
+                <p className="performance-advisor-brief-section-note">
+                  Advisor-ready narrative for the selected period.
+                </p>
+              </div>
               <div className="performance-advisor-brief-item-list">
                 {brief.talkingPoints.length ? (
                   brief.talkingPoints.map((item) => (
@@ -176,27 +187,29 @@ export default function PerformanceAdvisorBriefMode({
               className="performance-advisor-brief-section"
               aria-label="Recommended Actions"
             >
-              <h3>Recommended Actions</h3>
-              <div className="performance-advisor-brief-action-list">
-                {brief.recommendedActions.map((action) => (
-                  <button
-                    key={action.label}
-                    type="button"
-                    className="performance-advisor-brief-action"
-                    onClick={() => onSelectMode(action.targetMode)}
-                  >
-                    <span>{action.label}</span>
-                    <span aria-hidden="true">→</span>
-                  </button>
-                ))}
+              <div className="performance-advisor-brief-section-heading">
+                <h3>Recommended Actions</h3>
+                <p className="performance-advisor-brief-section-note">
+                  Next advisor workflow steps from the current brief.
+                </p>
               </div>
+              <DrilldownActionList
+                actions={brief.recommendedActions}
+                onSelectMode={onSelectMode}
+                variant="workflow"
+              />
             </section>
 
             <section
               className="performance-advisor-brief-section"
               aria-label="Risks and Exceptions"
             >
-              <h3>Risks / Exceptions</h3>
+              <div className="performance-advisor-brief-section-heading">
+                <h3>Risks / Exceptions</h3>
+                <p className="performance-advisor-brief-section-note">
+                  Exceptions, evidence gaps, and supportability limits.
+                </p>
+              </div>
               {brief.risksAndExceptions.length ? (
                 <div className="performance-advisor-brief-item-list">
                   {brief.risksAndExceptions.map((item) => (
@@ -220,49 +233,47 @@ export default function PerformanceAdvisorBriefMode({
             aria-label="Advisor brief source evidence"
           >
             <section
-              className="performance-advisor-brief-section"
-              aria-label="Source Metrics"
+              className="performance-advisor-brief-rail-panel"
+              aria-label="Source metrics rail"
             >
-              <h3>Source Metrics</h3>
-              <div className="performance-advisor-brief-metric-list">
-                {brief.sourceMetrics.map((metric) => (
-                  <MetricEvidenceCard
-                    key={metric.label}
-                    metric={metric}
-                    onSelectMode={onSelectMode}
-                  />
-                ))}
-              </div>
+              <SourceMetricPanel metrics={brief.sourceMetrics} onSelectMode={onSelectMode} />
             </section>
 
             <section
               className="performance-advisor-brief-section"
               aria-label="Drill-down Actions"
             >
-              <h3>Drill-down Actions</h3>
-              <div className="performance-advisor-brief-action-list">
-                {brief.recommendedActions.map((action) => (
-                  <button
-                    key={`source-${action.label}`}
-                    type="button"
-                    className="performance-advisor-brief-action"
-                    onClick={() => onSelectMode(action.targetMode)}
-                  >
-                    <span>{action.label}</span>
-                    <span aria-hidden="true">→</span>
-                  </button>
-                ))}
+              <div className="performance-advisor-brief-section-heading">
+                <h3>Drill-down Actions</h3>
+                <p className="performance-advisor-brief-section-note">
+                  Open the supporting analysis surfaces directly.
+                </p>
               </div>
+              <DrilldownActionList actions={drilldownActions} onSelectMode={onSelectMode} />
             </section>
 
             <SupportabilityPanel items={brief.supportability} />
           </aside>
         </div>
 
-        <AuditMetadataDrawer audit={brief.audit} />
+        <BriefProvenanceStrip audit={brief.audit} />
       </Panel>
     </section>
   );
+}
+
+function dedupeAdvisorActions(
+  actions: ReturnType<typeof buildPerformanceAdvisorBriefViewModel>["recommendedActions"]
+) {
+  const seen = new Set<string>();
+  return actions.filter((action) => {
+    const key = `${action.targetMode}:${action.label}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 function toAdvisorNoteCopy(brief: ReturnType<typeof buildPerformanceAdvisorBriefViewModel>) {

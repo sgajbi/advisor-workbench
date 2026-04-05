@@ -15,10 +15,13 @@ export default function MetricEvidenceCard({
       onClick={() => onSelectMode(metric.targetMode)}
     >
       <span className="performance-advisor-brief-metric-label">{metric.label}</span>
-      <strong className="performance-advisor-brief-metric-value">{metric.value}</strong>
-      <span className="performance-advisor-brief-metric-support">
-        {metric.supportingText}
-      </span>
+      <div className="performance-advisor-brief-metric-row">
+        <strong className="performance-advisor-brief-metric-value">{metric.value}</strong>
+        <span className="performance-advisor-brief-metric-arrow" aria-hidden="true">
+          →
+        </span>
+      </div>
+      <span className="performance-advisor-brief-metric-support">{metric.supportingText}</span>
     </button>
   );
 }

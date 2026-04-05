@@ -9,6 +9,7 @@ import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 import type { PerformanceWorkspaceCapabilities } from "./capabilities";
 import { formatCurrency, formatDate, formatPct } from "./formatters";
 import { buildPerformanceHref } from "./navigation";
+import { getPerformanceBenchmarkLabel } from "./components/performance-summary-context-helpers";
 import {
   getBottomContributionRows,
   getNegativePositionContributionRows,
@@ -115,6 +116,10 @@ export function buildPerformanceAdvisorBriefViewModel({
 
   const selectedPerformance =
     detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance;
+  const benchmarkLabel = getPerformanceBenchmarkLabel(
+    workspace.benchmark_code ?? benchmark,
+    workspace.benchmark_options ?? []
+  );
   const route = buildPerformanceHref({
     portfolioId: workspace.portfolio.portfolio_id,
     period,
@@ -228,7 +233,7 @@ export function buildPerformanceAdvisorBriefViewModel({
       {
         label: "Benchmark Return",
         value: benchmarkReturnValue,
-        supportingText: workspace.benchmark_code ?? "Benchmark not assigned",
+        supportingText: benchmarkLabel,
         targetMode: "summary",
         route,
       },
@@ -243,6 +248,13 @@ export function buildPerformanceAdvisorBriefViewModel({
         label: "Net Flow",
         value: formatCurrency(selectedPerformance.net_cash_flow, currency),
         supportingText: `Closing MV ${formatCurrency(selectedPerformance.end_market_value, currency)}`,
+        targetMode: "summary",
+        route,
+      },
+      {
+        label: "Ending MV",
+        value: formatCurrency(selectedPerformance.end_market_value, currency),
+        supportingText: formatDate(workspace.as_of_date),
         targetMode: "summary",
         route,
       },
@@ -267,6 +279,14 @@ function buildGatewayAdvisorBriefViewModel(
   advisorBrief: WorkbenchPerformanceAdvisorBrief,
   workspace: WorkbenchPerformanceWorkspace
 ): PerformanceAdvisorBriefViewModel {
+  const selectedPerformance =
+    advisorBrief.detail_basis === "GROSS"
+      ? workspace.gross_performance
+      : workspace.net_performance;
+  const benchmarkLabel = getPerformanceBenchmarkLabel(
+    advisorBrief.benchmark_code ?? workspace.benchmark_code ?? undefined,
+    workspace.benchmark_options ?? []
+  );
   return {
     status: advisorBrief.status,
     title: `Advisor Brief • ${advisorBrief.portfolio_id}`,
@@ -300,13 +320,15 @@ function buildGatewayAdvisorBriefViewModel(
         targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
       })),
     })),
-    sourceMetrics: advisorBrief.source_metrics.map((metric) => ({
-      label: metric.label,
-      value: metric.value,
-      supportingText: metric.support_label,
-      route: metric.route,
-      targetMode: normalizeAdvisorTargetMode(metric.target_mode),
-    })),
+    sourceMetrics: normalizeGatewaySourceMetrics({
+      advisorBrief,
+      workspace,
+      benchmarkLabel,
+      endingMarketValue: formatCurrency(
+        selectedPerformance.end_market_value,
+        workspace.portfolio.base_currency
+      ),
+    }),
     supportability: advisorBrief.supportability.map((item) => ({
       label: item.label,
       value: item.value,
@@ -328,6 +350,56 @@ function buildGatewayAdvisorBriefViewModel(
         [`lotus-gateway:workbench:${advisorBrief.portfolio_id}:performance-advisor-brief:${advisorBrief.period}`],
     },
   };
+}
+
+function normalizeGatewaySourceMetrics({
+  advisorBrief,
+  workspace,
+  benchmarkLabel,
+  endingMarketValue,
+}: {
+  advisorBrief: WorkbenchPerformanceAdvisorBrief;
+  workspace: WorkbenchPerformanceWorkspace;
+  benchmarkLabel: string;
+  endingMarketValue: string;
+}): PerformanceAdvisorBriefMetric[] {
+  const route = buildPerformanceHref({
+    portfolioId: workspace.portfolio.portfolio_id,
+    period: advisorBrief.period,
+    detailBasis: advisorBrief.detail_basis,
+    contributionDimension: advisorBrief.contribution_dimension,
+    attributionDimension: advisorBrief.attribution_dimension,
+    chartFrequency: advisorBrief.chart_frequency,
+    benchmark: advisorBrief.benchmark_code ?? workspace.benchmark_code ?? undefined,
+    reportStartDate: advisorBrief.report_start_date,
+    reportEndDate: advisorBrief.report_end_date,
+  });
+
+  const normalizedMetrics = advisorBrief.source_metrics.map((metric) => {
+    const isBenchmarkMetric = metric.label.toLowerCase() === "benchmark return";
+    return {
+      label: metric.label,
+      value: metric.value,
+      supportingText: isBenchmarkMetric ? benchmarkLabel : metric.support_label,
+      route: metric.route,
+      targetMode: normalizeAdvisorTargetMode(metric.target_mode),
+    } satisfies PerformanceAdvisorBriefMetric;
+  });
+
+  if (normalizedMetrics.some((metric) => metric.label === "Ending MV")) {
+    return normalizedMetrics;
+  }
+
+  return [
+    ...normalizedMetrics,
+    {
+      label: "Ending MV",
+      value: endingMarketValue,
+      supportingText: formatDate(advisorBrief.as_of_date ?? workspace.as_of_date),
+      route,
+      targetMode: "summary",
+    },
+  ];
 }
 
 function resolveAdvisorBriefStatus({

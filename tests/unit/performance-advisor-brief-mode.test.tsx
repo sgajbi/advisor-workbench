@@ -114,10 +114,13 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(
       screen.getByRole("heading", { name: "Performance Advisor Brief" })
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Advisor brief context")).toHaveTextContent(
+      "BenchmarkGlobal Balanced 60/40"
+    );
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief supportability")).toHaveTextContent(
-        "Advisor Brief: Ready"
-      );
+      const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent("Advisor Brief");
+      expect(supportability).toHaveTextContent("Ready");
     });
     expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
     expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
@@ -127,7 +130,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       "No material supportability exceptions are flagged"
     );
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
-    expect(screen.getByText("Brief provenance")).toBeInTheDocument();
+    expect(screen.getByText("View audit metadata")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByText("EXPLANATION_ONLY")).not.toBeInTheDocument();
 
@@ -162,9 +165,9 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief supportability")).toHaveTextContent(
-        "Advisor Brief: Ready"
-      );
+      const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent("Advisor Brief");
+      expect(supportability).toHaveTextContent("Ready");
     });
 
     fireEvent.click(
@@ -197,9 +200,9 @@ describe("PerformanceAdvisorBriefMode", () => {
       />
     );
 
-    expect(screen.getByLabelText("Advisor brief supportability")).toHaveTextContent(
-      "Advisor Brief: Generating"
-    );
+    const supportability = screen.getByLabelText("Advisor brief supportability");
+    expect(supportability).toHaveTextContent("Advisor Brief");
+    expect(supportability).toHaveTextContent("Generating");
     expect(getWorkbenchPerformanceAdvisorBriefClient).not.toHaveBeenCalled();
   });
 });

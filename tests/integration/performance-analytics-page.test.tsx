@@ -446,14 +446,14 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Advisor Brief" }));
 
-    expect(
-      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
-    ).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief supportability")).toHaveTextContent(
-        "Advisor Brief: Ready"
-      );
-    });
+      expect(
+        await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+      ).toBeInTheDocument();
+      await waitFor(() => {
+        const supportability = screen.getByLabelText("Advisor brief supportability");
+        expect(supportability).toHaveTextContent("Advisor Brief");
+        expect(supportability).toHaveTextContent("Ready");
+      });
     expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
     expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."

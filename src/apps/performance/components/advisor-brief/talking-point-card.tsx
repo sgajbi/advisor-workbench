@@ -23,9 +23,14 @@ export default function TalkingPointCard({
   onSelectMode: (mode: PerformanceWorkspaceMode) => void;
 }) {
   return (
-    <article className="performance-advisor-brief-item">
+    <article
+      className={`performance-advisor-brief-item performance-advisor-brief-item-${item.tone}`}
+    >
       <header className="performance-advisor-brief-item-header">
-        <h4>{item.headline}</h4>
+        <div className="performance-advisor-brief-item-copy">
+          <h4>{item.headline}</h4>
+          <p>{item.detail}</p>
+        </div>
         <StatusChip
           tone={item.tone === "warning" ? "warn" : "default"}
           className="performance-advisor-brief-item-tone"
@@ -33,8 +38,10 @@ export default function TalkingPointCard({
           {toToneLabel(item.tone)}
         </StatusChip>
       </header>
-      <p>{item.detail}</p>
-      <div className="performance-advisor-brief-evidence-row">
+      <div className="performance-advisor-brief-item-support">
+        <span className="performance-advisor-brief-item-support-label">Supporting metrics</span>
+      </div>
+      <div className="performance-advisor-brief-evidence-row" aria-label="Supporting metrics">
         {item.evidenceRefs.map((evidenceRef) => (
           <EvidenceChip
             key={`${item.headline}-${evidenceRef.metricLabel}-${evidenceRef.sourceSurface}`}

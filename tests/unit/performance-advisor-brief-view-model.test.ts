@@ -48,6 +48,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       "Benchmark Return",
       "Active Return",
       "Net Flow",
+      "Ending MV",
     ]);
     expect(brief.supportability).toEqual(
       expect.arrayContaining([

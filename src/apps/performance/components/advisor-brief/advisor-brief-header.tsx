@@ -1,13 +1,9 @@
 export default function AdvisorBriefHeader({
-  title,
-  summary,
   portfolioId,
   benchmarkLabel,
   asOfDate,
   period,
 }: {
-  title: string;
-  summary: string;
   portfolioId: string;
   benchmarkLabel: string;
   asOfDate: string;
@@ -15,14 +11,28 @@ export default function AdvisorBriefHeader({
 }) {
   return (
     <header className="performance-advisor-brief-header">
-      <div className="performance-advisor-brief-copy">
-        <p className="performance-advisor-brief-eyebrow">{title}</p>
+      <div className="performance-advisor-brief-header-copy">
+        <p className="performance-advisor-brief-eyebrow">Performance • Advisor Brief</p>
         <h2 className="performance-advisor-brief-title">Performance Advisor Brief</h2>
-        <p className="performance-advisor-brief-context-line">
-          {period} | Portfolio: {portfolioId} | Benchmark: {benchmarkLabel} | As of {asOfDate}
-        </p>
-        <p className="performance-advisor-brief-summary">{summary}</p>
       </div>
+      <dl className="performance-advisor-brief-context-grid" aria-label="Advisor brief context">
+        <div>
+          <dt>Period</dt>
+          <dd>{period}</dd>
+        </div>
+        <div>
+          <dt>Portfolio</dt>
+          <dd>{portfolioId}</dd>
+        </div>
+        <div>
+          <dt>Benchmark</dt>
+          <dd>{benchmarkLabel}</dd>
+        </div>
+        <div>
+          <dt>As of</dt>
+          <dd>{asOfDate}</dd>
+        </div>
+      </dl>
     </header>
   );
 }
