@@ -511,6 +511,9 @@ export type WorkbenchPerformanceAdvisorBrief = {
     output_label?: string;
     prompt_version?: string;
     provider_mode?: string;
+    provider_id?: string | null;
+    adapter_kind?: string | null;
+    model_id?: string | null;
     generated_at?: string;
     stubbed?: boolean;
     source_refs?: string[];

@@ -62,6 +62,9 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         outputLabel: "EXPLANATION_ONLY",
         promptVersion: "foundation.explain.v1",
         providerMode: "fixture-preview",
+        providerId: "text.stub",
+        adapterKind: "STUB",
+        modelId: null,
         stubbed: true,
         sourceRefs: expect.arrayContaining([
           "lotus-gateway:workbench:PF_1001:performance-summary:YTD",

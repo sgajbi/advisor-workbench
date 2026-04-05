@@ -461,6 +461,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Brief provenance")).toHaveTextContent(
+      "Execution local_openai_compatible • text.local • qwen3:8b"
+    );
 
     fireEvent.click(
       within(screen.getByLabelText("Recommended Actions")).getByRole("button", {

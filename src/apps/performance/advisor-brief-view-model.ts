@@ -73,6 +73,9 @@ export type PerformanceAdvisorBriefAudit = {
   outputLabel: string;
   promptVersion: string;
   providerMode: string;
+  providerId: string | null;
+  adapterKind: string | null;
+  modelId: string | null;
   generatedAt: string;
   stubbed: boolean;
   sourceRefs: string[];
@@ -269,6 +272,9 @@ export function buildPerformanceAdvisorBriefViewModel({
       outputLabel: "EXPLANATION_ONLY",
       promptVersion: "foundation.explain.v1",
       providerMode: "fixture-preview",
+      providerId: "text.stub",
+      adapterKind: "STUB",
+      modelId: null,
       generatedAt: workspace.as_of_date,
       stubbed: true,
       sourceRefs: [
@@ -344,6 +350,9 @@ function buildGatewayAdvisorBriefViewModel(
       outputLabel: advisorBrief.ai_audit.output_label ?? "EXPLANATION_ONLY",
       promptVersion: advisorBrief.ai_audit.prompt_version ?? "foundation.explain.v1",
       providerMode: advisorBrief.ai_audit.provider_mode ?? "unknown",
+      providerId: advisorBrief.ai_audit.provider_id ?? null,
+      adapterKind: advisorBrief.ai_audit.adapter_kind ?? null,
+      modelId: advisorBrief.ai_audit.model_id ?? null,
       generatedAt:
         advisorBrief.ai_audit.generated_at ??
         advisorBrief.as_of_date ??

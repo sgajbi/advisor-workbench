@@ -97,9 +97,12 @@ function buildAdvisorBriefResponse(portfolioId: string, benchmarkCode: string | 
       task_id: "explain.v1",
       output_label: "EXPLANATION_ONLY",
       prompt_version: "foundation.explain.v1",
-      provider_mode: "disabled",
+      provider_mode: "local_openai_compatible",
+      provider_id: "text.local",
+      adapter_kind: "OPENAI_COMPATIBLE_LOCAL",
+      model_id: "qwen3:8b",
       generated_at: "2026-02-24T00:00:00Z",
-      stubbed: true,
+      stubbed: false,
     },
     ai_evidence: {
       source_refs: [

@@ -14,12 +14,24 @@ export default function AuditMetadataDrawer({
           <dd>{audit.generatedAt}</dd>
         </div>
         <div>
-          <dt>Provider</dt>
+          <dt>Provider Mode</dt>
           <dd>{audit.providerMode}</dd>
+        </div>
+        <div>
+          <dt>Provider ID</dt>
+          <dd>{audit.providerId ?? "Not reported"}</dd>
+        </div>
+        <div>
+          <dt>Model</dt>
+          <dd>{audit.modelId ?? "Not reported"}</dd>
         </div>
         <div>
           <dt>Source Refs</dt>
           <dd>{audit.sourceRefs.length}</dd>
+        </div>
+        <div>
+          <dt>Adapter</dt>
+          <dd>{audit.adapterKind ?? "Not reported"}</dd>
         </div>
         <div>
           <dt>Review Mode</dt>

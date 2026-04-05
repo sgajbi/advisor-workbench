@@ -74,9 +74,12 @@ vi.mock("../../src/features/workbench/api", () => ({
       task_id: "explain.v1",
       output_label: "EXPLANATION_ONLY",
       prompt_version: "foundation.explain.v1",
-      provider_mode: "disabled",
+      provider_mode: "local_openai_compatible",
+      provider_id: "text.local",
+      adapter_kind: "OPENAI_COMPATIBLE_LOCAL",
+      model_id: "qwen3:8b",
       generated_at: "2026-02-24T00:00:00Z",
-      stubbed: true,
+      stubbed: false,
     },
     ai_evidence: {
       source_refs: [
@@ -138,6 +141,17 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByText("Audit metadata")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByText("EXPLANATION_ONLY")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Brief provenance")).toHaveTextContent(
+      "Execution local_openai_compatible • text.local • qwen3:8b"
+    );
+
+    fireEvent.click(screen.getByText("Audit metadata"));
+
+    expect(screen.getByText("Provider ID")).toBeInTheDocument();
+    expect(screen.getByText("text.local")).toBeInTheDocument();
+    expect(screen.getByText("OPENAI_COMPATIBLE_LOCAL")).toBeInTheDocument();
+    expect(screen.getByText("qwen3:8b")).toBeInTheDocument();
+    expect(screen.getByText("Live")).toBeInTheDocument();
 
     fireEvent.click(
       within(screen.getByLabelText("Recommended Actions")).getByRole("button", {

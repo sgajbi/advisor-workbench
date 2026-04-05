@@ -523,6 +523,9 @@ Status:
   AI generation, with route/service regression tests covering those timing headers.
 - Repo docs now document the Advisor Brief route, canonical local upstream dependencies, and the
   Gateway-curated `lotus-ai` integration boundary.
+- Workbench provenance now surfaces provider mode, provider id, adapter kind, and model id in a
+  bounded audit surface so operators can distinguish managed and local authorship without reading
+  raw payloads.
 - Remaining RFC status stays `PROPOSED` until the implementation branches are raised, reviewed,
   merged, and the repo trees return to `main`.
 
