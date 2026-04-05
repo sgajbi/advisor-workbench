@@ -383,7 +383,8 @@ export default function PerformanceAttributionTrendPanel({
             ariaLabel="Attribution trend table"
             columns={tableModel.columns}
             rows={tableModel.rows}
-            dense
+            density="compact"
+            variant="analysis"
             className="performance-analysis-table performance-attribution-trend-table"
           />
         </>

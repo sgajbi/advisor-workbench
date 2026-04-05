@@ -45,7 +45,8 @@ export default function PerformanceSummaryContributorsSection({
               <AnalyticsTable
                 ariaLabel="Top Contributors table"
                 className="performance-contributors-table performance-chart-observation-table"
-                dense
+                density="compact"
+                variant="observation"
                 columns={presentation.positiveTableModel.columns}
                 rows={presentation.positiveTableModel.rows}
               />
@@ -57,7 +58,8 @@ export default function PerformanceSummaryContributorsSection({
               <AnalyticsTable
                 ariaLabel="Top Detractors table"
                 className="performance-contributors-table performance-chart-observation-table"
-                dense
+                density="compact"
+                variant="observation"
                 columns={presentation.negativeTableModel.columns}
                 rows={presentation.negativeTableModel.rows}
               />
@@ -87,7 +89,8 @@ export default function PerformanceSummaryContributorsSection({
             <AnalyticsTable
               ariaLabel="Aggregate contributor summary"
               className="performance-contributors-table performance-chart-observation-table"
-              dense
+              density="compact"
+              variant="observation"
               columns={presentation.tableModel.columns}
               rows={presentation.tableModel.rows}
               footer={presentation.tableModel.footer}

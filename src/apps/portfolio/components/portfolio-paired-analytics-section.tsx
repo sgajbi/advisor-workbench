@@ -217,7 +217,8 @@ function renderIncomeModule({
           </DeferredWorkbenchMount>
           {isDetailedView ? (
             <AnalyticsTable
-              dense
+              density="compact"
+              variant="portfolio"
               className="portfolio-analytics-table"
               ariaLabel="Income summary"
               columns={[
@@ -345,7 +346,8 @@ function renderActivityModule({
           </DeferredWorkbenchMount>
           {isDetailedView ? (
             <AnalyticsTable
-              dense
+              density="compact"
+              variant="portfolio"
               className="portfolio-analytics-table"
               ariaLabel="Activity summary"
               columns={[

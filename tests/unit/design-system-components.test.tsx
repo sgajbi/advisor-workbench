@@ -295,6 +295,7 @@ describe("design-system components", () => {
       <AnalyticsTable
         className="analysis-table"
         ariaLabel="Allocation summary"
+        variant="analysis"
         columns={[
           { key: "bucket", label: "Bucket" },
           { key: "value", label: "Market Value", align: "right" },
@@ -309,7 +310,11 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("table", { name: "Allocation summary" })).toBeInTheDocument();
-    expect(document.querySelector(".analytics-table-frame.analysis-table")).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".analytics-table-frame.analytics-table-variant-analysis.analytics-table-density-comfortable.analysis-table"
+      )
+    ).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Market Value" })).toBeInTheDocument();
     expect(screen.getByText("$800,000")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
@@ -318,7 +323,8 @@ describe("design-system components", () => {
   it("renders dense analytics tables through the shared frame contract", () => {
     render(
       <AnalyticsTable
-        dense
+        density="compact"
+        variant="observation"
         ariaLabel="Dense allocation summary"
         columns={[
           { key: "bucket", label: "Bucket" },
@@ -329,7 +335,11 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("table", { name: "Dense allocation summary" })).toBeInTheDocument();
-    expect(document.querySelector(".analytics-table-frame.analytics-table-frame-dense")).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".analytics-table-frame.analytics-table-density-compact.analytics-table-frame-dense.analytics-table-variant-observation"
+      )
+    ).toBeTruthy();
   });
 
   it("supports keyboard activation for interactive analytics table rows", () => {
@@ -355,6 +365,55 @@ describe("design-system components", () => {
 
     fireEvent.keyDown(screen.getByLabelText("Equity row"), { key: "Enter" });
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders shared empty and loading table states through the table shell", () => {
+    const { rerender } = render(
+      <AnalyticsTable
+        ariaLabel="Portfolio cash ledger"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "date", label: "Date" },
+          { key: "amount", label: "Amount", align: "right" },
+        ]}
+        rows={[]}
+        emptyState={{
+          title: "No cash movements",
+          body: "Booked cash movements will appear once treasury events are published.",
+        }}
+      />
+    );
+
+    expect(screen.getByText("No cash movements")).toHaveClass("analytics-table-state-title");
+    expect(
+      screen.getByText("Booked cash movements will appear once treasury events are published.")
+    ).toHaveClass("analytics-table-state-body");
+    expect(
+      document.querySelector(
+        ".analytics-table-frame.analytics-table-variant-portfolio.analytics-table-density-compact"
+      )
+    ).toBeTruthy();
+
+    rerender(
+      <AnalyticsTable
+        ariaLabel="Portfolio cash ledger"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "date", label: "Date" },
+          { key: "amount", label: "Amount", align: "right" },
+        ]}
+        rows={[]}
+        loadingState={{
+          title: "Loading cash ledger",
+          body: "Cash ledger rows are loading for the selected horizon.",
+        }}
+      />
+    );
+
+    expect(screen.getByText("Loading cash ledger")).toBeInTheDocument();
+    expect(screen.getByText("Cash ledger rows are loading for the selected horizon.")).toBeInTheDocument();
   });
 
   it("renders analytics stats with semantic tone and business tooltip", async () => {

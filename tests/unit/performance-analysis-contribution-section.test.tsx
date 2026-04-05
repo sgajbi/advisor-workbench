@@ -42,7 +42,6 @@ describe("PerformanceAnalysisContributionSection", () => {
       screen.queryByText("Position-level and segment-level contribution for the selected period.")
     ).not.toBeInTheDocument();
     expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
-    expect(document.querySelector(".performance-analysis-table.analytics-table-frame-dense")).toBeTruthy();
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Contributor")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Detractor")).not.toBeInTheDocument();
@@ -56,6 +55,11 @@ describe("PerformanceAnalysisContributionSection", () => {
     );
     const positionTable = screen.getByLabelText("Position contribution table");
     expect(positionTable).toBeInTheDocument();
+    expect(
+      positionTable.closest(
+        ".performance-analysis-table.analytics-table-variant-analysis.analytics-table-density-compact"
+      )
+    ).toBeTruthy();
     expect(within(positionTable).getByText("Position")).toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();

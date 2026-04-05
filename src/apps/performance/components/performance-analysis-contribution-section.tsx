@@ -128,7 +128,8 @@ export default function PerformanceAnalysisContributionSection({
               positionTableModel ? (
                 <AnalyticsTable
                   className="performance-analysis-table"
-                  dense
+                  density="compact"
+                  variant="analysis"
                   ariaLabel="Position contribution table"
                   columns={positionTableModel.columns}
                   rows={positionTableModel.rows.map((row) => ({
@@ -138,16 +139,22 @@ export default function PerformanceAnalysisContributionSection({
                   }))}
                 />
               ) : (
-                <div
-                  className="performance-analysis-detail-empty"
-                  aria-label="Position contribution detail unavailable"
-                >
-                  <strong>Position ranking unavailable</strong>
-                  <span>
-                    Open Segment Contribution to inspect grouped contribution for the selected
-                    segment.
-                  </span>
-                </div>
+                <AnalyticsTable
+                  className="performance-analysis-table"
+                  density="compact"
+                  variant="analysis"
+                  ariaLabel="Position contribution detail unavailable"
+                  columns={[
+                    { key: "position", label: "Position" },
+                    { key: "contribution", label: "Contribution", align: "right" },
+                  ]}
+                  rows={[]}
+                  emptyState={{
+                    title: "Position ranking unavailable",
+                    body:
+                      "Open Segment Contribution to inspect grouped contribution for the selected segment.",
+                  }}
+                />
               )
             ) : segmentLevel ? (
               <PerformanceContributionAggregateTable
@@ -158,15 +165,22 @@ export default function PerformanceAnalysisContributionSection({
                 rowKeyPrefix={segmentLevel.name}
               />
             ) : (
-              <div
-                className="performance-analysis-detail-empty"
-                aria-label="Segment contribution detail unavailable"
-              >
-                <strong>Segment breakdown unavailable</strong>
-                <span>
-                  Grouped contribution is not available for the current selection and horizon.
-                </span>
-              </div>
+              <AnalyticsTable
+                className="performance-analysis-table"
+                density="compact"
+                variant="analysis"
+                ariaLabel="Segment contribution detail unavailable"
+                columns={[
+                  { key: "segment", label: "Segment" },
+                  { key: "contribution", label: "Contribution", align: "right" },
+                ]}
+                rows={[]}
+                emptyState={{
+                  title: "Segment breakdown unavailable",
+                  body:
+                    "Grouped contribution is not available for the current selection and horizon.",
+                }}
+              />
             )}
           </PerformanceAnalysisDetailPane>
         ) : null}

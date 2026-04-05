@@ -170,7 +170,8 @@ export default function PerformanceAnalysisAttributionSection({
                       />
                       <AnalyticsTable
                         className="performance-analysis-table"
-                        dense
+                        density="compact"
+                        variant="analysis"
                         ariaLabel={`${formatLabel(level.dimension)} attribution table`}
                         columns={[
                           { key: "bucket", label: "Segment" },
@@ -224,7 +225,8 @@ export default function PerformanceAnalysisAttributionSection({
                       </div>
                       <AnalyticsTable
                         className="performance-analysis-table"
-                        dense
+                        density="compact"
+                        variant="analysis"
                         ariaLabel={`${formatLabel(level.dimension)} attribution totals`}
                         columns={[
                           { key: "view", label: "Metric" },

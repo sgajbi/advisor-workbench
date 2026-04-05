@@ -339,7 +339,8 @@ export default function PerformanceMultiHorizonPanel({
             ariaLabel="Multi-horizon return table"
             columns={tableModel.columns}
             rows={tableModel.rows}
-            dense
+            density="compact"
+            variant="observation"
             className="performance-horizon-table performance-chart-observation-table"
           />
         </>

@@ -242,3 +242,50 @@ Slice 1 is considered complete when:
    - Shared primitives are converging, but some naming overlap and component API cleanup still
      remains.
    - Target slice: Slice 7.
+
+## Slice 5 Findings
+
+### Closed in Slice 5
+
+1. **Shared table language was still too thin**
+   - `AnalyticsTable` existed, but it still behaved mostly as a low-level wrapper around MUI
+     tables.
+   - Density, visual tone, and table-empty handling were not governed explicitly enough to stop
+     feature-local drift.
+   - Slice 5 closes this by introducing a stronger shared table contract with explicit:
+     - density
+     - variant
+     - empty/loading table states
+
+2. **Portfolio and Performance tables still carried duplicated styling intent**
+   - Major financial tables on both surfaces still depended on route-local classes for visual
+     posture.
+   - Slice 5 closes the main part of that gap by migrating key table consumers to shared
+     `variant="portfolio"`, `variant="analysis"`, and `variant="observation"` semantics and by
+     moving repeated styling into shared global selectors keyed from the design-system contract.
+
+3. **Table-state handling was not system-governed**
+   - Modules that lacked detail rows still fell back to ad hoc empty-state blocks outside the
+     table system.
+   - Slice 5 closes the first part of that gap by allowing shared empty/loading table states and
+     by migrating contribution-detail empty cases to the common contract.
+
+4. **No test guard existed for table contract semantics**
+   - The repo had table usage tests, but no direct proof that the shared table layer enforced
+     variant, density, and table-state behavior.
+   - Slice 5 adds focused tests for:
+     - shared table variant and density classes
+     - empty/loading state rendering
+     - portfolio/performance consumer migration onto the new table contract
+
+### Still Open After Slice 5
+
+1. **State-system consistency still needs a shared contract**
+   - Screen-level loading, partial, unavailable, stale, and no-results states still use more than
+     one pattern.
+   - Target slice: Slice 6.
+
+2. **Naming and API cleanup remains**
+   - Shared primitives are converging, but some naming overlap and component API cleanup still
+     remains.
+   - Target slice: Slice 7.

@@ -6,6 +6,12 @@ export { default as AnalyticsRankedList } from "./components/analytics-ranked-li
 export { default as AnalyticsSectionHeader } from "./components/analytics-section-header";
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
+export type {
+  AnalyticsTableColumn,
+  AnalyticsTableDensity,
+  AnalyticsTableRow,
+  AnalyticsTableVariant,
+} from "./components/analytics-table";
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
 export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";

@@ -1207,6 +1207,33 @@ a:hover {
   line-height: 1.25;
 }
 
+.analytics-table-frame .analytics-table-state-cell {
+  padding: 0;
+  border-bottom: none;
+}
+
+.analytics-table-state {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-6);
+  text-align: left;
+}
+
+.analytics-table-state-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--text-default);
+}
+
+.analytics-table-state-body {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.analytics-table-variant-portfolio.analytics-table-frame,
 .portfolio-analytics-table.analytics-table-frame,
 .portfolio-cashflow-table.analytics-table-frame {
   width: 100%;
@@ -1214,15 +1241,18 @@ a:hover {
   border-radius: 0;
 }
 
+.analytics-table-variant-portfolio.analytics-table-frame,
 .portfolio-analytics-table.analytics-table-frame {
   align-self: start;
 }
 
+.analytics-table-variant-portfolio.analytics-table-frame .MuiTable-root,
 .portfolio-analytics-table.analytics-table-frame .MuiTable-root,
 .portfolio-cashflow-table.analytics-table-frame .MuiTable-root {
   min-width: 0;
 }
 
+.analytics-table-variant-portfolio.analytics-table-frame .MuiTableCell-root,
 .portfolio-analytics-table.analytics-table-frame .MuiTableCell-root,
 .portfolio-cashflow-table.analytics-table-frame .MuiTableCell-root {
   white-space: nowrap;
@@ -6056,16 +6086,19 @@ a:hover {
   gap: 0.55rem;
 }
 
+.analytics-table-variant-analysis.analytics-table-frame,
 .performance-analysis-table {
   border-radius: 12px;
   border-color: rgba(32, 44, 61, 0.08);
   background: #fbfcfd;
 }
 
+.analytics-table-variant-analysis.analytics-table-frame.analytics-table-frame-dense,
 .performance-analysis-table.analytics-table-frame-dense {
   border-radius: 12px;
 }
 
+.analytics-table-variant-analysis.analytics-table-frame .MuiTableHead-root .MuiTableCell-root,
 .performance-analysis-table.analytics-table-frame .MuiTableHead-root .MuiTableCell-root {
   background: #f5f7fa;
   color: #4f5d70;
@@ -6074,6 +6107,8 @@ a:hover {
   letter-spacing: 0.08em;
 }
 
+.analytics-table-variant-analysis.analytics-table-frame .MuiTableBody-root .MuiTableCell-root,
+.analytics-table-variant-analysis.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root,
 .performance-analysis-table.analytics-table-frame .MuiTableBody-root .MuiTableCell-root,
 .performance-analysis-table.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root {
   padding-top: 0.9rem;
@@ -6083,10 +6118,12 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.analytics-table-variant-analysis.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even),
 .performance-analysis-table.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
   background: rgba(247, 249, 251, 0.82);
 }
 
+.analytics-table-variant-analysis.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root,
 .performance-analysis-table.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root {
   background: #f5f7fa;
   color: #172234;
@@ -6989,12 +7026,14 @@ a:hover {
   overflow: hidden;
 }
 
+.analytics-table-variant-observation.analytics-table-frame,
 .performance-chart-observation-table.analytics-table-frame {
   border-color: rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: #fbfcfd;
 }
 
+.analytics-table-variant-observation.analytics-table-frame .MuiTableHead-root .MuiTableCell-root,
 .performance-chart-observation-table.analytics-table-frame .MuiTableHead-root .MuiTableCell-root {
   background: #f5f7fa;
   color: #4f5d70;
@@ -7003,6 +7042,7 @@ a:hover {
   letter-spacing: 0.08em;
 }
 
+.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableCell-root,
 .performance-chart-observation-table.analytics-table-frame .MuiTableBody-root .MuiTableCell-root {
   padding-top: 0.9rem;
   padding-bottom: 0.9rem;
@@ -7010,10 +7050,12 @@ a:hover {
   color: #1f2937;
 }
 
+.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even),
 .performance-chart-observation-table.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
   background: rgba(247, 249, 251, 0.82);
 }
 
+.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableCell-root:nth-child(n + 3),
 .performance-chart-observation-table.analytics-table-frame .MuiTableBody-root .MuiTableCell-root:nth-child(n + 3) {
   text-align: right;
 }

@@ -623,7 +623,8 @@ export default function PerformanceChartPanel({
             ariaLabel="Return path observation table"
             columns={chartTableModel.columns}
             rows={chartTableModel.rows}
-            dense
+            density="compact"
+            variant="observation"
             className="performance-chart-observation-table"
           />
         </>
