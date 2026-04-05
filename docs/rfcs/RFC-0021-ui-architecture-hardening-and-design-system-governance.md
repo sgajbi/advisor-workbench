@@ -30,6 +30,80 @@ This RFC proposes the next deliberate foundation step:
 
 This is not a page-cleanup RFC. It is a product-wide frontend hardening RFC.
 
+## Why This RFC Is Next
+
+The current product is past the point where page-by-page polish is enough.
+
+Current reality:
+
+1. `Portfolio` and `Performance` now carry enough product weight that shared UI drift is visible,
+2. the shell and app-oriented package direction already exist, so the right next step is
+   standardization, not another architectural reset,
+3. newer product-quality work has improved the UI, but some of the best patterns still live too
+   close to route-level code,
+4. future app surfaces will become slower and riskier to build if the current system remains only
+   partially governed.
+
+If this RFC is not done now:
+
+1. every new screen will continue to make small local design decisions,
+2. review cost will rise because styling intent will remain distributed,
+3. visual and interaction drift will compound,
+4. design-system debt will become more expensive than feature work itself.
+
+This is therefore the correct next foundation step for `lotus-workbench`.
+
+## Scope Clarification
+
+This RFC is broad in product reach but deliberately narrow in implementation style.
+
+It is:
+
+1. a systematization RFC,
+2. a shared-primitives RFC,
+3. a naming and composition cleanup RFC,
+4. a staged migration RFC.
+
+It is not:
+
+1. a big-bang visual redesign,
+2. a mandate to rewrite every page before value is shipped,
+3. a license to abstract every component into a generic wrapper,
+4. a brand-refresh RFC,
+5. a backend-contract RFC.
+
+The intended outcome is controlled consolidation, not abstraction theatre.
+
+## Current Source Reality
+
+The RFC must respond to how the repo actually works today.
+
+### What already exists
+
+`lotus-workbench` already has:
+
+1. a shell architecture under `src/shell/`,
+2. a design-system area under `src/design-system/`,
+3. major feature surfaces under `src/apps/`,
+4. meaningful shared tokens and CSS variables in `src/app/globals.css`,
+5. established product surfaces where UI inconsistency is now visible enough to govern.
+
+### What is still weak
+
+The current foundation still has these gaps:
+
+1. tokens are present, but not all product decisions are represented cleanly as tokens,
+2. some primitives exist, but typography, surfaces, status, and tables are not yet enforced
+   systematically,
+3. several high-quality patterns are still feature-local rather than first-class shared building
+   blocks,
+4. naming is partially coherent but not yet stable enough to scale cleanly across many app
+   surfaces,
+5. CSS is disciplined in parts, but repeated local class patterns still carry too much system
+   responsibility.
+
+This RFC should extend the current foundation instead of pretending no foundation exists.
+
 ## Relationship to Prior RFCs
 
 This RFC extends earlier Workbench foundation work rather than replacing it.
@@ -114,6 +188,76 @@ to:
 
 2. “high-quality screens produced by default because the shared architecture makes the right path
    the easiest path.”
+
+## Architectural Rules
+
+The following rules are mandatory for implementation.
+
+### 1. Shared layer first
+
+If a pattern appears in more than one product surface and has the same semantic role, it should be
+implemented in the shared layer before more page-local copies are added.
+
+### 2. No “god components”
+
+Shared components must be explicit and intention-revealing.
+
+Rejected pattern:
+
+1. one highly flexible `Card` or `InfoBox` with many flags and unclear semantics.
+
+Preferred pattern:
+
+1. a small number of explicit surface primitives with clear product roles.
+
+### 3. Product semantics over technical semantics
+
+Primitive and variant names should describe product meaning, not implementation accidents.
+
+Rejected examples:
+
+1. `CustomCard`,
+2. `InfoBox`,
+3. `CompactThing`,
+4. `SmallBadgeVariantTwo`.
+
+Preferred examples:
+
+1. `SectionBlock`,
+2. `MetricPanel`,
+3. `SemanticBadge`,
+4. `AuditMetadataStrip`.
+
+### 4. No new page-local system rules
+
+Page files may compose the system, but they should not define new typography scales, spacing
+systems, badge systems, or table conventions unless the RFC or a later approved RFC explicitly
+requires it.
+
+### 5. Real patterns only
+
+A shared primitive must come from repeated real usage in the product, not speculative future
+abstraction.
+
+## Definition of Success
+
+This RFC succeeds if the product becomes more consistent because the codebase makes inconsistent
+choices harder to write.
+
+That means:
+
+1. fewer page-local styling decisions,
+2. fewer duplicate layout and status patterns,
+3. more shared component usage in `Portfolio` and `Performance`,
+4. clearer naming and reviewability,
+5. more predictable behavior for states, formatting, tables, and navigation.
+
+This RFC does not succeed if:
+
+1. the product only looks more consistent in a few screenshots,
+2. the code gets more abstract but harder to understand,
+3. teams still need to remember style rules manually because the shared system does not embody
+   them.
 
 ## Architecture Direction
 
@@ -323,6 +467,24 @@ Rules:
 1. values should render consistently in cards, chips, rails, and tables,
 2. negative values, currency placement, precision, and units should not vary ad hoc.
 
+## Priority Migration Targets
+
+This RFC should focus first on the surfaces that already define the current product standard.
+
+Priority order:
+
+1. shared shell and design-system layer,
+2. `Performance`,
+3. `Portfolio`,
+4. any other screen only after the shared layer and the two primary workbench surfaces are
+   coherent.
+
+Reason:
+
+1. `Performance` and `Portfolio` already expose enough repeated patterns to justify systemization,
+2. they are the current user-visible quality bar,
+3. solving them through shared architecture creates leverage for future surfaces.
+
 ## Implementation Slices
 
 The work should be delivered in small, auditable slices with meaningful commits.
@@ -353,6 +515,7 @@ Acceptance gate:
 1. token categories are explicit and readable,
 2. the repo has a traceable inventory of current gaps,
 3. no feature behavior changes are required yet.
+4. a persistent implementation ledger exists so later slices can explicitly close identified gaps.
 
 ### Slice 2: Typography and formatted value primitives
 
@@ -378,6 +541,8 @@ Acceptance gate:
 1. at least `Portfolio` and `Performance` consume the shared text system for primary headings,
    labels, and key metrics,
 2. financial values no longer rely on page-local numeric styling.
+3. typography and formatted-value migration can be demonstrated with concrete before/after
+   reductions in page-local classes or formatting logic.
 
 ### Slice 3: Page composition and surface primitives
 
@@ -408,6 +573,7 @@ Acceptance gate:
 
 1. shared page shells are used in the main product surfaces,
 2. repeated shell-level and section-level layout CSS is reduced materially.
+3. page files become more composition-oriented and less styling-oriented.
 
 ### Slice 4: Navigation, action hierarchy, and semantic states
 
@@ -435,6 +601,7 @@ Acceptance gate:
 1. `Summary / Analysis / Advisor Brief / Evidence` and similar patterns use one shared
    implementation,
 2. state naming and visuals are consistent across the product.
+3. button/action hierarchy is demonstrably consistent in the primary user-facing flows.
 
 ### Slice 5: Table and grid system hardening
 
@@ -459,6 +626,8 @@ Acceptance gate:
 1. major financial tables share one design language,
 2. numeric alignment and row density are consistent,
 3. loading/empty/error table states follow one product pattern.
+4. if AG Grid remains in use, page teams consume a shared wrapper or configuration seam rather
+   than styling grids individually.
 
 ### Slice 6: State system and resilience patterns
 
@@ -481,6 +650,7 @@ Acceptance gate:
 
 1. state treatment is visually and behaviorally consistent,
 2. page code no longer hand-builds most empty/unavailable panels.
+3. state copy follows one heading/body/action structure across the product.
 
 ### Slice 7: Naming and API cleanup
 
@@ -504,6 +674,7 @@ Acceptance gate:
 
 1. shared primitives have consistent prop naming and discoverable semantics,
 2. feature teams can compose the design system without guessing between overlapping components.
+3. the shared layer has fewer overlapping concepts and less naming ambiguity than before the slice.
 
 ### Slice 8: Governance, documentation, and rollout closure
 
@@ -527,6 +698,8 @@ Acceptance gate:
 
 1. future work has clear usage guidance,
 2. the RFC can be reviewed against visible artifacts and not just code intent.
+3. the implementation ledger is updated with completed migrations and explicitly deferred follow-up
+   items if any remain.
 
 ## Testing Requirements
 
@@ -540,6 +713,16 @@ Every slice must include meaningful tests.
 4. focused visual/browser smoke where shared navigation or state patterns are materially changed,
 5. regression tests for formatting and status semantics.
 
+### Required evidence for slice closure
+
+Each slice should produce explicit evidence in the commit series or accompanying docs:
+
+1. what duplication or inconsistency was removed,
+2. what shared primitive or rule replaced it,
+3. what tests prove the new system behavior,
+4. what pages or features were migrated in that slice,
+5. what known gaps remain open for later slices.
+
 ### Explicit quality rule
 
 Do not add tests that only snapshot markup without proving behavior or system rules.
@@ -551,6 +734,32 @@ High-value examples:
 3. mode tabs share active-state logic across screens,
 4. shared empty/loading/unavailable sections preserve the same heading/body/action contract,
 5. migrated pages no longer duplicate now-shared styling behavior.
+
+## Review and Governance Rules
+
+### Slice advancement rule
+
+Do not move to the next slice until the current slice is:
+
+1. implemented coherently,
+2. locally validated,
+3. documented in the ledger or RFC where relevant,
+4. clean enough that the next slice starts from a stable baseline.
+
+### PR rule
+
+PRs should remain slice-scoped or tightly coupled to one slice concern.
+
+Reject:
+
+1. broad mixed-purpose PRs that add primitives, restyle pages, rename components, and refactor
+   tests without a clear slice boundary.
+
+Prefer:
+
+1. one primitive family,
+2. one migration theme,
+3. one governance/documentation closure.
 
 ## Delivery Strategy
 
@@ -596,7 +805,23 @@ This RFC is complete when:
 3. `Portfolio` and `Performance` materially reduce page-local styling duplication,
 4. naming and component APIs are more consistent and easier to review,
 5. the product feels more coherent because consistency is enforced by construction,
-6. documentation exists so new UI work follows the same system by default.
+6. documentation exists so new UI work follows the same system by default,
+7. the implementation ledger shows the primary duplicated patterns have either been migrated or
+   explicitly deferred with rationale,
+8. the repo can demonstrate that shared rules replaced local drift in real product surfaces, not
+   just in isolated demo components.
+
+## Definition of Done
+
+RFC-0021 should only be marked `IMPLEMENTED` when all of the following are true:
+
+1. the planned slices are merged,
+2. `Portfolio` and `Performance` both consume the strengthened shared system in meaningful areas,
+3. the shared primitives are the default path for new page composition, status semantics, and
+   navigation patterns,
+4. the documentation and ledger make future UI work reviewable against the system,
+5. local and CI validation for the affected shared layer and migrated screens are green,
+6. the resulting codebase is cleaner and less duplicated than the baseline that started this RFC.
 
 ## Approval Requested
 
