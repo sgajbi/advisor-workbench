@@ -130,8 +130,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Reporting Currency")).toBeDisabled();
     expect(screen.getByText(/Historical snapshots are not source-backed/i)).toBeInTheDocument();
     expect(screen.getByText(/Reporting currency restatement is pending source support/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Summary" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Detailed" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Detailed" })).toBeInTheDocument();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
@@ -360,8 +360,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByLabelText("From")[0]).toHaveValue("");
     expect(screen.getAllByLabelText("To")[0]).toHaveValue("");
 
-    expect(screen.getByRole("button", { name: "Detailed" })).toHaveAttribute(
-      "aria-pressed",
+    expect(screen.getByRole("tab", { name: "Detailed" })).toHaveAttribute(
+      "aria-selected",
       "true"
     );
     expect(document.querySelector("#portfolio-drilldown .portfolio-holdings-grid .portfolio-module-state")).toBeFalsy();
@@ -440,7 +440,7 @@ describe("PortfolioFoundationPage", () => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith("CIF_1001");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Summary" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
 
     expect(window.localStorage.getItem("lotus:portfolio:view-mode")).toBe("summary");
     expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();

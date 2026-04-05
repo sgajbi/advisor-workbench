@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ActionLink,
+  ActionButton,
   ActionListCard,
   AppPageShell,
   AnalyticsModule,
@@ -19,6 +20,7 @@ import {
   KpiStatTile,
   MainWithSideRailLayout,
   ModuleStatePanel,
+  ModeTabs,
   MetricRow,
   PageToolbar,
   Panel,
@@ -26,6 +28,7 @@ import {
   SectionBlock,
   SectionLabel,
   SectionHeader,
+  SemanticBadge,
   StatusChip,
   WorkspaceGrid,
   WorkspaceHeader,
@@ -192,6 +195,43 @@ describe("design-system components", () => {
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio catalog")).toBeInTheDocument();
     expect(screen.getByText("Ready")).toBeInTheDocument();
+  });
+
+  it("renders shared semantic badges, action buttons, and mode tabs with the standardized class contract", () => {
+    const onChange = vi.fn();
+    const onClick = vi.fn();
+
+    render(
+      <>
+        <SemanticBadge tone="warn" emphasis="strong">
+          Review
+        </SemanticBadge>
+        <ActionButton priority="primary" onClick={onClick}>
+          Copy Note
+        </ActionButton>
+        <ModeTabs
+          value="advisor"
+          onChange={onChange}
+          ariaLabel="Workspace modes"
+          accentModeKey="advisor"
+          options={[
+            { key: "summary", label: "Summary" },
+            { key: "advisor", label: "Advisor Brief" },
+          ]}
+        />
+      </>
+    );
+
+    expect(screen.getByText("Review")).toHaveClass("semantic-badge", "semantic-badge-warn", "semantic-badge-strong");
+    expect(screen.getByRole("button", { name: "Copy Note" })).toHaveClass("action-button", "action-button-primary");
+    expect(screen.getByRole("tablist", { name: "Workspace modes" })).toHaveClass("mode-tabs");
+    expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveClass("workbench-segmented-control-button-active");
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy Note" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith("summary");
   });
 
   it("renders the shared workbench rail card primitive", () => {

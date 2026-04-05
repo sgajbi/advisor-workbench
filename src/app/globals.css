@@ -3508,6 +3508,14 @@ a:hover {
   min-width: 220px;
 }
 
+.portfolio-workspace-view-mode-tabs {
+  justify-content: flex-start;
+}
+
+.portfolio-workspace-view-mode-tabs .workbench-segmented-control-button {
+  min-width: 5.2rem;
+}
+
 .portfolio-workspace-toolbar-field label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -5000,6 +5008,7 @@ a:hover {
   gap: 0.4rem;
 }
 
+.mode-tabs,
 .lotus-mode-tabs {
   display: inline-flex;
   align-items: stretch;
@@ -5010,6 +5019,8 @@ a:hover {
   background: transparent;
 }
 
+.mode-tabs .mode-tabs-button,
+.mode-tabs .workbench-segmented-control-button,
 .lotus-mode-tabs .lotus-mode-tabs-button,
 .lotus-mode-tabs .workbench-segmented-control-button {
   position: relative;
@@ -5021,6 +5032,8 @@ a:hover {
   letter-spacing: 0.01em;
 }
 
+.mode-tabs .mode-tabs-button::after,
+.mode-tabs .workbench-segmented-control-button::after,
 .lotus-mode-tabs .lotus-mode-tabs-button::after,
 .lotus-mode-tabs .workbench-segmented-control-button::after {
   content: "";
@@ -5033,25 +5046,33 @@ a:hover {
   transition: background-color 140ms ease;
 }
 
+.mode-tabs .mode-tabs-button:hover,
+.mode-tabs .workbench-segmented-control-button:hover,
 .lotus-mode-tabs .lotus-mode-tabs-button:hover,
 .lotus-mode-tabs .workbench-segmented-control-button:hover {
   color: var(--brand-strong);
   background: transparent;
 }
 
+.mode-tabs .workbench-segmented-control-button-active,
 .lotus-mode-tabs .workbench-segmented-control-button-active {
   background: transparent;
   color: var(--brand-strong);
 }
 
+.mode-tabs .workbench-segmented-control-button-active::after,
 .lotus-mode-tabs .workbench-segmented-control-button-active::after {
   background: rgba(87, 121, 157, 0.9);
 }
 
+.performance-workspace-mode-switch-group-advisor-active .mode-tabs,
 .performance-workspace-mode-switch-group-advisor-active .lotus-mode-tabs {
   border-bottom-color: rgba(87, 121, 157, 0.2);
 }
 
+.performance-workspace-mode-switch-group-advisor-active
+  .mode-tabs
+  .workbench-segmented-control-button-active,
 .performance-workspace-mode-switch-group-advisor-active
   .lotus-mode-tabs
   .workbench-segmented-control-button-active {
@@ -5197,6 +5218,7 @@ a:hover {
   align-items: center;
 }
 
+.semantic-badge,
 .lotus-semantic-badge {
   display: inline-flex;
   align-items: center;
@@ -5212,24 +5234,29 @@ a:hover {
   text-transform: uppercase;
 }
 
+.semantic-badge-strong,
 .lotus-semantic-badge-strong {
   border-color: rgba(87, 121, 157, 0.18);
   background: rgba(236, 242, 247, 0.95);
   color: #203446;
 }
 
+.semantic-badge-success,
 .lotus-semantic-badge-success {
   color: #45695a;
 }
 
+.semantic-badge-warn,
 .lotus-semantic-badge-warn {
   color: #8e6232;
 }
 
+.semantic-badge-danger,
 .lotus-semantic-badge-danger {
   color: #945760;
 }
 
+.action-button,
 .lotus-primary-action {
   border: 1px solid rgba(23, 32, 43, 0.12);
   border-radius: 9px;
@@ -5248,11 +5275,13 @@ a:hover {
     transform 120ms ease;
 }
 
+.action-button:hover,
 .lotus-primary-action:hover {
   border-color: rgba(87, 121, 157, 0.24);
   background: rgba(247, 249, 251, 0.98);
 }
 
+.action-button-primary,
 .lotus-primary-action-primary {
   border-color: rgba(23, 32, 43, 0.1);
   background: linear-gradient(180deg, #22384b, #182b3d);
@@ -5260,9 +5289,23 @@ a:hover {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+.action-button-primary:hover,
 .lotus-primary-action-primary:hover {
   border-color: rgba(24, 43, 61, 0.95);
   background: linear-gradient(180deg, #1d3143, #152433);
+}
+
+.action-button-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--brand);
+  padding-inline: 0.2rem;
+}
+
+.action-button-quiet:hover {
+  border-color: transparent;
+  background: transparent;
+  color: var(--brand-strong);
 }
 
 .performance-advisor-brief-body-grid {
@@ -5723,12 +5766,14 @@ a:hover {
 }
 
 .performance-advisor-brief-toolbar-button:focus-visible,
+.action-button:focus-visible,
 .lotus-primary-action:focus-visible,
 .performance-advisor-brief-workflow-action:focus-visible,
 .performance-advisor-brief-drilldown-action:focus-visible,
 .performance-advisor-brief-evidence-chip:focus-visible,
 .performance-advisor-brief-metric-card:focus-visible,
 .performance-advisor-brief-audit-drawer summary:focus-visible,
+.mode-tabs .workbench-segmented-control-button:focus-visible,
 .lotus-mode-tabs .workbench-segmented-control-button:focus-visible {
   outline: 2px solid rgba(87, 121, 157, 0.42);
   outline-offset: 2px;
@@ -6136,6 +6181,7 @@ a:hover {
   flex: 0 0 auto;
 }
 
+.performance-analysis-detail-pane-tabs.mode-tabs,
 .performance-analysis-detail-pane-tabs.lotus-mode-tabs {
   border-bottom: 0;
   background: rgba(247, 249, 251, 0.96);
@@ -6145,16 +6191,19 @@ a:hover {
   gap: 0.12rem;
 }
 
+.performance-analysis-detail-pane-tabs.mode-tabs .workbench-segmented-control-button,
 .performance-analysis-detail-pane-tabs.lotus-mode-tabs .workbench-segmented-control-button {
   padding: 0.42rem 0.62rem;
   border-radius: 8px;
   font-size: 0.74rem;
 }
 
+.performance-analysis-detail-pane-tabs.mode-tabs .workbench-segmented-control-button::after,
 .performance-analysis-detail-pane-tabs.lotus-mode-tabs .workbench-segmented-control-button::after {
   display: none;
 }
 
+.performance-analysis-detail-pane-tabs.mode-tabs .workbench-segmented-control-button-active,
 .performance-analysis-detail-pane-tabs.lotus-mode-tabs .workbench-segmented-control-button-active {
   background: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(87, 121, 157, 0.12);

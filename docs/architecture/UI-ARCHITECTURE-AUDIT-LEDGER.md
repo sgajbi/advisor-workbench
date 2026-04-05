@@ -198,3 +198,47 @@ Slice 1 is considered complete when:
    - The shared layer is clearer than before, but naming overlap and primitive/API consistency are
      not finished.
    - Target slice: Slice 7.
+
+## Slice 4 Findings
+
+### Closed in Slice 4
+
+1. **Mode switching still drifted across product surfaces**
+   - `Performance` and `Portfolio` both exposed segmented navigation, but the implementation was
+     still split between shared workstation controls and feature-local wrappers.
+   - Slice 4 closes this by introducing a shared `ModeTabs` primitive and migrating both
+     workspaces to the same mode-switch contract.
+
+2. **Semantic badges were only partially system-governed**
+   - Advisor Brief introduced a more refined status language, but that logic still lived in
+     feature-local components.
+   - Slice 4 closes this by promoting shared semantic status treatment into `SemanticBadge` and by
+     refactoring `StatusChip` to compose the same semantics instead of duplicating them.
+
+3. **Action hierarchy still depended on route-local button choices**
+   - Quiet utility actions and primary workflow actions were not expressed through a shared action
+     vocabulary.
+   - Slice 4 closes the first part of that gap with a reusable `ActionButton` primitive and by
+     migrating representative `Portfolio` and `Performance` actions to the shared hierarchy.
+
+4. **No explicit cross-screen test contract for navigation and semantic actions**
+   - The repo had strong page tests, but no focused proof that shared navigation, badges, and
+     action primitives exposed a stable class and accessibility contract.
+   - Slice 4 adds and updates tests to prove shared semantics across design-system, unit, and
+     integration layers.
+
+### Still Open After Slice 4
+
+1. **Table posture is still not fully centralized**
+   - Tables and data-grid behavior are closer than before, but density, formatting posture, and
+     row semantics still need a single governed contract.
+   - Target slice: Slice 5.
+
+2. **State-system consistency still needs a shared contract**
+   - Loading, partial, unavailable, stale, and no-results states still use more than one pattern.
+   - Target slice: Slice 6.
+
+3. **Naming and API cleanup remains**
+   - Shared primitives are converging, but some naming overlap and component API cleanup still
+     remains.
+   - Target slice: Slice 7.

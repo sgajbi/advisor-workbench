@@ -1,7 +1,7 @@
  "use client";
 
 import { useEffect, useState } from "react";
-import { WorkbenchStatusRow } from "@/design-system";
+import { ModeTabs, WorkbenchStatusRow } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
   isPartialCapability,
@@ -9,8 +9,6 @@ import {
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
 import { formatDate } from "../formatters";
-import LotusModeTabs from "./advisor-brief/lotus-mode-tabs";
-
 export type PerformanceWorkspaceMode =
   | "summary"
   | "analysis"
@@ -204,12 +202,13 @@ export default function PerformanceWorkspaceModeSwitch({
         .filter(Boolean)
         .join(" ")}
     >
-      <LotusModeTabs
+      <ModeTabs
         value={value}
         onChange={onChange}
         options={modeOptions}
         ariaLabel="Performance workspace mode"
         className="performance-workspace-mode-switch"
+        accentModeKey={"advisor"}
       />
       {modeStatusItems.length ? (
         <WorkbenchStatusRow
