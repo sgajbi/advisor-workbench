@@ -1,20 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
-  <defs>
-    <linearGradient id="lotusRed" x1="16" y1="20" x2="108" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F26D72"/>
-      <stop offset="0.5" stop-color="#E54148"/>
-      <stop offset="1" stop-color="#C91F29"/>
-    </linearGradient>
-    <linearGradient id="lotusRedSoft" x1="24" y1="24" x2="98" y2="98" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F7B2B6"/>
-      <stop offset="1" stop-color="#DF4F57"/>
-    </linearGradient>
-  </defs>
   <rect width="128" height="128" rx="28" fill="#FFFFFF"/>
-  <path d="M64 18C55.8 25.6 51.8 34.8 51.8 45C51.8 56.8 56.4 66 64 72.4C71.6 66 76.2 56.8 76.2 45C76.2 34.8 72.2 25.6 64 18Z" fill="url(#lotusRed)"/>
-  <path d="M41.6 24.4C32.2 30.8 26.4 39.4 24.4 49.6C22.2 61.6 28.4 70.6 38.4 75C37.8 72.2 37.6 69.4 37.6 66.4C37.6 50.8 45.8 36.8 41.6 24.4Z" fill="url(#lotusRed)"/>
-  <path d="M86.4 24.4C95.8 30.8 101.6 39.4 103.6 49.6C105.8 61.6 99.6 70.6 89.6 75C90.2 72.2 90.4 69.4 90.4 66.4C90.4 50.8 82.2 36.8 86.4 24.4Z" fill="url(#lotusRed)"/>
-  <path d="M22 41.6C13.2 45.6 7 51.8 4.6 59.8C1.8 69 6.8 76.8 16.4 81C21 83 26.6 83.8 33.6 83.4C25.6 76.8 21 68.4 22 41.6Z" fill="url(#lotusRedSoft)"/>
-  <path d="M106 41.6C114.8 45.6 121 51.8 123.4 59.8C126.2 69 121.2 76.8 111.6 81C107 83 101.4 83.8 94.4 83.4C102.4 76.8 107 68.4 106 41.6Z" fill="url(#lotusRedSoft)"/>
-  <path d="M39.6 74.8C46.6 82.6 55.2 87.4 64 87.4C72.8 87.4 81.4 82.6 88.4 74.8C81.2 77.2 73 78.6 64 78.6C55 78.6 46.8 77.2 39.6 74.8Z" fill="url(#lotusRedSoft)"/>
+  <path d="M64 95C46 76 46 43 64 20C82 43 82 76 64 95Z" stroke="#111418" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M57 88C38 80 25 66 18 47C38 46 52 58 57 88Z" stroke="#111418" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M71 88C90 80 103 66 110 47C90 46 76 58 71 88Z" stroke="#111418" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M56 92C34 95 18 90 5 78C19 67 37 70 56 92Z" stroke="#111418" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M72 92C94 95 110 90 123 78C109 67 91 70 72 92Z" stroke="#111418" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M47 58C37 57 31 50 31 38C41 38 49 42 54 50C50 52 48 55 47 58Z" stroke="#111418" stroke-width="5.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M81 58C91 57 97 50 97 38C87 38 79 42 74 50C78 52 80 55 81 58Z" stroke="#111418" stroke-width="5.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M56 98C58.5 101 62.2 103 64 103C65.8 103 69.5 101 72 98" stroke="#111418" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
