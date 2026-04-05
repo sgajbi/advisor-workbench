@@ -55,6 +55,10 @@ describe("IntakePage", () => {
       screen.getByRole("heading", { name: "Portfolio Intake Operations Console" })
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Create Portfolio Workspace" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Intake operation" })).toHaveClass(
+      "workbench-segmented-control",
+      "intake-operation-tabs"
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Load Selector Catalog" }));
 

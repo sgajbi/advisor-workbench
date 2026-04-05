@@ -5074,6 +5074,15 @@ a:hover {
   background: rgba(87, 121, 157, 0.9);
 }
 
+.intake-operation-tabs.workbench-segmented-control {
+  width: 100%;
+}
+
+.intake-operation-tabs .workbench-segmented-control-button {
+  min-width: 0;
+  white-space: normal;
+}
+
 .performance-workspace-mode-switch-group-advisor-active .mode-tabs,
 .performance-workspace-mode-switch-group-advisor-active .lotus-mode-tabs {
   border-bottom-color: rgba(87, 121, 157, 0.2);
@@ -8331,6 +8340,17 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .intake-operation-tabs.workbench-segmented-control {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .intake-operation-tabs .workbench-segmented-control-button {
+    width: 100%;
+    text-align: left;
+  }
+
   .section-card {
     padding: 0.9rem;
   }
@@ -8517,6 +8537,10 @@ a:hover {
 
   .page-container {
     padding: 24px;
+  }
+
+  .intake-operation-tabs.workbench-segmented-control {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .performance-summary-stage {
