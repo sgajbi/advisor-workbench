@@ -6,6 +6,7 @@ import ReactECharts from "echarts-for-react";
 
 import {
   AnalyticsTable,
+  ScreenStatePanel,
   WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
@@ -19,7 +20,6 @@ import type {
 import { formatLabel } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
-import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 import {
   getAttributionTrendContextItems,
   getAttributionTrendSummaryItems,
@@ -359,10 +359,11 @@ export default function PerformanceAttributionTrendPanel({
         </div>
       ) : null}
       {isLoading ? (
-        <PerformanceAnalysisStatePanel
-          state="loading"
+        <ScreenStatePanel
+          kind="loading"
           title="Loading attribution trend"
           body="Loading attribution effect trend."
+          surface="analysis"
         />
       ) : chartOption ? (
         <>
@@ -389,10 +390,11 @@ export default function PerformanceAttributionTrendPanel({
           />
         </>
       ) : (
-        <PerformanceAnalysisStatePanel
-          state="unavailable"
+        <ScreenStatePanel
+          kind="unavailable"
           title="Attribution trend unavailable"
           body="Attribution trend is not available for the current selection."
+          surface="analysis"
         />
       )}
     </WorkbenchChartShell>

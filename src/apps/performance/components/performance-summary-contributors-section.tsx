@@ -1,8 +1,8 @@
 import {
   AnalyticsTable,
+  CapabilityStatePanel,
 } from "@/design-system";
 
-import PerformanceCapabilityNotice from "./performance-capability-notice";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
@@ -68,12 +68,14 @@ export default function PerformanceSummaryContributorsSection({
         </div>
       ) : presentation.mode === "partial" ? (
         <div className="performance-contributors-panel">
-          <PerformanceCapabilityNotice
+          <CapabilityStatePanel
             capability={capabilities.contributionRanking}
             partialTitle={presentation.noticeTitle}
             unavailableTitle={presentation.noticeTitle}
             body={presentation.noticeBody}
-            hint={presentation.hint}
+            partialHint={presentation.hint}
+            unavailableHint={presentation.hint}
+            surface="analysis"
           />
           {workspace.contribution?.levels?.length ? (
             <PerformanceContributionContextNote contribution={workspace.contribution} />
@@ -100,12 +102,14 @@ export default function PerformanceSummaryContributorsSection({
       ) : presentation.mode === "loading" ? (
         <p className="muted">{presentation.body}</p>
       ) : (
-        <PerformanceCapabilityNotice
+        <CapabilityStatePanel
           capability={capabilities.contributionRanking}
           partialTitle={presentation.noticeTitle}
           unavailableTitle={presentation.noticeTitle}
           body={presentation.noticeBody}
-          hint={presentation.hint}
+          partialHint={presentation.hint}
+          unavailableHint={presentation.hint}
+          surface="analysis"
         />
       )}
     </PerformanceSummaryDriverModule>

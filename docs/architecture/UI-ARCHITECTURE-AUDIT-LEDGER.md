@@ -289,3 +289,42 @@ Slice 1 is considered complete when:
    - Shared primitives are converging, but some naming overlap and component API cleanup still
      remains.
    - Target slice: Slice 7.
+
+## Slice 6 Findings
+
+### Closed in Slice 6
+
+1. **Screen-state handling still split across Portfolio and Performance adapters**
+   - Loading, partial, unavailable, empty, and error states were still routed through parallel
+     feature-local wrappers.
+   - Slice 6 closes this by introducing shared:
+     - `ScreenStatePanel`
+     - `CapabilityStatePanel`
+   - The common state semantics now live in the shared layer instead of being repeated in feature
+     adapters.
+
+2. **Capability-state UX was not governed through one shared contract**
+   - Capability-backed partial/unavailable surfaces still relied on multiple adapter paths with
+     slightly different semantics.
+   - Slice 6 closes this by refactoring the shared capability and status panels to compose the new
+     state-system primitives instead of manually choosing between unrelated panel types.
+
+3. **Performance still depended on feature-local state wrappers**
+   - The analysis surface used local wrappers for capability notices and analysis-state panels even
+     though the underlying state semantics matched the shared system.
+   - Slice 6 closes that gap by migrating analysis and evidence surfaces onto the shared state
+     primitives and removing the redundant feature-local wrappers.
+
+4. **No direct tests existed for the new shared state contract**
+   - Existing tests proved route behavior, but not the shared state seam itself.
+   - Slice 6 adds focused tests for:
+     - shared screen-state rendering
+     - shared capability-state rendering
+     - migrated portfolio/performance state consumers
+
+### Still Open After Slice 6
+
+1. **Naming and API cleanup remains**
+   - Shared primitives are stronger and more coherent, but some naming overlap and API cleanup
+     still remains.
+   - Target slice: Slice 7.

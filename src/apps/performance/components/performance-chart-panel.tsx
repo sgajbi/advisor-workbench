@@ -7,6 +7,7 @@ import { Box, Typography } from "@mui/material";
 
 import {
   AnalyticsTable,
+  CapabilityStatePanel,
   WorkbenchChartShell,
 } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
@@ -16,7 +17,6 @@ import type {
   MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
-import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
@@ -555,7 +555,7 @@ export default function PerformanceChartPanel({
       fallbackState={
         !isDetailsPending ? (
           <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
-            <PerformanceCapabilityNotice
+            <CapabilityStatePanel
               capability={capabilities.returnPath}
               partialTitle="Return History Is Partial"
               unavailableTitle="Return History Unavailable"
@@ -563,7 +563,9 @@ export default function PerformanceChartPanel({
                 capabilities.returnPath.reason ??
                 "The resolved window does not currently have published performance observations for this mandate."
               }
-              hint="Adjust the period or explicit dates once performance history is available for this resolved window."
+              partialHint="Adjust the period or explicit dates once performance history is available for this resolved window."
+              unavailableHint="Adjust the period or explicit dates once performance history is available for this resolved window."
+              surface="analysis"
             />
           </div>
         ) : undefined

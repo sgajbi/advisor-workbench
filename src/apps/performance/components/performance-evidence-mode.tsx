@@ -1,8 +1,6 @@
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 import { isSupportedCapability } from "@/shell/workspace-capabilities";
-import { WorkbenchDataGridFrame, WorkbenchStatusStrip } from "@/design-system";
-
-import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
+import { ScreenStatePanel, WorkbenchDataGridFrame, WorkbenchStatusStrip } from "@/design-system";
 
 export default function PerformanceEvidenceMode({
   capability,
@@ -21,11 +19,12 @@ export default function PerformanceEvidenceMode({
         subtitle={subtitle}
         className="performance-detail-panel-wide performance-analysis-module performance-evidence-module performance-lotus-stage performance-lotus-stage-evidence"
       >
-        <PerformanceAnalysisStatePanel
-          state={capability.state === "partial" ? "partial" : "unavailable"}
+        <ScreenStatePanel
+          kind={capability.state === "partial" ? "partial" : "unavailable"}
           title={capability.state === "partial" ? "Evidence partially available" : "Evidence unavailable"}
           body="Execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract."
           hint={capability.reason}
+          surface="analysis"
         />
       </WorkbenchDataGridFrame>
     );

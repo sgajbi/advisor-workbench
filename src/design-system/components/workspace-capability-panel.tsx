@@ -1,7 +1,6 @@
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
-import EmptyStatePanel from "./empty-state-panel";
-import ModuleStatePanel from "./module-state-panel";
+import CapabilityStatePanel from "./capability-state-panel";
 
 export default function WorkspaceCapabilityPanel({
   capability,
@@ -26,23 +25,14 @@ export default function WorkspaceCapabilityPanel({
   illustration?: boolean;
   centered?: boolean;
 }) {
-  if (capability.state === "partial") {
-    return (
-      <ModuleStatePanel
-        state="partial"
-        title={partialTitle}
-        body={body}
-        hint={hint}
-        why={why}
-      />
-    );
-  }
-
   return (
-    <EmptyStatePanel
-      title={unavailableTitle}
+    <CapabilityStatePanel
+      capability={capability}
+      partialTitle={partialTitle}
+      unavailableTitle={unavailableTitle}
       body={body}
-      hint={hint}
+      partialHint={hint}
+      unavailableHint={hint}
       why={why}
       illustration={illustration}
       centered={centered}

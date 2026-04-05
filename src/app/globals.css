@@ -6033,31 +6033,6 @@ a:hover {
   line-height: 1.35;
 }
 
-.performance-capability-notice .module-state-panel,
-.performance-capability-notice .empty-state-panel {
-  gap: 0.45rem;
-  padding: 0.75rem 0.85rem;
-}
-
-.performance-capability-notice .module-state-panel-header,
-.performance-capability-notice .empty-state-header {
-  gap: 0.35rem;
-}
-
-.performance-capability-notice .module-state-panel strong,
-.performance-capability-notice .empty-state-panel strong {
-  font-size: var(--workbench-analytic-heading-size);
-  line-height: 1.25;
-}
-
-.performance-capability-notice .module-state-panel p,
-.performance-capability-notice .module-state-panel span,
-.performance-capability-notice .empty-state-panel p,
-.performance-capability-notice .empty-state-panel span {
-  font-size: var(--workbench-analytic-fallback-size);
-  line-height: 1.38;
-}
-
 .performance-secondary-zone > * {
   height: 100%;
 }

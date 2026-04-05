@@ -6,6 +6,7 @@ export { default as AnalyticsRankedList } from "./components/analytics-ranked-li
 export { default as AnalyticsSectionHeader } from "./components/analytics-section-header";
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
+export { default as CapabilityStatePanel } from "./components/capability-state-panel";
 export type {
   AnalyticsTableColumn,
   AnalyticsTableDensity,
@@ -37,6 +38,8 @@ export { default as StateInfoHint } from "./components/state-info-hint";
 export { default as FilterBar } from "./components/filter-bar";
 export { default as MainWithSideRailLayout } from "./components/main-with-side-rail-layout";
 export { default as ModeTabs } from "./components/mode-tabs";
+export { default as ScreenStatePanel } from "./components/screen-state-panel";
+export type { ScreenStateKind, ScreenStateSurface } from "./components/screen-state-panel";
 export { default as SectionHeader } from "./components/section-header";
 export { default as SectionBlock } from "./components/section-block";
 export { default as SemanticBadge } from "./components/semantic-badge";
