@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { AnalyticsSectionHeader } from "@/design-system";
+import { SectionHeader } from "@/design-system";
 
 export default function PerformanceSummaryDriverSection({
   title,
@@ -13,7 +13,7 @@ export default function PerformanceSummaryDriverSection({
 }) {
   return (
     <section className="performance-summary-driver-section">
-      <AnalyticsSectionHeader title={title} subtitle={subtitle} />
+      <SectionHeader title={title} subtitle={subtitle} />
       {children}
     </section>
   );

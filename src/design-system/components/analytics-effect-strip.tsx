@@ -1,5 +1,7 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+
+import { lotusThemeTokens } from "../theme/tokens";
+import Text from "./text";
 
 type AnalyticsEffectRow = {
   key: string;
@@ -16,26 +18,39 @@ export default function AnalyticsEffectStrip({
   rows: AnalyticsEffectRow[];
 }) {
   return (
-    <Box sx={{ display: "grid", gap: 0.75 }}>
+    <Box sx={{ display: "grid", gap: lotusThemeTokens.spacing.step2 }}>
       {rows.map((row) => (
         <Box
           key={row.key}
           sx={{
             display: "grid",
             gridTemplateColumns: "minmax(120px, 1fr) minmax(0, 1.7fr) 72px",
-            gap: 1,
+            gap: lotusThemeTokens.spacing.step2,
             alignItems: "center",
           }}
         >
-          <Typography sx={{ fontSize: "0.875rem", fontWeight: 700 }}>{row.label}</Typography>
-          <Box sx={{ display: "flex", gap: 0.5, alignItems: "center", minHeight: 10 }}>
+          <Text variant="subsectionTitle" as="div" className="analytics-effect-strip-label">
+            {row.label}
+          </Text>
+          <Box
+            sx={{
+              display: "flex",
+              gap: lotusThemeTokens.spacing.step1,
+              alignItems: "center",
+              minHeight: 10,
+            }}
+          >
             <EffectBar value={row.allocationPct} color="#5b9bd5" />
             <EffectBar value={row.selectionPct} color="#7fa65a" />
             <EffectBar value={row.interactionPct} color="#b07a8e" />
           </Box>
-          <Typography sx={{ fontSize: "0.875rem", fontWeight: 700, textAlign: "right" }}>
+          <Text
+            variant="metricValueCompact"
+            as="div"
+            className="analytics-effect-strip-total"
+          >
             {row.totalPct}
-          </Typography>
+          </Text>
         </Box>
       ))}
     </Box>

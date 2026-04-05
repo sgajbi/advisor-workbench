@@ -10,10 +10,8 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
-import { FilterBar, PageToolbar, WorkbenchSegmentedControl } from "@/design-system";
+import { FilterBar, ModeTabs, PageToolbar, WorkbenchSegmentedControl } from "@/design-system";
 
 import { formatDate } from "../formatters";
 import type {
@@ -134,20 +132,18 @@ export default function PortfolioWorkspaceToolbar({
 
         <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">
           <label>View</label>
-          <ToggleButtonGroup
-            exclusive
-            size="small"
+          <ModeTabs
             value={controls.viewMode}
-            aria-label="Portfolio page view mode"
-            onChange={(_event, nextValue: PortfolioViewMode | null) => {
-              if (nextValue) {
-                onControlsChange({ viewMode: nextValue });
-              }
+            onChange={(nextValue: PortfolioViewMode) => {
+              onControlsChange({ viewMode: nextValue });
             }}
-          >
-            <ToggleButton value="summary">Summary</ToggleButton>
-            <ToggleButton value="detailed">Detailed</ToggleButton>
-          </ToggleButtonGroup>
+            options={[
+              { key: "summary", label: "Summary" },
+              { key: "detailed", label: "Detailed" },
+            ]}
+            ariaLabel="Portfolio page view mode"
+            className="portfolio-workspace-view-mode-tabs"
+          />
         </div>
 
         <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">

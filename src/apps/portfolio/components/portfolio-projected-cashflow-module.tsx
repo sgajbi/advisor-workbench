@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AnalyticsModule,
   AnalyticsTable,
+  DisclosureToggleButton,
+  SectionHeader,
   WorkbenchInlineRefreshNote,
 } from "@/design-system";
 
@@ -13,7 +15,6 @@ import { formatCurrency, formatDate } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
 import { PortfolioProjectedCashflowPanel } from "./portfolio-chart-panels";
 import PortfolioModuleState from "./portfolio-module-state";
-import PortfolioSectionHeader from "./portfolio-section-header";
 
 const CASHFLOW_HORIZON_PRESETS = [10, 30, 90] as const;
 
@@ -143,7 +144,7 @@ export default function PortfolioProjectedCashflowModule({
 
   return (
     <AnalyticsModule>
-      <PortfolioSectionHeader
+      <SectionHeader
         title="Projected Cashflow"
         subtitle={subtitle}
         actions={
@@ -159,16 +160,13 @@ export default function PortfolioProjectedCashflowModule({
             >
               Export
             </button>
-            <button
-              type="button"
-              className="portfolio-inline-action"
-              onClick={() => setExpanded((current) => !current)}
-            >
-              Expand
-            </button>
+            <DisclosureToggleButton
+              expanded={expanded}
+              onToggle={() => setExpanded((current) => !current)}
+            />
           </>
         }
-      /> 
+      />
 
       {loading && !cashflowOutlook ? (
         <PortfolioModuleState
@@ -195,7 +193,8 @@ export default function PortfolioProjectedCashflowModule({
           ) : null}
           {expanded ? (
             <AnalyticsTable
-              dense
+              density="compact"
+              variant="portfolio"
               className="portfolio-analytics-table portfolio-cashflow-table"
               ariaLabel="Cashflow outlook"
               columns={[

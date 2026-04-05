@@ -3,12 +3,15 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 
 import {
   AnalyticsTable,
+  CapabilityStatePanel,
+  Text,
   WorkbenchChartShell,
 } from "@/design-system";
+import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
@@ -16,7 +19,6 @@ import type {
   MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
-import PerformanceCapabilityNotice from "./performance-capability-notice";
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
@@ -555,7 +557,7 @@ export default function PerformanceChartPanel({
       fallbackState={
         !isDetailsPending ? (
           <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
-            <PerformanceCapabilityNotice
+            <CapabilityStatePanel
               capability={capabilities.returnPath}
               partialTitle="Return History Is Partial"
               unavailableTitle="Return History Unavailable"
@@ -563,7 +565,9 @@ export default function PerformanceChartPanel({
                 capabilities.returnPath.reason ??
                 "The resolved window does not currently have published performance observations for this mandate."
               }
-              hint="Adjust the period or explicit dates once performance history is available for this resolved window."
+              partialHint="Adjust the period or explicit dates once performance history is available for this resolved window."
+              unavailableHint="Adjust the period or explicit dates once performance history is available for this resolved window."
+              surface="analysis"
             />
           </div>
         ) : undefined
@@ -603,19 +607,19 @@ export default function PerformanceChartPanel({
               <Box
                 sx={{
                   position: "absolute",
-                  top: 12,
-                  right: 12,
-                  px: 1.25,
-                  py: 0.5,
+                  top: lotusThemeTokens.spacing.step3,
+                  right: lotusThemeTokens.spacing.step3,
+                  px: lotusThemeTokens.spacing.step3,
+                  py: lotusThemeTokens.spacing.step1,
                   borderRadius: 999,
                   bgcolor: "rgba(255,255,255,0.92)",
                   border: "1px solid rgba(31,39,51,0.08)",
                   boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
                 }}
               >
-                <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "text.secondary" }}>
+                <Text variant="metadata" as="span">
                   Refreshing analytical series
-                </Typography>
+                </Text>
               </Box>
             ) : null}
           </div>
@@ -623,7 +627,8 @@ export default function PerformanceChartPanel({
             ariaLabel="Return path observation table"
             columns={chartTableModel.columns}
             rows={chartTableModel.rows}
-            dense
+            density="compact"
+            variant="observation"
             className="performance-chart-observation-table"
           />
         </>

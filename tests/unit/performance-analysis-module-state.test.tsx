@@ -38,7 +38,7 @@ describe("PerformanceAnalysisModuleState", () => {
 
     expect(screen.getByText("Loading detail.")).toBeInTheDocument();
     expect(
-      document.querySelector(".performance-analysis-state-panel-loading .module-state-panel")
+      document.querySelector(".performance-analysis-state-panel-loading .workbench-loading-state")
     ).toBeTruthy();
   });
 

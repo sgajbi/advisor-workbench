@@ -1,13 +1,21 @@
 export { default as ActionLink } from "./components/action-link";
+export { default as AppPageShell } from "./components/app-page-shell";
 export { default as AnalyticsEffectStrip } from "./components/analytics-effect-strip";
 export { default as AnalyticsModule } from "./components/analytics-module";
 export { default as AnalyticsRankedList } from "./components/analytics-ranked-list";
-export { default as AnalyticsSectionHeader } from "./components/analytics-section-header";
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
+export { default as CapabilityStatePanel } from "./components/capability-state-panel";
+export type {
+  AnalyticsTableColumn,
+  AnalyticsTableDensity,
+  AnalyticsTableRow,
+  AnalyticsTableVariant,
+} from "./components/analytics-table";
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
 export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";
+export { default as DisclosureToggleButton } from "./components/disclosure-toggle-button";
 export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
 export { default as WorkbenchSegmentedControl } from "./components/workbench-segmented-control";
 export type { WorkbenchSegmentedControlOption } from "./components/workbench-segmented-control";
@@ -24,16 +32,27 @@ export { default as ActionListCard } from "./components/action-list-card";
 export { default as ChartCard } from "./components/chart-card";
 export { default as DataGridCard } from "./components/data-grid-card";
 export { default as EmptyStatePanel } from "./components/empty-state-panel";
+export { default as FieldLabel } from "./components/field-label";
 export { default as ModuleStatePanel } from "./components/module-state-panel";
 export { default as ModuleSkeleton } from "./components/module-skeleton";
 export { default as StateInfoHint } from "./components/state-info-hint";
 export { default as FilterBar } from "./components/filter-bar";
+export { default as MainWithSideRailLayout } from "./components/main-with-side-rail-layout";
+export { default as ModeTabs } from "./components/mode-tabs";
+export { default as ScreenStatePanel } from "./components/screen-state-panel";
+export type { ScreenStateKind, ScreenStateSurface } from "./components/screen-state-panel";
 export { default as SectionHeader } from "./components/section-header";
+export { default as SectionBlock } from "./components/section-block";
+export { default as SemanticBadge } from "./components/semantic-badge";
+export type { SemanticBadgeTone, SemanticBadgeEmphasis } from "./components/semantic-badge";
+export { default as ActionButton } from "./components/action-button";
+export type { ActionButtonPriority } from "./components/action-button";
 export { default as DetailDrawer } from "./components/detail-drawer";
 export { default as MetricRow } from "./components/metric-row";
 export { default as Panel } from "./components/panel";
 export { default as SectionLabel } from "./components/section-label";
-export { default as StatusChip } from "./components/status-chip";
+export { default as Text } from "./components/text";
+export type { TextVariant } from "./components/text";
 export {
   WorkstationPage,
   WorkstationShell,

@@ -15,14 +15,14 @@ describe("PortfolioUnavailableWorkspace", () => {
     expect(screen.getByText("Core feed unavailable")).toBeInTheDocument();
 
     for (const area of FALLBACK_WORK_AREAS) {
-      const card = screen.getByRole("heading", { name: area.title }).closest("article, section, div");
+      const card = screen.getByRole("heading", { name: area.title }).closest(".section-block");
       expect(card).toBeTruthy();
       expect(screen.getByText(area.note)).toBeInTheDocument();
       expect(screen.getByRole("link", { name: `Open ${area.title}` })).toHaveAttribute("href", area.href);
       expect(screen.getAllByText(area.value).length).toBeGreaterThanOrEqual(1);
     }
 
-    const serviceState = screen.getByRole("heading", { name: "Service State" }).closest("article, section, div");
+    const serviceState = screen.getByRole("heading", { name: "Service State" }).closest(".section-block");
     expect(serviceState).toBeTruthy();
     const stateScope = within(serviceState as HTMLElement);
     expect(stateScope.getByText("Portfolio catalog")).toBeInTheDocument();

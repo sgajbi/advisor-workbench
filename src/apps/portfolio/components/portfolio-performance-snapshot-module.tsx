@@ -1,8 +1,11 @@
 "use client";
 
-import Button from "@mui/material/Button";
-
-import { ActionLink, AnalyticsModule, MetricRow } from "@/design-system";
+import {
+  ActionLink,
+  AnalyticsModule,
+  DisclosureToggleButton,
+  MetricRow,
+} from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import { buildPerformanceHref } from "@/apps/performance/navigation";
@@ -67,9 +70,7 @@ export default function PortfolioPerformanceSnapshotModule({
       actions={
         <>
           <ActionLink href={performanceWorkspaceHref}>Open Performance</ActionLink>
-          <Button size="small" variant="text" onClick={onToggle}>
-            {expanded ? "Collapse" : "Expand"}
-          </Button>
+          <DisclosureToggleButton expanded={expanded} onToggle={onToggle} />
         </>
       }
     >

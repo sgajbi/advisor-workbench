@@ -1,4 +1,5 @@
 import { cx } from "../utils/cx";
+import Text from "./text";
 
 export type WorkbenchSummaryMetricStripItem = {
   key?: string;
@@ -35,10 +36,16 @@ export default function WorkbenchSummaryMetricStrip({
             item.className
           )}
         >
-          <span className="workbench-summary-metric-label">{item.label}</span>
-          <strong className="workbench-summary-metric-value">{item.value}</strong>
+          <Text variant="label" className="workbench-summary-metric-label">
+            {item.label}
+          </Text>
+          <Text variant="metricValueCompact" className="workbench-summary-metric-value">
+            {item.value}
+          </Text>
           {item.support ? (
-            <span className="workbench-summary-metric-support">{item.support}</span>
+            <Text variant="metadata" className="workbench-summary-metric-support">
+              {item.support}
+            </Text>
           ) : null}
         </div>
       ))}

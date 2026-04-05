@@ -1,6 +1,6 @@
 "use client";
 
-import AnalyticsModule from "@/design-system/components/analytics-module";
+import { AnalyticsModule, DisclosureToggleButton } from "@/design-system";
 import { cx } from "@/design-system/utils/cx";
 
 export default function PortfolioCollapsibleModule({
@@ -31,14 +31,7 @@ export default function PortfolioCollapsibleModule({
       title={title}
       subtitle={subtitle}
       actions={
-        <button
-          type="button"
-          className="portfolio-inline-action"
-          aria-expanded={expanded}
-          onClick={onToggle}
-        >
-          {expanded ? "Collapse" : "Expand"}
-        </button>
+        <DisclosureToggleButton expanded={expanded} onToggle={onToggle} />
       }
     >
       {expanded ? children : null}

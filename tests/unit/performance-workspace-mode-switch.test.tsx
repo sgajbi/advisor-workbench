@@ -11,6 +11,10 @@ describe("PerformanceWorkspaceModeSwitch", () => {
 
     render(<PerformanceWorkspaceModeSwitch value="summary" onChange={onChange} />);
 
+    expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toHaveClass(
+      "mode-tabs",
+      "performance-workspace-mode-switch"
+    );
     expect(screen.getByRole("tab", { name: "Summary" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Analysis" })).toHaveAttribute("aria-selected", "false");
     expect(screen.getByRole("tab", { name: "Evidence" })).toHaveAttribute("aria-selected", "false");

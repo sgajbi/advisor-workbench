@@ -3,9 +3,9 @@
 import type { ReactNode } from "react";
 
 import {
+  CapabilityStatePanel,
+  ScreenStatePanel,
   WorkbenchLoadingState,
-  WorkspaceCapabilityPanel,
-  WorkspaceStatusPanel,
 } from "@/design-system";
 import {
   isRenderableCapability,
@@ -76,19 +76,17 @@ export default function PortfolioModuleState(props: PortfolioModuleStateProps) {
 
     return (
       <div className={classes}>
-        <WorkspaceCapabilityPanel
+        <CapabilityStatePanel
           capability={props.capability}
           partialTitle={props.partialTitle}
           unavailableTitle={props.unavailableTitle}
           body={props.body}
-          hint={
-            props.capability.state === "partial"
-              ? props.partialHint
-              : props.unavailableHint
-          }
+          partialHint={props.partialHint}
+          unavailableHint={props.unavailableHint}
           why={props.why}
           illustration={props.illustration}
           centered={props.centered}
+          surface="portfolio"
         />
       </div>
     );
@@ -96,13 +94,14 @@ export default function PortfolioModuleState(props: PortfolioModuleStateProps) {
 
   return (
     <div className={classes}>
-      <WorkspaceStatusPanel
-        state={props.state}
+      <ScreenStatePanel
+        kind={props.state}
         title={props.title}
         body={props.body}
         hint={props.hint}
         action={props.action}
         why={props.why}
+        surface="portfolio"
       />
     </div>
   );

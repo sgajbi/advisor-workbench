@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 
+import { lotusThemeTokens } from "../theme/tokens";
 import { cx } from "../utils/cx";
+import Text from "./text";
 
 export default function AnalyticsModule({
   title,
@@ -31,58 +31,51 @@ export default function AnalyticsModule({
       )}
       sx={{
         display: "grid",
-        gap: compact ? 1.5 : 2,
+        gap: compact
+          ? lotusThemeTokens.spacing.step3
+          : lotusThemeTokens.layout.workbenchSectionGap,
         minWidth: 0,
-        p: compact ? { xs: 2.25, md: 2.5 } : { xs: 2.5, md: 3 },
-        borderRadius: "12px",
-        border: "1px solid #e5e7eb",
-        background: "#ffffff",
+        p: compact
+          ? {
+              xs: lotusThemeTokens.layout.workbenchCardPaddingCompact,
+              md: lotusThemeTokens.layout.workbenchCardPadding,
+            }
+          : {
+              xs: lotusThemeTokens.layout.workbenchCardPadding,
+              md: lotusThemeTokens.layout.workbenchCardPadding,
+            },
+        borderRadius: `${lotusThemeTokens.radius.md}px`,
+        border: lotusThemeTokens.color.border.subtle,
+        background: lotusThemeTokens.color.surface.panel,
         boxShadow: "none",
       }}
     >
       {title || subtitle || actions ? (
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={1}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "flex-start" }}
-          useFlexGap
-        >
-          <Box sx={{ minWidth: 0 }} className="workbench-summary-card-header">
-            {title ? (
-              <Typography
-                className="workbench-summary-card-title"
-                component="h4"
-                sx={{
-                  m: 0,
-                  fontSize: "1rem",
-                  fontWeight: 650,
-                  lineHeight: 1.25,
-                  color: "text.primary",
-                }}
-              >
-                {title}
-              </Typography>
-            ) : null}
-            {subtitle ? (
-              <Typography
-                className="workbench-summary-card-subtitle"
-                component="div"
-                sx={{
-                  mt: compact ? 0.25 : 0.5,
-                  fontSize: "0.75rem",
-                  fontWeight: 500,
-                  lineHeight: 1.4,
-                  color: "text.secondary",
-                  maxWidth: "36ch",
-                }}
-              >
-                {subtitle}
-              </Typography>
-            ) : null}
+        <Box sx={{ display: "grid", gap: lotusThemeTokens.spacing.step2, minWidth: 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: lotusThemeTokens.spacing.step2,
+              minWidth: 0,
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: "1 1 auto" }} className="workbench-summary-card-header">
+              {title ? (
+                <Text variant="cardTitle" className="workbench-summary-card-title">
+                  {title}
+                </Text>
+              ) : null}
+            </Box>
+            {actions ? <Box sx={{ flexShrink: 0 }}>{actions}</Box> : null}
           </Box>
-          {actions ? <Box sx={{ minWidth: 0 }}>{actions}</Box> : null}
-        </Stack>
+          {subtitle ? (
+            <Text variant="metadata" as="div" className="workbench-summary-card-subtitle">
+              {subtitle}
+            </Text>
+          ) : null}
+        </Box>
       ) : null}
       {children}
     </Box>

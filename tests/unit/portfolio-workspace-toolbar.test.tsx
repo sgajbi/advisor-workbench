@@ -75,9 +75,16 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(screen.getByText(/Period 30D: 01 Mar 2026 to 29 Mar 2026\./i)).toBeInTheDocument();
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
+    expect(screen.getByRole("tablist", { name: "Portfolio page view mode" })).toHaveClass(
+      "mode-tabs",
+      "portfolio-workspace-view-mode-tabs"
+    );
+    expect(screen.getByRole("tab", { name: "Detailed" })).toHaveAttribute("aria-selected", "true");
 
     fireEvent.click(screen.getByRole("tab", { name: "YTD" }));
     expect(onControlsChange).toHaveBeenCalledWith({ timeWindow: "YTD" });
+    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
+    expect(onControlsChange).toHaveBeenCalledWith({ viewMode: "summary" });
 
     fireEvent.click(screen.getByRole("button", { name: /Export portfolio data/i }));
     expect(onExport).toHaveBeenCalledTimes(1);

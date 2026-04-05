@@ -1,8 +1,8 @@
+import { SemanticBadge } from "@/design-system";
 import type { PerformanceAdvisorBriefItem } from "../../advisor-brief-view-model";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
 
 import LotusEvidenceChip from "./lotus-evidence-chip";
-import LotusSemanticBadge from "./lotus-semantic-badge";
 
 function toToneLabel(tone: PerformanceAdvisorBriefItem["tone"]) {
   if (tone === "warning") {
@@ -36,12 +36,12 @@ export default function LotusTalkingPointCard({
           <h4>{item.headline}</h4>
           <p>{item.detail}</p>
         </div>
-        <LotusSemanticBadge
+        <SemanticBadge
           tone={item.tone === "warning" ? "warn" : item.tone === "positive" ? "success" : "default"}
           className="performance-advisor-brief-item-tone"
         >
           {toToneLabel(item.tone)}
-        </LotusSemanticBadge>
+        </SemanticBadge>
       </header>
       <div className="performance-advisor-brief-item-support">
         <span className="performance-advisor-brief-item-support-label">Supporting metrics</span>

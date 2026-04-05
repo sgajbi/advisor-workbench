@@ -1,29 +1,36 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   ActionLink,
+  ActionButton,
   ActionListCard,
+  AppPageShell,
   AnalyticsModule,
   AnalyticsRankedList,
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
   DeferredModulePlaceholder,
+  DisclosureToggleButton,
   DegradedStatePanel,
   EmptyStatePanel,
+  FieldLabel,
   FilterBar,
   InsightCallout,
   KpiStatTile,
+  MainWithSideRailLayout,
   ModuleStatePanel,
+  ModeTabs,
   MetricRow,
   PageToolbar,
   Panel,
   ReadinessIndicator,
+  SectionBlock,
   SectionLabel,
   SectionHeader,
-  StatusChip,
+  SemanticBadge,
   WorkspaceGrid,
   WorkspaceHeader,
   WorkspaceLayout,
@@ -56,20 +63,20 @@ import {
 describe("design-system components", () => {
   it("renders the compact workspace header with title and meta", () => {
     render(
-      <WorkspaceHeader
-        title="Portfolio"
-        meta={
-          <>
-            <StatusChip>2 portfolios</StatusChip>
-            <StatusChip tone="success">Catalog live</StatusChip>
-          </>
-        }
-      />
+        <WorkspaceHeader
+          title="Portfolio"
+          meta={
+            <>
+            <SemanticBadge>2 portfolios</SemanticBadge>
+            <SemanticBadge tone="success">Catalog live</SemanticBadge>
+            </>
+          }
+        />
     );
 
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
-    expect(screen.getByText("2 portfolios")).toHaveClass("status-chip");
-    expect(screen.getByText("Catalog live")).toHaveClass("success");
+    expect(screen.getByText("2 portfolios")).toHaveClass("semantic-badge");
+    expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge-success");
   });
 
   it("renders core panel and row primitives with shared classes", () => {
@@ -131,13 +138,35 @@ describe("design-system components", () => {
     expect(document.querySelector(".workstation-shell-side-comfortable")).toBeTruthy();
   });
 
+  it("renders shared app-shell composition primitives with the workstation contract underneath", () => {
+    render(
+      <AppPageShell pageKey="performance" className="performance-page">
+        <MainWithSideRailLayout
+          className="performance-layout"
+          rail={<Panel>Rail</Panel>}
+          main={<Panel>Main</Panel>}
+          side={<Panel>Side</Panel>}
+          sideDensity="comfortable"
+        />
+      </AppPageShell>
+    );
+
+    expect(document.querySelector("main.app-page-shell.app-page-shell-performance.performance-page"))
+      .toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.performance-layout")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
+  });
+
   it("renders the shared workbench page frame with shared header and section stack", () => {
     render(
       <WorkstationPage>
         <WorkbenchPageFrame
           title="Portfolio"
           subtitle="Front-office portfolio context"
-          actions={<StatusChip>Catalog live</StatusChip>}
+          actions={<SemanticBadge>Catalog live</SemanticBadge>}
         >
           <WorkbenchSectionStack>
             <Panel>Summary Section</Panel>
@@ -151,7 +180,85 @@ describe("design-system components", () => {
     expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
-    expect(screen.getByText("Catalog live")).toHaveClass("status-chip");
+    expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge");
+  });
+
+  it("renders section blocks with a standardized header and body seam", () => {
+    render(
+      <SectionBlock title="Service State" subtitle="Operational posture" actions={<button type="button">Refresh</button>}>
+        <MetricRow label="Portfolio catalog" value="Ready" />
+      </SectionBlock>
+    );
+
+    expect(document.querySelector(".section-block")).toBeTruthy();
+    expect(document.querySelector(".section-block-body")).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Service State section header" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+    expect(screen.getByText("Portfolio catalog")).toBeInTheDocument();
+    expect(screen.getByText("Ready")).toBeInTheDocument();
+  });
+
+  it("renders shared semantic badges, action buttons, and mode tabs with the standardized class contract", () => {
+    const onChange = vi.fn();
+    const onClick = vi.fn();
+
+    render(
+      <>
+        <SemanticBadge tone="warn" emphasis="strong">
+          Review
+        </SemanticBadge>
+        <ActionButton priority="primary" onClick={onClick}>
+          Copy Note
+        </ActionButton>
+        <ModeTabs
+          value="advisor"
+          onChange={onChange}
+          ariaLabel="Workspace modes"
+          accentModeKey="advisor"
+          options={[
+            { key: "summary", label: "Summary" },
+            { key: "advisor", label: "Advisor Brief" },
+          ]}
+        />
+      </>
+    );
+
+    expect(screen.getByText("Review")).toHaveClass("semantic-badge", "semantic-badge-warn", "semantic-badge-strong");
+    expect(screen.getByRole("button", { name: "Copy Note" })).toHaveClass("action-button", "action-button-primary");
+    expect(screen.getByRole("tablist", { name: "Workspace modes" })).toHaveClass("mode-tabs");
+    expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveClass("workbench-segmented-control-button-active");
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy Note" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith("summary");
+  });
+
+  it("renders the shared disclosure toggle contract with consistent labels and chevron state", () => {
+    const onToggle = vi.fn();
+    const { rerender } = render(
+      <DisclosureToggleButton expanded={false} onToggle={onToggle} />
+    );
+
+    const button = screen.getByRole("button", { name: "Expand" });
+    expect(button).toHaveClass("disclosure-toggle-button");
+    expect(button).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(button);
+    expect(onToggle).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <DisclosureToggleButton
+        expanded
+        decorative
+        className="portfolio-disclosure-toggle"
+        collapsedToggleLabel="Expand"
+        expandedToggleLabel="Collapse"
+      />
+    );
+    expect(screen.getByText("Collapse")).toHaveClass("disclosure-toggle-button-label");
+    expect(document.querySelector(".disclosure-toggle-button-decorative")).toBeTruthy();
   });
 
   it("renders the shared workbench rail card primitive", () => {
@@ -190,7 +297,7 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByText("Portfolio unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Core feed unavailable")).toHaveClass("warn");
+    expect(screen.getByText("Core feed unavailable")).toHaveClass("semantic-badge-warn");
     expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
       "href",
       "/performance"
@@ -215,6 +322,7 @@ describe("design-system components", () => {
       <AnalyticsTable
         className="analysis-table"
         ariaLabel="Allocation summary"
+        variant="analysis"
         columns={[
           { key: "bucket", label: "Bucket" },
           { key: "value", label: "Market Value", align: "right" },
@@ -229,7 +337,11 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("table", { name: "Allocation summary" })).toBeInTheDocument();
-    expect(document.querySelector(".analytics-table-frame.analysis-table")).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".analytics-table-frame.analytics-table-variant-analysis.analytics-table-density-comfortable.analysis-table"
+      )
+    ).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Market Value" })).toBeInTheDocument();
     expect(screen.getByText("$800,000")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
@@ -238,7 +350,8 @@ describe("design-system components", () => {
   it("renders dense analytics tables through the shared frame contract", () => {
     render(
       <AnalyticsTable
-        dense
+        density="compact"
+        variant="observation"
         ariaLabel="Dense allocation summary"
         columns={[
           { key: "bucket", label: "Bucket" },
@@ -249,7 +362,11 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("table", { name: "Dense allocation summary" })).toBeInTheDocument();
-    expect(document.querySelector(".analytics-table-frame.analytics-table-frame-dense")).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".analytics-table-frame.analytics-table-density-compact.analytics-table-frame-dense.analytics-table-variant-observation"
+      )
+    ).toBeTruthy();
   });
 
   it("supports keyboard activation for interactive analytics table rows", () => {
@@ -275,6 +392,55 @@ describe("design-system components", () => {
 
     fireEvent.keyDown(screen.getByLabelText("Equity row"), { key: "Enter" });
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders shared empty and loading table states through the table shell", () => {
+    const { rerender } = render(
+      <AnalyticsTable
+        ariaLabel="Portfolio cash ledger"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "date", label: "Date" },
+          { key: "amount", label: "Amount", align: "right" },
+        ]}
+        rows={[]}
+        emptyState={{
+          title: "No cash movements",
+          body: "Booked cash movements will appear once treasury events are published.",
+        }}
+      />
+    );
+
+    expect(screen.getByText("No cash movements")).toHaveClass("analytics-table-state-title");
+    expect(
+      screen.getByText("Booked cash movements will appear once treasury events are published.")
+    ).toHaveClass("analytics-table-state-body");
+    expect(
+      document.querySelector(
+        ".analytics-table-frame.analytics-table-variant-portfolio.analytics-table-density-compact"
+      )
+    ).toBeTruthy();
+
+    rerender(
+      <AnalyticsTable
+        ariaLabel="Portfolio cash ledger"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "date", label: "Date" },
+          { key: "amount", label: "Amount", align: "right" },
+        ]}
+        rows={[]}
+        loadingState={{
+          title: "Loading cash ledger",
+          body: "Cash ledger rows are loading for the selected horizon.",
+        }}
+      />
+    );
+
+    expect(screen.getByText("Loading cash ledger")).toBeInTheDocument();
+    expect(screen.getByText("Cash ledger rows are loading for the selected horizon.")).toBeInTheDocument();
   });
 
   it("renders analytics stats with semantic tone and business tooltip", async () => {
@@ -399,6 +565,21 @@ describe("design-system components", () => {
     expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
     expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
     expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();
+    const title = screen.getByText("Shared Summary");
+    const subtitle = screen.getByText("Shared subtitle");
+    const action = screen.getByRole("button", { name: "Module Action" });
+    const header = document.querySelector(".workbench-summary-card-header");
+    expect(header).toContainElement(title);
+    expect(header).not.toContainElement(subtitle);
+    expect(title.closest(".MuiBox-root")?.parentElement).toContainElement(action);
+  });
+
+  it("renders field labels through the shared typography contract", () => {
+    render(<FieldLabel htmlFor="benchmark-select">Benchmark</FieldLabel>);
+
+    expect(screen.getByText("Benchmark")).toHaveClass("workbench-field-label", "ui-text-label");
+    expect(screen.getByText("Benchmark").tagName).toBe("LABEL");
+    expect(screen.getByText("Benchmark")).toHaveAttribute("for", "benchmark-select");
   });
 
   it("renders ranked analytics content with shared summary visual typography classes", () => {
@@ -527,9 +708,9 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("group", { name: "Observation status" })).toBeInTheDocument();
-    expect(screen.getByText("As of 2026-03-29")).toHaveClass("status-chip");
-    expect(screen.getByText("2 observations")).toHaveClass("status-chip", "success");
-    expect(screen.getByText("Relative measurement")).toHaveClass("status-chip", "success");
+    expect(screen.getByText("As of 2026-03-29")).toHaveClass("semantic-badge");
+    expect(screen.getByText("2 observations")).toHaveClass("semantic-badge", "semantic-badge-success");
+    expect(screen.getByText("Relative measurement")).toHaveClass("semantic-badge", "semantic-badge-success");
   });
 
   it("renders a reusable deferred workbench section with shared heading structure", () => {

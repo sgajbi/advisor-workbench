@@ -1,4 +1,4 @@
-import StatusChip from "./status-chip";
+import SemanticBadge from "./semantic-badge";
 
 export type WorkbenchStatusStripItem = {
   label: string;
@@ -35,9 +35,9 @@ export default function WorkbenchStatusStrip({
           <div key={item.label} className={itemClassName}>
             <span className={itemLabelClassName}>{item.label}</span>
             <div className={itemBodyClassName}>
-              <StatusChip tone={item.tone ?? "default"} className={itemChipClassName}>
+              <SemanticBadge tone={item.tone ?? "default"} className={itemChipClassName}>
                 {item.value}
-              </StatusChip>
+              </SemanticBadge>
               {item.support ? <span className={itemSupportClassName}>{item.support}</span> : null}
             </div>
           </div>

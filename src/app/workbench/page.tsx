@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { DegradedStatePanel, WorkbenchPageFrame } from "@/design-system";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 const WORKBENCH_FALLBACK_PORTFOLIO_IDS =
   process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ??
@@ -48,12 +49,20 @@ export default async function WorkbenchEntryPage() {
 
   return (
     <main className="page-container">
-      <section className="page-header">
-        <h1 className="page-title">Decision Console</h1>
-        <p className="page-subtitle">
-          No portfolio is currently available from the platform lookup catalog and no fallback IDs are configured.
-        </p>
-      </section>
+      <WorkbenchPageFrame
+        title="Decision Console"
+        subtitle="No portfolio is currently available from the platform lookup catalog and no fallback IDs are configured."
+      >
+        <DegradedStatePanel
+          label="Route availability"
+          title="No portfolio could be resolved"
+          tone="warn"
+          status="Unavailable"
+        >
+          Add a platform lookup portfolio or configure `WORKBENCH_FALLBACK_PORTFOLIO_IDS` to restore
+          the default decision-console entry path.
+        </DegradedStatePanel>
+      </WorkbenchPageFrame>
     </main>
   );
 }

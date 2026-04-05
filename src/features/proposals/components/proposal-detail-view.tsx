@@ -29,6 +29,7 @@ import {
   recordClientConsent,
   submitProposal,
 } from "../api";
+import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
   ProposalApprovalsData,
   ProposalDetailData,
@@ -107,29 +108,25 @@ export default function ProposalDetailView({ proposalId }: Props) {
     queryKey,
     queryFn: async () => await getProposal(proposalId, includeEvidence),
     enabled: proposalIdValid,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
   const workflowQuery = useQuery({
     queryKey: ["proposal-workflow", proposalId, revision],
     queryFn: async () => await getProposalWorkflowEvents(proposalId),
     enabled: !!detailQuery.data?.proposal,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
   const approvalsQuery = useQuery({
     queryKey: ["proposal-approvals", proposalId, revision],
     queryFn: async () => await getProposalApprovals(proposalId),
     enabled: !!detailQuery.data?.proposal,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
   const lineageQuery = useQuery({
     queryKey: ["proposal-lineage", proposalId, revision],
     queryFn: async () => await getProposalLineage(proposalId),
     enabled: !!detailQuery.data?.proposal,
-    retry: false,
-    refetchOnWindowFocus: false,
+    ...workbenchStrictQueryDefaults,
   });
 
   async function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {

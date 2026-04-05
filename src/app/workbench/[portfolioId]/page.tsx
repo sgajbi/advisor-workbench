@@ -3,6 +3,16 @@ import {
   getReportingSnapshot,
   getWorkbenchAnalytics,
 } from "@/features/workbench/api";
+import {
+  AnalyticsTable,
+  DegradedStatePanel,
+  ScreenStatePanel,
+  SectionBlock,
+  SemanticBadge,
+  WorkbenchPageFrame,
+  WorkbenchSectionStack,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 import AnalyticsControls from "@/features/workbench/components/analytics-controls";
 import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
 import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
@@ -15,7 +25,6 @@ import PerformanceSnapshot from "@/features/workbench/components/performance-sna
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
 import ReportingSnapshotPanel from "@/features/workbench/components/reporting-snapshot-panel";
 import SandboxControls from "@/features/workbench/components/sandbox-controls";
-import Link from "next/link";
 
 function formatCurrency(value: number | null | undefined, currency: string): string {
   if (value === null || value === undefined) {
@@ -66,26 +75,24 @@ export default async function WorkbenchPage({
     const detail = error instanceof Error ? error.message : "Unknown error";
     return (
       <main className="page-container">
-        <section className="page-header">
-          <h1 className="page-title">Advisor Workbench</h1>
-          <p className="page-subtitle">Decision context is temporarily unavailable for {portfolioId}.</p>
-        </section>
-        <section className="section-card">
-          <p className="error-text">
-            Unable to load workbench overview for {portfolioId}. {detail}
-          </p>
-          <div className="toolbar">
-            <Link href={`/performance?portfolioId=${encodeURIComponent(portfolioId)}`} className="nav-link">
-              Open Performance Workspace
-            </Link>
-            <Link href="/intake" className="nav-link">
-              Open Portfolio Intake
-            </Link>
-            <Link href="/suite" className="nav-link">
-              Return To Command Center
-            </Link>
-          </div>
-        </section>
+        <WorkbenchPageFrame
+          title="Advisor Workbench"
+          subtitle={`Decision context is temporarily unavailable for ${portfolioId}.`}
+        >
+          <DegradedStatePanel
+            label="Operational status"
+            title={`Unable to load workbench overview for ${portfolioId}.`}
+            tone="danger"
+            status="Unavailable"
+            actions={[
+              { href: `/performance?portfolioId=${encodeURIComponent(portfolioId)}`, label: "Open Performance Workspace" },
+              { href: "/intake", label: "Open Portfolio Intake" },
+              { href: "/suite", label: "Return To Command Center" },
+            ]}
+          >
+            {detail}
+          </DegradedStatePanel>
+        </WorkbenchPageFrame>
       </main>
     );
   }
@@ -122,202 +129,195 @@ export default async function WorkbenchPage({
 
   return (
     <main className="page-container">
-      <section className="page-header">
-        <h1 className="page-title">Advisor Workbench: {data.portfolio.portfolio_id}</h1>
-        <p className="page-subtitle">As of: {data.as_of_date}</p>
-      </section>
+      <WorkbenchPageFrame
+        title={`Advisor Workbench: ${data.portfolio.portfolio_id}`}
+        subtitle={`As of: ${data.as_of_date}`}
+        actions={
+          <>
+            <SemanticBadge tone={data.partial_failures.length > 0 ? "warn" : "success"}>
+              {data.partial_failures.length > 0 ? "Partial upstream coverage" : "Operationally ready"}
+            </SemanticBadge>
+            <SemanticBadge>{data.active_session_id ? "Sandbox active" : "Sandbox idle"}</SemanticBadge>
+          </>
+        }
+      >
+        <WorkbenchSectionStack>
+          <PartialFailureBanner items={data.partial_failures} />
 
-      <PartialFailureBanner items={data.partial_failures} />
-
-      <OverviewCards
-        marketValueBase={data.overview.market_value_base}
-        cashWeightPct={data.overview.cash_weight_pct}
-        positionCount={data.overview.position_count}
-        baseCurrency={data.portfolio.base_currency}
-      />
-      {!hasValuationData ? (
-        <section className="section-card">
-          <p className="muted">
-            Valuation is not available for this portfolio yet. Load market prices and rerun lotus-core
-            valuation to unlock position-level values and weights.
-          </p>
-        </section>
-      ) : null}
-
-      <AnalyticsControls
-        sessionId={data.active_session_id}
-        period={period}
-        groupBy={groupBy}
-        benchmark={benchmark}
-        preset={preset}
-      />
-
-      <BenchmarkKpiStrip
-        returnPct={analytics?.portfolio_return_pct ?? null}
-        benchmarkReturnPct={analytics?.benchmark_return_pct ?? null}
-        activeReturnPct={analytics?.active_return_pct ?? null}
-        projectedCoveragePct={projectedCoveragePct}
-      />
-      {analytics === null ? (
-        <section className="section-card">
-          <p className="muted">
-            Backend analytics endpoint is unavailable. Portfolio analytics panels will populate once
-            the API is online.
-          </p>
-        </section>
-      ) : null}
-
-      <section className="workbench-split">
-        <div className="workbench-col">
-          <section className="section-card">
-            <h3>Portfolio 360 Baseline Positions</h3>
-            {data.current_positions.length ? (
-              <div className="table-wrap">
-                <table className="position-table">
-                  <thead>
-                    <tr>
-                      <th align="left">Security</th>
-                      <th align="left">Instrument</th>
-                      <th align="left">Asset Class</th>
-                      <th align="right">Quantity</th>
-                      <th align="right">Market Value</th>
-                      <th align="right">Weight</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.current_positions.map((row) => (
-                      <tr key={row.security_id}>
-                        <td>{row.security_id}</td>
-                        <td>{row.instrument_name}</td>
-                        <td>{row.asset_class ?? "N/A"}</td>
-                        <td align="right">{row.quantity.toFixed(4)}</td>
-                        <td align="right">
-                          {formatCurrency(row.market_value_base, data.portfolio.base_currency)}
-                        </td>
-                        <td align="right">{formatPct(row.weight_pct)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="muted">No current positions available in snapshot.</p>
-            )}
-          </section>
-
-          <PerformanceSnapshot
-            period={data.performance_snapshot?.period ?? "YTD"}
-            returnPct={data.performance_snapshot?.return_pct ?? null}
-            benchmarkReturnPct={data.performance_snapshot?.benchmark_return_pct ?? null}
+          <OverviewCards
+            marketValueBase={data.overview.market_value_base}
+            cashWeightPct={data.overview.cash_weight_pct}
+            positionCount={data.overview.position_count}
+            baseCurrency={data.portfolio.base_currency}
           />
-
-          <RebalanceStatus
-            status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
-            lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
-          />
-
-          {reportingSnapshot ? (
-            <ReportingSnapshotPanel
-              asOfDate={reportingSnapshot.asOfDate}
-              sourceService={reportingSnapshot.sourceService}
-              rows={reportingSnapshot.rows}
+          {!hasValuationData ? (
+            <ScreenStatePanel
+              kind="empty"
+              title="Valuation is not available for this portfolio yet"
+              body="Load market prices and rerun lotus-core valuation to unlock position-level values and weights."
             />
-          ) : (
-            <section className="section-card">
-              <h3>Reporting Snapshot</h3>
-              <p className="muted">
-                Reporting service is unavailable. This panel will populate when reporting
-                aggregation is online.
-              </p>
-            </section>
-          )}
-        </div>
-
-        <div className="workbench-col">
-          <SandboxControls
-            portfolioId={data.portfolio.portfolio_id}
-            sessionId={data.active_session_id}
-            warnings={data.warnings}
-          />
-
-          {data.projected_summary ? (
-            <section className="section-card">
-              <h3>Projected Summary</h3>
-              <div className="suite-row">
-                <span>Baseline Positions</span>
-                <strong>{data.projected_summary.total_baseline_positions}</strong>
-              </div>
-              <div className="suite-row">
-                <span>Proposed Positions</span>
-                <strong>{data.projected_summary.total_proposed_positions}</strong>
-              </div>
-              <div className="suite-row">
-                <span>Net Delta Quantity</span>
-                <strong>{data.projected_summary.net_delta_quantity.toFixed(4)}</strong>
-              </div>
-            </section>
           ) : null}
 
-          <section className="section-card">
-            <h3>Live Sandbox Projected Positions</h3>
-            {data.projected_positions.length ? (
-              <div className="table-wrap">
-                <table className="position-table">
-                  <thead>
-                    <tr>
-                      <th align="left">Security</th>
-                      <th align="left">Instrument</th>
-                      <th align="right">Baseline</th>
-                      <th align="right">Proposed</th>
-                      <th align="right">Delta</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.projected_positions.map((row) => (
-                      <tr key={row.security_id}>
-                        <td>{row.security_id}</td>
-                        <td>{row.instrument_name}</td>
-                        <td align="right">{row.baseline_quantity.toFixed(4)}</td>
-                        <td align="right">{row.proposed_quantity.toFixed(4)}</td>
-                        <td align="right">{row.delta_quantity.toFixed(4)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="muted">Create and update a sandbox session to see projected holdings.</p>
-            )}
-          </section>
-
-          <DeltaAnalyticsPanel
-            buckets={analytics?.allocation_buckets ?? []}
+          <AnalyticsControls
+            sessionId={data.active_session_id}
+            period={period}
             groupBy={groupBy}
+            benchmark={benchmark}
+            preset={preset}
           />
 
-          <ExceptionQueue
-            warnings={data.warnings}
-            partialFailures={data.partial_failures}
+          <BenchmarkKpiStrip
+            returnPct={analytics?.portfolio_return_pct ?? null}
+            benchmarkReturnPct={analytics?.benchmark_return_pct ?? null}
+            activeReturnPct={analytics?.active_return_pct ?? null}
+            projectedCoveragePct={projectedCoveragePct}
           />
+          {analytics === null ? (
+            <ScreenStatePanel
+              kind="partial"
+              title="Backend analytics endpoint is unavailable"
+              body="Portfolio analytics panels will populate once the API is online."
+            />
+          ) : null}
 
-          <DecisionReadinessPanel
-            hasValuationData={hasValuationData}
-            hasAnalytics={hasAnalytics}
-            hasReporting={hasReporting}
-            hasActiveSandbox={Boolean(data.active_session_id)}
-            warningCount={data.warnings.length}
-            failureCount={data.partial_failures.length}
-            hhiProposed={analytics?.risk_proxy.hhi_proposed ?? null}
-          />
+          <section className="workbench-split">
+            <div className="workbench-col">
+              <SectionBlock title="Portfolio 360 Baseline Positions">
+                <AnalyticsTable
+                  ariaLabel="Portfolio 360 baseline positions"
+                  variant="portfolio"
+                  density="comfortable"
+                  columns={[
+                    { key: "security", label: "Security" },
+                    { key: "instrument", label: "Instrument" },
+                    { key: "asset-class", label: "Asset Class" },
+                    { key: "quantity", label: "Quantity", align: "right" },
+                    { key: "market-value", label: "Market Value", align: "right" },
+                    { key: "weight", label: "Weight", align: "right" },
+                  ]}
+                  rows={data.current_positions.map((row) => ({
+                    key: row.security_id,
+                    cells: [
+                      row.security_id,
+                      row.instrument_name,
+                      row.asset_class ?? "N/A",
+                      row.quantity.toFixed(4),
+                      formatCurrency(row.market_value_base, data.portfolio.base_currency),
+                      formatPct(row.weight_pct),
+                    ],
+                  }))}
+                  emptyState={{
+                    title: "No current positions available",
+                    body: "No current positions are available in the latest portfolio snapshot.",
+                  }}
+                />
+              </SectionBlock>
 
-          <AdvisorSummaryCard
-            portfolioId={data.portfolio.portfolio_id}
-            warningCount={data.warnings.length}
-            failureCount={data.partial_failures.length}
-            netDeltaQuantity={data.projected_summary?.net_delta_quantity ?? 0}
-          />
-        </div>
-      </section>
+              <PerformanceSnapshot
+                period={data.performance_snapshot?.period ?? "YTD"}
+                returnPct={data.performance_snapshot?.return_pct ?? null}
+                benchmarkReturnPct={data.performance_snapshot?.benchmark_return_pct ?? null}
+              />
+
+              <RebalanceStatus
+                status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
+                lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
+              />
+
+              {reportingSnapshot ? (
+                <ReportingSnapshotPanel
+                  asOfDate={reportingSnapshot.asOfDate}
+                  sourceService={reportingSnapshot.sourceService}
+                  rows={reportingSnapshot.rows}
+                />
+              ) : (
+                <ScreenStatePanel
+                  kind="partial"
+                  title="Reporting service is unavailable"
+                  body="This panel will populate when reporting aggregation is online."
+                />
+              )}
+            </div>
+
+            <div className="workbench-col">
+              <SandboxControls
+                portfolioId={data.portfolio.portfolio_id}
+                sessionId={data.active_session_id}
+                warnings={data.warnings}
+              />
+
+              {data.projected_summary ? (
+                <SectionBlock title="Projected Summary">
+                  <WorkbenchSummaryMetricStrip
+                    ariaLabel="Projected summary"
+                    items={[
+                      { key: "baseline", label: "Baseline Positions", value: data.projected_summary.total_baseline_positions },
+                      { key: "proposed", label: "Proposed Positions", value: data.projected_summary.total_proposed_positions },
+                      { key: "net-delta", label: "Net Delta Quantity", value: data.projected_summary.net_delta_quantity.toFixed(4) },
+                    ]}
+                  />
+                </SectionBlock>
+              ) : null}
+
+              <SectionBlock title="Live Sandbox Projected Positions">
+                <AnalyticsTable
+                  ariaLabel="Live sandbox projected positions"
+                  variant="analysis"
+                  density="comfortable"
+                  columns={[
+                    { key: "security", label: "Security" },
+                    { key: "instrument", label: "Instrument" },
+                    { key: "baseline", label: "Baseline", align: "right" },
+                    { key: "proposed", label: "Proposed", align: "right" },
+                    { key: "delta", label: "Delta", align: "right" },
+                  ]}
+                  rows={data.projected_positions.map((row) => ({
+                    key: row.security_id,
+                    cells: [
+                      row.security_id,
+                      row.instrument_name,
+                      row.baseline_quantity.toFixed(4),
+                      row.proposed_quantity.toFixed(4),
+                      row.delta_quantity.toFixed(4),
+                    ],
+                  }))}
+                  emptyState={{
+                    title: "No projected holdings yet",
+                    body: "Create and update a sandbox session to see projected holdings.",
+                  }}
+                />
+              </SectionBlock>
+
+              <DeltaAnalyticsPanel
+                buckets={analytics?.allocation_buckets ?? []}
+                groupBy={groupBy}
+              />
+
+              <ExceptionQueue
+                warnings={data.warnings}
+                partialFailures={data.partial_failures}
+              />
+
+              <DecisionReadinessPanel
+                hasValuationData={hasValuationData}
+                hasAnalytics={hasAnalytics}
+                hasReporting={hasReporting}
+                hasActiveSandbox={Boolean(data.active_session_id)}
+                warningCount={data.warnings.length}
+                failureCount={data.partial_failures.length}
+                hhiProposed={analytics?.risk_proxy.hhi_proposed ?? null}
+              />
+
+              <AdvisorSummaryCard
+                portfolioId={data.portfolio.portfolio_id}
+                warningCount={data.warnings.length}
+                failureCount={data.partial_failures.length}
+                netDeltaQuantity={data.projected_summary?.net_delta_quantity ?? 0}
+              />
+            </div>
+          </section>
+        </WorkbenchSectionStack>
+      </WorkbenchPageFrame>
     </main>
   );
 }

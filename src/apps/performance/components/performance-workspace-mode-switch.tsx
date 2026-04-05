@@ -1,7 +1,5 @@
- "use client";
-
-import { useEffect, useState } from "react";
-import { WorkbenchStatusRow } from "@/design-system";
+"use client";
+import { ModeTabs, WorkbenchStatusRow } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
   isPartialCapability,
@@ -9,8 +7,6 @@ import {
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
 import { formatDate } from "../formatters";
-import LotusModeTabs from "./advisor-brief/lotus-mode-tabs";
-
 export type PerformanceWorkspaceMode =
   | "summary"
   | "analysis"
@@ -115,11 +111,6 @@ export default function PerformanceWorkspaceModeSwitch({
   onChange: (value: PerformanceWorkspaceMode) => void;
   capabilities?: PerformanceWorkspaceCapabilities | null;
 }) {
-  const [isHydrated, setIsHydrated] = useState(false);
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
   const analysisCapability = getAnalysisCapability(capabilities ?? undefined);
   const analysisReadiness = getAnalysisReadiness(capabilities);
   const evidenceCapability = capabilities?.evidence ?? null;
@@ -155,46 +146,6 @@ export default function PerformanceWorkspaceModeSwitch({
       : null,
   ].filter(Boolean) as Array<{ value: string; tone: "default" | "warn" | "danger" }>;
 
-  if (!isHydrated) {
-    return (
-      <div
-        className={[
-          "performance-workspace-mode-switch-group",
-          value === "advisor" ? "performance-workspace-mode-switch-group-advisor-active" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <div
-          className="workbench-segmented-control performance-workspace-mode-switch lotus-mode-tabs"
-          role="tablist"
-          aria-label="Performance workspace mode"
-          aria-busy="true"
-        >
-          {modeOptions.map((option) => (
-            <span
-              key={option.key}
-              className={
-                option.key === value
-                  ? "workbench-segmented-control-button workbench-segmented-control-button-active"
-                  : "workbench-segmented-control-button"
-              }
-            >
-              {option.label}
-            </span>
-          ))}
-        </div>
-        {modeStatusItems.length ? (
-          <WorkbenchStatusRow
-            label="Performance mode readiness"
-            items={modeStatusItems}
-            className="performance-workspace-mode-status"
-          />
-        ) : null}
-      </div>
-    );
-  }
-
   return (
     <div
       className={[
@@ -204,12 +155,13 @@ export default function PerformanceWorkspaceModeSwitch({
         .filter(Boolean)
         .join(" ")}
     >
-      <LotusModeTabs
+      <ModeTabs
         value={value}
         onChange={onChange}
         options={modeOptions}
         ariaLabel="Performance workspace mode"
         className="performance-workspace-mode-switch"
+        accentModeKey={"advisor"}
       />
       {modeStatusItems.length ? (
         <WorkbenchStatusRow

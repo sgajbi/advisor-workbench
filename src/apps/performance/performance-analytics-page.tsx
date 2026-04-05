@@ -2,7 +2,7 @@ import {
   getWorkbenchPerformanceWorkspaceSummary,
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
-import { WorkstationPage } from "@/design-system";
+import { AppPageShell } from "@/design-system";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 
 type LookupEnvelope = {
@@ -97,7 +97,7 @@ export default async function PerformanceAnalyticsPage({
   }
 
   return (
-    <WorkstationPage className="performance-page">
+    <AppPageShell pageKey="performance" className="performance-page">
       <PerformanceWorkspaceEntry
         initialSummary={workspaceSummary}
         initialDetails={workspaceDetails}
@@ -109,6 +109,6 @@ export default async function PerformanceAnalyticsPage({
         initialChartFrequency={chartFrequency}
         initialBenchmark={benchmark}
       />
-    </WorkstationPage>
+    </AppPageShell>
   );
 }

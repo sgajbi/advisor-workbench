@@ -1,8 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Alert, Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Alert } from "@mui/material";
+
+import {
+  ActionLink,
+  ModeTabs,
+  SectionBlock,
+  SemanticBadge,
+  Text,
+  WorkbenchPageFrame,
+  WorkbenchSectionStack,
+} from "@/design-system";
 
 import {
   advisoryQueue,
@@ -44,67 +53,66 @@ export default function SuitePage() {
       );
     }
     return (
-      <Link href={href} className="journey-step">
+      <ActionLink href={href} className="journey-step">
         {label}
-      </Link>
+      </ActionLink>
     );
   }
 
   return (
     <main className="page-container">
-      <section className="page-header">
-        <Typography variant="h4" component="h1" className="page-title">
-          Command Center
-        </Typography>
-        <Typography className="page-subtitle">
-          Start with client priorities, execute next-best workflow actions, and close the day with decision-ready outcomes.
-        </Typography>
-      </section>
-      {capabilities.partialFailure ? (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          Platform capability negotiation is partially degraded. Some routes are disabled based on currently available services.
-        </Alert>
-      ) : null}
+      <WorkbenchPageFrame
+        title="Command Center"
+        subtitle="Start with client priorities, execute next-best workflow actions, and close the day with decision-ready outcomes."
+        actions={
+          <>
+            <SemanticBadge tone={capabilities.partialFailure ? "warn" : "success"}>
+              {capabilities.partialFailure ? "Capability partial" : "Capability ready"}
+            </SemanticBadge>
+            <SemanticBadge>Operations workspace</SemanticBadge>
+          </>
+        }
+      >
+        <WorkbenchSectionStack>
+          {capabilities.partialFailure ? (
+            <Alert severity="warning">
+              Platform capability negotiation is partially degraded. Some routes are disabled based
+              on currently available services.
+            </Alert>
+          ) : null}
 
-      <section className="journey-grid">
-        <Paper className="section-card journey-card" elevation={0}>
-          <Typography variant="h6" component="h2">
-            Client Advisor Journey
-          </Typography>
-          <Typography className="muted" sx={{ mb: 1 }}>
-            Intake data, review portfolio context, assess performance, and progress the next decision-ready action.
-          </Typography>
+          <section className="journey-grid">
+        <SectionBlock
+          title="Client Advisor Journey"
+          subtitle="Intake data, review portfolio context, assess performance, and progress the next decision-ready action."
+          className="journey-card"
+        >
           <div className="journey-steps">
             {renderRouteAction("1. Portfolio Intake", "/intake", navFlags.portfolio_intake !== false)}
             {renderRouteAction("2. Portfolio Review", "/portfolio", navFlags.command_center !== false)}
             {renderRouteAction("3. Analytics Context", "/performance", navFlags.analytics_studio !== false)}
             {renderRouteAction("4. Decision Console", "/workbench", navFlags.decision_console !== false)}
           </div>
-        </Paper>
+        </SectionBlock>
 
-        <Paper className="section-card journey-card" elevation={0}>
-          <Typography variant="h6" component="h2">
-            Portfolio Manager Journey
-          </Typography>
-          <Typography className="muted" sx={{ mb: 1 }}>
-            Monitor live portfolio state, inspect risk/review queue, and approve execution-ready decisions.
-          </Typography>
+        <SectionBlock
+          title="Portfolio Manager Journey"
+          subtitle="Monitor live portfolio state, inspect risk/review queue, and approve execution-ready decisions."
+          className="journey-card"
+        >
           <div className="journey-steps">
             {renderRouteAction("1. Decision Console", "/workbench", navFlags.decision_console !== false)}
             {renderRouteAction("2. Performance Review", "/performance", navFlags.analytics_studio !== false)}
             {renderRouteAction("3. Portfolio Review", "/portfolio", navFlags.command_center !== false)}
             {renderRouteAction("4. Command Center Metrics", "/suite", navFlags.command_center !== false)}
           </div>
-        </Paper>
+        </SectionBlock>
       </section>
 
-      <Paper className="section-card" elevation={0}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant="h6" component="h2">
-            Integration Status
-          </Typography>
-          <Chip size="small" color="success" label="Decision Flow Live" />
-        </Stack>
+      <SectionBlock
+        title="Integration Status"
+        actions={<SemanticBadge tone="success">Decision Flow Live</SemanticBadge>}
+      >
         <div className="kpi-grid">
           {sources.map((source) => (
             <div key={source} className="kpi-box">
@@ -136,49 +144,34 @@ export default function SuitePage() {
             ) : null}
           </div>
         </div>
-      </Paper>
+      </SectionBlock>
 
       <section className="suite-grid">
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Role Operations Lens
-          </Typography>
-          <Typography className="muted" sx={{ mb: 1 }}>
-            Switch the active role to view ownership, queues, and actions for that operating function.
-          </Typography>
-          <ToggleButtonGroup
-            color="primary"
-            exclusive
+        <SectionBlock
+          title="Role Operations Lens"
+          subtitle="Switch the active role to view ownership, queues, and actions for that operating function."
+          className="suite-panel"
+          bodyClassName="suite-panel-body"
+        >
+          <ModeTabs
             value={activeRole}
-            onChange={(_event, nextRole: OperatingRole | null) => {
-              if (nextRole) setActiveRole(nextRole);
-            }}
-            size="small"
-            sx={{
-              width: "100%",
-              flexWrap: "wrap",
-              gap: 0.5,
-              "& .MuiToggleButton-root": {
-                minWidth: 0,
-                flex: { xs: "1 1 calc(50% - 8px)", sm: "0 0 auto" },
-              },
-            }}
-          >
-            <ToggleButton value="ADVISOR">Advisor</ToggleButton>
-            <ToggleButton value="RISK">Risk</ToggleButton>
-            <ToggleButton value="COMPLIANCE">Compliance</ToggleButton>
-          </ToggleButtonGroup>
+            onChange={setActiveRole}
+            ariaLabel="Operating role"
+            className="suite-role-tabs"
+            options={[
+              { key: "ADVISOR", label: "Advisor" },
+              { key: "RISK", label: "Risk" },
+              { key: "COMPLIANCE", label: "Compliance" },
+            ]}
+          />
           <div className="toolbar">
-            <Chip label={`Active Role: ${roleLabel}`} size="small" color="primary" />
-            <Chip label={`Assigned Items: ${rolePriorities.length}`} size="small" />
-            <Chip label={`Action Templates: ${rolePlaybook.length}`} size="small" />
+            <SemanticBadge emphasis="strong">{`Active Role: ${roleLabel}`}</SemanticBadge>
+            <SemanticBadge>{`Assigned Items: ${rolePriorities.length}`}</SemanticBadge>
+            <SemanticBadge>{`Action Templates: ${rolePlaybook.length}`}</SemanticBadge>
           </div>
-        </Paper>
+        </SectionBlock>
 
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            {roleLabel} Priorities
-          </Typography>
+        <SectionBlock title={`${roleLabel} Priorities`} className="suite-panel">
           {rolePriorities.map((item) => (
             <div key={item.proposalId} className="suite-row">
               <div>
@@ -193,21 +186,18 @@ export default function SuitePage() {
               </div>
             </div>
           ))}
-          {rolePriorities.length === 0 ? <Typography className="muted">No active items for this role.</Typography> : null}
+          {rolePriorities.length === 0 ? <Text variant="secondary">No active items for this role.</Text> : null}
           <div className="toolbar">
-            <Link href="/performance" className="nav-link">
+            <ActionLink href="/performance">
               Open Performance Workspace
-            </Link>
-            <Link href="/workbench" className="nav-link">
+            </ActionLink>
+            <ActionLink href="/workbench">
               Open Decision Console
-            </Link>
+            </ActionLink>
           </div>
-        </Paper>
+        </SectionBlock>
 
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            {roleLabel} Action Playbook
-          </Typography>
+        <SectionBlock title={`${roleLabel} Action Playbook`} className="suite-panel">
           {rolePlaybook.map((item) => (
             <div key={item.workflowState} className="suite-row">
               <div>
@@ -215,29 +205,26 @@ export default function SuitePage() {
                 <p className="muted">{item.advisorAction}</p>
               </div>
               <div>
-                <Link href={item.route} className="nav-link">
+                <ActionLink href={item.route}>
                   {item.routeLabel}
-                </Link>
+                </ActionLink>
               </div>
             </div>
           ))}
-          {rolePlaybook.length === 0 ? <Typography className="muted">No mapped actions for this role.</Typography> : null}
-        </Paper>
+          {rolePlaybook.length === 0 ? <Text variant="secondary">No mapped actions for this role.</Text> : null}
+        </SectionBlock>
       </section>
 
       <section className="suite-grid">
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Workflow Execution Controls
-          </Typography>
+        <SectionBlock title="Workflow Execution Controls" className="suite-panel">
           <div className="suite-row">
             <span>Portfolio Review</span>
             {navFlags.command_center === false ? (
               <span className="nav-link nav-link-disabled">Open Portfolio</span>
             ) : (
-              <Link href="/portfolio" className="nav-link">
+              <ActionLink href="/portfolio">
                 Open Portfolio
-              </Link>
+              </ActionLink>
             )}
           </div>
           <div className="suite-row">
@@ -245,9 +232,9 @@ export default function SuitePage() {
             {navFlags.analytics_studio === false ? (
               <span className="nav-link nav-link-disabled">Open Performance</span>
             ) : (
-              <Link href="/performance" className="nav-link">
+              <ActionLink href="/performance">
                 Open Performance
-              </Link>
+              </ActionLink>
             )}
           </div>
           <div className="suite-row">
@@ -255,17 +242,14 @@ export default function SuitePage() {
             {navFlags.decision_console === false ? (
               <span className="nav-link nav-link-disabled">Open Workbench</span>
             ) : (
-              <Link href="/workbench" className="nav-link">
+              <ActionLink href="/workbench">
                 Open Workbench
-              </Link>
+              </ActionLink>
             )}
           </div>
-        </Paper>
+        </SectionBlock>
 
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Intake Control Tower
-          </Typography>
+        <SectionBlock title="Intake Control Tower" className="suite-panel">
           {intakeBatches.map((batch) => (
             <div key={batch.batchId} className="suite-row">
               <div>
@@ -280,30 +264,24 @@ export default function SuitePage() {
               </div>
             </div>
           ))}
-          <Link href="/intake" className="nav-link">
+          <ActionLink href="/intake">
             Open Intake Workspace
-          </Link>
-        </Paper>
+          </ActionLink>
+        </SectionBlock>
 
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Analytics Intelligence Desk
-          </Typography>
+        <SectionBlock title="Analytics Intelligence Desk" className="suite-panel">
           {analyticsHighlights.map((item) => (
             <div key={item.label} className="suite-row">
               <span>{item.label}</span>
               <strong>{item.value}</strong>
             </div>
           ))}
-          <Link href="/performance" className="nav-link">
+          <ActionLink href="/performance">
             Open Analytics Workspace
-          </Link>
-        </Paper>
+          </ActionLink>
+        </SectionBlock>
 
-        <Paper className="section-card suite-panel" elevation={0}>
-          <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-            Advisory Decision Queue
-          </Typography>
+        <SectionBlock title="Advisory Decision Queue" className="suite-panel">
           {advisoryQueue.map((item) => (
             <div key={item.proposalId} className="suite-row">
               <div>
@@ -317,15 +295,17 @@ export default function SuitePage() {
             </div>
           ))}
           <div className="toolbar">
-            <Link href="/portfolio" className="nav-link">
+            <ActionLink href="/portfolio">
               Open Portfolio Workspace
-            </Link>
-            <Link href="/workbench" className="nav-link">
+            </ActionLink>
+            <ActionLink href="/workbench">
               Open Decision Console
-            </Link>
+            </ActionLink>
           </div>
-        </Paper>
+        </SectionBlock>
       </section>
+      </WorkbenchSectionStack>
+      </WorkbenchPageFrame>
     </main>
   );
 }

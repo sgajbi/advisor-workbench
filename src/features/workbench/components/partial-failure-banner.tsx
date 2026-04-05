@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, AlertTitle } from "@mui/material";
+import { DegradedStatePanel } from "@/design-system";
 
 type PartialFailure = {
   source_service: string;
@@ -18,8 +18,13 @@ export default function PartialFailureBanner(props: Props) {
   }
 
   return (
-    <Alert severity="warning" aria-label="partial-failures" sx={{ mb: 1.2 }}>
-      <AlertTitle>Partial Data Warning</AlertTitle>
+    <DegradedStatePanel
+      className="workbench-partial-failure-banner"
+      label="Operational status"
+      title="Partial Data Warning"
+      tone="warn"
+      status="Partial"
+    >
       <ul>
         {props.items.map((item) => (
           <li key={`${item.source_service}:${item.error_code}`}>
@@ -27,6 +32,6 @@ export default function PartialFailureBanner(props: Props) {
           </li>
         ))}
       </ul>
-    </Alert>
+    </DegradedStatePanel>
   );
 }

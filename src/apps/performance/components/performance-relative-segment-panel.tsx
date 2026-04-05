@@ -1,10 +1,9 @@
 "use client";
 
-import { WorkbenchChartShell } from "@/design-system";
+import { ScreenStatePanel, WorkbenchChartShell } from "@/design-system";
 import type { AttributionRowView } from "@/features/workbench/types";
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
-import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
 
 type RelativeSegmentRow = AttributionRowView & {
   active_weight_pct: number;
@@ -23,10 +22,11 @@ export default function PerformanceRelativeSegmentPanel({
         subtitle="Portfolio and benchmark weights and returns by selected segment."
         className="performance-analysis-mini-module performance-relative-segment-module"
       >
-        <PerformanceAnalysisStatePanel
-          state="unavailable"
+        <ScreenStatePanel
+          kind="unavailable"
           title="Relative segment context unavailable"
           body="Segment-level relative weight and return context is not available for this selection."
+          surface="analysis"
         />
       </WorkbenchChartShell>
     );

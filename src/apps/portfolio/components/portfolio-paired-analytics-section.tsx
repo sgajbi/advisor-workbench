@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import {
   AnalyticsTable,
   DeferredWorkbenchMount,
+  SectionHeader,
+  WorkbenchSummaryMetricStrip,
   WorkspaceGrid,
 } from "@/design-system";
 import { isRenderableCapability } from "@/shell/workspace-capabilities";
@@ -149,10 +151,7 @@ export default function PortfolioPairedAnalyticsSection({
       id={sectionId}
       className={sectionClassName ? `portfolio-workspace-section ${sectionClassName}` : "portfolio-workspace-section"}
     >
-      <div className="portfolio-section-header">
-        <h3>{title}</h3>
-        <p className="portfolio-section-copy">{subtitle}</p>
-      </div>
+      <SectionHeader title={title} subtitle={subtitle} />
       {content}
     </section>
   );
@@ -217,7 +216,8 @@ function renderIncomeModule({
           </DeferredWorkbenchMount>
           {isDetailedView ? (
             <AnalyticsTable
-              dense
+              density="compact"
+              variant="portfolio"
               className="portfolio-analytics-table"
               ariaLabel="Income summary"
               columns={[
@@ -345,7 +345,8 @@ function renderActivityModule({
           </DeferredWorkbenchMount>
           {isDetailedView ? (
             <AnalyticsTable
-              dense
+              density="compact"
+              variant="portfolio"
               className="portfolio-analytics-table"
               ariaLabel="Activity summary"
               columns={[
@@ -387,20 +388,16 @@ function PortfolioAnalyticsSummaryRow({
   ariaLabel: string;
 }) {
   return (
-    <div
-      className="portfolio-analytics-summary-row workbench-summary-metric-strip"
-      aria-label={ariaLabel}
-    >
-      {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="portfolio-analytics-summary-stat workbench-summary-metric-card"
-        >
-          <span className="workbench-summary-metric-label">{stat.label}</span>
-          <strong className="workbench-summary-metric-value">{stat.value}</strong>
-        </div>
-      ))}
-    </div>
+    <WorkbenchSummaryMetricStrip
+      className="portfolio-analytics-summary-row"
+      itemClassName="portfolio-analytics-summary-stat"
+      ariaLabel={ariaLabel}
+      items={stats.map((stat) => ({
+        key: stat.label,
+        label: stat.label,
+        value: stat.value,
+      }))}
+    />
   );
 }
 

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { DisclosureToggleButton } from "@/design-system";
 import {
   isRenderableCapability,
   isSupportedCapability,
@@ -57,15 +58,16 @@ export default function PortfolioDrilldownDisclosure({
             <span>{summary}</span>
           </div>
           <span className="portfolio-disclosure-action-copy">
-            {expanded ? "Collapse detail" : "Open detail"}
-          </span>
-        </div>
-        <div className="portfolio-disclosure-toggle" aria-hidden="true">
-          <span className="portfolio-disclosure-toggle-label">
             {expanded ? "Collapse" : "Expand"}
           </span>
-          <span className="portfolio-disclosure-chevron">▾</span>
         </div>
+        <DisclosureToggleButton
+          expanded={expanded}
+          decorative
+          className="portfolio-disclosure-toggle"
+          collapsedToggleLabel=""
+          expandedToggleLabel=""
+        />
       </summary>
       <div className="portfolio-disclosure-content">
         {expanded ? (

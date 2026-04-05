@@ -1,7 +1,5 @@
+import { ActionButton, SemanticBadge } from "@/design-system";
 import type { PerformanceAdvisorBriefStatus } from "../../advisor-brief-view-model";
-
-import LotusPrimaryAction from "./lotus-primary-action";
-import LotusSemanticBadge from "./lotus-semantic-badge";
 
 function getStatusLabel(status: PerformanceAdvisorBriefStatus) {
   if (status === "loading") {
@@ -48,27 +46,27 @@ export default function LotusStatusBar({
   return (
     <div className="lotus-status-bar performance-advisor-brief-toolbar" aria-label="Advisor brief toolbar">
       <div className="lotus-status-bar-status performance-advisor-brief-toolbar-status">
-        <LotusSemanticBadge
+        <SemanticBadge
           tone={getStatusTone(status)}
           emphasis="strong"
           className="performance-advisor-brief-toolbar-chip performance-advisor-brief-toolbar-chip-primary"
         >
           {getStatusLabel(status)}
-        </LotusSemanticBadge>
-        <LotusSemanticBadge className="performance-advisor-brief-toolbar-chip">
+        </SemanticBadge>
+        <SemanticBadge className="performance-advisor-brief-toolbar-chip">
           Source-grounded
-        </LotusSemanticBadge>
+        </SemanticBadge>
         {status === "partial" ? (
-          <LotusSemanticBadge tone="warn" className="performance-advisor-brief-toolbar-chip">
+          <SemanticBadge tone="warn" className="performance-advisor-brief-toolbar-chip">
             Partial Evidence
-          </LotusSemanticBadge>
+          </SemanticBadge>
         ) : null}
       </div>
       <div className="lotus-status-bar-actions performance-advisor-brief-toolbar-actions">
-        <LotusPrimaryAction onClick={onRefresh}>Refresh</LotusPrimaryAction>
-        <LotusPrimaryAction variant="primary" onClick={() => void handleCopyNote()}>
+        <ActionButton onClick={onRefresh}>Refresh</ActionButton>
+        <ActionButton priority="primary" onClick={() => void handleCopyNote()}>
           Copy Note
-        </LotusPrimaryAction>
+        </ActionButton>
       </div>
     </div>
   );

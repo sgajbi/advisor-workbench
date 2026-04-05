@@ -90,7 +90,7 @@ describe("PerformanceAttributionTrendPanel", () => {
 
     expect(screen.getByText("Loading attribution effect trend.")).toBeInTheDocument();
     expect(
-      document.querySelector(".performance-analysis-state-panel-loading .module-state-panel")
+      document.querySelector(".performance-analysis-state-panel-loading .workbench-loading-state")
     ).toBeTruthy();
 
     await waitFor(() => {

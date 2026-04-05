@@ -29,7 +29,8 @@ export default function PerformanceContributionAggregateTable({
   return (
     <AnalyticsTable
       className={className}
-      dense={dense}
+      density={dense ? "compact" : "comfortable"}
+      variant="analysis"
       ariaLabel={ariaLabel}
       columns={tableModel.columns}
       rows={tableModel.rows.map((row) => ({

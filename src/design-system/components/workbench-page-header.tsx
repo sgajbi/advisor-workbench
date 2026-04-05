@@ -1,4 +1,5 @@
 import { cx } from "../utils/cx";
+import Text from "./text";
 
 export default function WorkbenchPageHeader({
   title,
@@ -14,8 +15,14 @@ export default function WorkbenchPageHeader({
   return (
     <section className={cx("workbench-page-header", className)}>
       <div className="workbench-page-header-copy">
-        <h1 className="workbench-page-header-title">{title}</h1>
-        {subtitle ? <p className="workbench-page-header-subtitle">{subtitle}</p> : null}
+        <Text variant="pageTitle" className="workbench-page-header-title">
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text variant="secondary" className="workbench-page-header-subtitle">
+            {subtitle}
+          </Text>
+        ) : null}
       </div>
       {actions ? <div className="workbench-page-header-actions">{actions}</div> : null}
     </section>

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
-import EmptyStatePanel from "./empty-state-panel";
-import ModuleStatePanel from "./module-state-panel";
+import ScreenStatePanel from "./screen-state-panel";
 
 export default function WorkspaceStatusPanel({
   state,
@@ -22,13 +21,9 @@ export default function WorkspaceStatusPanel({
     label?: string;
   };
 }) {
-  if (state === "empty") {
-    return <EmptyStatePanel title={title} body={body} hint={hint} actions={action} why={why} />;
-  }
-
   return (
-    <ModuleStatePanel
-      state={state}
+    <ScreenStatePanel
+      kind={state}
       title={title}
       body={body}
       hint={hint}

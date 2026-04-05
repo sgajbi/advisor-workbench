@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, MenuItem, Stack, TextField } from "@mui/material";
+
+import { ActionButton, MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
 
 import { applySandboxChanges, createSandboxSession } from "../api";
 import { WorkbenchPolicyFeedback } from "../types";
@@ -78,15 +80,14 @@ export default function SandboxControls({
   }
 
   return (
-    <section className="section-card">
-      <Typography variant="h6">Live Sandbox</Typography>
-      <Typography className="muted" sx={{ mb: 1 }}>
+    <SectionBlock title="Live Sandbox">
+      <Text variant="secondary" className="muted">
         Session: {sessionId ?? "none"} | Version: {sessionVersion ?? "N/A"}
-      </Typography>
+      </Text>
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
-        <Button variant="outlined" onClick={onCreateSession} disabled={loading}>
+        <ActionButton onClick={onCreateSession} disabled={loading}>
           {loading ? "Working..." : "Create Session"}
-        </Button>
+        </ActionButton>
       </Stack>
       <Box>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
@@ -126,9 +127,9 @@ export default function SandboxControls({
             <MenuItem value="ON">ON</MenuItem>
             <MenuItem value="OFF">OFF</MenuItem>
           </TextField>
-          <Button variant="contained" onClick={onApplyChange} disabled={loading || !sessionId}>
+          <ActionButton priority="primary" onClick={onApplyChange} disabled={loading || !sessionId}>
             {loading ? "Applying..." : "Apply Change"}
-          </Button>
+          </ActionButton>
         </Stack>
       </Box>
       {error ? (
@@ -138,35 +139,34 @@ export default function SandboxControls({
       ) : null}
 
       <div className="constraint-rail" style={{ marginTop: 14 }}>
-        <div className="constraint-item">
-          <span className="constraint-label">Policy Gate</span>
-          <strong
-            className={`constraint-pill ${
-              policyFeedback?.status === "PASS"
-                ? "constraint-pass"
-                : policyFeedback?.status === "UNAVAILABLE"
-                  ? "constraint-warn"
-                  : policyFeedback?.status
-                    ? "constraint-fail"
-                    : "constraint-neutral"
-            }`}
-          >
-            {policyFeedback?.status ?? "NOT_EVALUATED"}
-          </strong>
-        </div>
-        <div className="constraint-item">
-          <span className="constraint-label">Workflow Readiness</span>
-          <strong className={`constraint-pill ${warnings.length ? "constraint-warn" : "constraint-pass"}`}>
-            {warnings.length ? "WARNINGS_PRESENT" : "READY"}
-          </strong>
-        </div>
-        <div className="constraint-item">
-          <span className="constraint-label">Policy Detail</span>
-          <strong className="constraint-pill constraint-neutral">
-            {policyFeedback?.detail ?? "Run simulation with policy evaluation enabled."}
-          </strong>
-        </div>
+        <MetricRow
+          label="Policy Gate"
+          value={
+            <SemanticBadge
+              tone={
+                policyFeedback?.status === "PASS"
+                  ? "success"
+                  : policyFeedback?.status === "UNAVAILABLE"
+                    ? "warn"
+                    : policyFeedback?.status
+                      ? "danger"
+                      : "default"
+              }
+            >
+              {policyFeedback?.status ?? "NOT_EVALUATED"}
+            </SemanticBadge>
+          }
+        />
+        <MetricRow
+          label="Workflow Readiness"
+          value={
+            <SemanticBadge tone={warnings.length ? "warn" : "success"}>
+              {warnings.length ? "WARNINGS_PRESENT" : "READY"}
+            </SemanticBadge>
+          }
+        />
+        <MetricRow label="Policy Detail" value={policyFeedback?.detail ?? "Run simulation with policy evaluation enabled."} />
       </div>
-    </section>
+    </SectionBlock>
   );
 }

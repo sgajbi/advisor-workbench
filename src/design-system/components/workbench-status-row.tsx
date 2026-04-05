@@ -1,4 +1,4 @@
-import StatusChip from "./status-chip";
+import SemanticBadge from "./semantic-badge";
 
 export type WorkbenchStatusRowItem = {
   value: string;
@@ -17,9 +17,9 @@ export default function WorkbenchStatusRow({
   return (
     <div className={className} role="group" aria-label={label}>
       {items.map((item) => (
-        <StatusChip key={`${item.value}-${item.tone ?? "default"}`} tone={item.tone ?? "default"}>
+        <SemanticBadge key={`${item.value}-${item.tone ?? "default"}`} tone={item.tone ?? "default"}>
           {item.value}
-        </StatusChip>
+        </SemanticBadge>
       ))}
     </div>
   );

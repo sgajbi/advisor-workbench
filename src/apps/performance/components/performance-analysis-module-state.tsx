@@ -1,6 +1,6 @@
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
-import PerformanceAnalysisStatePanel from "./performance-analysis-state-panel";
+import { ScreenStatePanel } from "@/design-system";
 
 export default function PerformanceAnalysisModuleState({
   capability,
@@ -29,10 +29,11 @@ export default function PerformanceAnalysisModuleState({
 
   if (isDetailsPending) {
     return (
-      <PerformanceAnalysisStatePanel
-        state="loading"
+      <ScreenStatePanel
+        kind="loading"
         title="Loading detail"
         body={loadingText}
+        surface="analysis"
       />
     );
   }
@@ -40,11 +41,12 @@ export default function PerformanceAnalysisModuleState({
   if (capability.state === "partial" && allowPartialContent) {
     return (
       <>
-        <PerformanceAnalysisStatePanel
-          state="partial"
+        <ScreenStatePanel
+          kind="partial"
           title={partialTitle}
           body={body}
           hint={hint}
+          surface="analysis"
         />
         {children}
       </>
@@ -52,11 +54,12 @@ export default function PerformanceAnalysisModuleState({
   }
 
   return (
-    <PerformanceAnalysisStatePanel
-      state={capability.state === "partial" ? "partial" : "unavailable"}
+    <ScreenStatePanel
+      kind={capability.state === "partial" ? "partial" : "unavailable"}
       title={capability.state === "partial" ? partialTitle : unavailableTitle}
       body={body}
       hint={hint}
+      surface="analysis"
     />
   );
 }

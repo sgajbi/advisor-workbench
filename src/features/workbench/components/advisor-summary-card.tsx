@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
 
 type Props = {
   portfolioId: string;
@@ -29,27 +30,15 @@ function recommendation(state: "BLOCKED" | "CAUTION" | "READY"): string {
 
 export default function AdvisorSummaryCard(props: Props) {
   const state = readinessState(props);
+  const tone = state === "READY" ? "success" : state === "CAUTION" ? "warn" : "danger";
 
   return (
-    <section className="section-card">
-      <h3>Advisor Summary</h3>
-      <div className="suite-row">
-        <span>Readiness</span>
-        <strong className={`summary-${state.toLowerCase()}`}>{state}</strong>
-      </div>
-      <div className="suite-row">
-        <span>Warnings</span>
-        <strong>{props.warningCount}</strong>
-      </div>
-      <div className="suite-row">
-        <span>Failures</span>
-        <strong>{props.failureCount}</strong>
-      </div>
-      <div className="suite-row">
-        <span>Net Delta Quantity</span>
-        <strong>{props.netDeltaQuantity.toFixed(4)}</strong>
-      </div>
-      <p className="muted">{recommendation(state)}</p>
+    <SectionBlock title="Advisor Summary">
+      <MetricRow label="Readiness" value={<SemanticBadge tone={tone}>{state}</SemanticBadge>} />
+      <MetricRow label="Warnings" value={props.warningCount} />
+      <MetricRow label="Failures" value={props.failureCount} />
+      <MetricRow label="Net Delta Quantity" value={props.netDeltaQuantity.toFixed(4)} />
+      <Text variant="secondary" className="muted">{recommendation(state)}</Text>
       <div className="toolbar">
         <Link
           className="nav-link"
@@ -61,6 +50,6 @@ export default function AdvisorSummaryCard(props: Props) {
           Open Portfolio Workspace
         </Link>
       </div>
-    </section>
+    </SectionBlock>
   );
 }

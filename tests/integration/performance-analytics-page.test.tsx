@@ -104,13 +104,15 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(document.querySelector("main.workstation-page.performance-page")).toBeTruthy();
+    expect(
+      document.querySelector("main.workstation-page.app-page-shell.app-page-shell-performance.performance-page")
+    ).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
     expect(document.querySelector(".workbench-page-frame.performance-page-frame")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
@@ -900,7 +902,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(trustStrip).getByText("Attribution detail unavailable")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Evidence")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Pending")).toBeInTheDocument();
-    expect(trustStrip.querySelectorAll(".performance-trust-item .status-chip")).toHaveLength(5);
+    expect(trustStrip.querySelectorAll(".performance-trust-item .semantic-badge")).toHaveLength(5);
   });
 
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {

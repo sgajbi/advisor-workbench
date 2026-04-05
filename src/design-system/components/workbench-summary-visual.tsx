@@ -1,9 +1,9 @@
 import type { ComponentPropsWithoutRef } from "react";
 
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 import { cx } from "../utils/cx";
+import Text from "./text";
 
 export function WorkbenchSummaryToolbar({
   children,
@@ -35,12 +35,9 @@ export function WorkbenchSummaryVisualHeading({
   className?: string;
 }) {
   return (
-    <Typography
-      className={cx("workbench-summary-visual-heading", className)}
-      sx={{ fontSize: "0.95rem", fontWeight: 700, color: "text.primary" }}
-    >
+    <Text variant="cardTitle" as="div" className={cx("workbench-summary-visual-heading", className)}>
       {children}
-    </Typography>
+    </Text>
   );
 }
 
@@ -52,12 +49,9 @@ export function WorkbenchSummaryVisualLabel({
   className?: string;
 }) {
   return (
-    <Typography
-      className={cx("workbench-summary-visual-label", className)}
-      sx={{ fontSize: "0.875rem", fontWeight: 700, color: "text.primary" }}
-    >
+    <Text variant="subsectionTitle" as="div" className={cx("workbench-summary-visual-label", className)}>
       {children}
-    </Typography>
+    </Text>
   );
 }
 
@@ -69,17 +63,9 @@ export function WorkbenchSummaryVisualValue({
   className?: string;
 }) {
   return (
-    <Typography
-      className={cx("workbench-summary-visual-value", className)}
-      sx={{
-        fontSize: "0.875rem",
-        fontWeight: 700,
-        color: "text.primary",
-        fontVariantNumeric: "tabular-nums",
-      }}
-    >
+    <Text variant="metricValueCompact" as="div" className={cx("workbench-summary-visual-value", className)}>
       {children}
-    </Typography>
+    </Text>
   );
 }
 
@@ -91,12 +77,9 @@ export function WorkbenchSummaryVisualMeta({
   className?: string;
 }) {
   return (
-    <Typography
-      className={cx("workbench-summary-visual-meta", className)}
-      sx={{ fontSize: "0.75rem", color: "text.secondary" }}
-    >
+    <Text variant="metadata" as="div" className={cx("workbench-summary-visual-meta", className)}>
       {children}
-    </Typography>
+    </Text>
   );
 }
 

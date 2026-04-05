@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
-import { Paper, Typography } from "@mui/material";
+import { SectionBlock, Text } from "@/design-system";
 
 type Props = {
   period: string;
@@ -37,17 +37,14 @@ export default function PerformanceSnapshot(props: Props) {
   }, [props.benchmarkReturnPct, props.returnPct]);
 
   return (
-    <Paper className="section-card">
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Performance Snapshot
-      </Typography>
-      <Typography sx={{ mb: 0.4 }}>
+    <SectionBlock title="Performance Snapshot">
+      <Text variant="body" className="workbench-summary-copy">
         {props.period}: {props.returnPct ?? "N/A"}
-      </Typography>
-      <Typography className="muted" sx={{ mb: 1 }}>
+      </Text>
+      <Text variant="secondary" className="muted">
         Benchmark: {props.benchmarkReturnPct ?? "N/A"}
-      </Typography>
+      </Text>
       <ReactECharts option={option} style={{ height: 240 }} notMerge lazyUpdate />
-    </Paper>
+    </SectionBlock>
   );
 }

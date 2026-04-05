@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  AppPageShell,
   WorkbenchLoadingState,
   WorkbenchToolbarPlaceholder,
-  WorkstationPage,
 } from "@/design-system";
 
 import {
@@ -251,7 +251,7 @@ export default function PortfolioWorkspaceClient({
   }
 
   return (
-    <WorkstationPage className="portfolio-page">
+    <AppPageShell pageKey="portfolio" className="portfolio-page">
       {!portfolios.length ? (
         <PortfolioUnavailableWorkspace />
       ) : (
@@ -300,7 +300,7 @@ export default function PortfolioWorkspaceClient({
           }
         />
       )}
-    </WorkstationPage>
+    </AppPageShell>
   );
 }
 

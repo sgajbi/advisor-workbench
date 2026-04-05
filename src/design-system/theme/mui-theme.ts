@@ -7,49 +7,49 @@ export function createLotusMuiTheme() {
     palette: {
       mode: "light",
       primary: {
-        main: lotusThemeTokens.color.brand,
-        dark: lotusThemeTokens.color.brandStrong,
-        light: lotusThemeTokens.color.brandAccent,
+        main: lotusThemeTokens.color.brand.base,
+        dark: lotusThemeTokens.color.brand.strong,
+        light: lotusThemeTokens.color.brand.accent,
       },
       secondary: {
-        main: lotusThemeTokens.color.brandHighlight,
+        main: lotusThemeTokens.color.brand.highlight,
       },
       background: {
-        default: lotusThemeTokens.color.bg,
-        paper: lotusThemeTokens.color.panel,
+        default: lotusThemeTokens.color.surface.canvas,
+        paper: lotusThemeTokens.color.surface.panel,
       },
       text: {
-        primary: lotusThemeTokens.color.text,
-        secondary: lotusThemeTokens.color.textMuted,
+        primary: lotusThemeTokens.color.text.primary,
+        secondary: lotusThemeTokens.color.text.muted,
       },
       success: {
-        main: lotusThemeTokens.color.success,
+        main: lotusThemeTokens.color.semantic.success,
       },
       warning: {
-        main: lotusThemeTokens.color.warning,
+        main: lotusThemeTokens.color.semantic.warning,
       },
       error: {
-        main: lotusThemeTokens.color.danger,
+        main: lotusThemeTokens.color.semantic.danger,
       },
-      divider: lotusThemeTokens.color.border,
+      divider: lotusThemeTokens.color.border.default,
     },
     shape: {
       borderRadius: lotusThemeTokens.radius.control,
     },
     typography: {
-      fontFamily: lotusThemeTokens.font.ui,
+      fontFamily: lotusThemeTokens.typography.fontFamily.ui,
       h1: {
-        fontFamily: lotusThemeTokens.font.display,
+        fontFamily: lotusThemeTokens.typography.fontFamily.display,
         fontWeight: 600,
         letterSpacing: "-0.03em",
       },
       h2: {
-        fontFamily: lotusThemeTokens.font.display,
+        fontFamily: lotusThemeTokens.typography.fontFamily.display,
         fontWeight: 600,
         letterSpacing: "-0.02em",
       },
       h3: {
-        fontFamily: lotusThemeTokens.font.display,
+        fontFamily: lotusThemeTokens.typography.fontFamily.display,
         fontWeight: 600,
         letterSpacing: "-0.02em",
       },
@@ -62,8 +62,8 @@ export function createLotusMuiTheme() {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            color: lotusThemeTokens.color.text,
-            backgroundColor: lotusThemeTokens.color.bg,
+            color: lotusThemeTokens.color.text.primary,
+            backgroundColor: lotusThemeTokens.color.surface.canvas,
           },
         },
       },
@@ -72,8 +72,8 @@ export function createLotusMuiTheme() {
           root: {
             backgroundImage: "none",
             borderRadius: lotusThemeTokens.radius.panel,
-            border: `1px solid ${lotusThemeTokens.color.border}`,
-            boxShadow: "0 16px 32px rgba(16, 40, 51, 0.06)",
+            border: lotusThemeTokens.color.border.subtle,
+            boxShadow: lotusThemeTokens.elevation.subtle,
           },
         },
       },

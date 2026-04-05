@@ -1,3 +1,5 @@
+import { SectionBlock, WorkbenchSummaryMetricStrip } from "@/design-system";
+
 type Props = {
   returnPct: number | null;
   benchmarkReturnPct: number | null;
@@ -14,26 +16,16 @@ function formatPct(value: number | null): string {
 
 export default function BenchmarkKpiStrip(props: Props) {
   return (
-    <section className="section-card">
-      <h3>Benchmark Relative Snapshot</h3>
-      <div className="kpi-grid">
-        <div className="kpi-box">
-          <p className="kpi-label">Portfolio Return</p>
-          <p className="kpi-value">{formatPct(props.returnPct)}</p>
-        </div>
-        <div className="kpi-box">
-          <p className="kpi-label">Benchmark Return</p>
-          <p className="kpi-value">{formatPct(props.benchmarkReturnPct)}</p>
-        </div>
-        <div className="kpi-box">
-          <p className="kpi-label">Active Return</p>
-          <p className="kpi-value">{formatPct(props.activeReturnPct)}</p>
-        </div>
-        <div className="kpi-box">
-          <p className="kpi-label">Simulation Coverage</p>
-          <p className="kpi-value">{formatPct(props.projectedCoveragePct)}</p>
-        </div>
-      </div>
-    </section>
+    <SectionBlock title="Benchmark Relative Snapshot">
+      <WorkbenchSummaryMetricStrip
+        ariaLabel="Benchmark relative snapshot"
+        items={[
+          { key: "portfolio-return", label: "Portfolio Return", value: formatPct(props.returnPct) },
+          { key: "benchmark-return", label: "Benchmark Return", value: formatPct(props.benchmarkReturnPct) },
+          { key: "active-return", label: "Active Return", value: formatPct(props.activeReturnPct) },
+          { key: "simulation-coverage", label: "Simulation Coverage", value: formatPct(props.projectedCoveragePct) },
+        ]}
+      />
+    </SectionBlock>
   );
 }

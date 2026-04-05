@@ -4,10 +4,10 @@ import { useState } from "react";
 import {
   DeferredWorkbenchMount,
   DeferredModulePlaceholder,
+  MainWithSideRailLayout,
   Panel,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
-  WorkstationShell,
 } from "@/design-system";
 
 import { getPerformanceWorkspaceCapabilities } from "../capabilities";
@@ -144,7 +144,7 @@ export default function PerformanceWorkspaceView({
   );
 
   return (
-    <WorkstationShell
+    <MainWithSideRailLayout
       className="performance-layout"
       mainClassName="performance-main"
       main={
