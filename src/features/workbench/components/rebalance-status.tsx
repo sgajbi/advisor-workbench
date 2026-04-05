@@ -1,6 +1,7 @@
 "use client";
 
 import { Paper, Typography } from "@mui/material";
+import { SemanticBadge } from "@/design-system";
 
 type Props = {
   status: string;
@@ -18,10 +19,7 @@ export default function RebalanceStatus(props: Props) {
       </Typography>
       <Typography sx={{ mb: 0.6 }}>
         Status:{" "}
-        <span className={`status-chip ${tone}`}>
-          <span>●</span>
-          {props.status}
-        </span>
+        <SemanticBadge tone={tone}>{props.status}</SemanticBadge>
       </Typography>
       <Typography className="muted">Last Run: {props.lastRunId ?? "N/A"}</Typography>
     </Paper>

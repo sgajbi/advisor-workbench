@@ -29,7 +29,6 @@ import {
   SectionLabel,
   SectionHeader,
   SemanticBadge,
-  StatusChip,
   WorkspaceGrid,
   WorkspaceHeader,
   WorkspaceLayout,
@@ -62,20 +61,20 @@ import {
 describe("design-system components", () => {
   it("renders the compact workspace header with title and meta", () => {
     render(
-      <WorkspaceHeader
-        title="Portfolio"
-        meta={
-          <>
-            <StatusChip>2 portfolios</StatusChip>
-            <StatusChip tone="success">Catalog live</StatusChip>
-          </>
-        }
-      />
+        <WorkspaceHeader
+          title="Portfolio"
+          meta={
+            <>
+            <SemanticBadge>2 portfolios</SemanticBadge>
+            <SemanticBadge tone="success">Catalog live</SemanticBadge>
+            </>
+          }
+        />
     );
 
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
-    expect(screen.getByText("2 portfolios")).toHaveClass("status-chip");
-    expect(screen.getByText("Catalog live")).toHaveClass("success");
+    expect(screen.getByText("2 portfolios")).toHaveClass("semantic-badge");
+    expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge-success");
   });
 
   it("renders core panel and row primitives with shared classes", () => {
@@ -165,7 +164,7 @@ describe("design-system components", () => {
         <WorkbenchPageFrame
           title="Portfolio"
           subtitle="Front-office portfolio context"
-          actions={<StatusChip>Catalog live</StatusChip>}
+          actions={<SemanticBadge>Catalog live</SemanticBadge>}
         >
           <WorkbenchSectionStack>
             <Panel>Summary Section</Panel>
@@ -179,7 +178,7 @@ describe("design-system components", () => {
     expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
-    expect(screen.getByText("Catalog live")).toHaveClass("status-chip");
+    expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge");
   });
 
   it("renders section blocks with a standardized header and body seam", () => {
@@ -270,7 +269,7 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByText("Portfolio unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Core feed unavailable")).toHaveClass("warn");
+    expect(screen.getByText("Core feed unavailable")).toHaveClass("semantic-badge-warn");
     expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
       "href",
       "/performance"
@@ -666,9 +665,9 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("group", { name: "Observation status" })).toBeInTheDocument();
-    expect(screen.getByText("As of 2026-03-29")).toHaveClass("status-chip");
-    expect(screen.getByText("2 observations")).toHaveClass("status-chip", "success");
-    expect(screen.getByText("Relative measurement")).toHaveClass("status-chip", "success");
+    expect(screen.getByText("As of 2026-03-29")).toHaveClass("semantic-badge");
+    expect(screen.getByText("2 observations")).toHaveClass("semantic-badge", "semantic-badge-success");
+    expect(screen.getByText("Relative measurement")).toHaveClass("semantic-badge", "semantic-badge-success");
   });
 
   it("renders a reusable deferred workbench section with shared heading structure", () => {

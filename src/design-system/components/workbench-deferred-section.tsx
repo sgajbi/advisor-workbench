@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-import AnalyticsSectionHeader from "./analytics-section-header";
 import DeferredModulePlaceholder from "./deferred-module-placeholder";
 import DeferredWorkbenchMount from "./deferred-workbench-mount";
+import SectionHeader from "./section-header";
 
 export default function WorkbenchDeferredSection({
   title,
@@ -35,7 +35,7 @@ export default function WorkbenchDeferredSection({
         <DeferredWorkbenchMount placeholder={placeholder}>
           <>
             {!hideHeader ? (
-              <AnalyticsSectionHeader title={title} subtitle={subtitle} />
+              <SectionHeader title={title} subtitle={subtitle} />
             ) : null}
             {children}
           </>
@@ -46,7 +46,7 @@ export default function WorkbenchDeferredSection({
 
   return (
     <section className={className}>
-      <AnalyticsSectionHeader title={title} subtitle={subtitle} />
+      <SectionHeader title={title} subtitle={subtitle} />
       <DeferredWorkbenchMount
         placeholder={placeholder ?? fallbackPlaceholder}
       >

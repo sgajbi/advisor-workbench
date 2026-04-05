@@ -3,7 +3,6 @@ export { default as AppPageShell } from "./components/app-page-shell";
 export { default as AnalyticsEffectStrip } from "./components/analytics-effect-strip";
 export { default as AnalyticsModule } from "./components/analytics-module";
 export { default as AnalyticsRankedList } from "./components/analytics-ranked-list";
-export { default as AnalyticsSectionHeader } from "./components/analytics-section-header";
 export { default as AnalyticsStat } from "./components/analytics-stat";
 export { default as AnalyticsTable } from "./components/analytics-table";
 export { default as CapabilityStatePanel } from "./components/capability-state-panel";
@@ -50,7 +49,6 @@ export { default as DetailDrawer } from "./components/detail-drawer";
 export { default as MetricRow } from "./components/metric-row";
 export { default as Panel } from "./components/panel";
 export { default as SectionLabel } from "./components/section-label";
-export { default as StatusChip } from "./components/status-chip";
 export { default as Text } from "./components/text";
 export type { TextVariant } from "./components/text";
 export {

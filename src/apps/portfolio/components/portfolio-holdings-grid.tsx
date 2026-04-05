@@ -11,6 +11,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import * as XLSX from "xlsx";
 
+import { SectionHeader } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
@@ -18,7 +19,6 @@ import {
   PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
-import PortfolioSectionHeader from "./portfolio-section-header";
 import PortfolioModuleState from "./portfolio-module-state";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -223,7 +223,7 @@ export default function PortfolioHoldingsGrid({
 
   return (
     <div className="portfolio-grid-module">
-      <PortfolioSectionHeader
+      <SectionHeader
         title="Holdings"
         subtitle={`As of ${formatDate(asOfDate)} in ${baseCurrency}`}
         actions={

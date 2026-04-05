@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 
 import { cx } from "../utils/cx";
+import Text from "./text";
 
 export default function AnalyticsModule({
   title,
@@ -50,35 +50,14 @@ export default function AnalyticsModule({
         >
           <Box sx={{ minWidth: 0 }} className="workbench-summary-card-header">
             {title ? (
-              <Typography
-                className="workbench-summary-card-title"
-                component="h4"
-                sx={{
-                  m: 0,
-                  fontSize: "1rem",
-                  fontWeight: 650,
-                  lineHeight: 1.25,
-                  color: "text.primary",
-                }}
-              >
+              <Text variant="cardTitle" className="workbench-summary-card-title">
                 {title}
-              </Typography>
+              </Text>
             ) : null}
             {subtitle ? (
-              <Typography
-                className="workbench-summary-card-subtitle"
-                component="div"
-                sx={{
-                  mt: compact ? 0.25 : 0.5,
-                  fontSize: "0.75rem",
-                  fontWeight: 500,
-                  lineHeight: 1.4,
-                  color: "text.secondary",
-                  maxWidth: "36ch",
-                }}
-              >
+              <Text variant="metadata" as="div" className="workbench-summary-card-subtitle">
                 {subtitle}
-              </Typography>
+              </Text>
             ) : null}
           </Box>
           {actions ? <Box sx={{ minWidth: 0 }}>{actions}</Box> : null}

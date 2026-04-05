@@ -4,9 +4,9 @@ import {
   MainWithSideRailLayout,
   MetricRow,
   Panel,
+  SemanticBadge,
   SectionBlock,
   SectionLabel,
-  StatusChip,
   WorkspaceGrid,
 } from "@/design-system";
 
@@ -47,7 +47,7 @@ export default function PortfolioUnavailableWorkspace() {
                 key={area.href}
                 className="portfolio-action-card"
                 title={area.title}
-                actions={<StatusChip tone="success">{area.value}</StatusChip>}
+                actions={<SemanticBadge tone="success">{area.value}</SemanticBadge>}
               >
                 <p className="muted">{area.note}</p>
                 <div className="toolbar">

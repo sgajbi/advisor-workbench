@@ -902,7 +902,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(trustStrip).getByText("Attribution detail unavailable")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Evidence")).toBeInTheDocument();
     expect(within(trustStrip).getByText("Pending")).toBeInTheDocument();
-    expect(trustStrip.querySelectorAll(".performance-trust-item .status-chip")).toHaveLength(5);
+    expect(trustStrip.querySelectorAll(".performance-trust-item .semantic-badge")).toHaveLength(5);
   });
 
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {

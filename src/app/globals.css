@@ -1529,34 +1529,6 @@ a:hover {
   line-height: 1.25;
 }
 
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  border-radius: 10px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.3;
-  border: none;
-  background: #eef3f8;
-}
-
-.status-chip.success {
-  color: var(--success);
-  background: #eef6f1;
-}
-
-.status-chip.warn {
-  color: var(--warn-text);
-  background: var(--warn-bg);
-}
-
-.status-chip.danger {
-  color: var(--danger);
-  background: #fdf0ee;
-}
-
 .warn-banner {
   border: 1px solid var(--warn-border);
   background: var(--warn-bg);
@@ -3780,34 +3752,6 @@ a:hover {
   max-width: none;
 }
 
-.portfolio-section-header {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.portfolio-summary-cluster .portfolio-section-header {
-  padding-inline: var(--space-1);
-}
-
-.portfolio-section-header h3 {
-  margin: 0;
-  font-size: 1.1875rem;
-  font-weight: 650;
-  line-height: 1.3;
-  color: var(--brand-strong);
-}
-
-.portfolio-section-copy {
-  margin: 0;
-  font-size: var(--workbench-text-compact-strong);
-  line-height: 1.4;
-  color: var(--text-muted);
-  max-width: 42ch;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .portfolio-primary-grid {
   align-items: stretch;
 }
@@ -3829,10 +3773,6 @@ a:hover {
 
 .portfolio-detailed-cluster-section {
   gap: var(--space-4);
-}
-
-.portfolio-detailed-cluster .portfolio-section-header {
-  padding-inline: var(--space-1);
 }
 
 .portfolio-detailed-cluster > .portfolio-workspace-section + .portfolio-workspace-section {
@@ -4750,17 +4690,17 @@ a:hover {
   max-width: 26ch;
 }
 
-.performance-trust-item-chip.status-chip.success {
+.performance-trust-item-chip.semantic-badge-success {
   color: #355e47;
   background: #f2f6f3;
 }
 
-.performance-trust-item-chip.status-chip.warn {
+.performance-trust-item-chip.semantic-badge-warn {
   color: #8a6a23;
   background: #faf5e8;
 }
 
-.performance-trust-item-chip.status-chip.danger {
+.performance-trust-item-chip.semantic-badge-danger {
   color: #8f4b41;
   background: #faf1ef;
 }
@@ -8412,6 +8352,27 @@ a:hover {
 
 .portfolio-workspace-toolbar .portfolio-workspace-toolbar-action {
   min-height: 36px;
+}
+
+.analytics-stat-value {
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.analytics-stat-value-neutral {
+  color: var(--text);
+}
+
+.analytics-stat-value-success {
+  color: #355e47;
+}
+
+.analytics-stat-value-warn {
+  color: #8a6a23;
+}
+
+.analytics-stat-value-danger {
+  color: #8f4b41;
 }
 
 .analytics-stat-interactive:focus-visible,

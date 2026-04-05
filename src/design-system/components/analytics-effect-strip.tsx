@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+
+import Text from "./text";
 
 type AnalyticsEffectRow = {
   key: string;
@@ -27,15 +28,21 @@ export default function AnalyticsEffectStrip({
             alignItems: "center",
           }}
         >
-          <Typography sx={{ fontSize: "0.875rem", fontWeight: 700 }}>{row.label}</Typography>
+          <Text variant="subsectionTitle" as="div" className="analytics-effect-strip-label">
+            {row.label}
+          </Text>
           <Box sx={{ display: "flex", gap: 0.5, alignItems: "center", minHeight: 10 }}>
             <EffectBar value={row.allocationPct} color="#5b9bd5" />
             <EffectBar value={row.selectionPct} color="#7fa65a" />
             <EffectBar value={row.interactionPct} color="#b07a8e" />
           </Box>
-          <Typography sx={{ fontSize: "0.875rem", fontWeight: 700, textAlign: "right" }}>
+          <Text
+            variant="metricValueCompact"
+            as="div"
+            className="analytics-effect-strip-total"
+          >
             {row.totalPct}
-          </Typography>
+          </Text>
         </Box>
       ))}
     </Box>

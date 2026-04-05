@@ -12,8 +12,9 @@ import {
   MainWithSideRailLayout,
   MetricRow,
   Panel,
+  SectionHeader,
   SectionLabel,
-  StatusChip,
+  SemanticBadge,
   WorkbenchLoadingState,
   WorkbenchPageFrame,
   WorkbenchRailCard,
@@ -411,10 +412,10 @@ export default function PortfolioWorkspaceView({
               subtitle="Front-office portfolio context, readiness, and decision support"
               actions={
                 <>
-                  <StatusChip>{portfolios.length} portfolios</StatusChip>
-                  <StatusChip tone={portfolios.length ? "success" : "warn"}>
+                  <SemanticBadge>{portfolios.length} portfolios</SemanticBadge>
+                  <SemanticBadge tone={portfolios.length ? "success" : "warn"}>
                     {portfolios.length ? "Catalog live" : "Catalog unavailable"}
-                  </StatusChip>
+                  </SemanticBadge>
                 </>
               }
             >
@@ -661,9 +662,9 @@ function PortfolioSummaryHeaderSection({
               <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
             ) : null}
             {workspace.profile.status ? (
-              <StatusChip className="portfolio-hero-status">
+              <SemanticBadge className="portfolio-hero-status">
                 {formatStatus(workspace.profile.status)}
-              </StatusChip>
+              </SemanticBadge>
             ) : null}
           </div>
         </div>
@@ -762,14 +763,14 @@ function PortfolioExceptionsSection({ workspace }: { workspace: PortfolioWorkspa
       id="portfolio-attention"
       className="portfolio-workspace-section portfolio-summary-cluster-section"
     >
-      <div className="portfolio-section-header">
-        <h3>{workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}</h3>
-        <p className="portfolio-section-copy">
-          {workspace.partial_failures.length
+      <SectionHeader
+        title={workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}
+        subtitle={
+          workspace.partial_failures.length
             ? "Unresolved issues affecting reporting, valuation, or operations."
-            : "Current reporting and operational exception status."}
-        </p>
-      </div>
+            : "Current reporting and operational exception status."
+        }
+      />
       {workspace.partial_failures.length ? (
         <AnalyticsModule
           title="Data Coverage"
@@ -819,12 +820,10 @@ function PortfolioHealthSection({
       id="portfolio-health"
       className="portfolio-workspace-section portfolio-detailed-cluster-section"
     >
-      <div className="portfolio-section-header">
-        <h3>Portfolio Health Snapshot</h3>
-        <p className="portfolio-section-copy">
-          Readiness and coverage as of {formatDate(context.selectedAsOfDate)}.
-        </p>
-      </div>
+      <SectionHeader
+        title="Portfolio Health Snapshot"
+        subtitle={`Readiness and coverage as of ${formatDate(context.selectedAsOfDate)}.`}
+      />
       <WorkspaceGrid className="portfolio-primary-grid">
         <AnalyticsModule
           title="Mandate Overview"
@@ -878,9 +877,9 @@ function PortfolioHealthSection({
           {workspace.warnings.length ? (
             <div className="portfolio-warning-list">
               {workspace.warnings.map((warning) => (
-                <StatusChip key={warning} tone="warn">
+                <SemanticBadge key={warning} tone="warn">
                   {getCoverageWarningLabel(warning)}
-                </StatusChip>
+                </SemanticBadge>
               ))}
             </div>
           ) : null}
@@ -943,12 +942,10 @@ function PortfolioInsightsSection({
     visibleInsights.length > 0 || showLiquidityModule || showPerformanceSnapshot;
   return (
     <section className="portfolio-workspace-section portfolio-summary-cluster-section">
-      <div className="portfolio-section-header">
-        <h3>Portfolio Insights</h3>
-        <p className="portfolio-section-copy">
-          Allocation, concentration, liquidity, and recent activity.
-        </p>
-      </div>
+      <SectionHeader
+        title="Portfolio Insights"
+        subtitle="Allocation, concentration, liquidity, and recent activity."
+      />
       {showInsightsSummaryBand ? (
         <div className="portfolio-insights-summary-band workbench-summary-region">
           <PortfolioInsightsStrip
@@ -1232,10 +1229,10 @@ function PortfolioDrilldownSection({
       id="portfolio-drilldown"
       className="portfolio-workspace-section portfolio-detailed-cluster-section"
     >
-      <div className="portfolio-section-header">
-        <h3>Where can I drill down?</h3>
-        <p className="portfolio-section-copy">Holdings, transactions, and projected liquidity on demand.</p>
-      </div>
+      <SectionHeader
+        title="Where can I drill down?"
+        subtitle="Holdings, transactions, and projected liquidity on demand."
+      />
       <div className="portfolio-disclosure-stack">
         <PortfolioDrilldownDisclosure
           title="Holdings"

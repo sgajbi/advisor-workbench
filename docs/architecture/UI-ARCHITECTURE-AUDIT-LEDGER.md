@@ -328,3 +328,46 @@ Slice 1 is considered complete when:
    - Shared primitives are stronger and more coherent, but some naming overlap and API cleanup
      still remains.
    - Target slice: Slice 7.
+
+## Slice 7 Findings
+
+### Closed in Slice 7
+
+1. **Legacy shared names still overlapped for the same product roles**
+   - `AnalyticsSectionHeader` and `SectionHeader` described the same concept.
+   - `StatusChip` and `SemanticBadge` described the same semantic status surface.
+   - `PortfolioSectionHeader` was only an app-local alias around the shared section-header
+     contract.
+   - Slice 7 closes this by standardizing on:
+     - `SectionHeader`
+     - `SemanticBadge`
+   - The legacy aliases are removed from real consumers so feature teams now have one obvious
+     primitive for those roles.
+
+2. **Some primary surfaces still bypassed shared composition primitives**
+   - `Portfolio` still hand-built several section headers and one metric-strip variant.
+   - `Performance` still had a custom hydration-only tab fallback in the workspace mode switch.
+   - Slice 7 closes this by migrating those remaining route-local seams onto:
+     - `SectionHeader`
+     - `WorkbenchSummaryMetricStrip`
+     - `ModeTabs`
+
+3. **The design-system still carried typography drift in several shared components**
+   - `AnalyticsModule`, `AnalyticsStat`, `AnalyticsEffectStrip`, and
+     `WorkbenchSummaryVisual*` still relied on local `Typography` sizing instead of the shared
+     text system.
+   - Slice 7 closes this by moving those shared components onto `Text` variants and shared class
+     semantics.
+
+4. **Status semantics were still partially enforced by legacy CSS classes**
+   - Some status styling and tests still targeted `.status-chip` even though the canonical shared
+     primitive is `SemanticBadge`.
+   - Slice 7 closes this by migrating status rows, strips, degraded states, and related tests to
+     the semantic-badge contract.
+
+### Still Open After Slice 7
+
+1. **System documentation and rollout guidance remain**
+   - The shared primitives are now materially clearer and less overlapping, but the product still
+     needs the final governed usage guide and RFC closure artifacts.
+   - Target slice: Slice 8.

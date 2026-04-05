@@ -13,6 +13,7 @@ import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
 import {
+  SectionHeader,
   WorkbenchInlineRefreshNote,
 } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
@@ -26,7 +27,6 @@ import {
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
-import PortfolioSectionHeader from "./portfolio-section-header";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -244,7 +244,7 @@ export default function PortfolioTransactionsGrid({
 
   return (
     <div className="portfolio-grid-module">
-      <PortfolioSectionHeader
+      <SectionHeader
         title="Transactions"
         subtitle={`Activity since ${formatDate(defaultStartDate)}`}
         actions={
