@@ -9,6 +9,7 @@ import {
   DataGridCard,
   DeferredModulePlaceholder,
   DegradedStatePanel,
+  MainWithSideRailLayout,
   MetricRow,
   Panel,
   SectionLabel,
@@ -17,7 +18,6 @@ import {
   WorkbenchPageFrame,
   WorkbenchRailCard,
   WorkbenchSectionStack,
-  WorkstationShell,
   WorkspaceGrid,
 } from "@/design-system";
 
@@ -395,7 +395,7 @@ export default function PortfolioWorkspaceView({
 
   return (
     <>
-      <WorkstationShell
+      <MainWithSideRailLayout
         sideDensity="comfortable"
         className="portfolio-layout"
         railClassName="portfolio-rail-shell"

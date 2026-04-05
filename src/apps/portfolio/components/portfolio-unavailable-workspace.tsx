@@ -1,11 +1,12 @@
 import {
   ActionLink,
   DegradedStatePanel,
+  MainWithSideRailLayout,
   MetricRow,
   Panel,
+  SectionBlock,
   SectionLabel,
   StatusChip,
-  WorkstationShell,
   WorkspaceGrid,
 } from "@/design-system";
 
@@ -13,7 +14,7 @@ import { FALLBACK_WORK_AREAS } from "../workspace-config";
 
 export default function PortfolioUnavailableWorkspace() {
   return (
-    <WorkstationShell
+    <MainWithSideRailLayout
       className="portfolio-layout-empty"
       railClassName="portfolio-rail-shell"
       mainClassName="portfolio-main"
@@ -42,27 +43,27 @@ export default function PortfolioUnavailableWorkspace() {
 
           <WorkspaceGrid className="portfolio-action-grid">
             {FALLBACK_WORK_AREAS.map((area) => (
-              <Panel key={area.href} className="portfolio-action-card">
-                <div className="portfolio-action-header">
-                  <h3>{area.title}</h3>
-                  <StatusChip tone="success">{area.value}</StatusChip>
-                </div>
+              <SectionBlock
+                key={area.href}
+                className="portfolio-action-card"
+                title={area.title}
+                actions={<StatusChip tone="success">{area.value}</StatusChip>}
+              >
                 <p className="muted">{area.note}</p>
                 <div className="toolbar">
                   <ActionLink href={area.href}>Open {area.title}</ActionLink>
                 </div>
-              </Panel>
+              </SectionBlock>
             ))}
           </WorkspaceGrid>
         </>
       }
       side={
-        <Panel className="portfolio-side-card">
-          <h3>Service State</h3>
+        <SectionBlock className="portfolio-side-card" title="Service State">
           <MetricRow label="Portfolio catalog" value="Unavailable" />
           <MetricRow label="Performance area" value="Available" />
           <MetricRow label="Operations" value="Available" />
-        </Panel>
+        </SectionBlock>
       }
     />
   );

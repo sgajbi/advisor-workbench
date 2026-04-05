@@ -294,6 +294,11 @@ a:hover {
   min-width: 0;
 }
 
+.app-page-shell,
+.main-with-side-rail-layout {
+  min-width: 0;
+}
+
 .workbench-page-frame-header {
   padding-block: var(--workbench-page-frame-header-padding);
 }
@@ -312,6 +317,17 @@ a:hover {
 
 .workbench-page-frame-body > *,
 .workbench-section-stack > * {
+  min-width: 0;
+}
+
+.section-block {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.section-block-body {
+  display: grid;
+  gap: var(--space-4);
   min-width: 0;
 }
 

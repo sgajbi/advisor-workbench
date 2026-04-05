@@ -177,7 +177,7 @@ describe("PerformanceWorkspaceView", () => {
       />
     );
 
-    expect(document.querySelector(".workstation-shell-main-only")).toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     expect(document.querySelector(".workspace-layout")).toBeFalsy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();

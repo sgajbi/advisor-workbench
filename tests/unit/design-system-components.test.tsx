@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   ActionLink,
   ActionListCard,
+  AppPageShell,
   AnalyticsModule,
   AnalyticsRankedList,
   AnalyticsStat,
@@ -16,11 +17,13 @@ import {
   FilterBar,
   InsightCallout,
   KpiStatTile,
+  MainWithSideRailLayout,
   ModuleStatePanel,
   MetricRow,
   PageToolbar,
   Panel,
   ReadinessIndicator,
+  SectionBlock,
   SectionLabel,
   SectionHeader,
   StatusChip,
@@ -131,6 +134,28 @@ describe("design-system components", () => {
     expect(document.querySelector(".workstation-shell-side-comfortable")).toBeTruthy();
   });
 
+  it("renders shared app-shell composition primitives with the workstation contract underneath", () => {
+    render(
+      <AppPageShell pageKey="performance" className="performance-page">
+        <MainWithSideRailLayout
+          className="performance-layout"
+          rail={<Panel>Rail</Panel>}
+          main={<Panel>Main</Panel>}
+          side={<Panel>Side</Panel>}
+          sideDensity="comfortable"
+        />
+      </AppPageShell>
+    );
+
+    expect(document.querySelector("main.app-page-shell.app-page-shell-performance.performance-page"))
+      .toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.performance-layout")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
+  });
+
   it("renders the shared workbench page frame with shared header and section stack", () => {
     render(
       <WorkstationPage>
@@ -152,6 +177,21 @@ describe("design-system components", () => {
     expect(document.querySelector(".workbench-section-stack")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
     expect(screen.getByText("Catalog live")).toHaveClass("status-chip");
+  });
+
+  it("renders section blocks with a standardized header and body seam", () => {
+    render(
+      <SectionBlock title="Service State" subtitle="Operational posture" actions={<button type="button">Refresh</button>}>
+        <MetricRow label="Portfolio catalog" value="Ready" />
+      </SectionBlock>
+    );
+
+    expect(document.querySelector(".section-block")).toBeTruthy();
+    expect(document.querySelector(".section-block-body")).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Service State section header" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+    expect(screen.getByText("Portfolio catalog")).toBeInTheDocument();
+    expect(screen.getByText("Ready")).toBeInTheDocument();
   });
 
   it("renders the shared workbench rail card primitive", () => {

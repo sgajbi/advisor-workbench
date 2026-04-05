@@ -149,3 +149,52 @@ Slice 1 is considered complete when:
 4. **Table posture is still not fully centralized**
    - Shared table shells exist, but table semantics and density are not yet universally enforced.
    - Target slice: Slice 5.
+
+## Slice 3 Findings
+
+### Closed in Slice 3
+
+1. **Top-level route composition still depended on low-level layout primitives**
+   - `Portfolio` and `Performance` both composed `WorkstationPage` and `WorkstationShell`
+     directly.
+   - That made page entry composition correct, but not explicit enough. Route code still had to
+     understand the raw shell primitives instead of consuming a named product-level composition
+     contract.
+   - Slice 3 closes this by introducing:
+     - `AppPageShell`
+     - `MainWithSideRailLayout`
+   - The `Portfolio` and `Performance` entry surfaces now consume those shared composition
+     primitives directly.
+
+2. **Section-level surface composition was still too ad hoc**
+   - Some supporting surfaces still assembled panel + header structure manually.
+   - Slice 3 closes the first part of that gap with `SectionBlock`, a thin explicit wrapper for a
+     headed section surface without introducing a speculative “god card.”
+
+3. **No test contract for product-level composition primitives**
+   - Existing tests covered the raw workstation shell primitives, but not the product-level page
+     shell contract now expected by routes.
+   - Slice 3 adds tests proving:
+     - the new page-shell primitives render correctly,
+     - `Portfolio` and `Performance` now use them in real page entry flows,
+     - unavailable portfolio surfaces consume the same section-block surface contract.
+
+### Still Open After Slice 3
+
+1. **Navigation and action hierarchy still need shared enforcement**
+   - The product now has a stronger composition baseline, but navigation patterns and action
+     prominence are still only partially standardized.
+   - Target slice: Slice 4.
+
+2. **Table posture is still not fully centralized**
+   - Page composition is clearer, but tables and grid behavior still need a single shared system.
+   - Target slice: Slice 5.
+
+3. **State-system consistency still needs a shared contract**
+   - Loading, partial, unavailable, stale, and no-results states still use more than one pattern.
+   - Target slice: Slice 6.
+
+4. **Naming and API cleanup remains**
+   - The shared layer is clearer than before, but naming overlap and primitive/API consistency are
+     not finished.
+   - Target slice: Slice 7.

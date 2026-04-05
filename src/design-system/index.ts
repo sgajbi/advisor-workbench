@@ -1,4 +1,5 @@
 export { default as ActionLink } from "./components/action-link";
+export { default as AppPageShell } from "./components/app-page-shell";
 export { default as AnalyticsEffectStrip } from "./components/analytics-effect-strip";
 export { default as AnalyticsModule } from "./components/analytics-module";
 export { default as AnalyticsRankedList } from "./components/analytics-ranked-list";
@@ -28,7 +29,9 @@ export { default as ModuleStatePanel } from "./components/module-state-panel";
 export { default as ModuleSkeleton } from "./components/module-skeleton";
 export { default as StateInfoHint } from "./components/state-info-hint";
 export { default as FilterBar } from "./components/filter-bar";
+export { default as MainWithSideRailLayout } from "./components/main-with-side-rail-layout";
 export { default as SectionHeader } from "./components/section-header";
+export { default as SectionBlock } from "./components/section-block";
 export { default as DetailDrawer } from "./components/detail-drawer";
 export { default as MetricRow } from "./components/metric-row";
 export { default as Panel } from "./components/panel";
