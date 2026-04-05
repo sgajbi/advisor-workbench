@@ -29,21 +29,21 @@ test.describe('UI smoke checks', () => {
   test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {
     await page.goto('/intake', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })).toBeVisible();
-    const operationTabs = page.locator('.MuiToggleButtonGroup-root').last();
+    const operationTabs = page.getByRole('tablist', { name: /Intake operation/i });
 
-    await operationTabs.getByRole('button', { name: /^Create Portfolio$/i }).click();
+    await operationTabs.getByRole('tab', { name: /^Create Portfolio$/i }).click();
     await expect(page.getByRole('heading', { name: /Create Portfolio Workspace/i })).toBeVisible();
 
-    await operationTabs.getByRole('button', { name: /^Add Positions$/i }).click();
+    await operationTabs.getByRole('tab', { name: /^Add Positions$/i }).click();
     await expect(page.getByRole('heading', { name: /Add Positions Workspace/i })).toBeVisible();
 
-    await operationTabs.getByRole('button', { name: /^Add Transactions$/i }).click();
+    await operationTabs.getByRole('tab', { name: /^Add Transactions$/i }).click();
     await expect(page.getByRole('heading', { name: /Add Transactions Workspace/i })).toBeVisible();
 
-    await operationTabs.getByRole('button', { name: /^Add Instruments$/i }).click();
+    await operationTabs.getByRole('tab', { name: /^Add Instruments$/i }).click();
     await expect(page.getByRole('heading', { name: /Add Instruments Workspace/i })).toBeVisible();
 
-    await operationTabs.getByRole('button', { name: /^Add Market Data$/i }).click();
+    await operationTabs.getByRole('tab', { name: /^Add Market Data$/i }).click();
     await expect(page.getByRole('heading', { name: /Add Market Data Workspace/i })).toBeVisible();
   });
 
