@@ -1,46 +1,33 @@
+import {
+  formatCurrencyValue,
+  formatDateValue,
+  formatNumber,
+  formatPercent,
+} from "@/design-system/utils/financial-formatters";
+
 export function formatPct(value: number | null | undefined): string {
-  if (typeof value !== "number") {
-    return "N/A";
-  }
-  return `${formatFixedNumber(value, 2)}%`;
+  return formatPercent(value);
 }
 
 export function formatCurrency(
   value: number | null | undefined,
   currency: string | undefined
 ): string {
-  if (typeof value !== "number") {
-    return "N/A";
-  }
-  return `${formatCompactNumber(value, 2)} ${currency ?? "USD"}`;
+  return formatCurrencyValue(value, {
+    currency: currency ?? "USD",
+    display: "code",
+    maximumFractionDigits: 2,
+  });
 }
 
 export function formatQuantity(value: number | null | undefined): string {
-  if (typeof value !== "number") {
-    return "N/A";
-  }
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: Number.isInteger(value) ? 0 : undefined,
+  return formatNumber(value, {
     maximumFractionDigits: 4,
-  }).format(value);
+  });
 }
 
 export function formatDate(value: string | null | undefined): string {
-  if (!value) {
-    return "N/A";
-  }
-  const normalized = value.includes("T") ? value : `${value}T00:00:00Z`;
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-SG", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(parsed);
+  return formatDateValue(value);
 }
 
 export function formatBooleanFlag(value: boolean | null | undefined): string {
@@ -89,15 +76,7 @@ export function formatBookingCenter(value: string | null | undefined): string {
 }
 
 function formatCompactNumber(value: number, maximumFractionDigits: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: Number.isInteger(value) ? 0 : undefined,
+  return formatNumber(value, {
     maximumFractionDigits,
-  }).format(value);
-}
-
-function formatFixedNumber(value: number, fractionDigits: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(value);
+  });
 }

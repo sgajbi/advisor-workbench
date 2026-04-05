@@ -34,6 +34,8 @@ export { default as MetricRow } from "./components/metric-row";
 export { default as Panel } from "./components/panel";
 export { default as SectionLabel } from "./components/section-label";
 export { default as StatusChip } from "./components/status-chip";
+export { default as Text } from "./components/text";
+export type { TextVariant } from "./components/text";
 export {
   WorkstationPage,
   WorkstationShell,

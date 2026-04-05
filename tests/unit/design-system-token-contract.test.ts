@@ -37,6 +37,13 @@ describe("design-system token contract", () => {
       table: expect.any(Object),
       zIndex: expect.any(Object),
     });
+    expect(lotusThemeTokens.typography.variant).toMatchObject({
+      pageTitle: expect.any(Object),
+      sectionTitle: expect.any(Object),
+      cardTitle: expect.any(Object),
+      label: expect.any(Object),
+      metricValue: expect.any(Object),
+    });
   });
 
   it("keeps representative CSS root variables aligned with the shared TypeScript token baseline", () => {

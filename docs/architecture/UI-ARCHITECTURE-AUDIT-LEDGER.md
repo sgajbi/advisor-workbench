@@ -107,3 +107,45 @@ Slice 1 is considered complete when:
 2. the MUI theme consumes the normalized token contract,
 3. automated tests prove representative CSS and TypeScript token parity,
 4. this ledger exists and records the remaining gaps for later slices.
+
+## Slice 2 Findings
+
+### Closed in Slice 2
+
+1. **No shared typography variant contract**
+   - Shared components such as page headers, section headers, KPI tiles, and metric strips relied
+     on CSS classes alone rather than a reusable typography primitive.
+   - Slice 2 closes this by introducing a shared `Text` primitive with semantic variants and by
+     wiring the most reused header and metric components to that contract.
+
+2. **Financial formatting logic duplicated across app surfaces**
+   - `Portfolio` and `Performance` each implemented overlapping percent, currency, and date
+     formatting logic.
+   - Slice 2 closes this by introducing shared financial-formatting utilities and refactoring both
+     app-local formatter modules to consume them.
+
+3. **No explicit test guard for typography and formatting reuse**
+   - There was no direct proof that typography variants and shared financial formatting behaved
+     consistently.
+   - Slice 2 adds focused tests for the typography primitive, shared formatting utilities, and the
+     migrated `Portfolio` / `Performance` formatter entry points.
+
+### Still Open After Slice 2
+
+1. **Page composition still relies on feature-local structure**
+   - Shared page and section shells exist, but page-level composition patterns are not yet unified
+     enough.
+   - Target slice: Slice 3.
+
+2. **Surface/container roles remain only partially standardized**
+   - Cards, rails, strips, and supportability panels still have overlapping implementations.
+   - Target slice: Slice 3.
+
+3. **Navigation and state semantics still drift**
+   - Mode tabs improved, but badges, state notes, and drill-down behaviors are not yet fully
+     system-governed.
+   - Target slices: Slice 4 and Slice 6.
+
+4. **Table posture is still not fully centralized**
+   - Shared table shells exist, but table semantics and density are not yet universally enforced.
+   - Target slice: Slice 5.

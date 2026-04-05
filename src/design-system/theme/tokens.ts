@@ -65,6 +65,51 @@ export const lotusThemeTokens = {
       shellUi: "-0.015em",
       analyticLabel: "0.06em",
     },
+    variant: {
+      pageTitle: {
+        size: "clamp(1.45rem, 1.6vw, 1.9rem)",
+        weight: 700,
+        lineHeight: 1.05,
+        tracking: "-0.04em",
+      },
+      sectionTitle: {
+        size: "1.125rem",
+        weight: 650,
+        lineHeight: 1.2,
+        tracking: "-0.02em",
+      },
+      cardTitle: {
+        size: "1rem",
+        weight: 650,
+        lineHeight: 1.24,
+        tracking: "-0.015em",
+      },
+      body: {
+        size: "0.875rem",
+        lineHeight: 1.6,
+      },
+      secondary: {
+        size: "0.75rem",
+        lineHeight: 1.4,
+      },
+      label: {
+        size: "0.6875rem",
+        weight: 800,
+        lineHeight: 1.3,
+        tracking: "0.08em",
+      },
+      metricValue: {
+        size: "1.75rem",
+        weight: 700,
+        lineHeight: 1.12,
+        tracking: "-0.03em",
+      },
+      metricValueCompact: {
+        size: "1rem",
+        weight: 750,
+        lineHeight: 1.2,
+      },
+    },
     workbench: {
       textCompact: "0.75rem",
       textCompactStrong: "0.8125rem",

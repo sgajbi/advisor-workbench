@@ -1,6 +1,8 @@
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 
+import Text from "./text";
+
 export default function KpiStatTile({
   label,
   value,
@@ -41,9 +43,15 @@ export default function KpiStatTile({
         appearance: "none",
       }}
     >
-      <span className="kpi-stat-label">{label}</span>
-      <span className="kpi-stat-value">{value}</span>
-      <span className="kpi-stat-support">{support ?? "\u00A0"}</span>
+      <Text variant="label" className="kpi-stat-label">
+        {label}
+      </Text>
+      <Text variant="metricValue" className="kpi-stat-value">
+        {value}
+      </Text>
+      <Text variant="metadata" className="kpi-stat-support">
+        {support ?? "\u00A0"}
+      </Text>
     </Box>
   );
 

@@ -194,6 +194,91 @@ a:hover {
   flex-shrink: 0;
 }
 
+.ui-text {
+  margin: 0;
+  min-width: 0;
+  color: inherit;
+}
+
+.ui-text-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 1.6vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--brand-strong);
+}
+
+.ui-text-section-title {
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--brand-strong);
+}
+
+.ui-text-subsection-title,
+.ui-text-card-title {
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.24;
+  letter-spacing: -0.015em;
+  color: var(--brand-strong);
+}
+
+.ui-text-body {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text);
+}
+
+.ui-text-secondary,
+.ui-text-metadata {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.ui-text-label,
+.ui-text-eyebrow,
+.ui-text-badge,
+.ui-text-button {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.ui-text-label {
+  color: var(--text-muted);
+}
+
+.ui-text-eyebrow,
+.ui-text-badge,
+.ui-text-button {
+  color: var(--brand-strong);
+}
+
+.ui-text-metric-value,
+.ui-text-metric-value-compact {
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-strong);
+}
+
+.ui-text-metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.ui-text-metric-value-compact {
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
 .workbench-page-header {
   display: flex;
   align-items: center;
@@ -238,21 +323,11 @@ a:hover {
 }
 
 .workbench-page-header-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.45rem, 1.6vw, 1.9rem);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-  color: var(--brand-strong);
+  max-width: 24ch;
 }
 
 .workbench-page-header-subtitle {
-  margin: 0;
   max-width: 68ch;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  line-height: 1.35;
 }
 
 .workbench-summary-card {

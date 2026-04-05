@@ -1,44 +1,27 @@
+import {
+  formatCurrencyValue,
+  formatDateValue,
+  formatPercent,
+} from "@/design-system/utils/financial-formatters";
+
 export function formatPct(value: number | null | undefined): string {
-  if (value === null || value === undefined) {
-    return "N/A";
-  }
-  return `${value.toFixed(2)}%`;
+  return formatPercent(value);
 }
 
 export function formatCompactPct(value: number | null | undefined): string {
-  if (value === null || value === undefined) {
-    return "--";
-  }
-  return `${value.toFixed(2)}%`;
+  return formatPercent(value, { nullDisplay: "--" });
 }
 
 export function formatCurrency(value: number | null | undefined, currency: string): string {
-  if (value === null || value === undefined) {
-    return "N/A";
-  }
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
+  return formatCurrencyValue(value, {
     currency,
+    display: "symbol",
     maximumFractionDigits: 0,
-  }).format(value);
+  });
 }
 
 export function formatDate(value: string | null | undefined): string {
-  if (!value) {
-    return "N/A";
-  }
-  const normalized = value.includes("T") ? value : `${value}T00:00:00Z`;
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-SG", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(parsed);
+  return formatDateValue(value);
 }
 
 export function formatLabel(value: string): string {
