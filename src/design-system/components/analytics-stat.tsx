@@ -21,7 +21,7 @@ export default function AnalyticsStat({
   valueTone?: "neutral" | "success" | "warn" | "danger";
   onClick?: () => void;
 }) {
-  const accessibleLabel = `${label}: ${typeof value === "string" || typeof value === "number" ? value : "Open detail"}`;
+  const accessibleLabel = `${label}: ${typeof value === "string" || typeof value === "number" ? value : "Expand"}`;
   const stat = (
     <Box
       component={onClick ? "button" : "div"}

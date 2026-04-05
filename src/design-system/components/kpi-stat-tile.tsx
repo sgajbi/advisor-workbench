@@ -18,7 +18,7 @@ export default function KpiStatTile({
   valueTone?: "neutral" | "success" | "warn" | "danger";
   onClick?: () => void;
 }) {
-  const accessibleLabel = `${label}: ${typeof value === "string" || typeof value === "number" ? value : "Open detail"}`;
+  const accessibleLabel = `${label}: ${typeof value === "string" || typeof value === "number" ? value : "Expand"}`;
   const tile = (
     <Box
       component={onClick ? "button" : "div"}

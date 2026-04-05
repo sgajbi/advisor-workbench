@@ -49,6 +49,7 @@ describe("PortfolioProjectedCashflowModule", () => {
     );
 
     expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Expand" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Period" }));
 
@@ -60,6 +61,34 @@ describe("PortfolioProjectedCashflowModule", () => {
       });
     });
     expect(screen.getByText("Next 30 days in USD")).toBeInTheDocument();
+  });
+
+  it("uses the shared disclosure action for expanded projected cashflow detail", () => {
+    render(
+      <PortfolioProjectedCashflowModule
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultExpanded
+        initialCashflowOutlook={{
+          as_of_date: "2026-03-28",
+          range_end_date: "2026-04-07",
+          total_net_cashflow_base: 250,
+          projection_days: 10,
+          include_projected: true,
+          upcoming_points: [
+            {
+              projection_date: "2026-03-29",
+              net_cashflow_base: 250,
+              projected_cumulative_cashflow_base: 250,
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Collapse" })).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Cashflow outlook" })).toBeInTheDocument();
   });
 
   it("shows an error state when projected cashflow cannot be loaded", async () => {

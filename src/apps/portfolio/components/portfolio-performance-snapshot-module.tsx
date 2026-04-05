@@ -1,6 +1,11 @@
 "use client";
 
-import { ActionButton, ActionLink, AnalyticsModule, MetricRow } from "@/design-system";
+import {
+  ActionLink,
+  AnalyticsModule,
+  DisclosureToggleButton,
+  MetricRow,
+} from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import { buildPerformanceHref } from "@/apps/performance/navigation";
@@ -65,9 +70,7 @@ export default function PortfolioPerformanceSnapshotModule({
       actions={
         <>
           <ActionLink href={performanceWorkspaceHref}>Open Performance</ActionLink>
-          <ActionButton priority="quiet" onClick={onToggle}>
-            {expanded ? "Collapse" : "Expand"}
-          </ActionButton>
+          <DisclosureToggleButton expanded={expanded} onToggle={onToggle} />
         </>
       }
     >

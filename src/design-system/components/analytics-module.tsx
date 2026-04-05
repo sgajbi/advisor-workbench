@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 
 import { cx } from "../utils/cx";
 import Text from "./text";
@@ -41,27 +40,31 @@ export default function AnalyticsModule({
       }}
     >
       {title || subtitle || actions ? (
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={1}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "flex-start" }}
-          useFlexGap
-        >
-          <Box sx={{ minWidth: 0 }} className="workbench-summary-card-header">
-            {title ? (
-              <Text variant="cardTitle" className="workbench-summary-card-title">
-                {title}
-              </Text>
-            ) : null}
-            {subtitle ? (
-              <Text variant="metadata" as="div" className="workbench-summary-card-subtitle">
-                {subtitle}
-              </Text>
-            ) : null}
+        <Box sx={{ display: "grid", gap: 0.75, minWidth: 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 1,
+              minWidth: 0,
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: "1 1 auto" }} className="workbench-summary-card-header">
+              {title ? (
+                <Text variant="cardTitle" className="workbench-summary-card-title">
+                  {title}
+                </Text>
+              ) : null}
+            </Box>
+            {actions ? <Box sx={{ flexShrink: 0 }}>{actions}</Box> : null}
           </Box>
-          {actions ? <Box sx={{ minWidth: 0 }}>{actions}</Box> : null}
-        </Stack>
+          {subtitle ? (
+            <Text variant="metadata" as="div" className="workbench-summary-card-subtitle">
+              {subtitle}
+            </Text>
+          ) : null}
+        </Box>
       ) : null}
       {children}
     </Box>

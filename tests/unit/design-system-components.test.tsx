@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   ActionLink,
@@ -13,6 +13,7 @@ import {
   AnalyticsTable,
   ContextCard,
   DeferredModulePlaceholder,
+  DisclosureToggleButton,
   DegradedStatePanel,
   EmptyStatePanel,
   FilterBar,
@@ -231,6 +232,32 @@ describe("design-system components", () => {
 
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith("summary");
+  });
+
+  it("renders the shared disclosure toggle contract with consistent labels and chevron state", () => {
+    const onToggle = vi.fn();
+    const { rerender } = render(
+      <DisclosureToggleButton expanded={false} onToggle={onToggle} />
+    );
+
+    const button = screen.getByRole("button", { name: "Expand" });
+    expect(button).toHaveClass("disclosure-toggle-button");
+    expect(button).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(button);
+    expect(onToggle).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <DisclosureToggleButton
+        expanded
+        decorative
+        className="portfolio-disclosure-toggle"
+        collapsedToggleLabel="Expand"
+        expandedToggleLabel="Collapse"
+      />
+    );
+    expect(screen.getByText("Collapse")).toHaveClass("disclosure-toggle-button-label");
+    expect(document.querySelector(".disclosure-toggle-button-decorative")).toBeTruthy();
   });
 
   it("renders the shared workbench rail card primitive", () => {
@@ -537,6 +564,13 @@ describe("design-system components", () => {
     expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
     expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
     expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();
+    const title = screen.getByText("Shared Summary");
+    const subtitle = screen.getByText("Shared subtitle");
+    const action = screen.getByRole("button", { name: "Module Action" });
+    const header = document.querySelector(".workbench-summary-card-header");
+    expect(header).toContainElement(title);
+    expect(header).not.toContainElement(subtitle);
+    expect(title.closest(".MuiBox-root")?.parentElement).toContainElement(action);
   });
 
   it("renders ranked analytics content with shared summary visual typography classes", () => {

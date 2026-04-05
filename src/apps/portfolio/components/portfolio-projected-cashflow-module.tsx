@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AnalyticsModule,
   AnalyticsTable,
+  DisclosureToggleButton,
   SectionHeader,
   WorkbenchInlineRefreshNote,
 } from "@/design-system";
@@ -159,13 +160,10 @@ export default function PortfolioProjectedCashflowModule({
             >
               Export
             </button>
-            <button
-              type="button"
-              className="portfolio-inline-action"
-              onClick={() => setExpanded((current) => !current)}
-            >
-              Expand
-            </button>
+            <DisclosureToggleButton
+              expanded={expanded}
+              onToggle={() => setExpanded((current) => !current)}
+            />
           </>
         }
       />

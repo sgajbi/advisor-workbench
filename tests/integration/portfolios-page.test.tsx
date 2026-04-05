@@ -341,7 +341,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("Performance not available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Why performance is unavailable" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Export/i }).length).toBeGreaterThanOrEqual(3);
-    expect(screen.getAllByRole("button", { name: /Expand/i }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByRole("button", { name: /Expand|Collapse/i }).length).toBeGreaterThanOrEqual(4);
     expect(screen.getAllByText("Dividend").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Inflows").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
