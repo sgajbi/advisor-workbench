@@ -871,6 +871,8 @@ Slice 3 evidence:
 
 ### Slice 4: Workbench Risk mode shell and fixture-backed UI
 
+Status: completed on 2026-04-07.
+
 Outcome:
 
 1. `Risk` appears as a Performance mode,
@@ -900,6 +902,19 @@ Acceptance:
 2. no stateless UX is exposed,
 3. state handling is complete,
 4. first-paint panels remain useful when detail modules are still loading.
+
+Slice 4 evidence:
+
+1. Workbench added `Risk` to the Performance mode navigation while keeping Summary as first paint.
+2. Workbench added a contract-shaped fixture view model in
+   `src/apps/performance/risk-workspace-view-model.ts` that mirrors the Gateway
+   `risk-workspace.v1` envelope and explicitly labels `input_mode` as stateful-only.
+3. Workbench added modular Risk mode components for status, snapshot, concentration,
+   supportability, and provenance under `src/apps/performance/components/risk`.
+4. Workbench validation evidence:
+   - `npm test -- --run tests/unit/performance-risk-view-model.test.ts tests/unit/performance-risk-mode.test.tsx tests/unit/performance-workspace-mode-switch.test.tsx tests/unit/performance-workspace-view.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `npm run lint`
+   - `npm run typecheck`
 
 ### Slice 5: Live Workbench integration for Risk Snapshot and Concentration
 
