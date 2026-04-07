@@ -822,6 +822,8 @@ Acceptance:
 
 ### Slice 3: Gateway Risk BFF foundation
 
+Status: completed on 2026-04-07.
+
 Outcome:
 
 1. Gateway exposes typed stateful risk BFF contracts,
@@ -851,6 +853,21 @@ Acceptance:
 2. no UI needs raw `lotus-risk` response fields,
 3. failures are partial/degraded, not page-breaking,
 4. supportability explains missing benchmark, risk-free, issuer, or sandbox dependencies.
+
+Slice 3 evidence:
+
+1. Gateway branch `feat/rfc0022-stateful-risk-workspace-bff` added typed risk workspace
+   contracts in `src/app/contracts/risk_workspace.py`.
+2. Gateway added `RiskWorkspaceService` in `src/app/services/risk_workspace_service.py` to
+   construct stateful-only `lotus-risk` payloads, normalize supportability, preserve correlation
+   IDs, and cache repeated identical risk BFF reads.
+3. Gateway added Workbench BFF routes for:
+   - `GET /api/v1/workbench/{portfolioId}/risk/summary`
+   - `GET /api/v1/workbench/{portfolioId}/risk/concentration`
+4. Gateway validation evidence:
+   - `python -m pytest tests/unit/test_risk_workspace_service.py tests/unit/test_async_ttl_cache.py tests/unit/test_upstream_clients.py tests/unit/test_rfc0022_risk_proxy_guard.py tests/integration/test_workbench_router.py -q`
+   - `python -m pytest tests/unit/test_workbench_service.py tests/unit/test_workbench_service_additional.py tests/unit/test_upstream_clients.py tests/unit/test_rfc0022_risk_proxy_guard.py tests/integration/test_workbench_router.py -q`
+   - `python -m ruff check src tests`
 
 ### Slice 4: Workbench Risk mode shell and fixture-backed UI
 
