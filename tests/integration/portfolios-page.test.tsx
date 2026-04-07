@@ -263,7 +263,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(
       "href",
-      "/ignored"
+      "/performance?portfolioId=PORT_UI_1001"
     );
     expect(screen.getByText("Review performance")).toBeInTheDocument();
     expect(
@@ -272,7 +272,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[1]).toHaveAttribute(
       "href",
-      "/ignored"
+      "/performance?portfolioId=PORT_UI_1001"
     );
 
     fireEvent.click(screen.getAllByRole("button", { name: /AUM/i })[0]);
