@@ -455,24 +455,48 @@ describe("portfolio view model", () => {
         impact:
           "Review portfolio return, benchmark context, and contribution once the book is valued.",
         target: "Target: Performance workflow for this portfolio",
-        href: "/performance",
+        href: "/performance?portfolioId=PORT_UI_1001",
         cta_label: "Performance",
         recommended: true,
       },
       {
         sequence: 2,
-        title: "Review suitability",
+        title: "Review risk",
         impact:
           "Validate suitability, exposure, and mandate fit before the next client action.",
         target: "Target: Risk workflow for this portfolio",
-        href: "/risk",
-        cta_label: "Risk",
+        href: "/performance?portfolioId=PORT_UI_1001&mode=risk",
+        cta_label: "Open Risk",
         recommended: false,
       },
     ]);
 
     expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
     expect(buildPortfolioInsights(workspace)).toEqual([]);
+  });
+
+  it("routes concentration insights into Performance Risk mode", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.top_positions = [
+      {
+        security_id: "EQ_1",
+        instrument_name: "Apple Inc",
+        asset_class: "Equities",
+        quantity: 10,
+        market_value_base: 250000,
+        weight_pct: 22,
+      },
+    ];
+
+    expect(buildPortfolioInsights(workspace)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "equity-concentration-high",
+          href: "/performance?portfolioId=PORT_UI_1001&mode=risk",
+          detail: expect.stringContaining("Open Risk"),
+        }),
+      ])
+    );
   });
 
   it("does not raise false funding or transaction exceptions when summary evidence exists", () => {

@@ -485,6 +485,34 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
   });
 
+  it("opens Performance Risk mode from the mode query parameter and preserves it in navigation updates", async () => {
+    installPerformancePageFetchMock();
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          portfolioId: "DEMO_ADV_USD_001",
+          mode: "risk",
+        }),
+      })
+    );
+
+    expect(await screen.findByRole("tab", { name: "Risk" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith(
+        expect.stringContaining("/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis"),
+        { scroll: false }
+      );
+    });
+  });
+
   it("shows Risk as a stateful fixture-backed mode without browser calls to raw lotus-risk APIs", async () => {
     installPerformancePageFetchMock();
 
@@ -673,7 +701,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       await waitFor(() => {
         expect(replaceMock).toHaveBeenCalledWith(
-          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
           { scroll: false }
         );
       });

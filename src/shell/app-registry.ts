@@ -3,7 +3,6 @@ export type ShellAppId =
   | "clients"
   | "portfolio"
   | "performance"
-  | "risk"
   | "reporting"
   | "operations";
 
@@ -53,15 +52,6 @@ export const SHELL_APPS: ShellApp[] = [
     matchers: ["/performance"],
     capabilityKey: "analytics_studio",
     available: true,
-  },
-  {
-    id: "risk",
-    label: "Suitability",
-    href: "/risk-and-suitability",
-    description: "Suitability review.",
-    matchers: ["/risk-and-suitability", "/risk"],
-    capabilityKey: "analytics_studio",
-    available: false,
   },
   {
     id: "reporting",

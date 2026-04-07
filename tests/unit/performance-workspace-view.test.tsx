@@ -8,6 +8,7 @@ import {
   buildSupportedPerformanceScenario,
   buildUnavailableEvidencePerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
+import type { PerformanceWorkspaceMode } from "../../src/apps/performance/components/performance-workspace-mode-switch";
 
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
@@ -52,19 +53,37 @@ vi.mock("../../src/apps/performance/components/performance-evidence-mode", () =>
 }));
 
 describe("PerformanceWorkspaceView", () => {
+  function renderWorkspaceView({
+    mode = "summary",
+    workspace = buildSupportedPerformanceScenario().workspace,
+  }: {
+    mode?: PerformanceWorkspaceMode;
+    workspace?: ReturnType<typeof buildSupportedPerformanceScenario>["workspace"];
+  }) {
+    function Harness() {
+      const [selectedMode, setSelectedMode] = React.useState<PerformanceWorkspaceMode>(mode);
+
+      return (
+        <PerformanceWorkspaceView
+          workspace={workspace}
+          mode={selectedMode}
+          period="YTD"
+          detailBasis="NET"
+          contributionDimension="asset_class"
+          attributionDimension="asset_class"
+          chartFrequency="monthly"
+          onModeChange={setSelectedMode}
+        />
+      );
+    }
+
+    return render(<Harness />);
+  }
+
   it("keeps summary mode as the only mounted mode on initial render", async () => {
     const scenario = buildSupportedPerformanceScenario();
 
-    render(
-      <PerformanceWorkspaceView
-        workspace={scenario.workspace}
-        period="YTD"
-        detailBasis="NET"
-        contributionDimension="asset_class"
-        attributionDimension="asset_class"
-        chartFrequency="monthly"
-      />
-    );
+    renderWorkspaceView({ workspace: scenario.workspace });
 
     expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
       "workbench-segmented-control-button-active"
@@ -86,16 +105,7 @@ describe("PerformanceWorkspaceView", () => {
   it("passes contract-backed evidence capability into evidence mode from the shared scenario", async () => {
     const scenario = buildUnavailableEvidencePerformanceScenario();
 
-    render(
-      <PerformanceWorkspaceView
-        workspace={scenario.workspace}
-        period="YTD"
-        detailBasis="NET"
-        contributionDimension="asset_class"
-        attributionDimension="asset_class"
-        chartFrequency="monthly"
-      />
-    );
+    renderWorkspaceView({ workspace: scenario.workspace });
 
     expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
@@ -104,16 +114,7 @@ describe("PerformanceWorkspaceView", () => {
   it("disables unavailable evidence mode instead of mounting a dead panel", async () => {
     const scenario = buildUnavailableEvidencePerformanceScenario();
 
-    render(
-      <PerformanceWorkspaceView
-        workspace={scenario.workspace}
-        period="YTD"
-        detailBasis="NET"
-        contributionDimension="asset_class"
-        attributionDimension="asset_class"
-        chartFrequency="monthly"
-      />
-    );
+    renderWorkspaceView({ workspace: scenario.workspace });
 
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
     expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
@@ -124,16 +125,7 @@ describe("PerformanceWorkspaceView", () => {
   it("keeps analysis available when there is at least partial analytical coverage", async () => {
     const scenario = buildSupportedPerformanceScenario();
 
-    render(
-      <PerformanceWorkspaceView
-        workspace={scenario.workspace}
-        period="YTD"
-        detailBasis="NET"
-        contributionDimension="asset_class"
-        attributionDimension="asset_class"
-        chartFrequency="monthly"
-      />
-    );
+    renderWorkspaceView({ workspace: scenario.workspace });
 
     expect(screen.getByRole("tab", { name: "Analysis" })).not.toBeDisabled();
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
@@ -145,16 +137,7 @@ describe("PerformanceWorkspaceView", () => {
   it("shows a backend-backed control normalization notice when unsupported deep-link controls were adjusted", async () => {
     const scenario = buildNormalizedControlsPerformanceScenario();
 
-    render(
-      <PerformanceWorkspaceView
-        workspace={scenario.workspace}
-        period="YTD"
-        detailBasis="NET"
-        contributionDimension="asset_class"
-        attributionDimension="asset_class"
-        chartFrequency="monthly"
-      />
-    );
+    renderWorkspaceView({ workspace: scenario.workspace });
 
     const normalizationNotice = screen.getByRole("status", {
       name: "Performance control normalization",
@@ -172,16 +155,7 @@ describe("PerformanceWorkspaceView", () => {
   it("switches between summary, analysis, risk, and evidence modes", async () => {
     const scenario = buildSupportedPerformanceScenario();
 
-    render(
-      <PerformanceWorkspaceView
-        workspace={scenario.workspace}
-        period="YTD"
-        detailBasis="NET"
-        contributionDimension="asset_class"
-        attributionDimension="asset_class"
-        chartFrequency="monthly"
-      />
-    );
+    renderWorkspaceView({ workspace: scenario.workspace });
 
     expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-main-only")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();

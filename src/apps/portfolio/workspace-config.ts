@@ -10,7 +10,7 @@ export function mapWorkflowHref(key: string, portfolioId: string): string {
     case "performance":
       return `/performance?portfolioId=${encodeURIComponent(portfolioId)}`;
     case "risk":
-      return `/risk-and-suitability?portfolioId=${encodeURIComponent(portfolioId)}`;
+      return `/performance?portfolioId=${encodeURIComponent(portfolioId)}&mode=risk`;
     default:
       return `/portfolio?portfolioId=${encodeURIComponent(portfolioId)}`;
   }
@@ -19,7 +19,7 @@ export function mapWorkflowHref(key: string, portfolioId: string): string {
 export function getWorkflowActionLabel(key: string): string {
   switch (key) {
     case "risk":
-      return "Review Suitability";
+      return "Open Risk";
     default:
       return "Performance";
   }
@@ -28,7 +28,7 @@ export function getWorkflowActionLabel(key: string): string {
 export function getWorkflowTaskLabel(key: string): string {
   switch (key) {
     case "risk":
-      return "Review suitability";
+      return "Review risk";
     default:
       return "Review performance";
   }

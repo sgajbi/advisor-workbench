@@ -1,4 +1,5 @@
 import { CANONICAL_PERFORMANCE_PERIOD_OPTIONS } from "./periods";
+import type { PerformanceWorkspaceMode } from "./components/performance-workspace-mode-switch";
 
 export const PERIOD_OPTIONS = CANONICAL_PERFORMANCE_PERIOD_OPTIONS;
 export const BASIS_OPTIONS = ["NET", "GROSS"] as const;
@@ -24,6 +25,7 @@ export function buildPerformanceHref({
   benchmark,
   reportStartDate,
   reportEndDate,
+  mode,
 }: {
   portfolioId: string;
   period: string;
@@ -34,10 +36,14 @@ export function buildPerformanceHref({
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  mode?: PerformanceWorkspaceMode;
 }) {
   const query = new URLSearchParams();
   const isExplicitWindow = period === "EXPLICIT";
   query.set("portfolioId", portfolioId);
+  if (mode && mode !== "summary") {
+    query.set("mode", mode);
+  }
   query.set("period", period);
   query.set("detailBasis", detailBasis);
   query.set("contributionDimension", contributionDimension);
