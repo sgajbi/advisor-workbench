@@ -626,6 +626,77 @@ export type WorkbenchRiskConcentrationResponse = {
   };
 };
 
+export type WorkbenchRiskDrawdownSummary = {
+  max_drawdown: number | null;
+  max_drawdown_peak_date?: string | null;
+  max_drawdown_trough_date?: string | null;
+  max_drawdown_recovery_date?: string | null;
+  is_recovered: boolean;
+  days_to_trough?: number | null;
+  days_to_recovery?: number | null;
+  time_under_water_days: number;
+  average_drawdown?: number | null;
+  ulcer_index?: number | null;
+  drawdown_at_risk_95?: number | null;
+  conditional_drawdown_at_risk_95?: number | null;
+};
+
+export type WorkbenchRiskDrawdownEpisode = {
+  episode_id: string;
+  peak_date: string;
+  trough_date: string;
+  recovery_date?: string | null;
+  depth: number;
+  days_to_trough: number;
+  days_to_recovery?: number | null;
+  total_days: number;
+  is_recovered: boolean;
+};
+
+export type WorkbenchRiskRelativeDrawdownSummary = {
+  max_drawdown: number | null;
+  max_drawdown_peak_date?: string | null;
+  max_drawdown_trough_date?: string | null;
+};
+
+export type WorkbenchRiskUnderwaterPoint = {
+  date: string;
+  drawdown: number;
+};
+
+export type WorkbenchRiskDrawdownResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    periods: Array<{
+      key: string;
+      label: string;
+      start_date: string;
+      end_date: string;
+      summary: WorkbenchRiskDrawdownSummary | null;
+      episodes: WorkbenchRiskDrawdownEpisode[];
+      relative_to_benchmark?: WorkbenchRiskRelativeDrawdownSummary | null;
+      underwater_series?: WorkbenchRiskUnderwaterPoint[] | null;
+      error?: string | null;
+    }>;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
 export type WorkbenchReportingSnapshot = {
   correlationId: string;
   contractVersion: string;

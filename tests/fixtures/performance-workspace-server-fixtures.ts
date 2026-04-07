@@ -13,6 +13,7 @@ import {
 } from "./performance-workspace-fixtures";
 import {
   buildFixtureRiskConcentration,
+  buildFixtureRiskDrawdown,
   buildFixtureRiskSummary,
 } from "../../src/apps/performance/risk-workspace-view-model";
 
@@ -143,6 +144,25 @@ function buildRiskConcentrationResponse(portfolioId: string, options?: Performan
   return buildFixtureRiskConcentration(workspace, workspace.period);
 }
 
+function buildRiskDrawdownResponse(
+  portfolioId: string,
+  options?: PerformanceFixtureOptions,
+  includeUnderwaterSeries = false
+) {
+  const scenario = options
+    ? buildBenchmarkUnassignedPerformanceScenario()
+    : buildSupportedPerformanceScenario();
+  const workspace = {
+    ...scenario.workspace,
+    portfolio_id: portfolioId,
+    portfolio: { ...scenario.workspace.portfolio, portfolio_id: portfolioId },
+  };
+  return buildFixtureRiskDrawdown(workspace, workspace.period, workspace.detail_basis, {
+    includeUnderwaterSeries,
+    includeBenchmarkRelative: Boolean(workspace.benchmark_code),
+  });
+}
+
 export function installPerformancePageFetchMock(options?: PerformanceFixtureOptions) {
   vi.stubGlobal(
     "fetch",
@@ -197,6 +217,17 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
         return {
           ok: true,
           json: async () => buildRiskConcentrationResponse("DEMO_ADV_USD_001", options),
+        } as Response;
+      }
+      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/drawdown")) {
+        return {
+          ok: true,
+          json: async () =>
+            buildRiskDrawdownResponse(
+              "DEMO_ADV_USD_001",
+              options,
+              url.includes("include_underwater_series=true")
+            ),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
@@ -295,6 +326,16 @@ export function installPerformancePageFetchScenario(
         return {
           ok: true,
           json: async () => buildFixtureRiskConcentration(workspace, workspace.period),
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/drawdown`)) {
+        return {
+          ok: true,
+          json: async () =>
+            buildFixtureRiskDrawdown(workspace, workspace.period, workspace.detail_basis, {
+              includeUnderwaterSeries: url.includes("include_underwater_series=true"),
+              includeBenchmarkRelative: Boolean(workspace.benchmark_code),
+            }),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {

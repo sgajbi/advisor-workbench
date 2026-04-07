@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFixtureRiskConcentration,
+  buildFixtureRiskDrawdown,
   buildFixtureRiskSummary,
   buildPerformanceRiskViewModel,
 } from "../../src/apps/performance/risk-workspace-view-model";
@@ -17,6 +18,7 @@ describe("buildPerformanceRiskViewModel", () => {
       detailBasis: "NET",
       riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     });
 
     expect(viewModel.state).toBe("partial");
@@ -37,12 +39,27 @@ describe("buildPerformanceRiskViewModel", () => {
       "Issuer Coverage",
     ]);
     expect(viewModel.supportability.map((item) => item.key)).toEqual([
-      "portfolio_returns",
-      "benchmark_returns",
-      "risk_free_series",
-      "portfolio_positions",
-      "issuer_enrichment",
+      "summary:portfolio_returns",
+      "summary:benchmark_returns",
+      "summary:risk_free_series",
+      "concentration:portfolio_positions",
+      "concentration:issuer_enrichment",
+      "drawdown:portfolio_returns",
+      "drawdown:benchmark_relative_drawdown",
+      "drawdown:underwater_series",
     ]);
+    expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
+      "Max Drawdown",
+      "Time Under Water",
+      "Ulcer Index",
+      "DaR 95",
+      "CDaR 95",
+    ]);
+    expect(viewModel.drawdownEpisodes[0]).toMatchObject({
+      episode: "DD_0001",
+      depth: "-12.45%",
+      status: "Open",
+    });
     expect(viewModel.provenance).toContainEqual({
       label: "Input Mode",
       value: "Stateful only",
@@ -58,14 +75,21 @@ describe("buildPerformanceRiskViewModel", () => {
       detailBasis: "NET",
       riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+        includeBenchmarkRelative: false,
+      }),
     });
 
     expect(viewModel.state).toBe("partial");
     expect(
-      viewModel.supportability.find((item) => item.key === "benchmark_returns")
+      viewModel.supportability.find((item) => item.key === "summary:benchmark_returns")
     ).toMatchObject({
       state: "unavailable",
       reason: "Benchmark-relative risk requires benchmark context.",
+    });
+    expect(viewModel.drawdownRelativeMetric).toMatchObject({
+      value: "N/A",
+      support: "Benchmark-relative drawdown requires benchmark context.",
     });
   });
 
@@ -85,5 +109,28 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.supportability).toEqual([
       expect.objectContaining({ key: "risk_bff", state: "partial" }),
     ]);
+  });
+
+  it("only surfaces underwater series after detail-on-demand fetch returns", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      riskDrawdownDetail: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+        includeUnderwaterSeries: true,
+      }),
+    });
+
+    expect(viewModel.underwaterDetailState).toBe("ready");
+    expect(viewModel.underwaterSeries).toHaveLength(3);
+    expect(viewModel.underwaterSeries[0]).toMatchObject({
+      date: "20 Jan 2026",
+      drawdown: "-5.21%",
+    });
   });
 });

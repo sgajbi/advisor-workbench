@@ -5,6 +5,7 @@ import {
   WorkbenchOverview,
   WorkbenchPerformanceHorizonComparison,
   WorkbenchRiskConcentrationResponse,
+  WorkbenchRiskDrawdownResponse,
   WorkbenchRiskSummaryResponse,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
@@ -386,7 +387,7 @@ function buildRiskWorkspaceQuery(params: {
 
 function buildRiskWorkspaceUrl(
   portfolioId: string,
-  pathSuffix: "/risk/summary" | "/risk/concentration",
+  pathSuffix: "/risk/summary" | "/risk/concentration" | "/risk/drawdown",
   params: {
     period: string;
     detailBasis?: string;
@@ -431,6 +432,35 @@ export async function getWorkbenchRiskConcentrationClient(
   return await fetchWorkbenchJson<WorkbenchRiskConcentrationResponse>(
     buildRiskWorkspaceUrl(portfolioId, "/risk/concentration", params, "client"),
     "workbench risk concentration"
+  );
+}
+
+export async function getWorkbenchRiskDrawdownClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    detailBasis: string;
+    benchmark?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
+    includeUnderwaterSeries?: boolean;
+  }
+): Promise<WorkbenchRiskDrawdownResponse> {
+  const query = new URLSearchParams(
+    buildRiskWorkspaceQuery({
+      period: params.period,
+      detailBasis: params.detailBasis,
+      benchmark: params.benchmark,
+      asOfDate: params.asOfDate,
+      reportingCurrency: params.reportingCurrency,
+    })
+  );
+  if (params.includeUnderwaterSeries) {
+    query.set("include_underwater_series", "true");
+  }
+  return await fetchWorkbenchJson<WorkbenchRiskDrawdownResponse>(
+    buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/drawdown`, query),
+    "workbench risk drawdown"
   );
 }
 

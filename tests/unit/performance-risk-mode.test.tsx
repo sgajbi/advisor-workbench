@@ -1,14 +1,16 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceRiskMode from "../../src/apps/performance/components/performance-risk-mode";
 import {
   buildFixtureRiskConcentration,
+  buildFixtureRiskDrawdown,
   buildFixtureRiskSummary,
 } from "../../src/apps/performance/risk-workspace-view-model";
 import {
   getWorkbenchRiskConcentrationClient,
+  getWorkbenchRiskDrawdownClient,
   getWorkbenchRiskSummaryClient,
 } from "../../src/features/workbench/api";
 import { buildBenchmarkUnassignedPerformanceScenario, buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
@@ -16,6 +18,7 @@ import { buildBenchmarkUnassignedPerformanceScenario, buildSupportedPerformanceS
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskSummaryClient: vi.fn(),
   getWorkbenchRiskConcentrationClient: vi.fn(),
+  getWorkbenchRiskDrawdownClient: vi.fn(),
 }));
 
 function renderRiskMode(
@@ -50,6 +53,9 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
     );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
 
     renderRiskMode(scenario);
 
@@ -71,6 +77,14 @@ describe("PerformanceRiskMode", () => {
       asOfDate: "2026-02-24",
       reportingCurrency: "USD",
     });
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledWith("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      includeUnderwaterSeries: false,
+    });
   });
 
   it("reuses cached live responses for the same request shape and invalidates summary only when detail basis changes", async () => {
@@ -80,6 +94,9 @@ describe("PerformanceRiskMode", () => {
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
     );
 
     const { rerender } = render(
@@ -120,6 +137,7 @@ describe("PerformanceRiskMode", () => {
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
 
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "GROSS")
@@ -143,6 +161,7 @@ describe("PerformanceRiskMode", () => {
       expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(2);
     });
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
   });
 
   it("shows partial live supportability when benchmark-relative risk is unavailable", async () => {
@@ -152,6 +171,11 @@ describe("PerformanceRiskMode", () => {
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+        includeBenchmarkRelative: false,
+      })
     );
 
     renderRiskMode(scenario);
@@ -169,6 +193,7 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskConcentrationClient).mockRejectedValue(
       new Error("concentration down")
     );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockRejectedValue(new Error("drawdown down"));
 
     renderRiskMode();
 
@@ -177,5 +202,44 @@ describe("PerformanceRiskMode", () => {
     });
     expect(screen.getByLabelText("Risk provenance")).toHaveTextContent("Stateful only");
     expect(screen.queryByLabelText("Risk snapshot metric table")).not.toBeInTheDocument();
+  });
+
+  it("does not request underwater detail on first paint and fetches it only on expand", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient)
+      .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+          includeUnderwaterSeries: true,
+        })
+      );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risk drawdown episode table")).toBeInTheDocument();
+    });
+
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[0][1]).toMatchObject({
+      includeUnderwaterSeries: false,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risk underwater series table")).toBeInTheDocument();
+    });
+
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[1][1]).toMatchObject({
+      includeUnderwaterSeries: true,
+    });
   });
 });

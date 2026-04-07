@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   ScreenStatePanel,
   SectionBlock,
@@ -9,6 +11,7 @@ import { buildPerformanceRiskViewModel } from "../risk-workspace-view-model";
 import { usePerformanceRiskContract } from "../use-performance-risk-contract";
 import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
+import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
 import RiskProvenanceStrip from "./risk/risk-provenance-strip";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
@@ -20,12 +23,26 @@ export default function PerformanceRiskMode({
   detailBasis,
   isDetailsPending,
 }: PerformanceRiskModeProps) {
-  const { riskSummary, riskConcentration, isLoading } = usePerformanceRiskContract({
+  const [underwaterExpanded, setUnderwaterExpanded] = useState(false);
+  const {
+    riskSummary,
+    riskConcentration,
+    riskDrawdown,
+    riskDrawdownDetail,
+    isLoading,
+    isDrawdownDetailLoading,
+    requestDrawdownDetail,
+  } = usePerformanceRiskContract({
     workspace,
     period,
     detailBasis,
     isDetailsPending,
   });
+
+  useEffect(() => {
+    setUnderwaterExpanded(false);
+  }, [detailBasis, period, workspace.as_of_date, workspace.benchmark_code, workspace.portfolio.portfolio_id]);
+
   const viewModel = buildPerformanceRiskViewModel({
     workspace,
     period,
@@ -33,6 +50,9 @@ export default function PerformanceRiskMode({
     isDetailsPending: isLoading,
     riskSummary,
     riskConcentration,
+    riskDrawdown,
+    riskDrawdownDetail,
+    isDrawdownDetailLoading,
   });
 
   const statePanel =
@@ -84,6 +104,17 @@ export default function PerformanceRiskMode({
           <div className="performance-risk-grid">
             <div className="performance-risk-main-column">
               <RiskSnapshotPanel viewModel={viewModel} />
+              <RiskDrawdownPanel
+                viewModel={viewModel}
+                underwaterExpanded={underwaterExpanded}
+                onToggleUnderwater={() => {
+                  const nextExpanded = !underwaterExpanded;
+                  setUnderwaterExpanded(nextExpanded);
+                  if (nextExpanded) {
+                    requestDrawdownDetail();
+                  }
+                }}
+              />
               <RiskConcentrationPanel viewModel={viewModel} />
             </div>
             <aside className="performance-risk-side-rail" aria-label="Risk support rail">

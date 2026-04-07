@@ -1,6 +1,8 @@
 import type {
   WorkbenchPerformanceWorkspace,
   WorkbenchRiskConcentrationResponse,
+  WorkbenchRiskDrawdownResponse,
+  WorkbenchRiskDrawdownSummary,
   WorkbenchRiskMetric,
   WorkbenchRiskModuleState,
   WorkbenchRiskSummaryResponse,
@@ -37,6 +39,35 @@ export type PerformanceRiskViewModel = {
     value: string;
     support: string;
   }>;
+  drawdownHeadlineMetrics: Array<{
+    key: string;
+    label: string;
+    value: string;
+    support: string;
+    state: PerformanceRiskState;
+  }>;
+  drawdownEpisodes: Array<{
+    key: string;
+    episode: string;
+    depth: string;
+    peakDate: string;
+    troughDate: string;
+    recoveryDate: string;
+    totalDays: string;
+    status: string;
+  }>;
+  drawdownRelativeMetric: {
+    label: string;
+    value: string;
+    support: string;
+    state: PerformanceRiskState;
+  } | null;
+  underwaterSeries: Array<{
+    key: string;
+    date: string;
+    drawdown: string;
+  }>;
+  underwaterDetailState: "idle" | "loading" | "ready" | "unavailable";
   supportability: Array<{
     key: string;
     label: string;
@@ -55,6 +86,9 @@ export type BuildPerformanceRiskViewModelOptions = {
   isDetailsPending?: boolean;
   riskSummary?: WorkbenchRiskSummaryResponse | null;
   riskConcentration?: WorkbenchRiskConcentrationResponse | null;
+  riskDrawdown?: WorkbenchRiskDrawdownResponse | null;
+  riskDrawdownDetail?: WorkbenchRiskDrawdownResponse | null;
+  isDrawdownDetailLoading?: boolean;
 };
 
 export function buildPerformanceRiskViewModel({
@@ -64,6 +98,9 @@ export function buildPerformanceRiskViewModel({
   isDetailsPending = false,
   riskSummary,
   riskConcentration,
+  riskDrawdown,
+  riskDrawdownDetail,
+  isDrawdownDetailLoading = false,
 }: BuildPerformanceRiskViewModelOptions): PerformanceRiskViewModel {
   if (isDetailsPending) {
     return buildStateViewModel(workspace, period, detailBasis, "loading");
@@ -82,11 +119,27 @@ export function buildPerformanceRiskViewModel({
     buildUnavailableRiskConcentration({
       workspace,
       period,
-      detail: "Risk concentration is not available from the Gateway BFF.",
+        detail: "Risk concentration is not available from the Gateway BFF.",
     });
+  const drawdown =
+    riskDrawdown ??
+    buildUnavailableRiskDrawdown({
+      workspace,
+      period,
+      detailBasis,
+      detail: "Risk drawdown is not available from the Gateway BFF.",
+      includeUnderwaterSeries: false,
+    });
+  const drawdownDetail = riskDrawdownDetail ?? null;
 
-  const supportability = [...summary.supportability, ...concentration.supportability];
-  const hasPayload = Boolean(summary.payload?.periods.length || concentration.payload);
+  const supportability = [
+    ...mapSupportabilityGroup("summary", summary.supportability),
+    ...mapSupportabilityGroup("concentration", concentration.supportability),
+    ...mapSupportabilityGroup("drawdown", drawdown.supportability),
+  ];
+  const hasPayload = Boolean(
+    summary.payload?.periods.length || concentration.payload || drawdown.payload?.periods.length
+  );
   const state = !hasPayload
     ? "unavailable"
     : summary.state === "ready" && concentration.state === "ready"
@@ -105,6 +158,15 @@ export function buildPerformanceRiskViewModel({
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
     snapshotMetrics: mapSnapshotMetrics(summary),
     concentrationMetrics: mapConcentrationMetrics(concentration),
+    drawdownHeadlineMetrics: mapDrawdownHeadlineMetrics(drawdown),
+    drawdownEpisodes: mapDrawdownEpisodes(drawdown),
+    drawdownRelativeMetric: mapRelativeDrawdownMetric(drawdown),
+    underwaterSeries: mapUnderwaterSeries(drawdownDetail),
+    underwaterDetailState: resolveUnderwaterDetailState({
+      drawdown,
+      drawdownDetail,
+      isDrawdownDetailLoading,
+    }),
     supportability: supportability.map((item) => ({
       key: item.key,
       label: item.label,
@@ -118,10 +180,11 @@ export function buildPerformanceRiskViewModel({
       { label: "Cache", value: summary.metadata.cache_status ?? "miss" },
       { label: "Generated", value: formatDateValue(summary.metadata.generated_at) },
     ],
-    warnings: [...summary.warnings, ...concentration.warnings],
+    warnings: [...summary.warnings, ...concentration.warnings, ...drawdown.warnings],
     partialFailures: [
       ...summary.partial_failures.map((failure) => failure.detail),
       ...concentration.partial_failures.map((failure) => failure.detail),
+      ...drawdown.partial_failures.map((failure) => failure.detail),
     ],
   };
 }
@@ -277,6 +340,126 @@ export function buildFixtureRiskConcentration(
   };
 }
 
+export function buildFixtureRiskDrawdown(
+  workspace: WorkbenchPerformanceWorkspace,
+  period: string,
+  detailBasis: string,
+  options?: {
+    includeUnderwaterSeries?: boolean;
+    includeBenchmarkRelative?: boolean;
+  }
+): WorkbenchRiskDrawdownResponse {
+  const includeUnderwaterSeries = options?.includeUnderwaterSeries ?? false;
+  const includeBenchmarkRelative = options?.includeBenchmarkRelative ?? Boolean(workspace.benchmark_code);
+  return {
+    correlation_id: "fixture-risk-drawdown",
+    contract_version: "risk-workspace.v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    period,
+    as_of_date: workspace.as_of_date,
+    benchmark_code: workspace.benchmark_code,
+    source_service: "lotus-risk",
+    state: includeBenchmarkRelative ? "partial" : "partial",
+    payload: {
+      periods: [
+        {
+          key: period,
+          label: period,
+          start_date: workspace.report_start_date,
+          end_date: workspace.report_end_date,
+          summary: {
+            max_drawdown: -0.124533,
+            max_drawdown_peak_date: "2026-01-12",
+            max_drawdown_trough_date: "2026-02-03",
+            max_drawdown_recovery_date: null,
+            is_recovered: false,
+            days_to_trough: 16,
+            days_to_recovery: null,
+            time_under_water_days: 34,
+            average_drawdown: -0.041208,
+            ulcer_index: 0.053901,
+            drawdown_at_risk_95: -0.101552,
+            conditional_drawdown_at_risk_95: -0.117884,
+          },
+          episodes: [
+            {
+              episode_id: "dd_0001",
+              peak_date: "2026-01-12",
+              trough_date: "2026-02-03",
+              recovery_date: null,
+              depth: -0.124533,
+              days_to_trough: 16,
+              days_to_recovery: null,
+              total_days: 34,
+              is_recovered: false,
+            },
+            {
+              episode_id: "dd_0002",
+              peak_date: "2026-02-12",
+              trough_date: "2026-02-13",
+              recovery_date: "2026-02-19",
+              depth: -0.055,
+              days_to_trough: 1,
+              days_to_recovery: 4,
+              total_days: 7,
+              is_recovered: true,
+            },
+          ],
+          relative_to_benchmark: includeBenchmarkRelative
+            ? {
+                max_drawdown: -0.0821,
+                max_drawdown_peak_date: "2026-01-11",
+                max_drawdown_trough_date: "2026-02-01",
+              }
+            : null,
+          underwater_series: includeUnderwaterSeries
+            ? [
+                { date: "2026-01-20", drawdown: -0.0521 },
+                { date: "2026-01-21", drawdown: -0.061 },
+                { date: "2026-01-22", drawdown: -0.0734 },
+              ]
+            : null,
+          error: null,
+        },
+      ],
+    },
+    supportability: [
+      {
+        key: "portfolio_returns",
+        label: "Portfolio returns",
+        state: "ready",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "benchmark_relative_drawdown",
+        label: "Benchmark-relative drawdown",
+        state: includeBenchmarkRelative ? "ready" : "partial",
+        reason: includeBenchmarkRelative
+          ? null
+          : "Benchmark-relative drawdown requires benchmark context.",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "underwater_series",
+        label: "Underwater series",
+        state: includeUnderwaterSeries ? "ready" : "partial",
+        reason: includeUnderwaterSeries
+          ? null
+          : "Underwater series is available on demand and is not included in first paint.",
+        source_service: "lotus-risk",
+      },
+    ],
+    warnings: includeUnderwaterSeries ? [] : ["RISK_DRAWDOWN_UNDERWATER_DEFERRED"],
+    partial_failures: [],
+    metadata: {
+      generated_at: workspace.as_of_date,
+      input_mode: "stateful",
+      methodology_version: "drawdown.fixture.v1",
+      cache_status: "bypass",
+    },
+  };
+}
+
 export function buildUnavailableRiskSummary({
   workspace,
   period,
@@ -359,6 +542,50 @@ export function buildUnavailableRiskConcentration({
   };
 }
 
+export function buildUnavailableRiskDrawdown({
+  workspace,
+  period,
+  detailBasis,
+  detail,
+  includeUnderwaterSeries,
+}: {
+  workspace: WorkbenchPerformanceWorkspace;
+  period: string;
+  detailBasis: string;
+  detail: string;
+  includeUnderwaterSeries: boolean;
+}): WorkbenchRiskDrawdownResponse {
+  return {
+    correlation_id: "risk-drawdown-unavailable",
+    contract_version: "risk-workspace.v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    period,
+    as_of_date: workspace.as_of_date,
+    benchmark_code: workspace.benchmark_code,
+    source_service: "lotus-risk",
+    state: "unavailable",
+    payload: null,
+    supportability: [
+      {
+        key: "risk_drawdown",
+        label: includeUnderwaterSeries ? "Risk drawdown detail" : "Risk drawdown",
+        state: "unavailable",
+        reason: `${detail} (${detailBasis} basis)`,
+        source_service: "lotus-risk",
+      },
+    ],
+    warnings: ["RISK_DRAWDOWN_UNAVAILABLE"],
+    partial_failures: [
+      { source_service: "risk", error_code: "RISK_DRAWDOWN_UNAVAILABLE", detail },
+    ],
+    metadata: {
+      generated_at: workspace.as_of_date,
+      input_mode: "stateful",
+      cache_status: "miss",
+    },
+  };
+}
+
 function buildStateViewModel(
   workspace: WorkbenchPerformanceWorkspace,
   period: string,
@@ -383,6 +610,11 @@ function buildStateViewModel(
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     snapshotMetrics: [],
     concentrationMetrics: [],
+    drawdownHeadlineMetrics: [],
+    drawdownEpisodes: [],
+    drawdownRelativeMetric: null,
+    underwaterSeries: [],
+    underwaterDetailState: "idle",
     supportability: [
       {
         key: "risk_bff",
@@ -472,6 +704,117 @@ function mapConcentrationMetrics(response: WorkbenchRiskConcentrationResponse) {
   ];
 }
 
+function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
+  const summary = response.payload?.periods[0]?.summary;
+  if (!summary) {
+    return [];
+  }
+  return [
+    {
+      key: "max_drawdown",
+      label: "Max Drawdown",
+      value: formatDrawdownPercent(summary.max_drawdown),
+      support: buildDrawdownDateRange(summary),
+      state: resolveModuleState(response.state),
+    },
+    {
+      key: "time_under_water_days",
+      label: "Time Under Water",
+      value: formatInteger(summary.time_under_water_days),
+      support: "Business days below prior peak",
+      state: resolveModuleState(response.state),
+    },
+    {
+      key: "ulcer_index",
+      label: "Ulcer Index",
+      value: formatDrawdownPercent(summary.ulcer_index),
+      support: "Path severity across underwater observations",
+      state: resolveModuleState(response.state),
+    },
+    {
+      key: "drawdown_at_risk_95",
+      label: "DaR 95",
+      value: formatDrawdownPercent(summary.drawdown_at_risk_95),
+      support: "Episode-tail drawdown threshold",
+      state: resolveModuleState(response.state),
+    },
+    {
+      key: "conditional_drawdown_at_risk_95",
+      label: "CDaR 95",
+      value: formatDrawdownPercent(summary.conditional_drawdown_at_risk_95),
+      support: "Average of worst drawdown tail",
+      state: resolveModuleState(response.state),
+    },
+  ];
+}
+
+function mapDrawdownEpisodes(response: WorkbenchRiskDrawdownResponse) {
+  const episodes = response.payload?.periods[0]?.episodes ?? [];
+  return episodes.map((episode) => ({
+    key: episode.episode_id,
+    episode: episode.episode_id.toUpperCase(),
+    depth: formatDrawdownPercent(episode.depth),
+    peakDate: formatDateValue(episode.peak_date),
+    troughDate: formatDateValue(episode.trough_date),
+    recoveryDate: episode.recovery_date ? formatDateValue(episode.recovery_date) : "Open",
+    totalDays: formatInteger(episode.total_days),
+    status: episode.is_recovered ? "Recovered" : "Open",
+  }));
+}
+
+function mapRelativeDrawdownMetric(response: WorkbenchRiskDrawdownResponse) {
+  const relative = response.payload?.periods[0]?.relative_to_benchmark;
+  const supportability = response.supportability.find(
+    (item) => item.key === "benchmark_relative_drawdown"
+  );
+  if (!relative && !supportability) {
+    return null;
+  }
+  return {
+    label: "Relative Max Drawdown",
+    value: relative ? formatDrawdownPercent(relative.max_drawdown) : "N/A",
+    support:
+      supportability?.reason ??
+      (relative
+        ? `${formatDateValue(relative.max_drawdown_peak_date ?? "")} to ${formatDateValue(
+            relative.max_drawdown_trough_date ?? ""
+          )}`
+        : "Benchmark-relative drawdown not available."),
+    state: resolveMetricState(supportability?.state ?? "unavailable"),
+  };
+}
+
+function mapUnderwaterSeries(response: WorkbenchRiskDrawdownResponse | null) {
+  const points = response?.payload?.periods[0]?.underwater_series ?? [];
+  return points.map((point) => ({
+    key: `${point.date}-${point.drawdown}`,
+    date: formatDateValue(point.date),
+    drawdown: formatDrawdownPercent(point.drawdown),
+  }));
+}
+
+function resolveUnderwaterDetailState({
+  drawdown,
+  drawdownDetail,
+  isDrawdownDetailLoading,
+}: {
+  drawdown: WorkbenchRiskDrawdownResponse;
+  drawdownDetail: WorkbenchRiskDrawdownResponse | null;
+  isDrawdownDetailLoading: boolean;
+}): "idle" | "loading" | "ready" | "unavailable" {
+  if (isDrawdownDetailLoading) {
+    return "loading";
+  }
+  if (drawdownDetail?.payload?.periods[0]?.underwater_series?.length) {
+    return "ready";
+  }
+  if (drawdownDetail?.state === "unavailable") {
+    return "unavailable";
+  }
+  const supportability = drawdown.supportability.find((item) => item.key === "underwater_series");
+  return supportability?.state === "unavailable" ? "unavailable" : "idle";
+}
+
 function formatRiskMetric(metric: WorkbenchRiskMetric) {
   if (typeof metric.value !== "number") {
     return "N/A";
@@ -482,9 +825,46 @@ function formatRiskMetric(metric: WorkbenchRiskMetric) {
   return formatNumber(metric.value, { maximumFractionDigits: 2 });
 }
 
-function resolveMetricState(state: WorkbenchRiskModuleState): PerformanceRiskState {
+function formatDrawdownPercent(value: number | null | undefined) {
+  if (typeof value !== "number") {
+    return "N/A";
+  }
+  return formatPercent(value * 100);
+}
+
+function formatInteger(value: number | null | undefined) {
+  if (typeof value !== "number") {
+    return "N/A";
+  }
+  return formatNumber(value, { maximumFractionDigits: 0 });
+}
+
+function buildDrawdownDateRange(summary: WorkbenchRiskDrawdownSummary) {
+  if (!summary.max_drawdown_peak_date || !summary.max_drawdown_trough_date) {
+    return "Peak/trough timing unavailable";
+  }
+  return `${formatDateValue(summary.max_drawdown_peak_date)} to ${formatDateValue(
+    summary.max_drawdown_trough_date
+  )}`;
+}
+
+function resolveModuleState(state: WorkbenchRiskModuleState): PerformanceRiskState {
   if (state === "ready" || state === "partial" || state === "unavailable") {
     return state;
   }
   return "unavailable";
+}
+
+function resolveMetricState(state: WorkbenchRiskModuleState): PerformanceRiskState {
+  return resolveModuleState(state);
+}
+
+function mapSupportabilityGroup(
+  group: "summary" | "concentration" | "drawdown",
+  items: PerformanceRiskViewModel["supportability"]
+) {
+  return items.map((item) => ({
+    ...item,
+    key: `${group}:${item.key}`,
+  }));
 }
