@@ -5,18 +5,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getWorkbenchRiskConcentrationClient,
   getWorkbenchRiskDrawdownClient,
+  getWorkbenchRiskRollingClient,
   getWorkbenchRiskSummaryClient,
 } from "@/features/workbench/api";
 import type {
   WorkbenchPerformanceWorkspace,
   WorkbenchRiskConcentrationResponse,
   WorkbenchRiskDrawdownResponse,
+  WorkbenchRiskRollingResponse,
   WorkbenchRiskSummaryResponse,
 } from "@/features/workbench/types";
 
 import {
   buildUnavailableRiskConcentration,
   buildUnavailableRiskDrawdown,
+  buildUnavailableRiskRolling,
   buildUnavailableRiskSummary,
 } from "./risk-workspace-view-model";
 
@@ -25,9 +28,13 @@ type PerformanceRiskContractState = {
   riskConcentration: WorkbenchRiskConcentrationResponse | null;
   riskDrawdown: WorkbenchRiskDrawdownResponse | null;
   riskDrawdownDetail: WorkbenchRiskDrawdownResponse | null;
+  riskRolling: WorkbenchRiskRollingResponse | null;
+  riskRollingDetail: WorkbenchRiskRollingResponse | null;
   isLoading: boolean;
   isDrawdownDetailLoading: boolean;
+  isRollingDetailLoading: boolean;
   requestDrawdownDetail: () => void;
+  requestRollingDetail: () => void;
 };
 
 export function usePerformanceRiskContract({
@@ -46,8 +53,11 @@ export function usePerformanceRiskContract({
   const concentrationCacheRef = useRef<Map<string, WorkbenchRiskConcentrationResponse>>(new Map());
   const drawdownCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(new Map());
   const drawdownDetailCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(new Map());
+  const rollingCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(new Map());
+  const rollingDetailCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(new Map());
   const requestSequenceRef = useRef(0);
   const drawdownDetailRequestSequenceRef = useRef(0);
+  const rollingDetailRequestSequenceRef = useRef(0);
   const [riskSummary, setRiskSummary] = useState<WorkbenchRiskSummaryResponse | null>(null);
   const [riskConcentration, setRiskConcentration] = useState<WorkbenchRiskConcentrationResponse | null>(
     null
@@ -56,8 +66,13 @@ export function usePerformanceRiskContract({
   const [riskDrawdownDetail, setRiskDrawdownDetail] = useState<WorkbenchRiskDrawdownResponse | null>(
     null
   );
+  const [riskRolling, setRiskRolling] = useState<WorkbenchRiskRollingResponse | null>(null);
+  const [riskRollingDetail, setRiskRollingDetail] = useState<WorkbenchRiskRollingResponse | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isDrawdownDetailLoading, setIsDrawdownDetailLoading] = useState(false);
+  const [isRollingDetailLoading, setIsRollingDetailLoading] = useState(false);
 
   useEffect(() => {
     workspaceRef.current = workspace;
@@ -143,30 +158,79 @@ export function usePerformanceRiskContract({
     ]
   );
 
+  const rollingKey = useMemo(
+    () =>
+      JSON.stringify({
+        portfolioId: workspace.portfolio.portfolio_id,
+        period,
+        detailBasis,
+        benchmark: workspace.benchmark_code ?? null,
+        asOfDate: workspace.as_of_date,
+        reportingCurrency: workspace.portfolio.base_currency,
+        includeTimeSeries: false,
+      }),
+    [
+      detailBasis,
+      period,
+      workspace.as_of_date,
+      workspace.benchmark_code,
+      workspace.portfolio.base_currency,
+      workspace.portfolio.portfolio_id,
+    ]
+  );
+
+  const rollingDetailKey = useMemo(
+    () =>
+      JSON.stringify({
+        portfolioId: workspace.portfolio.portfolio_id,
+        period,
+        detailBasis,
+        benchmark: workspace.benchmark_code ?? null,
+        asOfDate: workspace.as_of_date,
+        reportingCurrency: workspace.portfolio.base_currency,
+        includeTimeSeries: true,
+      }),
+    [
+      detailBasis,
+      period,
+      workspace.as_of_date,
+      workspace.benchmark_code,
+      workspace.portfolio.base_currency,
+      workspace.portfolio.portfolio_id,
+    ]
+  );
+
   useEffect(() => {
     if (isDetailsPending) {
       setRiskSummary(null);
       setRiskConcentration(null);
       setRiskDrawdown(null);
       setRiskDrawdownDetail(null);
+      setRiskRolling(null);
+      setRiskRollingDetail(null);
       setIsLoading(true);
       setIsDrawdownDetailLoading(false);
+      setIsRollingDetailLoading(false);
       return;
     }
 
     const cachedSummary = summaryCacheRef.current.get(summaryKey) ?? null;
     const cachedConcentration = concentrationCacheRef.current.get(concentrationKey) ?? null;
     const cachedDrawdown = drawdownCacheRef.current.get(drawdownKey) ?? null;
+    const cachedRolling = rollingCacheRef.current.get(rollingKey) ?? null;
 
     setRiskSummary(cachedSummary);
     setRiskConcentration(cachedConcentration);
     setRiskDrawdown(cachedDrawdown);
     setRiskDrawdownDetail(drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null);
+    setRiskRolling(cachedRolling);
+    setRiskRollingDetail(rollingDetailCacheRef.current.get(rollingDetailKey) ?? null);
 
     const needsSummary = !cachedSummary;
     const needsConcentration = !cachedConcentration;
     const needsDrawdown = !cachedDrawdown;
-    if (!needsSummary && !needsConcentration && !needsDrawdown) {
+    const needsRolling = !cachedRolling;
+    if (!needsSummary && !needsConcentration && !needsDrawdown && !needsRolling) {
       setIsLoading(false);
       return;
     }
@@ -226,8 +290,27 @@ export function usePerformanceRiskContract({
         )
       : Promise.resolve(cachedDrawdown);
 
-    void Promise.all([summaryPromise, concentrationPromise, drawdownPromise]).then(
-      ([nextSummary, nextConcentration, nextDrawdown]) => {
+    const rollingPromise = needsRolling
+      ? getWorkbenchRiskRollingClient(workspace.portfolio.portfolio_id, {
+          period,
+          detailBasis,
+          benchmark: workspace.benchmark_code ?? undefined,
+          asOfDate: workspace.as_of_date,
+          reportingCurrency: workspace.portfolio.base_currency,
+          includeTimeSeries: false,
+        }).catch((error: unknown) =>
+          buildUnavailableRiskRolling({
+            workspace: workspaceRef.current,
+            period,
+            detailBasis,
+            detail: error instanceof Error ? error.message : "Risk rolling fetch failed.",
+            includeTimeSeries: false,
+          })
+        )
+      : Promise.resolve(cachedRolling);
+
+    void Promise.all([summaryPromise, concentrationPromise, drawdownPromise, rollingPromise]).then(
+      ([nextSummary, nextConcentration, nextDrawdown, nextRolling]) => {
         if (requestSequenceRef.current !== requestId) {
           return;
         }
@@ -243,6 +326,10 @@ export function usePerformanceRiskContract({
           drawdownCacheRef.current.set(drawdownKey, nextDrawdown);
           setRiskDrawdown(nextDrawdown);
         }
+        if (nextRolling) {
+          rollingCacheRef.current.set(rollingKey, nextRolling);
+          setRiskRolling(nextRolling);
+        }
         setIsLoading(false);
       }
     );
@@ -253,6 +340,8 @@ export function usePerformanceRiskContract({
     drawdownKey,
     isDetailsPending,
     period,
+    rollingDetailKey,
+    rollingKey,
     summaryKey,
     workspace.as_of_date,
     workspace.benchmark_code,
@@ -300,13 +389,57 @@ export function usePerformanceRiskContract({
       });
   };
 
+  const requestRollingDetail = () => {
+    if (isDetailsPending) {
+      return;
+    }
+    const cachedDetail = rollingDetailCacheRef.current.get(rollingDetailKey) ?? null;
+    if (cachedDetail) {
+      setRiskRollingDetail(cachedDetail);
+      return;
+    }
+    const requestId = rollingDetailRequestSequenceRef.current + 1;
+    rollingDetailRequestSequenceRef.current = requestId;
+    setIsRollingDetailLoading(true);
+    void getWorkbenchRiskRollingClient(workspaceRef.current.portfolio.portfolio_id, {
+      period,
+      detailBasis,
+      benchmark: workspaceRef.current.benchmark_code ?? undefined,
+      asOfDate: workspaceRef.current.as_of_date,
+      reportingCurrency: workspaceRef.current.portfolio.base_currency,
+      includeTimeSeries: true,
+    })
+      .catch((error: unknown) =>
+        buildUnavailableRiskRolling({
+          workspace: workspaceRef.current,
+          period,
+          detailBasis,
+          detail:
+            error instanceof Error ? error.message : "Risk rolling detail fetch failed.",
+          includeTimeSeries: true,
+        })
+      )
+      .then((response) => {
+        if (rollingDetailRequestSequenceRef.current !== requestId) {
+          return;
+        }
+        rollingDetailCacheRef.current.set(rollingDetailKey, response);
+        setRiskRollingDetail(response);
+        setIsRollingDetailLoading(false);
+      });
+  };
+
   return {
     riskSummary,
     riskConcentration,
     riskDrawdown,
     riskDrawdownDetail,
+    riskRolling,
+    riskRollingDetail,
     isLoading,
     isDrawdownDetailLoading,
+    isRollingDetailLoading,
     requestDrawdownDetail,
+    requestRollingDetail,
   };
 }

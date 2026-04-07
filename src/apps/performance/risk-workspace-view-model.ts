@@ -5,6 +5,7 @@ import type {
   WorkbenchRiskDrawdownSummary,
   WorkbenchRiskMetric,
   WorkbenchRiskModuleState,
+  WorkbenchRiskRollingResponse,
   WorkbenchRiskSummaryResponse,
 } from "@/features/workbench/types";
 import {
@@ -68,6 +69,34 @@ export type PerformanceRiskViewModel = {
     drawdown: string;
   }>;
   underwaterDetailState: "idle" | "loading" | "ready" | "unavailable";
+  rollingWindows: Array<{
+    key: string;
+    label: string;
+    headlineMetrics: Array<{
+      key: string;
+      label: string;
+      value: string;
+      support: string;
+      state: PerformanceRiskState;
+    }>;
+    summaryRows: Array<{
+      key: string;
+      metric: string;
+      latest: string;
+      average: string;
+      p05: string;
+      p95: string;
+      support: string;
+    }>;
+    seriesRows: Array<{
+      key: string;
+      date: string;
+      values: Record<string, string>;
+    }>;
+    seriesMetricKeys: string[];
+  }>;
+  rollingQualityFlags: string[];
+  rollingDetailState: "idle" | "loading" | "ready" | "unavailable";
   supportability: Array<{
     key: string;
     label: string;
@@ -88,8 +117,13 @@ export type BuildPerformanceRiskViewModelOptions = {
   riskConcentration?: WorkbenchRiskConcentrationResponse | null;
   riskDrawdown?: WorkbenchRiskDrawdownResponse | null;
   riskDrawdownDetail?: WorkbenchRiskDrawdownResponse | null;
+  riskRolling?: WorkbenchRiskRollingResponse | null;
+  riskRollingDetail?: WorkbenchRiskRollingResponse | null;
   isDrawdownDetailLoading?: boolean;
+  isRollingDetailLoading?: boolean;
 };
+
+type RiskRollingPayload = NonNullable<WorkbenchRiskRollingResponse["payload"]>;
 
 export function buildPerformanceRiskViewModel({
   workspace,
@@ -100,7 +134,10 @@ export function buildPerformanceRiskViewModel({
   riskConcentration,
   riskDrawdown,
   riskDrawdownDetail,
+  riskRolling,
+  riskRollingDetail,
   isDrawdownDetailLoading = false,
+  isRollingDetailLoading = false,
 }: BuildPerformanceRiskViewModelOptions): PerformanceRiskViewModel {
   if (isDetailsPending) {
     return buildStateViewModel(workspace, period, detailBasis, "loading");
@@ -119,7 +156,7 @@ export function buildPerformanceRiskViewModel({
     buildUnavailableRiskConcentration({
       workspace,
       period,
-        detail: "Risk concentration is not available from the Gateway BFF.",
+      detail: "Risk concentration is not available from the Gateway BFF.",
     });
   const drawdown =
     riskDrawdown ??
@@ -130,19 +167,34 @@ export function buildPerformanceRiskViewModel({
       detail: "Risk drawdown is not available from the Gateway BFF.",
       includeUnderwaterSeries: false,
     });
+  const rolling =
+    riskRolling ??
+    buildUnavailableRiskRolling({
+      workspace,
+      period,
+      detailBasis,
+      detail: "Rolling risk is not available from the Gateway BFF.",
+      includeTimeSeries: false,
+    });
   const drawdownDetail = riskDrawdownDetail ?? null;
+  const rollingDetail = riskRollingDetail ?? null;
 
   const supportability = [
     ...mapSupportabilityGroup("summary", summary.supportability),
     ...mapSupportabilityGroup("concentration", concentration.supportability),
     ...mapSupportabilityGroup("drawdown", drawdown.supportability),
+    ...mapSupportabilityGroup("rolling", rolling.supportability),
   ];
   const hasPayload = Boolean(
-    summary.payload?.periods.length || concentration.payload || drawdown.payload?.periods.length
+    summary.payload?.periods.length ||
+      concentration.payload ||
+      drawdown.payload?.periods.length ||
+      rolling.payload?.periods.length
   );
+  const moduleStates = [summary.state, concentration.state, drawdown.state, rolling.state];
   const state = !hasPayload
     ? "unavailable"
-    : summary.state === "ready" && concentration.state === "ready"
+    : moduleStates.every((moduleState) => moduleState === "ready")
       ? "ready"
       : "partial";
 
@@ -167,6 +219,13 @@ export function buildPerformanceRiskViewModel({
       drawdownDetail,
       isDrawdownDetailLoading,
     }),
+    rollingWindows: mapRollingWindows(rolling, rollingDetail),
+    rollingQualityFlags: rolling.payload?.periods[0]?.quality_flags ?? [],
+    rollingDetailState: resolveRollingDetailState({
+      rolling,
+      rollingDetail,
+      isRollingDetailLoading,
+    }),
     supportability: supportability.map((item) => ({
       key: item.key,
       label: item.label,
@@ -180,11 +239,17 @@ export function buildPerformanceRiskViewModel({
       { label: "Cache", value: summary.metadata.cache_status ?? "miss" },
       { label: "Generated", value: formatDateValue(summary.metadata.generated_at) },
     ],
-    warnings: [...summary.warnings, ...concentration.warnings, ...drawdown.warnings],
+    warnings: [
+      ...summary.warnings,
+      ...concentration.warnings,
+      ...drawdown.warnings,
+      ...rolling.warnings,
+    ],
     partialFailures: [
       ...summary.partial_failures.map((failure) => failure.detail),
       ...concentration.partial_failures.map((failure) => failure.detail),
       ...drawdown.partial_failures.map((failure) => failure.detail),
+      ...rolling.partial_failures.map((failure) => failure.detail),
     ],
   };
 }
@@ -460,6 +525,99 @@ export function buildFixtureRiskDrawdown(
   };
 }
 
+export function buildFixtureRiskRolling(
+  workspace: WorkbenchPerformanceWorkspace,
+  period: string,
+  detailBasis: string,
+  options?: {
+    includeTimeSeries?: boolean;
+  }
+): WorkbenchRiskRollingResponse {
+  const includeTimeSeries = options?.includeTimeSeries ?? false;
+  const includeBenchmarkMetrics = Boolean(workspace.benchmark_code);
+  return {
+    correlation_id: "fixture-risk-rolling",
+    contract_version: "risk-workspace.v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    period,
+    as_of_date: workspace.as_of_date,
+    benchmark_code: workspace.benchmark_code,
+    source_service: "lotus-risk",
+    state: includeBenchmarkMetrics ? "partial" : "partial",
+    payload: {
+      periods: [
+        {
+          key: period,
+          label: period,
+          start_date: workspace.report_start_date,
+          end_date: workspace.report_end_date,
+          series_count: 66,
+          window_results: [21, 63, 126, 252].map((windowLength, index) => ({
+            window_length: windowLength,
+            metric_summaries: buildFixtureRollingMetricSummaries({
+              windowLength,
+              includeBenchmarkMetrics,
+            }),
+            metric_series: includeTimeSeries
+              ? buildFixtureRollingSeries({
+                  windowLength,
+                  includeBenchmarkMetrics,
+                  offset: index,
+                })
+              : null,
+          })),
+          quality_flags: includeBenchmarkMetrics
+            ? ["metric:ROLLING_BETA:benchmark_variance_zero"]
+            : [],
+          error: null,
+        },
+      ],
+    },
+    supportability: [
+      {
+        key: "portfolio_returns",
+        label: "Portfolio returns",
+        state: "ready",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "benchmark_returns",
+        label: "Benchmark returns",
+        state: includeBenchmarkMetrics ? "ready" : "partial",
+        reason: includeBenchmarkMetrics
+          ? null
+          : "Benchmark-relative rolling metrics require benchmark context.",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "risk_free_series",
+        label: "Risk-free series",
+        state: "partial",
+        reason:
+          "Rolling Sharpe uses the configured risk-free source and may degrade when the upstream curve is unavailable.",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "rolling_time_series",
+        label: "Rolling time series",
+        state: includeTimeSeries ? "ready" : "partial",
+        reason: includeTimeSeries
+          ? null
+          : "Rolling time series is available on demand and is excluded from first paint.",
+        source_service: "lotus-risk",
+      },
+    ],
+    warnings: includeTimeSeries ? [] : ["RISK_ROLLING_TIME_SERIES_DEFERRED"],
+    partial_failures: [],
+    metadata: {
+      generated_at: workspace.as_of_date,
+      input_mode: "stateful",
+      methodology_version: `rolling.fixture.${detailBasis.toLowerCase()}.v1`,
+      cache_status: "bypass",
+    },
+  };
+}
+
 export function buildUnavailableRiskSummary({
   workspace,
   period,
@@ -586,6 +744,50 @@ export function buildUnavailableRiskDrawdown({
   };
 }
 
+export function buildUnavailableRiskRolling({
+  workspace,
+  period,
+  detailBasis,
+  detail,
+  includeTimeSeries,
+}: {
+  workspace: WorkbenchPerformanceWorkspace;
+  period: string;
+  detailBasis: string;
+  detail: string;
+  includeTimeSeries: boolean;
+}): WorkbenchRiskRollingResponse {
+  return {
+    correlation_id: "risk-rolling-unavailable",
+    contract_version: "risk-workspace.v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    period,
+    as_of_date: workspace.as_of_date,
+    benchmark_code: workspace.benchmark_code,
+    source_service: "lotus-risk",
+    state: "unavailable",
+    payload: null,
+    supportability: [
+      {
+        key: "risk_rolling",
+        label: includeTimeSeries ? "Rolling risk detail" : "Rolling risk",
+        state: "unavailable",
+        reason: `${detail} (${detailBasis} basis)`,
+        source_service: "lotus-risk",
+      },
+    ],
+    warnings: ["RISK_ROLLING_UNAVAILABLE"],
+    partial_failures: [
+      { source_service: "risk", error_code: "RISK_ROLLING_UNAVAILABLE", detail },
+    ],
+    metadata: {
+      generated_at: workspace.as_of_date,
+      input_mode: "stateful",
+      cache_status: "miss",
+    },
+  };
+}
+
 function buildStateViewModel(
   workspace: WorkbenchPerformanceWorkspace,
   period: string,
@@ -615,6 +817,9 @@ function buildStateViewModel(
     drawdownRelativeMetric: null,
     underwaterSeries: [],
     underwaterDetailState: "idle",
+    rollingWindows: [],
+    rollingQualityFlags: [],
+    rollingDetailState: "idle",
     supportability: [
       {
         key: "risk_bff",
@@ -815,6 +1020,133 @@ function resolveUnderwaterDetailState({
   return supportability?.state === "unavailable" ? "unavailable" : "idle";
 }
 
+function mapRollingWindows(
+  rolling: WorkbenchRiskRollingResponse,
+  rollingDetail: WorkbenchRiskRollingResponse | null
+) {
+  const summaryWindows = rolling.payload?.periods[0]?.window_results ?? [];
+  const detailWindows = new Map(
+    (rollingDetail?.payload?.periods[0]?.window_results ?? []).map((window) => [
+      window.window_length,
+      window,
+    ])
+  );
+
+  return summaryWindows.map((window) => {
+    const detailWindow = detailWindows.get(window.window_length) ?? null;
+    const metricKeys = Array.from(
+      new Set([
+        ...Object.keys(window.metric_summaries),
+        ...Object.keys(detailWindow?.metric_summaries ?? {}),
+      ])
+    );
+    return {
+      key: String(window.window_length),
+      label: buildRollingWindowLabel(window.window_length),
+      headlineMetrics: metricKeys.map((metricKey) => {
+        const summary = window.metric_summaries[metricKey];
+        return {
+          key: `${window.window_length}-${metricKey}`,
+          label: resolveRollingMetricLabel(metricKey),
+          value: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
+          support: buildRollingMetricSupport(metricKey, summary),
+          state: summary ? ("ready" as PerformanceRiskState) : ("unavailable" as PerformanceRiskState),
+        };
+      }),
+      summaryRows: metricKeys.map((metricKey) => {
+        const summary = window.metric_summaries[metricKey];
+        return {
+          key: `${window.window_length}-${metricKey}`,
+          metric: resolveRollingMetricLabel(metricKey),
+          latest: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
+          average: formatRollingMetricSummaryValue(metricKey, summary?.average ?? null),
+          p05: formatRollingMetricSummaryValue(metricKey, summary?.p05 ?? null),
+          p95: formatRollingMetricSummaryValue(metricKey, summary?.p95 ?? null),
+          support: buildRollingMetricSupport(metricKey, summary),
+        };
+      }),
+      seriesRows: mapRollingSeriesRows(detailWindow?.metric_series ?? []),
+      seriesMetricKeys: metricKeys,
+    };
+  });
+}
+
+function resolveRollingDetailState({
+  rolling,
+  rollingDetail,
+  isRollingDetailLoading,
+}: {
+  rolling: WorkbenchRiskRollingResponse;
+  rollingDetail: WorkbenchRiskRollingResponse | null;
+  isRollingDetailLoading: boolean;
+}): "idle" | "loading" | "ready" | "unavailable" {
+  if (isRollingDetailLoading) {
+    return "loading";
+  }
+  if (
+    rollingDetail?.payload?.periods[0]?.window_results?.some(
+      (window) => (window.metric_series?.length ?? 0) > 0
+    )
+  ) {
+    return "ready";
+  }
+  if (rollingDetail?.state === "unavailable") {
+    return "unavailable";
+  }
+  const supportability = rolling.supportability.find((item) => item.key === "rolling_time_series");
+  return supportability?.state === "unavailable" ? "unavailable" : "idle";
+}
+
+function mapRollingSeriesRows(
+  series: RiskRollingPayload["periods"][number]["window_results"][number]["metric_series"]
+) {
+  return (series ?? []).map((point) => ({
+    key: point.date,
+    date: formatDateValue(point.date),
+    values: Object.fromEntries(
+      Object.entries(point.metric_values).map(([metricKey, value]) => [
+        metricKey,
+        formatRollingMetricSummaryValue(metricKey, value),
+      ])
+    ),
+  }));
+}
+
+function buildRollingMetricSupport(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return "Metric not returned for this rolling request.";
+  }
+  return `Avg ${formatRollingMetricSummaryValue(metricKey, summary.average)} • P05 ${formatRollingMetricSummaryValue(metricKey, summary.p05)} • P95 ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
+}
+
+function buildRollingWindowLabel(windowLength: number) {
+  return `${windowLength}D`;
+}
+
+function resolveRollingMetricLabel(metricKey: string) {
+  switch (metricKey) {
+    case "ROLLING_VOLATILITY":
+      return "Volatility";
+    case "ROLLING_MAX_DRAWDOWN":
+      return "Max Drawdown";
+    case "ROLLING_SHARPE":
+      return "Sharpe";
+    case "ROLLING_BETA":
+      return "Beta";
+    case "ROLLING_TRACKING_ERROR":
+      return "Tracking Error";
+    case "ROLLING_INFORMATION_RATIO":
+      return "Information Ratio";
+    default:
+      return metricKey.replaceAll("_", " ");
+  }
+}
+
 function formatRiskMetric(metric: WorkbenchRiskMetric) {
   if (typeof metric.value !== "number") {
     return "N/A";
@@ -839,6 +1171,165 @@ function formatInteger(value: number | null | undefined) {
   return formatNumber(value, { maximumFractionDigits: 0 });
 }
 
+function formatRollingMetricSummaryValue(metricKey: string, value: number | null | undefined) {
+  if (typeof value !== "number") {
+    return "N/A";
+  }
+  if (
+    metricKey === "ROLLING_VOLATILITY" ||
+    metricKey === "ROLLING_MAX_DRAWDOWN" ||
+    metricKey === "ROLLING_TRACKING_ERROR"
+  ) {
+    return formatPercent(value * 100);
+  }
+  return formatNumber(value, { maximumFractionDigits: 2 });
+}
+
+function buildFixtureRollingMetricSummaries({
+  windowLength,
+  includeBenchmarkMetrics,
+}: {
+  windowLength: number;
+  includeBenchmarkMetrics: boolean;
+}) {
+  const volatilityBase = 0.109 + windowLength / 5000;
+  const maxDrawdownBase = -0.017 - windowLength / 5000;
+  const summaries: Record<
+    string,
+    {
+      latest: number | null;
+      average: number | null;
+      minimum: number | null;
+      maximum: number | null;
+      p05: number | null;
+      p50: number | null;
+      p95: number | null;
+    }
+  > = {
+    ROLLING_VOLATILITY: {
+      latest: volatilityBase,
+      average: volatilityBase - 0.008,
+      minimum: volatilityBase - 0.026,
+      maximum: volatilityBase + 0.021,
+      p05: volatilityBase - 0.02,
+      p50: volatilityBase - 0.004,
+      p95: volatilityBase + 0.018,
+    },
+    ROLLING_MAX_DRAWDOWN: {
+      latest: maxDrawdownBase,
+      average: maxDrawdownBase + 0.005,
+      minimum: maxDrawdownBase - 0.02,
+      maximum: maxDrawdownBase + 0.011,
+      p05: maxDrawdownBase - 0.016,
+      p50: maxDrawdownBase + 0.003,
+      p95: maxDrawdownBase + 0.009,
+    },
+    ROLLING_SHARPE: {
+      latest: 0.74 + windowLength / 1000,
+      average: 0.68 + windowLength / 1000,
+      minimum: 0.31 + windowLength / 1200,
+      maximum: 1.14 + windowLength / 900,
+      p05: 0.42 + windowLength / 1200,
+      p50: 0.71 + windowLength / 1000,
+      p95: 1.02 + windowLength / 900,
+    },
+  };
+  if (includeBenchmarkMetrics) {
+    summaries.ROLLING_BETA = {
+      latest: 0.91 + windowLength / 5000,
+      average: 0.88 + windowLength / 5000,
+      minimum: 0.74,
+      maximum: 1.08,
+      p05: 0.78,
+      p50: 0.89,
+      p95: 1.02,
+    };
+    summaries.ROLLING_TRACKING_ERROR = {
+      latest: 0.024 + windowLength / 10000,
+      average: 0.022 + windowLength / 10000,
+      minimum: 0.015,
+      maximum: 0.034,
+      p05: 0.017,
+      p50: 0.022,
+      p95: 0.031,
+    };
+    summaries.ROLLING_INFORMATION_RATIO = {
+      latest: 0.29 + windowLength / 2000,
+      average: 0.24 + windowLength / 2000,
+      minimum: -0.08,
+      maximum: 0.61,
+      p05: 0.01,
+      p50: 0.27,
+      p95: 0.55,
+    };
+  }
+  return summaries;
+}
+
+function buildFixtureRollingSeries({
+  windowLength,
+  includeBenchmarkMetrics,
+  offset,
+}: {
+  windowLength: number;
+  includeBenchmarkMetrics: boolean;
+  offset: number;
+}) {
+  return [
+    {
+      date: `2026-03-${String(15 + offset).padStart(2, "0")}`,
+      metric_values: buildFixtureRollingSeriesMetricValues({
+        windowLength,
+        includeBenchmarkMetrics,
+        volatility: 0.112 + windowLength / 5200,
+        maxDrawdown: -0.018 - windowLength / 5200,
+      }),
+    },
+    {
+      date: `2026-03-${String(22 + offset).padStart(2, "0")}`,
+      metric_values: buildFixtureRollingSeriesMetricValues({
+        windowLength,
+        includeBenchmarkMetrics,
+        volatility: 0.118 + windowLength / 5200,
+        maxDrawdown: -0.022 - windowLength / 5200,
+      }),
+    },
+    {
+      date: `2026-03-${String(29 + offset).padStart(2, "0")}`,
+      metric_values: buildFixtureRollingSeriesMetricValues({
+        windowLength,
+        includeBenchmarkMetrics,
+        volatility: 0.121 + windowLength / 5200,
+        maxDrawdown: -0.028 - windowLength / 5200,
+      }),
+    },
+  ];
+}
+
+function buildFixtureRollingSeriesMetricValues({
+  windowLength,
+  includeBenchmarkMetrics,
+  volatility,
+  maxDrawdown,
+}: {
+  windowLength: number;
+  includeBenchmarkMetrics: boolean;
+  volatility: number;
+  maxDrawdown: number;
+}) {
+  const values: Record<string, number> = {
+    ROLLING_VOLATILITY: volatility,
+    ROLLING_MAX_DRAWDOWN: maxDrawdown,
+    ROLLING_SHARPE: 0.67 + windowLength / 1100,
+  };
+  if (includeBenchmarkMetrics) {
+    values.ROLLING_BETA = 0.9 + windowLength / 5200;
+    values.ROLLING_TRACKING_ERROR = 0.023 + windowLength / 11000;
+    values.ROLLING_INFORMATION_RATIO = 0.25 + windowLength / 2200;
+  }
+  return values;
+}
+
 function buildDrawdownDateRange(summary: WorkbenchRiskDrawdownSummary) {
   if (!summary.max_drawdown_peak_date || !summary.max_drawdown_trough_date) {
     return "Peak/trough timing unavailable";
@@ -860,7 +1351,7 @@ function resolveMetricState(state: WorkbenchRiskModuleState): PerformanceRiskSta
 }
 
 function mapSupportabilityGroup(
-  group: "summary" | "concentration" | "drawdown",
+  group: "summary" | "concentration" | "drawdown" | "rolling",
   items: PerformanceRiskViewModel["supportability"]
 ) {
   return items.map((item) => ({

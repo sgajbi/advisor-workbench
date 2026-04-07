@@ -5105,6 +5105,17 @@ a:hover {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.performance-risk-window-toolbar {
+  justify-self: start;
+}
+
+.performance-risk-quality-flags {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(202, 138, 4, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 251, 235, 0.52);
+}
+
 .performance-risk-relative-note {
   display: grid;
   gap: 0.2rem;
@@ -5115,6 +5126,12 @@ a:hover {
 }
 
 .performance-risk-underwater-detail {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.25rem;
+}
+
+.performance-risk-rolling-detail {
   display: grid;
   gap: 0.65rem;
   padding-top: 0.25rem;

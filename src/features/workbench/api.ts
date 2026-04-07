@@ -6,6 +6,7 @@ import {
   WorkbenchPerformanceHorizonComparison,
   WorkbenchRiskConcentrationResponse,
   WorkbenchRiskDrawdownResponse,
+  WorkbenchRiskRollingResponse,
   WorkbenchRiskSummaryResponse,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
@@ -461,6 +462,35 @@ export async function getWorkbenchRiskDrawdownClient(
   return await fetchWorkbenchJson<WorkbenchRiskDrawdownResponse>(
     buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/drawdown`, query),
     "workbench risk drawdown"
+  );
+}
+
+export async function getWorkbenchRiskRollingClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    detailBasis: string;
+    benchmark?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
+    includeTimeSeries?: boolean;
+  }
+): Promise<WorkbenchRiskRollingResponse> {
+  const query = new URLSearchParams(
+    buildRiskWorkspaceQuery({
+      period: params.period,
+      detailBasis: params.detailBasis,
+      benchmark: params.benchmark,
+      asOfDate: params.asOfDate,
+      reportingCurrency: params.reportingCurrency,
+    })
+  );
+  if (params.includeTimeSeries) {
+    query.set("include_time_series", "true");
+  }
+  return await fetchWorkbenchJson<WorkbenchRiskRollingResponse>(
+    buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/rolling`, query),
+    "workbench risk rolling"
   );
 }
 

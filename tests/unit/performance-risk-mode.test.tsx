@@ -6,11 +6,13 @@ import PerformanceRiskMode from "../../src/apps/performance/components/performan
 import {
   buildFixtureRiskConcentration,
   buildFixtureRiskDrawdown,
+  buildFixtureRiskRolling,
   buildFixtureRiskSummary,
 } from "../../src/apps/performance/risk-workspace-view-model";
 import {
   getWorkbenchRiskConcentrationClient,
   getWorkbenchRiskDrawdownClient,
+  getWorkbenchRiskRollingClient,
   getWorkbenchRiskSummaryClient,
 } from "../../src/features/workbench/api";
 import { buildBenchmarkUnassignedPerformanceScenario, buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
@@ -19,6 +21,7 @@ vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskSummaryClient: vi.fn(),
   getWorkbenchRiskConcentrationClient: vi.fn(),
   getWorkbenchRiskDrawdownClient: vi.fn(),
+  getWorkbenchRiskRollingClient: vi.fn(),
 }));
 
 function renderRiskMode(
@@ -56,6 +59,9 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
     );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
 
     renderRiskMode(scenario);
 
@@ -85,6 +91,14 @@ describe("PerformanceRiskMode", () => {
       reportingCurrency: "USD",
       includeUnderwaterSeries: false,
     });
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledWith("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      includeTimeSeries: false,
+    });
   });
 
   it("reuses cached live responses for the same request shape and invalidates summary only when detail basis changes", async () => {
@@ -97,6 +111,9 @@ describe("PerformanceRiskMode", () => {
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
     );
 
     const { rerender } = render(
@@ -138,6 +155,7 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(1);
 
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "GROSS")
@@ -162,6 +180,7 @@ describe("PerformanceRiskMode", () => {
     });
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
   });
 
   it("shows partial live supportability when benchmark-relative risk is unavailable", async () => {
@@ -176,6 +195,9 @@ describe("PerformanceRiskMode", () => {
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
         includeBenchmarkRelative: false,
       })
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
     );
 
     renderRiskMode(scenario);
@@ -194,6 +216,7 @@ describe("PerformanceRiskMode", () => {
       new Error("concentration down")
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockRejectedValue(new Error("drawdown down"));
+    vi.mocked(getWorkbenchRiskRollingClient).mockRejectedValue(new Error("rolling down"));
 
     renderRiskMode();
 
@@ -219,6 +242,9 @@ describe("PerformanceRiskMode", () => {
           includeUnderwaterSeries: true,
         })
       );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
 
     renderRiskMode(scenario);
 
@@ -231,7 +257,7 @@ describe("PerformanceRiskMode", () => {
       includeUnderwaterSeries: false,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand underwater path" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Risk underwater series table")).toBeInTheDocument();
@@ -240,6 +266,48 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
     expect(vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[1][1]).toMatchObject({
       includeUnderwaterSeries: true,
+    });
+  });
+
+  it("does not request rolling detail on first paint and fetches it only on expand", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient)
+      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
+          includeTimeSeries: true,
+        })
+      );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
+    });
+
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(getWorkbenchRiskRollingClient).mock.calls[0][1]).toMatchObject({
+      includeTimeSeries: false,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
+    });
+
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(getWorkbenchRiskRollingClient).mock.calls[1][1]).toMatchObject({
+      includeTimeSeries: true,
     });
   });
 });

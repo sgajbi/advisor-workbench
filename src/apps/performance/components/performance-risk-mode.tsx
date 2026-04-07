@@ -13,6 +13,7 @@ import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
 import RiskProvenanceStrip from "./risk/risk-provenance-strip";
+import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
 import RiskSupportabilityPanel from "./risk/risk-supportability-panel";
@@ -24,14 +25,19 @@ export default function PerformanceRiskMode({
   isDetailsPending,
 }: PerformanceRiskModeProps) {
   const [underwaterExpanded, setUnderwaterExpanded] = useState(false);
+  const [rollingExpanded, setRollingExpanded] = useState(false);
   const {
     riskSummary,
     riskConcentration,
     riskDrawdown,
     riskDrawdownDetail,
+    riskRolling,
+    riskRollingDetail,
     isLoading,
     isDrawdownDetailLoading,
+    isRollingDetailLoading,
     requestDrawdownDetail,
+    requestRollingDetail,
   } = usePerformanceRiskContract({
     workspace,
     period,
@@ -41,6 +47,7 @@ export default function PerformanceRiskMode({
 
   useEffect(() => {
     setUnderwaterExpanded(false);
+    setRollingExpanded(false);
   }, [detailBasis, period, workspace.as_of_date, workspace.benchmark_code, workspace.portfolio.portfolio_id]);
 
   const viewModel = buildPerformanceRiskViewModel({
@@ -52,7 +59,10 @@ export default function PerformanceRiskMode({
     riskConcentration,
     riskDrawdown,
     riskDrawdownDetail,
+    riskRolling,
+    riskRollingDetail,
     isDrawdownDetailLoading,
+    isRollingDetailLoading,
   });
 
   const statePanel =
@@ -112,6 +122,17 @@ export default function PerformanceRiskMode({
                   setUnderwaterExpanded(nextExpanded);
                   if (nextExpanded) {
                     requestDrawdownDetail();
+                  }
+                }}
+              />
+              <RiskRollingPanel
+                viewModel={viewModel}
+                rollingExpanded={rollingExpanded}
+                onToggleRolling={() => {
+                  const nextExpanded = !rollingExpanded;
+                  setRollingExpanded(nextExpanded);
+                  if (nextExpanded) {
+                    requestRollingDetail();
                   }
                 }}
               />

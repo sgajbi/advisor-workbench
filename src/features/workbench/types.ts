@@ -697,6 +697,59 @@ export type WorkbenchRiskDrawdownResponse = {
   };
 };
 
+export type WorkbenchRiskRollingMetricSummary = {
+  latest: number | null;
+  average: number | null;
+  minimum: number | null;
+  maximum: number | null;
+  p05: number | null;
+  p50: number | null;
+  p95: number | null;
+};
+
+export type WorkbenchRiskRollingMetricSeriesPoint = {
+  date: string;
+  metric_values: Record<string, number | null>;
+};
+
+export type WorkbenchRiskRollingWindowResult = {
+  window_length: number;
+  metric_summaries: Record<string, WorkbenchRiskRollingMetricSummary>;
+  metric_series?: WorkbenchRiskRollingMetricSeriesPoint[] | null;
+};
+
+export type WorkbenchRiskRollingResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    periods: Array<{
+      key: string;
+      label: string;
+      start_date: string;
+      end_date: string;
+      series_count: number;
+      window_results: WorkbenchRiskRollingWindowResult[];
+      quality_flags: string[];
+      error?: string | null;
+    }>;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
 export type WorkbenchReportingSnapshot = {
   correlationId: string;
   contractVersion: string;

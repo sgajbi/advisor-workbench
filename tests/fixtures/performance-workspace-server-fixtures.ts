@@ -14,6 +14,7 @@ import {
 import {
   buildFixtureRiskConcentration,
   buildFixtureRiskDrawdown,
+  buildFixtureRiskRolling,
   buildFixtureRiskSummary,
 } from "../../src/apps/performance/risk-workspace-view-model";
 
@@ -163,6 +164,24 @@ function buildRiskDrawdownResponse(
   });
 }
 
+function buildRiskRollingResponse(
+  portfolioId: string,
+  options?: PerformanceFixtureOptions,
+  includeTimeSeries = false
+) {
+  const scenario = options
+    ? buildBenchmarkUnassignedPerformanceScenario()
+    : buildSupportedPerformanceScenario();
+  const workspace = {
+    ...scenario.workspace,
+    portfolio_id: portfolioId,
+    portfolio: { ...scenario.workspace.portfolio, portfolio_id: portfolioId },
+  };
+  return buildFixtureRiskRolling(workspace, workspace.period, workspace.detail_basis, {
+    includeTimeSeries,
+  });
+}
+
 export function installPerformancePageFetchMock(options?: PerformanceFixtureOptions) {
   vi.stubGlobal(
     "fetch",
@@ -227,6 +246,17 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
               "DEMO_ADV_USD_001",
               options,
               url.includes("include_underwater_series=true")
+            ),
+        } as Response;
+      }
+      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/rolling")) {
+        return {
+          ok: true,
+          json: async () =>
+            buildRiskRollingResponse(
+              "DEMO_ADV_USD_001",
+              options,
+              url.includes("include_time_series=true")
             ),
         } as Response;
       }
@@ -335,6 +365,15 @@ export function installPerformancePageFetchScenario(
             buildFixtureRiskDrawdown(workspace, workspace.period, workspace.detail_basis, {
               includeUnderwaterSeries: url.includes("include_underwater_series=true"),
               includeBenchmarkRelative: Boolean(workspace.benchmark_code),
+            }),
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/rolling`)) {
+        return {
+          ok: true,
+          json: async () =>
+            buildFixtureRiskRolling(workspace, workspace.period, workspace.detail_basis, {
+              includeTimeSeries: url.includes("include_time_series=true"),
             }),
         } as Response;
       }

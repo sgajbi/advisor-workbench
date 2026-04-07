@@ -496,6 +496,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
     expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
     expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
     expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
       "Issuer Coverage"
     );
@@ -515,11 +516,31 @@ describe("PerformanceAnalyticsPage", () => {
       )
     ).toBe(true);
     expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/rolling")
+      )
+    ).toBe(true);
+    expect(
       fetchMock.mock.calls.some(([input]) => input.toString().includes("/analytics/risk/"))
     ).toBe(false);
     expect(
       fetchMock.mock.calls.some(([input]) => input.toString().includes("lotus-risk"))
     ).toBe(false);
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
+    });
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input
+          .toString()
+          .includes(
+            "/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD&include_time_series=true"
+          )
+      )
+    ).toBe(true);
   });
 
   it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildFixtureRiskConcentration,
   buildFixtureRiskDrawdown,
+  buildFixtureRiskRolling,
   buildFixtureRiskSummary,
   buildPerformanceRiskViewModel,
 } from "../../src/apps/performance/risk-workspace-view-model";
@@ -19,6 +20,7 @@ describe("buildPerformanceRiskViewModel", () => {
       riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
       riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     });
 
     expect(viewModel.state).toBe("partial");
@@ -47,6 +49,10 @@ describe("buildPerformanceRiskViewModel", () => {
       "drawdown:portfolio_returns",
       "drawdown:benchmark_relative_drawdown",
       "drawdown:underwater_series",
+      "rolling:portfolio_returns",
+      "rolling:benchmark_returns",
+      "rolling:risk_free_series",
+      "rolling:rolling_time_series",
     ]);
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Max Drawdown",
@@ -64,6 +70,15 @@ describe("buildPerformanceRiskViewModel", () => {
       label: "Input Mode",
       value: "Stateful only",
     });
+    expect(viewModel.rollingWindows[0]).toMatchObject({
+      label: "21D",
+    });
+    expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
+      "Volatility"
+    );
+    expect(viewModel.rollingQualityFlags).toContain(
+      "metric:ROLLING_BETA:benchmark_variance_zero"
+    );
   });
 
   it("does not imply benchmark-relative risk is ready when benchmark context is absent", () => {
@@ -78,6 +93,7 @@ describe("buildPerformanceRiskViewModel", () => {
       riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
         includeBenchmarkRelative: false,
       }),
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     });
 
     expect(viewModel.state).toBe("partial");
@@ -106,6 +122,7 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.state).toBe("loading");
     expect(viewModel.snapshotMetrics).toEqual([]);
     expect(viewModel.concentrationMetrics).toEqual([]);
+    expect(viewModel.rollingWindows).toEqual([]);
     expect(viewModel.supportability).toEqual([
       expect.objectContaining({ key: "risk_bff", state: "partial" }),
     ]);
@@ -124,6 +141,7 @@ describe("buildPerformanceRiskViewModel", () => {
       riskDrawdownDetail: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
         includeUnderwaterSeries: true,
       }),
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     });
 
     expect(viewModel.underwaterDetailState).toBe("ready");
@@ -132,5 +150,31 @@ describe("buildPerformanceRiskViewModel", () => {
       date: "20 Jan 2026",
       drawdown: "-5.21%",
     });
+  });
+
+  it("only surfaces rolling series after detail-on-demand fetch returns", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+      riskRollingDetail: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
+        includeTimeSeries: true,
+      }),
+    });
+
+    expect(viewModel.rollingDetailState).toBe("ready");
+    expect(viewModel.rollingWindows[0]?.seriesRows).toHaveLength(3);
+    expect(viewModel.rollingWindows[0]?.seriesRows[0]).toMatchObject({
+      date: "15 Mar 2026",
+    });
+    expect(viewModel.rollingWindows[0]?.seriesRows[0]?.values.ROLLING_VOLATILITY).toMatch(
+      /%$/
+    );
   });
 });
