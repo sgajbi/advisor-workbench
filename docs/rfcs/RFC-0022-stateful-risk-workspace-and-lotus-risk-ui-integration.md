@@ -992,6 +992,22 @@ Acceptance:
 2. detailed episode evidence is available without cluttering first paint,
 3. benchmark-relative drawdown is gated when benchmark series is unavailable.
 
+Slice 6 evidence:
+
+1. Gateway added `GET /api/v1/workbench/{portfolioId}/risk/drawdown` with a typed stateful-only
+   BFF contract and an explicit `include_underwater_series` on-demand detail flag.
+2. Gateway added request-shape, cache-key, malformed upstream, and router coverage for drawdown.
+3. Workbench added live drawdown client wiring, drawdown view-model mapping, and a modular
+   `RiskDrawdownPanel`.
+4. Workbench only requests underwater series after explicit disclosure expansion; first paint keeps
+   underwater detail out of the request path.
+5. Validation evidence:
+   - `python -m pytest tests/unit/test_risk_workspace_service.py tests/unit/test_upstream_clients.py tests/integration/test_workbench_router.py -q`
+   - `python -m ruff check src tests`
+   - `npm test -- --run tests/unit/performance-risk-view-model.test.ts tests/unit/performance-risk-mode.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `npm run lint`
+   - `npm run typecheck`
+
 ### Slice 7: Rolling Risk module
 
 Outcome:
