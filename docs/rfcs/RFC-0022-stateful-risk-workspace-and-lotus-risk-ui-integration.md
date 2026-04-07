@@ -22,8 +22,8 @@ Current `lotus-risk` capabilities include:
 2. stateful drawdown analytics,
 3. stateful rolling risk diagnostics,
 4. stateful and simulation-aware concentration analytics,
-5. stateful historical risk attribution, with `TOTAL_RISK` available and `ACTIVE_RISK` gated by
-   benchmark exposure-history support,
+5. stateful historical risk attribution, with `TOTAL_RISK` available and `ACTIVE_RISK` available
+   for `POSITION`, `SECTOR`, and `ASSET_CLASS`, while `ISSUER` remains explicitly gated,
 6. integration capability publication for platform capability aggregation.
 
 `lotus-workbench` does not yet present these as a first-class front-office risk workspace.
@@ -117,7 +117,8 @@ Observed current state:
 5. `POST /analytics/risk/historical-attribution`
    - modes: `stateless`, `stateful`
    - stateful `TOTAL_RISK` exists
-   - stateful `ACTIVE_RISK` remains gated by benchmark exposure-history integration
+   - stateful `ACTIVE_RISK` is available for `POSITION`, `SECTOR`, and `ASSET_CLASS`
+   - stateful `ACTIVE_RISK` + `ISSUER` remains gated until benchmark issuer exposure semantics exist
 6. `GET /integration/capabilities`
    - publishes `risk_snapshot`, `concentration_risk`, `drawdown_analytics`,
      `rolling_risk_analytics`, and `historical_risk_attribution`
@@ -634,12 +635,9 @@ POST /analytics/risk/historical-attribution
 Initial use:
 
 1. `input_mode=stateful`,
-2. `attribution_types=["TOTAL_RISK"]`,
-3. `metrics=["VOLATILITY"]`,
-4. groupings: `POSITION`, `ISSUER`, `SECTOR`, `ASSET_CLASS` where supported.
-
-Do not expose `ACTIVE_RISK` as enabled until Gateway supportability proves benchmark exposure
-history is available.
+2. support `TOTAL_RISK` for `POSITION`, `ISSUER`, `SECTOR`, `ASSET_CLASS`,
+3. support `ACTIVE_RISK` for `POSITION`, `SECTOR`, and `ASSET_CLASS`,
+4. keep `ACTIVE_RISK + ISSUER` explicitly blocked with clear supportability rationale.
 
 ## Risk Workspace Component Architecture
 
@@ -1061,22 +1059,21 @@ Slice 7 evidence:
 
 Outcome:
 
-1. Workbench surfaces stateful total-risk attribution.
+1. Workbench surfaces stateful total-risk and supported active-risk attribution.
 
 Tasks:
 
 1. add Gateway `risk/attribution`,
 2. wire `HistoricalRiskAttributionPanel`,
-3. expose `TOTAL_RISK` initially,
-4. keep `ACTIVE_RISK` disabled/blocked until supportability says benchmark exposure history is
-   ready,
+3. expose `TOTAL_RISK` and supported `ACTIVE_RISK` dimensions,
+4. keep `ACTIVE_RISK + ISSUER` disabled/blocked with explicit rationale,
 5. render contributors and residual diagnostics,
 6. make grouping dimensions switchable when supported.
 
 Tests:
 
-1. Gateway request-shape tests for `TOTAL_RISK`,
-2. blocked-state tests for `ACTIVE_RISK`,
+1. Gateway request-shape tests for `TOTAL_RISK` and supported `ACTIVE_RISK`,
+2. blocked-state tests for `ACTIVE_RISK + ISSUER` and missing benchmark context,
 3. contributor table tests,
 4. residual formatting tests,
 5. grouping selector tests proving unavailable groupings are disabled with clear rationale.
@@ -1087,6 +1084,26 @@ Acceptance:
 2. active-risk is not falsely represented as available,
 3. blocked-state copy explains the benchmark exposure-history dependency,
 4. contributor sorting and residual rows are deterministic.
+
+Slice 8 evidence:
+
+1. Gateway added `GET /api/v1/workbench/{portfolioId}/risk/attribution` with a typed
+   stateful-only BFF contract that directly reflects the merged `lotus-risk` and
+   `lotus-performance` support matrix.
+2. Gateway now supports `TOTAL_RISK` for `POSITION`, `ISSUER`, `SECTOR`, and `ASSET_CLASS`,
+   and supports `ACTIVE_RISK` for `POSITION`, `SECTOR`, and `ASSET_CLASS`.
+3. Gateway explicitly blocks `ACTIVE_RISK + ISSUER` and `ACTIVE_RISK` without benchmark context
+   before any upstream call is made.
+4. Workbench added a modular `RiskAttributionPanel`, a typed risk attribution client, and
+   lazy attribution query handling that reuses cache keys instead of issuing duplicate fetches.
+5. Workbench surfaces only backend-supported attribution combinations. It does not fabricate
+   unsupported active-risk behavior and it does not preserve the older blanket gating assumption.
+6. Validation:
+   - `lotus-gateway`: `python -m pytest tests/unit/test_risk_workspace_service.py tests/unit/test_upstream_clients.py tests/integration/test_workbench_router.py -q`
+   - `lotus-gateway`: `python -m ruff check src tests`
+   - `lotus-workbench`: `npm test -- --run tests/unit/performance-risk-view-model.test.ts tests/unit/performance-risk-mode.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `lotus-workbench`: `npm run lint`
+   - `lotus-workbench`: `npm run typecheck`
 
 ### Slice 9: Portfolio and Advisor Brief cross-links
 

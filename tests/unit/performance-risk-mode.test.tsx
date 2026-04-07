@@ -4,12 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceRiskMode from "../../src/apps/performance/components/performance-risk-mode";
 import {
+  buildFixtureRiskAttribution,
   buildFixtureRiskConcentration,
   buildFixtureRiskDrawdown,
   buildFixtureRiskRolling,
   buildFixtureRiskSummary,
 } from "../../src/apps/performance/risk-workspace-view-model";
 import {
+  getWorkbenchRiskAttributionClient,
   getWorkbenchRiskConcentrationClient,
   getWorkbenchRiskDrawdownClient,
   getWorkbenchRiskRollingClient,
@@ -20,6 +22,7 @@ import { buildBenchmarkUnassignedPerformanceScenario, buildSupportedPerformanceS
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskSummaryClient: vi.fn(),
   getWorkbenchRiskConcentrationClient: vi.fn(),
+  getWorkbenchRiskAttributionClient: vi.fn(),
   getWorkbenchRiskDrawdownClient: vi.fn(),
   getWorkbenchRiskRollingClient: vi.fn(),
 }));
@@ -56,6 +59,9 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
     );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
     );
@@ -83,6 +89,15 @@ describe("PerformanceRiskMode", () => {
       asOfDate: "2026-02-24",
       reportingCurrency: "USD",
     });
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      attributionType: "TOTAL_RISK",
+      groupingDimension: "SECTOR",
+    });
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
       detailBasis: "NET",
@@ -108,6 +123,9 @@ describe("PerformanceRiskMode", () => {
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
@@ -154,6 +172,7 @@ describe("PerformanceRiskMode", () => {
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(1);
 
@@ -179,6 +198,7 @@ describe("PerformanceRiskMode", () => {
       expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(2);
     });
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(2);
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
   });
@@ -190,6 +210,9 @@ describe("PerformanceRiskMode", () => {
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
@@ -215,6 +238,7 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskConcentrationClient).mockRejectedValue(
       new Error("concentration down")
     );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockRejectedValue(new Error("attribution down"));
     vi.mocked(getWorkbenchRiskDrawdownClient).mockRejectedValue(new Error("drawdown down"));
     vi.mocked(getWorkbenchRiskRollingClient).mockRejectedValue(new Error("rolling down"));
 
@@ -234,6 +258,9 @@ describe("PerformanceRiskMode", () => {
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
     );
     vi.mocked(getWorkbenchRiskDrawdownClient)
       .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"))
@@ -277,6 +304,9 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD")
     );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
     );
@@ -308,6 +338,72 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
     expect(vi.mocked(getWorkbenchRiskRollingClient).mock.calls[1][1]).toMatchObject({
       includeTimeSeries: true,
+    });
+  });
+
+  it("requests supported active-risk attribution directly and does not expose issuer as interactive", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockImplementation(async (_portfolioId, params) =>
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
+        attributionType:
+          params.attributionType === "ACTIVE_RISK" ? "ACTIVE_RISK" : "TOTAL_RISK",
+        groupingDimension:
+          params.groupingDimension === "ASSET_CLASS"
+            ? "ASSET_CLASS"
+            : params.groupingDimension === "POSITION"
+              ? "POSITION"
+              : params.groupingDimension === "ISSUER"
+                ? "ISSUER"
+                : "SECTOR",
+      })
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Historical risk attribution table")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
+    await waitFor(() => {
+      expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith("PF_1001", {
+        period: "YTD",
+        detailBasis: "NET",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        asOfDate: "2026-02-24",
+        reportingCurrency: "USD",
+        attributionType: "ACTIVE_RISK",
+        groupingDimension: "SECTOR",
+      });
+    });
+    fireEvent.click(screen.getByRole("tab", { name: "Asset Class" }));
+
+    await waitFor(() => {
+      expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(3);
+    });
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenLastCalledWith("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      attributionType: "ACTIVE_RISK",
+      groupingDimension: "ASSET_CLASS",
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Issuer" })).toBeDisabled();
     });
   });
 });

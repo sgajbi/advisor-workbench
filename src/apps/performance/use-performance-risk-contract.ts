@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  getWorkbenchRiskAttributionClient,
   getWorkbenchRiskConcentrationClient,
   getWorkbenchRiskDrawdownClient,
   getWorkbenchRiskRollingClient,
@@ -10,6 +11,7 @@ import {
 } from "@/features/workbench/api";
 import type {
   WorkbenchPerformanceWorkspace,
+  WorkbenchRiskAttributionResponse,
   WorkbenchRiskConcentrationResponse,
   WorkbenchRiskDrawdownResponse,
   WorkbenchRiskRollingResponse,
@@ -17,6 +19,7 @@ import type {
 } from "@/features/workbench/types";
 
 import {
+  buildUnavailableRiskAttribution,
   buildUnavailableRiskConcentration,
   buildUnavailableRiskDrawdown,
   buildUnavailableRiskRolling,
@@ -26,13 +29,16 @@ import {
 type PerformanceRiskContractState = {
   riskSummary: WorkbenchRiskSummaryResponse | null;
   riskConcentration: WorkbenchRiskConcentrationResponse | null;
+  riskAttribution: WorkbenchRiskAttributionResponse | null;
   riskDrawdown: WorkbenchRiskDrawdownResponse | null;
   riskDrawdownDetail: WorkbenchRiskDrawdownResponse | null;
   riskRolling: WorkbenchRiskRollingResponse | null;
   riskRollingDetail: WorkbenchRiskRollingResponse | null;
   isLoading: boolean;
+  isAttributionLoading: boolean;
   isDrawdownDetailLoading: boolean;
   isRollingDetailLoading: boolean;
+  requestAttribution: (attributionType: string, groupingDimension: string) => void;
   requestDrawdownDetail: () => void;
   requestRollingDetail: () => void;
 };
@@ -51,6 +57,7 @@ export function usePerformanceRiskContract({
   const workspaceRef = useRef(workspace);
   const summaryCacheRef = useRef<Map<string, WorkbenchRiskSummaryResponse>>(new Map());
   const concentrationCacheRef = useRef<Map<string, WorkbenchRiskConcentrationResponse>>(new Map());
+  const attributionCacheRef = useRef<Map<string, WorkbenchRiskAttributionResponse>>(new Map());
   const drawdownCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(new Map());
   const drawdownDetailCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(new Map());
   const rollingCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(new Map());
@@ -58,10 +65,12 @@ export function usePerformanceRiskContract({
   const requestSequenceRef = useRef(0);
   const drawdownDetailRequestSequenceRef = useRef(0);
   const rollingDetailRequestSequenceRef = useRef(0);
+  const attributionRequestSequenceRef = useRef(0);
   const [riskSummary, setRiskSummary] = useState<WorkbenchRiskSummaryResponse | null>(null);
   const [riskConcentration, setRiskConcentration] = useState<WorkbenchRiskConcentrationResponse | null>(
     null
   );
+  const [riskAttribution, setRiskAttribution] = useState<WorkbenchRiskAttributionResponse | null>(null);
   const [riskDrawdown, setRiskDrawdown] = useState<WorkbenchRiskDrawdownResponse | null>(null);
   const [riskDrawdownDetail, setRiskDrawdownDetail] = useState<WorkbenchRiskDrawdownResponse | null>(
     null
@@ -71,8 +80,11 @@ export function usePerformanceRiskContract({
     null
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isAttributionLoading, setIsAttributionLoading] = useState(false);
   const [isDrawdownDetailLoading, setIsDrawdownDetailLoading] = useState(false);
   const [isRollingDetailLoading, setIsRollingDetailLoading] = useState(false);
+  const [selectedAttributionType, setSelectedAttributionType] = useState("TOTAL_RISK");
+  const [selectedGroupingDimension, setSelectedGroupingDimension] = useState("SECTOR");
 
   useEffect(() => {
     workspaceRef.current = workspace;
@@ -204,11 +216,13 @@ export function usePerformanceRiskContract({
     if (isDetailsPending) {
       setRiskSummary(null);
       setRiskConcentration(null);
+      setRiskAttribution(null);
       setRiskDrawdown(null);
       setRiskDrawdownDetail(null);
       setRiskRolling(null);
       setRiskRollingDetail(null);
       setIsLoading(true);
+      setIsAttributionLoading(false);
       setIsDrawdownDetailLoading(false);
       setIsRollingDetailLoading(false);
       return;
@@ -349,6 +363,101 @@ export function usePerformanceRiskContract({
     workspace.portfolio.portfolio_id,
   ]);
 
+  const attributionKey = useMemo(
+    () =>
+      JSON.stringify({
+        portfolioId: workspace.portfolio.portfolio_id,
+        period,
+        detailBasis,
+        benchmark: workspace.benchmark_code ?? null,
+        asOfDate: workspace.as_of_date,
+        reportingCurrency: workspace.portfolio.base_currency,
+        attributionType: selectedAttributionType,
+        groupingDimension: selectedGroupingDimension,
+      }),
+    [
+      detailBasis,
+      period,
+      selectedAttributionType,
+      selectedGroupingDimension,
+      workspace.as_of_date,
+      workspace.benchmark_code,
+      workspace.portfolio.base_currency,
+      workspace.portfolio.portfolio_id,
+    ]
+  );
+
+  useEffect(() => {
+    setSelectedAttributionType("TOTAL_RISK");
+    setSelectedGroupingDimension("SECTOR");
+    setRiskAttribution(null);
+    setIsAttributionLoading(false);
+  }, [detailBasis, period, workspace.as_of_date, workspace.benchmark_code, workspace.portfolio.portfolio_id]);
+
+  const requestAttribution = (attributionType: string, groupingDimension: string) => {
+    if (isDetailsPending) {
+      return;
+    }
+    setSelectedAttributionType(attributionType);
+    setSelectedGroupingDimension(groupingDimension);
+  };
+
+  useEffect(() => {
+    if (isDetailsPending) {
+      return;
+    }
+    const cachedResponse = attributionCacheRef.current.get(attributionKey) ?? null;
+    if (cachedResponse) {
+      setRiskAttribution(cachedResponse);
+      setIsAttributionLoading(false);
+      return;
+    }
+    const requestId = attributionRequestSequenceRef.current + 1;
+    attributionRequestSequenceRef.current = requestId;
+    setIsAttributionLoading(true);
+    void getWorkbenchRiskAttributionClient(workspace.portfolio.portfolio_id, {
+      period,
+      detailBasis,
+      benchmark: workspace.benchmark_code ?? undefined,
+      asOfDate: workspace.as_of_date,
+      reportingCurrency: workspace.portfolio.base_currency,
+      attributionType: selectedAttributionType,
+      groupingDimension: selectedGroupingDimension,
+    })
+      .then((response) => {
+        if (attributionRequestSequenceRef.current !== requestId) {
+          return;
+        }
+        attributionCacheRef.current.set(attributionKey, response);
+        setRiskAttribution(response);
+        setIsAttributionLoading(false);
+      })
+      .catch(() => {
+        const unavailableResponse = buildUnavailableRiskAttribution({
+          workspace: workspaceRef.current,
+          period,
+          detail: "Risk attribution fetch failed.",
+        });
+        if (attributionRequestSequenceRef.current !== requestId) {
+          return;
+        }
+        attributionCacheRef.current.set(attributionKey, unavailableResponse);
+        setRiskAttribution(unavailableResponse);
+        setIsAttributionLoading(false);
+      });
+  }, [
+    attributionKey,
+    detailBasis,
+    isDetailsPending,
+    period,
+    selectedAttributionType,
+    selectedGroupingDimension,
+    workspace.as_of_date,
+    workspace.benchmark_code,
+    workspace.portfolio.base_currency,
+    workspace.portfolio.portfolio_id,
+  ]);
+
   const requestDrawdownDetail = () => {
     if (isDetailsPending) {
       return;
@@ -432,13 +541,16 @@ export function usePerformanceRiskContract({
   return {
     riskSummary,
     riskConcentration,
+    riskAttribution,
     riskDrawdown,
     riskDrawdownDetail,
     riskRolling,
     riskRollingDetail,
     isLoading,
+    isAttributionLoading,
     isDrawdownDetailLoading,
     isRollingDetailLoading,
+    requestAttribution,
     requestDrawdownDetail,
     requestRollingDetail,
   };

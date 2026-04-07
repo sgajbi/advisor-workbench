@@ -6,6 +6,7 @@ import {
   WorkbenchPerformanceHorizonComparison,
   WorkbenchRiskConcentrationResponse,
   WorkbenchRiskDrawdownResponse,
+  WorkbenchRiskAttributionResponse,
   WorkbenchRiskRollingResponse,
   WorkbenchRiskSummaryResponse,
   WorkbenchPerformanceWorkspaceDetails,
@@ -388,7 +389,11 @@ function buildRiskWorkspaceQuery(params: {
 
 function buildRiskWorkspaceUrl(
   portfolioId: string,
-  pathSuffix: "/risk/summary" | "/risk/concentration" | "/risk/drawdown",
+  pathSuffix:
+    | "/risk/summary"
+    | "/risk/concentration"
+    | "/risk/drawdown"
+    | "/risk/attribution",
   params: {
     period: string;
     detailBasis?: string;
@@ -491,6 +496,35 @@ export async function getWorkbenchRiskRollingClient(
   return await fetchWorkbenchJson<WorkbenchRiskRollingResponse>(
     buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/rolling`, query),
     "workbench risk rolling"
+  );
+}
+
+export async function getWorkbenchRiskAttributionClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    detailBasis: string;
+    benchmark?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
+    attributionType: string;
+    groupingDimension: string;
+  }
+): Promise<WorkbenchRiskAttributionResponse> {
+  const query = new URLSearchParams(
+    buildRiskWorkspaceQuery({
+      period: params.period,
+      detailBasis: params.detailBasis,
+      benchmark: params.benchmark,
+      asOfDate: params.asOfDate,
+      reportingCurrency: params.reportingCurrency,
+    })
+  );
+  query.set("attribution_type", params.attributionType);
+  query.set("grouping_dimension", params.groupingDimension);
+  return await fetchWorkbenchJson<WorkbenchRiskAttributionResponse>(
+    buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/attribution`, query),
+    "workbench risk attribution"
   );
 }
 

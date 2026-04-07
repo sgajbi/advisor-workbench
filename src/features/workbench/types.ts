@@ -750,6 +750,81 @@ export type WorkbenchRiskRollingResponse = {
   };
 };
 
+export type WorkbenchRiskAttributionTypeOption = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string | null;
+};
+
+export type WorkbenchRiskAttributionGroupingOption = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string | null;
+  supported_attribution_types: string[];
+};
+
+export type WorkbenchRiskAttributionContributor = {
+  group_key: string;
+  group_label: string;
+  weight_average?: number | null;
+  marginal_contribution?: number | null;
+  component_contribution?: number | null;
+  percent_contribution?: number | null;
+};
+
+export type WorkbenchRiskAttributionSet = {
+  attribution_type: string;
+  metric: string;
+  grouping_dimension: string;
+  total_value?: number | null;
+  reconciled_sum?: number | null;
+  residual?: number | null;
+  contributors: WorkbenchRiskAttributionContributor[];
+  quality_flags: string[];
+};
+
+export type WorkbenchRiskAttributionPeriodResult = {
+  key: string;
+  label: string;
+  start_date: string;
+  end_date: string;
+  attribution_sets: WorkbenchRiskAttributionSet[];
+  error?: string | null;
+};
+
+export type WorkbenchRiskAttributionControls = {
+  attribution_types: WorkbenchRiskAttributionTypeOption[];
+  grouping_dimensions: WorkbenchRiskAttributionGroupingOption[];
+  selected_attribution_type: string;
+  selected_grouping_dimension: string;
+};
+
+export type WorkbenchRiskAttributionResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    controls: WorkbenchRiskAttributionControls;
+    periods: WorkbenchRiskAttributionPeriodResult[];
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
 export type WorkbenchReportingSnapshot = {
   correlationId: string;
   contractVersion: string;

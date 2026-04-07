@@ -12,6 +12,7 @@ import { usePerformanceRiskContract } from "../use-performance-risk-contract";
 import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
+import RiskAttributionPanel from "./risk/risk-attribution-panel";
 import RiskProvenanceStrip from "./risk/risk-provenance-strip";
 import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
@@ -29,13 +30,16 @@ export default function PerformanceRiskMode({
   const {
     riskSummary,
     riskConcentration,
+    riskAttribution,
     riskDrawdown,
     riskDrawdownDetail,
     riskRolling,
     riskRollingDetail,
     isLoading,
+    isAttributionLoading,
     isDrawdownDetailLoading,
     isRollingDetailLoading,
+    requestAttribution,
     requestDrawdownDetail,
     requestRollingDetail,
   } = usePerformanceRiskContract({
@@ -57,10 +61,12 @@ export default function PerformanceRiskMode({
     isDetailsPending: isLoading,
     riskSummary,
     riskConcentration,
+    riskAttribution,
     riskDrawdown,
     riskDrawdownDetail,
     riskRolling,
     riskRollingDetail,
+    isAttributionLoading,
     isDrawdownDetailLoading,
     isRollingDetailLoading,
   });
@@ -135,6 +141,10 @@ export default function PerformanceRiskMode({
                     requestRollingDetail();
                   }
                 }}
+              />
+              <RiskAttributionPanel
+                viewModel={viewModel}
+                onSelectAttribution={requestAttribution}
               />
               <RiskConcentrationPanel viewModel={viewModel} />
             </div>

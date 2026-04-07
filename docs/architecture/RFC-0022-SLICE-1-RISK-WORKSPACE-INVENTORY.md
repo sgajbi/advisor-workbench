@@ -14,7 +14,7 @@ The approved RFC-0022 v1 direction is:
 3. allow concentration simulation only when tied to an explicit sandbox/session context,
 4. route all Workbench risk reads through Gateway BFF contracts,
 5. remove the old Gateway `/analytics/workbench/risk-proxy` path instead of wrapping it,
-6. block `ACTIVE_RISK` attribution until benchmark exposure-history supportability proves readiness.
+6. expose only supported `ACTIVE_RISK` attribution dimensions and explicitly block unsupported combinations.
 
 ## lotus-risk Baseline
 
@@ -44,7 +44,7 @@ Available canonical `lotus-risk` routes for the Workbench Risk BFF:
 | Drawdown | `POST /analytics/risk/drawdown` | stateful only |
 | Rolling Risk | `POST /analytics/risk/rolling-metrics` | stateful only |
 | Concentration | `POST /analytics/risk/concentration` | stateful; simulation only with sandbox/session |
-| Historical Risk Attribution | `POST /analytics/risk/historical-attribution` | stateful `TOTAL_RISK`; `ACTIVE_RISK` supportability-gated |
+| Historical Risk Attribution | `POST /analytics/risk/historical-attribution` | stateful `TOTAL_RISK`; stateful `ACTIVE_RISK` for `POSITION`, `SECTOR`, `ASSET_CLASS`; `ISSUER` gated |
 | Capabilities | `GET /integration/capabilities` | Gateway capability aggregation |
 
 Legacy route status:

@@ -496,6 +496,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
     expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
     expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+    expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
+      "Technology"
+    );
     expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
     expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
       "Issuer Coverage"
@@ -513,6 +516,11 @@ describe("PerformanceAnalyticsPage", () => {
         input
           .toString()
           .includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/concentration")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution")
       )
     ).toBe(true);
     expect(
@@ -541,6 +549,28 @@ describe("PerformanceAnalyticsPage", () => {
           )
       )
     ).toBe(true);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution") &&
+          input.toString().includes("attribution_type=ACTIVE_RISK") &&
+          input.toString().includes("grouping_dimension=SECTOR")
+        )
+      ).toBe(true);
+    });
+    fireEvent.click(screen.getByRole("tab", { name: "Asset Class" }));
+
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution") &&
+          input.toString().includes("attribution_type=ACTIVE_RISK") &&
+          input.toString().includes("grouping_dimension=ASSET_CLASS")
+        )
+      ).toBe(true);
+    });
   });
 
   it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {

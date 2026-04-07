@@ -12,6 +12,7 @@ import {
   type PerformancePresentationScenario,
 } from "./performance-workspace-fixtures";
 import {
+  buildFixtureRiskAttribution,
   buildFixtureRiskConcentration,
   buildFixtureRiskDrawdown,
   buildFixtureRiskRolling,
@@ -182,6 +183,26 @@ function buildRiskRollingResponse(
   });
 }
 
+function buildRiskAttributionResponse(
+  portfolioId: string,
+  options?: PerformanceFixtureOptions,
+  attributionType: "TOTAL_RISK" | "ACTIVE_RISK" = "TOTAL_RISK",
+  groupingDimension: "POSITION" | "SECTOR" | "ASSET_CLASS" | "ISSUER" = "SECTOR"
+) {
+  const scenario = options
+    ? buildBenchmarkUnassignedPerformanceScenario()
+    : buildSupportedPerformanceScenario();
+  const workspace = {
+    ...scenario.workspace,
+    portfolio_id: portfolioId,
+    portfolio: { ...scenario.workspace.portfolio, portfolio_id: portfolioId },
+  };
+  return buildFixtureRiskAttribution(workspace, workspace.period, workspace.detail_basis, {
+    attributionType,
+    groupingDimension,
+  });
+}
+
 export function installPerformancePageFetchMock(options?: PerformanceFixtureOptions) {
   vi.stubGlobal(
     "fetch",
@@ -236,6 +257,24 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
         return {
           ok: true,
           json: async () => buildRiskConcentrationResponse("DEMO_ADV_USD_001", options),
+        } as Response;
+      }
+      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution")) {
+        return {
+          ok: true,
+          json: async () =>
+            buildRiskAttributionResponse(
+              "DEMO_ADV_USD_001",
+              options,
+              url.includes("attribution_type=ACTIVE_RISK") ? "ACTIVE_RISK" : "TOTAL_RISK",
+              url.includes("grouping_dimension=ASSET_CLASS")
+                ? "ASSET_CLASS"
+                : url.includes("grouping_dimension=ISSUER")
+                  ? "ISSUER"
+                  : url.includes("grouping_dimension=POSITION")
+                    ? "POSITION"
+                    : "SECTOR"
+            ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/drawdown")) {
@@ -356,6 +395,24 @@ export function installPerformancePageFetchScenario(
         return {
           ok: true,
           json: async () => buildFixtureRiskConcentration(workspace, workspace.period),
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/attribution`)) {
+        return {
+          ok: true,
+          json: async () =>
+            buildFixtureRiskAttribution(workspace, workspace.period, workspace.detail_basis, {
+              attributionType: url.includes("attribution_type=ACTIVE_RISK")
+                ? "ACTIVE_RISK"
+                : "TOTAL_RISK",
+              groupingDimension: url.includes("grouping_dimension=ASSET_CLASS")
+                ? "ASSET_CLASS"
+                : url.includes("grouping_dimension=ISSUER")
+                  ? "ISSUER"
+                  : url.includes("grouping_dimension=POSITION")
+                    ? "POSITION"
+                    : "SECTOR",
+            }),
         } as Response;
       }
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/drawdown`)) {

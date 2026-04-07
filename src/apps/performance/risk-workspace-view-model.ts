@@ -1,5 +1,6 @@
 import type {
   WorkbenchPerformanceWorkspace,
+  WorkbenchRiskAttributionResponse,
   WorkbenchRiskConcentrationResponse,
   WorkbenchRiskDrawdownResponse,
   WorkbenchRiskDrawdownSummary,
@@ -97,6 +98,39 @@ export type PerformanceRiskViewModel = {
   }>;
   rollingQualityFlags: string[];
   rollingDetailState: "idle" | "loading" | "ready" | "unavailable";
+  attributionControls: {
+    selectedAttributionType: string;
+    selectedGroupingDimension: string;
+    attributionTypes: Array<{
+      key: string;
+      label: string;
+      disabled: boolean;
+      reason?: string | null;
+    }>;
+    groupingDimensions: Array<{
+      key: string;
+      label: string;
+      disabled: boolean;
+      reason?: string | null;
+    }>;
+  } | null;
+  attributionRows: Array<{
+    key: string;
+    group: string;
+    avgWeight: string;
+    marginalContribution: string;
+    componentContribution: string;
+    contributionShare: string;
+  }>;
+  attributionTotals: {
+    metric: string;
+    totalValue: string;
+    reconciledSum: string;
+    residual: string;
+    support: string;
+  } | null;
+  attributionState: "idle" | "loading" | "ready" | "blocked" | "unavailable";
+  attributionWarnings: string[];
   supportability: Array<{
     key: string;
     label: string;
@@ -115,10 +149,12 @@ export type BuildPerformanceRiskViewModelOptions = {
   isDetailsPending?: boolean;
   riskSummary?: WorkbenchRiskSummaryResponse | null;
   riskConcentration?: WorkbenchRiskConcentrationResponse | null;
+  riskAttribution?: WorkbenchRiskAttributionResponse | null;
   riskDrawdown?: WorkbenchRiskDrawdownResponse | null;
   riskDrawdownDetail?: WorkbenchRiskDrawdownResponse | null;
   riskRolling?: WorkbenchRiskRollingResponse | null;
   riskRollingDetail?: WorkbenchRiskRollingResponse | null;
+  isAttributionLoading?: boolean;
   isDrawdownDetailLoading?: boolean;
   isRollingDetailLoading?: boolean;
 };
@@ -132,10 +168,12 @@ export function buildPerformanceRiskViewModel({
   isDetailsPending = false,
   riskSummary,
   riskConcentration,
+  riskAttribution,
   riskDrawdown,
   riskDrawdownDetail,
   riskRolling,
   riskRollingDetail,
+  isAttributionLoading = false,
   isDrawdownDetailLoading = false,
   isRollingDetailLoading = false,
 }: BuildPerformanceRiskViewModelOptions): PerformanceRiskViewModel {
@@ -158,6 +196,7 @@ export function buildPerformanceRiskViewModel({
       period,
       detail: "Risk concentration is not available from the Gateway BFF.",
     });
+  const attribution = riskAttribution ?? null;
   const drawdown =
     riskDrawdown ??
     buildUnavailableRiskDrawdown({
@@ -182,12 +221,14 @@ export function buildPerformanceRiskViewModel({
   const supportability = [
     ...mapSupportabilityGroup("summary", summary.supportability),
     ...mapSupportabilityGroup("concentration", concentration.supportability),
+    ...mapSupportabilityGroup("attribution", attribution?.supportability ?? []),
     ...mapSupportabilityGroup("drawdown", drawdown.supportability),
     ...mapSupportabilityGroup("rolling", rolling.supportability),
   ];
   const hasPayload = Boolean(
     summary.payload?.periods.length ||
       concentration.payload ||
+      attribution?.payload?.periods.length ||
       drawdown.payload?.periods.length ||
       rolling.payload?.periods.length
   );
@@ -226,6 +267,11 @@ export function buildPerformanceRiskViewModel({
       rollingDetail,
       isRollingDetailLoading,
     }),
+    attributionControls: mapAttributionControls(attribution),
+    attributionRows: mapAttributionRows(attribution),
+    attributionTotals: mapAttributionTotals(attribution),
+    attributionState: resolveAttributionState({ attribution, isAttributionLoading }),
+    attributionWarnings: attribution?.warnings ?? [],
     supportability: supportability.map((item) => ({
       key: item.key,
       label: item.label,
@@ -242,12 +288,14 @@ export function buildPerformanceRiskViewModel({
     warnings: [
       ...summary.warnings,
       ...concentration.warnings,
+      ...(attribution?.warnings ?? []),
       ...drawdown.warnings,
       ...rolling.warnings,
     ],
     partialFailures: [
       ...summary.partial_failures.map((failure) => failure.detail),
       ...concentration.partial_failures.map((failure) => failure.detail),
+      ...(attribution?.partial_failures.map((failure) => failure.detail) ?? []),
       ...drawdown.partial_failures.map((failure) => failure.detail),
       ...rolling.partial_failures.map((failure) => failure.detail),
     ],
@@ -618,6 +666,212 @@ export function buildFixtureRiskRolling(
   };
 }
 
+export function buildFixtureRiskAttribution(
+  workspace: WorkbenchPerformanceWorkspace,
+  period: string,
+  detailBasis: string,
+  options?: {
+    attributionType?: "TOTAL_RISK" | "ACTIVE_RISK";
+    groupingDimension?: "POSITION" | "SECTOR" | "ASSET_CLASS" | "ISSUER";
+  }
+): WorkbenchRiskAttributionResponse {
+  const attributionType = options?.attributionType ?? "TOTAL_RISK";
+  const groupingDimension = options?.groupingDimension ?? "SECTOR";
+  const activeRiskReady = Boolean(workspace.benchmark_code);
+  const issuerBlocked = attributionType === "ACTIVE_RISK" && groupingDimension === "ISSUER";
+  const blockedWithoutBenchmark = attributionType === "ACTIVE_RISK" && !workspace.benchmark_code;
+  const state = issuerBlocked || blockedWithoutBenchmark ? "blocked" : "ready";
+  const contributors =
+    groupingDimension === "ASSET_CLASS"
+      ? [
+          {
+            group_key: "EQUITY",
+            group_label: "Equity",
+            weight_average: 0.62,
+            marginal_contribution: 0.018,
+            component_contribution: 0.016,
+            percent_contribution: 0.47,
+          },
+          {
+            group_key: "FIXED_INCOME",
+            group_label: "Fixed Income",
+            weight_average: 0.24,
+            marginal_contribution: 0.011,
+            component_contribution: 0.009,
+            percent_contribution: 0.26,
+          },
+        ]
+      : [
+          {
+            group_key: "SECTOR_TECH",
+            group_label: "Technology",
+            weight_average: 0.41,
+            marginal_contribution: 0.019,
+            component_contribution: 0.017,
+            percent_contribution: 0.41,
+          },
+          {
+            group_key: "SECTOR_HEALTH",
+            group_label: "Healthcare",
+            weight_average: 0.18,
+            marginal_contribution: 0.008,
+            component_contribution: 0.006,
+            percent_contribution: 0.15,
+          },
+        ];
+  const supportability: NonNullable<WorkbenchRiskAttributionResponse["supportability"]> = [
+    {
+      key: "portfolio_returns",
+      label: "Portfolio returns",
+      state: "ready",
+      source_service: "lotus-risk",
+    },
+    {
+      key: "exposure_history",
+      label: "Exposure history",
+      state: "ready",
+      source_service: "lotus-core",
+    },
+    ...(attributionType === "ACTIVE_RISK"
+      ? [
+          {
+            key: "benchmark_returns",
+            label: "Benchmark returns",
+            state: workspace.benchmark_code ? ("ready" as const) : ("blocked" as const),
+            reason: workspace.benchmark_code ? null : "Active risk requires benchmark context.",
+            source_service: "lotus-performance",
+          },
+          {
+            key: "benchmark_exposure_context",
+            label: "Benchmark exposure context",
+            state:
+              groupingDimension === "ISSUER"
+                ? ("blocked" as const)
+                : workspace.benchmark_code
+                  ? ("ready" as const)
+                  : ("blocked" as const),
+            reason:
+              groupingDimension === "ISSUER"
+                ? "Issuer benchmark exposure semantics are not available."
+                : workspace.benchmark_code
+                  ? null
+                  : "Active risk requires benchmark context.",
+            source_service: "lotus-performance",
+          },
+        ]
+      : [
+          {
+            key: "benchmark_exposure_context",
+            label: "Benchmark exposure context",
+            state: groupingDimension === "ISSUER" ? ("partial" as const) : ("ready" as const),
+            reason:
+              groupingDimension === "ISSUER"
+                ? "Issuer benchmark exposure semantics remain unavailable for active-risk decomposition."
+                : null,
+            source_service: "lotus-performance",
+          },
+        ]),
+  ];
+
+  return {
+    correlation_id: "fixture-risk-attribution",
+    contract_version: "risk-workspace.v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    period,
+    as_of_date: workspace.as_of_date,
+    benchmark_code: workspace.benchmark_code,
+    source_service: "lotus-risk",
+    state,
+    payload: {
+      controls: {
+        attribution_types: [
+          { key: "TOTAL_RISK", label: "Total Risk", state: "ready", reason: null },
+          {
+            key: "ACTIVE_RISK",
+            label: "Active Risk",
+            state: activeRiskReady ? "ready" : "blocked",
+            reason: activeRiskReady ? null : "Active risk requires benchmark context.",
+          },
+        ],
+        grouping_dimensions: [
+          {
+            key: "POSITION",
+            label: "Position",
+            state: "ready",
+            reason: null,
+            supported_attribution_types: activeRiskReady
+              ? ["TOTAL_RISK", "ACTIVE_RISK"]
+              : ["TOTAL_RISK"],
+          },
+          {
+            key: "SECTOR",
+            label: "Sector",
+            state: "ready",
+            reason: null,
+            supported_attribution_types: activeRiskReady
+              ? ["TOTAL_RISK", "ACTIVE_RISK"]
+              : ["TOTAL_RISK"],
+          },
+          {
+            key: "ASSET_CLASS",
+            label: "Asset Class",
+            state: "ready",
+            reason: null,
+            supported_attribution_types: activeRiskReady
+              ? ["TOTAL_RISK", "ACTIVE_RISK"]
+              : ["TOTAL_RISK"],
+          },
+          {
+            key: "ISSUER",
+            label: "Issuer",
+            state: attributionType === "TOTAL_RISK" ? "partial" : "blocked",
+            reason:
+              attributionType === "TOTAL_RISK"
+                ? "Issuer is supported for total risk only."
+                : "Active risk by issuer remains unavailable until benchmark issuer exposure semantics are approved.",
+            supported_attribution_types: ["TOTAL_RISK"],
+          },
+        ],
+        selected_attribution_type: attributionType,
+        selected_grouping_dimension: groupingDimension,
+      },
+      periods:
+        state === "ready"
+          ? [
+              {
+                key: period,
+                label: period,
+                start_date: workspace.report_start_date,
+                end_date: workspace.report_end_date,
+                attribution_sets: [
+                  {
+                    attribution_type: attributionType,
+                    metric: attributionType === "ACTIVE_RISK" ? "TRACKING_ERROR" : "VOLATILITY",
+                    grouping_dimension: groupingDimension,
+                    total_value: attributionType === "ACTIVE_RISK" ? 0.034 : 0.121,
+                    reconciled_sum: attributionType === "ACTIVE_RISK" ? 0.033 : 0.119,
+                    residual: attributionType === "ACTIVE_RISK" ? 0.001 : 0.002,
+                    contributors,
+                    quality_flags: [],
+                  },
+                ],
+                error: null,
+              },
+            ]
+          : [],
+    },
+    supportability,
+    warnings: state === "ready" ? [] : ["RISK_ATTRIBUTION_BLOCKED"],
+    partial_failures: [],
+    metadata: {
+      generated_at: workspace.as_of_date,
+      input_mode: "stateful",
+      methodology_version: `historical_attribution.fixture.${detailBasis.toLowerCase()}.v1`,
+      cache_status: "bypass",
+    },
+  };
+}
+
 export function buildUnavailableRiskSummary({
   workspace,
   period,
@@ -788,6 +1042,46 @@ export function buildUnavailableRiskRolling({
   };
 }
 
+export function buildUnavailableRiskAttribution({
+  workspace,
+  period,
+  detail,
+}: {
+  workspace: WorkbenchPerformanceWorkspace;
+  period: string;
+  detail: string;
+}): WorkbenchRiskAttributionResponse {
+  return {
+    correlation_id: "risk-attribution-unavailable",
+    contract_version: "risk-workspace.v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    period,
+    as_of_date: workspace.as_of_date,
+    benchmark_code: workspace.benchmark_code,
+    source_service: "lotus-risk",
+    state: "unavailable",
+    payload: null,
+    supportability: [
+      {
+        key: "risk_attribution",
+        label: "Historical risk attribution",
+        state: "unavailable",
+        reason: detail,
+        source_service: "lotus-risk",
+      },
+    ],
+    warnings: ["RISK_ATTRIBUTION_UNAVAILABLE"],
+    partial_failures: [
+      { source_service: "risk", error_code: "RISK_ATTRIBUTION_UNAVAILABLE", detail },
+    ],
+    metadata: {
+      generated_at: workspace.as_of_date,
+      input_mode: "stateful",
+      cache_status: "miss",
+    },
+  };
+}
+
 function buildStateViewModel(
   workspace: WorkbenchPerformanceWorkspace,
   period: string,
@@ -820,6 +1114,11 @@ function buildStateViewModel(
     rollingWindows: [],
     rollingQualityFlags: [],
     rollingDetailState: "idle",
+    attributionControls: null,
+    attributionRows: [],
+    attributionTotals: null,
+    attributionState: "idle",
+    attributionWarnings: [],
     supportability: [
       {
         key: "risk_bff",
@@ -1351,11 +1650,84 @@ function resolveMetricState(state: WorkbenchRiskModuleState): PerformanceRiskSta
 }
 
 function mapSupportabilityGroup(
-  group: "summary" | "concentration" | "drawdown" | "rolling",
+  group: "summary" | "concentration" | "attribution" | "drawdown" | "rolling",
   items: PerformanceRiskViewModel["supportability"]
 ) {
   return items.map((item) => ({
     ...item,
     key: `${group}:${item.key}`,
   }));
+}
+
+function mapAttributionControls(response: WorkbenchRiskAttributionResponse | null) {
+  if (!response?.payload) {
+    return null;
+  }
+  return {
+    selectedAttributionType: response.payload.controls.selected_attribution_type,
+    selectedGroupingDimension: response.payload.controls.selected_grouping_dimension,
+    attributionTypes: response.payload.controls.attribution_types.map((option) => ({
+      key: option.key,
+      label: option.label,
+      disabled: option.state !== "ready",
+      reason: option.reason,
+    })),
+    groupingDimensions: response.payload.controls.grouping_dimensions.map((option) => ({
+      key: option.key,
+      label: option.label,
+      disabled: option.state === "blocked" || option.state === "unavailable",
+      reason: option.reason,
+    })),
+  };
+}
+
+function mapAttributionRows(response: WorkbenchRiskAttributionResponse | null) {
+  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
+  if (!selectedSet) {
+    return [];
+  }
+  return selectedSet.contributors.map((contributor) => ({
+    key: contributor.group_key,
+    group: contributor.group_label,
+    avgWeight: formatPercent((contributor.weight_average ?? 0) * 100),
+    marginalContribution: formatPercent((contributor.marginal_contribution ?? 0) * 100),
+    componentContribution: formatPercent((contributor.component_contribution ?? 0) * 100),
+    contributionShare: formatPercent((contributor.percent_contribution ?? 0) * 100),
+  }));
+}
+
+function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null) {
+  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
+  if (!selectedSet) {
+    return null;
+  }
+  return {
+    metric: `${selectedSet.attribution_type.replaceAll("_", " ")} • ${selectedSet.metric.replaceAll("_", " ")}`,
+    totalValue: formatPercent((selectedSet.total_value ?? 0) * 100),
+    reconciledSum: formatPercent((selectedSet.reconciled_sum ?? 0) * 100),
+    residual: formatPercent((selectedSet.residual ?? 0) * 100),
+    support: selectedSet.grouping_dimension.replaceAll("_", " "),
+  };
+}
+
+function resolveAttributionState({
+  attribution,
+  isAttributionLoading,
+}: {
+  attribution: WorkbenchRiskAttributionResponse | null;
+  isAttributionLoading: boolean;
+}): "idle" | "loading" | "ready" | "blocked" | "unavailable" {
+  if (isAttributionLoading) {
+    return "loading";
+  }
+  if (!attribution) {
+    return "idle";
+  }
+  if (attribution.state === "blocked") {
+    return "blocked";
+  }
+  if (attribution.state === "unavailable") {
+    return "unavailable";
+  }
+  return "ready";
 }

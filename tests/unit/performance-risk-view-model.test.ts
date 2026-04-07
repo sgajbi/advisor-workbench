@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildFixtureRiskAttribution,
   buildFixtureRiskConcentration,
   buildFixtureRiskDrawdown,
   buildFixtureRiskRolling,
@@ -19,6 +20,7 @@ describe("buildPerformanceRiskViewModel", () => {
       detailBasis: "NET",
       riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskAttribution: buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
       riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
       riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     });
@@ -46,6 +48,9 @@ describe("buildPerformanceRiskViewModel", () => {
       "summary:risk_free_series",
       "concentration:portfolio_positions",
       "concentration:issuer_enrichment",
+      "attribution:portfolio_returns",
+      "attribution:exposure_history",
+      "attribution:benchmark_exposure_context",
       "drawdown:portfolio_returns",
       "drawdown:benchmark_relative_drawdown",
       "drawdown:underwater_series",
@@ -76,6 +81,10 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
+    expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
+    expect(viewModel.attributionRows[0]).toMatchObject({
+      group: "Technology",
+    });
     expect(viewModel.rollingQualityFlags).toContain(
       "metric:ROLLING_BETA:benchmark_variance_zero"
     );
@@ -90,6 +99,10 @@ describe("buildPerformanceRiskViewModel", () => {
       detailBasis: "NET",
       riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskAttribution: buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
+        attributionType: "ACTIVE_RISK",
+        groupingDimension: "SECTOR",
+      }),
       riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
         includeBenchmarkRelative: false,
       }),
@@ -106,6 +119,10 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.drawdownRelativeMetric).toMatchObject({
       value: "N/A",
       support: "Benchmark-relative drawdown requires benchmark context.",
+    });
+    expect(viewModel.attributionControls?.attributionTypes[1]).toMatchObject({
+      key: "ACTIVE_RISK",
+      disabled: true,
     });
   });
 
@@ -161,6 +178,10 @@ describe("buildPerformanceRiskViewModel", () => {
       detailBasis: "NET",
       riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskAttribution: buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
+        attributionType: "ACTIVE_RISK",
+        groupingDimension: "ISSUER",
+      }),
       riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
       riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
       riskRollingDetail: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
@@ -176,5 +197,7 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingWindows[0]?.seriesRows[0]?.values.ROLLING_VOLATILITY).toMatch(
       /%$/
     );
+    expect(viewModel.attributionState).toBe("blocked");
+    expect(viewModel.attributionTotals).toBeNull();
   });
 });
