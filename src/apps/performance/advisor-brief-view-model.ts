@@ -716,9 +716,11 @@ function normalizeAdvisorTargetMode(targetMode: string): PerformanceWorkspaceMod
     ? "analysis"
     : targetMode === "advisor"
       ? "advisor"
-      : targetMode === "evidence"
-        ? "evidence"
-        : "summary";
+      : targetMode === "risk"
+        ? "risk"
+        : targetMode === "evidence"
+          ? "evidence"
+          : "summary";
 }
 
 function normalizeSupportabilityTone(

@@ -32,6 +32,7 @@ vi.mock("next/dynamic", () => ({
 
 const summaryModeMock = vi.fn((_: unknown) => <div>Summary Mode Panel</div>);
 const analysisModeMock = vi.fn((_: unknown) => <div>Analysis Mode Panel</div>);
+const riskModeMock = vi.fn((_: unknown) => <div>Risk Mode Panel</div>);
 const evidenceModeMock = vi.fn((_: unknown) => <div>Evidence Mode Panel</div>);
 
 vi.mock("../../src/apps/performance/components/performance-summary-mode", () => ({
@@ -40,6 +41,10 @@ vi.mock("../../src/apps/performance/components/performance-summary-mode", () => 
 
 vi.mock("../../src/apps/performance/components/performance-analysis-mode", () => ({
   default: (props: unknown) => analysisModeMock(props),
+}));
+
+vi.mock("../../src/apps/performance/components/performance-risk-mode", () => ({
+  default: (props: unknown) => riskModeMock(props),
 }));
 
 vi.mock("../../src/apps/performance/components/performance-evidence-mode", () => ({
@@ -71,6 +76,7 @@ describe("PerformanceWorkspaceView", () => {
 
     expect(summaryModeMock).toHaveBeenCalledTimes(1);
     expect(analysisModeMock).not.toHaveBeenCalled();
+    expect(riskModeMock).not.toHaveBeenCalled();
     expect(evidenceModeMock).not.toHaveBeenCalled();
     expect(document.querySelector(".workbench-deferred-placeholder")).toBeFalsy();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
@@ -163,7 +169,7 @@ describe("PerformanceWorkspaceView", () => {
     );
   });
 
-  it("switches between summary, analysis, and evidence modes", async () => {
+  it("switches between summary, analysis, risk, and evidence modes", async () => {
     const scenario = buildSupportedPerformanceScenario();
 
     render(
@@ -202,6 +208,7 @@ describe("PerformanceWorkspaceView", () => {
       selectedBenchmarkCode: scenario.workspace.benchmark_code,
     });
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Risk Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
@@ -220,10 +227,23 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("tab", { name: "Risk" }));
+    await waitFor(() => {
+      expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
+    });
+    expect(riskModeMock).toHaveBeenCalled();
+    expect(riskModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
+      workspace: scenario.workspace,
+      chartFrequency: "monthly",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+    });
+    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
     expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
-    expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
+    expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
   });
 });

@@ -3536,6 +3536,26 @@ a:hover {
   }
 }
 
+@media (max-width: 1100px) {
+  .performance-risk-grid,
+  .performance-risk-context-grid,
+  .performance-risk-metric-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-risk-status-bar {
+    justify-items: start;
+  }
+
+  .performance-risk-status-items {
+    justify-content: flex-start;
+  }
+
+  .performance-risk-status-note {
+    text-align: left;
+  }
+}
+
 .portfolio-header-context-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4526,7 +4546,8 @@ a:hover {
 .performance-lotus-stage-chart::before,
 .performance-lotus-stage-secondary::before,
 .performance-lotus-stage-analysis::before,
-.performance-lotus-stage-evidence::before {
+.performance-lotus-stage-evidence::before,
+.performance-risk-shell::before {
   content: "";
   position: absolute;
   left: 0;
@@ -4998,6 +5019,139 @@ a:hover {
 
 .performance-advisor-brief-stage {
   width: 100%;
+}
+
+.performance-risk-stage {
+  width: 100%;
+}
+
+.performance-risk-shell.section-block {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  background:
+    linear-gradient(180deg, rgba(241, 245, 249, 0.9) 0%, rgba(255, 255, 255, 1) 18%),
+    #ffffff;
+  overflow: hidden;
+}
+
+.performance-risk-status-bar {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.performance-risk-status-items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.performance-risk-status-note {
+  max-width: 44ch;
+  text-align: right;
+}
+
+.performance-risk-context-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.performance-risk-context-item {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.performance-risk-synopsis {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(87, 121, 157, 0.18);
+  border-radius: 12px;
+  background: rgba(247, 250, 252, 0.82);
+}
+
+.performance-risk-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.34fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.performance-risk-main-column,
+.performance-risk-side-rail {
+  display: grid;
+  gap: 1rem;
+}
+
+.performance-risk-panel.section-block {
+  box-shadow: none;
+}
+
+.performance-risk-panel .section-block-body {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.performance-risk-metric-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.performance-risk-supportability-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.performance-risk-supportability-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.performance-risk-supportability-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.performance-risk-provenance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  color: var(--text-muted);
+}
+
+.performance-risk-provenance-item {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-risk-provenance-item strong {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.performance-risk-partial-failure-row {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(202, 138, 4, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 251, 235, 0.72);
 }
 
 .performance-advisor-brief-shell {

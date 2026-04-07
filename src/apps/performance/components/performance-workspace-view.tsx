@@ -18,6 +18,7 @@ import PerformanceWorkspaceModeSwitch, {
   type PerformanceWorkspaceMode,
 } from "./performance-workspace-mode-switch";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
+import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import type {
   PerformanceWorkspaceControls,
@@ -129,6 +130,12 @@ export default function PerformanceWorkspaceView({
       {...controls}
       capabilities={capabilities!}
       onSelectMode={setMode}
+    />
+  ) : mode === "risk" ? (
+    <PerformanceRiskMode
+      workspace={workspace}
+      {...controls}
+      capabilities={capabilities!}
     />
   ) : (
     <DeferredWorkbenchMount

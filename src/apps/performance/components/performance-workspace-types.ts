@@ -109,6 +109,11 @@ export type PerformanceAdvisorBriefModeProps = PerformanceWorkspaceControls & {
   onSelectMode: (mode: PerformanceWorkspaceMode) => void;
 };
 
+export type PerformanceRiskModeProps = PerformanceWorkspaceControls & {
+  workspace: WorkbenchPerformanceWorkspace;
+  capabilities: PerformanceWorkspaceCapabilities;
+};
+
 export type PerformanceWorkspaceViewProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   period: string;

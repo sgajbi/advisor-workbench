@@ -485,6 +485,31 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
   });
 
+  it("shows Risk as a stateful fixture-backed mode without browser calls to raw lotus-risk APIs", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Risk" }));
+
+    expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
+      "Issuer Coverage"
+    );
+    expect(screen.getByLabelText("Risk support rail")).toHaveTextContent("Risk-free series");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(
+      fetchMock.mock.calls.some(([input]) => input.toString().includes("/analytics/risk/"))
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(([input]) => input.toString().includes("lotus-risk"))
+    ).toBe(false);
+  });
+
   it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {
     installPerformancePageFetchScenario(buildNormalizedControlsPerformanceScenario());
 
