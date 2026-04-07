@@ -1,6 +1,6 @@
 # RFC-0022: Stateful Risk Workspace and lotus-risk UI Integration
 
-- Status: APPROVED
+- Status: IMPLEMENTED
 - Date: 2026-04-07
 - Owners:
   - lotus-workbench maintainers
@@ -59,7 +59,8 @@ Approval should be treated as approval for these hard decisions:
 2. Workbench surfaces only stateful risk execution, except sandbox-linked concentration simulation.
 3. Gateway owns the front-office Risk BFF contract.
 4. The old Gateway `/analytics/workbench/risk-proxy` integration is removed, not wrapped.
-5. `ACTIVE_RISK` attribution is blocked until benchmark exposure-history supportability is proven.
+5. `ACTIVE_RISK` attribution is available only where upstream support exists; `ISSUER` remains
+   explicitly blocked.
 6. Each risk module is delivered as an independently testable slice using RFC-0021 shared primitives.
 
 Approval should not be treated as approval for:
@@ -211,7 +212,7 @@ Allowed execution modes by panel:
 | Drawdown | stateful | Benchmark-relative summary only when supportability allows it. |
 | Rolling Risk | stateful | Risk-free and benchmark-dependent metrics are supportability-gated. |
 | Concentration | stateful by default; simulation when sandbox session exists | Simulation is allowed only for concentration because `lotus-risk` supports it. |
-| Historical Risk Attribution | stateful `TOTAL_RISK` first | `ACTIVE_RISK` must remain gated until benchmark exposure history is available. |
+| Historical Risk Attribution | stateful | `TOTAL_RISK` is available across supported groupings; `ACTIVE_RISK` is available for `POSITION`, `SECTOR`, and `ASSET_CLASS`, while `ISSUER` remains blocked. |
 
 ## Architectural Principles
 
@@ -770,7 +771,8 @@ Acceptance:
 1. stakeholders approve stateful-only UI scope,
 2. stakeholders approve removal of the legacy Gateway risk-proxy path,
 3. stakeholders approve Performance `Risk` mode placement.
-4. stakeholders accept that `ACTIVE_RISK` remains blocked unless supportability proves readiness.
+4. stakeholders accept that `ACTIVE_RISK` is surfaced only for supported grouping dimensions and
+   remains blocked for `ISSUER`.
 
 ### Slice 2: Gateway legacy risk-proxy removal
 
@@ -1183,6 +1185,35 @@ Acceptance:
 5. RFC status can move from `PROPOSED` to `IMPLEMENTED`,
 6. all affected repos are left on clean branches after merge.
 
+Status: completed on 2026-04-07.
+
+Slice 10 evidence:
+
+1. Gateway removed the legacy `WorkbenchRiskProxy` type from the monolithic workbench analytics
+   contract and stopped serializing `risk_proxy` on `/api/v1/workbench/{portfolioId}/analytics`.
+2. Workbench removed the legacy analytics `risk_proxy` field from `src/features/workbench/types.ts`
+   and replaced the old `Decision Readiness` concentration signal with a canonical `Open Risk`
+   drilldown into `/performance?portfolioId=...&mode=risk`.
+3. Gateway strengthened `tests/unit/test_rfc0022_risk_proxy_guard.py` so the deleted legacy
+   contract type cannot be reintroduced silently.
+4. Workbench added a focused architecture guard proving the legacy workbench analytics contract and
+   old workbench page no longer depend on removed `risk_proxy` fields.
+5. Operator notes were added in `docs/operations/risk-workspace-supportability.md`, covering:
+   - stateful-only execution rules,
+   - first-paint versus on-demand module behavior,
+   - the final active-risk attribution support matrix,
+   - the explicit removal of the legacy workbench analytics `risk_proxy` field.
+6. Validation:
+   - `lotus-gateway`: `python -m pytest tests/unit/test_workbench_service.py tests/unit/test_workbench_service_additional.py tests/unit/test_rfc0022_risk_proxy_guard.py tests/integration/test_workbench_router.py -q`
+   - `lotus-gateway`: `python -m ruff check src tests`
+   - `lotus-workbench`: `npm test -- --run tests/unit/decision-readiness-panel.test.tsx tests/unit/workbench-api.test.ts tests/unit/rfc0022-risk-architecture-guard.test.ts tests/integration/workbench-page.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `lotus-workbench`: `npm run lint`
+   - `lotus-workbench`: `npm run typecheck`
+7. Canonical local live probes were attempted against `gateway.dev.lotus` and
+   `workbench.dev.lotus`; the environment returned `404` and `502`, so slice closure relies on the
+   green contract, integration, lint, and typecheck evidence rather than a healthy local stack
+   probe.
+
 ## UI Quality Bar
 
 The Risk Workspace must feel:
@@ -1258,7 +1289,8 @@ Target latency posture:
 1. Gateway BFF contract is mandatory before live UI integration,
 2. initial UI shell can be fixture-backed but must match Gateway-shaped contracts,
 3. heavy modules are lazy or detail-on-demand,
-4. active-risk attribution is supportability-gated,
+4. active-risk attribution follows the upstream support matrix and keeps unsupported issuer
+   attribution blocked,
 5. old risk-proxy endpoint is removed, not wrapped,
 6. UI copy is reviewed for advisor-facing business language,
 7. supportability rail is implemented before complex detail modules,
@@ -1276,7 +1308,7 @@ Target latency posture:
 | Shared UI system | RFC-0021 primitives mandatory | Component imports and integration tests. |
 | Banking-grade UX | Summary first, supportability rail, provenance, detail on demand | Risk mode browser/integration tests and visual review. |
 | Simulation support | Concentration simulation only with sandbox session | Concentration Gateway and Workbench session tests. |
-| Active-risk safety | `ACTIVE_RISK` blocked until exposure-history supportability is ready | Attribution blocked-state tests. |
+| Active-risk safety | `ACTIVE_RISK` only where upstream support exists; `ISSUER` stays blocked | Attribution blocked-state tests. |
 | Performance | Split queries, lazy heavy modules, bounded cache | Query-key/cache tests and live probe evidence. |
 | Advisor Brief/Portfolio integration | Links/evidence only, no duplicated full risk workspace | Route/evidence gating tests. |
 
@@ -1291,7 +1323,8 @@ This RFC can be marked `IMPLEMENTED` only when:
    context,
 5. Risk Snapshot, Drawdown, Rolling Risk, Concentration, and Total-Risk Attribution are rendered
    with supportability states,
-6. active-risk attribution is blocked/gated until benchmark exposure history is available,
+6. active-risk attribution follows the supported upstream matrix and keeps `ISSUER` explicitly
+   blocked,
 7. Portfolio links into Risk without duplicating full risk analytics,
 8. all new panels use RFC-0021 shared primitives,
 9. tests cover contracts, state handling, supportability, cache behavior, and navigation,
