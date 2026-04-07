@@ -776,6 +776,21 @@ Acceptance:
 
 ### Slice 2: Gateway legacy risk-proxy removal
 
+Status: completed on 2026-04-07.
+
+Evidence:
+
+1. Gateway branch:
+   `feat/rfc0022-stateful-risk-workspace-bff`
+2. Gateway guard:
+   `tests/unit/test_rfc0022_risk_proxy_guard.py`
+3. Workbench degraded-state handling:
+   `src/app/workbench/[portfolioId]/page.tsx`
+4. Workbench architecture guard:
+   `tests/unit/rfc0022-risk-architecture-guard.test.ts`
+5. Slice 2 status note:
+   `docs/architecture/RFC-0022-SLICE-1-RISK-WORKSPACE-INVENTORY.md`
+
 Outcome:
 
 1. old Gateway risk-proxy connection is removed,

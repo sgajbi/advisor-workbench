@@ -126,7 +126,7 @@ export type WorkbenchAnalytics = {
   active_return_pct: number | null;
   allocation_buckets: WorkbenchAnalyticsBucket[];
   top_changes: WorkbenchAnalyticsTopChange[];
-  risk_proxy: WorkbenchAnalyticsRiskProxy;
+  risk_proxy: WorkbenchAnalyticsRiskProxy | null;
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };

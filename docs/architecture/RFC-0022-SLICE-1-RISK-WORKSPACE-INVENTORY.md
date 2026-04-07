@@ -141,3 +141,40 @@ Next slice:
 ```text
 Slice 2: Gateway legacy risk-proxy removal
 ```
+
+## Slice 2 Completion Note
+
+Status: completed on 2026-04-07.
+
+Gateway branch:
+
+```text
+feat/rfc0022-stateful-risk-workspace-bff
+```
+
+Completed changes:
+
+1. removed the Gateway client method for `/analytics/workbench/risk-proxy`,
+2. removed WorkbenchService's split risk-proxy client dependency,
+3. changed legacy Workbench analytics risk output to an explicit controlled unavailable state,
+4. added a Gateway source guard preventing the removed endpoint and client method from returning,
+5. updated Workbench to treat `risk_proxy` as nullable and show `Concentration Risk: UNAVAILABLE`,
+6. surfaced analytics partial failures in the Workbench page so the risk gap is visible in the
+   operational degraded-state flow.
+
+Slice 2 validation:
+
+```text
+lotus-gateway:
+python -m pytest tests/unit/test_workbench_service.py tests/unit/test_workbench_service_additional.py tests/unit/test_upstream_clients.py tests/unit/test_rfc0022_risk_proxy_guard.py tests/integration/test_workbench_router.py -q
+python -m ruff check src tests
+
+lotus-workbench:
+npm test -- --run tests/integration/workbench-page.test.tsx tests/unit/rfc0022-risk-architecture-guard.test.ts tests/unit/workbench-api.test.ts
+npm run lint
+npm run typecheck
+```
+
+Slice 3 remains responsible for introducing the new stateful Gateway Risk BFF. Slice 2 intentionally
+does not add a replacement metric because every UI feature must be genuinely backed by supported
+backend functionality.
