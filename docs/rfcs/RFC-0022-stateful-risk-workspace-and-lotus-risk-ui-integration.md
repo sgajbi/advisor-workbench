@@ -918,6 +918,8 @@ Slice 4 evidence:
 
 ### Slice 5: Live Workbench integration for Risk Snapshot and Concentration
 
+Status: completed on 2026-04-07.
+
 Outcome:
 
 1. Workbench calls Gateway for stateful Risk Snapshot and Concentration.
@@ -947,6 +949,19 @@ Acceptance:
 2. Concentration is live through Gateway,
 3. portfolio/sandbox context changes invalidate only the relevant risk queries,
 4. concentration simulation is impossible without an explicit sandbox/session context.
+
+Slice 5 evidence:
+
+1. Workbench added live client fetchers for:
+   - `GET /api/bff/api/v1/workbench/{portfolioId}/risk/summary`
+   - `GET /api/bff/api/v1/workbench/{portfolioId}/risk/concentration`
+2. Workbench added `usePerformanceRiskContract` to isolate request-shape caching and refetch logic.
+3. Risk mode now renders live Gateway BFF results and uses explicit unavailable envelopes on failure
+   instead of fixture fallback.
+4. Workbench validation evidence:
+   - `npm test -- --run tests/unit/performance-risk-view-model.test.ts tests/unit/performance-risk-mode.test.tsx tests/unit/performance-workspace-mode-switch.test.tsx tests/unit/performance-workspace-view.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `npm run lint`
+   - `npm run typecheck`
 
 ### Slice 6: Drawdown module
 
