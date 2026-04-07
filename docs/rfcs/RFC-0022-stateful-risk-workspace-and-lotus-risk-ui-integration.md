@@ -1,6 +1,6 @@
 # RFC-0022: Stateful Risk Workspace and lotus-risk UI Integration
 
-- Status: PROPOSED
+- Status: APPROVED
 - Date: 2026-04-07
 - Owners:
   - lotus-workbench maintainers
@@ -735,6 +735,17 @@ or hidden fixture-only behavior that will block live integration.
 ## Proposed Implementation Slices
 
 ### Slice 1: RFC approval and current-state inventory
+
+Status: completed on 2026-04-07.
+
+Evidence:
+
+1. Slice 1 inventory artifact:
+   `docs/architecture/RFC-0022-SLICE-1-RISK-WORKSPACE-INVENTORY.md`
+2. Workbench architectural guard:
+   `tests/unit/rfc0022-risk-architecture-guard.test.ts`
+3. Approval scope captured in this RFC's `Approval Posture`, `Non-Goals`,
+   `Cross-Repo Ownership`, and `Requirement Traceability` sections.
 
 Outcome:
 
