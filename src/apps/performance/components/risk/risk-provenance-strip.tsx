@@ -10,12 +10,14 @@ export default function RiskProvenanceStrip({
   return (
     <section className="performance-risk-provenance-strip" aria-label="Risk provenance">
       {viewModel.provenance.map((item) => (
-        <span key={item.label} className="performance-risk-provenance-item">
-          <Text variant="metadata" as="span">
+        <div key={item.label} className="performance-risk-provenance-item">
+          <Text variant="metadata" as="span" className="performance-risk-provenance-label">
             {item.label}
           </Text>
-          <strong>{item.value}</strong>
-        </span>
+          <Text variant="body" as="span" className="performance-risk-provenance-value">
+            {item.value}
+          </Text>
+        </div>
       ))}
     </section>
   );

@@ -7,14 +7,11 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Divider,
   FormControlLabel,
-  Paper,
   Stack,
   Switch,
-  Typography,
 } from "@mui/material";
 
 import {
@@ -30,6 +27,7 @@ import {
   submitProposal,
 } from "../api";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import { SectionBlock, SemanticBadge, Text } from "@/design-system";
 import {
   ProposalApprovalsData,
   ProposalDetailData,
@@ -216,12 +214,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
 
   if (detailQuery.isLoading || workflowQuery.isLoading || approvalsQuery.isLoading || lineageQuery.isLoading) {
     return (
-      <Paper className="section-card">
+      <SectionBlock>
         <Stack direction="row" spacing={1} alignItems="center">
           <CircularProgress size={16} />
-          <Typography>Loading proposal...</Typography>
+          <Text variant="body">Loading proposal...</Text>
         </Stack>
-      </Paper>
+      </SectionBlock>
     );
   }
 
@@ -277,13 +275,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
 
   if (!proposalIdValid) {
     return (
-      <Paper className="section-card">
-        <Typography variant="h6" component="h2" sx={{ mb: 0.8 }}>
-          Invalid Proposal Identifier
-        </Typography>
-        <Typography className="muted" sx={{ mb: 1 }}>
+      <SectionBlock title="Invalid Proposal Identifier">
+        <Text variant="secondary" className="muted">
           Proposal ID `{proposalId}` is not a valid route key. Use alphanumeric IDs with hyphen separators only.
-        </Typography>
+        </Text>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
           <Link href="/proposals" className="nav-link">
             Open Proposal Workspace
@@ -292,19 +287,16 @@ export default function ProposalDetailView({ proposalId }: Props) {
             Create New Proposal Draft
           </Link>
         </Stack>
-      </Paper>
+      </SectionBlock>
     );
   }
 
   if (detailQuery.error && isNotFound(detailQuery.error)) {
     return (
-      <Paper className="section-card">
-        <Typography variant="h6" component="h2" sx={{ mb: 0.8 }}>
-          Proposal Not Found
-        </Typography>
-        <Typography className="muted" sx={{ mb: 1 }}>
+      <SectionBlock title="Proposal Not Found">
+        <Text variant="secondary" className="muted">
           Proposal `{proposalId}` was not found in the active advisory pipeline.
-        </Typography>
+        </Text>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
           <Link href="/proposals" className="nav-link">
             Open Proposal Workspace
@@ -313,7 +305,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
             Create New Proposal Draft
           </Link>
         </Stack>
-      </Paper>
+      </SectionBlock>
     );
   }
 
@@ -326,7 +318,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   if (!detailQuery.data?.proposal) {
-    return <Typography>Proposal not found.</Typography>;
+    return <Text variant="body">Proposal not found.</Text>;
   }
 
   const data = detailQuery.data as ProposalDetailData;
@@ -352,10 +344,14 @@ export default function ProposalDetailView({ proposalId }: Props) {
     (evidence?.generated_at as string | undefined);
 
   return (
-    <Paper className="section-card">
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Proposal {data.proposal.proposal_id}
-      </Typography>
+    <SectionBlock
+      title={`Proposal ${data.proposal.proposal_id}`}
+      actions={
+        <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
+          {stageDescription(data.proposal.current_state)}
+        </SemanticBadge>
+      }
+    >
       <FormControlLabel
         control={
           <Switch
@@ -370,33 +366,27 @@ export default function ProposalDetailView({ proposalId }: Props) {
         sx={{ mb: 1 }}
       />
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Current State</Typography>
-          <Typography sx={{ fontWeight: 700 }}>{data.proposal.current_state}</Typography>
-          <Typography sx={{ fontSize: 13, mt: 0.4 }}>{stageDescription(data.proposal.current_state)}</Typography>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Portfolio</Typography>
-          <Typography sx={{ fontWeight: 700 }}>{data.proposal.portfolio_id ?? "N/A"}</Typography>
-          <Typography sx={{ fontSize: 13, mt: 0.4 }}>
-            Version: {String(data.proposal.current_version_no ?? "N/A")}
-          </Typography>
-        </Paper>
+        <div className="analytics-stat">
+          <Text variant="label">Current State</Text>
+          <Text variant="metricValueCompact">{data.proposal.current_state}</Text>
+          <Text variant="secondary">{stageDescription(data.proposal.current_state)}</Text>
+        </div>
+        <div className="analytics-stat">
+          <Text variant="label">Portfolio</Text>
+          <Text variant="metricValueCompact">{data.proposal.portfolio_id ?? "N/A"}</Text>
+          <Text variant="secondary">Version: {String(data.proposal.current_version_no ?? "N/A")}</Text>
+        </div>
       </Stack>
 
-      <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 0.6 }}>
-        Workflow Progress
-      </Typography>
+      <Text variant="label">Workflow Progress</Text>
       <Stack direction="row" spacing={0.7} flexWrap="wrap" sx={{ mb: 1 }}>
-        <Chip label="Draft" color={stageOrder(data.proposal.current_state) >= 1 ? "primary" : "default"} />
-        <Chip label="Review" color={stageOrder(data.proposal.current_state) >= 2 ? "primary" : "default"} />
-        <Chip label="Client Consent" color={stageOrder(data.proposal.current_state) >= 3 ? "primary" : "default"} />
-        <Chip label="Execution Ready" color={stageOrder(data.proposal.current_state) >= 4 ? "success" : "default"} />
+        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 1 ? "success" : "default"}>Draft</SemanticBadge>
+        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 2 ? "success" : "default"}>Review</SemanticBadge>
+        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 3 ? "success" : "default"}>Client Consent</SemanticBadge>
+        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 4 ? "success" : "default"}>Execution Ready</SemanticBadge>
       </Stack>
 
-      <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 0.6 }}>
-        Available Actions
-      </Typography>
+      <Text variant="label">Available Actions</Text>
       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
         {data.proposal.current_state === "DRAFT" ? (
           <>
@@ -436,9 +426,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
       </Stack>
 
       <Divider sx={{ my: 1 }} />
-      <Typography variant="h6" component="h3">
-        Version Management
-      </Typography>
+      <Text variant="sectionTitle">Version Management</Text>
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 0.7, mb: 1 }}>
         <Button type="button" variant="outlined" onClick={() => void onCreateNextVersion()} disabled={creatingVersion}>
           {creatingVersion ? "Creating Version..." : "Create Next Version"}
@@ -448,8 +436,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
         </Button>
       </Stack>
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, minWidth: { md: 220 } }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Lookup Version Number</Typography>
+        <div className="analytics-stat" style={{ minWidth: 220 }}>
+          <Text variant="label">Lookup Version Number</Text>
           <input
             className="input"
             type="number"
@@ -461,26 +449,24 @@ export default function ProposalDetailView({ proposalId }: Props) {
             }}
             style={{ marginTop: 6 }}
           />
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Current Version</Typography>
-          <Typography sx={{ fontWeight: 700 }}>{String(data.proposal.current_version_no ?? "N/A")}</Typography>
+        </div>
+        <div className="analytics-stat" style={{ flex: 1 }}>
+          <Text variant="label">Current Version</Text>
+          <Text variant="metricValueCompact">{String(data.proposal.current_version_no ?? "N/A")}</Text>
           {createdVersionNo ? (
-            <Typography sx={{ fontSize: 13, mt: 0.5, color: "success.main" }}>
-              Version created successfully: {createdVersionNo}
-            </Typography>
+            <Text variant="secondary">Version created successfully: {createdVersionNo}</Text>
           ) : null}
-        </Paper>
+        </div>
       </Stack>
       {versionLookup ? (
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, mb: 1 }}>
-          <Typography variant="subtitle2">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Typography>
-          <Typography sx={{ fontSize: 13 }}>Status At Creation: {String(versionLookup.status_at_creation ?? "N/A")}</Typography>
-          <Typography sx={{ fontSize: 13 }}>Created At: {String(versionLookup.created_at ?? "N/A")}</Typography>
-          <Typography sx={{ fontSize: 13, wordBreak: "break-all" }}>
+        <SectionBlock className="proposal-version-lookup">
+          <Text variant="cardTitle">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Text>
+          <Text variant="body">Status At Creation: {String(versionLookup.status_at_creation ?? "N/A")}</Text>
+          <Text variant="body">Created At: {String(versionLookup.created_at ?? "N/A")}</Text>
+          <Text variant="body">
             Artifact Hash: {String(versionLookup.artifact_hash ?? "N/A")}
-          </Typography>
-        </Paper>
+          </Text>
+        </SectionBlock>
       ) : null}
       {versionActionError ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
@@ -489,61 +475,47 @@ export default function ProposalDetailView({ proposalId }: Props) {
       ) : null}
 
       <Divider sx={{ my: 1 }} />
-      <Typography variant="h6" component="h3">
-        Lineage Explorer
-      </Typography>
+      <Text variant="sectionTitle">Lineage Explorer</Text>
       {lineage?.versions?.length ? (
         <Stack spacing={0.8} sx={{ mt: 0.8, mb: 1 }}>
           {lineage.versions.map((version) => (
-            <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5 }} key={`lineage-${String(version.version_no ?? "na")}`}>
-              <Typography variant="subtitle2">Version {String(version.version_no ?? "N/A")}</Typography>
-              <Typography sx={{ fontSize: 12, wordBreak: "break-all" }}>
-                Request Hash: {String(version.request_hash ?? "N/A")}
-              </Typography>
-              <Typography sx={{ fontSize: 12, wordBreak: "break-all" }}>
-                Simulation Hash: {String(version.simulation_hash ?? "N/A")}
-              </Typography>
-              <Typography sx={{ fontSize: 12, wordBreak: "break-all" }}>
-                Artifact Hash: {String(version.artifact_hash ?? "N/A")}
-              </Typography>
-              <Typography sx={{ fontSize: 12 }}>Created At: {String(version.created_at ?? "N/A")}</Typography>
-            </Paper>
+            <SectionBlock key={`lineage-${String(version.version_no ?? "na")}`}>
+              <Text variant="cardTitle">Version {String(version.version_no ?? "N/A")}</Text>
+              <Text variant="metadata">Request Hash: {String(version.request_hash ?? "N/A")}</Text>
+              <Text variant="metadata">Simulation Hash: {String(version.simulation_hash ?? "N/A")}</Text>
+              <Text variant="metadata">Artifact Hash: {String(version.artifact_hash ?? "N/A")}</Text>
+              <Text variant="metadata">Created At: {String(version.created_at ?? "N/A")}</Text>
+            </SectionBlock>
           ))}
         </Stack>
       ) : (
-        <Typography className="muted" sx={{ mb: 1 }}>
-          No lineage metadata returned for this proposal yet.
-        </Typography>
+        <Text variant="secondary">No lineage metadata returned for this proposal yet.</Text>
       )}
 
       <Divider sx={{ my: 1 }} />
-      <Typography variant="h6" component="h3">
-        Evidence And Auditability
-      </Typography>
+      <Text variant="sectionTitle">Evidence And Auditability</Text>
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 0.7, mb: 1.1 }}>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Artifact Hash</Typography>
-          <Typography sx={{ fontSize: 13 }}>{artifactHash ?? "Not available"}</Typography>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Request Hash</Typography>
-          <Typography sx={{ fontSize: 13 }}>{requestHash ?? "Not available"}</Typography>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1, borderRadius: 1.5, flex: 1 }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Simulation Hash</Typography>
-          <Typography sx={{ fontSize: 13 }}>{simulationHash ?? "Not available"}</Typography>
-        </Paper>
+        <div className="analytics-stat" style={{ flex: 1 }}>
+          <Text variant="label">Artifact Hash</Text>
+          <Text variant="metadata">{artifactHash ?? "Not available"}</Text>
+        </div>
+        <div className="analytics-stat" style={{ flex: 1 }}>
+          <Text variant="label">Request Hash</Text>
+          <Text variant="metadata">{requestHash ?? "Not available"}</Text>
+        </div>
+        <div className="analytics-stat" style={{ flex: 1 }}>
+          <Text variant="label">Simulation Hash</Text>
+          <Text variant="metadata">{simulationHash ?? "Not available"}</Text>
+        </div>
       </Stack>
-      <Typography className="muted" sx={{ mb: 1.1 }}>
+      <Text variant="secondary">
         {generatedAt
           ? `Latest artifact generated at ${generatedAt}.`
           : "Evidence metadata not available in current response. Turn on evidence or confirm backend evidence storage settings."}
-      </Typography>
+      </Text>
 
       <Divider sx={{ my: 1 }} />
-      <Typography variant="h6" component="h3" sx={{ mt: 1.2 }}>
-        Workflow Timeline
-      </Typography>
+      <Text variant="sectionTitle">Workflow Timeline</Text>
       {workflow?.events?.length ? (
         <Box component="ul" sx={{ pl: 2.2, mt: 0.7, mb: 0 }}>
           {workflow.events.map((event) => (
@@ -554,12 +526,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
           ))}
         </Box>
       ) : (
-        <Typography className="muted">No workflow events.</Typography>
+        <Text variant="secondary">No workflow events.</Text>
       )}
 
-      <Typography variant="h6" component="h3" sx={{ mt: 1.2 }}>
-        Approvals
-      </Typography>
+      <Text variant="sectionTitle">Approvals</Text>
       {approvals?.approvals?.length ? (
         <Box component="ul" sx={{ pl: 2.2, mt: 0.7, mb: 0 }}>
           {approvals.approvals.map((approval) => (
@@ -570,8 +540,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
           ))}
         </Box>
       ) : (
-        <Typography className="muted">No approvals recorded.</Typography>
+        <Text variant="secondary">No approvals recorded.</Text>
       )}
-    </Paper>
+    </SectionBlock>
   );
 }

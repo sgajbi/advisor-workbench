@@ -12,10 +12,8 @@ import {
   Divider,
   Grid,
   MenuItem,
-  Paper,
   Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 
 import { createProposal, simulateProposal } from "../api";
@@ -25,6 +23,7 @@ import {
   TradeIntentInput,
 } from "../simulation-payload";
 import { ProposalSimulateResponse } from "../types";
+import { SectionBlock, Text } from "@/design-system";
 
 const schema = z.object({
   idempotencyKey: z.string().min(6, "Idempotency key is required"),
@@ -193,18 +192,13 @@ export default function ProposalSimulateForm({
   }
 
   return (
-    <Paper className="section-card">
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Create And Simulate Proposal
-      </Typography>
-      <Typography className="muted" sx={{ mb: 1 }}>
-        Build iterative intent sets, simulate impact, and persist an advisory draft.
-      </Typography>
+    <SectionBlock
+      title="Create And Simulate Proposal"
+      subtitle="Build iterative intent sets, simulate impact, and persist an advisory draft."
+    >
       <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
         <Stack spacing={1.2}>
-          <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-            Portfolio Inputs
-          </Typography>
+          <Text variant="label">Portfolio Inputs</Text>
           <Controller
             control={form.control}
             name="portfolioId"
@@ -255,15 +249,13 @@ export default function ProposalSimulateForm({
             />
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ color: "text.secondary", mt: 0.5 }}>
-            Scenario Intent Builder
-          </Typography>
-          <Typography className="muted">
+          <Text variant="label">Scenario Intent Builder</Text>
+          <Text variant="secondary">
             Net cash impact: {netCashImpact()} | Valid trades: {validTradeCount()}
-          </Typography>
+          </Text>
 
           <Stack spacing={1}>
-            <Typography variant="subtitle2">Cash Flow Intents</Typography>
+            <Text variant="subsectionTitle">Cash Flow Intents</Text>
             {cashFlows.map((item) => (
               <Stack key={item.id} direction={{ xs: "column", md: "row" }} spacing={1}>
                 <TextField
@@ -323,7 +315,7 @@ export default function ProposalSimulateForm({
           </Stack>
 
           <Stack spacing={1}>
-            <Typography variant="subtitle2">Trade Intents</Typography>
+            <Text variant="subsectionTitle">Trade Intents</Text>
             {trades.map((item) => (
               <Stack key={item.id} direction={{ xs: "column", md: "row" }} spacing={1}>
                 <TextField
@@ -370,9 +362,7 @@ export default function ProposalSimulateForm({
             </Button>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ color: "text.secondary", mt: 0.5 }}>
-            Proposal Metadata
-          </Typography>
+          <Text variant="label">Proposal Metadata</Text>
           <Controller
             control={form.control}
             name="idempotencyKey"
@@ -435,9 +425,7 @@ export default function ProposalSimulateForm({
 
       {result ? (
         <Box sx={{ mt: 1.2 }}>
-          <Typography variant="h6" component="h3">
-            Simulation Summary
-          </Typography>
+          <Text variant="sectionTitle">Simulation Summary</Text>
           <div className="kpi-grid" style={{ marginTop: 8 }}>
             <div className="kpi-box">
               <p className="kpi-label">Status</p>
@@ -455,39 +443,35 @@ export default function ProposalSimulateForm({
             </div>
           </div>
           <Divider sx={{ my: 1 }} />
-          <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 0.7 }}>
-            Key Output Signals
-          </Typography>
+          <Text variant="label">Key Output Signals</Text>
           {simulationHighlights(result).length ? (
             <Grid container spacing={1}>
               {simulationHighlights(result).map((highlight) => (
                 <Grid size={{ xs: 12, md: 6 }} key={highlight.label}>
-                  <Box sx={{ border: "1px solid #d4d8e1", borderRadius: 1.5, p: 0.9 }}>
-                    <Typography sx={{ textTransform: "capitalize", color: "text.secondary", fontSize: 12 }}>
-                      {highlight.label}
-                    </Typography>
-                    <Typography sx={{ fontWeight: 700 }}>{highlight.value}</Typography>
-                  </Box>
+                  <div className="analytics-stat">
+                    <Text variant="label">{highlight.label}</Text>
+                    <Text variant="metricValueCompact">{highlight.value}</Text>
+                  </div>
                 </Grid>
               ))}
             </Grid>
           ) : (
-            <Typography className="muted">No additional scalar metrics were returned by the simulation engine.</Typography>
+            <Text variant="secondary">No additional scalar metrics were returned by the simulation engine.</Text>
           )}
         </Box>
       ) : null}
 
       {savedProposalId ? (
         <Box sx={{ mt: 1.2 }}>
-          <Typography>Draft saved as Proposal ID: {savedProposalId}</Typography>
-          <Typography>
+          <Text variant="body">Draft saved as Proposal ID: {savedProposalId}</Text>
+          <Text variant="body">
             <Link href={`/proposals/${savedProposalId}`}>Open Proposal Details</Link>
-          </Typography>
+          </Text>
         </Box>
       ) : null}
-      <Typography sx={{ mt: 1.2 }}>
+      <Text variant="body">
         <Link href="/proposals">View Proposal Workspace</Link>
-      </Typography>
-    </Paper>
+      </Text>
+    </SectionBlock>
   );
 }

@@ -200,4 +200,40 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.attributionState).toBe("blocked");
     expect(viewModel.attributionTotals).toBeNull();
   });
+
+  it("normalizes attribution percentages when upstream returns already-scaled percentage values", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const attribution = buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET");
+
+    attribution.payload?.periods[0]?.attribution_sets[0]?.contributors.splice(0, 1, {
+      ...(attribution.payload?.periods[0]?.attribution_sets[0]?.contributors[0] ?? {
+        group_key: "cash",
+        group_label: "Cash",
+        weight_average: 0.0002,
+        marginal_contribution: 83.5946,
+        component_contribution: 0.0184,
+        percent_contribution: 0.1956,
+      }),
+      marginal_contribution: 83.5946,
+      component_contribution: 0.0184,
+      percent_contribution: 0.1956,
+    });
+
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskAttribution: attribution,
+      riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+    });
+
+    expect(viewModel.attributionRows[0]).toMatchObject({
+      marginalContribution: "83.59%",
+      componentContribution: "1.84%",
+      contributionShare: "19.56%",
+    });
+  });
 });

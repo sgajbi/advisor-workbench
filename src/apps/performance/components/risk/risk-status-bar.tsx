@@ -27,18 +27,26 @@ export default function RiskStatusBar({
   state: PerformanceRiskState;
   warnings: string[];
 }) {
+  const evidenceLabel = warnings.length ? "Review notes" : "Source-grounded";
+
   return (
     <div className="performance-risk-status-bar" aria-label="Risk mode status">
-      <div className="performance-risk-status-items">
+      <div className="performance-risk-status-summary">
         <SemanticBadge tone={STATUS_TONES[state]} emphasis="strong">
           {STATUS_LABELS[state]}
         </SemanticBadge>
-        <SemanticBadge>Stateful only</SemanticBadge>
-        <SemanticBadge tone={warnings.length ? "warn" : "success"}>
-          {warnings.length ? "Review notes" : "Source-grounded"}
-        </SemanticBadge>
+        <div className="performance-risk-status-metadata" aria-label="Risk mode metadata">
+          <div className="performance-risk-status-metadata-item">
+            <Text variant="label">Input mode</Text>
+            <Text variant="metadata">Stateful only</Text>
+          </div>
+          <div className="performance-risk-status-metadata-item">
+            <Text variant="label">Evidence</Text>
+            <Text variant="metadata">{evidenceLabel}</Text>
+          </div>
+        </div>
       </div>
-      <Text variant="metadata" className="performance-risk-status-note">
+      <Text variant="secondary" className="performance-risk-status-note">
         Gateway Risk BFF contract. No stateless risk execution is surfaced in Workbench.
       </Text>
     </div>

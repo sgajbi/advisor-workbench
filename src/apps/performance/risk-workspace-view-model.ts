@@ -1190,13 +1190,13 @@ function mapConcentrationMetrics(response: WorkbenchRiskConcentrationResponse) {
     {
       key: "top_position_weight",
       label: "Top Position",
-      value: formatPercent(payload.single_position_concentration.top_position_weight_current * 100),
+      value: formatRiskPercentValue(payload.single_position_concentration.top_position_weight_current),
       support: "Largest single-position weight",
     },
     {
       key: "top_issuer_weight",
       label: "Top Issuer",
-      value: formatPercent(payload.issuer_concentration.top_issuer_weight_current * 100),
+      value: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
       support: "Largest issuer exposure",
     },
     {
@@ -1463,6 +1463,29 @@ function formatDrawdownPercent(value: number | null | undefined) {
   return formatPercent(value * 100);
 }
 
+function formatRiskPercentValue(
+  value: number | null | undefined,
+  {
+    nullDisplay = "N/A",
+    minimumFractionDigits = 2,
+    maximumFractionDigits = minimumFractionDigits,
+  }: {
+    nullDisplay?: string;
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  } = {}
+) {
+  if (typeof value !== "number") {
+    return nullDisplay;
+  }
+  const normalizedValue = Math.abs(value) <= 1 ? value * 100 : value;
+  return formatPercent(normalizedValue, {
+    nullDisplay,
+    minimumFractionDigits,
+    maximumFractionDigits,
+  });
+}
+
 function formatInteger(value: number | null | undefined) {
   if (typeof value !== "number") {
     return "N/A";
@@ -1689,10 +1712,10 @@ function mapAttributionRows(response: WorkbenchRiskAttributionResponse | null) {
   return selectedSet.contributors.map((contributor) => ({
     key: contributor.group_key,
     group: contributor.group_label,
-    avgWeight: formatPercent((contributor.weight_average ?? 0) * 100),
-    marginalContribution: formatPercent((contributor.marginal_contribution ?? 0) * 100),
-    componentContribution: formatPercent((contributor.component_contribution ?? 0) * 100),
-    contributionShare: formatPercent((contributor.percent_contribution ?? 0) * 100),
+    avgWeight: formatRiskPercentValue(contributor.weight_average),
+    marginalContribution: formatRiskPercentValue(contributor.marginal_contribution),
+    componentContribution: formatRiskPercentValue(contributor.component_contribution),
+    contributionShare: formatRiskPercentValue(contributor.percent_contribution),
   }));
 }
 
@@ -1703,9 +1726,9 @@ function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null)
   }
   return {
     metric: `${selectedSet.attribution_type.replaceAll("_", " ")} • ${selectedSet.metric.replaceAll("_", " ")}`,
-    totalValue: formatPercent((selectedSet.total_value ?? 0) * 100),
-    reconciledSum: formatPercent((selectedSet.reconciled_sum ?? 0) * 100),
-    residual: formatPercent((selectedSet.residual ?? 0) * 100),
+    totalValue: formatRiskPercentValue(selectedSet.total_value),
+    reconciledSum: formatRiskPercentValue(selectedSet.reconciled_sum),
+    residual: formatRiskPercentValue(selectedSet.residual),
     support: selectedSet.grouping_dimension.replaceAll("_", " "),
   };
 }

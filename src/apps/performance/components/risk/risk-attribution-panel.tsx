@@ -1,7 +1,7 @@
 import {
   AnalyticsTable,
+  ScreenStatePanel,
   SectionBlock,
-  Text,
   WorkbenchSegmentedControl,
   WorkbenchStatusRow,
   WorkbenchSummaryMetricStrip,
@@ -98,15 +98,28 @@ export default function RiskAttributionPanel({
       ) : null}
 
       {viewModel.attributionState === "loading" ? (
-        <Text variant="metadata">Loading historical risk attribution.</Text>
+        <ScreenStatePanel
+          kind="loading"
+          title="Loading historical risk attribution"
+          body="Fetching stateful attribution contributors for the selected controls."
+          surface="analysis"
+          rows={2}
+        />
       ) : viewModel.attributionState === "blocked" ? (
-        <Text variant="metadata">
-          The selected attribution combination is blocked by the current stateful support matrix.
-        </Text>
+        <ScreenStatePanel
+          kind="partial"
+          title="Attribution selection blocked"
+          body="The selected attribution combination is blocked by the current stateful support matrix."
+          hint="Choose a supported attribution type and grouping combination to continue."
+          surface="analysis"
+        />
       ) : viewModel.attributionState === "unavailable" ? (
-        <Text variant="metadata">
-          Historical risk attribution is not available for the selected portfolio context.
-        </Text>
+        <ScreenStatePanel
+          kind="unavailable"
+          title="Historical risk attribution unavailable"
+          body="Historical risk attribution is not available for the selected portfolio context."
+          surface="analysis"
+        />
       ) : (
         <AnalyticsTable
           ariaLabel="Historical risk attribution table"

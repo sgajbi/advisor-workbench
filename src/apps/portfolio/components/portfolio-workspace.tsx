@@ -15,6 +15,7 @@ import {
   SectionHeader,
   SectionLabel,
   SemanticBadge,
+  Text,
   WorkbenchLoadingState,
   WorkbenchPageFrame,
   WorkbenchRailCard,
@@ -607,10 +608,10 @@ export default function PortfolioWorkspaceView({
           ) : (
             <WorkbenchRailCard className="portfolio-side-card">
               <div className="portfolio-card-header">
-                <h3 className="portfolio-side-card-title">Available Work Areas</h3>
-                <p className="portfolio-card-subtitle">
+                <Text variant="cardTitle">Available Work Areas</Text>
+                <Text variant="secondary">
                   Open adjacent portfolio workflows while the main briefing is unavailable.
-                </p>
+                </Text>
               </div>
               <div className="toolbar">
                 <ActionLink href="/performance">Performance</ActionLink>

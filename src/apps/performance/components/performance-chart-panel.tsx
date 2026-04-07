@@ -63,6 +63,20 @@ const CHART_COLORS = {
   activeBar: "rgba(47, 95, 151, 0.24)",
 };
 
+const SHARED_CHART_TEXT = {
+  legendSize: Number.parseFloat(lotusThemeTokens.typography.size.textSm),
+  axisSize: Number.parseFloat(lotusThemeTokens.typography.size.textXs),
+  legendWeight: lotusThemeTokens.typography.variant.cardTitle.weight,
+  axisWeight: lotusThemeTokens.typography.variant.label.weight,
+  tooltipWeight: 600,
+  tooltipPadding: [
+    Number.parseInt(lotusThemeTokens.spacing.step3, 10),
+    Number.parseInt(lotusThemeTokens.spacing.step4, 10),
+  ] as [number, number],
+  barRadius: [lotusThemeTokens.radius.sm, lotusThemeTokens.radius.sm, 0, 0] as [number, number, number, number],
+  refreshRadius: lotusThemeTokens.radius.control,
+};
+
 function toNumeric(value: number | null | undefined): number | null {
   return value === null || value === undefined || Number.isNaN(value) ? null : value;
 }
@@ -276,8 +290,8 @@ export default function PerformanceChartPanel({
         icon: "roundRect",
         textStyle: {
           color: "#435164",
-          fontSize: 12,
-          fontWeight: 700,
+          fontSize: SHARED_CHART_TEXT.legendSize,
+          fontWeight: SHARED_CHART_TEXT.legendWeight,
         },
         data: [
           ...(includeAbsoluteSeries ? ["Portfolio Return"] : []),
@@ -296,12 +310,12 @@ export default function PerformanceChartPanel({
         borderWidth: 1,
         textStyle: {
           color: "#f8fafc",
-          fontSize: 12,
-          fontWeight: 600,
+          fontSize: SHARED_CHART_TEXT.legendSize,
+          fontWeight: SHARED_CHART_TEXT.tooltipWeight,
         },
         extraCssText:
           "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.24); border-radius: 10px;",
-        padding: [12, 14],
+        padding: SHARED_CHART_TEXT.tooltipPadding,
         valueFormatter: (value: unknown) => {
           if (typeof value === "number") {
             return `${value.toFixed(2)}%`;
@@ -319,8 +333,8 @@ export default function PerformanceChartPanel({
         axisTick: { show: false },
         axisLabel: {
           color: "#5a6779",
-          fontSize: 11,
-          fontWeight: 700,
+          fontSize: SHARED_CHART_TEXT.axisSize,
+          fontWeight: SHARED_CHART_TEXT.axisWeight,
         },
       },
       yAxis: [
@@ -363,7 +377,7 @@ export default function PerformanceChartPanel({
                 z: 1,
                 itemStyle: {
                   color: "rgba(218, 30, 40, 0.38)",
-                  borderRadius: [3, 3, 0, 0],
+                  borderRadius: SHARED_CHART_TEXT.barRadius,
                   borderColor: "rgba(218, 30, 40, 0.66)",
                   borderWidth: 1,
                 },
@@ -381,7 +395,7 @@ export default function PerformanceChartPanel({
                 z: 1,
                 itemStyle: {
                   color: "rgba(31, 46, 69, 0.36)",
-                  borderRadius: [3, 3, 0, 0],
+                  borderRadius: SHARED_CHART_TEXT.barRadius,
                   borderColor: "rgba(31, 46, 69, 0.6)",
                   borderWidth: 1,
                 },
@@ -399,7 +413,7 @@ export default function PerformanceChartPanel({
                 z: 1,
                 itemStyle: {
                   color: "rgba(47, 95, 151, 0.34)",
-                  borderRadius: [3, 3, 0, 0],
+                  borderRadius: SHARED_CHART_TEXT.barRadius,
                   borderColor: "rgba(47, 95, 151, 0.58)",
                   borderWidth: 1,
                 },
@@ -611,7 +625,7 @@ export default function PerformanceChartPanel({
                   right: lotusThemeTokens.spacing.step3,
                   px: lotusThemeTokens.spacing.step3,
                   py: lotusThemeTokens.spacing.step1,
-                  borderRadius: 999,
+                  borderRadius: SHARED_CHART_TEXT.refreshRadius,
                   bgcolor: "rgba(255,255,255,0.92)",
                   border: "1px solid rgba(31,39,51,0.08)",
                   boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
