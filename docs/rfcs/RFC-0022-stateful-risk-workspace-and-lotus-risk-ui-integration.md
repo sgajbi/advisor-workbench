@@ -46,6 +46,30 @@ The result should feel like a private-banking risk cockpit:
 7. fast enough for front-office use,
 8. modular enough for future independent risk panels.
 
+This RFC is intentionally not a dashboard request. It is a cross-repo integration and UI
+architecture proposal. The implementation must create a durable risk capability seam that future
+Workbench, Advisor Brief, Portfolio, Reporting, and Suitability surfaces can consume without
+reintroducing direct service calls, page-local risk vocabulary, or bespoke risk panels.
+
+## Approval Posture
+
+Approval should be treated as approval for these hard decisions:
+
+1. `Risk` becomes a first-class Performance workspace mode for v1.
+2. Workbench surfaces only stateful risk execution, except sandbox-linked concentration simulation.
+3. Gateway owns the front-office Risk BFF contract.
+4. The old Gateway `/analytics/workbench/risk-proxy` integration is removed, not wrapped.
+5. `ACTIVE_RISK` attribution is blocked until benchmark exposure-history supportability is proven.
+6. Each risk module is delivered as an independently testable slice using RFC-0021 shared primitives.
+
+Approval should not be treated as approval for:
+
+1. a top-level standalone `Risk` app in this RFC,
+2. direct browser-to-`lotus-risk` calls,
+3. stateless request builders or user-uploaded return series in Workbench,
+4. fixture-only risk panels that remain after live Gateway contracts exist,
+5. speculative charting or decorative visuals without advisor decision value.
+
 ## Why This RFC Is Needed
 
 The Workbench product now has stable `Portfolio`, `Performance`, and `Advisor Brief` surfaces.
@@ -118,6 +142,18 @@ Current Gateway posture:
 
 This RFC requires removing that old connection fully.
 
+Verified legacy-removal inventory at RFC time:
+
+| Area | Current reference | Required disposition |
+|---|---|---|
+| Gateway client | `src/app/clients/lotus_analytics_client.py#get_workbench_risk_proxy` | Delete and replace with typed risk client methods for canonical `lotus-risk` routes. |
+| Gateway service | `src/app/services/workbench_service.py` `riskProxy` merge/fallback logic | Remove legacy proxy merge. Replace downstream HHI usage with new concentration BFF contract. |
+| Gateway contract | `src/app/contracts/workbench.py` `WorkbenchRiskProxy` | Retire only when no active Workbench contract needs the field; otherwise mark as legacy/degraded until new contract cutover. |
+| Gateway tests | `tests/integration/test_workbench_router.py`, `tests/unit/test_workbench_service*.py` risk-proxy assertions | Replace with degraded-state and new Risk BFF assertions. |
+| Workbench app | `src/app/workbench/[portfolioId]/page.tsx` reads `analytics.risk_proxy` | Remove after Risk BFF concentration source is available. |
+| Workbench types/tests | `src/features/workbench/types.ts`, `tests/integration/workbench-page.test.tsx`, `tests/unit/workbench-api.test.ts` | Replace `risk_proxy` display assumptions with new BFF risk contracts or controlled unavailable state. |
+| lotus-risk docs | `docs/domain-apis/legacy-endpoints.md` marks endpoint removed | Keep as historical source of truth; do not reintroduce compatibility. |
+
 ### lotus-workbench
 
 Current Workbench posture:
@@ -127,6 +163,32 @@ Current Workbench posture:
 3. `Performance` has strong summary, analysis, advisor brief, and evidence modes,
 4. no first-class Risk mode exists,
 5. RFC-0021 shared UI architecture is available and must be used for the new risk surface.
+
+## Non-Goals
+
+This RFC explicitly does not cover:
+
+1. building a new standalone top-level Risk application shell,
+2. changing `lotus-risk` analytics formulas or methodology,
+3. exposing stateless or caller-supplied data entry in Workbench,
+4. replacing Performance attribution with risk attribution,
+5. adding AI-generated risk commentary before source-grounded risk facts exist,
+6. building a charting system independent of RFC-0021 shared primitives,
+7. changing portfolio valuation, transaction, or benchmark source-of-truth ownership,
+8. shipping a compatibility shim for `/analytics/workbench/risk-proxy`.
+
+## Cross-Repo Ownership
+
+| Concern | Owning repo | Rule |
+|---|---|---|
+| Risk analytics computation | `lotus-risk` | Workbench and Gateway must not recompute metrics. |
+| Front-office BFF contracts | `lotus-gateway` | Gateway owns stateful request construction, supportability, caching, and display-shaped contracts. |
+| UI composition and interaction | `lotus-workbench` | Workbench owns presentation, navigation, module state, and shared design-system conformance. |
+| Capability aggregation and runtime wiring | `lotus-platform` | Platform owns service routing and local/deployed capability health. |
+| Benchmark and exposure source data | `lotus-core` / `lotus-performance` via service contracts | Risk UI must gate unavailable benchmark/exposure facts rather than infer them. |
+
+Any implementation that moves computation into Workbench, bypasses Gateway, or duplicates risk
+methodology in the UI violates this RFC.
 
 ## Decision
 
@@ -369,6 +431,13 @@ GET /api/v1/workbench/{portfolioId}/risk
 Use split endpoints for lower latency and module-level refresh. Use the aggregate endpoint only if
 it is proven useful for first paint.
 
+The preferred implementation is split-first:
+
+1. `risk/summary` and `risk/concentration` are first-paint candidates,
+2. `risk/drawdown`, `risk/rolling`, and `risk/attribution` are module-level queries,
+3. an aggregate endpoint may exist only if it reuses the same services and does not become a second
+   contract dialect.
+
 ### Common Query Parameters
 
 All endpoints should support:
@@ -381,6 +450,16 @@ All endpoints should support:
 6. `reportingCurrency`,
 7. `asOfDate`,
 8. `sessionId`.
+
+Parameter rules:
+
+1. `period` must map to a bounded, documented reporting period, not an arbitrary free-form label.
+2. `detailBasis` must align with existing Workbench performance basis naming where possible.
+3. `benchmarkCode` is optional in request shape but required for benchmark-relative metrics to be
+   `ready`.
+4. `sessionId` must only affect concentration simulation; it must not silently change other risk
+   modules.
+5. `asOfDate` and reporting period must be echoed back by Gateway after normalization.
 
 ### Common Response Fields
 
@@ -396,6 +475,59 @@ Every endpoint should return:
 8. `warnings`,
 9. `partialFailures`,
 10. `metadata`.
+
+Contract envelope direction:
+
+```ts
+type WorkbenchRiskModuleState = "ready" | "partial" | "unavailable" | "blocked";
+
+type WorkbenchRiskSupportabilityState =
+  | "ready"
+  | "partial"
+  | "unavailable"
+  | "blocked";
+
+type WorkbenchRiskSupportabilityItem = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string;
+  sourceService?: "lotus-risk" | "lotus-performance" | "lotus-core" | "lotus-gateway";
+};
+
+type WorkbenchRiskModuleEnvelope<TPayload> = {
+  contractVersion: "risk-workspace.v1";
+  correlationId: string;
+  portfolioId: string;
+  period: string;
+  asOfDate: string;
+  benchmarkCode?: string | null;
+  sourceService: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: TPayload | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partialFailures: Array<{
+    sourceService: string;
+    code: string;
+    message: string;
+  }>;
+  metadata: {
+    generatedAt: string;
+    methodologyVersion?: string | null;
+    inputMode: "stateful" | "simulation";
+    cacheStatus?: "hit" | "miss" | "bypass";
+  };
+};
+```
+
+The exact language may evolve during implementation, but the shape must preserve these principles:
+
+1. one envelope per module,
+2. state and supportability are first-class,
+3. `payload` can be absent without the page failing,
+4. raw engine enum leakage is mapped before reaching display components,
+5. input mode is auditable.
 
 ### Supportability Model
 
@@ -551,6 +683,55 @@ Rules:
 6. all tables use `AnalyticsTable`,
 7. all values use shared financial/risk formatters.
 
+### Micro-Frontend-Style Boundaries
+
+Each risk module must be independently movable and testable:
+
+1. `api/` owns BFF calls, query keys, and cache/refetch rules.
+2. `contracts/` owns TypeScript DTOs matching Gateway responses.
+3. `view-model/` owns risk-specific display mapping and business copy.
+4. `components/` owns rendering and shared primitive composition.
+5. `fixtures/` owns representative BFF-shaped payloads for tests and Storybook-like future usage.
+
+Forbidden dependencies:
+
+1. panel components importing raw Gateway fetch helpers directly,
+2. panels importing other panel view models,
+3. view models importing React,
+4. Gateway DTO parsing inside JSX,
+5. risk-specific CSS classes that duplicate RFC-0021 primitives without an explicit reason.
+
+### Risk-Specific Shared Formatters
+
+Add shared risk formatters only when existing financial formatters do not cover the domain:
+
+1. volatility and tracking error as percentages,
+2. Sharpe, Sortino, beta, and information ratio as ratios,
+3. VaR and expected shortfall with currency/percentage mode based on Gateway contract,
+4. HHI as an index score with optional interpretation band,
+5. time-under-water as duration,
+6. attribution contribution as percentage contribution or risk units based on metric.
+
+Formatter tests must include negative values, missing values, zero, extreme concentration values,
+and precision expectations.
+
+## Common Quality Gates for Every Slice
+
+Every implementation slice after approval must provide:
+
+1. a small, meaningful commit or commit set scoped to that slice,
+2. unit tests for transformed business logic, not only render smoke tests,
+3. at least one failure/partial/unavailable-state test for any new runtime path,
+4. no direct browser-to-`lotus-risk` URL references,
+5. no production reference to `/analytics/workbench/risk-proxy` after Slice 2,
+6. `npm run lint` and `npm run typecheck` for Workbench slices,
+7. Gateway lint and focused unit/integration tests for Gateway slices,
+8. documentation update when behavior, supportability, or operator workflow changes,
+9. explicit branch-clean status before moving to the next slice.
+
+Do not move to the next slice if the current slice has uncommitted changes, failing focused tests,
+or hidden fixture-only behavior that will block live integration.
+
 ## Proposed Implementation Slices
 
 ### Slice 1: RFC approval and current-state inventory
@@ -572,13 +753,15 @@ Tasks:
 Tests:
 
 1. no code tests required,
-2. RFC review checklist must be completed.
+2. RFC review checklist must be completed,
+3. inventory grep evidence must be recorded in the implementation notes before Slice 2 starts.
 
 Acceptance:
 
 1. stakeholders approve stateful-only UI scope,
 2. stakeholders approve removal of the legacy Gateway risk-proxy path,
 3. stakeholders approve Performance `Risk` mode placement.
+4. stakeholders accept that `ACTIVE_RISK` remains blocked unless supportability proves readiness.
 
 ### Slice 2: Gateway legacy risk-proxy removal
 
@@ -601,13 +784,15 @@ Tests:
 
 1. Gateway unit tests for Workbench analytics without risk-proxy fallback,
 2. Gateway integration tests proving no legacy path is called,
-3. contract grep/guard test if appropriate.
+3. contract grep/guard test if appropriate,
+4. Workbench tests proving old HHI panels degrade cleanly if the new BFF is not yet wired.
 
 Acceptance:
 
 1. `rg "/analytics/workbench/risk-proxy"` returns no production references,
 2. Gateway tests are green,
-3. Workbench still renders controlled degraded risk state.
+3. Workbench still renders controlled degraded risk state,
+4. no compatibility shim or alias endpoint is introduced.
 
 ### Slice 3: Gateway Risk BFF foundation
 
@@ -638,7 +823,8 @@ Acceptance:
 
 1. risk summary and concentration BFF endpoints return stable contracts,
 2. no UI needs raw `lotus-risk` response fields,
-3. failures are partial/degraded, not page-breaking.
+3. failures are partial/degraded, not page-breaking,
+4. supportability explains missing benchmark, risk-free, issuer, or sandbox dependencies.
 
 ### Slice 4: Workbench Risk mode shell and fixture-backed UI
 
@@ -662,13 +848,15 @@ Tests:
 2. component tests for Risk shell and supportability rail,
 3. view-model tests for fixture data,
 4. integration test proving `Risk` mode renders and does not call raw risk endpoints from browser,
-5. responsive smoke for no horizontal overflow.
+5. responsive smoke for no horizontal overflow,
+6. accessibility assertions for tab semantics and blocked-state explanatory copy.
 
 Acceptance:
 
 1. `Risk` mode is visually consistent with `Summary`, `Analysis`, and `Advisor Brief`,
 2. no stateless UX is exposed,
-3. state handling is complete.
+3. state handling is complete,
+4. first-paint panels remain useful when detail modules are still loading.
 
 ### Slice 5: Live Workbench integration for Risk Snapshot and Concentration
 
@@ -691,13 +879,16 @@ Tests:
 1. MSW/fake fetch or integration tests for successful BFF payloads,
 2. partial-failure rendering tests,
 3. query-key tests if query keys are generated separately,
-4. sandbox concentration contract tests.
+4. sandbox concentration contract tests,
+5. cache/refetch tests proving portfolio, period, basis, benchmark, and session changes invalidate
+   the correct query scope.
 
 Acceptance:
 
 1. Risk Snapshot is live through Gateway,
 2. Concentration is live through Gateway,
-3. portfolio/sandbox context changes invalidate only the relevant risk queries.
+3. portfolio/sandbox context changes invalidate only the relevant risk queries,
+4. concentration simulation is impossible without an explicit sandbox/session context.
 
 ### Slice 6: Drawdown module
 
@@ -719,12 +910,14 @@ Tests:
 1. Gateway request-shape tests,
 2. drawdown view-model tests,
 3. drawdown panel state tests,
-4. table tests for episode sorting and numeric formatting.
+4. table tests for episode sorting and numeric formatting,
+5. detail-on-demand tests proving underwater series is not requested for first paint.
 
 Acceptance:
 
 1. advisors can identify drawdown severity in seconds,
-2. detailed episode evidence is available without cluttering first paint.
+2. detailed episode evidence is available without cluttering first paint,
+3. benchmark-relative drawdown is gated when benchmark series is unavailable.
 
 ### Slice 7: Rolling Risk module
 
@@ -746,13 +939,15 @@ Tests:
 1. Gateway request-shape tests for benchmark/risk-free metric selection,
 2. view-model tests for quality flags,
 3. component tests for window switching,
-4. latency-conscious query tests where practical.
+4. latency-conscious query tests where practical,
+5. tests proving time-series detail is opt-in and not loaded by default.
 
 Acceptance:
 
 1. first paint does not request large rolling time series by default,
 2. rolling detail is available on demand,
-3. benchmark/risk-free unavailability is explicit.
+3. benchmark/risk-free unavailability is explicit,
+4. window switching does not refresh unrelated risk modules.
 
 ### Slice 8: Historical Risk Attribution module
 
@@ -775,13 +970,15 @@ Tests:
 1. Gateway request-shape tests for `TOTAL_RISK`,
 2. blocked-state tests for `ACTIVE_RISK`,
 3. contributor table tests,
-4. residual formatting tests.
+4. residual formatting tests,
+5. grouping selector tests proving unavailable groupings are disabled with clear rationale.
 
 Acceptance:
 
 1. total-risk contributors are visible,
 2. active-risk is not falsely represented as available,
-3. blocked-state copy explains the benchmark exposure-history dependency.
+3. blocked-state copy explains the benchmark exposure-history dependency,
+4. contributor sorting and residual rows are deterministic.
 
 ### Slice 9: Portfolio and Advisor Brief cross-links
 
@@ -800,13 +997,15 @@ Tests:
 
 1. Portfolio link tests,
 2. Advisor Brief evidence gating tests,
-3. route query parameter tests for opening Risk mode.
+3. route query parameter tests for opening Risk mode,
+4. tests proving Advisor Brief does not cite risk facts when Gateway risk evidence is absent.
 
 Acceptance:
 
 1. Portfolio remains summary-first,
 2. Risk remains the analytical drilldown home,
-3. Advisor Brief cites risk only when evidence is source-grounded.
+3. Advisor Brief cites risk only when evidence is source-grounded,
+4. no duplicated risk tables appear in Portfolio.
 
 ### Slice 10: Production hardening and RFC closeout
 
@@ -827,7 +1026,8 @@ Tests:
 1. Workbench lint/typecheck/unit/integration/e2e smoke,
 2. Gateway unit/integration tests,
 3. lotus-risk existing branch tests as reference, without modifying uncommitted hardening work,
-4. live local platform probe if services are available.
+4. live local platform probe if services are available,
+5. cross-repo grep guard for old risk-proxy path and browser-to-risk direct calls.
 
 Acceptance:
 
@@ -835,7 +1035,8 @@ Acceptance:
 2. no old risk-proxy references remain,
 3. Risk mode supports stateful-only UI paths,
 4. supportability behavior is explicit and auditable,
-5. RFC status can move from `PROPOSED` to `IMPLEMENTED`.
+5. RFC status can move from `PROPOSED` to `IMPLEMENTED`,
+6. all affected repos are left on clean branches after merge.
 
 ## UI Quality Bar
 
@@ -875,6 +1076,17 @@ Rules:
 6. module refresh should be independent where possible,
 7. a failed heavy module must not block the whole Risk mode.
 
+Target latency posture:
+
+1. Risk mode shell should render immediately from existing Performance context.
+2. Risk Snapshot and Concentration should be optimized for first useful paint.
+3. Drawdown, Rolling Risk, and Attribution should not block first useful paint.
+4. Detail expansions should use module-level queries and preserve existing module content during
+   refresh.
+5. Cache TTLs must be short and explicit because risk data is as-of and portfolio-context sensitive.
+6. Cache keys must include portfolio, period, basis, benchmark, as-of date, reporting currency, and
+   sandbox session where relevant.
+
 ## Accessibility Requirements
 
 1. all tabbed navigation uses semantic tab roles,
@@ -890,7 +1102,11 @@ Rules:
 2. calling all risk endpoints at first paint could create high latency,
 3. surfacing active-risk attribution too early could mislead users,
 4. legacy risk-proxy compatibility could hide integration debt,
-5. risk terms could become too technical for advisors if raw engine vocabulary leaks.
+5. risk terms could become too technical for advisors if raw engine vocabulary leaks,
+6. partial benchmark/risk-free/source-data coverage could make the UI look broken if supportability
+   is not designed first,
+7. a monolithic risk endpoint could become slow and hard to reason about,
+8. duplicated Portfolio and Performance risk displays could create inconsistent decisions.
 
 ## Mitigations
 
@@ -899,7 +1115,25 @@ Rules:
 3. heavy modules are lazy or detail-on-demand,
 4. active-risk attribution is supportability-gated,
 5. old risk-proxy endpoint is removed, not wrapped,
-6. UI copy is reviewed for advisor-facing business language.
+6. UI copy is reviewed for advisor-facing business language,
+7. supportability rail is implemented before complex detail modules,
+8. Portfolio only links to Risk and surfaces minimal exceptions,
+9. module-level query boundaries are preserved.
+
+## Requirement Traceability
+
+| Requirement | RFC decision | Primary implementation evidence expected |
+|---|---|---|
+| Use all `lotus-risk` features | Risk Snapshot, Drawdown, Rolling Risk, Concentration, Historical Risk Attribution panels | Gateway BFF endpoints and Workbench modules for all five panels. |
+| UI is stateful-only | Browser exposes no stateless request builders; Gateway constructs stateful requests | Gateway request-shape tests and Workbench copy/tests. |
+| Remove old risk-proxy | Delete old Gateway client/service path and Workbench consumers | Grep guard plus Gateway/Workbench tests. |
+| Micro-frontend-style UI | `src/apps/performance/risk/*` isolated api/contracts/view-model/components/fixtures | Folder structure and panel-level tests. |
+| Shared UI system | RFC-0021 primitives mandatory | Component imports and integration tests. |
+| Banking-grade UX | Summary first, supportability rail, provenance, detail on demand | Risk mode browser/integration tests and visual review. |
+| Simulation support | Concentration simulation only with sandbox session | Concentration Gateway and Workbench session tests. |
+| Active-risk safety | `ACTIVE_RISK` blocked until exposure-history supportability is ready | Attribution blocked-state tests. |
+| Performance | Split queries, lazy heavy modules, bounded cache | Query-key/cache tests and live probe evidence. |
+| Advisor Brief/Portfolio integration | Links/evidence only, no duplicated full risk workspace | Route/evidence gating tests. |
 
 ## Definition of Done
 
