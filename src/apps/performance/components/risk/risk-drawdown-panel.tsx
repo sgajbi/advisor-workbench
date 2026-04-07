@@ -1,8 +1,8 @@
 import {
   AnalyticsTable,
   DisclosureToggleButton,
+  ScreenStatePanel,
   SectionBlock,
-  Text,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
@@ -45,10 +45,12 @@ export default function RiskDrawdownPanel({
         }))}
       />
       {viewModel.drawdownRelativeMetric ? (
-        <div className="performance-risk-relative-note" aria-label="Relative drawdown summary">
-          <Text variant="label">{viewModel.drawdownRelativeMetric.label}</Text>
-          <Text variant="cardTitle">{viewModel.drawdownRelativeMetric.value}</Text>
-          <Text variant="metadata">{viewModel.drawdownRelativeMetric.support}</Text>
+        <div className="performance-risk-note-card" aria-label="Relative drawdown summary">
+          <div className="performance-risk-note-copy">
+            <span className="ui-text ui-text-label">{viewModel.drawdownRelativeMetric.label}</span>
+            <span className="ui-text ui-text-card-title">{viewModel.drawdownRelativeMetric.value}</span>
+            <span className="ui-text ui-text-metadata">{viewModel.drawdownRelativeMetric.support}</span>
+          </div>
         </div>
       ) : null}
       <AnalyticsTable
@@ -84,11 +86,20 @@ export default function RiskDrawdownPanel({
       {underwaterExpanded ? (
         <div className="performance-risk-underwater-detail" aria-label="Underwater path detail">
           {viewModel.underwaterDetailState === "loading" ? (
-            <Text variant="metadata">Loading underwater path.</Text>
+            <ScreenStatePanel
+              kind="loading"
+              title="Loading underwater path"
+              body="Fetching drawdown series detail for the selected portfolio context."
+              surface="analysis"
+              rows={2}
+            />
           ) : viewModel.underwaterDetailState === "unavailable" ? (
-            <Text variant="metadata">
-              Underwater path detail is not available for the selected portfolio context.
-            </Text>
+            <ScreenStatePanel
+              kind="unavailable"
+              title="Underwater path unavailable"
+              body="Drawdown path detail is not available for the selected portfolio context."
+              surface="analysis"
+            />
           ) : (
             <AnalyticsTable
               ariaLabel="Risk underwater series table"

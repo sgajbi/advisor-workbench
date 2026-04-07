@@ -11,6 +11,7 @@ import {
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
+import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type {
   PerformanceBenchmarkOptionView,
@@ -43,6 +44,17 @@ const ATTRIBUTION_TREND_COLORS = {
   selection: "#4caf50",
   interaction: "#da1e28",
   total: "#2d3748",
+};
+
+const ATTRIBUTION_CHART_TEXT = {
+  legendSize: Number.parseFloat(lotusThemeTokens.typography.size.textSm),
+  axisSize: Number.parseFloat(lotusThemeTokens.typography.size.textXs),
+  legendWeight: lotusThemeTokens.typography.variant.cardTitle.weight,
+  axisWeight: lotusThemeTokens.typography.variant.label.weight,
+  tooltipPadding: [
+    Number.parseInt(lotusThemeTokens.spacing.step3, 10),
+    Number.parseInt(lotusThemeTokens.spacing.step4, 10),
+  ] as [number, number],
 };
 
 export default function PerformanceAttributionTrendPanel({
@@ -168,8 +180,8 @@ export default function PerformanceAttributionTrendPanel({
         itemGap: 16,
         textStyle: {
           color: "#485668",
-          fontSize: 12,
-          fontWeight: 700,
+          fontSize: ATTRIBUTION_CHART_TEXT.legendSize,
+          fontWeight: ATTRIBUTION_CHART_TEXT.legendWeight,
         },
       },
       tooltip: {
@@ -177,11 +189,11 @@ export default function PerformanceAttributionTrendPanel({
         axisPointer: { type: "cross" },
         borderColor: "rgba(36, 50, 70, 0.14)",
         backgroundColor: "rgba(255, 255, 255, 0.98)",
-        padding: [10, 12],
+        padding: ATTRIBUTION_CHART_TEXT.tooltipPadding,
         textStyle: {
           color: "#172033",
-          fontSize: 12,
-          fontWeight: 700,
+          fontSize: ATTRIBUTION_CHART_TEXT.legendSize,
+          fontWeight: ATTRIBUTION_CHART_TEXT.legendWeight,
         },
         valueFormatter: (value: unknown) =>
           typeof value === "number" ? `${value.toFixed(2)}%` : "",
@@ -193,8 +205,8 @@ export default function PerformanceAttributionTrendPanel({
         axisTick: { show: false },
         axisLabel: {
           color: "#5f6c7f",
-          fontSize: 11,
-          fontWeight: 700,
+          fontSize: ATTRIBUTION_CHART_TEXT.axisSize,
+          fontWeight: ATTRIBUTION_CHART_TEXT.axisWeight,
         },
       },
       yAxis: [

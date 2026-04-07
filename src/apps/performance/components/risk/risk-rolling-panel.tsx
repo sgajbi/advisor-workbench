@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import {
   AnalyticsTable,
   DisclosureToggleButton,
+  ScreenStatePanel,
   SectionBlock,
-  Text,
   WorkbenchSegmentedControl,
   WorkbenchStatusRow,
   WorkbenchSummaryMetricStrip,
@@ -106,11 +106,20 @@ export default function RiskRollingPanel({
       {rollingExpanded ? (
         <div className="performance-risk-rolling-detail" aria-label="Rolling series detail">
           {viewModel.rollingDetailState === "loading" ? (
-            <Text variant="metadata">Loading rolling series.</Text>
+            <ScreenStatePanel
+              kind="loading"
+              title="Loading rolling series"
+              body="Fetching time-series risk detail for the selected rolling window."
+              surface="analysis"
+              rows={2}
+            />
           ) : viewModel.rollingDetailState === "unavailable" ? (
-            <Text variant="metadata">
-              Rolling series detail is not available for the selected portfolio context.
-            </Text>
+            <ScreenStatePanel
+              kind="unavailable"
+              title="Rolling series unavailable"
+              body="Time-series rolling detail is not available for the selected portfolio context."
+              surface="analysis"
+            />
           ) : (
             <AnalyticsTable
               ariaLabel="Rolling risk series table"

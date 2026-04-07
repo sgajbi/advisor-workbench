@@ -7,19 +7,17 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Divider,
   MenuItem,
-  Paper,
   Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 
 import { listProposals } from "../api";
 import { ProposalSummary } from "../types";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import { ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
 
 const STAGES = ["DRAFT", "RISK_REVIEW", "COMPLIANCE_REVIEW", "AWAITING_CLIENT_CONSENT", "EXECUTION_READY"] as const;
 type Stage = (typeof STAGES)[number];
@@ -84,6 +82,16 @@ function nextAction(state: string): string {
   return "Pending workflow action";
 }
 
+function stageTone(state: string): "default" | "warn" | "success" {
+  if (state === "EXECUTION_READY") {
+    return "success";
+  }
+  if (state === "DRAFT") {
+    return "default";
+  }
+  return "warn";
+}
+
 function groupedByStage(items: ProposalSummary[]): Record<Stage, ProposalSummary[]> {
   return STAGES.reduce(
     (acc, stage) => {
@@ -139,37 +147,30 @@ export default function ProposalListView() {
 
   if (liveMode && isLoading) {
     return (
-      <Paper className="section-card">
+      <SectionBlock>
         <Stack direction="row" spacing={1} alignItems="center">
           <CircularProgress size={16} />
-          <Typography>Loading proposals...</Typography>
+          <Text variant="body">Loading proposals...</Text>
         </Stack>
-      </Paper>
+      </SectionBlock>
     );
   }
 
   return (
-    <Paper className="section-card">
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Proposal Workspace
-      </Typography>
-      <Typography className="muted" sx={{ mb: 1 }}>
-        Prioritize advisor tasks by workflow stage and jump directly to the next action.
-      </Typography>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 1 }}>
-        <Chip
-          size="small"
-          color={liveMode ? "primary" : "default"}
-          label={liveMode ? "Live Queue Mode" : "Storyboard Mode"}
-        />
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => setLiveMode((prev) => !prev)}
-        >
-          {liveMode ? "Switch To Storyboard Mode" : "Load Live Queue"}
-        </Button>
-      </Stack>
+    <SectionBlock
+      title="Proposal Workspace"
+      subtitle="Prioritize advisor tasks by workflow stage and jump directly to the next action."
+      actions={
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <SemanticBadge tone={liveMode ? "success" : "default"}>
+            {liveMode ? "Live Queue Mode" : "Storyboard Mode"}
+          </SemanticBadge>
+          <Button variant="outlined" size="small" onClick={() => setLiveMode((prev) => !prev)}>
+            {liveMode ? "Switch To Storyboard Mode" : "Load Live Queue"}
+          </Button>
+        </Stack>
+      }
+    >
       {liveMode && error ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           Live queue is unavailable. Showing no live proposals.
@@ -226,12 +227,21 @@ export default function ProposalListView() {
         />
         <Stack direction="row" spacing={0.7} flexWrap="wrap">
           {STAGES.map((stage) => (
-            <Chip key={stage} label={`${stageLabel(stage)}: ${grouped[stage].length}`} size="small" />
+            <SemanticBadge key={stage} tone={stageTone(stage)}>
+              {stageLabel(stage)}: {grouped[stage].length}
+            </SemanticBadge>
           ))}
         </Stack>
       </Stack>
 
-      {visibleItems.length === 0 ? <Typography className="muted">No proposals found.</Typography> : null}
+      {visibleItems.length === 0 ? (
+        <ScreenStatePanel
+          kind="empty"
+          title="No proposals found"
+          body="No proposals match the current queue filters."
+          surface="default"
+        />
+      ) : null}
 
       <Box
         sx={{
@@ -241,43 +251,33 @@ export default function ProposalListView() {
         }}
       >
         {STAGES.map((stage) => (
-          <Paper key={stage} variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+          <SectionBlock key={stage} className="proposal-stage-block">
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.4 }}>
-              <Typography variant="subtitle2" sx={{ textTransform: "capitalize" }}>
-                {stageLabel(stage)}
-              </Typography>
-              <Chip size="small" label={grouped[stage].length} />
+              <Text variant="subsectionTitle">{stageLabel(stage)}</Text>
+              <SemanticBadge tone={stageTone(stage)}>{grouped[stage].length}</SemanticBadge>
             </Stack>
             <Divider sx={{ mb: 0.8 }} />
             {grouped[stage].length === 0 ? (
-              <Typography className="muted" sx={{ fontSize: 13 }}>
-                No proposals in this stage.
-              </Typography>
+              <Text variant="secondary">No proposals in this stage.</Text>
             ) : (
               <Stack spacing={0.8}>
                 {grouped[stage].map((item) => (
-                  <Paper key={item.proposal_id} variant="outlined" sx={{ p: 0.8, borderRadius: 1.5 }}>
-                    <Typography sx={{ fontWeight: 700, lineHeight: 1.3 }}>
+                  <SectionBlock key={item.proposal_id} className="proposal-stage-card">
+                    <Text variant="cardTitle">
                       <Link href={liveMode ? `/proposals/${item.proposal_id}` : "/proposals/simulate"}>
                         {item.title || item.proposal_id}
                       </Link>
-                    </Typography>
-                    <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
-                      ID: {item.proposal_id}
-                    </Typography>
-                    <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
-                      Portfolio: {item.portfolio_id ?? "N/A"}
-                    </Typography>
-                    <Typography sx={{ mt: 0.6, fontSize: 13 }}>
-                      Next: {nextAction(item.current_state)}
-                    </Typography>
-                  </Paper>
+                    </Text>
+                    <Text variant="metadata">ID: {item.proposal_id}</Text>
+                    <Text variant="metadata">Portfolio: {item.portfolio_id ?? "N/A"}</Text>
+                    <Text variant="body">Next: {nextAction(item.current_state)}</Text>
+                  </SectionBlock>
                 ))}
               </Stack>
             )}
-          </Paper>
+          </SectionBlock>
         ))}
       </Box>
-    </Paper>
+    </SectionBlock>
   );
 }

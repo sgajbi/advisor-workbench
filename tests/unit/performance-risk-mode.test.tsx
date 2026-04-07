@@ -233,6 +233,72 @@ describe("PerformanceRiskMode", () => {
     );
   });
 
+  it("renders enriched concentration interpretation and neutral provenance metadata", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risk concentration interpretation")).toBeInTheDocument();
+    });
+
+    expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
+      "Portfolio posture"
+    );
+    expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
+      "Largest exposures"
+    );
+    expect(screen.getByLabelText("Risk provenance")).toHaveTextContent("Contract");
+    expect(screen.getByLabelText("Risk provenance")).toHaveTextContent("Input Mode");
+  });
+
+  it("uses a single semantic status badge and shared metadata text in the risk header", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Input mode");
+    });
+
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Input mode");
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Evidence");
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Review notes");
+    expect(screen.queryByLabelText("Status Stateful only")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Status Source-grounded")).not.toBeInTheDocument();
+  });
+
   it("renders controlled unavailable states when both live BFF requests fail", async () => {
     vi.mocked(getWorkbenchRiskSummaryClient).mockRejectedValue(new Error("summary down"));
     vi.mocked(getWorkbenchRiskConcentrationClient).mockRejectedValue(
@@ -404,6 +470,72 @@ describe("PerformanceRiskMode", () => {
     });
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Issuer" })).toBeDisabled();
+    });
+  });
+
+  it("renders structured attribution blocked state instead of raw inline copy", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
+        attributionType: "ACTIVE_RISK",
+        groupingDimension: "ISSUER",
+      })
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByText("Attribution selection blocked")).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText("Choose a supported attribution type and grouping combination to continue.")
+    ).toBeInTheDocument();
+  });
+
+  it("renders structured unavailable states for deferred detail panels", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient)
+      .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"))
+      .mockRejectedValueOnce(new Error("underwater unavailable"));
+    vi.mocked(getWorkbenchRiskRollingClient)
+      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"))
+      .mockRejectedValueOnce(new Error("rolling unavailable"));
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risk drawdown episode table")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand underwater path" }));
+    await waitFor(() => {
+      expect(screen.getByText("Underwater path unavailable")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+    await waitFor(() => {
+      expect(screen.getByText("Rolling series unavailable")).toBeInTheDocument();
     });
   });
 });

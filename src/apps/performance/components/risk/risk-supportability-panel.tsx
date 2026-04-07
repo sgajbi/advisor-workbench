@@ -24,7 +24,7 @@ export default function RiskSupportabilityPanel({
         {viewModel.supportability.map((item) => (
           <div key={item.key} className="performance-risk-supportability-row">
             <div>
-              <Text variant="cardTitle">{item.label}</Text>
+              <Text variant="body">{item.label}</Text>
               {item.reason ? <Text variant="metadata">{item.reason}</Text> : null}
             </div>
             <SemanticBadge tone={STATE_TONE[item.state]}>{item.state}</SemanticBadge>
