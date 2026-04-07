@@ -27,4 +27,5 @@ Governance boundary:
 | RFC-0019 | Modular Portfolio Book and Ledger Experience | PROPOSED | `docs/rfcs/RFC-0019-modular-portfolio-book-and-ledger-experience.md` |
 | RFC-0020 | AI Advisor Brief Copilot for Portfolio and Performance | PROPOSED | `docs/rfcs/RFC-0020-ai-advisor-brief-copilot.md` |
 | RFC-0021 | UI Architecture Hardening and Design-System Governance | IMPLEMENTED | `docs/rfcs/RFC-0021-ui-architecture-hardening-and-design-system-governance.md` |
+| RFC-0022 | Stateful Risk Workspace and lotus-risk UI Integration | PROPOSED | `docs/rfcs/RFC-0022-stateful-risk-workspace-and-lotus-risk-ui-integration.md` |
 
