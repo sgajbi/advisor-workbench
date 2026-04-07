@@ -107,12 +107,6 @@ export type WorkbenchAnalyticsTopChange = {
   direction: string;
 };
 
-export type WorkbenchAnalyticsRiskProxy = {
-  hhi_current: number;
-  hhi_proposed: number;
-  hhi_delta: number;
-};
-
 export type WorkbenchAnalytics = {
   correlation_id: string;
   contract_version: string;
@@ -126,7 +120,6 @@ export type WorkbenchAnalytics = {
   active_return_pct: number | null;
   allocation_buckets: WorkbenchAnalyticsBucket[];
   top_changes: WorkbenchAnalyticsTopChange[];
-  risk_proxy: WorkbenchAnalyticsRiskProxy;
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };
@@ -523,6 +516,306 @@ export type WorkbenchPerformanceAdvisorBrief = {
   };
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
+};
+
+export type WorkbenchRiskModuleState = "ready" | "partial" | "unavailable" | "blocked";
+export type WorkbenchRiskSupportabilityState = WorkbenchRiskModuleState;
+
+export type WorkbenchRiskSupportabilityItem = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string | null;
+  source_service?: string | null;
+};
+
+export type WorkbenchRiskMetric = {
+  key: string;
+  label: string;
+  value: number | null;
+  state: WorkbenchRiskModuleState;
+  reason?: string | null;
+  details?: Record<string, unknown> | null;
+};
+
+export type WorkbenchRiskSummaryResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    periods: Array<{
+      key: string;
+      label: string;
+      start_date: string;
+      end_date: string;
+      metrics: WorkbenchRiskMetric[];
+    }>;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
+export type WorkbenchRiskConcentrationResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    risk_proxy: {
+      hhi_current: number;
+      hhi_proposed: number;
+      hhi_delta: number;
+    };
+    single_position_concentration: {
+      top_position_weight_current: number;
+      top_position_weight_proposed: number;
+      top_position_weight_delta: number;
+      top_n_cumulative_weight_current: number;
+      top_n_cumulative_weight_proposed: number;
+      top_n_cumulative_weight_delta: number;
+      top_n: number;
+    };
+    issuer_concentration: {
+      hhi_current: number;
+      hhi_proposed: number;
+      hhi_delta: number;
+      top_issuer_weight_current: number;
+      top_issuer_weight_proposed: number;
+      top_issuer_weight_delta: number;
+      coverage_status: string;
+      covered_position_count_current: number;
+      covered_position_count_proposed: number;
+      total_position_count_current: number;
+      total_position_count_proposed: number;
+      note?: string | null;
+    };
+    valuation_context?: Record<string, unknown> | null;
+    risk_metadata?: Record<string, unknown> | null;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
+export type WorkbenchRiskDrawdownSummary = {
+  max_drawdown: number | null;
+  max_drawdown_peak_date?: string | null;
+  max_drawdown_trough_date?: string | null;
+  max_drawdown_recovery_date?: string | null;
+  is_recovered: boolean;
+  days_to_trough?: number | null;
+  days_to_recovery?: number | null;
+  time_under_water_days: number;
+  average_drawdown?: number | null;
+  ulcer_index?: number | null;
+  drawdown_at_risk_95?: number | null;
+  conditional_drawdown_at_risk_95?: number | null;
+};
+
+export type WorkbenchRiskDrawdownEpisode = {
+  episode_id: string;
+  peak_date: string;
+  trough_date: string;
+  recovery_date?: string | null;
+  depth: number;
+  days_to_trough: number;
+  days_to_recovery?: number | null;
+  total_days: number;
+  is_recovered: boolean;
+};
+
+export type WorkbenchRiskRelativeDrawdownSummary = {
+  max_drawdown: number | null;
+  max_drawdown_peak_date?: string | null;
+  max_drawdown_trough_date?: string | null;
+};
+
+export type WorkbenchRiskUnderwaterPoint = {
+  date: string;
+  drawdown: number;
+};
+
+export type WorkbenchRiskDrawdownResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    periods: Array<{
+      key: string;
+      label: string;
+      start_date: string;
+      end_date: string;
+      summary: WorkbenchRiskDrawdownSummary | null;
+      episodes: WorkbenchRiskDrawdownEpisode[];
+      relative_to_benchmark?: WorkbenchRiskRelativeDrawdownSummary | null;
+      underwater_series?: WorkbenchRiskUnderwaterPoint[] | null;
+      error?: string | null;
+    }>;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
+export type WorkbenchRiskRollingMetricSummary = {
+  latest: number | null;
+  average: number | null;
+  minimum: number | null;
+  maximum: number | null;
+  p05: number | null;
+  p50: number | null;
+  p95: number | null;
+};
+
+export type WorkbenchRiskRollingMetricSeriesPoint = {
+  date: string;
+  metric_values: Record<string, number | null>;
+};
+
+export type WorkbenchRiskRollingWindowResult = {
+  window_length: number;
+  metric_summaries: Record<string, WorkbenchRiskRollingMetricSummary>;
+  metric_series?: WorkbenchRiskRollingMetricSeriesPoint[] | null;
+};
+
+export type WorkbenchRiskRollingResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    periods: Array<{
+      key: string;
+      label: string;
+      start_date: string;
+      end_date: string;
+      series_count: number;
+      window_results: WorkbenchRiskRollingWindowResult[];
+      quality_flags: string[];
+      error?: string | null;
+    }>;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
+export type WorkbenchRiskAttributionTypeOption = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string | null;
+};
+
+export type WorkbenchRiskAttributionGroupingOption = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string | null;
+  supported_attribution_types: string[];
+};
+
+export type WorkbenchRiskAttributionContributor = {
+  group_key: string;
+  group_label: string;
+  weight_average?: number | null;
+  marginal_contribution?: number | null;
+  component_contribution?: number | null;
+  percent_contribution?: number | null;
+};
+
+export type WorkbenchRiskAttributionSet = {
+  attribution_type: string;
+  metric: string;
+  grouping_dimension: string;
+  total_value?: number | null;
+  reconciled_sum?: number | null;
+  residual?: number | null;
+  contributors: WorkbenchRiskAttributionContributor[];
+  quality_flags: string[];
+};
+
+export type WorkbenchRiskAttributionPeriodResult = {
+  key: string;
+  label: string;
+  start_date: string;
+  end_date: string;
+  attribution_sets: WorkbenchRiskAttributionSet[];
+  error?: string | null;
+};
+
+export type WorkbenchRiskAttributionControls = {
+  attribution_types: WorkbenchRiskAttributionTypeOption[];
+  grouping_dimensions: WorkbenchRiskAttributionGroupingOption[];
+  selected_attribution_type: string;
+  selected_grouping_dimension: string;
+};
+
+export type WorkbenchRiskAttributionResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    controls: WorkbenchRiskAttributionControls;
+    periods: WorkbenchRiskAttributionPeriodResult[];
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
 };
 
 export type WorkbenchReportingSnapshot = {

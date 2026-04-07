@@ -14,15 +14,13 @@ describe("TopNav", () => {
 
     const clientsDisabled = screen.getByText("Relationship Book");
     const analyticsDisabled = screen.getByText("Performance");
-    const riskDisabled = screen.getByText("Suitability");
     const reportingDisabled = screen.getByText("Reporting");
 
     expect(clientsDisabled.tagName).toBe("SPAN");
     expect(clientsDisabled).toHaveAttribute("aria-disabled", "true");
     expect(analyticsDisabled.tagName).toBe("A");
     expect(analyticsDisabled).toHaveAttribute("href", "/performance");
-    expect(riskDisabled.tagName).toBe("SPAN");
-    expect(riskDisabled).toHaveAttribute("aria-disabled", "true");
+    expect(screen.queryByText("Suitability")).not.toBeInTheDocument();
     expect(reportingDisabled.tagName).toBe("SPAN");
     expect(reportingDisabled).toHaveAttribute("aria-disabled", "true");
   });

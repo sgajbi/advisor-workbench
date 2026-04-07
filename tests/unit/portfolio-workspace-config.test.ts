@@ -14,20 +14,20 @@ describe("portfolio workspace config", () => {
       "/performance?portfolioId=PORT%201001"
     );
     expect(mapWorkflowHref("risk", "PORT_1001")).toBe(
-      "/risk-and-suitability?portfolioId=PORT_1001"
+      "/performance?portfolioId=PORT_1001&mode=risk"
     );
     expect(mapWorkflowHref("unknown", "PORT_1001")).toBe("/portfolio?portfolioId=PORT_1001");
   });
 
   it("maps workflow cues into advisor-facing action labels", () => {
     expect(getWorkflowActionLabel("performance")).toBe("Performance");
-    expect(getWorkflowActionLabel("risk")).toBe("Review Suitability");
+    expect(getWorkflowActionLabel("risk")).toBe("Open Risk");
     expect(getWorkflowActionLabel("unknown")).toBe("Performance");
   });
 
   it("maps workflow cues into concise task labels", () => {
     expect(getWorkflowTaskLabel("performance")).toBe("Review performance");
-    expect(getWorkflowTaskLabel("risk")).toBe("Review suitability");
+    expect(getWorkflowTaskLabel("risk")).toBe("Review risk");
     expect(getWorkflowTaskLabel("unknown")).toBe("Review performance");
   });
 

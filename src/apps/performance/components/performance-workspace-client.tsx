@@ -16,6 +16,7 @@ import type {
 import { buildPerformanceHref } from "../navigation";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import PerformanceWorkspaceView from "./performance-workspace-view";
+import type { PerformanceWorkspaceMode } from "./performance-workspace-mode-switch";
 
 type PerformanceWorkspaceClientProps = {
   initialSummary: WorkbenchPerformanceWorkspaceSummary | null;
@@ -26,6 +27,7 @@ type PerformanceWorkspaceClientProps = {
   initialContributionDimension: string;
   initialAttributionDimension: string;
   initialChartFrequency: string;
+  initialMode?: PerformanceWorkspaceMode;
   initialBenchmark?: string;
 };
 
@@ -52,6 +54,7 @@ export default function PerformanceWorkspaceClient({
   initialContributionDimension,
   initialAttributionDimension,
   initialChartFrequency,
+  initialMode = "summary",
   initialBenchmark,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
@@ -107,6 +110,7 @@ export default function PerformanceWorkspaceClient({
     initialDetails ?? null
   );
   const [isSummaryUpdating, setIsSummaryUpdating] = useState(false);
+  const [mode, setMode] = useState<PerformanceWorkspaceMode>(initialMode);
   const [controls, setControls] = useState<PerformanceControlState | null>(
     initialControls
   );
@@ -169,7 +173,7 @@ export default function PerformanceWorkspaceClient({
       return;
     }
     startTransition(() => {
-      router.replace(buildPerformanceHref(initialControls), { scroll: false });
+      router.replace(buildPerformanceHref({ ...initialControls, mode }), { scroll: false });
     });
   }, [
     initialAttributionDimension,
@@ -182,6 +186,7 @@ export default function PerformanceWorkspaceClient({
     initialPortfolioId,
     initialSummary?.report_end_date,
     initialSummary?.report_start_date,
+    mode,
     router,
   ]);
 
@@ -234,7 +239,7 @@ export default function PerformanceWorkspaceClient({
     requestSequenceRef.current = requestId;
 
     startTransition(() => {
-      router.replace(buildPerformanceHref(nextControls), { scroll: false });
+      router.replace(buildPerformanceHref({ ...nextControls, mode }), { scroll: false });
     });
 
     if (!shouldRefreshSummary(controls, nextControls)) {
@@ -387,12 +392,24 @@ export default function PerformanceWorkspaceClient({
   return (
     <PerformanceWorkspaceView
       workspace={workspace}
+      mode={mode}
       period={controls?.period ?? initialPeriod}
       detailBasis={controls?.detailBasis ?? initialDetailBasis}
       contributionDimension={controls?.contributionDimension ?? initialContributionDimension}
       attributionDimension={controls?.attributionDimension ?? initialAttributionDimension}
       chartFrequency={controls?.chartFrequency ?? initialChartFrequency}
       benchmark={controls?.benchmark}
+      onModeChange={(nextMode) => {
+        setMode(nextMode);
+        if (!controls) {
+          return;
+        }
+        startTransition(() => {
+          router.replace(buildPerformanceHref({ ...controls, mode: nextMode }), {
+            scroll: false,
+          });
+        });
+      }}
       onRequestChange={handleRequestChange}
       isUpdating={isUpdating}
       isDetailsPending={isDetailsPending}

@@ -95,13 +95,14 @@ describe("WorkbenchPage", () => {
               active_return_pct: 0.25,
               allocation_buckets: [],
               top_changes: [],
-              risk_proxy: {
-                hhi_current: 0.11,
-                hhi_proposed: 0.18,
-                hhi_delta: 0.07,
-              },
-              warnings: [],
-              partial_failures: [],
+              warnings: ["RISK_BFF_PENDING"],
+              partial_failures: [
+                {
+                  source_service: "risk",
+                  error_code: "RISK_BFF_NOT_IMPLEMENTED",
+                  detail: "Stateful concentration risk will be restored through the Risk BFF.",
+                },
+              ],
             }),
           } as Response;
         }
@@ -134,8 +135,12 @@ describe("WorkbenchPage", () => {
 
     expect(screen.getByRole("heading", { name: /Advisor Workbench: PF_1001/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Decision Readiness/i })).toBeInTheDocument();
-    expect(screen.getByText("Concentration Signal (HHI)")).toBeInTheDocument();
-    expect(screen.getByText("MEDIUM")).toBeInTheDocument();
+    expect(screen.getByText("Risk Workspace")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Risk" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PF_1001&mode=risk"
+    );
+    expect(screen.getAllByText(/RISK_BFF_NOT_IMPLEMENTED/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Data Integrity")).toBeInTheDocument();
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();

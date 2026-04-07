@@ -111,7 +111,6 @@ describe("workbench api", () => {
             active_return_pct: 0.5,
             allocation_buckets: [],
             top_changes: [],
-            risk_proxy: { hhi_current: 1500, hhi_proposed: 1600, hhi_delta: 100 },
             warnings: [],
             partial_failures: [],
           }),

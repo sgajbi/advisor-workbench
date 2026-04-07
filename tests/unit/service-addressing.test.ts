@@ -38,6 +38,14 @@ describe("service addressing", () => {
     expect(resolveGatewayBaseUrl()).toBe("https://gateway.uat.lotus");
   });
 
+  it("rejects local loopback BFF overrides", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:8000/";
+
+    expect(() => resolveGatewayBaseUrl()).toThrow(
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+    );
+  });
+
   it("uses the proxy path for client-side requests", () => {
     expect(resolveBffProxyBaseUrl()).toBe("/api/bff");
     expect(resolveWorkbenchApiBase("client")).toBe("/api/bff/api/v1");

@@ -22,6 +22,7 @@ import {
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
   getPortfolioDefaultFilterValue,
+  getOrderedWorkflowCues,
   type PortfolioTimeWindow,
   type PortfolioWorkspaceControls,
 } from "../view-model";
@@ -294,7 +295,7 @@ export default function PortfolioWorkspaceClient({
                 onFilterReset={handleFilterReset}
                 onFilterChipRemove={handleFilterChipRemove}
                 onExport={handleExport}
-                quickActions={initialWorkspace?.workflow_cues ?? []}
+                quickActions={workspaceState ? getOrderedWorkflowCues(workspaceState) : []}
               />
             )
           }

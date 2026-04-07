@@ -1,5 +1,4 @@
 import dynamic from "next/dynamic";
-import { useState } from "react";
 
 import {
   DeferredWorkbenchMount,
@@ -15,9 +14,9 @@ import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
 import PerformanceWorkspaceModeSwitch, {
-  type PerformanceWorkspaceMode,
 } from "./performance-workspace-mode-switch";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
+import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import type {
   PerformanceWorkspaceControls,
@@ -53,18 +52,18 @@ const DeferredPerformanceEvidenceMode = dynamic(() => import("./performance-evid
 
 export default function PerformanceWorkspaceView({
   workspace,
+  mode,
   period,
   detailBasis,
   contributionDimension,
   attributionDimension,
   chartFrequency,
   benchmark,
+  onModeChange,
   onRequestChange,
   isUpdating = false,
   isDetailsPending = false,
 }: PerformanceWorkspaceViewProps) {
-  const [mode, setMode] = useState<PerformanceWorkspaceMode>("summary");
-
   const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
   const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
@@ -128,7 +127,13 @@ export default function PerformanceWorkspaceView({
       workspace={workspace}
       {...controls}
       capabilities={capabilities!}
-      onSelectMode={setMode}
+      onSelectMode={onModeChange}
+    />
+  ) : mode === "risk" ? (
+    <PerformanceRiskMode
+      workspace={workspace}
+      {...controls}
+      capabilities={capabilities!}
     />
   ) : (
     <DeferredWorkbenchMount
@@ -163,7 +168,7 @@ export default function PerformanceWorkspaceView({
             actions={
               <PerformanceWorkspaceModeSwitch
                 value={mode}
-                onChange={setMode}
+                onChange={onModeChange}
                 capabilities={capabilities}
               />
             }

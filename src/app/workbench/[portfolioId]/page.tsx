@@ -126,6 +126,11 @@ export default async function WorkbenchPage({
     data.current_positions.some((row) => row.market_value_base !== null);
   const hasAnalytics = analytics !== null;
   const hasReporting = reportingSnapshot !== null;
+  const warnings = [...data.warnings, ...(analytics?.warnings ?? [])];
+  const partialFailures = [
+    ...data.partial_failures,
+    ...(analytics?.partial_failures ?? []),
+  ];
 
   return (
     <main className="page-container">
@@ -134,15 +139,15 @@ export default async function WorkbenchPage({
         subtitle={`As of: ${data.as_of_date}`}
         actions={
           <>
-            <SemanticBadge tone={data.partial_failures.length > 0 ? "warn" : "success"}>
-              {data.partial_failures.length > 0 ? "Partial upstream coverage" : "Operationally ready"}
+            <SemanticBadge tone={partialFailures.length > 0 ? "warn" : "success"}>
+              {partialFailures.length > 0 ? "Partial upstream coverage" : "Operationally ready"}
             </SemanticBadge>
             <SemanticBadge>{data.active_session_id ? "Sandbox active" : "Sandbox idle"}</SemanticBadge>
           </>
         }
       >
         <WorkbenchSectionStack>
-          <PartialFailureBanner items={data.partial_failures} />
+          <PartialFailureBanner items={partialFailures} />
 
           <OverviewCards
             marketValueBase={data.overview.market_value_base}
@@ -243,7 +248,7 @@ export default async function WorkbenchPage({
               <SandboxControls
                 portfolioId={data.portfolio.portfolio_id}
                 sessionId={data.active_session_id}
-                warnings={data.warnings}
+                warnings={warnings}
               />
 
               {data.projected_summary ? (
@@ -294,8 +299,8 @@ export default async function WorkbenchPage({
               />
 
               <ExceptionQueue
-                warnings={data.warnings}
-                partialFailures={data.partial_failures}
+                warnings={warnings}
+                partialFailures={partialFailures}
               />
 
               <DecisionReadinessPanel
@@ -303,15 +308,17 @@ export default async function WorkbenchPage({
                 hasAnalytics={hasAnalytics}
                 hasReporting={hasReporting}
                 hasActiveSandbox={Boolean(data.active_session_id)}
-                warningCount={data.warnings.length}
-                failureCount={data.partial_failures.length}
-                hhiProposed={analytics?.risk_proxy.hhi_proposed ?? null}
+                warningCount={warnings.length}
+                failureCount={partialFailures.length}
+                riskWorkspaceHref={`/performance?portfolioId=${encodeURIComponent(
+                  data.portfolio.portfolio_id
+                )}&mode=risk`}
               />
 
               <AdvisorSummaryCard
                 portfolioId={data.portfolio.portfolio_id}
-                warningCount={data.warnings.length}
-                failureCount={data.partial_failures.length}
+                warningCount={warnings.length}
+                failureCount={partialFailures.length}
                 netDeltaQuantity={data.projected_summary?.net_delta_quantity ?? 0}
               />
             </div>

@@ -1,5 +1,7 @@
 import {
+  getWorkflowActionLabel,
   getWorkflowTaskLabel,
+  mapWorkflowHref,
   WORKFLOW_DISPLAY_ORDER,
 } from "./workspace-config";
 import { formatDate } from "./formatters";
@@ -756,9 +758,10 @@ export function buildPortfolioInsights(workspace: PortfolioWorkspace): Portfolio
     insights.push({
       key: "equity-concentration-high",
       title: "Large position dominates portfolio risk",
-      detail: "One holding has become large enough to dominate current portfolio concentration.",
+      detail:
+        "One holding has become large enough to dominate current portfolio concentration. Open Risk to review concentration pressure.",
       severity: "warning",
-      href: "#portfolio-insights",
+      href: mapWorkflowHref("risk", workspace.portfolio.portfolio_id),
     });
   }
 
@@ -787,6 +790,7 @@ export function buildPortfolioInsights(workspace: PortfolioWorkspace): Portfolio
 
 export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): PortfolioWorkflowCue[] {
   const supportedWorkflowKeys = new Set<string>(WORKFLOW_DISPLAY_ORDER);
+  const portfolioId = workspace.portfolio.portfolio_id;
 
   return [...workspace.workflow_cues]
     .filter((cue) => supportedWorkflowKeys.has(cue.key))
@@ -803,7 +807,11 @@ export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): Portfolio
 
       return (leftOrder === -1 ? Number.MAX_SAFE_INTEGER : leftOrder) -
         (rightOrder === -1 ? Number.MAX_SAFE_INTEGER : rightOrder);
-    });
+    })
+    .map((cue) => ({
+      ...cue,
+      href: mapWorkflowHref(cue.key, portfolioId),
+    }));
 }
 
 export function buildPortfolioWorkflowActions(
@@ -873,8 +881,8 @@ export function buildPortfolioWorkflowActions(
     title: getWorkflowTaskLabel(cue.key),
     impact: getWorkflowImpactLabel(cue.key),
     target: `Target: ${cue.label} workflow for this portfolio`,
-    href: cue.href,
-    cta_label: cue.label,
+    href: mapWorkflowHref(cue.key, workspace.portfolio.portfolio_id),
+    cta_label: getWorkflowActionLabel(cue.key),
     recommended: index === 0,
   }));
 }

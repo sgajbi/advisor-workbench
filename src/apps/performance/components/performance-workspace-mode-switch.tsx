@@ -11,12 +11,14 @@ export type PerformanceWorkspaceMode =
   | "summary"
   | "analysis"
   | "advisor"
+  | "risk"
   | "evidence";
 
 const WORKSPACE_MODES: Array<{ key: PerformanceWorkspaceMode; label: string }> = [
   { key: "summary", label: "Summary" },
   { key: "analysis", label: "Analysis" },
   { key: "advisor", label: "Advisor Brief" },
+  { key: "risk", label: "Risk" },
   { key: "evidence", label: "Evidence" },
 ];
 

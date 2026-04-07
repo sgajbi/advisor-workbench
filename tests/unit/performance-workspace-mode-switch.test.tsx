@@ -6,7 +6,7 @@ import PerformanceWorkspaceModeSwitch from "../../src/apps/performance/component
 import { buildPerformanceCapabilities } from "../fixtures/performance-workspace-fixtures";
 
 describe("PerformanceWorkspaceModeSwitch", () => {
-  it("renders the three workspace modes and calls onChange with the selected mode", () => {
+  it("renders the workspace modes and calls onChange with the selected mode", () => {
     const onChange = vi.fn();
 
     render(<PerformanceWorkspaceModeSwitch value="summary" onChange={onChange} />);
@@ -17,13 +17,16 @@ describe("PerformanceWorkspaceModeSwitch", () => {
     );
     expect(screen.getByRole("tab", { name: "Summary" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Analysis" })).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("tab", { name: "Risk" })).toHaveAttribute("aria-selected", "false");
     expect(screen.getByRole("tab", { name: "Evidence" })).toHaveAttribute("aria-selected", "false");
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Risk" }));
     fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
 
     expect(onChange).toHaveBeenNthCalledWith(1, "analysis");
-    expect(onChange).toHaveBeenNthCalledWith(2, "evidence");
+    expect(onChange).toHaveBeenNthCalledWith(2, "risk");
+    expect(onChange).toHaveBeenNthCalledWith(3, "evidence");
   });
 
   it("disables unavailable modes and shows readiness status when capabilities are provided", () => {
@@ -43,6 +46,7 @@ describe("PerformanceWorkspaceModeSwitch", () => {
     );
 
     expect(screen.getByRole("tab", { name: "Analysis" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Risk" })).not.toBeDisabled();
     expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
     expect(screen.getByRole("group", { name: "Performance mode readiness" })).toHaveTextContent(
       "Analysis unavailable"

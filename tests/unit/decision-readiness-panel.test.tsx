@@ -13,13 +13,16 @@ describe("DecisionReadinessPanel", () => {
         hasActiveSandbox
         warningCount={0}
         failureCount={0}
-        hhiProposed={0.12}
+        riskWorkspaceHref="/performance?portfolioId=PF_1001&mode=risk"
       />
     );
 
     expect(screen.getByRole("heading", { name: /Decision Readiness/i })).toBeInTheDocument();
     expect(screen.getAllByText("READY").length).toBeGreaterThanOrEqual(5);
-    expect(screen.getByText("LOW")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Risk" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PF_1001&mode=risk"
+    );
   });
 
   it("shows attention states when dependencies are missing", () => {
@@ -31,12 +34,15 @@ describe("DecisionReadinessPanel", () => {
         hasActiveSandbox={false}
         warningCount={2}
         failureCount={1}
-        hhiProposed={0.3}
+        riskWorkspaceHref="/performance?portfolioId=PF_2001&mode=risk"
       />
     );
 
     expect(screen.getAllByText("PENDING").length).toBeGreaterThanOrEqual(4);
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
-    expect(screen.getByText("HIGH")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Risk" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PF_2001&mode=risk"
+    );
   });
 });

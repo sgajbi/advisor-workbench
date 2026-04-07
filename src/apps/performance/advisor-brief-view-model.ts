@@ -298,39 +298,20 @@ function buildGatewayAdvisorBriefViewModel(
     advisorBrief.benchmark_code ?? workspace.benchmark_code ?? undefined,
     workspace.benchmark_options ?? []
   );
+  const hasBackedRiskEvidence = hasReadyRiskEvidence(advisorBrief.source_metrics);
   return {
     status: advisorBrief.status,
     title: `Advisor Brief • ${advisorBrief.portfolio_id}`,
     summary: advisorBrief.summary,
-    talkingPoints: advisorBrief.talking_points.map((item) => ({
-      headline: item.headline,
-      detail: item.detail,
-      tone: item.tone,
-      evidenceRefs: item.evidence_refs.map((evidenceRef) => ({
-        metricLabel: evidenceRef.metric_label,
-        metricValue: evidenceRef.metric_value,
-        sourceSurface: evidenceRef.source_surface,
-        route: evidenceRef.route,
-        targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
-      })),
-    })),
-    recommendedActions: advisorBrief.recommended_actions.map((action) => ({
-      label: action.label,
-      route: action.route,
-      targetMode: normalizeAdvisorTargetMode(action.target_mode),
-    })),
-    risksAndExceptions: advisorBrief.risks_and_exceptions.map((item) => ({
-      headline: item.headline,
-      detail: item.detail,
-      tone: item.tone,
-      evidenceRefs: item.evidence_refs.map((evidenceRef) => ({
-        metricLabel: evidenceRef.metric_label,
-        metricValue: evidenceRef.metric_value,
-        sourceSurface: evidenceRef.source_surface,
-        route: evidenceRef.route,
-        targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
-      })),
-    })),
+    talkingPoints: normalizeGatewayNarrativeItems(advisorBrief.talking_points, hasBackedRiskEvidence),
+    recommendedActions: normalizeGatewayActions(
+      advisorBrief.recommended_actions,
+      hasBackedRiskEvidence
+    ),
+    risksAndExceptions: normalizeGatewayNarrativeItems(
+      advisorBrief.risks_and_exceptions,
+      hasBackedRiskEvidence
+    ),
     sourceMetrics: normalizeGatewaySourceMetrics({
       advisorBrief,
       workspace,
@@ -339,6 +320,7 @@ function buildGatewayAdvisorBriefViewModel(
         selectedPerformance.end_market_value,
         workspace.portfolio.base_currency
       ),
+      hasBackedRiskEvidence,
     }),
     supportability: advisorBrief.supportability.map((item) => ({
       label: item.label,
@@ -371,11 +353,13 @@ function normalizeGatewaySourceMetrics({
   workspace,
   benchmarkLabel,
   endingMarketValue,
+  hasBackedRiskEvidence,
 }: {
   advisorBrief: WorkbenchPerformanceAdvisorBrief;
   workspace: WorkbenchPerformanceWorkspace;
   benchmarkLabel: string;
   endingMarketValue: string;
+  hasBackedRiskEvidence: boolean;
 }): PerformanceAdvisorBriefMetric[] {
   const route = buildPerformanceHref({
     portfolioId: workspace.portfolio.portfolio_id,
@@ -389,16 +373,18 @@ function normalizeGatewaySourceMetrics({
     reportEndDate: advisorBrief.report_end_date,
   });
 
-  const normalizedMetrics = advisorBrief.source_metrics.map((metric) => {
-    const isBenchmarkMetric = metric.label.toLowerCase() === "benchmark return";
-    return {
-      label: metric.label,
-      value: metric.value,
-      supportingText: isBenchmarkMetric ? benchmarkLabel : metric.support_label,
-      route: metric.route,
-      targetMode: normalizeAdvisorTargetMode(metric.target_mode),
-    } satisfies PerformanceAdvisorBriefMetric;
-  });
+  const normalizedMetrics = advisorBrief.source_metrics
+    .filter((metric) => shouldIncludeAdvisorRiskTarget(metric.target_mode, hasBackedRiskEvidence))
+    .map((metric) => {
+      const isBenchmarkMetric = metric.label.toLowerCase() === "benchmark return";
+      return {
+        label: metric.label,
+        value: metric.value,
+        supportingText: isBenchmarkMetric ? benchmarkLabel : metric.support_label,
+        route: metric.route,
+        targetMode: normalizeAdvisorTargetMode(metric.target_mode),
+      } satisfies PerformanceAdvisorBriefMetric;
+    });
 
   if (normalizedMetrics.some((metric) => metric.label === "Ending MV")) {
     return normalizedMetrics;
@@ -414,6 +400,68 @@ function normalizeGatewaySourceMetrics({
       targetMode: "summary",
     },
   ];
+}
+
+function normalizeGatewayNarrativeItems(
+  items: WorkbenchPerformanceAdvisorBrief["talking_points"],
+  hasBackedRiskEvidence: boolean
+): PerformanceAdvisorBriefItem[] {
+  return items.flatMap((item) => {
+    const evidenceRefs = item.evidence_refs
+      .filter((evidenceRef) =>
+        shouldIncludeAdvisorRiskTarget(evidenceRef.target_mode, hasBackedRiskEvidence)
+      )
+      .map((evidenceRef) => ({
+        metricLabel: evidenceRef.metric_label,
+        metricValue: evidenceRef.metric_value,
+        sourceSurface: evidenceRef.source_surface,
+        route: evidenceRef.route,
+        targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
+      }));
+
+    if (item.evidence_refs.length > 0 && evidenceRefs.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        headline: item.headline,
+        detail: item.detail,
+        tone: item.tone,
+        evidenceRefs,
+      },
+    ];
+  });
+}
+
+function normalizeGatewayActions(
+  actions: WorkbenchPerformanceAdvisorBrief["recommended_actions"],
+  hasBackedRiskEvidence: boolean
+): PerformanceAdvisorBriefAction[] {
+  return actions
+    .filter((action) => shouldIncludeAdvisorRiskTarget(action.target_mode, hasBackedRiskEvidence))
+    .map((action) => ({
+      label: action.label,
+      route: action.route,
+      targetMode: normalizeAdvisorTargetMode(action.target_mode),
+    }));
+}
+
+function hasReadyRiskEvidence(
+  sourceMetrics: WorkbenchPerformanceAdvisorBrief["source_metrics"]
+): boolean {
+  return sourceMetrics.some(
+    (metric) =>
+      normalizeAdvisorTargetMode(metric.target_mode) === "risk" &&
+      (metric.state?.toLowerCase() ?? "") === "ready"
+  );
+}
+
+function shouldIncludeAdvisorRiskTarget(
+  targetMode: string,
+  hasBackedRiskEvidence: boolean
+): boolean {
+  return normalizeAdvisorTargetMode(targetMode) !== "risk" || hasBackedRiskEvidence;
 }
 
 function resolveAdvisorBriefStatus({
@@ -716,9 +764,11 @@ function normalizeAdvisorTargetMode(targetMode: string): PerformanceWorkspaceMod
     ? "analysis"
     : targetMode === "advisor"
       ? "advisor"
-      : targetMode === "evidence"
-        ? "evidence"
-        : "summary";
+      : targetMode === "risk"
+        ? "risk"
+        : targetMode === "evidence"
+          ? "evidence"
+          : "summary";
 }
 
 function normalizeSupportabilityTone(

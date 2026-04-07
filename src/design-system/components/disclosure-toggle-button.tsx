@@ -51,7 +51,7 @@ export default function DisclosureToggleButton({
       type="button"
       className={cx("disclosure-toggle-button", className)}
       aria-expanded={expanded}
-      aria-label={label}
+      aria-label={toggleLabel || label}
       onClick={onToggle}
     >
       {content}

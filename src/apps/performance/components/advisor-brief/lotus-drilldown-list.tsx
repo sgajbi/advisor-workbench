@@ -5,6 +5,7 @@ const MODE_LABELS: Record<PerformanceWorkspaceMode, string> = {
   summary: "Open Return Path",
   analysis: "Open Analysis",
   advisor: "Open Advisor Brief",
+  risk: "Open Risk",
   evidence: "Open Evidence",
 };
 

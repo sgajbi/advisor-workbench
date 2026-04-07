@@ -485,6 +485,122 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
   });
 
+  it("opens Performance Risk mode from the mode query parameter and preserves it in navigation updates", async () => {
+    installPerformancePageFetchMock();
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          portfolioId: "DEMO_ADV_USD_001",
+          mode: "risk",
+        }),
+      })
+    );
+
+    expect(await screen.findByRole("tab", { name: "Risk" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith(
+        expect.stringContaining("/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis"),
+        { scroll: false }
+      );
+    });
+  });
+
+  it("shows Risk as a stateful fixture-backed mode without browser calls to raw lotus-risk APIs", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Risk" }));
+
+    expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+    expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
+      "Technology"
+    );
+    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
+    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
+      "Issuer Coverage"
+    );
+    expect(screen.getByLabelText("Risk support rail")).toHaveTextContent("Risk-free series");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/summary")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input
+          .toString()
+          .includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/concentration")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/rolling")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) => input.toString().includes("/analytics/risk/"))
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(([input]) => input.toString().includes("lotus-risk"))
+    ).toBe(false);
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
+    });
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input
+          .toString()
+          .includes(
+            "/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD&include_time_series=true"
+          )
+      )
+    ).toBe(true);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution") &&
+          input.toString().includes("attribution_type=ACTIVE_RISK") &&
+          input.toString().includes("grouping_dimension=SECTOR")
+        )
+      ).toBe(true);
+    });
+    fireEvent.click(screen.getByRole("tab", { name: "Asset Class" }));
+
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]) =>
+          input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/attribution") &&
+          input.toString().includes("attribution_type=ACTIVE_RISK") &&
+          input.toString().includes("grouping_dimension=ASSET_CLASS")
+        )
+      ).toBe(true);
+    });
+  });
+
   it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {
     installPerformancePageFetchScenario(buildNormalizedControlsPerformanceScenario());
 
@@ -585,7 +701,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       await waitFor(() => {
         expect(replaceMock).toHaveBeenCalledWith(
-          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
           { scroll: false }
         );
       });
