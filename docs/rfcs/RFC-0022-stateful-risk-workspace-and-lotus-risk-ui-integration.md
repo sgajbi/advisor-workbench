@@ -1107,6 +1107,8 @@ Slice 8 evidence:
 
 ### Slice 9: Portfolio and Advisor Brief cross-links
 
+Status: completed on 2026-04-07.
+
 Outcome:
 
 1. Portfolio and Advisor Brief can reference the Risk Workspace without duplicating it.
@@ -1131,6 +1133,24 @@ Acceptance:
 2. Risk remains the analytical drilldown home,
 3. Advisor Brief cites risk only when evidence is source-grounded,
 4. no duplicated risk tables appear in Portfolio.
+
+Slice 9 evidence:
+
+1. Workbench removed the stale Portfolio risk deep link to `/risk-and-suitability` and now routes
+   all portfolio risk entry points to the canonical Performance Risk mode via
+   `/performance?portfolioId=...&mode=risk`.
+2. Workbench normalized portfolio workflow cues, next actions, and concentration insights so they
+   all open the same Risk workspace rather than preserving backend-echoed raw hrefs.
+3. Workbench added URL-backed Performance mode routing, so `mode=risk` and other mode deep links
+   survive tab changes and control updates instead of dropping back to summary-only URLs.
+4. Workbench removed the obsolete standalone shell `Suitability` navigation entry, which was no
+   longer backed by a live route after Risk moved into the Performance workspace.
+5. Advisor Brief gateway normalization now drops risk metrics, risk evidence chips, and risk
+   drilldown actions when the Gateway contract does not mark risk evidence as `ready`.
+6. Validation:
+   - `npm test -- --run tests/unit/portfolio-workspace-config.test.ts tests/unit/portfolio-view-model.test.ts tests/unit/performance-advisor-brief-view-model.test.ts tests/unit/performance-workspace-view.test.tsx tests/unit/performance-workspace-client.test.tsx tests/unit/performance-workspace-entry.test.tsx tests/unit/shell-app-registry.test.ts tests/integration/top-nav-capabilities.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `npm run lint`
+   - `npm run typecheck`
 
 ### Slice 10: Production hardening and RFC closeout
 

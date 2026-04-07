@@ -238,4 +238,156 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       ])
     );
   });
+
+  it("drops risk source facts and risk drilldowns when gateway evidence is not ready", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-risk-brief",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "ready",
+        summary: "Risk-linked advisor brief.",
+        talking_points: [
+          {
+            headline: "Portfolio concentration warrants review.",
+            detail: "Open Risk to inspect HHI and top-position concentration.",
+            tone: "warning",
+            evidence_refs: [
+              {
+                metric_label: "HHI Current",
+                metric_value: "1260",
+                source_surface: "risk.concentration",
+                target_mode: "risk",
+                route: "/performance?portfolioId=PF_1001&mode=risk",
+              },
+            ],
+          },
+        ],
+        recommended_actions: [
+          {
+            label: "Open Risk",
+            target_mode: "risk",
+            route: "/performance?portfolioId=PF_1001&mode=risk",
+          },
+        ],
+        risks_and_exceptions: [],
+        source_metrics: [
+          {
+            label: "HHI Current",
+            value: "1260",
+            support_label: "Stateful concentration",
+            target_mode: "risk",
+            route: "/performance?portfolioId=PF_1001&mode=risk",
+            state: "partial",
+          },
+        ],
+        supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
+        ai_audit: { stubbed: false },
+        ai_evidence: { source_refs: ["lotus-gateway:risk:summary"] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.talkingPoints).toEqual([]);
+    expect(brief.recommendedActions.some((action) => action.targetMode === "risk")).toBe(false);
+    expect(brief.sourceMetrics.some((metric) => metric.targetMode === "risk")).toBe(false);
+  });
+
+  it("keeps risk source facts when gateway evidence is ready", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-risk-ready",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "ready",
+        summary: "Risk-linked advisor brief.",
+        talking_points: [
+          {
+            headline: "Portfolio concentration warrants review.",
+            detail: "Open Risk to inspect HHI and top-position concentration.",
+            tone: "warning",
+            evidence_refs: [
+              {
+                metric_label: "HHI Current",
+                metric_value: "1260",
+                source_surface: "risk.concentration",
+                target_mode: "risk",
+                route: "/performance?portfolioId=PF_1001&mode=risk",
+              },
+            ],
+          },
+        ],
+        recommended_actions: [
+          {
+            label: "Open Risk",
+            target_mode: "risk",
+            route: "/performance?portfolioId=PF_1001&mode=risk",
+          },
+        ],
+        risks_and_exceptions: [],
+        source_metrics: [
+          {
+            label: "HHI Current",
+            value: "1260",
+            support_label: "Stateful concentration",
+            target_mode: "risk",
+            route: "/performance?portfolioId=PF_1001&mode=risk",
+            state: "ready",
+          },
+        ],
+        supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
+        ai_audit: { stubbed: false },
+        ai_evidence: { source_refs: ["lotus-gateway:risk:concentration"] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.talkingPoints[0]?.evidenceRefs[0]?.targetMode).toBe("risk");
+    expect(brief.recommendedActions.some((action) => action.targetMode === "risk")).toBe(true);
+    expect(brief.sourceMetrics.some((metric) => metric.targetMode === "risk")).toBe(true);
+  });
 });
