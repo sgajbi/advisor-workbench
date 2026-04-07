@@ -1038,6 +1038,25 @@ Acceptance:
 3. benchmark/risk-free unavailability is explicit,
 4. window switching does not refresh unrelated risk modules.
 
+Slice 7 evidence:
+
+1. Gateway added `GET /api/v1/workbench/{portfolioId}/risk/rolling` with a typed
+   stateful-only BFF contract and an explicit `include_time_series` on-demand detail flag.
+2. Gateway added request-shape, cache-key, quality-flag, Sharpe fallback, malformed-upstream,
+   and router coverage for rolling risk.
+3. Workbench added live rolling client wiring, rolling view-model mapping, and a modular
+   `RiskRollingPanel`.
+4. Workbench keeps first paint lean by requesting rolling summaries only; rolling series is
+   fetched only after explicit disclosure expansion.
+5. Workbench now uses descriptive disclosure aria labels, improving shared accessibility while
+   keeping the disclosure primitive reusable across modules.
+6. Validation:
+   - `lotus-gateway`: `python -m pytest tests/unit/test_risk_workspace_service.py tests/unit/test_upstream_clients.py tests/integration/test_workbench_router.py -q`
+   - `lotus-gateway`: `python -m ruff check src tests`
+   - `lotus-workbench`: `npm test -- --run tests/unit/performance-risk-view-model.test.ts tests/unit/performance-risk-mode.test.tsx tests/integration/performance-analytics-page.test.tsx`
+   - `lotus-workbench`: `npm run lint`
+   - `lotus-workbench`: `npm run typecheck`
+
 ### Slice 8: Historical Risk Attribution module
 
 Outcome:
