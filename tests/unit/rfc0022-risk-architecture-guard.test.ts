@@ -56,4 +56,34 @@ describe("RFC-0022 risk workspace architecture guard", () => {
 
     expect(violations).toEqual([]);
   });
+
+  it("keeps the legacy workbench analytics contract free of removed risk proxy fields", () => {
+    const typesPath = path.join(repoRoot, "src/features/workbench/types.ts");
+    const typesContents = fs.readFileSync(typesPath, "utf8");
+    const workbenchAnalyticsStart = typesContents.indexOf("export type WorkbenchAnalytics = {");
+    const nextTypeStart = typesContents.indexOf("export type PerformanceComparativeSummary = {");
+    const analyticsBlock = typesContents.slice(workbenchAnalyticsStart, nextTypeStart);
+
+    const pagePath = path.join(repoRoot, "src/app/workbench/[portfolioId]/page.tsx");
+    const pageContents = fs.readFileSync(pagePath, "utf8");
+
+    const violations = [
+      analyticsBlock.includes("risk_proxy")
+        ? {
+            file: "src/features/workbench/types.ts",
+            pattern: "risk_proxy",
+            reason: "Legacy workbench analytics should not depend on the removed risk proxy field.",
+          }
+        : null,
+      pageContents.includes("risk_proxy")
+        ? {
+            file: "src/app/workbench/[portfolioId]/page.tsx",
+            pattern: "risk_proxy",
+            reason: "The legacy workbench page should not read removed risk proxy fields.",
+          }
+        : null,
+    ].filter((value): value is { file: string; pattern: string; reason: string } => value !== null);
+
+    expect(violations).toEqual([]);
+  });
 });

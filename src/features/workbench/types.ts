@@ -107,12 +107,6 @@ export type WorkbenchAnalyticsTopChange = {
   direction: string;
 };
 
-export type WorkbenchAnalyticsRiskProxy = {
-  hhi_current: number;
-  hhi_proposed: number;
-  hhi_delta: number;
-};
-
 export type WorkbenchAnalytics = {
   correlation_id: string;
   contract_version: string;
@@ -126,7 +120,6 @@ export type WorkbenchAnalytics = {
   active_return_pct: number | null;
   allocation_buckets: WorkbenchAnalyticsBucket[];
   top_changes: WorkbenchAnalyticsTopChange[];
-  risk_proxy: WorkbenchAnalyticsRiskProxy | null;
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };

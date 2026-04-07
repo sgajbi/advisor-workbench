@@ -310,7 +310,9 @@ export default async function WorkbenchPage({
                 hasActiveSandbox={Boolean(data.active_session_id)}
                 warningCount={warnings.length}
                 failureCount={partialFailures.length}
-                hhiProposed={analytics?.risk_proxy?.hhi_proposed ?? null}
+                riskWorkspaceHref={`/performance?portfolioId=${encodeURIComponent(
+                  data.portfolio.portfolio_id
+                )}&mode=risk`}
               />
 
               <AdvisorSummaryCard

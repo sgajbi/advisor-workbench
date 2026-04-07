@@ -1,4 +1,4 @@
-import { MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import { ActionLink, MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
 
 type Props = {
   hasValuationData: boolean;
@@ -7,29 +7,15 @@ type Props = {
   hasActiveSandbox: boolean;
   warningCount: number;
   failureCount: number;
-  hhiProposed: number | null;
+  riskWorkspaceHref: string;
 };
 
 function statusLabel(ready: boolean): string {
   return ready ? "READY" : "PENDING";
 }
 
-function concentrationSignal(hhiProposed: number | null): string {
-  if (hhiProposed === null) {
-    return "UNAVAILABLE";
-  }
-  if (hhiProposed >= 0.25) {
-    return "HIGH";
-  }
-  if (hhiProposed >= 0.15) {
-    return "MEDIUM";
-  }
-  return "LOW";
-}
-
 export default function DecisionReadinessPanel(props: Props) {
   const dataIntegrityReady = props.warningCount === 0 && props.failureCount === 0;
-  const riskSignal = concentrationSignal(props.hhiProposed);
   const readinessTone = (value: string) =>
     value === "READY" || value === "LOW"
       ? "success"
@@ -48,8 +34,8 @@ export default function DecisionReadinessPanel(props: Props) {
       <MetricRow label="Sandbox Session" value={<SemanticBadge tone={readinessTone(statusLabel(props.hasActiveSandbox))}>{statusLabel(props.hasActiveSandbox)}</SemanticBadge>} />
       <MetricRow label="Data Integrity" value={<SemanticBadge tone={readinessTone(dataIntegrityReady ? "READY" : "ATTENTION")}>{dataIntegrityReady ? "READY" : "ATTENTION"}</SemanticBadge>} />
       <MetricRow
-        label="Concentration Risk"
-        value={<SemanticBadge tone={readinessTone(riskSignal)}>{riskSignal}</SemanticBadge>}
+        label="Risk Workspace"
+        value={<ActionLink href={props.riskWorkspaceHref}>Open Risk</ActionLink>}
       />
     </SectionBlock>
   );
