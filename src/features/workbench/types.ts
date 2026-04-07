@@ -525,6 +525,107 @@ export type WorkbenchPerformanceAdvisorBrief = {
   partial_failures: WorkbenchOverview["partial_failures"];
 };
 
+export type WorkbenchRiskModuleState = "ready" | "partial" | "unavailable" | "blocked";
+export type WorkbenchRiskSupportabilityState = WorkbenchRiskModuleState;
+
+export type WorkbenchRiskSupportabilityItem = {
+  key: string;
+  label: string;
+  state: WorkbenchRiskSupportabilityState;
+  reason?: string | null;
+  source_service?: string | null;
+};
+
+export type WorkbenchRiskMetric = {
+  key: string;
+  label: string;
+  value: number | null;
+  state: WorkbenchRiskModuleState;
+  reason?: string | null;
+  details?: Record<string, unknown> | null;
+};
+
+export type WorkbenchRiskSummaryResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    periods: Array<{
+      key: string;
+      label: string;
+      start_date: string;
+      end_date: string;
+      metrics: WorkbenchRiskMetric[];
+    }>;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
+export type WorkbenchRiskConcentrationResponse = {
+  correlation_id: string;
+  contract_version: "risk-workspace.v1";
+  portfolio_id: string;
+  period: string;
+  as_of_date: string;
+  benchmark_code?: string | null;
+  source_service: "lotus-risk";
+  state: WorkbenchRiskModuleState;
+  payload: {
+    risk_proxy: {
+      hhi_current: number;
+      hhi_proposed: number;
+      hhi_delta: number;
+    };
+    single_position_concentration: {
+      top_position_weight_current: number;
+      top_position_weight_proposed: number;
+      top_position_weight_delta: number;
+      top_n_cumulative_weight_current: number;
+      top_n_cumulative_weight_proposed: number;
+      top_n_cumulative_weight_delta: number;
+      top_n: number;
+    };
+    issuer_concentration: {
+      hhi_current: number;
+      hhi_proposed: number;
+      hhi_delta: number;
+      top_issuer_weight_current: number;
+      top_issuer_weight_proposed: number;
+      top_issuer_weight_delta: number;
+      coverage_status: string;
+      covered_position_count_current: number;
+      covered_position_count_proposed: number;
+      total_position_count_current: number;
+      total_position_count_proposed: number;
+      note?: string | null;
+    };
+    valuation_context?: Record<string, unknown> | null;
+    risk_metadata?: Record<string, unknown> | null;
+  } | null;
+  supportability: WorkbenchRiskSupportabilityItem[];
+  warnings: string[];
+  partial_failures: WorkbenchOverview["partial_failures"];
+  metadata: {
+    generated_at: string;
+    input_mode: "stateful";
+    methodology_version?: string | null;
+    cache_status?: "hit" | "miss" | "bypass" | null;
+  };
+};
+
 export type WorkbenchReportingSnapshot = {
   correlationId: string;
   contractVersion: string;

@@ -11,6 +11,10 @@ import {
   type PerformanceFixtureOptions,
   type PerformancePresentationScenario,
 } from "./performance-workspace-fixtures";
+import {
+  buildFixtureRiskConcentration,
+  buildFixtureRiskSummary,
+} from "../../src/apps/performance/risk-workspace-view-model";
 
 type InstallPerformancePageFetchScenarioOptions = {
   portfolioId?: string;
@@ -115,6 +119,30 @@ function buildAdvisorBriefResponse(portfolioId: string, benchmarkCode: string | 
   };
 }
 
+function buildRiskSummaryResponse(portfolioId: string, options?: PerformanceFixtureOptions) {
+  const scenario = options
+    ? buildBenchmarkUnassignedPerformanceScenario()
+    : buildSupportedPerformanceScenario();
+  const workspace = {
+    ...scenario.workspace,
+    portfolio_id: portfolioId,
+    portfolio: { ...scenario.workspace.portfolio, portfolio_id: portfolioId },
+  };
+  return buildFixtureRiskSummary(workspace, workspace.period, workspace.detail_basis);
+}
+
+function buildRiskConcentrationResponse(portfolioId: string, options?: PerformanceFixtureOptions) {
+  const scenario = options
+    ? buildBenchmarkUnassignedPerformanceScenario()
+    : buildSupportedPerformanceScenario();
+  const workspace = {
+    ...scenario.workspace,
+    portfolio_id: portfolioId,
+    portfolio: { ...scenario.workspace.portfolio, portfolio_id: portfolioId },
+  };
+  return buildFixtureRiskConcentration(workspace, workspace.period);
+}
+
 export function installPerformancePageFetchMock(options?: PerformanceFixtureOptions) {
   vi.stubGlobal(
     "fetch",
@@ -157,6 +185,18 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
         return {
           ok: true,
           json: async () => buildAdvisorBriefResponse("DEMO_ADV_USD_001", "BMK_GLOBAL_BALANCED_60_40"),
+        } as Response;
+      }
+      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/summary")) {
+        return {
+          ok: true,
+          json: async () => buildRiskSummaryResponse("DEMO_ADV_USD_001", options),
+        } as Response;
+      }
+      if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/concentration")) {
+        return {
+          ok: true,
+          json: async () => buildRiskConcentrationResponse("DEMO_ADV_USD_001", options),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
@@ -243,6 +283,18 @@ export function installPerformancePageFetchScenario(
         return {
           ok: true,
           json: async () => buildAdvisorBriefResponse(portfolioId, workspace.benchmark_code),
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/summary`)) {
+        return {
+          ok: true,
+          json: async () => buildFixtureRiskSummary(workspace, workspace.period, workspace.detail_basis),
+        } as Response;
+      }
+      if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/concentration`)) {
+        return {
+          ok: true,
+          json: async () => buildFixtureRiskConcentration(workspace, workspace.period),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {

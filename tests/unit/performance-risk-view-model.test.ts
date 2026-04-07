@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPerformanceRiskViewModel } from "../../src/apps/performance/risk-workspace-view-model";
+import {
+  buildFixtureRiskConcentration,
+  buildFixtureRiskSummary,
+  buildPerformanceRiskViewModel,
+} from "../../src/apps/performance/risk-workspace-view-model";
 import { buildBenchmarkUnassignedPerformanceScenario, buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
 
 describe("buildPerformanceRiskViewModel", () => {
@@ -11,6 +15,8 @@ describe("buildPerformanceRiskViewModel", () => {
       workspace: scenario.workspace,
       period: "YTD",
       detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     });
 
     expect(viewModel.state).toBe("partial");
@@ -50,6 +56,8 @@ describe("buildPerformanceRiskViewModel", () => {
       workspace: scenario.workspace,
       period: "YTD",
       detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     });
 
     expect(viewModel.state).toBe("partial");

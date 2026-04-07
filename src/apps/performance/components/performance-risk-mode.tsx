@@ -6,6 +6,7 @@ import {
 } from "@/design-system";
 
 import { buildPerformanceRiskViewModel } from "../risk-workspace-view-model";
+import { usePerformanceRiskContract } from "../use-performance-risk-contract";
 import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskProvenanceStrip from "./risk/risk-provenance-strip";
@@ -19,11 +20,19 @@ export default function PerformanceRiskMode({
   detailBasis,
   isDetailsPending,
 }: PerformanceRiskModeProps) {
-  const viewModel = buildPerformanceRiskViewModel({
+  const { riskSummary, riskConcentration, isLoading } = usePerformanceRiskContract({
     workspace,
     period,
     detailBasis,
     isDetailsPending,
+  });
+  const viewModel = buildPerformanceRiskViewModel({
+    workspace,
+    period,
+    detailBasis,
+    isDetailsPending: isLoading,
+    riskSummary,
+    riskConcentration,
   });
 
   const statePanel =

@@ -4,6 +4,8 @@ import {
   WorkbenchPerformanceAttributionTrend,
   WorkbenchOverview,
   WorkbenchPerformanceHorizonComparison,
+  WorkbenchRiskConcentrationResponse,
+  WorkbenchRiskSummaryResponse,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPortfolio360,
@@ -355,6 +357,80 @@ export async function getWorkbenchPerformanceAdvisorBriefClient(
     `/workbench/${portfolioId}/performance/advisor-brief`,
     "performance advisor brief",
     buildPerformanceWorkspaceQuery(params)
+  );
+}
+
+function buildRiskWorkspaceQuery(params: {
+  period: string;
+  detailBasis?: string;
+  benchmark?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
+}): string {
+  const query = new URLSearchParams();
+  query.set("period", params.period);
+  if (params.detailBasis) {
+    query.set("detail_basis", params.detailBasis);
+  }
+  if (params.benchmark) {
+    query.set("benchmark_code", params.benchmark);
+  }
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
+  }
+  return query.toString();
+}
+
+function buildRiskWorkspaceUrl(
+  portfolioId: string,
+  pathSuffix: "/risk/summary" | "/risk/concentration",
+  params: {
+    period: string;
+    detailBasis?: string;
+    benchmark?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
+  },
+  target: WorkbenchRequestTarget
+): string {
+  return buildWorkbenchUrl(
+    target,
+    `/workbench/${portfolioId}${pathSuffix}`,
+    buildRiskWorkspaceQuery(params)
+  );
+}
+
+export async function getWorkbenchRiskSummaryClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    detailBasis: string;
+    benchmark?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
+  }
+): Promise<WorkbenchRiskSummaryResponse> {
+  return await fetchWorkbenchJson<WorkbenchRiskSummaryResponse>(
+    buildRiskWorkspaceUrl(portfolioId, "/risk/summary", params, "client"),
+    "workbench risk summary"
+  );
+}
+
+export async function getWorkbenchRiskConcentrationClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    benchmark?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
+  }
+): Promise<WorkbenchRiskConcentrationResponse> {
+  return await fetchWorkbenchJson<WorkbenchRiskConcentrationResponse>(
+    buildRiskWorkspaceUrl(portfolioId, "/risk/concentration", params, "client"),
+    "workbench risk concentration"
   );
 }
 

@@ -503,6 +503,18 @@ describe("PerformanceAnalyticsPage", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/summary")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input
+          .toString()
+          .includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/concentration")
+      )
+    ).toBe(true);
+    expect(
       fetchMock.mock.calls.some(([input]) => input.toString().includes("/analytics/risk/"))
     ).toBe(false);
     expect(
