@@ -107,7 +107,7 @@ describe("PerformanceChartPanel", () => {
     expect(activePeriodSeries?.barWidth).toBe(14);
     expect(activePeriodSeries?.itemStyle).toMatchObject({
       borderWidth: 1,
-      borderRadius: [3, 3, 0, 0],
+      borderRadius: [8, 8, 0, 0],
     });
 
     const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio Return");
@@ -267,7 +267,7 @@ describe("PerformanceChartPanel", () => {
     expect(lastChartOption?.legend).toMatchObject({
       icon: "roundRect",
       itemGap: 18,
-      textStyle: { color: "#435164", fontWeight: 700 },
+      textStyle: { color: "#435164", fontWeight: 650 },
     });
     expect(lastChartOption?.tooltip).toMatchObject({
       backgroundColor: "rgba(19, 30, 43, 0.96)",
