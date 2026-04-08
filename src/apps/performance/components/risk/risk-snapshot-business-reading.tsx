@@ -14,6 +14,7 @@ export default function RiskSnapshotBusinessReading({
     <RiskExecutiveSummary
       summary={summary}
       ariaLabel="Risk snapshot business reading"
+      density="compact"
     />
   );
 }

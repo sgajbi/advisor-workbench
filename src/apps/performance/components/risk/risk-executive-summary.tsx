@@ -9,6 +9,7 @@ export default function RiskExecutiveSummary({
   summary,
   ariaLabel,
   postureTone,
+  density = "default",
 }: {
   summary:
     | PerformanceRiskExecutiveSummary
@@ -18,9 +19,18 @@ export default function RiskExecutiveSummary({
       });
   ariaLabel: string;
   postureTone?: "success" | "default" | "warn" | "danger";
+  density?: "default" | "compact";
 }) {
   return (
-    <section className="performance-risk-briefing-card" aria-label={ariaLabel}>
+    <section
+      className={[
+        "performance-risk-briefing-card",
+        density === "compact" ? "performance-risk-briefing-card-compact" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label={ariaLabel}
+    >
       <div className="performance-risk-section-header">
         <Text variant="cardTitle" className="performance-risk-section-title">
           {summary.heading}

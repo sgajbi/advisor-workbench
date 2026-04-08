@@ -40,6 +40,8 @@ describe("RiskSnapshotPanel", () => {
     expect(
       screen.getByText(/Next review: confirm active risk remains appropriate through beta and tracking error\./)
     ).toBeInTheDocument();
+    const businessReading = screen.getByLabelText("Risk snapshot business reading");
+    expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
     expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })
