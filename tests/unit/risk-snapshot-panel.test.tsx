@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import RiskSnapshotPanel from "../../src/apps/performance/components/risk/risk-snapshot-panel";
@@ -41,7 +41,10 @@ describe("RiskSnapshotPanel", () => {
       screen.getByText(/Next review: confirm active risk remains appropriate through beta and tracking error\./)
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Context and methodology" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Context and methodology" })).not.toBeInTheDocument();
     expect(screen.queryByText("Stateful risk metric")).not.toBeInTheDocument();
 
     const headlineLabels = Array.from(
@@ -65,6 +68,24 @@ describe("RiskSnapshotPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps methodology hidden until explicitly requested", () => {
+    const viewModel = buildRiskViewModel();
+    render(<RiskSnapshotPanel viewModel={viewModel} />);
+
+    expect(
+      screen.queryByRole("dialog", { name: "Risk Snapshot methodology and coverage" })
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" }));
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Risk Snapshot methodology and coverage",
+    });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText("Portfolio observations")).toBeInTheDocument();
+    expect(within(dialog).getByText("Benchmark context")).toBeInTheDocument();
+  });
+
   it("qualifies benchmark-relative interpretation when benchmark context is unavailable", () => {
     const viewModel = buildRiskViewModel({ benchmarkUnassigned: true });
     render(<RiskSnapshotPanel viewModel={viewModel} />);
@@ -79,6 +100,9 @@ describe("RiskSnapshotPanel", () => {
     expect(
       screen.getAllByText("Benchmark-relative risk requires benchmark context.").length
     ).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Relative risk is not being applied for this selection.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" }));
+    expect(
+      screen.getByRole("dialog", { name: "Risk Snapshot methodology and coverage" })
+    ).toHaveTextContent("Relative risk is not being applied for this selection.");
   });
 });
