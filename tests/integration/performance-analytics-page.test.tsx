@@ -528,11 +528,14 @@ describe("PerformanceAnalyticsPage", () => {
       "Technology"
     );
     expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
-      expect(screen.getByLabelText("Risk concentration current-state cards")).toHaveTextContent(
-        "Portfolio HHI"
+      expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
+        "Business reading"
       );
-      expect(screen.getByLabelText("Risk concentration coverage table")).toHaveTextContent(
-        "Coverage Current"
+      expect(screen.getByLabelText("Risk concentration indicator strip")).toHaveTextContent(
+        "Portfolio Concentration Index"
+      );
+      expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
+        "Issuer Coverage"
       );
     expect(screen.queryByLabelText("Risk support rail")).not.toBeInTheDocument();
 

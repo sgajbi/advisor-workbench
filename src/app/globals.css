@@ -3540,7 +3540,6 @@ a:hover {
   .performance-risk-grid,
   .performance-risk-context-grid,
   .performance-risk-metric-strip,
-  .performance-risk-concentration-context,
   .performance-risk-provenance-strip {
     grid-template-columns: 1fr;
   }
@@ -5209,103 +5208,182 @@ a:hover {
   color: var(--text);
 }
 
-.performance-risk-concentration-context {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
 .performance-risk-concentration-metric-strip {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-.performance-risk-concentration-reading,
-.performance-risk-concentration-visual {
-  min-height: 100%;
-}
-
-.performance-risk-concentration-visual {
-  padding: 1rem 1rem 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.performance-risk-concentration-footer {
+.performance-risk-concentration-upper {
   display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.95fr);
   gap: 1rem;
-  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.85fr);
   align-items: start;
 }
 
-.performance-risk-concentration-index-grid {
+.performance-risk-concentration-upper-main,
+.performance-risk-concentration-upper-side {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.performance-risk-concentration-index-card {
+.performance-risk-concentration-executive,
+.performance-risk-concentration-driver-analysis,
+.performance-risk-concentration-scale,
+.performance-risk-concentration-context-panel {
   display: grid;
-  gap: 0.65rem;
-  padding: 1rem 1rem 0.9rem;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem;
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
 }
 
-.performance-risk-concentration-index-header {
+.performance-risk-concentration-section-header {
   display: flex;
-  align-items: baseline;
+  align-items: start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.performance-risk-concentration-index-band {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  overflow: hidden;
-  height: 0.55rem;
+.performance-risk-concentration-action-cue {
+  color: var(--text-muted);
+}
+
+.performance-risk-term-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.performance-risk-term-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.26);
   border-radius: 999px;
+  background: rgba(248, 250, 252, 0.95);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1;
+  cursor: help;
 }
 
-.performance-risk-concentration-index-band-segment {
-  height: 100%;
-}
-
-.performance-risk-concentration-index-band-low {
-  background: rgba(22, 163, 74, 0.18);
-}
-
-.performance-risk-concentration-index-band-mid {
-  background: rgba(202, 138, 4, 0.18);
-}
-
-.performance-risk-concentration-index-band-high {
-  background: rgba(185, 28, 28, 0.18);
-}
-
-.performance-risk-concentration-index-marker {
-  position: absolute;
-  top: -0.12rem;
-  width: 2px;
-  height: 0.8rem;
-  background: rgba(15, 23, 42, 0.85);
-  transform: translateX(-50%);
-}
-
-.performance-risk-concentration-controls {
+.performance-risk-concentration-driver-list {
   display: grid;
   gap: 0.75rem;
 }
 
-.performance-risk-control-item {
+.performance-risk-concentration-driver-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.performance-risk-concentration-driver-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.performance-risk-concentration-driver-copy,
+.performance-risk-concentration-driver-metric {
   display: grid;
   gap: 0.2rem;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
+}
+
+.performance-risk-concentration-driver-metric {
+  min-width: 140px;
+  justify-items: end;
+  text-align: right;
+}
+
+.performance-risk-concentration-scale-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.performance-risk-concentration-scale-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.performance-risk-concentration-scale-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.performance-risk-concentration-scale-bands {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.performance-risk-concentration-scale-band {
+  height: 100%;
+}
+
+.performance-risk-concentration-scale-band-diversified {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.performance-risk-concentration-scale-band-moderate {
+  background: rgba(51, 65, 85, 0.12);
+}
+
+.performance-risk-concentration-scale-band-elevated {
+  background: rgba(71, 85, 105, 0.18);
+}
+
+.performance-risk-concentration-scale-band-high {
+  background: rgba(30, 41, 59, 0.26);
+}
+
+.performance-risk-concentration-scale-marker {
+  position: absolute;
+  top: -0.12rem;
+  width: 2px;
+  height: 0.84rem;
+  background: rgba(15, 23, 42, 0.9);
+  transform: translateX(-50%);
+}
+
+.performance-risk-concentration-scale-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.performance-risk-concentration-context-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.performance-risk-concentration-context-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: start;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.performance-risk-concentration-context-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.performance-risk-concentration-context-copy {
+  display: grid;
+  gap: 0.2rem;
 }
 
 .performance-risk-partial-failure-row {
@@ -5316,16 +5394,19 @@ a:hover {
 }
 
 @media (max-width: 1180px) {
-  .performance-risk-concentration-context {
+  .performance-risk-concentration-upper {
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-concentration-index-grid {
+  .performance-risk-concentration-scale-header,
+  .performance-risk-concentration-driver-row,
+  .performance-risk-concentration-context-row {
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-concentration-footer {
-    grid-template-columns: 1fr;
+  .performance-risk-concentration-driver-metric {
+    justify-items: start;
+    text-align: left;
   }
 }
 

@@ -167,7 +167,7 @@ describe("PerformanceRiskMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration current-state cards")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk concentration executive summary")).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
@@ -255,42 +255,41 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration interpretation")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk concentration executive summary")).toBeInTheDocument();
     });
 
-    expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
+    expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
       "Business reading"
     );
-    expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
-      "Coverage posture"
+    expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
+      "Partial Coverage"
     );
     const concentrationMetricStrip = screen.getByLabelText("Risk concentration headline metrics");
     expect(
       within(concentrationMetricStrip)
-        .getByText("Portfolio HHI")
+        .getByText("Portfolio Concentration Index")
         .closest(".workbench-summary-metric-card")
-    ).toHaveAttribute("title", "Position-level concentration for the current live book");
-    expect(screen.getByLabelText("Risk concentration current-state cards")).toHaveTextContent(
-      "Portfolio HHI"
+    ).toHaveAttribute(
+      "title",
+      "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings."
     );
-    expect(screen.getByLabelText("Risk concentration current-state cards")).toHaveTextContent(
-      "Issuer HHI"
+    expect(screen.getByLabelText("Risk concentration driver analysis")).toHaveTextContent(
+      "Largest current exposures"
     );
-    expect(screen.getByText("Exposure concentration")).toBeInTheDocument();
-    expect(screen.getByText("Largest current exposures")).toBeInTheDocument();
-    expect(screen.getByText("Single-name exposure")).toBeInTheDocument();
-    expect(screen.getByText("Issuer-bucket exposure")).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
-      "PIMCO GIS Income Fund"
+    expect(screen.getByLabelText("Risk concentration driver analysis")).toHaveTextContent(
+      "Concentration breadth"
     );
-    expect(screen.getByLabelText("Risk concentration interpretation")).not.toHaveTextContent(
-      "FUND_PIMCO_INC"
+    expect(screen.getByLabelText("Risk concentration scale")).toHaveTextContent(
+      "Diversified"
     );
-    expect(screen.getByLabelText("Risk concentration coverage table")).toHaveTextContent(
-      "Coverage Current"
-    );
-    expect(screen.getByLabelText("Risk concentration controls")).toHaveTextContent(
+    expect(screen.getByLabelText("Risk concentration context")).toHaveTextContent(
       "Grouping Level"
+    );
+    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
+      "Portfolio Concentration Index"
+    );
+    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
+      "Issuer Coverage"
     );
     expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
   });

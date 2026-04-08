@@ -36,14 +36,27 @@ describe("buildPerformanceRiskViewModel", () => {
       "Information Ratio",
       "Value at Risk",
     ]);
-    expect(viewModel.concentrationMetrics.map((metric) => metric.label)).toEqual([
-      "Portfolio HHI",
-      "Issuer HHI",
-      "Top Position",
-      "Top Issuer",
-      "Top 10",
-      "Coverage",
+    expect(viewModel.concentrationIndicators.map((metric) => metric.label)).toEqual([
+      "Portfolio Concentration Index",
+      "Issuer Concentration Index",
+      "Largest Position Weight",
+      "Largest Issuer Weight",
+      "Top 10 Weight",
     ]);
+    expect(viewModel.concentrationExecutiveSummary).toMatchObject({
+      heading: "Business reading",
+      postureLabel: "Partial Coverage",
+    });
+    expect(viewModel.concentrationDriverAnalysis[0]).toMatchObject({
+      title: "Largest current exposures",
+    });
+    expect(viewModel.concentrationScales[0]).toMatchObject({
+      label: "Portfolio Concentration Index",
+      interpretationBand: "Moderate",
+    });
+    expect(viewModel.concentrationContextRows[0]).toMatchObject({
+      label: "Issuer Coverage",
+    });
     expect(viewModel.supportability.map((item) => item.key)).toEqual([
       "summary:portfolio_returns",
       "summary:benchmark_returns",
@@ -63,20 +76,9 @@ describe("buildPerformanceRiskViewModel", () => {
       "rolling:risk_free_series",
       "rolling:rolling_time_series",
     ]);
-    expect(viewModel.concentrationComparisonRows[0]).toMatchObject({
-      metric: "Portfolio HHI",
-      current: "1,260",
-      proposed: "1,260",
-      delta: "0",
-    });
-    expect(viewModel.concentrationHasProposedChanges).toBe(false);
-    expect(viewModel.concentrationDriverRows[0]).toMatchObject({
-      lens: "Largest Position",
-      currentDriver: "PIMCO GIS Income Fund",
-    });
-    expect(viewModel.concentrationCoverageRows[0]).toMatchObject({
-      item: "Grouping Level",
-      value: "Ultimate Parent",
+    expect(viewModel.concentrationDiagnosticRows[0]).toMatchObject({
+      measure: "Portfolio Concentration Index",
+      currentReading: "1,260",
     });
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Max Drawdown",
@@ -153,7 +155,8 @@ describe("buildPerformanceRiskViewModel", () => {
 
     expect(viewModel.state).toBe("loading");
     expect(viewModel.snapshotMetrics).toEqual([]);
-    expect(viewModel.concentrationMetrics).toEqual([]);
+    expect(viewModel.concentrationIndicators).toEqual([]);
+    expect(viewModel.concentrationExecutiveSummary).toBeNull();
     expect(viewModel.rollingWindows).toEqual([]);
     expect(viewModel.supportability).toEqual([
       expect.objectContaining({ key: "risk_bff", state: "partial" }),
