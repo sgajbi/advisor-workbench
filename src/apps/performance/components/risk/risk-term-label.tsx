@@ -2,7 +2,7 @@ import Tooltip from "@mui/material/Tooltip";
 
 import { Text } from "@/design-system";
 
-export default function RiskConcentrationTermLabel({
+export default function RiskTermLabel({
   label,
   definition,
 }: {

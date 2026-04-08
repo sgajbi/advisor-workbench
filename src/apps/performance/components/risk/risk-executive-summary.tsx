@@ -1,17 +1,40 @@
-import { Text } from "@/design-system";
+import { SemanticBadge, Text } from "@/design-system";
 
-import type { PerformanceRiskExecutiveSummary } from "../../risk-workspace-view-model";
+import type {
+  PerformanceRiskConcentrationExecutiveSummary,
+  PerformanceRiskExecutiveSummary,
+} from "../../risk-workspace-view-model";
 
 export default function RiskExecutiveSummary({
   summary,
   ariaLabel,
+  postureTone,
 }: {
-  summary: PerformanceRiskExecutiveSummary;
+  summary:
+    | PerformanceRiskExecutiveSummary
+    | (Omit<PerformanceRiskConcentrationExecutiveSummary, "postureState"> & {
+        headline: string;
+        detail: string;
+      });
   ariaLabel: string;
+  postureTone?: "success" | "default" | "warn" | "danger";
 }) {
   return (
     <section className="performance-risk-briefing-card" aria-label={ariaLabel}>
-      <Text variant="cardTitle">{summary.heading}</Text>
+      <div className="performance-risk-section-header">
+        <Text variant="cardTitle" className="performance-risk-section-title">
+          {summary.heading}
+        </Text>
+        {summary.postureLabel ? (
+          <SemanticBadge
+            tone={postureTone ?? "default"}
+            emphasis="strong"
+            className="performance-risk-briefing-badge"
+          >
+            {summary.postureLabel}
+          </SemanticBadge>
+        ) : null}
+      </div>
       <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
         {summary.headline}
       </Text>
