@@ -22,6 +22,8 @@ describe("RiskMetricCard", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("21.40%")).toBeInTheDocument();
     expect(screen.getByText("Aggregated exposure to the largest issuer group.")).toBeInTheDocument();
+    expect(screen.getByText("Largest Issuer Weight")).toHaveClass("workbench-summary-metric-label");
+    expect(screen.getByText("21.40%")).toHaveClass("workbench-summary-metric-value");
     expect(container.querySelector(".performance-risk-metric-card-warn")).toBeTruthy();
   });
 

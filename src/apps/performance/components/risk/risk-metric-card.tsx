@@ -50,7 +50,9 @@ export default function RiskMetricCard({
         {definition ? (
           <RiskTermLabel label={label} definition={definition} />
         ) : (
-          <Text variant="label">{label}</Text>
+          <Text variant="label" className="workbench-summary-metric-label">
+            {label}
+          </Text>
         )}
         {displaySupport ? (
           <Text variant="metadata" className="performance-risk-metric-card-support">
@@ -63,7 +65,10 @@ export default function RiskMetricCard({
           </Text>
         ) : null}
       </div>
-      <Text variant="cardTitle" className="performance-risk-metric-card-value">
+      <Text
+        variant="metricValueCompact"
+        className="performance-risk-metric-card-value workbench-summary-metric-value"
+      >
         {value}
       </Text>
     </article>

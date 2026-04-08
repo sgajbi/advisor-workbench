@@ -5352,10 +5352,6 @@ a:hover {
   background: #ffffff;
 }
 
-.performance-risk-secondary-group .section-header .ui-text-section-title {
-  font-size: 1rem;
-}
-
 .performance-risk-secondary-group .section-header-copy .ui-text-secondary {
   font-size: 0.82rem;
   line-height: 1.45;
@@ -5427,14 +5423,6 @@ a:hover {
   gap: 0.55rem;
 }
 
-.performance-risk-module-shell-primary .section-header .ui-text-section-title {
-  font-size: 1.04rem;
-}
-
-.performance-risk-module-shell-secondary .section-header .ui-text-section-title {
-  font-size: 0.98rem;
-}
-
 .performance-risk-module-shell-secondary .section-header-copy {
   max-width: 48ch;
 }
@@ -5484,10 +5472,6 @@ a:hover {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-}
-
-.performance-risk-section-title {
-  color: var(--brand-strong);
 }
 
 .performance-risk-detail-toolbar {
@@ -6331,12 +6315,6 @@ a:hover {
   line-height: 1.45;
 }
 
-.performance-risk-concentration-indicator-card .performance-risk-metric-card-value {
-  font-size: 1.2rem;
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-}
-
 .performance-risk-concentration-indicator-card .ui-text-metadata {
   max-width: 18ch;
   line-height: 1.35;
@@ -6490,10 +6468,6 @@ a:hover {
 
 .performance-risk-concentration-panel .performance-risk-detail-section-compact .performance-risk-detail-body {
   gap: 0.52rem;
-}
-
-.performance-risk-concentration-panel .performance-risk-section-title {
-  font-size: 0.92rem;
 }
 
 .performance-risk-concentration-panel .performance-risk-detail-section-compact .ui-text-card-title {
