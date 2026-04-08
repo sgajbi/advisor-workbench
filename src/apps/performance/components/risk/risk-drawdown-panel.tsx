@@ -19,6 +19,7 @@ export default function RiskDrawdownPanel({
       title="Drawdown"
       subtitle="Realized loss path, recovery posture, and benchmark-relative drawdown evidence."
       priority="primary"
+      density="compact"
       className="performance-risk-drawdown-panel"
       actions={
         <RiskPanelUtilityRow

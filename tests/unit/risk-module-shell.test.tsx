@@ -10,6 +10,7 @@ describe("RiskModuleShell", () => {
         title="Risk Snapshot"
         subtitle="Executive risk posture."
         priority="primary"
+        density="compact"
         actions={<button type="button">Utility</button>}
         businessReading={<section aria-label="Business reading">Read</section>}
       />
@@ -17,6 +18,7 @@ describe("RiskModuleShell", () => {
 
     expect(screen.getByRole("heading", { name: "Risk Snapshot" })).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-module-shell-primary")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-module-shell-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-module-body")).toBeNull();
   });
 

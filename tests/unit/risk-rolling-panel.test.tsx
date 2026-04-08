@@ -63,11 +63,13 @@ describe("RiskRollingPanel", () => {
         /review 63D to separate short-term noise from longer-horizon posture\./i
       )
     ).toBeInTheDocument();
+    expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
 
     const headlineLabels = Array.from(
       container.querySelectorAll(".performance-risk-rolling-headline-card")
     ).map((node) => node.getAttribute("aria-label")?.replace(" headline metric", ""));
     expect(headlineLabels).toEqual(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
+    expect(container.querySelector(".performance-risk-rolling-headline-grid")).toBeTruthy();
 
     expect(screen.getByRole("tab", { name: "21D" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("Review window")).toBeInTheDocument();
@@ -75,6 +77,7 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-rolling-detail-table")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Current" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Observed Range" })).toBeInTheDocument();

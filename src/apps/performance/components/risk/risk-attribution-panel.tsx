@@ -28,6 +28,7 @@ export default function RiskAttributionPanel({
       title="Historical Risk Attribution"
       subtitle="Analytical decomposition of total and active risk across supported business dimensions."
       priority="secondary"
+      density="compact"
       className="performance-risk-attribution-panel"
       actions={
         <RiskPanelUtilityRow
@@ -40,6 +41,7 @@ export default function RiskAttributionPanel({
           <RiskExecutiveSummary
             summary={viewModel.attributionExecutiveSummary}
             ariaLabel="Historical risk attribution business reading"
+            density="compact"
           />
         ) : null
       }
@@ -158,6 +160,7 @@ export default function RiskAttributionPanel({
             <RiskAnalyticalTable
               ariaLabel="Historical risk attribution table"
               density="compact"
+              className="performance-risk-attribution-detail-table"
               columns={[
                 { key: "group", label: "Group" },
                 { key: "avgWeight", label: "Average Weight", align: "right" },

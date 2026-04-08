@@ -86,6 +86,7 @@ export default function RiskRollingWindowDetail({
       <RiskAnalyticalTable
         ariaLabel="Rolling risk summary table"
         density="compact"
+        className="performance-risk-rolling-detail-table"
         columns={[
           { key: "metric", label: "Measure" },
           { key: "current", label: "Current", align: "right" },

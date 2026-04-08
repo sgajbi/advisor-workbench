@@ -10,5 +10,11 @@ export default function RiskRollingBusinessReading({
     return null;
   }
 
-  return <RiskExecutiveSummary summary={summary} ariaLabel="Rolling risk business reading" />;
+  return (
+    <RiskExecutiveSummary
+      summary={summary}
+      ariaLabel="Rolling risk business reading"
+      density="compact"
+    />
+  );
 }

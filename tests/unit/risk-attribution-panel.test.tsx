@@ -28,11 +28,14 @@ describe("RiskAttributionPanel", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Historical Risk Attribution" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Historical risk attribution business reading")).toBeInTheDocument();
+    const businessReading = screen.getByLabelText("Historical risk attribution business reading");
+    expect(businessReading).toBeInTheDocument();
+    expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
     expect(screen.getByLabelText("Risk attribution highlights")).toBeInTheDocument();
     expect(screen.getByLabelText("Risk attribution detail")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-attribution-detail-table")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Historical Risk Attribution methodology and coverage" })).toBeInTheDocument();
   });
 });

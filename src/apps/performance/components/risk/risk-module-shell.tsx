@@ -12,6 +12,7 @@ export default function RiskModuleShell({
   context,
   className,
   priority = "primary",
+  density = "default",
 }: {
   title: string;
   subtitle: string;
@@ -22,6 +23,7 @@ export default function RiskModuleShell({
   context?: ReactNode;
   className?: string;
   priority?: "primary" | "secondary";
+  density?: "default" | "compact";
 }) {
   return (
     <SectionBlock
@@ -32,6 +34,7 @@ export default function RiskModuleShell({
         "performance-risk-panel",
         "performance-risk-module-shell",
         `performance-risk-module-shell-${priority}`,
+        density === "compact" ? "performance-risk-module-shell-compact" : "",
         className,
       ]
         .filter(Boolean)

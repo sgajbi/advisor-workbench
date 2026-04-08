@@ -109,6 +109,7 @@ describe("PerformanceRiskMode", () => {
         ".performance-risk-secondary-group .performance-risk-attribution-panel"
       )
     ).toBeTruthy();
+    expect(container.querySelectorAll(".performance-risk-module-shell-compact")).toHaveLength(5);
     expect(screen.queryByText("Coverage and methodology")).not.toBeInTheDocument();
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledWith("PF_1001", {

@@ -25,6 +25,7 @@ export default function RiskConcentrationPanel({
       title="Concentration"
       subtitle="Front-office concentration posture, principal drivers, and issuer-reliability context."
       priority="primary"
+      density="compact"
       className="performance-risk-concentration-panel"
       actions={
         <RiskPanelUtilityRow

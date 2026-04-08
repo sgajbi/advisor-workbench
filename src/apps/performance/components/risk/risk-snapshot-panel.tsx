@@ -15,6 +15,7 @@ export default function RiskSnapshotPanel({
       title="Risk Snapshot"
       subtitle="Executive risk posture, benchmark-relative reliability, and the key measures to review first."
       priority="primary"
+      density="compact"
       className="performance-risk-snapshot-panel"
       actions={
         <RiskPanelUtilityRow

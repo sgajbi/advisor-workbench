@@ -33,6 +33,7 @@ export default function RiskRollingPanel({
       title="Rolling Risk"
       subtitle="Selected-window behaviour, relative reliability, and next-horizon review."
       priority="secondary"
+      density="compact"
       className="performance-risk-rolling-panel"
       actions={
         <RiskPanelUtilityRow
