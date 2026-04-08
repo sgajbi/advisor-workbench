@@ -53,6 +53,7 @@ export default function RiskAttributionPanel({
             ariaLabel="Risk attribution highlights"
             className="performance-risk-attribution-highlights"
             itemClassName="performance-risk-attribution-highlight-card"
+            supportMode="hidden"
             metrics={viewModel.attributionHighlights.map((highlight) => ({
               key: highlight.key,
               label: highlight.label,

@@ -5900,7 +5900,7 @@ a:hover {
 }
 
 .performance-risk-rolling-headline-support {
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .performance-risk-rolling-headline-metadata {
@@ -5936,8 +5936,8 @@ a:hover {
 }
 
 .performance-risk-attribution-highlight-card {
-  min-height: 102px;
-  padding: 0.82rem 0.88rem;
+  min-height: 84px;
+  padding: 0.72rem 0.8rem;
 }
 
 .performance-risk-secondary-main .performance-risk-analytical-table-compact,

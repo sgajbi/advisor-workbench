@@ -16,8 +16,10 @@ export function selectRollingHeadlineMetrics(
 
 export default function RiskRollingHeadlineMetrics({
   window,
+  showMetadata = true,
 }: {
   window: PerformanceRiskRollingWindow | null;
+  showMetadata?: boolean;
 }) {
   const metrics = selectRollingHeadlineMetrics(window);
   if (!metrics.length) {
@@ -48,7 +50,7 @@ export default function RiskRollingHeadlineMetrics({
               <Text variant="body" className="performance-risk-rolling-headline-support">
                 {metric.support}
               </Text>
-              {metric.metadata ? (
+              {showMetadata && metric.metadata ? (
                 <Text variant="metadata" className="performance-risk-rolling-headline-metadata">
                   {metric.metadata}
                 </Text>

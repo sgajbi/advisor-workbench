@@ -51,7 +51,7 @@ export default function RiskRollingPanel({
           summary={selectedWindow?.selectedWindowBusinessReading ?? viewModel.rollingExecutiveSummary}
         />
       }
-      headlineMetrics={<RiskRollingHeadlineMetrics window={selectedWindow} />}
+      headlineMetrics={<RiskRollingHeadlineMetrics window={selectedWindow} showMetadata={false} />}
       detail={
         <RiskRollingWindowDetail
           viewModel={viewModel}

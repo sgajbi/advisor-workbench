@@ -39,6 +39,8 @@ describe("RiskAttributionPanel", () => {
     expect(container.querySelector(".performance-risk-attribution-toolbar")).toBeTruthy();
     expect(container.querySelectorAll(".performance-risk-compact-segmented-control")).toHaveLength(2);
     expect(screen.queryByText("Attribution reconciliation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Current decomposition lens for contributor review.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Largest visible component effect at 5.83%.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Historical Risk Attribution methodology and coverage" })).toBeInTheDocument();
   });
 });

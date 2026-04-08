@@ -85,6 +85,7 @@ describe("RiskRollingPanel", () => {
     expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Rolling review notes")).toBeInTheDocument();
     expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
+    expect(screen.queryByText(/Typical 4\.07%/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Rolling Risk methodology and coverage" })
     ).toBeInTheDocument();

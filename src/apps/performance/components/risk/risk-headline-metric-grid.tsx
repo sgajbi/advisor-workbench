@@ -13,11 +13,13 @@ export default function RiskHeadlineMetricGrid({
   metrics,
   className,
   itemClassName,
+  supportMode = "full",
 }: {
   ariaLabel: string;
   metrics: RiskHeadlineMetric[];
   className?: string;
   itemClassName?: string;
+  supportMode?: "full" | "hidden";
 }) {
   if (!metrics.length) {
     return null;
@@ -33,7 +35,7 @@ export default function RiskHeadlineMetricGrid({
           key: metric.key,
           label: metric.label,
           value: metric.value,
-          support: metric.support,
+          support: supportMode === "hidden" ? undefined : metric.support,
           unavailable: metric.state === "unavailable",
         }))}
       />
