@@ -78,6 +78,7 @@ describe("RiskRollingPanel", () => {
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-rolling-detail-table")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-compact-segmented-control")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Current" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Observed Range" })).toBeInTheDocument();

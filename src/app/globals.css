@@ -5760,6 +5760,15 @@ a:hover {
 }
 
 .performance-risk-rolling-detail-table .analytics-table-head-cell,
+.performance-risk-rolling-detail-table .analytics-table-body-cell,
+.performance-risk-attribution-detail-table .analytics-table-head-cell,
+.performance-risk-attribution-detail-table .analytics-table-body-cell {
+  font-size: 0.72rem;
+  padding-top: 0.58rem;
+  padding-bottom: 0.58rem;
+}
+
+.performance-risk-rolling-detail-table .analytics-table-head-cell,
 .performance-risk-rolling-detail-table .analytics-table-body-cell {
   white-space: normal;
   word-break: break-word;
@@ -5940,6 +5949,26 @@ a:hover {
 
 .performance-risk-attribution-panel .performance-risk-note-card {
   padding: 0.6rem 0.72rem;
+}
+
+.performance-risk-attribution-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.38rem;
+}
+
+.performance-risk-compact-segmented-control {
+  padding: 0.14rem;
+  gap: 0.14rem;
+  border-radius: 9px;
+}
+
+.performance-risk-compact-segmented-control-button {
+  min-width: 0;
+  padding: 0.34rem 0.56rem;
+  font-size: 0.68rem;
+  line-height: 1.15;
 }
 
 .performance-risk-detail-drawer {

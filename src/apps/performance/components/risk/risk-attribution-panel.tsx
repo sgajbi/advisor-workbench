@@ -80,6 +80,8 @@ export default function RiskAttributionPanel({
                     title: option.reason ?? undefined,
                   }))}
                   ariaLabel="Risk attribution type"
+                  className="performance-risk-compact-segmented-control"
+                  buttonClassName="performance-risk-compact-segmented-control-button"
                 />
                 <WorkbenchSegmentedControl
                   value={controls.selectedGroupingDimension}
@@ -93,6 +95,8 @@ export default function RiskAttributionPanel({
                     title: option.reason ?? undefined,
                   }))}
                   ariaLabel="Risk attribution grouping"
+                  className="performance-risk-compact-segmented-control"
+                  buttonClassName="performance-risk-compact-segmented-control-button"
                 />
               </div>
             ) : null

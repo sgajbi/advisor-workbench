@@ -39,8 +39,8 @@ export default function RiskRollingWindowDetail({
                 title: `${window.label} rolling window`,
               }))}
               ariaLabel="Rolling risk windows"
-              className="performance-risk-window-toolbar performance-risk-rolling-window-toolbar"
-              buttonClassName="performance-risk-rolling-window-button"
+              className="performance-risk-window-toolbar performance-risk-rolling-window-toolbar performance-risk-compact-segmented-control"
+              buttonClassName="performance-risk-rolling-window-button performance-risk-compact-segmented-control-button"
             />
           </div>
         ) : null

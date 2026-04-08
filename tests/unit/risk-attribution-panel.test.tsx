@@ -36,6 +36,8 @@ describe("RiskAttributionPanel", () => {
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-attribution-detail-table")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-attribution-toolbar")).toBeTruthy();
+    expect(container.querySelectorAll(".performance-risk-compact-segmented-control")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Historical Risk Attribution methodology and coverage" })).toBeInTheDocument();
   });
 });
