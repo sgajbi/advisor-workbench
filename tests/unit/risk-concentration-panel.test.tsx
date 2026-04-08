@@ -34,6 +34,20 @@ describe("RiskConcentrationPanel", () => {
         ".performance-risk-concentration-indicator-grid .performance-risk-metric-card-compact"
       )
     ).toHaveLength(5);
+    const driverSection = screen
+      .getByRole("heading", { name: "Driver analysis" })
+      .closest(".performance-risk-detail-section");
+    const scaleSection = screen
+      .getByRole("heading", { name: "Concentration scale" })
+      .closest(".performance-risk-detail-section");
+    expect(driverSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(scaleSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(
+      container.querySelectorAll(".performance-risk-concentration-driver-row")
+    ).toHaveLength(3);
+    expect(
+      container.querySelectorAll(".performance-risk-concentration-scale-card")
+    ).toHaveLength(2);
   });
 
   it("keeps concentration methodology behind the on-demand panel", () => {

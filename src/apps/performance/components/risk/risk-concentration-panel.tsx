@@ -49,13 +49,21 @@ export default function RiskConcentrationPanel({
       }
       headlineMetrics={<RiskConcentrationIndicatorStrip indicators={viewModel.concentrationIndicators} />}
       detail={
-        <RiskDetailSection title="Driver analysis" ariaLabel="Risk concentration detail">
+        <RiskDetailSection
+          title="Driver analysis"
+          ariaLabel="Risk concentration detail"
+          density="compact"
+        >
           <RiskConcentrationDriverAnalysis rows={viewModel.concentrationDriverAnalysis} />
         </RiskDetailSection>
       }
       context={
         <div className="performance-risk-concentration-side-stack">
-          <RiskDetailSection title="Concentration scale" ariaLabel="Risk concentration scale detail">
+          <RiskDetailSection
+            title="Concentration scale"
+            ariaLabel="Risk concentration scale detail"
+            density="compact"
+          >
             <RiskConcentrationScale scales={viewModel.concentrationScales} />
           </RiskDetailSection>
         </div>

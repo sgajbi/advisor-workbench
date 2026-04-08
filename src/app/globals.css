@@ -6087,15 +6087,15 @@ a:hover {
 
 .performance-risk-concentration-driver-list {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.62rem;
 }
 
 .performance-risk-concentration-driver-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1rem;
+  gap: 0.8rem;
   align-items: start;
-  padding-bottom: 0.8rem;
+  padding-bottom: 0.62rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
 
@@ -6116,14 +6116,14 @@ a:hover {
 
 .performance-risk-concentration-driver-summary {
   color: var(--brand-strong);
-  line-height: 1.45;
+  line-height: 1.38;
 }
 
 .performance-risk-concentration-driver-metric {
   min-width: 140px;
   justify-items: end;
   text-align: right;
-  padding-left: 0.6rem;
+  padding-left: 0.5rem;
   border-left: 1px solid rgba(148, 163, 184, 0.14);
 }
 
@@ -6140,12 +6140,12 @@ a:hover {
 .performance-risk-concentration-scale-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.95rem;
+  gap: 0.72rem;
 }
 
 .performance-risk-concentration-scale-card {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .performance-risk-concentration-scale-header {
@@ -6208,6 +6208,36 @@ a:hover {
 
 .performance-risk-concentration-scale-reading {
   color: var(--text-muted);
+  line-height: 1.38;
+}
+
+.performance-risk-concentration-panel .performance-risk-module-body {
+  gap: 0.68rem;
+}
+
+.performance-risk-concentration-panel .performance-risk-concentration-side-stack {
+  gap: 0.68rem;
+}
+
+.performance-risk-concentration-panel .performance-risk-detail-section-compact {
+  padding: 0.74rem 0.82rem;
+}
+
+.performance-risk-concentration-panel .performance-risk-detail-section-compact .performance-risk-detail-body {
+  gap: 0.52rem;
+}
+
+.performance-risk-concentration-panel .performance-risk-section-title {
+  font-size: 0.92rem;
+}
+
+.performance-risk-concentration-panel .performance-risk-detail-section-compact .ui-text-card-title {
+  line-height: 1.22;
+}
+
+.performance-risk-concentration-panel .performance-risk-detail-section-compact .ui-text-secondary,
+.performance-risk-concentration-panel .performance-risk-detail-section-compact .ui-text-body {
+  font-size: 0.82rem;
   line-height: 1.4;
 }
 
