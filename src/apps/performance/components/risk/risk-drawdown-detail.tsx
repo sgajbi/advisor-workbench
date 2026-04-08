@@ -11,7 +11,7 @@ export default function RiskDrawdownDetail({
 }) {
   return (
     <div className="performance-risk-drawdown-detail-stack">
-      <RiskDetailSection title="Episode review" ariaLabel="Risk drawdown detail" density="compact">
+      <RiskDetailSection ariaLabel="Risk drawdown detail" density="compact">
         {viewModel.drawdownEpisodeInterpretation ? (
           <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card">
             <div className="performance-risk-note-copy">

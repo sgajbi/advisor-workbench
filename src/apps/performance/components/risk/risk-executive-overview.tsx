@@ -29,7 +29,7 @@ export default function RiskExecutiveOverview({
   return (
     <section className="performance-risk-executive" aria-label="Risk executive overview">
       <div className="performance-risk-executive-grid">
-        {overview.map((item, index) => (
+        {overview.map((item) => (
           <RiskMetricCard
             key={item.key}
             label={item.label}
@@ -37,12 +37,7 @@ export default function RiskExecutiveOverview({
             support=""
             tone={mapOverviewToneToCardTone(item.tone)}
             density="compact"
-            className={[
-              "performance-risk-executive-card",
-              index === 0 ? "performance-risk-executive-card-primary" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
+            className="performance-risk-executive-card"
             displaySupport={false}
             ariaLabel={`${item.label}: ${item.value}`}
           />

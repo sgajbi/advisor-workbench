@@ -51,7 +51,7 @@ describe("RiskDrawdownPanel", () => {
     );
     expect(screen.getByRole("heading", { name: "Drawdown" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Episode review" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Episode review" })).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Drawdown methodology and coverage" })
     ).toBeInTheDocument();
@@ -77,9 +77,7 @@ describe("RiskDrawdownPanel", () => {
       })
     ).toBeInTheDocument();
 
-    const episodeSection = screen
-      .getByRole("heading", { name: "Episode review" })
-      .closest(".performance-risk-detail-section");
+    const episodeSection = screen.getByLabelText("Risk drawdown detail");
     expect(episodeSection).toHaveClass("performance-risk-detail-section-compact");
     expect(
       (episodeSection as HTMLElement).querySelector(".performance-risk-note-card-compact")
@@ -125,9 +123,7 @@ describe("RiskDrawdownPanel", () => {
         "The portfolio did experience a loss path, but no episode met the retained episode policy for this window."
       )
     ).toBeInTheDocument();
-    const episodeSection = screen
-      .getByRole("heading", { name: "Episode review" })
-      .closest(".performance-risk-detail-section");
+    const episodeSection = screen.getByLabelText("Risk drawdown detail");
     expect(episodeSection).toHaveClass("performance-risk-detail-section-compact");
     expect(
       (episodeSection as HTMLElement).querySelector(".performance-risk-note-card-compact")

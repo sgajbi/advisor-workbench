@@ -27,7 +27,7 @@ describe("RiskConcentrationPanel", () => {
     expect(screen.getByRole("heading", { name: "Concentration" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Risk concentration executive summary")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk concentration scale detail")).toBeInTheDocument();
+    expect(screen.getByLabelText("Risk concentration scale")).toBeInTheDocument();
     expect(
       container.querySelectorAll(
         ".performance-risk-concentration-indicator-grid .performance-risk-metric-card-compact"
@@ -39,10 +39,9 @@ describe("RiskConcentrationPanel", () => {
         name: "Portfolio Concentration Index: Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
       }).length
     ).toBeGreaterThan(0);
-    const scaleSection = screen
-      .getByRole("heading", { name: "Concentration scale" })
-      .closest(".performance-risk-detail-section");
-    expect(scaleSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(screen.queryByRole("heading", { name: "Concentration scale" })).not.toBeInTheDocument();
+    const scaleSection = screen.getByLabelText("Risk concentration scale");
+    expect(scaleSection).toHaveClass("performance-risk-concentration-scale");
     expect(
       container.querySelectorAll(".performance-risk-concentration-scale-card")
     ).toHaveLength(2);

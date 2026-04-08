@@ -1,7 +1,6 @@
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskConcentrationIndicatorStrip from "./risk-concentration-indicator-strip";
 import RiskConcentrationScale from "./risk-concentration-scale";
-import RiskDetailSection from "./risk-detail-section";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
 
@@ -25,13 +24,7 @@ export default function RiskConcentrationPanel({
       headlineMetrics={<RiskConcentrationIndicatorStrip indicators={viewModel.concentrationIndicators} />}
       context={
         <div className="performance-risk-concentration-side-stack">
-          <RiskDetailSection
-            title="Concentration scale"
-            ariaLabel="Risk concentration scale detail"
-            density="compact"
-          >
-            <RiskConcentrationScale scales={viewModel.concentrationScales} />
-          </RiskDetailSection>
+          <RiskConcentrationScale scales={viewModel.concentrationScales} />
         </div>
       }
     />
