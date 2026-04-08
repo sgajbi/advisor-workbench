@@ -5099,6 +5099,9 @@ a:hover {
 }
 
 .performance-risk-context-grid .performance-risk-context-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   min-height: auto;
   padding: 0.52rem 0.62rem;
   background: rgba(248, 250, 252, 0.5);
@@ -5117,6 +5120,7 @@ a:hover {
   letter-spacing: 0;
   color: var(--brand-strong);
   font-variant-numeric: tabular-nums;
+  text-align: left;
 }
 
 .performance-risk-synopsis {
