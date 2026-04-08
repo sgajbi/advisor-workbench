@@ -367,13 +367,15 @@ export function buildPerformanceRiskViewModel({
       ...drawdown.warnings,
       ...rolling.warnings,
     ],
-    partialFailures: [
-      ...summary.partial_failures.map((failure) => failure.detail),
-      ...concentration.partial_failures.map((failure) => failure.detail),
-      ...(attribution?.partial_failures.map((failure) => failure.detail) ?? []),
-      ...drawdown.partial_failures.map((failure) => failure.detail),
-      ...rolling.partial_failures.map((failure) => failure.detail),
-    ],
+    partialFailures: Array.from(
+      new Set([
+        ...summary.partial_failures.map((failure) => failure.detail),
+        ...concentration.partial_failures.map((failure) => failure.detail),
+        ...(attribution?.partial_failures.map((failure) => failure.detail) ?? []),
+        ...drawdown.partial_failures.map((failure) => failure.detail),
+        ...rolling.partial_failures.map((failure) => failure.detail),
+      ])
+    ),
   };
 }
 
