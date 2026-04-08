@@ -20,6 +20,7 @@ export default function RiskDrawdownDetail({
           title="Supporting risk measures"
           ariaLabel="Drawdown supporting risk measures"
           className="performance-risk-supporting-detail"
+          density="compact"
         >
           <div
             className="performance-risk-secondary-metrics performance-risk-drawdown-supporting-strip"
@@ -87,6 +88,7 @@ function SupportingMetricCard({
       label={metric.label}
       value={metric.value}
       support={metric.support}
+      density="compact"
       className="performance-risk-secondary-metric"
     />
   );

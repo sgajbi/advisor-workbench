@@ -58,6 +58,10 @@ describe("RiskSnapshotPanel", () => {
       .getByRole("heading", { name: "Supporting risk measures" })
       .closest(".performance-risk-detail-section");
     expect(supportingSection).toBeTruthy();
+    expect(supportingSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(
+      (supportingSection as HTMLElement).querySelectorAll(".performance-risk-metric-card-compact")
+    ).toHaveLength(3);
     expect(within(supportingSection as HTMLElement).getByText("Information Ratio")).toBeInTheDocument();
     expect(within(supportingSection as HTMLElement).getByText("Sortino")).toBeInTheDocument();
     expect(within(supportingSection as HTMLElement).getByText("Value at Risk")).toBeInTheDocument();

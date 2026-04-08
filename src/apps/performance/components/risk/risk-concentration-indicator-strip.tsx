@@ -23,6 +23,7 @@ export default function RiskConcentrationIndicatorStrip({
             support={indicator.support}
             definition={indicator.definition}
             tone={indicator.tone === "neutral" ? "default" : indicator.tone}
+            density="compact"
             className={[
               "performance-risk-concentration-indicator-tile",
               "performance-risk-concentration-indicator-card",

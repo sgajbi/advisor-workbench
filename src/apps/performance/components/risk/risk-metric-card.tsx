@@ -8,6 +8,7 @@ export default function RiskMetricCard({
   support,
   definition,
   tone = "default",
+  density = "default",
   className,
   ariaLabel,
   title,
@@ -17,6 +18,7 @@ export default function RiskMetricCard({
   support: string;
   definition?: string;
   tone?: "default" | "warn" | "danger";
+  density?: "default" | "compact";
   className?: string;
   ariaLabel?: string;
   title?: string;
@@ -25,6 +27,7 @@ export default function RiskMetricCard({
     <article
       className={[
         "performance-risk-metric-card",
+        density === "compact" ? "performance-risk-metric-card-compact" : "",
         tone === "warn"
           ? "performance-risk-metric-card-warn"
           : tone === "danger"

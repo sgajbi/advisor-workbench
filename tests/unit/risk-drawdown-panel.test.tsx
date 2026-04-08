@@ -85,6 +85,10 @@ describe("RiskDrawdownPanel", () => {
       .getByRole("heading", { name: "Supporting risk measures" })
       .closest(".performance-risk-detail-section");
     expect(supportingSection).toBeTruthy();
+    expect(supportingSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(
+      (supportingSection as HTMLElement).querySelector(".performance-risk-metric-card-compact")
+    ).toBeTruthy();
     expect(within(supportingSection as HTMLElement).getByText("Ulcer Index")).toBeInTheDocument();
     expect(
       within(supportingSection as HTMLElement).getByText(

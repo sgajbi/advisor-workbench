@@ -37,4 +37,17 @@ describe("RiskMetricCard", () => {
     expect(screen.getByText("Ulcer Index")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Ulcer Index:/ })).not.toBeInTheDocument();
   });
+
+  it("supports a compact density for tighter first-paint risk cards", () => {
+    const { container } = render(
+      <RiskMetricCard
+        label="Information Ratio"
+        value="0.58"
+        support="Active return earned per unit of tracking error."
+        density="compact"
+      />
+    );
+
+    expect(container.querySelector(".performance-risk-metric-card-compact")).toBeTruthy();
+  });
 });
