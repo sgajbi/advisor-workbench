@@ -3552,9 +3552,6 @@ a:hover {
     justify-content: flex-start;
   }
 
-  .performance-risk-status-note {
-    text-align: left;
-  }
 }
 
 .portfolio-header-context-grid {
@@ -5241,8 +5238,7 @@ a:hover {
 }
 
 .performance-risk-secondary-group .performance-risk-briefing-card,
-.performance-risk-secondary-group .performance-risk-detail-section,
-.performance-risk-secondary-group .performance-risk-context-section {
+.performance-risk-secondary-group .performance-risk-detail-section {
   padding: 0.72rem 0.8rem;
 }
 
@@ -5479,8 +5475,7 @@ a:hover {
   cursor: pointer;
 }
 
-.performance-risk-detail-section,
-.performance-risk-context-section {
+.performance-risk-detail-section {
   display: grid;
   gap: 0.55rem;
   padding: 0.72rem 0.8rem;

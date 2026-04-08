@@ -23,6 +23,7 @@ describe("RFC-0023 risk hardening architecture guard", () => {
       const contents = readRepoFile(relativePath);
       return [
         !contents.includes("RiskPanelInfoDrawer")
+        && !contents.includes("RiskPanelUtilityRow")
           ? {
               file: relativePath,
               reason:
@@ -58,12 +59,12 @@ describe("RFC-0023 risk hardening architecture guard", () => {
       },
       {
         file: "src/apps/performance/components/risk/risk-drawdown-panel.tsx",
-        required: ['label="View underwater path"'],
+        required: ["View underwater path"],
         forbidden: ["Expand underwater path"],
       },
       {
         file: "src/apps/performance/components/risk/risk-rolling-panel.tsx",
-        required: ['label="View rolling series"'],
+        required: ["drilldownLabel", "onViewSeries"],
         forbidden: ["Expand rolling series"],
       },
     ];
