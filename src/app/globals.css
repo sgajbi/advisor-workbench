@@ -5315,7 +5315,10 @@ a:hover {
 }
 
 .performance-risk-secondary-grid-item {
+  display: flex;
   min-width: 0;
+  align-self: flex-start;
+  flex-direction: column;
 }
 
 .performance-risk-secondary-grid-item:first-child {
@@ -5324,6 +5327,10 @@ a:hover {
 
 .performance-risk-secondary-grid-item:last-child {
   flex: 0.94 1 0;
+}
+
+.performance-risk-secondary-grid-item > * {
+  height: auto;
 }
 
 .performance-risk-panel.section-block {

@@ -11,6 +11,7 @@ import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
+import RiskTableText from "./risk-table-text";
 
 type RiskAttributionPanelProps = {
   viewModel: PerformanceRiskViewModel;
@@ -167,15 +168,15 @@ export default function RiskAttributionPanel({
               className="performance-risk-attribution-detail-table"
               columns={[
                 { key: "group", label: "Group" },
-                { key: "avgWeight", label: "Average Weight", align: "right" },
-                { key: "marginalContribution", label: "Marginal Sensitivity", align: "right" },
-                { key: "componentContribution", label: "Component Contribution", align: "right" },
-                { key: "contributionShare", label: "Share of Risk", align: "right" },
+                { key: "avgWeight", label: "Avg Weight", align: "right" },
+                { key: "marginalContribution", label: "Marginal", align: "right" },
+                { key: "componentContribution", label: "Component", align: "right" },
+                { key: "contributionShare", label: "Share", align: "right" },
               ]}
               rows={viewModel.attributionRows.map((row) => ({
                 key: row.key,
                 cells: [
-                  row.group,
+                  <RiskTableText key={`${row.key}-group`} value={row.group} truncate />,
                   row.avgWeight,
                   row.marginalContribution,
                   row.componentContribution,

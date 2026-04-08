@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { AnalyticsTable } from "@/design-system";
 
 type RiskAnalyticalTableColumn = {
@@ -8,7 +10,7 @@ type RiskAnalyticalTableColumn = {
 
 type RiskAnalyticalTableRow = {
   key: string;
-  cells: Array<string>;
+  cells: Array<ReactNode>;
 };
 
 export default function RiskAnalyticalTable({

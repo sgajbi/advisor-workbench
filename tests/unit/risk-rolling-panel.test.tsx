@@ -81,8 +81,8 @@ describe("RiskRollingPanel", () => {
     expect(container.querySelector(".performance-risk-compact-segmented-control")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Current" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Observed Range" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Interpretation" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Range" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Review note" })).toBeInTheDocument();
     expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
     expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
     expect(

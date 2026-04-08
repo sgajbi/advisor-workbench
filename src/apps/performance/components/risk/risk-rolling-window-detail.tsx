@@ -6,6 +6,7 @@ import {
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailSection from "./risk-detail-section";
+import RiskTableText from "./risk-table-text";
 
 export default function RiskRollingWindowDetail({
   viewModel,
@@ -91,12 +92,22 @@ export default function RiskRollingWindowDetail({
           { key: "metric", label: "Measure" },
           { key: "current", label: "Current", align: "right" },
           { key: "typical", label: "Typical", align: "right" },
-          { key: "range", label: "Observed Range", align: "right" },
-          { key: "interpretation", label: "Interpretation" },
+          { key: "range", label: "Range", align: "right" },
+          { key: "interpretation", label: "Review note" },
         ]}
         rows={(selectedWindow?.detailRowInterpretations ?? []).map((row) => ({
           key: row.key,
-          cells: [row.metric, row.current, row.typical, row.range, row.interpretation],
+          cells: [
+            <RiskTableText key={`${row.key}-metric`} value={row.metric} />,
+            row.current,
+            row.typical,
+            row.range,
+            <RiskTableText
+              key={`${row.key}-interpretation`}
+              value={row.interpretation}
+              clamp
+            />,
+          ],
         }))}
         emptyState={{
           title: "No rolling risk metrics",
