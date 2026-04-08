@@ -75,19 +75,15 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     });
-    expect(screen.getByLabelText("Risk snapshot business reading")).toHaveTextContent(
-      "Business reading"
-    );
+    expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Risk posture");
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("What matters now");
     expect(screen.getByLabelText("Primary risk review")).toBeInTheDocument();
     expect(screen.getByLabelText("Secondary risk analysis")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /methodology and coverage$/i })).toHaveLength(5);
-    expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
-    expect(screen.getByLabelText("Rolling risk business reading")).toBeInTheDocument();
-    expect(
-      screen.getByLabelText("Historical risk attribution business reading")
-    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Rolling risk business reading")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Historical risk attribution business reading")).not.toBeInTheDocument();
     const concentrationHeading = screen.getByRole("heading", { name: "Concentration" });
     const rollingHeading = screen.getByRole("heading", { name: "Rolling Risk" });
     const attributionHeading = screen.getByRole("heading", {
@@ -211,7 +207,7 @@ describe("PerformanceRiskMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration executive summary")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
@@ -336,15 +332,9 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration executive summary")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
     });
-
-    expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
-      "Business reading"
-    );
-    expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
-      "Partial"
-    );
+    expect(screen.queryByLabelText("Risk concentration executive summary")).not.toBeInTheDocument();
     const concentrationMetricStrip = screen.getByLabelText("Risk concentration headline metrics");
     expect(
       within(concentrationMetricStrip)
@@ -354,15 +344,10 @@ describe("PerformanceRiskMode", () => {
       "title",
       "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings."
     );
-    expect(screen.getByLabelText("Risk concentration driver analysis")).toHaveTextContent(
-      "Largest current exposures"
-    );
-    expect(screen.getByLabelText("Risk concentration driver analysis")).toHaveTextContent(
-      "Concentration breadth"
-    );
     expect(screen.getByLabelText("Risk concentration scale")).toHaveTextContent(
       "Diversified"
     );
+    expect(screen.queryByLabelText("Risk concentration driver analysis")).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Concentration methodology and coverage" })
     );
@@ -452,7 +437,7 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk drawdown headline metrics")).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
@@ -677,7 +662,7 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk drawdown headline metrics")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: "View underwater path" }));

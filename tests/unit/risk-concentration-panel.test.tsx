@@ -25,29 +25,23 @@ describe("RiskConcentrationPanel", () => {
     const { container } = render(<RiskConcentrationPanel viewModel={viewModel} />);
 
     expect(screen.getByRole("heading", { name: "Concentration" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk concentration executive summary")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk concentration executive summary")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk concentration detail")).toBeInTheDocument();
     expect(screen.getByLabelText("Risk concentration scale detail")).toBeInTheDocument();
     expect(
       container.querySelectorAll(
         ".performance-risk-concentration-indicator-grid .performance-risk-metric-card-compact"
       )
     ).toHaveLength(5);
-    const driverSection = screen
-      .getByRole("heading", { name: "Driver analysis" })
-      .closest(".performance-risk-detail-section");
     const scaleSection = screen
       .getByRole("heading", { name: "Concentration scale" })
       .closest(".performance-risk-detail-section");
-    expect(driverSection).toHaveClass("performance-risk-detail-section-compact");
     expect(scaleSection).toHaveClass("performance-risk-detail-section-compact");
-    expect(
-      container.querySelectorAll(".performance-risk-concentration-driver-row")
-    ).toHaveLength(3);
     expect(
       container.querySelectorAll(".performance-risk-concentration-scale-card")
     ).toHaveLength(2);
+    expect(screen.queryByRole("heading", { name: "Driver analysis" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk concentration driver analysis")).not.toBeInTheDocument();
   });
 
   it("keeps concentration methodology behind the on-demand panel", () => {

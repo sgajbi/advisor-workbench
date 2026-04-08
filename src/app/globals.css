@@ -5940,6 +5940,44 @@ a:hover {
   gap: 0.1rem;
 }
 
+.performance-risk-range-indicator {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.performance-risk-range-indicator-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--brand-strong);
+}
+
+.performance-risk-range-indicator-track {
+  position: relative;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.26);
+}
+
+.performance-risk-range-indicator-marker {
+  position: absolute;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.performance-risk-range-indicator-marker-typical {
+  background: rgba(87, 121, 157, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.performance-risk-range-indicator-marker-current {
+  background: var(--brand);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.94);
+}
+
 .performance-risk-attribution-highlights {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -5979,6 +6017,37 @@ a:hover {
 
 .performance-risk-secondary-sidecar .performance-risk-attribution-detail-table .analytics-table-shell {
   max-height: 288px;
+}
+
+.performance-risk-share-bar {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.performance-risk-share-bar-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--brand-strong);
+}
+
+.performance-risk-share-bar-track {
+  display: block;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+  overflow: hidden;
+}
+
+.performance-risk-share-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4f7398 0%, #365f8b 100%);
+}
+
+.performance-risk-share-bar-fill-negative {
+  background: linear-gradient(90deg, #8a6757 0%, #6f5448 100%);
 }
 
 .performance-risk-rolling-supportability-row,

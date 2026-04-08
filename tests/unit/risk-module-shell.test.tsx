@@ -12,7 +12,6 @@ describe("RiskModuleShell", () => {
         priority="primary"
         density="compact"
         actions={<button type="button">Utility</button>}
-        businessReading={<section aria-label="Business reading">Read</section>}
       />
     );
 

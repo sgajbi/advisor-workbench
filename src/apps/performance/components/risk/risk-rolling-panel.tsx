@@ -1,7 +1,6 @@
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
-import RiskRollingBusinessReading from "./risk-rolling-business-reading";
 import RiskRollingHeadlineMetrics from "./risk-rolling-headline-metrics";
 import RiskRollingWindowDetail from "./risk-rolling-window-detail";
 import { riskRollingPanelCopy } from "./risk-secondary-copy";
@@ -44,11 +43,6 @@ export default function RiskRollingPanel({
             label: riskRollingPanelCopy.drilldownLabel,
             onClick: () => onViewSeries(selectedWindow?.key ?? resolvedSelectedWindowKey),
           }}
-        />
-      }
-      businessReading={
-        <RiskRollingBusinessReading
-          summary={selectedWindow?.selectedWindowBusinessReading ?? viewModel.rollingExecutiveSummary}
         />
       }
       headlineMetrics={<RiskRollingHeadlineMetrics window={selectedWindow} showMetadata={false} />}

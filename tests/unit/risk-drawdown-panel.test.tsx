@@ -49,19 +49,8 @@ describe("RiskDrawdownPanel", () => {
         onViewUnderwater={() => {}}
       />
     );
-    const businessReading = screen.getByLabelText("Drawdown business reading");
-
     expect(screen.getByRole("heading", { name: "Drawdown" })).toBeInTheDocument();
-    expect(
-      within(businessReading).getByText(
-        /Drawdown was elevated, benchmark-relative review is relevant, and the book is still underwater\./
-      )
-    ).toBeInTheDocument();
-    expect(
-      within(businessReading).getByText(
-        /Next review: inspect the worst episode and confirm whether the remaining underwater path needs action\./
-      )
-    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Episode review" })).toBeInTheDocument();
     expect(
@@ -122,14 +111,9 @@ describe("RiskDrawdownPanel", () => {
         onViewUnderwater={() => {}}
       />
     );
-    const businessReading = screen.getByLabelText("Drawdown business reading");
     const headlineMetrics = screen.getByLabelText("Risk drawdown headline metrics");
 
-    expect(
-      within(businessReading).getByText(
-        /Drawdown was elevated, benchmark-relative review is unavailable, and the book is still underwater\./
-      )
-    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
     expect(within(headlineMetrics).getByText("N/A")).toBeInTheDocument();
     expect(
       within(headlineMetrics).getByText("Benchmark-relative drawdown requires benchmark context.")

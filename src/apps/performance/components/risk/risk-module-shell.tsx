@@ -6,7 +6,6 @@ export default function RiskModuleShell({
   title,
   subtitle,
   actions,
-  businessReading,
   headlineMetrics,
   detail,
   context,
@@ -17,7 +16,6 @@ export default function RiskModuleShell({
   title: string;
   subtitle: string;
   actions?: ReactNode;
-  businessReading?: ReactNode;
   headlineMetrics?: ReactNode;
   detail?: ReactNode;
   context?: ReactNode;
@@ -40,7 +38,6 @@ export default function RiskModuleShell({
         .filter(Boolean)
         .join(" ")}
     >
-      {businessReading}
       {headlineMetrics}
       {detail || context ? (
         <div className="performance-risk-module-body">

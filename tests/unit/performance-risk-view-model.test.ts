@@ -49,12 +49,6 @@ describe("buildPerformanceRiskViewModel", () => {
       "Sortino",
       "Value at Risk",
     ]);
-    expect(viewModel.snapshotExecutiveSummary).toMatchObject({
-      heading: "Business reading",
-      headline: "Risk posture is contained, and benchmark-relative reading is reliable.",
-      actionCue:
-        "Next review: confirm active risk remains appropriate through beta and tracking error.",
-    });
     expect(viewModel.snapshotContextRows[0]).toMatchObject({
       label: "Portfolio observations",
     });
@@ -65,13 +59,6 @@ describe("buildPerformanceRiskViewModel", () => {
       "Largest Issuer Weight",
       "Top 10 Weight",
     ]);
-    expect(viewModel.concentrationExecutiveSummary).toMatchObject({
-      heading: "Business reading",
-      postureLabel: "Partial",
-    });
-    expect(viewModel.concentrationDriverAnalysis[0]).toMatchObject({
-      eyebrow: "Largest current exposures",
-    });
     expect(viewModel.concentrationScales[0]).toMatchObject({
       label: "Portfolio Concentration Index",
       interpretationBand: "Moderate",
@@ -107,13 +94,6 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.drawdownSupportingMetrics.map((metric) => metric.label)).toEqual([
       "Ulcer Index",
     ]);
-    expect(viewModel.drawdownExecutiveSummary).toMatchObject({
-      heading: "Business reading",
-      headline:
-        "Drawdown was elevated, benchmark-relative review is relevant, and the book is still underwater.",
-      actionCue:
-        "Next review: inspect the worst episode and confirm whether the remaining underwater path needs action.",
-    });
     expect(viewModel.drawdownEpisodeInterpretation).toMatchObject({
       title: "2 drawdown episodes to review",
     });
@@ -129,11 +109,6 @@ describe("buildPerformanceRiskViewModel", () => {
       label: "21D",
       horizonLabel: "Short window",
     });
-    expect(viewModel.rollingExecutiveSummary).toMatchObject({
-      heading: "Business reading",
-      headline: "Short-window risk is elevated, but not outside the recent range.",
-      actionCue: "review 63D to separate short-term noise from longer-horizon posture.",
-    });
     expect(viewModel.rollingSupportabilityNotes).toEqual([
       expect.objectContaining({
         title: "Benchmark-relative review is limited in one emitted window",
@@ -146,7 +121,7 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
-    expect(viewModel.rollingWindows[0]?.headlineMetricInterpretations[0]).toMatchObject({
+    expect(viewModel.rollingWindows[0]?.headlineMetrics[0]).toMatchObject({
       label: "Volatility",
       support: "Above typical but still in range",
     });
@@ -161,9 +136,6 @@ describe("buildPerformanceRiskViewModel", () => {
       interpretation: "Current reading is above typical but still in range.",
     });
     expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
-    expect(viewModel.attributionExecutiveSummary).toMatchObject({
-      heading: "Business reading",
-    });
     expect(viewModel.attributionMethodologyRows[0]).toMatchObject({
       label: "Covariance method",
     });
@@ -205,11 +177,6 @@ describe("buildPerformanceRiskViewModel", () => {
       value: "N/A",
       support: "Benchmark-relative drawdown requires benchmark context.",
     });
-    expect(viewModel.snapshotExecutiveSummary).toMatchObject({
-      headline: "Risk posture is contained, and benchmark-relative reading is unavailable.",
-      actionCue:
-        "Next review: rely on total-risk measures first, then confirm benchmark alignment.",
-    });
     expect(viewModel.snapshotHeadlineMetrics.find((metric) => metric.key === "BETA")).toMatchObject({
       value: "N/A",
       support: "Benchmark-relative risk requires benchmark context.",
@@ -238,7 +205,6 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.snapshotHeadlineMetrics).toEqual([]);
     expect(viewModel.snapshotSupportingMetrics).toEqual([]);
     expect(viewModel.concentrationIndicators).toEqual([]);
-    expect(viewModel.concentrationExecutiveSummary).toBeNull();
     expect(viewModel.rollingWindows).toEqual([]);
     expect(viewModel.supportability).toEqual([
       expect.objectContaining({ key: "risk_bff", state: "partial" }),

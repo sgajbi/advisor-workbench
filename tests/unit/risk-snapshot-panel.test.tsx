@@ -34,14 +34,7 @@ describe("RiskSnapshotPanel", () => {
     const { container } = render(<RiskSnapshotPanel viewModel={viewModel} />);
 
     expect(screen.getByRole("heading", { name: "Risk Snapshot" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/Risk posture is contained, and benchmark-relative reading is reliable\./)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Next review: confirm active risk remains appropriate through beta and tracking error\./)
-    ).toBeInTheDocument();
-    const businessReading = screen.getByLabelText("Risk snapshot business reading");
-    expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
+    expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })
@@ -96,12 +89,7 @@ describe("RiskSnapshotPanel", () => {
     const viewModel = buildRiskViewModel({ benchmarkUnassigned: true });
     render(<RiskSnapshotPanel viewModel={viewModel} />);
 
-    expect(
-      screen.getByText(/Risk posture is contained, and benchmark-relative reading is unavailable\./)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Next review: rely on total-risk measures first, then confirm benchmark alignment\./)
-    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getAllByText("N/A").length).toBeGreaterThanOrEqual(2);
     expect(
       screen.getAllByText("Benchmark-relative risk requires benchmark context.").length

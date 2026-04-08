@@ -48,14 +48,6 @@ export type PerformanceRiskConcentrationExecutiveSummary = {
   actionCue?: string | null;
 };
 
-export type PerformanceRiskConcentrationDriverAnalysisRow = {
-  key: string;
-  eyebrow: string;
-  summary: string;
-  supportingMetricLabel: string;
-  supportingMetricValue: string;
-};
-
 export type PerformanceRiskConcentrationScale = {
   key: string;
   label: string;
@@ -114,19 +106,18 @@ export type PerformanceRiskRollingDetailRow = {
   typical: string;
   range: string;
   interpretation: string;
+  currentPositionPct: number | null;
+  typicalPositionPct: number | null;
 };
 
 export type PerformanceRiskRollingWindow = {
   key: string;
   label: string;
   horizonLabel: string;
-  selectedWindowBusinessReading: PerformanceRiskExecutiveSummary;
   selectedWindowSummary: {
     title: string;
     body: string;
   };
-  selectedWindowNextStep: string;
-  headlineMetricInterpretations: PerformanceRiskMetricCard[];
   detailRowInterpretations: PerformanceRiskRollingDetailRow[];
   headlineMetrics: PerformanceRiskMetricCard[];
   detailRows: PerformanceRiskRollingDetailRow[];
@@ -159,16 +150,12 @@ export type PerformanceRiskViewModel = {
   contextItems: Array<{ label: string; value: string }>;
   workspaceOverview: PerformanceRiskOverviewItem[];
   whatMattersNow: PerformanceRiskWhatMattersItem[];
-  snapshotExecutiveSummary: PerformanceRiskExecutiveSummary | null;
   snapshotHeadlineMetrics: PerformanceRiskMetricCard[];
   snapshotSupportingMetrics: PerformanceRiskMetricCard[];
   snapshotContextRows: PerformanceRiskContextRow[];
   concentrationIndicators: PerformanceRiskConcentrationIndicator[];
-  concentrationExecutiveSummary: PerformanceRiskConcentrationExecutiveSummary | null;
-  concentrationDriverAnalysis: PerformanceRiskConcentrationDriverAnalysisRow[];
   concentrationScales: PerformanceRiskConcentrationScale[];
   concentrationContextRows: PerformanceRiskConcentrationContextRow[];
-  drawdownExecutiveSummary: PerformanceRiskExecutiveSummary | null;
   drawdownHeadlineMetrics: PerformanceRiskMetricCard[];
   drawdownSupportingMetrics: PerformanceRiskMetricCard[];
   drawdownContextRows: PerformanceRiskContextRow[];
@@ -207,7 +194,6 @@ export type PerformanceRiskViewModel = {
     tone: "default" | "warn";
   }>;
   rollingDetailState: "idle" | "loading" | "ready" | "unavailable";
-  rollingExecutiveSummary: PerformanceRiskExecutiveSummary | null;
   rollingContextRows: PerformanceRiskContextRow[];
   attributionControls: {
     selectedAttributionType: string;
@@ -232,7 +218,9 @@ export type PerformanceRiskViewModel = {
     marginalContribution: string;
     componentContribution: string;
     contributionShare: string;
+    contributionShareAbsPct: number | null;
   }>;
+  attributionMaxContributionShareAbsPct: number;
   attributionTotals: {
     metric: string;
     totalValue: string;
@@ -241,7 +229,6 @@ export type PerformanceRiskViewModel = {
     support: string;
   } | null;
   attributionHighlights: PerformanceRiskAttributionHighlight[];
-  attributionExecutiveSummary: PerformanceRiskExecutiveSummary | null;
   attributionMethodologyRows: PerformanceRiskContextRow[];
   attributionState: "idle" | "loading" | "ready" | "blocked" | "unavailable";
   attributionWarnings: string[];
@@ -376,16 +363,12 @@ export function buildPerformanceRiskViewModel({
       attribution,
       supportability,
     }),
-    snapshotExecutiveSummary: mapSnapshotExecutiveSummary(summary),
     snapshotHeadlineMetrics: mapSnapshotHeadlineMetrics(summary),
     snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
     snapshotContextRows: mapSnapshotContextRows(summary),
     concentrationIndicators: mapConcentrationIndicators(concentration),
-    concentrationExecutiveSummary: mapConcentrationExecutiveSummary(concentration),
-    concentrationDriverAnalysis: mapConcentrationDriverAnalysis(concentration),
     concentrationScales: mapConcentrationScales(concentration),
     concentrationContextRows: mapConcentrationContextRows(concentration),
-    drawdownExecutiveSummary: mapDrawdownExecutiveSummary(drawdown),
     drawdownHeadlineMetrics: mapDrawdownHeadlineMetrics(drawdown),
     drawdownSupportingMetrics: mapDrawdownSupportingMetrics(drawdown),
     drawdownContextRows: mapDrawdownContextRows(drawdown),
@@ -406,13 +389,12 @@ export function buildPerformanceRiskViewModel({
       rollingDetail,
       isRollingDetailLoading,
     }),
-    rollingExecutiveSummary: mapRollingExecutiveSummary(rolling),
     rollingContextRows: mapRollingContextRows(rolling),
     attributionControls: mapAttributionControls(attribution),
     attributionRows: mapAttributionRows(attribution),
+    attributionMaxContributionShareAbsPct: mapAttributionMaxContributionShareAbsPct(attribution),
     attributionTotals: mapAttributionTotals(attribution),
     attributionHighlights: mapAttributionHighlights(attribution),
-    attributionExecutiveSummary: mapAttributionExecutiveSummary(attribution),
     attributionMethodologyRows: mapAttributionMethodologyRows(attribution),
     attributionState: resolveAttributionState({ attribution, isAttributionLoading }),
     attributionWarnings: attribution?.warnings ?? [],
@@ -1310,16 +1292,12 @@ function buildStateViewModel(
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     workspaceOverview: [],
     whatMattersNow: [],
-    snapshotExecutiveSummary: null,
     snapshotHeadlineMetrics: [],
     snapshotSupportingMetrics: [],
     snapshotContextRows: [],
     concentrationIndicators: [],
-    concentrationExecutiveSummary: null,
-    concentrationDriverAnalysis: [],
     concentrationScales: [],
     concentrationContextRows: [],
-    drawdownExecutiveSummary: null,
     drawdownHeadlineMetrics: [],
     drawdownSupportingMetrics: [],
     drawdownContextRows: [],
@@ -1332,13 +1310,12 @@ function buildStateViewModel(
     rollingQualityFlags: [],
     rollingSupportabilityNotes: [],
     rollingDetailState: "idle",
-    rollingExecutiveSummary: null,
     rollingContextRows: [],
     attributionControls: null,
     attributionRows: [],
+    attributionMaxContributionShareAbsPct: 0,
     attributionTotals: null,
     attributionHighlights: [],
-    attributionExecutiveSummary: null,
     attributionMethodologyRows: [],
     attributionState: "idle",
     attributionWarnings: [],
@@ -1976,56 +1953,6 @@ function mapConcentrationExecutiveSummary(
   };
 }
 
-function mapConcentrationDriverAnalysis(
-  response: WorkbenchRiskConcentrationResponse
-): PerformanceRiskConcentrationDriverAnalysisRow[] {
-  const payload = response.payload;
-  if (!payload) {
-    return [];
-  }
-  const topPositionWeight = formatRiskPercentValue(
-    payload.single_position_concentration.top_position_weight_current
-  );
-  const topIssuerWeight = formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current);
-  const topTenWeight = formatRiskPercentValue(
-    payload.single_position_concentration.top_n_cumulative_weight_current
-  );
-  const coverageRatio = formatRiskPercentValue(payload.issuer_concentration.coverage_ratio_current);
-  const breadthSummary = buildBreadthSummary(
-    payload.single_position_concentration.top_n_cumulative_weight_current
-  );
-  const issuerCoverageSummary =
-    payload.issuer_concentration.coverage_ratio_current >= 0.99
-      ? "Issuer interpretation is reliable for the current selection."
-      : "Issuer interpretation should be qualified because coverage is not complete.";
-
-  return [
-    {
-      key: "largest_current_exposures",
-      eyebrow: "Largest current exposures",
-      summary: `The largest single holding is ${topPositionWeight}, and the largest issuer group is ${topIssuerWeight}, indicating concentration is driven by a small number of names.`,
-      supportingMetricLabel: "Largest line items",
-      supportingMetricValue: `${topPositionWeight} / ${topIssuerWeight}`,
-    },
-    {
-      key: "concentration_breadth",
-      eyebrow: "Concentration breadth",
-      summary: `The top ${payload.single_position_concentration.top_n} holdings represent ${topTenWeight} of portfolio weight, indicating ${breadthSummary.toLowerCase()}`,
-      supportingMetricLabel: `Top ${payload.single_position_concentration.top_n} weight`,
-      supportingMetricValue: topTenWeight,
-    },
-    {
-      key: "issuer_interpretation",
-      eyebrow: "Issuer interpretation",
-      summary: `${issuerCoverageSummary} Grouping is performed at ${formatEnumLabel(
-        payload.execution_context?.issuer_grouping_level
-      ) ?? "the configured issuer level"}.`,
-      supportingMetricLabel: "Issuer coverage",
-      supportingMetricValue: coverageRatio,
-    },
-  ];
-}
-
 function mapConcentrationScales(
   response: WorkbenchRiskConcentrationResponse
 ): PerformanceRiskConcentrationScale[] {
@@ -2369,11 +2296,6 @@ function mapRollingWindows(
         ])
       )
     );
-    const selectedWindowBusinessReading = buildRollingSelectedWindowBusinessReading(
-      window.window_length,
-      window.metric_summaries,
-      rolling.payload?.periods[0] ?? null
-    );
     const headlineMetricInterpretations = metricKeys.map((metricKey) => {
       const summary = window.metric_summaries[metricKey];
       return {
@@ -2396,6 +2318,8 @@ function mapRollingWindows(
           typical: formatRollingMetricSummaryValue(metricKey, summary?.average ?? null),
           range: buildRollingObservedRange(metricKey, summary),
           interpretation: buildRollingDetailInterpretation(metricKey, summary),
+          currentPositionPct: mapRollingRangePosition(summary?.latest ?? null, summary),
+          typicalPositionPct: mapRollingRangePosition(summary?.average ?? null, summary),
         };
       })
       .filter((row) => shouldDisplayRollingMetricRow(row.metric, row.current));
@@ -2403,10 +2327,7 @@ function mapRollingWindows(
       key: String(window.window_length),
       label: buildRollingWindowLabel(window.window_length),
       horizonLabel: resolveRollingWindowHorizonLabel(window.window_length),
-      selectedWindowBusinessReading,
       selectedWindowSummary: buildRollingWindowReview(window.window_length, window.metric_summaries),
-      selectedWindowNextStep: selectedWindowBusinessReading.actionCue ?? "Review the next emitted window.",
-      headlineMetricInterpretations,
       detailRowInterpretations,
       headlineMetrics: headlineMetricInterpretations,
       detailRows: detailRowInterpretations,
@@ -2775,6 +2696,26 @@ function buildRollingObservedRange(
     return "N/A";
   }
   return `${formatRollingMetricSummaryValue(metricKey, summary.p05)} to ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
+}
+
+function mapRollingRangePosition(
+  value: number | null | undefined,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (
+    typeof value !== "number" ||
+    typeof summary?.p05 !== "number" ||
+    typeof summary?.p95 !== "number" ||
+    summary.p05 === summary.p95
+  ) {
+    return null;
+  }
+
+  const min = Math.min(summary.p05, summary.p95);
+  const max = Math.max(summary.p05, summary.p95);
+  return Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
 }
 
 function buildRollingDetailInterpretation(
@@ -3474,19 +3415,6 @@ function buildDrawdownDateRange(summary: WorkbenchRiskDrawdownSummary) {
   )}`;
 }
 
-function buildBreadthSummary(topNWeight: number) {
-  if (topNWeight >= 0.9) {
-    return "limited diversification breadth.";
-  }
-  if (topNWeight >= 0.75) {
-    return "elevated breadth concentration.";
-  }
-  if (topNWeight >= 0.6) {
-    return "the largest holdings still account for a meaningful share of the book.";
-  }
-  return "diversification is broader across the portfolio.";
-}
-
 function resolveConcentrationBand(value: number) {
   if (value < 1000) {
     return "Diversified";
@@ -3631,7 +3559,26 @@ function mapAttributionRows(response: WorkbenchRiskAttributionResponse | null) {
       marginalContribution: formatRiskPercentValue(contributor.marginal_contribution),
       componentContribution: formatRiskPercentValue(contributor.component_contribution),
       contributionShare: formatRiskPercentValue(contributor.percent_contribution),
+      contributionShareAbsPct:
+        typeof contributor.percent_contribution === "number"
+          ? Math.abs(contributor.percent_contribution * 100)
+          : null,
     }));
+}
+
+function mapAttributionMaxContributionShareAbsPct(response: WorkbenchRiskAttributionResponse | null) {
+  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
+  if (!selectedSet) {
+    return 0;
+  }
+
+  return selectedSet.contributors.reduce((maxValue, contributor) => {
+    const nextValue =
+      typeof contributor.percent_contribution === "number"
+        ? Math.abs(contributor.percent_contribution * 100)
+        : 0;
+    return Math.max(maxValue, nextValue);
+  }, 0);
 }
 
 function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null) {

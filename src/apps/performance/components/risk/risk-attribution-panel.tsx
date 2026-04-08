@@ -7,11 +7,11 @@ import {
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskDetailSection from "./risk-detail-section";
 import RiskAnalyticalTable from "./risk-analytical-table";
-import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
 import { riskAttributionPanelCopy } from "./risk-secondary-copy";
+import RiskShareBar from "./risk-share-bar";
 import RiskTableText from "./risk-table-text";
 
 type RiskAttributionPanelProps = {
@@ -37,16 +37,6 @@ export default function RiskAttributionPanel({
           panelTitle={riskAttributionPanelCopy.methodologyPanelTitle}
           methodologyRows={viewModel.attributionMethodologyRows}
         />
-      }
-      businessReading={
-        viewModel.attributionExecutiveSummary ? (
-          <RiskExecutiveSummary
-            summary={viewModel.attributionExecutiveSummary}
-            ariaLabel="Historical risk attribution business reading"
-            density="compact"
-            detailMode="hidden"
-          />
-        ) : null
       }
       headlineMetrics={
         viewModel.attributionHighlights.length ? (
@@ -148,7 +138,12 @@ export default function RiskAttributionPanel({
                   row.avgWeight,
                   row.marginalContribution,
                   row.componentContribution,
-                  row.contributionShare,
+                  <RiskShareBar
+                    key={`${row.key}-share`}
+                    value={row.contributionShare}
+                    absValue={row.contributionShareAbsPct}
+                    maxAbsValue={viewModel.attributionMaxContributionShareAbsPct}
+                  />,
                 ],
               }))}
               emptyState={riskAttributionPanelCopy.tableEmptyState}

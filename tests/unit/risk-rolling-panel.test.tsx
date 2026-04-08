@@ -50,26 +50,9 @@ describe("RiskRollingPanel", () => {
   it("presents the shortest rolling window as the executive first read", () => {
     const viewModel = buildRiskViewModel();
     const { container } = renderRollingPanel(viewModel);
-    const businessReading = screen.getByLabelText("Rolling risk business reading");
 
     expect(screen.getByRole("heading", { name: "Rolling Risk" })).toBeInTheDocument();
-    expect(
-      within(businessReading).getByText(
-        "Short-window risk is elevated, but not outside the recent range."
-      )
-    ).toBeInTheDocument();
-    expect(
-      within(businessReading).queryByText(
-        /Volatility at 0\.02% remains contained versus the recent norm\./i
-      )
-    ).not.toBeInTheDocument();
-    expect(
-      within(businessReading).getByText(
-        /review 63D to separate short-term noise from longer-horizon posture\./i
-      )
-    ).toBeInTheDocument();
-    expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
-    expect(businessReading).toHaveClass("performance-risk-briefing-card-headline-only");
+    expect(screen.queryByLabelText("Rolling risk business reading")).not.toBeInTheDocument();
 
     const headlineLabels = Array.from(
       container.querySelectorAll(".performance-risk-rolling-headline-card")
@@ -89,6 +72,9 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByRole("columnheader", { name: "Range" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Review note" })).toBeInTheDocument();
     expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
+    expect(container.querySelectorAll(".performance-risk-range-indicator")).toHaveLength(
+      viewModel.rollingWindows[0]?.detailRowInterpretations.length ?? 0
+    );
     expect(screen.getByLabelText("Rolling review notes")).toBeInTheDocument();
     expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
     expect(screen.queryByText(/Typical 4\.07%/i)).not.toBeInTheDocument();
@@ -111,17 +97,8 @@ describe("RiskRollingPanel", () => {
   it("qualifies benchmark-dependent measures when benchmark context is unavailable", () => {
     const viewModel = buildRiskViewModel({ benchmarkUnassigned: true });
     renderRollingPanel(viewModel);
-    const businessReading = screen.getByLabelText("Rolling risk business reading");
 
-    expect(
-      businessReading
-    ).toBeInTheDocument();
-    expect(businessReading).toHaveClass("performance-risk-briefing-card-headline-only");
-    expect(
-      within(businessReading).queryByText(
-        /Benchmark-relative review should be qualified for beta and tracking error\./i
-      )
-    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Rolling risk business reading")).not.toBeInTheDocument();
     expect(screen.queryByText("Tracking Error")).not.toBeInTheDocument();
     expect(screen.queryByText("Beta")).not.toBeInTheDocument();
 

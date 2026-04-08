@@ -7,6 +7,7 @@ import {
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailSection from "./risk-detail-section";
+import RiskRangeIndicator from "./risk-range-indicator";
 import { riskRollingPanelCopy } from "./risk-secondary-copy";
 import RiskTableText from "./risk-table-text";
 
@@ -64,7 +65,12 @@ export default function RiskRollingWindowDetail({
           key: row.key,
           cells: [
             <RiskTableText key={`${row.key}-metric`} value={row.metric} />,
-            row.current,
+            <RiskRangeIndicator
+              key={`${row.key}-current`}
+              current={row.current}
+              currentPositionPct={row.currentPositionPct}
+              typicalPositionPct={row.typicalPositionPct}
+            />,
             row.typical,
             row.range,
             <RiskTableText

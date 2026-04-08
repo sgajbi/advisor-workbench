@@ -28,10 +28,7 @@ describe("RiskAttributionPanel", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Historical Risk Attribution" })).toBeInTheDocument();
-    const businessReading = screen.getByLabelText("Historical risk attribution business reading");
-    expect(businessReading).toBeInTheDocument();
-    expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
-    expect(businessReading).toHaveClass("performance-risk-briefing-card-headline-only");
+    expect(screen.queryByLabelText("Historical risk attribution business reading")).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Private Credit is the largest visible contributor/i)
     ).not.toBeInTheDocument();
@@ -40,6 +37,7 @@ describe("RiskAttributionPanel", () => {
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-attribution-detail-table")).toBeTruthy();
+    expect(container.querySelectorAll(".performance-risk-share-bar")).not.toHaveLength(0);
     expect(container.querySelector(".performance-risk-attribution-toolbar")).toBeTruthy();
     expect(container.querySelectorAll(".performance-risk-compact-segmented-control")).toHaveLength(2);
     expect(screen.queryByText("Attribution reconciliation")).not.toBeInTheDocument();
