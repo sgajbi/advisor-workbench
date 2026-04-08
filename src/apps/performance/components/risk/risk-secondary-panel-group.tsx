@@ -19,8 +19,16 @@ export default function RiskSecondaryPanelGroup({
         </div>
       </div>
       <div className="performance-risk-secondary-grid">
-        <div className="performance-risk-secondary-grid-item">{rolling}</div>
-        <div className="performance-risk-secondary-grid-item">{attribution}</div>
+        <div className="performance-risk-secondary-grid-item performance-risk-secondary-grid-item-rolling">
+          <div className="performance-risk-secondary-panel-slot performance-risk-secondary-panel-slot-rolling">
+            {rolling}
+          </div>
+        </div>
+        <div className="performance-risk-secondary-grid-item performance-risk-secondary-grid-item-attribution">
+          <div className="performance-risk-secondary-panel-slot performance-risk-secondary-panel-slot-attribution">
+            {attribution}
+          </div>
+        </div>
       </div>
     </section>
   );

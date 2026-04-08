@@ -5330,7 +5330,18 @@ a:hover {
 }
 
 .performance-risk-secondary-grid-item > * {
+  width: 100%;
   height: auto;
+}
+
+.performance-risk-secondary-panel-slot {
+  display: flex;
+  width: 100%;
+  align-self: flex-start;
+}
+
+.performance-risk-secondary-panel-slot > * {
+  width: 100%;
 }
 
 .performance-risk-panel.section-block {

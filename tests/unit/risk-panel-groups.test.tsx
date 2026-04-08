@@ -22,7 +22,7 @@ describe("Risk panel groups", () => {
   });
 
   it("keeps rolling and attribution grouped as secondary analysis", () => {
-    render(
+    const { container } = render(
       <RiskSecondaryPanelGroup
         rolling={<section aria-label="Rolling panel">Rolling</section>}
         attribution={<section aria-label="Attribution panel">Attribution</section>}
@@ -33,5 +33,7 @@ describe("Risk panel groups", () => {
     expect(within(secondaryGroup).getByText("Analytical follow-through")).toBeInTheDocument();
     expect(within(secondaryGroup).getByLabelText("Rolling panel")).toBeInTheDocument();
     expect(within(secondaryGroup).getByLabelText("Attribution panel")).toBeInTheDocument();
+    expect(container.querySelector(".performance-risk-secondary-panel-slot-rolling")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-secondary-panel-slot-attribution")).toBeTruthy();
   });
 });
