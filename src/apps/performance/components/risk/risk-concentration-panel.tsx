@@ -1,11 +1,19 @@
-import { SectionBlock } from "@/design-system";
-
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
-import RiskConcentrationContextPanel from "./risk-concentration-context-panel";
 import RiskConcentrationDriverAnalysis from "./risk-concentration-driver-analysis";
-import RiskConcentrationExecutiveSummary from "./risk-concentration-executive-summary";
 import RiskConcentrationIndicatorStrip from "./risk-concentration-indicator-strip";
 import RiskConcentrationScale from "./risk-concentration-scale";
+import RiskContextList from "./risk-context-list";
+import RiskDetailSection from "./risk-detail-section";
+import RiskExecutiveSummary from "./risk-executive-summary";
+import RiskModuleShell from "./risk-module-shell";
+
+const POSTURE_TONE = {
+  acceptable: "success",
+  moderate: "default",
+  elevated: "warn",
+  high: "danger",
+  partial: "warn",
+} as const;
 
 export default function RiskConcentrationPanel({
   viewModel,
@@ -13,25 +21,43 @@ export default function RiskConcentrationPanel({
   viewModel: PerformanceRiskViewModel;
 }) {
   return (
-    <SectionBlock
+    <RiskModuleShell
       title="Concentration"
       subtitle="Front-office concentration posture, principal drivers, and issuer-reliability context."
-      className="performance-risk-panel performance-risk-concentration-panel"
-    >
-      <div className="performance-risk-concentration-upper">
-        <div className="performance-risk-concentration-upper-main">
-          {viewModel.concentrationExecutiveSummary ? (
-            <RiskConcentrationExecutiveSummary summary={viewModel.concentrationExecutiveSummary} />
-          ) : null}
+      className="performance-risk-concentration-panel"
+      businessReading={
+        viewModel.concentrationExecutiveSummary ? (
+          <RiskExecutiveSummary
+            summary={{
+              heading: viewModel.concentrationExecutiveSummary.heading,
+              headline: viewModel.concentrationExecutiveSummary.businessReadingHeadline,
+              detail: viewModel.concentrationExecutiveSummary.businessReadingDetail,
+              actionCue: viewModel.concentrationExecutiveSummary.actionCue,
+              postureLabel: viewModel.concentrationExecutiveSummary.postureLabel,
+            }}
+            ariaLabel="Risk concentration executive summary"
+            postureTone={POSTURE_TONE[viewModel.concentrationExecutiveSummary.postureState]}
+          />
+        ) : null
+      }
+      headlineMetrics={<RiskConcentrationIndicatorStrip indicators={viewModel.concentrationIndicators} />}
+      detail={
+        <RiskDetailSection title="Driver analysis" ariaLabel="Risk concentration detail">
           <RiskConcentrationDriverAnalysis rows={viewModel.concentrationDriverAnalysis} />
+        </RiskDetailSection>
+      }
+      context={
+        <div className="performance-risk-concentration-side-stack">
+          <RiskDetailSection title="Concentration scale" ariaLabel="Risk concentration scale detail">
+            <RiskConcentrationScale scales={viewModel.concentrationScales} />
+          </RiskDetailSection>
+          <RiskContextList
+            rows={viewModel.concentrationContextRows}
+            ariaLabel="Risk concentration context"
+            title="Coverage and methodology"
+          />
         </div>
-
-        <div className="performance-risk-concentration-upper-side">
-          <RiskConcentrationIndicatorStrip indicators={viewModel.concentrationIndicators} />
-          <RiskConcentrationScale scales={viewModel.concentrationScales} />
-          <RiskConcentrationContextPanel rows={viewModel.concentrationContextRows} />
-        </div>
-      </div>
-    </SectionBlock>
+      }
+    />
   );
 }

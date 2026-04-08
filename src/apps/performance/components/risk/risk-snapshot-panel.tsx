@@ -1,8 +1,11 @@
-import { SectionBlock, Text, WorkbenchSummaryMetricStrip } from "@/design-system";
+import { Text } from "@/design-system";
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskContextList from "./risk-context-list";
+import RiskDetailSection from "./risk-detail-section";
 import RiskExecutiveSummary from "./risk-executive-summary";
+import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
+import RiskModuleShell from "./risk-module-shell";
 
 export default function RiskSnapshotPanel({
   viewModel,
@@ -18,44 +21,57 @@ export default function RiskSnapshotPanel({
   );
 
   return (
-    <SectionBlock
+    <RiskModuleShell
       title="Risk Snapshot"
       subtitle="Core realized risk measures, benchmark-relative posture, and observation context."
-      className="performance-risk-panel performance-risk-snapshot-panel"
-    >
-      {viewModel.snapshotExecutiveSummary ? (
-        <RiskExecutiveSummary
-          summary={viewModel.snapshotExecutiveSummary}
-          ariaLabel="Risk snapshot business reading"
+      className="performance-risk-snapshot-panel"
+      businessReading={
+        viewModel.snapshotExecutiveSummary ? (
+          <RiskExecutiveSummary
+            summary={viewModel.snapshotExecutiveSummary}
+            ariaLabel="Risk snapshot business reading"
+          />
+        ) : null
+      }
+      headlineMetrics={
+        <RiskHeadlineMetricGrid
+          ariaLabel="Risk snapshot headline metrics"
+          metrics={primaryMetrics}
         />
-      ) : null}
-      <WorkbenchSummaryMetricStrip
-        ariaLabel="Risk snapshot headline metrics"
-        className="performance-risk-metric-strip"
-        items={primaryMetrics.map((metric) => ({
-          key: metric.key,
-          label: metric.label,
-          value: metric.value,
-          support: metric.support,
-          unavailable: metric.state === "unavailable",
-        }))}
-      />
-      {secondaryMetrics.length ? (
-        <div className="performance-risk-secondary-metrics" aria-label="Risk snapshot supporting measures">
-          {secondaryMetrics.map((metric) => (
-            <div key={metric.key} className="performance-risk-secondary-metric">
-              <div className="performance-risk-secondary-metric-copy">
-                <Text variant="label">{metric.label}</Text>
-                <Text variant="metadata">{metric.support}</Text>
-              </div>
-              <Text variant="cardTitle" className="performance-risk-secondary-metric-value">
-                {metric.value}
-              </Text>
+      }
+      detail={
+        secondaryMetrics.length ? (
+          <RiskDetailSection
+            title="Supporting measures"
+            ariaLabel="Risk snapshot detail"
+            className="performance-risk-supporting-detail"
+          >
+            <div
+              className="performance-risk-secondary-metrics"
+              aria-label="Risk snapshot supporting measures"
+            >
+              {secondaryMetrics.map((metric) => (
+                <div key={metric.key} className="performance-risk-secondary-metric">
+                  <div className="performance-risk-secondary-metric-copy">
+                    <Text variant="label">{metric.label}</Text>
+                    <Text variant="metadata">{metric.support}</Text>
+                  </div>
+                  <Text variant="cardTitle" className="performance-risk-secondary-metric-value">
+                    {metric.value}
+                  </Text>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : null}
-      <RiskContextList rows={viewModel.snapshotContextRows} ariaLabel="Risk snapshot context" />
-    </SectionBlock>
+          </RiskDetailSection>
+        ) : null
+      }
+      context={
+        <RiskContextList
+          rows={viewModel.snapshotContextRows}
+          ariaLabel="Risk snapshot context"
+          title="Context and methodology"
+        />
+      }
+    />
   );
 }

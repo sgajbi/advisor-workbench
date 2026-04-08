@@ -1,7 +1,7 @@
 import { Text } from "@/design-system";
 
 import type { PerformanceRiskConcentrationScale } from "../../risk-workspace-view-model";
-import RiskConcentrationTermLabel from "./risk-concentration-term-label";
+import RiskTermLabel from "./risk-term-label";
 
 export default function RiskConcentrationScale({
   scales,
@@ -9,15 +9,12 @@ export default function RiskConcentrationScale({
   scales: PerformanceRiskConcentrationScale[];
 }) {
   return (
-    <section className="performance-risk-concentration-scale" aria-label="Risk concentration scale">
-      <div className="performance-risk-concentration-section-header">
-        <Text variant="cardTitle">Concentration scale</Text>
-      </div>
+    <div className="performance-risk-concentration-scale" aria-label="Risk concentration scale">
       <div className="performance-risk-concentration-scale-list">
         {scales.map((scale) => (
           <div key={scale.key} className="performance-risk-concentration-scale-card">
             <div className="performance-risk-concentration-scale-header">
-              <RiskConcentrationTermLabel label={scale.label} definition={scale.definition} />
+              <RiskTermLabel label={scale.label} definition={scale.definition} />
               <Text variant="metricValueCompact">{scale.value}</Text>
             </div>
             <div className="performance-risk-concentration-scale-bands" aria-hidden="true">
@@ -42,6 +39,6 @@ export default function RiskConcentrationScale({
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

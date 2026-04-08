@@ -8,13 +8,7 @@ export default function RiskConcentrationDriverAnalysis({
   rows: PerformanceRiskConcentrationDriverAnalysisRow[];
 }) {
   return (
-    <section
-      className="performance-risk-concentration-driver-analysis"
-      aria-label="Risk concentration driver analysis"
-    >
-      <div className="performance-risk-concentration-section-header">
-        <Text variant="cardTitle">Driver analysis</Text>
-      </div>
+    <div className="performance-risk-concentration-driver-analysis" aria-label="Risk concentration driver analysis">
       <div className="performance-risk-concentration-driver-list">
         {rows.map((row) => (
           <div key={row.key} className="performance-risk-concentration-driver-row">
@@ -30,13 +24,16 @@ export default function RiskConcentrationDriverAnalysis({
               <Text variant="label" className="performance-risk-concentration-driver-metric-label">
                 {row.supportingMetricLabel}
               </Text>
-              <Text variant="metricValueCompact" className="performance-risk-concentration-driver-metric-value">
+              <Text
+                variant="metricValueCompact"
+                className="performance-risk-concentration-driver-metric-value"
+              >
                 {row.supportingMetricValue}
               </Text>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

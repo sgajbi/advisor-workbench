@@ -1,7 +1,7 @@
 import { Text } from "@/design-system";
 
 import type { PerformanceRiskConcentrationIndicator } from "../../risk-workspace-view-model";
-import RiskConcentrationTermLabel from "./risk-concentration-term-label";
+import RiskTermLabel from "./risk-term-label";
 
 export default function RiskConcentrationIndicatorStrip({
   indicators,
@@ -34,10 +34,7 @@ export default function RiskConcentrationIndicatorStrip({
             aria-label={`${indicator.label}: ${indicator.value}. ${indicator.support}. ${indicator.definition}`}
           >
             <div className="performance-risk-concentration-indicator-header">
-              <RiskConcentrationTermLabel
-                label={indicator.label}
-                definition={indicator.definition}
-              />
+              <RiskTermLabel label={indicator.label} definition={indicator.definition} />
             </div>
             <Text
               variant="metricValueCompact"
