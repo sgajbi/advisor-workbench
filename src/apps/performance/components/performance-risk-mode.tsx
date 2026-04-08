@@ -13,11 +13,12 @@ import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
 import RiskAttributionPanel from "./risk/risk-attribution-panel";
+import RiskExecutiveOverview from "./risk/risk-executive-overview";
+import RiskPrimaryPanelGroup from "./risk/risk-primary-panel-group";
 import RiskRollingPanel from "./risk/risk-rolling-panel";
+import RiskSecondaryPanelGroup from "./risk/risk-secondary-panel-group";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
-import RiskWhatMattersNow from "./risk/risk-what-matters-now";
-import RiskWorkspaceOverview from "./risk/risk-workspace-overview";
 
 export default function PerformanceRiskMode({
   workspace,
@@ -114,35 +115,48 @@ export default function PerformanceRiskMode({
         ) : null}
         {statePanel ?? (
           <div className="performance-risk-main-column">
-            <RiskWorkspaceOverview items={viewModel.workspaceOverview} />
-            <RiskWhatMattersNow items={viewModel.whatMattersNow} />
-            <RiskSnapshotPanel viewModel={viewModel} />
-            <RiskDrawdownPanel
-              viewModel={viewModel}
-              underwaterExpanded={underwaterExpanded}
-              onToggleUnderwater={() => {
-                const nextExpanded = !underwaterExpanded;
-                setUnderwaterExpanded(nextExpanded);
-                if (nextExpanded) {
-                  requestDrawdownDetail();
-                }
-              }}
+            <RiskExecutiveOverview
+              overview={viewModel.workspaceOverview}
+              mattersNow={viewModel.whatMattersNow}
             />
-            <RiskConcentrationPanel viewModel={viewModel} />
-            <div className="performance-risk-secondary-column">
-              <RiskRollingPanel
-                viewModel={viewModel}
-                rollingExpanded={rollingExpanded}
-                onToggleRolling={() => {
-                  const nextExpanded = !rollingExpanded;
-                  setRollingExpanded(nextExpanded);
-                  if (nextExpanded) {
-                    requestRollingDetail();
-                  }
-                }}
-              />
-              <RiskAttributionPanel viewModel={viewModel} onSelectAttribution={requestAttribution} />
-            </div>
+            <RiskPrimaryPanelGroup
+              snapshot={<RiskSnapshotPanel viewModel={viewModel} />}
+              drawdown={
+                <RiskDrawdownPanel
+                  viewModel={viewModel}
+                  underwaterExpanded={underwaterExpanded}
+                  onToggleUnderwater={() => {
+                    const nextExpanded = !underwaterExpanded;
+                    setUnderwaterExpanded(nextExpanded);
+                    if (nextExpanded) {
+                      requestDrawdownDetail();
+                    }
+                  }}
+                />
+              }
+              concentration={<RiskConcentrationPanel viewModel={viewModel} />}
+            />
+            <RiskSecondaryPanelGroup
+              rolling={
+                <RiskRollingPanel
+                  viewModel={viewModel}
+                  rollingExpanded={rollingExpanded}
+                  onToggleRolling={() => {
+                    const nextExpanded = !rollingExpanded;
+                    setRollingExpanded(nextExpanded);
+                    if (nextExpanded) {
+                      requestRollingDetail();
+                    }
+                  }}
+                />
+              }
+              attribution={
+                <RiskAttributionPanel
+                  viewModel={viewModel}
+                  onSelectAttribution={requestAttribution}
+                />
+              }
+            />
           </div>
         )}
       </SectionBlock>

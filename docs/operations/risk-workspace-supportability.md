@@ -22,7 +22,7 @@ The Risk page is a front-office review workflow, not a flat analytics stack.
 The default reading order is:
 
 1. portfolio context
-2. cross-panel risk overview
+2. executive overview band
 3. what matters now
 4. Risk Snapshot
 5. Drawdown
@@ -34,6 +34,12 @@ The default reading order is:
 `Rolling Risk` and `Historical Risk Attribution` remain contract-backed, but they are positioned as
 secondary analytical follow-through after the current book, path, and concentration posture are
 understood.
+
+The workspace composition is intentionally split into:
+
+1. an executive briefing band,
+2. a primary review group for current risk, path, and concentration,
+3. a secondary analysis group for rolling behaviour and attribution drill-down.
 
 ## Risk Snapshot first-read contract
 

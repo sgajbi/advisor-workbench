@@ -78,8 +78,10 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk snapshot business reading")).toHaveTextContent(
       "Business reading"
     );
-    expect(screen.getByLabelText("Risk overview")).toHaveTextContent("Risk posture");
-    expect(screen.getByLabelText("What matters now")).toHaveTextContent("Total risk posture");
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Risk posture");
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("What matters now");
+    expect(screen.getByLabelText("Primary risk review")).toBeInTheDocument();
+    expect(screen.getByLabelText("Secondary risk analysis")).toBeInTheDocument();
     expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk business reading")).toBeInTheDocument();
     expect(
@@ -99,11 +101,11 @@ describe("PerformanceRiskMode", () => {
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
     expect(
-      container.querySelector(".performance-risk-secondary-column .performance-risk-rolling-panel")
+      container.querySelector(".performance-risk-secondary-group .performance-risk-rolling-panel")
     ).toBeTruthy();
     expect(
       container.querySelector(
-        ".performance-risk-secondary-column .performance-risk-attribution-panel"
+        ".performance-risk-secondary-group .performance-risk-attribution-panel"
       )
     ).toBeTruthy();
 
@@ -262,7 +264,7 @@ describe("PerformanceRiskMode", () => {
       );
     });
     expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent("N/A");
-    expect(screen.getByLabelText("Risk overview")).toHaveTextContent("Evidence posture");
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Evidence posture");
   });
 
   it("renders enriched concentration interpretation without a provenance footer", async () => {
