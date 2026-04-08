@@ -5671,6 +5671,15 @@ a:hover {
   line-height: 1.4;
 }
 
+.performance-risk-briefing-card-headline-only {
+  gap: 0.38rem;
+}
+
+.performance-risk-briefing-card-headline-only .performance-risk-briefing-cue {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .performance-risk-briefing-card-compact .performance-risk-briefing-cue {
   padding-top: 0.18rem;
 }

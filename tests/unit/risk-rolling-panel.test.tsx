@@ -59,11 +59,17 @@ describe("RiskRollingPanel", () => {
       )
     ).toBeInTheDocument();
     expect(
+      within(businessReading).queryByText(
+        /Volatility at 0\.02% remains contained versus the recent norm\./i
+      )
+    ).not.toBeInTheDocument();
+    expect(
       within(businessReading).getByText(
         /review 63D to separate short-term noise from longer-horizon posture\./i
       )
     ).toBeInTheDocument();
     expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
+    expect(businessReading).toHaveClass("performance-risk-briefing-card-headline-only");
 
     const headlineLabels = Array.from(
       container.querySelectorAll(".performance-risk-rolling-headline-card")
@@ -110,9 +116,12 @@ describe("RiskRollingPanel", () => {
     expect(
       businessReading
     ).toBeInTheDocument();
-    expect(businessReading).toHaveTextContent(
-      "Benchmark-relative review should be qualified for beta and tracking error."
-    );
+    expect(businessReading).toHaveClass("performance-risk-briefing-card-headline-only");
+    expect(
+      within(businessReading).queryByText(
+        /Benchmark-relative review should be qualified for beta and tracking error\./i
+      )
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Tracking Error")).not.toBeInTheDocument();
     expect(screen.queryByText("Beta")).not.toBeInTheDocument();
 

@@ -44,6 +44,7 @@ export default function RiskAttributionPanel({
             summary={viewModel.attributionExecutiveSummary}
             ariaLabel="Historical risk attribution business reading"
             density="compact"
+            detailMode="hidden"
           />
         ) : null
       }

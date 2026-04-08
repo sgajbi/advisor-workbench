@@ -31,6 +31,10 @@ describe("RiskAttributionPanel", () => {
     const businessReading = screen.getByLabelText("Historical risk attribution business reading");
     expect(businessReading).toBeInTheDocument();
     expect(businessReading).toHaveClass("performance-risk-briefing-card-compact");
+    expect(businessReading).toHaveClass("performance-risk-briefing-card-headline-only");
+    expect(
+      screen.queryByText(/Private Credit is the largest visible contributor/i)
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk attribution highlights")).toBeInTheDocument();
     expect(screen.getByLabelText("Risk attribution detail")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();

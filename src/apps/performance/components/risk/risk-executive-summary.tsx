@@ -10,6 +10,7 @@ export default function RiskExecutiveSummary({
   ariaLabel,
   postureTone,
   density = "default",
+  detailMode = "full",
 }: {
   summary:
     | PerformanceRiskExecutiveSummary
@@ -20,12 +21,14 @@ export default function RiskExecutiveSummary({
   ariaLabel: string;
   postureTone?: "success" | "default" | "warn" | "danger";
   density?: "default" | "compact";
+  detailMode?: "full" | "hidden";
 }) {
   return (
     <section
       className={[
         "performance-risk-briefing-card",
         density === "compact" ? "performance-risk-briefing-card-compact" : "",
+        detailMode === "hidden" ? "performance-risk-briefing-card-headline-only" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -48,7 +51,7 @@ export default function RiskExecutiveSummary({
       <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
         {summary.headline}
       </Text>
-      <Text variant="secondary">{summary.detail}</Text>
+      {detailMode === "full" ? <Text variant="secondary">{summary.detail}</Text> : null}
       {summary.actionCue ? (
         <Text variant="metadata" className="performance-risk-briefing-cue">
           Next: {summary.actionCue}

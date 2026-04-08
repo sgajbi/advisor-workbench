@@ -15,6 +15,7 @@ export default function RiskRollingBusinessReading({
       summary={summary}
       ariaLabel="Rolling risk business reading"
       density="compact"
+      detailMode="hidden"
     />
   );
 }
