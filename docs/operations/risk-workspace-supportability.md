@@ -15,6 +15,27 @@ The Risk workspace is backed only by Gateway BFF routes over canonical `lotus-ri
 | Rolling Risk | `GET /api/v1/workbench/{portfolioId}/risk/rolling` | rolling summaries on first paint | time series only when explicitly expanded |
 | Historical Risk Attribution | `GET /api/v1/workbench/{portfolioId}/risk/attribution` | lazy-loaded after the shell renders | grouping and attribution selector changes refetch only the attribution module |
 
+## Risk Snapshot first-read contract
+
+Risk Snapshot is the executive first-read module for the Risk workspace.
+
+The UI must answer three questions within the first viewport:
+
+1. what the current portfolio risk posture is,
+2. whether benchmark-relative measures are reliable enough to use,
+3. what the front office should review next.
+
+The first metric row is reserved for:
+
+1. `Volatility`
+2. `Sharpe`
+3. `Beta`
+4. `Tracking Error`
+
+Secondary measures such as `Information Ratio`, `Sortino`, and `Value at Risk` remain
+contract-backed, but they belong below the headline row as supporting interpretation rather than
+the first executive read.
+
 ## Stateful-only rule
 
 Workbench does not surface stateless risk execution.

@@ -89,19 +89,23 @@ export type PerformanceRiskContextRow = {
   support: string;
 };
 
+export type PerformanceRiskMetricCard = {
+  key: string;
+  label: string;
+  value: string;
+  support: string;
+  definition?: string;
+  state: PerformanceRiskState;
+};
+
 export type PerformanceRiskViewModel = {
   state: PerformanceRiskState;
   title: string;
   synopsis: string;
   contextItems: Array<{ label: string; value: string }>;
   snapshotExecutiveSummary: PerformanceRiskExecutiveSummary | null;
-  snapshotMetrics: Array<{
-    key: string;
-    label: string;
-    value: string;
-    support: string;
-    state: PerformanceRiskState;
-  }>;
+  snapshotHeadlineMetrics: PerformanceRiskMetricCard[];
+  snapshotSupportingMetrics: PerformanceRiskMetricCard[];
   snapshotContextRows: PerformanceRiskContextRow[];
   concentrationIndicators: PerformanceRiskConcentrationIndicator[];
   concentrationExecutiveSummary: PerformanceRiskConcentrationExecutiveSummary | null;
@@ -320,7 +324,8 @@ export function buildPerformanceRiskViewModel({
         : "Stateful portfolio risk is available for the selected performance context.",
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
     snapshotExecutiveSummary: mapSnapshotExecutiveSummary(summary),
-    snapshotMetrics: mapSnapshotMetrics(summary),
+    snapshotHeadlineMetrics: mapSnapshotHeadlineMetrics(summary),
+    snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
     snapshotContextRows: mapSnapshotContextRows(summary),
     concentrationIndicators: mapConcentrationIndicators(concentration),
     concentrationExecutiveSummary: mapConcentrationExecutiveSummary(concentration),
@@ -1247,7 +1252,8 @@ function buildStateViewModel(
         : "Stateful risk is not available for the selected portfolio context.",
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     snapshotExecutiveSummary: null,
-    snapshotMetrics: [],
+    snapshotHeadlineMetrics: [],
+    snapshotSupportingMetrics: [],
     snapshotContextRows: [],
     concentrationIndicators: [],
     concentrationExecutiveSummary: null,
@@ -1314,15 +1320,56 @@ function metric(
   return { key, label, value, state, details };
 }
 
-function mapSnapshotMetrics(response: WorkbenchRiskSummaryResponse) {
+const SNAPSHOT_HEADLINE_METRIC_KEYS = ["VOLATILITY", "SHARPE", "BETA", "TRACKING_ERROR"] as const;
+const SNAPSHOT_SUPPORTING_METRIC_KEYS = ["INFORMATION_RATIO", "SORTINO", "VAR"] as const;
+
+function mapSnapshotHeadlineMetrics(
+  response: WorkbenchRiskSummaryResponse
+): PerformanceRiskMetricCard[] {
+  return partitionSnapshotMetricCards(response).headline;
+}
+
+function mapSnapshotSupportingMetrics(
+  response: WorkbenchRiskSummaryResponse
+): PerformanceRiskMetricCard[] {
+  return partitionSnapshotMetricCards(response).supporting;
+}
+
+function partitionSnapshotMetricCards(response: WorkbenchRiskSummaryResponse): {
+  headline: PerformanceRiskMetricCard[];
+  supporting: PerformanceRiskMetricCard[];
+} {
   const metrics = response.payload?.periods[0]?.metrics ?? [];
-  return metrics.map((item) => ({
+  const metricCards = metrics.map(mapSnapshotMetricCard);
+  const byKey = new Map(metricCards.map((metricCard) => [metricCard.key, metricCard]));
+
+  const headline = SNAPSHOT_HEADLINE_METRIC_KEYS.map((key) => byKey.get(key)).filter(
+    (metric): metric is PerformanceRiskMetricCard => Boolean(metric)
+  );
+  const supportingPriority = SNAPSHOT_SUPPORTING_METRIC_KEYS.map((key) => byKey.get(key)).filter(
+    (metric): metric is PerformanceRiskMetricCard => Boolean(metric)
+  );
+  const supportingRemainder = metricCards.filter(
+    (metric) =>
+      !SNAPSHOT_HEADLINE_METRIC_KEYS.includes(metric.key as (typeof SNAPSHOT_HEADLINE_METRIC_KEYS)[number]) &&
+      !SNAPSHOT_SUPPORTING_METRIC_KEYS.includes(metric.key as (typeof SNAPSHOT_SUPPORTING_METRIC_KEYS)[number])
+  );
+
+  return {
+    headline,
+    supporting: [...supportingPriority, ...supportingRemainder],
+  };
+}
+
+function mapSnapshotMetricCard(item: WorkbenchRiskMetric): PerformanceRiskMetricCard {
+  return {
     key: item.key,
     label: item.label,
-    value: formatRiskMetric(item),
-    support: item.reason ?? (item.state === "ready" ? "Stateful risk metric" : "Not available"),
+    value: item.state === "ready" || item.state === "partial" ? formatRiskMetric(item) : "N/A",
+    support: describeSnapshotMetric(item),
+    definition: defineSnapshotMetric(item),
     state: resolveMetricState(item.state),
-  }));
+  };
 }
 
 function mapSnapshotExecutiveSummary(
@@ -1333,24 +1380,31 @@ function mapSnapshotExecutiveSummary(
     return null;
   }
   const volatility = period.metrics.find((metric) => metric.key === "VOLATILITY");
+  const sharpe = period.metrics.find((metric) => metric.key === "SHARPE");
+  const beta = period.metrics.find((metric) => metric.key === "BETA");
   const trackingError = period.metrics.find((metric) => metric.key === "TRACKING_ERROR");
-  const informationRatio = period.metrics.find((metric) => metric.key === "INFORMATION_RATIO");
-  const benchmarkApplied = period.benchmark_context?.reason === "APPLIED";
+  const posture = resolveSnapshotPosture(volatility?.value);
+  const reliability = resolveSnapshotBenchmarkReliability(response, period);
+  const volatilityReading = formatRiskMetric(
+    volatility ?? metric("VOLATILITY", "Volatility", null, "unavailable")
+  );
+  const sharpeReading = formatRiskMetric(sharpe ?? metric("SHARPE", "Sharpe", null, "unavailable"));
+  const betaReading = formatRiskMetric(beta ?? metric("BETA", "Beta", null, "unavailable"));
+  const trackingErrorReading = formatRiskMetric(
+    trackingError ?? metric("TRACKING_ERROR", "Tracking Error", null, "unavailable")
+  );
 
   return {
     heading: "Business reading",
-    headline:
-      typeof volatility?.value === "number" && volatility.value >= 12
-        ? "Realized portfolio volatility is elevated."
-        : typeof volatility?.value === "number" && volatility.value >= 8
-          ? "Realized portfolio volatility is moderate."
-          : "Realized portfolio volatility is contained.",
-    detail: benchmarkApplied
-      ? `Tracking error is ${formatRiskMetric(trackingError ?? metric("TRACKING_ERROR", "Tracking Error", null, "unavailable"))} and information ratio is ${formatRiskMetric(informationRatio ?? metric("INFORMATION_RATIO", "Information Ratio", null, "unavailable"))}, so benchmark-relative reading can be used.`
-      : "Benchmark-relative metrics should be qualified because benchmark alignment is incomplete.",
-    actionCue: benchmarkApplied
-      ? "Review volatility, tracking error, and information ratio together before treating the book as benchmark-stable."
-      : "Confirm benchmark availability before relying on relative risk interpretation.",
+    headline: `Risk posture is ${posture.label.toLowerCase()}, and benchmark-relative reading is ${reliability.label.toLowerCase()}.`,
+    detail:
+      reliability.state === "reliable"
+        ? `Volatility is ${volatilityReading}, Sharpe is ${sharpeReading}, beta is ${betaReading}, and tracking error is ${trackingErrorReading}.`
+        : `Volatility is ${volatilityReading} and Sharpe is ${sharpeReading}. Treat beta and tracking error as provisional until benchmark alignment is restored.`,
+    actionCue:
+      reliability.state === "reliable"
+        ? "Next review: confirm active risk remains appropriate through beta and tracking error."
+        : "Next review: rely on total-risk measures first, then confirm benchmark alignment.",
   };
 }
 
@@ -1366,7 +1420,7 @@ function mapSnapshotContextRows(
       key: "portfolio_observations",
       label: "Portfolio observations",
       value: formatInteger(period.portfolio_observation_count),
-      support: "Return observations used for realized risk calculations",
+      support: "Return observations backing the realized risk reading.",
     },
     {
       key: "benchmark_observations",
@@ -1374,8 +1428,10 @@ function mapSnapshotContextRows(
       value: formatInteger(period.benchmark_observation_count),
       support:
         period.benchmark_context?.reason === "APPLIED"
-          ? `${formatInteger(period.aligned_benchmark_observation_count)} aligned for relative risk`
-          : period.benchmark_context?.reason ?? "Benchmark-relative metrics not applied",
+          ? `${formatInteger(period.aligned_benchmark_observation_count)} aligned observations used for beta, tracking error, and information ratio.`
+          : period.benchmark_context?.reason
+            ? `Relative risk is currently ${formatEnumLabel(period.benchmark_context.reason)?.toLowerCase()}.`
+            : "Relative risk is not being applied for this selection.",
     },
     {
       key: "benchmark_context",
@@ -1383,10 +1439,124 @@ function mapSnapshotContextRows(
       value: formatEnumLabel(period.benchmark_context?.reason) ?? "Not requested",
       support:
         period.benchmark_context?.requested_metrics?.length
-          ? `${period.benchmark_context.requested_metrics.join(", ")} requested`
-          : "No benchmark-relative metrics requested",
+          ? `Requested relative measures: ${period.benchmark_context.requested_metrics.join(", ")}.`
+          : "No benchmark-relative measures requested.",
     },
   ];
+}
+
+function describeSnapshotMetric(metric: WorkbenchRiskMetric): string {
+  if (metric.state !== "ready") {
+    if (
+      metric.key === "BETA" ||
+      metric.key === "TRACKING_ERROR" ||
+      metric.key === "INFORMATION_RATIO"
+    ) {
+      return metric.reason ?? "Benchmark-relative risk requires benchmark context.";
+    }
+    return metric.reason ?? "Not available for the current portfolio context.";
+  }
+
+  switch (metric.key) {
+    case "VOLATILITY":
+      return "Overall realised risk level of the portfolio over the selected period.";
+    case "SHARPE":
+      return "Return earned for each unit of total risk taken.";
+    case "BETA":
+      return "Sensitivity of the portfolio to benchmark market moves.";
+    case "TRACKING_ERROR":
+      return "Amount of active risk taken relative to the benchmark.";
+    case "INFORMATION_RATIO":
+      return "Efficiency of active risk taken versus the benchmark.";
+    case "SORTINO":
+      return "Return earned per unit of downside volatility.";
+    case "VAR": {
+      const expectedShortfall = formatRiskExpectedShortfall(metric.details);
+      return expectedShortfall
+        ? `Estimated downside at the configured confidence level. Expected shortfall ${expectedShortfall}.`
+        : "Estimated downside at the configured confidence level.";
+    }
+    default:
+      return metric.reason ?? "Risk measure available for the selected portfolio context.";
+  }
+}
+
+function defineSnapshotMetric(metric: WorkbenchRiskMetric): string {
+  switch (metric.key) {
+    case "VOLATILITY":
+      return "Annualized realized volatility of portfolio returns over the selected period.";
+    case "SHARPE":
+      return "Portfolio excess return per unit of realized volatility.";
+    case "BETA":
+      return "Sensitivity of portfolio returns relative to the assigned benchmark.";
+    case "TRACKING_ERROR":
+      return "Realized standard deviation of active returns versus the benchmark.";
+    case "INFORMATION_RATIO":
+      return "Active return earned per unit of tracking error.";
+    case "SORTINO":
+      return "Return delivered per unit of downside volatility.";
+    case "VAR":
+      return "Value at Risk estimates the configured downside threshold over the selected horizon and confidence level.";
+    default:
+      return metric.reason ?? "Risk measure definition unavailable.";
+  }
+}
+
+function resolveSnapshotPosture(volatility: number | null | undefined): {
+  label: "Contained" | "Moderate" | "Elevated" | "High";
+} {
+  if (typeof volatility !== "number") {
+    return { label: "Moderate" };
+  }
+  if (volatility >= 16) {
+    return { label: "High" };
+  }
+  if (volatility >= 12) {
+    return { label: "Elevated" };
+  }
+  if (volatility >= 8) {
+    return { label: "Moderate" };
+  }
+  return { label: "Contained" };
+}
+
+function resolveSnapshotBenchmarkReliability(
+  response: WorkbenchRiskSummaryResponse,
+  period: NonNullable<WorkbenchRiskSummaryResponse["payload"]>["periods"][number]
+): {
+  label: "Reliable" | "Qualified" | "Unavailable";
+  state: "reliable" | "qualified" | "unavailable";
+} {
+  if (period.benchmark_context?.reason === "APPLIED" && period.benchmark_context.aligned) {
+    return { label: "Reliable", state: "reliable" };
+  }
+
+  const benchmarkSupportability = response.supportability.find(
+    (item) => item.key === "benchmark_returns"
+  );
+  if (benchmarkSupportability?.state === "ready") {
+    return { label: "Reliable", state: "reliable" };
+  }
+
+  if (
+    benchmarkSupportability?.state === "partial" ||
+    benchmarkSupportability?.state === "blocked"
+  ) {
+    return { label: "Qualified", state: "qualified" };
+  }
+
+  if (period.benchmark_context?.requested || period.benchmark_context?.available) {
+    return { label: "Qualified", state: "qualified" };
+  }
+
+  return { label: "Unavailable", state: "unavailable" };
+}
+
+function formatRiskExpectedShortfall(details: Record<string, unknown> | null | undefined): string | null {
+  const expectedShortfall = details?.expected_shortfall;
+  return typeof expectedShortfall === "number"
+    ? formatRiskPercentValue(expectedShortfall)
+    : null;
 }
 
 function mapConcentrationIndicators(

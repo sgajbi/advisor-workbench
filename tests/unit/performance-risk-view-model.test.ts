@@ -27,17 +27,22 @@ describe("buildPerformanceRiskViewModel", () => {
 
     expect(viewModel.state).toBe("partial");
     expect(viewModel.title).toBe("Stateful Risk");
-    expect(viewModel.snapshotMetrics.map((metric) => metric.label)).toEqual([
+    expect(viewModel.snapshotHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Volatility",
       "Sharpe",
-      "Sortino",
       "Beta",
       "Tracking Error",
+    ]);
+    expect(viewModel.snapshotSupportingMetrics.map((metric) => metric.label)).toEqual([
       "Information Ratio",
+      "Sortino",
       "Value at Risk",
     ]);
     expect(viewModel.snapshotExecutiveSummary).toMatchObject({
       heading: "Business reading",
+      headline: "Risk posture is contained, and benchmark-relative reading is reliable.",
+      actionCue:
+        "Next review: confirm active risk remains appropriate through beta and tracking error.",
     });
     expect(viewModel.snapshotContextRows[0]).toMatchObject({
       label: "Portfolio observations",
@@ -157,6 +162,16 @@ describe("buildPerformanceRiskViewModel", () => {
       value: "N/A",
       support: "Benchmark-relative drawdown requires benchmark context.",
     });
+    expect(viewModel.snapshotExecutiveSummary).toMatchObject({
+      headline: "Risk posture is contained, and benchmark-relative reading is unavailable.",
+      actionCue:
+        "Next review: rely on total-risk measures first, then confirm benchmark alignment.",
+    });
+    expect(viewModel.snapshotHeadlineMetrics.find((metric) => metric.key === "BETA")).toMatchObject({
+      value: "N/A",
+      support: "Benchmark-relative risk requires benchmark context.",
+      state: "unavailable",
+    });
     expect(viewModel.attributionControls?.attributionTypes[1]).toMatchObject({
       key: "ACTIVE_RISK",
       disabled: true,
@@ -174,7 +189,8 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.state).toBe("loading");
-    expect(viewModel.snapshotMetrics).toEqual([]);
+    expect(viewModel.snapshotHeadlineMetrics).toEqual([]);
+    expect(viewModel.snapshotSupportingMetrics).toEqual([]);
     expect(viewModel.concentrationIndicators).toEqual([]);
     expect(viewModel.concentrationExecutiveSummary).toBeNull();
     expect(viewModel.rollingWindows).toEqual([]);

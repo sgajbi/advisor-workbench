@@ -11,9 +11,13 @@ type RiskHeadlineMetric = {
 export default function RiskHeadlineMetricGrid({
   ariaLabel,
   metrics,
+  className,
+  itemClassName,
 }: {
   ariaLabel: string;
   metrics: RiskHeadlineMetric[];
+  className?: string;
+  itemClassName?: string;
 }) {
   if (!metrics.length) {
     return null;
@@ -23,7 +27,8 @@ export default function RiskHeadlineMetricGrid({
     <section className="performance-risk-headline-section">
       <WorkbenchSummaryMetricStrip
         ariaLabel={ariaLabel}
-        className="performance-risk-metric-strip"
+        className={["performance-risk-metric-strip", className].filter(Boolean).join(" ")}
+        itemClassName={itemClassName}
         items={metrics.map((metric) => ({
           key: metric.key,
           label: metric.label,
