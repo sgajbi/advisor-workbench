@@ -1620,10 +1620,22 @@ function mapConcentrationContextRows(
 }
 
 function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
-  const summary = response.payload?.periods[0]?.summary;
-  if (!summary) {
+  const period = response.payload?.periods[0];
+  const summary = period?.summary;
+  if (!period || !summary) {
     return [];
   }
+  const relative = period.relative_to_benchmark;
+  const recoveryStatus =
+    relative?.is_recovered === true
+      ? "Recovered"
+      : relative?.is_recovered === false
+        ? "Open"
+        : summary.is_recovered === true
+          ? "Recovered"
+          : summary.is_recovered === false
+            ? "Open"
+            : "N/A";
   return [
     {
       key: "max_drawdown",
@@ -1633,10 +1645,24 @@ function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
       state: resolveModuleState(response.state),
     },
     {
+      key: "relative_max_drawdown",
+      label: "Relative Max Drawdown",
+      value: relative ? formatDrawdownPercent(relative.max_drawdown) : "N/A",
+      support: relative ? buildRelativeDrawdownDateRange(relative) : "Benchmark-relative review unavailable",
+      state: resolveModuleState(response.state),
+    },
+    {
       key: "time_under_water_days",
       label: "Time Under Water",
-      value: formatInteger(summary.time_under_water_days),
+      value: formatInteger(relative?.time_under_water_days ?? summary.time_under_water_days),
       support: "Business days below prior peak",
+      state: resolveModuleState(response.state),
+    },
+    {
+      key: "recovery_status",
+      label: "Recovery Status",
+      value: recoveryStatus,
+      support: recoveryStatus === "Recovered" ? "Recovered before the period close" : "Recovery remained open at period close",
       state: resolveModuleState(response.state),
     },
     {
@@ -1644,20 +1670,6 @@ function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
       label: "Ulcer Index",
       value: formatDrawdownPercent(summary.ulcer_index),
       support: "Path severity across underwater observations",
-      state: resolveModuleState(response.state),
-    },
-    {
-      key: "drawdown_at_risk_95",
-      label: "DaR 95",
-      value: formatDrawdownPercent(summary.drawdown_at_risk_95),
-      support: "Episode-tail drawdown threshold",
-      state: resolveModuleState(response.state),
-    },
-    {
-      key: "conditional_drawdown_at_risk_95",
-      label: "CDaR 95",
-      value: formatDrawdownPercent(summary.conditional_drawdown_at_risk_95),
-      support: "Average of worst drawdown tail",
       state: resolveModuleState(response.state),
     },
   ];
@@ -1837,7 +1849,7 @@ function mapRollingWindows(
           p95: formatRollingMetricSummaryValue(metricKey, summary?.p95 ?? null),
           support: buildRollingMetricSupport(metricKey, summary),
         };
-      }),
+      }).filter((row) => shouldDisplayRollingMetricRow(row.metric, row.latest)),
       seriesRows: mapRollingSeriesRows(detailWindow?.metric_series ?? []),
       seriesMetricKeys: metricKeys,
     };
@@ -1989,6 +2001,17 @@ function mapRollingExecutiveSummary(
           : "Risk-free aligned measures should be qualified for this request.",
     actionCue: "Use shorter windows for current behaviour and longer windows for stability review.",
   };
+}
+
+function buildRelativeDrawdownDateRange(
+  relative: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["relative_to_benchmark"]
+) {
+  if (!relative?.max_drawdown_peak_date || !relative.max_drawdown_trough_date) {
+    return "Benchmark-relative timing unavailable";
+  }
+  return `${formatDateValue(relative.max_drawdown_peak_date)} to ${formatDateValue(
+    relative.max_drawdown_trough_date
+  )}`;
 }
 
 function mapRollingContextRows(
@@ -2392,14 +2415,19 @@ function mapAttributionRows(response: WorkbenchRiskAttributionResponse | null) {
   if (!selectedSet) {
     return [];
   }
-  return selectedSet.contributors.map((contributor) => ({
-    key: contributor.group_key,
-    group: contributor.group_label,
-    avgWeight: formatRiskPercentValue(contributor.weight_average),
-    marginalContribution: formatRiskPercentValue(contributor.marginal_contribution),
-    componentContribution: formatRiskPercentValue(contributor.component_contribution),
-    contributionShare: formatRiskPercentValue(contributor.percent_contribution),
-  }));
+  return [...selectedSet.contributors]
+    .sort(
+      (left, right) =>
+        Math.abs(right.component_contribution ?? 0) - Math.abs(left.component_contribution ?? 0)
+    )
+    .map((contributor) => ({
+      key: contributor.group_key,
+      group: normalizeAttributionGroupLabel(contributor.group_label),
+      avgWeight: formatRiskPercentValue(contributor.weight_average),
+      marginalContribution: formatRiskPercentValue(contributor.marginal_contribution),
+      componentContribution: formatRiskPercentValue(contributor.component_contribution),
+      contributionShare: formatRiskPercentValue(contributor.percent_contribution),
+    }));
 }
 
 function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null) {
@@ -2510,6 +2538,17 @@ function orderRollingMetricKeys(metricKeys: string[]) {
     }
     return leftIndex - rightIndex;
   });
+}
+
+function shouldDisplayRollingMetricRow(metricLabel: string, latestValue: string) {
+  if ((metricLabel === "Sharpe" || metricLabel === "Information Ratio") && latestValue === "Unstable") {
+    return false;
+  }
+  return true;
+}
+
+function normalizeAttributionGroupLabel(label: string) {
+  return label === "UNKNOWN" ? "Unclassified" : label;
 }
 
 function resolveAttributionState({

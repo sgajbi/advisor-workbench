@@ -52,15 +52,6 @@ export default function RiskDrawdownPanel({
           unavailable: metric.state === "unavailable",
         }))}
       />
-      {viewModel.drawdownRelativeMetric ? (
-        <div className="performance-risk-note-card" aria-label="Relative drawdown summary">
-          <div className="performance-risk-note-copy">
-            <span className="ui-text ui-text-label">{viewModel.drawdownRelativeMetric.label}</span>
-            <span className="ui-text ui-text-card-title">{viewModel.drawdownRelativeMetric.value}</span>
-            <span className="ui-text ui-text-metadata">{viewModel.drawdownRelativeMetric.support}</span>
-          </div>
-        </div>
-      ) : null}
       <RiskContextList rows={viewModel.drawdownContextRows} ariaLabel="Drawdown methodology context" compact />
       {viewModel.drawdownEpisodes.length ? (
         <AnalyticsTable

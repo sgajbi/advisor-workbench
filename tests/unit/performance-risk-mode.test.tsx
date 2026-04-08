@@ -234,12 +234,11 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Relative drawdown summary")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent(
+        "Relative Max Drawdown"
+      );
     });
-    expect(screen.getByLabelText("Relative drawdown summary")).toHaveTextContent("N/A");
-    expect(screen.getByLabelText("Relative drawdown summary")).toHaveTextContent(
-      "Benchmark-relative drawdown requires benchmark context."
-    );
+    expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent("N/A");
   });
 
   it("renders enriched concentration interpretation without a provenance footer", async () => {

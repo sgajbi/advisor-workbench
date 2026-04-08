@@ -141,7 +141,7 @@ export default function RiskAttributionPanel({
           columns={[
             { key: "group", label: "Group" },
             { key: "avgWeight", label: "Average Weight", align: "right" },
-            { key: "marginalContribution", label: "Marginal Effect", align: "right" },
+            { key: "marginalContribution", label: "Marginal Sensitivity", align: "right" },
             { key: "componentContribution", label: "Component Effect", align: "right" },
             { key: "contributionShare", label: "Share of Risk", align: "right" },
           ]}

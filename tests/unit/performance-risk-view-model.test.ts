@@ -84,10 +84,10 @@ describe("buildPerformanceRiskViewModel", () => {
     ]);
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Max Drawdown",
+      "Relative Max Drawdown",
       "Time Under Water",
+      "Recovery Status",
       "Ulcer Index",
-      "DaR 95",
-      "CDaR 95",
     ]);
     expect(viewModel.drawdownExecutiveSummary).toMatchObject({
       heading: "Business reading",
