@@ -5,6 +5,7 @@ import {
   DisclosureToggleButton,
   ScreenStatePanel,
   SectionBlock,
+  Text,
   WorkbenchSegmentedControl,
   WorkbenchStatusRow,
   WorkbenchSummaryMetricStrip,
@@ -38,7 +39,7 @@ export default function RiskRollingPanel({
   return (
     <SectionBlock
       title="Rolling Risk"
-      subtitle="Windowed risk behavior for realized volatility, drawdown pressure, and benchmark-relative drift."
+      subtitle="Windowed risk behaviour, dependency quality, and short-versus-long horizon context."
       className="performance-risk-panel performance-risk-rolling-panel"
       actions={
         <DisclosureToggleButton
@@ -49,6 +50,20 @@ export default function RiskRollingPanel({
         />
       }
     >
+      {viewModel.rollingExecutiveSummary ? (
+        <section className="performance-risk-briefing-card" aria-label="Rolling risk business reading">
+          <Text variant="cardTitle">{viewModel.rollingExecutiveSummary.heading}</Text>
+          <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
+            {viewModel.rollingExecutiveSummary.headline}
+          </Text>
+          <Text variant="secondary">{viewModel.rollingExecutiveSummary.detail}</Text>
+          {viewModel.rollingExecutiveSummary.actionCue ? (
+            <Text variant="metadata" className="performance-risk-briefing-cue">
+              Next: {viewModel.rollingExecutiveSummary.actionCue}
+            </Text>
+          ) : null}
+        </section>
+      ) : null}
       {viewModel.rollingWindows.length > 1 ? (
         <WorkbenchSegmentedControl
           value={selectedWindow?.key ?? defaultWindowKey}
@@ -82,13 +97,24 @@ export default function RiskRollingPanel({
           }))}
         />
       ) : null}
+      {viewModel.rollingContextRows.length ? (
+        <div className="performance-risk-context-card-grid" aria-label="Rolling risk methodology context">
+          {viewModel.rollingContextRows.map((row) => (
+            <div key={row.key} className="performance-risk-context-card">
+              <Text variant="label">{row.label}</Text>
+              <Text variant="cardTitle">{row.value}</Text>
+              <Text variant="metadata">{row.support}</Text>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <AnalyticsTable
         ariaLabel="Rolling risk summary table"
         variant="analysis"
         density="compact"
         columns={[
-          { key: "metric", label: "Metric" },
-          { key: "latest", label: "Latest", align: "right" },
+          { key: "metric", label: "Measure" },
+          { key: "latest", label: "Current Reading", align: "right" },
           { key: "average", label: "Average", align: "right" },
           { key: "p05", label: "P05", align: "right" },
           { key: "p95", label: "P95", align: "right" },

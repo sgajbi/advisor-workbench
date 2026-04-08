@@ -2,6 +2,7 @@ import {
   AnalyticsTable,
   ScreenStatePanel,
   SectionBlock,
+  Text,
   WorkbenchSegmentedControl,
   WorkbenchStatusRow,
   WorkbenchSummaryMetricStrip,
@@ -23,9 +24,23 @@ export default function RiskAttributionPanel({
   return (
     <SectionBlock
       title="Historical Risk Attribution"
-      subtitle="Stateful decomposition of realized total and active risk across supported business dimensions."
+      subtitle="Stateful decomposition of total and active risk across supported business dimensions."
       className="performance-risk-panel performance-risk-attribution-panel"
     >
+      {viewModel.attributionExecutiveSummary ? (
+        <section className="performance-risk-briefing-card" aria-label="Historical risk attribution business reading">
+          <Text variant="cardTitle">{viewModel.attributionExecutiveSummary.heading}</Text>
+          <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
+            {viewModel.attributionExecutiveSummary.headline}
+          </Text>
+          <Text variant="secondary">{viewModel.attributionExecutiveSummary.detail}</Text>
+          {viewModel.attributionExecutiveSummary.actionCue ? (
+            <Text variant="metadata" className="performance-risk-briefing-cue">
+              Next: {viewModel.attributionExecutiveSummary.actionCue}
+            </Text>
+          ) : null}
+        </section>
+      ) : null}
       {controls ? (
         <div className="performance-risk-attribution-toolbar">
           <WorkbenchSegmentedControl
@@ -50,6 +65,17 @@ export default function RiskAttributionPanel({
             }))}
             ariaLabel="Risk attribution grouping"
           />
+        </div>
+      ) : null}
+      {viewModel.attributionMethodologyRows.length ? (
+        <div className="performance-risk-context-card-grid" aria-label="Historical risk attribution methodology">
+          {viewModel.attributionMethodologyRows.map((row) => (
+            <div key={row.key} className="performance-risk-context-card">
+              <Text variant="label">{row.label}</Text>
+              <Text variant="cardTitle">{row.value}</Text>
+              <Text variant="metadata">{row.support}</Text>
+            </div>
+          ))}
         </div>
       ) : null}
 
@@ -127,7 +153,7 @@ export default function RiskAttributionPanel({
           density="compact"
           columns={[
             { key: "group", label: "Group" },
-            { key: "avgWeight", label: "Avg Weight", align: "right" },
+            { key: "avgWeight", label: "Average Weight", align: "right" },
             { key: "marginalContribution", label: "Marginal", align: "right" },
             { key: "componentContribution", label: "Component", align: "right" },
             { key: "contributionShare", label: "Share", align: "right" },

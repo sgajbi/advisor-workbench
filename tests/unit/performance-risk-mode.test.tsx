@@ -75,6 +75,14 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
     });
+    expect(screen.getByLabelText("Risk snapshot business reading")).toHaveTextContent(
+      "Business reading"
+    );
+    expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
+    expect(screen.getByLabelText("Rolling risk business reading")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Historical risk attribution business reading")
+    ).toBeInTheDocument();
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",

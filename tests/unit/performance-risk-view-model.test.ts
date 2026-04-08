@@ -36,6 +36,12 @@ describe("buildPerformanceRiskViewModel", () => {
       "Information Ratio",
       "Value at Risk",
     ]);
+    expect(viewModel.snapshotExecutiveSummary).toMatchObject({
+      heading: "Business reading",
+    });
+    expect(viewModel.snapshotContextRows[0]).toMatchObject({
+      label: "Portfolio observations",
+    });
     expect(viewModel.concentrationIndicators.map((metric) => metric.label)).toEqual([
       "Portfolio Concentration Index",
       "Issuer Concentration Index",
@@ -83,6 +89,12 @@ describe("buildPerformanceRiskViewModel", () => {
       "DaR 95",
       "CDaR 95",
     ]);
+    expect(viewModel.drawdownExecutiveSummary).toMatchObject({
+      heading: "Business reading",
+    });
+    expect(viewModel.drawdownContextRows[0]).toMatchObject({
+      label: "Portfolio observations",
+    });
     expect(viewModel.drawdownEpisodes[0]).toMatchObject({
       episode: "DD_0001",
       depth: "-12.45%",
@@ -91,10 +103,22 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingWindows[0]).toMatchObject({
       label: "21D",
     });
+    expect(viewModel.rollingExecutiveSummary).toMatchObject({
+      heading: "Business reading",
+    });
+    expect(viewModel.rollingContextRows[0]).toMatchObject({
+      label: "Window coverage",
+    });
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
     expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
+    expect(viewModel.attributionExecutiveSummary).toMatchObject({
+      heading: "Business reading",
+    });
+    expect(viewModel.attributionMethodologyRows[0]).toMatchObject({
+      label: "Covariance method",
+    });
     expect(viewModel.attributionRows[0]).toMatchObject({
       group: "Technology",
     });

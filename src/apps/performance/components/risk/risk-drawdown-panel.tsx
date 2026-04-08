@@ -3,6 +3,7 @@ import {
   DisclosureToggleButton,
   ScreenStatePanel,
   SectionBlock,
+  Text,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
@@ -22,7 +23,7 @@ export default function RiskDrawdownPanel({
   return (
     <SectionBlock
       title="Drawdown"
-      subtitle="Worst realized path loss, recovery posture, and drawdown episode evidence."
+      subtitle="Realized loss path, recovery posture, and benchmark-relative drawdown evidence."
       className="performance-risk-panel performance-risk-drawdown-panel"
       actions={
         <DisclosureToggleButton
@@ -33,6 +34,20 @@ export default function RiskDrawdownPanel({
         />
       }
     >
+      {viewModel.drawdownExecutiveSummary ? (
+        <section className="performance-risk-briefing-card" aria-label="Drawdown business reading">
+          <Text variant="cardTitle">{viewModel.drawdownExecutiveSummary.heading}</Text>
+          <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
+            {viewModel.drawdownExecutiveSummary.headline}
+          </Text>
+          <Text variant="secondary">{viewModel.drawdownExecutiveSummary.detail}</Text>
+          {viewModel.drawdownExecutiveSummary.actionCue ? (
+            <Text variant="metadata" className="performance-risk-briefing-cue">
+              Next: {viewModel.drawdownExecutiveSummary.actionCue}
+            </Text>
+          ) : null}
+        </section>
+      ) : null}
       <WorkbenchSummaryMetricStrip
         ariaLabel="Risk drawdown headline metrics"
         className="performance-risk-metric-strip"
@@ -53,13 +68,24 @@ export default function RiskDrawdownPanel({
           </div>
         </div>
       ) : null}
+      {viewModel.drawdownContextRows.length ? (
+        <div className="performance-risk-context-card-grid" aria-label="Drawdown methodology context">
+          {viewModel.drawdownContextRows.map((row) => (
+            <div key={row.key} className="performance-risk-context-card">
+              <Text variant="label">{row.label}</Text>
+              <Text variant="cardTitle">{row.value}</Text>
+              <Text variant="metadata">{row.support}</Text>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <AnalyticsTable
         ariaLabel="Risk drawdown episode table"
         variant="analysis"
         density="compact"
         columns={[
           { key: "episode", label: "Episode" },
-          { key: "depth", label: "Depth", align: "right" },
+          { key: "depth", label: "Current Reading", align: "right" },
           { key: "peak", label: "Peak" },
           { key: "trough", label: "Trough" },
           { key: "recovery", label: "Recovery" },
