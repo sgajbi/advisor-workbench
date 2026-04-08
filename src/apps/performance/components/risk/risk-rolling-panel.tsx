@@ -31,7 +31,6 @@ export default function RiskRollingPanel({
   return (
     <RiskModuleShell
       title={riskRollingPanelCopy.title}
-      subtitle={riskRollingPanelCopy.subtitle}
       priority="secondary"
       density="compact"
       className="performance-risk-rolling-panel"

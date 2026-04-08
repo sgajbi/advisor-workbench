@@ -1,6 +1,5 @@
 export const riskRollingPanelCopy = {
   title: "Rolling Risk",
-  subtitle: "Selected-window behaviour, relative reliability, and next-horizon review.",
   methodologyPanelTitle: "Rolling Risk",
   drilldownLabel: "View rolling series",
   detailTitle: "Window detail",
@@ -15,7 +14,6 @@ export const riskRollingPanelCopy = {
 
 export const riskAttributionPanelCopy = {
   title: "Historical Risk Attribution",
-  subtitle: "Analytical decomposition of total and active risk across supported business dimensions.",
   methodologyPanelTitle: "Historical Risk Attribution",
   detailTitle: "Contributor review",
   detailAriaLabel: "Risk attribution detail",

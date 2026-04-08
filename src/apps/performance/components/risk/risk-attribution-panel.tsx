@@ -27,7 +27,6 @@ export default function RiskAttributionPanel({
   return (
     <RiskModuleShell
       title={riskAttributionPanelCopy.title}
-      subtitle={riskAttributionPanelCopy.subtitle}
       priority="secondary"
       density="compact"
       className="performance-risk-attribution-panel"

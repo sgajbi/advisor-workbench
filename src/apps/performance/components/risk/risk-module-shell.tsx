@@ -14,7 +14,7 @@ export default function RiskModuleShell({
   density = "default",
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   actions?: ReactNode;
   headlineMetrics?: ReactNode;
   detail?: ReactNode;
