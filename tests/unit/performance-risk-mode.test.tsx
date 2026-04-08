@@ -71,7 +71,7 @@ describe("PerformanceRiskMode", () => {
 
     const { container } = renderRiskMode(scenario);
 
-    expect(screen.getByText("Loading stateful risk")).toBeInTheDocument();
+    expect(screen.getByText("Loading risk")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     });

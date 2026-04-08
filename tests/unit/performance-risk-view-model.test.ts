@@ -26,7 +26,7 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.state).toBe("partial");
-    expect(viewModel.title).toBe("Stateful Risk");
+    expect(viewModel.title).toBe("Risk");
     expect(viewModel.workspaceOverview).toEqual([
       expect.objectContaining({ label: "Risk posture", value: "Contained" }),
       expect.objectContaining({ label: "Drawdown posture", value: "Underwater" }),

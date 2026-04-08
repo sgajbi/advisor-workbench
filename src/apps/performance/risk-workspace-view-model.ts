@@ -310,11 +310,11 @@ export function buildPerformanceRiskViewModel({
 
   return {
     state,
-    title: state === "unavailable" ? "Risk unavailable" : "Stateful Risk",
+    title: state === "unavailable" ? "Risk unavailable" : "Risk",
     synopsis:
       state === "unavailable"
-        ? "Stateful risk is not available for the selected portfolio context."
-        : "Stateful portfolio risk is available for the selected performance context.",
+        ? "Risk is not available for the selected portfolio context."
+        : "Portfolio risk is available for the selected performance context.",
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
     workspaceOverview: buildRiskWorkspaceOverview({
       summary,
@@ -1234,7 +1234,7 @@ function buildStateViewModel(
   const asOfDate = workspace.as_of_date;
   const title =
     state === "loading"
-      ? "Loading stateful risk"
+      ? "Loading risk"
       : state === "unavailable"
         ? "Risk unavailable"
         : "Risk not available";
@@ -1245,7 +1245,7 @@ function buildStateViewModel(
     synopsis:
       state === "loading"
         ? "Risk snapshot and concentration modules are loading from the Gateway BFF contract."
-        : "Stateful risk is not available for the selected portfolio context.",
+        : "Risk is not available for the selected portfolio context.",
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     workspaceOverview: [],
     snapshotHeadlineMetrics: [],

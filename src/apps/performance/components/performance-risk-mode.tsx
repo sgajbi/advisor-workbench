@@ -103,8 +103,7 @@ export default function PerformanceRiskMode({
   return (
     <section className="performance-risk-stage" aria-label="Risk">
       <SectionBlock
-        title="Stateful Risk"
-        subtitle="Portfolio risk, concentration pressure, and supportability for the selected performance context."
+        title="Risk"
         className="performance-risk-shell performance-lotus-stage"
         actions={<RiskStatusBar state={viewModel.state} />}
       >
