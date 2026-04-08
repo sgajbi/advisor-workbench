@@ -62,6 +62,23 @@ preserving auditability and supportability detail on demand for:
 4. Rolling Risk
 5. Historical Risk Attribution
 
+## Analytical drill-down pattern
+
+Drawdown and Rolling Risk keep heavy detail off the main page and expose it only through the shared
+analytical detail drawer.
+
+Implemented behavior:
+
+1. `View underwater path` opens a drawdown detail drawer and lazy-loads underwater series only on
+   demand.
+2. `View rolling series` opens a rolling detail drawer and lazy-loads time-series rolling metrics
+   only on demand.
+3. The selected rolling window is preserved when the rolling drawer opens.
+4. Opening either drill-down must not reflow the page or push other modules down the screen.
+
+This keeps first paint dense and decision-oriented while preserving path and series auditability for
+deeper advisor review.
+
 ## Risk Snapshot first-read contract
 
 Risk Snapshot is the executive first-read module for the Risk workspace.

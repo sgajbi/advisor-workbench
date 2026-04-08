@@ -1,5 +1,6 @@
+import React, { useState } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import RiskRollingPanel from "../../src/apps/performance/components/risk/risk-rolling-panel";
 import {
@@ -29,15 +30,26 @@ function buildRiskViewModel({
 }
 
 describe("RiskRollingPanel", () => {
+  function renderRollingPanel(viewModel: ReturnType<typeof buildRiskViewModel>) {
+    function RollingHarness() {
+      const [selectedWindowKey, setSelectedWindowKey] = useState("");
+
+      return (
+        <RiskRollingPanel
+          viewModel={viewModel}
+          selectedWindowKey={selectedWindowKey}
+          onWindowChange={setSelectedWindowKey}
+          onViewSeries={() => {}}
+        />
+      );
+    }
+
+    return render(<RollingHarness />);
+  }
+
   it("presents the shortest rolling window as the executive first read", () => {
     const viewModel = buildRiskViewModel();
-    const { container } = render(
-      <RiskRollingPanel
-        viewModel={viewModel}
-        rollingExpanded={false}
-        onToggleRolling={() => {}}
-      />
-    );
+    const { container } = renderRollingPanel(viewModel);
     const businessReading = screen.getByLabelText("Rolling risk business reading");
 
     expect(screen.getByRole("heading", { name: "Rolling Risk" })).toBeInTheDocument();
@@ -70,17 +82,12 @@ describe("RiskRollingPanel", () => {
     expect(
       screen.getByRole("button", { name: "Rolling Risk methodology and coverage" })
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View rolling series" })).toBeInTheDocument();
   });
 
   it("switches windows through the analytical control and refreshes the review copy", () => {
     const viewModel = buildRiskViewModel();
-    render(
-      <RiskRollingPanel
-        viewModel={viewModel}
-        rollingExpanded={false}
-        onToggleRolling={() => {}}
-      />
-    );
+    renderRollingPanel(viewModel);
 
     fireEvent.click(screen.getByRole("tab", { name: "63D" }));
 
@@ -91,13 +98,7 @@ describe("RiskRollingPanel", () => {
 
   it("qualifies benchmark-dependent measures when benchmark context is unavailable", () => {
     const viewModel = buildRiskViewModel({ benchmarkUnassigned: true });
-    render(
-      <RiskRollingPanel
-        viewModel={viewModel}
-        rollingExpanded={false}
-        onToggleRolling={() => {}}
-      />
-    );
+    renderRollingPanel(viewModel);
     const businessReading = screen.getByLabelText("Rolling risk business reading");
 
     expect(
@@ -117,13 +118,7 @@ describe("RiskRollingPanel", () => {
 
   it("reveals rolling methodology and coverage on demand", () => {
     const viewModel = buildRiskViewModel();
-    render(
-      <RiskRollingPanel
-        viewModel={viewModel}
-        rollingExpanded={false}
-        onToggleRolling={() => {}}
-      />
-    );
+    renderRollingPanel(viewModel);
 
     fireEvent.click(screen.getByRole("button", { name: "Rolling Risk methodology and coverage" }));
 
@@ -132,5 +127,30 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByText("Benchmark alignment")).toBeInTheDocument();
     expect(screen.getByText("Risk-free alignment")).toBeInTheDocument();
     expect(screen.getByText("Methodology")).toBeInTheDocument();
+  });
+
+  it("passes the selected window into the drill-down action", () => {
+    const viewModel = buildRiskViewModel();
+    const onViewSeries = vi.fn();
+
+    function RollingHarness() {
+      const [selectedWindowKey, setSelectedWindowKey] = useState("");
+
+      return (
+        <RiskRollingPanel
+          viewModel={viewModel}
+          selectedWindowKey={selectedWindowKey}
+          onWindowChange={setSelectedWindowKey}
+          onViewSeries={onViewSeries}
+        />
+      );
+    }
+
+    render(<RollingHarness />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
+
+    expect(onViewSeries).toHaveBeenCalledWith("63");
   });
 });

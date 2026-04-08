@@ -1,6 +1,5 @@
 import {
   AnalyticsTable,
-  ScreenStatePanel,
   Text,
   WorkbenchSegmentedControl,
 } from "@/design-system";
@@ -13,13 +12,11 @@ export default function RiskRollingWindowDetail({
   selectedWindow,
   selectedWindowKey,
   onWindowChange,
-  rollingExpanded,
 }: {
   viewModel: PerformanceRiskViewModel;
   selectedWindow: PerformanceRiskRollingWindow | null;
   selectedWindowKey: string;
   onWindowChange: (value: string) => void;
-  rollingExpanded: boolean;
 }) {
   return (
     <RiskDetailSection
@@ -105,56 +102,6 @@ export default function RiskRollingWindowDetail({
           body: "Rolling risk windows are not available for this portfolio context.",
         }}
       />
-
-      {rollingExpanded ? (
-        <div className="performance-risk-rolling-detail" aria-label="Rolling series detail">
-          {viewModel.rollingDetailState === "loading" ? (
-            <ScreenStatePanel
-              kind="loading"
-              title="Loading rolling series"
-              body="Fetching time-series risk detail for the selected rolling window."
-              surface="analysis"
-              rows={2}
-            />
-          ) : viewModel.rollingDetailState === "unavailable" ? (
-            <ScreenStatePanel
-              kind="unavailable"
-              title="Rolling series unavailable"
-              body="Time-series rolling detail is not available for the selected portfolio context."
-              surface="analysis"
-            />
-          ) : (
-            <AnalyticsTable
-              ariaLabel="Rolling risk series table"
-              variant="analysis"
-              density="compact"
-              columns={[
-                { key: "date", label: "Date" },
-                ...((selectedWindow?.seriesMetricKeys ?? []).map((metricKey) => ({
-                  key: metricKey,
-                  label:
-                    selectedWindow?.detailRowInterpretations.find((row) => row.key.endsWith(metricKey))
-                      ?.metric ?? metricKey,
-                  align: "right" as const,
-                })) ?? []),
-              ]}
-              rows={(selectedWindow?.seriesRows ?? []).map((row) => ({
-                key: row.key,
-                cells: [
-                  row.date,
-                  ...(selectedWindow?.seriesMetricKeys.map(
-                    (metricKey) => row.values[metricKey] ?? "N/A"
-                  ) ?? []),
-                ],
-              }))}
-              emptyState={{
-                title: "No rolling series",
-                body: "Rolling series detail has not been returned for this window.",
-              }}
-            />
-          )}
-        </div>
-      ) : null}
     </RiskDetailSection>
   );
 }

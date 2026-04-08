@@ -43,41 +43,23 @@ export default function RiskAttributionPanel({
         ) : null
       }
       headlineMetrics={
-        viewModel.attributionTotals ? (
+        viewModel.attributionHighlights.length ? (
           <RiskHeadlineMetricGrid
-            ariaLabel="Risk attribution totals"
-            metrics={[
-              {
-                key: "metric",
-                label: "Selection",
-                value: viewModel.attributionTotals.metric,
-                support: viewModel.attributionTotals.support,
-              },
-              {
-                key: "total",
-                label: "Total",
-                value: viewModel.attributionTotals.totalValue,
-                support: "Reported total metric",
-              },
-              {
-                key: "sum",
-                label: "Reconciled Sum",
-                value: viewModel.attributionTotals.reconciledSum,
-                support: "Sum of contributors",
-              },
-              {
-                key: "residual",
-                label: "Residual",
-                value: viewModel.attributionTotals.residual,
-                support: "Residual after reconciliation",
-              },
-            ]}
+            ariaLabel="Risk attribution highlights"
+            className="performance-risk-attribution-highlights"
+            itemClassName="performance-risk-attribution-highlight-card"
+            metrics={viewModel.attributionHighlights.map((highlight) => ({
+              key: highlight.key,
+              label: highlight.label,
+              value: highlight.value,
+              support: highlight.support,
+            }))}
           />
         ) : null
       }
       detail={
         <RiskDetailSection
-          title="Contributor detail"
+          title="Contributor review"
           ariaLabel="Risk attribution detail"
           toolbar={
             controls ? (
@@ -112,6 +94,30 @@ export default function RiskAttributionPanel({
             ) : null
           }
         >
+          {viewModel.attributionTotals ? (
+            <div className="performance-risk-note-card performance-risk-attribution-reconciliation">
+              <div className="performance-risk-note-copy">
+                <WorkbenchStatusRow
+                  label="Attribution reconciliation"
+                  items={[
+                    {
+                      value: `Total ${viewModel.attributionTotals.totalValue}`,
+                      tone: "default" as const,
+                    },
+                    {
+                      value: `Reconciled sum ${viewModel.attributionTotals.reconciledSum}`,
+                      tone: "default" as const,
+                    },
+                    {
+                      value: `Residual ${viewModel.attributionTotals.residual}`,
+                      tone: "default" as const,
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          ) : null}
+
           {viewModel.attributionWarnings.length ? (
             <WorkbenchStatusRow
               label="Attribution notes"
@@ -155,7 +161,7 @@ export default function RiskAttributionPanel({
                 { key: "group", label: "Group" },
                 { key: "avgWeight", label: "Average Weight", align: "right" },
                 { key: "marginalContribution", label: "Marginal Sensitivity", align: "right" },
-                { key: "componentContribution", label: "Component Effect", align: "right" },
+                { key: "componentContribution", label: "Component Contribution", align: "right" },
                 { key: "contributionShare", label: "Share of Risk", align: "right" },
               ]}
               rows={viewModel.attributionRows.map((row) => ({

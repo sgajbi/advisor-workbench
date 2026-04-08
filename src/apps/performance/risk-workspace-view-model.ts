@@ -99,6 +99,14 @@ export type PerformanceRiskMetricCard = {
   state: PerformanceRiskState;
 };
 
+export type PerformanceRiskAttributionHighlight = {
+  key: string;
+  label: string;
+  value: string;
+  support: string;
+  metadata?: string;
+};
+
 export type PerformanceRiskRollingDetailRow = {
   key: string;
   metric: string;
@@ -232,6 +240,7 @@ export type PerformanceRiskViewModel = {
     residual: string;
     support: string;
   } | null;
+  attributionHighlights: PerformanceRiskAttributionHighlight[];
   attributionExecutiveSummary: PerformanceRiskExecutiveSummary | null;
   attributionMethodologyRows: PerformanceRiskContextRow[];
   attributionState: "idle" | "loading" | "ready" | "blocked" | "unavailable";
@@ -402,6 +411,7 @@ export function buildPerformanceRiskViewModel({
     attributionControls: mapAttributionControls(attribution),
     attributionRows: mapAttributionRows(attribution),
     attributionTotals: mapAttributionTotals(attribution),
+    attributionHighlights: mapAttributionHighlights(attribution),
     attributionExecutiveSummary: mapAttributionExecutiveSummary(attribution),
     attributionMethodologyRows: mapAttributionMethodologyRows(attribution),
     attributionState: resolveAttributionState({ attribution, isAttributionLoading }),
@@ -1327,6 +1337,7 @@ function buildStateViewModel(
     attributionControls: null,
     attributionRows: [],
     attributionTotals: null,
+    attributionHighlights: [],
     attributionExecutiveSummary: null,
     attributionMethodologyRows: [],
     attributionState: "idle",
@@ -3634,6 +3645,92 @@ function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null)
     reconciledSum: formatRiskPercentValue(selectedSet.reconciled_sum),
     residual: formatRiskPercentValue(selectedSet.residual),
     support: selectedSet.grouping_dimension.replaceAll("_", " "),
+  };
+}
+
+function mapAttributionHighlights(
+  response: WorkbenchRiskAttributionResponse | null
+): PerformanceRiskAttributionHighlight[] {
+  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
+  if (!selectedSet) {
+    return [];
+  }
+
+  const topContributor = [...selectedSet.contributors]
+    .sort(
+      (left, right) =>
+        Math.abs(right.component_contribution ?? 0) - Math.abs(left.component_contribution ?? 0)
+    )[0];
+  const selectedLens = `${formatEnumLabel(selectedSet.attribution_type) ?? selectedSet.attribution_type} • ${formatEnumLabel(selectedSet.grouping_dimension) ?? selectedSet.grouping_dimension}`;
+  const evidencePosture = resolveAttributionEvidencePosture(response, selectedSet.residual);
+
+  return [
+    {
+      key: "selected_lens",
+      label: "Selected lens",
+      value: selectedLens,
+      support: "Current decomposition lens for contributor review.",
+      metadata: selectedSet.metric.replaceAll("_", " "),
+    },
+    {
+      key: "top_contributor",
+      label: "Top contributor",
+      value: topContributor ? normalizeAttributionGroupLabel(topContributor.group_label) : "N/A",
+      support: topContributor
+        ? `Largest visible component effect at ${formatRiskPercentValue(
+            topContributor.component_contribution
+          )}.`
+        : "No contributor rows returned for the current lens.",
+      metadata: topContributor
+        ? `Share ${formatRiskPercentValue(topContributor.percent_contribution)}`
+        : undefined,
+    },
+    {
+      key: "reconciled_sum",
+      label: "Reconciled sum",
+      value: formatRiskPercentValue(selectedSet.reconciled_sum),
+      support: `Reported total ${formatRiskPercentValue(
+        selectedSet.total_value
+      )} with residual ${formatRiskPercentValue(selectedSet.residual)}.`,
+      metadata: "Contributor sum versus reported total",
+    },
+    {
+      key: "evidence_posture",
+      label: "Evidence posture",
+      value: evidencePosture.value,
+      support: evidencePosture.support,
+      metadata: evidencePosture.metadata,
+    },
+  ];
+}
+
+function resolveAttributionEvidencePosture(
+  response: WorkbenchRiskAttributionResponse,
+  residual: number | null | undefined
+) {
+  const hasQualifiedSupportability = response.supportability.some(
+    (item) => item.state !== "ready"
+  );
+  const residualAbs = Math.abs(residual ?? 0);
+
+  if (hasQualifiedSupportability) {
+    return {
+      value: "Qualified",
+      support: "Supportability should be reviewed before using this decomposition externally.",
+      metadata: "Upstream supportability is not fully ready",
+    };
+  }
+  if (residualAbs >= 0.001) {
+    return {
+      value: "Review",
+      support: "Residual remains visible, so the decomposition should be checked before escalation.",
+      metadata: `Residual ${formatRiskPercentValue(residual)}`,
+    };
+  }
+  return {
+    value: "Reliable",
+    support: "Residual is controlled and the current decomposition is suitable for front-office review.",
+    metadata: `Residual ${formatRiskPercentValue(residual)}`,
   };
 }
 

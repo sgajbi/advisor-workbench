@@ -1,14 +1,15 @@
-import { AnalyticsTable, ScreenStatePanel, Text } from "@/design-system";
+import { AnalyticsTable, Text } from "@/design-system";
 
-import type { PerformanceRiskMetricCard, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import type {
+  PerformanceRiskMetricCard,
+  PerformanceRiskViewModel,
+} from "../../risk-workspace-view-model";
 import RiskDetailSection from "./risk-detail-section";
 
 export default function RiskDrawdownDetail({
   viewModel,
-  underwaterExpanded,
 }: {
   viewModel: PerformanceRiskViewModel;
-  underwaterExpanded: boolean;
 }) {
   return (
     <div className="performance-risk-drawdown-detail-stack">
@@ -70,45 +71,6 @@ export default function RiskDrawdownDetail({
               body: "No retained drawdown episodes are available for the selected review window.",
             }}
           />
-        ) : null}
-
-        {underwaterExpanded ? (
-          <div className="performance-risk-underwater-detail" aria-label="Underwater path detail">
-            {viewModel.underwaterDetailState === "loading" ? (
-              <ScreenStatePanel
-                kind="loading"
-                title="Loading underwater path"
-                body="Fetching drawdown series detail for the selected portfolio context."
-                surface="analysis"
-                rows={2}
-              />
-            ) : viewModel.underwaterDetailState === "unavailable" ? (
-              <ScreenStatePanel
-                kind="unavailable"
-                title="Underwater path unavailable"
-                body="Drawdown path detail is not available for the selected portfolio context."
-                surface="analysis"
-              />
-            ) : (
-              <AnalyticsTable
-                ariaLabel="Risk underwater series table"
-                variant="analysis"
-                density="compact"
-                columns={[
-                  { key: "date", label: "Date" },
-                  { key: "drawdown", label: "Drawdown", align: "right" },
-                ]}
-                rows={viewModel.underwaterSeries.map((point) => ({
-                  key: point.key,
-                  cells: [point.date, point.drawdown],
-                }))}
-                emptyState={{
-                  title: "No underwater series",
-                  body: "Underwater detail has not been returned for this drawdown request.",
-                }}
-              />
-            )}
-          </div>
         ) : null}
       </RiskDetailSection>
     </div>

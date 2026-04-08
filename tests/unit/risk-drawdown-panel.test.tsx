@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import RiskDrawdownPanel from "../../src/apps/performance/components/risk/risk-drawdown-panel";
 import {
@@ -46,8 +46,7 @@ describe("RiskDrawdownPanel", () => {
     const { container } = render(
       <RiskDrawdownPanel
         viewModel={viewModel}
-        underwaterExpanded={false}
-        onToggleUnderwater={() => {}}
+        onViewUnderwater={() => {}}
       />
     );
     const businessReading = screen.getByLabelText("Drawdown business reading");
@@ -65,7 +64,10 @@ describe("RiskDrawdownPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Episode review" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Context and methodology" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Drawdown methodology and coverage" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View underwater path" })).toBeInTheDocument();
 
     const headlineLabels = Array.from(
       container.querySelectorAll(
@@ -103,8 +105,7 @@ describe("RiskDrawdownPanel", () => {
     render(
       <RiskDrawdownPanel
         viewModel={viewModel}
-        underwaterExpanded={false}
-        onToggleUnderwater={() => {}}
+        onViewUnderwater={() => {}}
       />
     );
     const businessReading = screen.getByLabelText("Drawdown business reading");
@@ -119,9 +120,11 @@ describe("RiskDrawdownPanel", () => {
     expect(
       within(headlineMetrics).getByText("Benchmark-relative drawdown requires benchmark context.")
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Relative drawdown is not active for this selection.")
-    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Drawdown methodology and coverage" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Drawdown methodology and coverage" });
+    expect(within(dialog).getByText("Relative drawdown is not active for this selection.")).toBeInTheDocument();
   });
 
   it("renders a controlled interpretation block when no retained episodes exist", () => {
@@ -129,8 +132,7 @@ describe("RiskDrawdownPanel", () => {
     render(
       <RiskDrawdownPanel
         viewModel={viewModel}
-        underwaterExpanded={false}
-        onToggleUnderwater={() => {}}
+        onViewUnderwater={() => {}}
       />
     );
 
@@ -142,5 +144,19 @@ describe("RiskDrawdownPanel", () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("Risk drawdown episode table")).not.toBeInTheDocument();
     expect(screen.queryByText("No drawdown episodes to review")).not.toBeInTheDocument();
+  });
+
+  it("exposes underwater path as a drill-down action instead of inline expansion", () => {
+    const viewModel = buildRiskViewModel();
+    const onViewUnderwater = vi.fn();
+
+    render(
+      <RiskDrawdownPanel viewModel={viewModel} onViewUnderwater={onViewUnderwater} />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "View underwater path" }));
+
+    expect(onViewUnderwater).toHaveBeenCalledTimes(1);
+    expect(screen.queryByLabelText("Risk underwater series table")).not.toBeInTheDocument();
   });
 });

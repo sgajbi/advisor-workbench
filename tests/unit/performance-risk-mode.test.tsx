@@ -418,7 +418,7 @@ describe("PerformanceRiskMode", () => {
     expect(screen.queryByLabelText("Risk snapshot headline metrics")).not.toBeInTheDocument();
   });
 
-  it("does not request underwater detail on first paint and fetches it only on expand", async () => {
+  it("does not request underwater detail on first paint and fetches it only on drawer drill-down", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
@@ -451,9 +451,10 @@ describe("PerformanceRiskMode", () => {
       includeUnderwaterSeries: false,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand underwater path" }));
+    fireEvent.click(screen.getByRole("button", { name: "View underwater path" }));
 
     await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "Underwater path detail" })).toBeInTheDocument();
       expect(screen.getByLabelText("Risk underwater series table")).toBeInTheDocument();
     });
 
@@ -463,7 +464,7 @@ describe("PerformanceRiskMode", () => {
     });
   });
 
-  it("does not request rolling detail on first paint and fetches it only on expand", async () => {
+  it("does not request rolling detail on first paint and fetches it only on drawer drill-down", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
@@ -496,9 +497,10 @@ describe("PerformanceRiskMode", () => {
       includeTimeSeries: false,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
 
     await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "Rolling series detail" })).toBeInTheDocument();
       expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
     });
 
@@ -506,6 +508,46 @@ describe("PerformanceRiskMode", () => {
     expect(vi.mocked(getWorkbenchRiskRollingClient).mock.calls[1][1]).toMatchObject({
       includeTimeSeries: true,
     });
+  });
+
+  it("preserves the selected rolling window when opening rolling series detail", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient)
+      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
+          includeTimeSeries: true,
+        })
+      );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "63D" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "Rolling series detail" })).toBeInTheDocument();
+    });
+
+    const detailDialog = screen.getByRole("dialog", { name: "Rolling series detail" });
+    expect(within(detailDialog).getByText("Review window")).toBeInTheDocument();
+    expect(within(detailDialog).getByText("63D")).toBeInTheDocument();
   });
 
   it("requests supported active-risk attribution directly and does not expose issuer as interactive", async () => {
@@ -629,12 +671,13 @@ describe("PerformanceRiskMode", () => {
       expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand underwater path" }));
+    fireEvent.click(screen.getByRole("button", { name: "View underwater path" }));
     await waitFor(() => {
       expect(screen.getByText("Underwater path unavailable")).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole("button", { name: "Close Underwater path detail" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
     await waitFor(() => {
       expect(screen.getByText("Rolling series unavailable")).toBeInTheDocument();
     });

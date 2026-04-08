@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
-
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
-import RiskExpandAction from "./risk-expand-action";
+import RiskDrilldownAction from "./risk-drilldown-action";
 import RiskModuleShell from "./risk-module-shell";
 import RiskRollingBusinessReading from "./risk-rolling-business-reading";
 import RiskRollingHeadlineMetrics from "./risk-rolling-headline-metrics";
@@ -10,24 +8,24 @@ import RiskPanelInfoDrawer from "./risk-panel-info-drawer";
 
 type RiskRollingPanelProps = {
   viewModel: PerformanceRiskViewModel;
-  rollingExpanded: boolean;
-  onToggleRolling: () => void;
+  selectedWindowKey: string;
+  onWindowChange: (value: string) => void;
+  onViewSeries: (selectedWindowKey: string) => void;
 };
 
 export default function RiskRollingPanel({
   viewModel,
-  rollingExpanded,
-  onToggleRolling,
+  selectedWindowKey,
+  onWindowChange,
+  onViewSeries,
 }: RiskRollingPanelProps) {
   const defaultWindowKey = viewModel.rollingWindows[0]?.key ?? "";
-  const [selectedWindowKey, setSelectedWindowKey] = useState(defaultWindowKey);
-
-  useEffect(() => {
-    setSelectedWindowKey(defaultWindowKey);
-  }, [defaultWindowKey]);
+  const resolvedSelectedWindowKey =
+    viewModel.rollingWindows.find((window) => window.key === selectedWindowKey)?.key ??
+    defaultWindowKey;
 
   const selectedWindow =
-    viewModel.rollingWindows.find((window) => window.key === selectedWindowKey) ??
+    viewModel.rollingWindows.find((window) => window.key === resolvedSelectedWindowKey) ??
     viewModel.rollingWindows[0] ??
     null;
 
@@ -42,11 +40,9 @@ export default function RiskRollingPanel({
             panelTitle="Rolling Risk"
             rows={viewModel.rollingContextRows}
           />
-          <RiskExpandAction
-            expanded={rollingExpanded}
-            onToggle={onToggleRolling}
-            expandedLabel="Collapse rolling series"
-            collapsedLabel="Expand rolling series"
+          <RiskDrilldownAction
+            label="View rolling series"
+            onClick={() => onViewSeries(selectedWindow?.key ?? resolvedSelectedWindowKey)}
           />
         </>
       }
@@ -60,9 +56,8 @@ export default function RiskRollingPanel({
         <RiskRollingWindowDetail
           viewModel={viewModel}
           selectedWindow={selectedWindow}
-          selectedWindowKey={selectedWindowKey}
-          onWindowChange={setSelectedWindowKey}
-          rollingExpanded={rollingExpanded}
+          selectedWindowKey={resolvedSelectedWindowKey}
+          onWindowChange={onWindowChange}
         />
       }
     />

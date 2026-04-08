@@ -13,8 +13,10 @@ import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
 import RiskAttributionPanel from "./risk/risk-attribution-panel";
+import RiskDrawdownDetailDrawer from "./risk/risk-drawdown-detail-drawer";
 import RiskExecutiveOverview from "./risk/risk-executive-overview";
 import RiskPrimaryPanelGroup from "./risk/risk-primary-panel-group";
+import RiskRollingDetailDrawer from "./risk/risk-rolling-detail-drawer";
 import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSecondaryPanelGroup from "./risk/risk-secondary-panel-group";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
@@ -26,8 +28,9 @@ export default function PerformanceRiskMode({
   detailBasis,
   isDetailsPending,
 }: PerformanceRiskModeProps) {
-  const [underwaterExpanded, setUnderwaterExpanded] = useState(false);
-  const [rollingExpanded, setRollingExpanded] = useState(false);
+  const [underwaterDrawerOpen, setUnderwaterDrawerOpen] = useState(false);
+  const [rollingDrawerOpen, setRollingDrawerOpen] = useState(false);
+  const [selectedRollingWindowKey, setSelectedRollingWindowKey] = useState("");
   const {
     riskSummary,
     riskConcentration,
@@ -51,8 +54,9 @@ export default function PerformanceRiskMode({
   });
 
   useEffect(() => {
-    setUnderwaterExpanded(false);
-    setRollingExpanded(false);
+    setUnderwaterDrawerOpen(false);
+    setRollingDrawerOpen(false);
+    setSelectedRollingWindowKey("");
   }, [detailBasis, period, workspace.as_of_date, workspace.benchmark_code, workspace.portfolio.portfolio_id]);
 
   const viewModel = buildPerformanceRiskViewModel({
@@ -86,6 +90,15 @@ export default function PerformanceRiskMode({
         rows={3}
       />
     ) : null;
+
+  const resolvedSelectedRollingWindowKey =
+    viewModel.rollingWindows.find((window) => window.key === selectedRollingWindowKey)?.key ??
+    viewModel.rollingWindows[0]?.key ??
+    "";
+  const selectedRollingWindow =
+    viewModel.rollingWindows.find((window) => window.key === resolvedSelectedRollingWindowKey) ??
+    viewModel.rollingWindows[0] ??
+    null;
 
   return (
     <section className="performance-risk-stage" aria-label="Risk">
@@ -124,13 +137,9 @@ export default function PerformanceRiskMode({
               drawdown={
                 <RiskDrawdownPanel
                   viewModel={viewModel}
-                  underwaterExpanded={underwaterExpanded}
-                  onToggleUnderwater={() => {
-                    const nextExpanded = !underwaterExpanded;
-                    setUnderwaterExpanded(nextExpanded);
-                    if (nextExpanded) {
-                      requestDrawdownDetail();
-                    }
+                  onViewUnderwater={() => {
+                    setUnderwaterDrawerOpen(true);
+                    requestDrawdownDetail();
                   }}
                 />
               }
@@ -140,13 +149,12 @@ export default function PerformanceRiskMode({
               rolling={
                 <RiskRollingPanel
                   viewModel={viewModel}
-                  rollingExpanded={rollingExpanded}
-                  onToggleRolling={() => {
-                    const nextExpanded = !rollingExpanded;
-                    setRollingExpanded(nextExpanded);
-                    if (nextExpanded) {
-                      requestRollingDetail();
-                    }
+                  selectedWindowKey={resolvedSelectedRollingWindowKey}
+                  onWindowChange={setSelectedRollingWindowKey}
+                  onViewSeries={(windowKey) => {
+                    setSelectedRollingWindowKey(windowKey);
+                    setRollingDrawerOpen(true);
+                    requestRollingDetail();
                   }}
                 />
               }
@@ -160,6 +168,17 @@ export default function PerformanceRiskMode({
           </div>
         )}
       </SectionBlock>
+      <RiskDrawdownDetailDrawer
+        open={underwaterDrawerOpen}
+        viewModel={viewModel}
+        onClose={() => setUnderwaterDrawerOpen(false)}
+      />
+      <RiskRollingDetailDrawer
+        open={rollingDrawerOpen}
+        viewModel={viewModel}
+        selectedWindow={selectedRollingWindow}
+        onClose={() => setRollingDrawerOpen(false)}
+      />
     </section>
   );
 }
