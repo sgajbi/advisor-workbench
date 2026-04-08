@@ -7,6 +7,7 @@ import {
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskDetailSection from "./risk-detail-section";
 import RiskAnalyticalTable from "./risk-analytical-table";
+import RiskAnalyticalReviewFrame from "./risk-analytical-review-frame";
 import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
@@ -103,40 +104,46 @@ export default function RiskAttributionPanel({
             ) : null
           }
         >
-          {viewModel.attributionTotals ? (
-            <div className="performance-risk-note-card performance-risk-attribution-reconciliation">
-              <div className="performance-risk-note-copy">
+          <RiskAnalyticalReviewFrame
+            className="performance-risk-attribution-review-frame"
+            summary={
+              viewModel.attributionTotals ? (
+                <div className="performance-risk-note-card performance-risk-attribution-reconciliation">
+                  <div className="performance-risk-note-copy">
+                    <WorkbenchStatusRow
+                      label="Attribution reconciliation"
+                      items={[
+                        {
+                          value: `Total ${viewModel.attributionTotals.totalValue}`,
+                          tone: "default" as const,
+                        },
+                        {
+                          value: `Reconciled sum ${viewModel.attributionTotals.reconciledSum}`,
+                          tone: "default" as const,
+                        },
+                        {
+                          value: `Residual ${viewModel.attributionTotals.residual}`,
+                          tone: "default" as const,
+                        },
+                      ]}
+                    />
+                  </div>
+                </div>
+              ) : null
+            }
+            supplementary={
+              viewModel.attributionWarnings.length ? (
                 <WorkbenchStatusRow
-                  label="Attribution reconciliation"
-                  items={[
-                    {
-                      value: `Total ${viewModel.attributionTotals.totalValue}`,
-                      tone: "default" as const,
-                    },
-                    {
-                      value: `Reconciled sum ${viewModel.attributionTotals.reconciledSum}`,
-                      tone: "default" as const,
-                    },
-                    {
-                      value: `Residual ${viewModel.attributionTotals.residual}`,
-                      tone: "default" as const,
-                    },
-                  ]}
+                  label="Attribution notes"
+                  className="performance-risk-quality-flags"
+                  items={viewModel.attributionWarnings.map((warning) => ({
+                    value: warning,
+                    tone: "warn" as const,
+                  }))}
                 />
-              </div>
-            </div>
-          ) : null}
-
-          {viewModel.attributionWarnings.length ? (
-            <WorkbenchStatusRow
-              label="Attribution notes"
-              className="performance-risk-quality-flags"
-              items={viewModel.attributionWarnings.map((warning) => ({
-                value: warning,
-                tone: "warn" as const,
-              }))}
-            />
-          ) : null}
+              ) : null
+            }
+          />
 
           {viewModel.attributionState === "loading" ? (
             <ScreenStatePanel

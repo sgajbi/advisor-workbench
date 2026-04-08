@@ -5,6 +5,7 @@ import {
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskAnalyticalTable from "./risk-analytical-table";
+import RiskAnalyticalReviewFrame from "./risk-analytical-review-frame";
 import RiskDetailSection from "./risk-detail-section";
 import RiskTableText from "./risk-table-text";
 
@@ -47,42 +48,48 @@ export default function RiskRollingWindowDetail({
         ) : null
       }
     >
-      {selectedWindow?.selectedWindowSummary ? (
-        <div className="performance-risk-note-card performance-risk-rolling-window-review">
-          <div className="performance-risk-note-copy">
-            <Text variant="cardTitle">{selectedWindow.selectedWindowSummary.title}</Text>
-            <Text variant="secondary">{selectedWindow.selectedWindowSummary.body}</Text>
-            <Text variant="metadata" className="performance-risk-briefing-cue">
-              Next: {selectedWindow.selectedWindowNextStep}
-            </Text>
-          </div>
-        </div>
-      ) : null}
-
-      {viewModel.rollingSupportabilityNotes.length ? (
-        <div
-          className="performance-risk-supportability-list performance-risk-rolling-supportability-list"
-          aria-label="Rolling review supportability notes"
-        >
-          {viewModel.rollingSupportabilityNotes.map((note) => (
-            <div
-              key={note.key}
-              className={[
-                "performance-risk-note-card",
-                "performance-risk-rolling-supportability-note",
-                note.tone === "warn" ? "performance-risk-rolling-supportability-note-warn" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
+      <RiskAnalyticalReviewFrame
+        className="performance-risk-rolling-review-frame"
+        summary={
+          selectedWindow?.selectedWindowSummary ? (
+            <div className="performance-risk-note-card performance-risk-rolling-window-review">
               <div className="performance-risk-note-copy">
-                <Text variant="cardTitle">{note.title}</Text>
-                <Text variant="secondary">{note.body}</Text>
+                <Text variant="cardTitle">{selectedWindow.selectedWindowSummary.title}</Text>
+                <Text variant="secondary">{selectedWindow.selectedWindowSummary.body}</Text>
+                <Text variant="metadata" className="performance-risk-briefing-cue">
+                  Next: {selectedWindow.selectedWindowNextStep}
+                </Text>
               </div>
             </div>
-          ))}
-        </div>
-      ) : null}
+          ) : null
+        }
+        supplementary={
+          viewModel.rollingSupportabilityNotes.length ? (
+            <div
+              className="performance-risk-supportability-list performance-risk-rolling-supportability-list"
+              aria-label="Rolling review supportability notes"
+            >
+              {viewModel.rollingSupportabilityNotes.map((note) => (
+                <div
+                  key={note.key}
+                  className={[
+                    "performance-risk-note-card",
+                    "performance-risk-rolling-supportability-note",
+                    note.tone === "warn" ? "performance-risk-rolling-supportability-note-warn" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  <div className="performance-risk-note-copy">
+                    <Text variant="cardTitle">{note.title}</Text>
+                    <Text variant="secondary">{note.body}</Text>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null
+        }
+      />
 
       <RiskAnalyticalTable
         ariaLabel="Rolling risk summary table"

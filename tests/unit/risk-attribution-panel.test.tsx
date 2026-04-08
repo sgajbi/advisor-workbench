@@ -34,6 +34,8 @@ describe("RiskAttributionPanel", () => {
     expect(screen.getByLabelText("Risk attribution highlights")).toBeInTheDocument();
     expect(screen.getByLabelText("Risk attribution detail")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-analytical-review-frame")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-attribution-review-frame")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-attribution-detail-table")).toBeTruthy();
     expect(container.querySelector(".performance-risk-attribution-toolbar")).toBeTruthy();
