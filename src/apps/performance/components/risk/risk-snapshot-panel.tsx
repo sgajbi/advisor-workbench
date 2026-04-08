@@ -1,6 +1,6 @@
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
-import RiskPanelInfoDrawer from "./risk-panel-info-drawer";
 import RiskModuleShell from "./risk-module-shell";
+import RiskPanelUtilityRow from "./risk-panel-utility-row";
 import RiskSnapshotBusinessReading from "./risk-snapshot-business-reading";
 import RiskSnapshotHeadlineMetrics from "./risk-snapshot-headline-metrics";
 import RiskSnapshotSupportingMeasures from "./risk-snapshot-supporting-measures";
@@ -14,11 +14,12 @@ export default function RiskSnapshotPanel({
     <RiskModuleShell
       title="Risk Snapshot"
       subtitle="Executive risk posture, benchmark-relative reliability, and the key measures to review first."
+      priority="primary"
       className="performance-risk-snapshot-panel"
       actions={
-        <RiskPanelInfoDrawer
+        <RiskPanelUtilityRow
           panelTitle="Risk Snapshot"
-          rows={viewModel.snapshotContextRows}
+          methodologyRows={viewModel.snapshotContextRows}
         />
       }
       businessReading={

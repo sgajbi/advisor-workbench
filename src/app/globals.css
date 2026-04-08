@@ -5357,6 +5357,25 @@ a:hover {
   gap: 0.55rem;
 }
 
+.performance-risk-panel-utility-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.performance-risk-module-shell-primary .section-header .ui-text-section-title {
+  font-size: 1.04rem;
+}
+
+.performance-risk-module-shell-secondary .section-header .ui-text-section-title {
+  font-size: 0.98rem;
+}
+
+.performance-risk-module-shell-secondary .section-header-copy {
+  max-width: 48ch;
+}
+
 .performance-risk-metric-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }

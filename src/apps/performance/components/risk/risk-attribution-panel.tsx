@@ -10,7 +10,7 @@ import RiskDetailSection from "./risk-detail-section";
 import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
-import RiskPanelInfoDrawer from "./risk-panel-info-drawer";
+import RiskPanelUtilityRow from "./risk-panel-utility-row";
 
 type RiskAttributionPanelProps = {
   viewModel: PerformanceRiskViewModel;
@@ -27,11 +27,12 @@ export default function RiskAttributionPanel({
     <RiskModuleShell
       title="Historical Risk Attribution"
       subtitle="Analytical decomposition of total and active risk across supported business dimensions."
+      priority="secondary"
       className="performance-risk-attribution-panel"
       actions={
-        <RiskPanelInfoDrawer
+        <RiskPanelUtilityRow
           panelTitle="Historical Risk Attribution"
-          rows={viewModel.attributionMethodologyRows}
+          methodologyRows={viewModel.attributionMethodologyRows}
         />
       }
       businessReading={

@@ -5,7 +5,7 @@ import RiskConcentrationScale from "./risk-concentration-scale";
 import RiskDetailSection from "./risk-detail-section";
 import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskModuleShell from "./risk-module-shell";
-import RiskPanelInfoDrawer from "./risk-panel-info-drawer";
+import RiskPanelUtilityRow from "./risk-panel-utility-row";
 
 const POSTURE_TONE = {
   acceptable: "success",
@@ -24,11 +24,12 @@ export default function RiskConcentrationPanel({
     <RiskModuleShell
       title="Concentration"
       subtitle="Front-office concentration posture, principal drivers, and issuer-reliability context."
+      priority="primary"
       className="performance-risk-concentration-panel"
       actions={
-        <RiskPanelInfoDrawer
+        <RiskPanelUtilityRow
           panelTitle="Concentration"
-          rows={viewModel.concentrationContextRows}
+          methodologyRows={viewModel.concentrationContextRows}
         />
       }
       businessReading={

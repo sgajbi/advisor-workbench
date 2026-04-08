@@ -11,6 +11,7 @@ export default function RiskModuleShell({
   detail,
   context,
   className,
+  priority = "primary",
 }: {
   title: string;
   subtitle: string;
@@ -20,13 +21,19 @@ export default function RiskModuleShell({
   detail?: ReactNode;
   context?: ReactNode;
   className?: string;
+  priority?: "primary" | "secondary";
 }) {
   return (
     <SectionBlock
       title={title}
       subtitle={subtitle}
       actions={actions}
-      className={["performance-risk-panel", "performance-risk-module-shell", className]
+      className={[
+        "performance-risk-panel",
+        "performance-risk-module-shell",
+        `performance-risk-module-shell-${priority}`,
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
     >
