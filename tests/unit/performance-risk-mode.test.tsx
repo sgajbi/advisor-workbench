@@ -31,7 +31,7 @@ function renderRiskMode(
   scenario = buildSupportedPerformanceScenario(),
   options: { detailBasis?: "NET" | "GROSS"; period?: string; isDetailsPending?: boolean } = {}
 ) {
-  render(
+  return render(
     <PerformanceRiskMode
       workspace={scenario.workspace}
       capabilities={scenario.capabilities}
@@ -69,7 +69,7 @@ describe("PerformanceRiskMode", () => {
       buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
     );
 
-    renderRiskMode(scenario);
+    const { container } = renderRiskMode(scenario);
 
     expect(screen.getByText("Loading stateful risk")).toBeInTheDocument();
     await waitFor(() => {
@@ -78,11 +78,34 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk snapshot business reading")).toHaveTextContent(
       "Business reading"
     );
+    expect(screen.getByLabelText("Risk overview")).toHaveTextContent("Risk posture");
+    expect(screen.getByLabelText("What matters now")).toHaveTextContent("Total risk posture");
     expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk business reading")).toBeInTheDocument();
     expect(
       screen.getByLabelText("Historical risk attribution business reading")
     ).toBeInTheDocument();
+    const concentrationHeading = screen.getByRole("heading", { name: "Concentration" });
+    const rollingHeading = screen.getByRole("heading", { name: "Rolling Risk" });
+    const attributionHeading = screen.getByRole("heading", {
+      name: "Historical Risk Attribution",
+    });
+    expect(
+      concentrationHeading.compareDocumentPosition(rollingHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      rollingHeading.compareDocumentPosition(attributionHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      container.querySelector(".performance-risk-secondary-column .performance-risk-rolling-panel")
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        ".performance-risk-secondary-column .performance-risk-attribution-panel"
+      )
+    ).toBeTruthy();
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
@@ -231,7 +254,7 @@ describe("PerformanceRiskMode", () => {
       buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
     );
 
-    renderRiskMode(scenario);
+    const { container } = renderRiskMode(scenario);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent(
@@ -239,6 +262,7 @@ describe("PerformanceRiskMode", () => {
       );
     });
     expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent("N/A");
+    expect(screen.getByLabelText("Risk overview")).toHaveTextContent("Evidence posture");
   });
 
   it("renders enriched concentration interpretation without a provenance footer", async () => {
@@ -314,7 +338,7 @@ describe("PerformanceRiskMode", () => {
       buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
     );
 
-    renderRiskMode(scenario);
+    const { container } = renderRiskMode(scenario);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Partial");

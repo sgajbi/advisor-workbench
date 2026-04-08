@@ -130,11 +130,27 @@ export type PerformanceRiskRollingWindow = {
   seriesMetricKeys: string[];
 };
 
+export type PerformanceRiskOverviewItem = {
+  key: string;
+  label: string;
+  value: string;
+  support: string;
+  tone: "default" | "success" | "warn" | "danger";
+};
+
+export type PerformanceRiskWhatMattersItem = {
+  key: string;
+  title: string;
+  body: string;
+};
+
 export type PerformanceRiskViewModel = {
   state: PerformanceRiskState;
   title: string;
   synopsis: string;
   contextItems: Array<{ label: string; value: string }>;
+  workspaceOverview: PerformanceRiskOverviewItem[];
+  whatMattersNow: PerformanceRiskWhatMattersItem[];
   snapshotExecutiveSummary: PerformanceRiskExecutiveSummary | null;
   snapshotHeadlineMetrics: PerformanceRiskMetricCard[];
   snapshotSupportingMetrics: PerformanceRiskMetricCard[];
@@ -335,6 +351,22 @@ export function buildPerformanceRiskViewModel({
         ? "Stateful risk is not available for the selected portfolio context."
         : "Stateful portfolio risk is available for the selected performance context.",
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
+    workspaceOverview: buildRiskWorkspaceOverview({
+      summary,
+      concentration,
+      drawdown,
+      rolling,
+      attribution,
+      supportability,
+    }),
+    whatMattersNow: buildRiskWhatMattersNow({
+      summary,
+      concentration,
+      drawdown,
+      rolling,
+      attribution,
+      supportability,
+    }),
     snapshotExecutiveSummary: mapSnapshotExecutiveSummary(summary),
     snapshotHeadlineMetrics: mapSnapshotHeadlineMetrics(summary),
     snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
@@ -1266,6 +1298,8 @@ function buildStateViewModel(
         ? "Risk snapshot and concentration modules are loading from the Gateway BFF contract."
         : "Stateful risk is not available for the selected portfolio context.",
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
+    workspaceOverview: [],
+    whatMattersNow: [],
     snapshotExecutiveSummary: null,
     snapshotHeadlineMetrics: [],
     snapshotSupportingMetrics: [],
@@ -1326,6 +1360,261 @@ function buildContextItems(
     { label: "Benchmark", value: workspace.benchmark_code ?? "Unassigned" },
     { label: "As of", value: formatDateValue(asOfDate) },
   ];
+}
+
+function buildRiskWorkspaceOverview({
+  summary,
+  concentration,
+  drawdown,
+  rolling,
+  attribution,
+  supportability,
+}: {
+  summary: WorkbenchRiskSummaryResponse;
+  concentration: WorkbenchRiskConcentrationResponse;
+  drawdown: WorkbenchRiskDrawdownResponse;
+  rolling: WorkbenchRiskRollingResponse;
+  attribution: WorkbenchRiskAttributionResponse | null;
+  supportability: Array<{
+    key: string;
+    label: string;
+    state: WorkbenchRiskModuleState;
+    reason?: string | null;
+  }>;
+}): PerformanceRiskOverviewItem[] {
+  const snapshotSummary = mapSnapshotExecutiveSummary(summary);
+  const drawdownSummary = mapDrawdownExecutiveSummary(drawdown);
+  const concentrationSummary = mapConcentrationExecutiveSummary(concentration);
+  const supportabilityPosture = resolveRiskEvidencePosture(supportability, [
+    summary.state,
+    concentration.state,
+    drawdown.state,
+    rolling.state,
+    attribution?.state ?? "unavailable",
+  ]);
+
+  return [
+    {
+      key: "risk_posture",
+      label: "Risk posture",
+      value: resolveRiskSnapshotPosture(snapshotSummary),
+      support:
+        snapshotSummary?.detail ??
+        "Current total-risk reading is not available for the selected portfolio context.",
+      tone: resolveRiskSnapshotOverviewTone(snapshotSummary),
+    },
+    {
+      key: "drawdown_posture",
+      label: "Drawdown posture",
+      value: resolveDrawdownOverviewPosture(drawdown),
+      support:
+        drawdownSummary?.detail ??
+        "Drawdown path review is not available for the selected portfolio context.",
+      tone: resolveDrawdownOverviewTone(drawdown),
+    },
+    {
+      key: "concentration_posture",
+      label: "Concentration posture",
+      value: concentrationSummary?.postureLabel ?? "Unavailable",
+      support:
+        concentrationSummary?.businessReadingDetail ??
+        "Concentration review is not available for the selected portfolio context.",
+      tone: resolveConcentrationOverviewTone(concentrationSummary?.postureState),
+    },
+    {
+      key: "evidence_posture",
+      label: "Evidence posture",
+      value: supportabilityPosture.label,
+      support: supportabilityPosture.support,
+      tone: supportabilityPosture.tone,
+    },
+  ];
+}
+
+function buildRiskWhatMattersNow({
+  summary,
+  concentration,
+  drawdown,
+  rolling,
+  attribution,
+  supportability,
+}: {
+  summary: WorkbenchRiskSummaryResponse;
+  concentration: WorkbenchRiskConcentrationResponse;
+  drawdown: WorkbenchRiskDrawdownResponse;
+  rolling: WorkbenchRiskRollingResponse;
+  attribution: WorkbenchRiskAttributionResponse | null;
+  supportability: Array<{
+    key: string;
+    label: string;
+    state: WorkbenchRiskModuleState;
+    reason?: string | null;
+  }>;
+}): PerformanceRiskWhatMattersItem[] {
+  const snapshotSummary = mapSnapshotExecutiveSummary(summary);
+  const drawdownSummary = mapDrawdownExecutiveSummary(drawdown);
+  const concentrationSummary = mapConcentrationExecutiveSummary(concentration);
+  const rollingSummary = mapRollingExecutiveSummary(rolling);
+  const attributionSummary = mapAttributionExecutiveSummary(attribution);
+  const benchmarkQualified = supportability.some(
+    (item) =>
+      item.key === "summary:benchmark_returns" ||
+      item.key === "rolling:benchmark_returns" ||
+      item.key === "drawdown:benchmark_relative_drawdown"
+        ? item.state !== "ready"
+        : false
+  );
+
+  const totalRiskBody = snapshotSummary
+    ? `${snapshotSummary.headline.replace(/^Risk posture is /, "").replace(/\.$/, "")}. ${
+        benchmarkQualified
+          ? "Benchmark-relative measures should be treated as qualified."
+          : "Benchmark-relative measures are usable for first review."
+      }`
+    : "Current total-risk posture is not available for first review.";
+
+  const pathBody = drawdownSummary
+    ? `${drawdownSummary.headline.replace(/^Drawdown /, "").replace(/\.$/, "")}.`
+    : "Drawdown path review is not available for the selected context.";
+
+  const concentrationMatters =
+    concentrationSummary?.postureState === "high" ||
+    concentrationSummary?.postureState === "elevated" ||
+    concentrationSummary?.postureState === "partial";
+
+  const thirdTitle = concentrationMatters ? "Concentration" : "Drivers";
+  const thirdBody = concentrationMatters
+    ? `${concentrationSummary?.businessReadingHeadline ?? "Concentration review is qualified."}`
+    : attributionSummary?.headline ??
+      rollingSummary?.headline ??
+      "Cross-panel driver review is not available for the selected context.";
+
+  return [
+    {
+      key: "total_risk",
+      title: "Total risk posture",
+      body: totalRiskBody,
+    },
+    {
+      key: "path_review",
+      title: "Path and recovery",
+      body: pathBody,
+    },
+    {
+      key: "cross_panel_focus",
+      title: thirdTitle,
+      body: thirdBody,
+    },
+  ];
+}
+
+function resolveRiskSnapshotPosture(summary: PerformanceRiskExecutiveSummary | null) {
+  const headline = summary?.headline.toLowerCase() ?? "";
+  if (headline.includes("unavailable")) {
+    return "Unavailable";
+  }
+  if (headline.includes("elevated")) {
+    return "Elevated";
+  }
+  if (headline.includes("contained")) {
+    return "Contained";
+  }
+  return "Moderate";
+}
+
+function resolveRiskSnapshotOverviewTone(summary: PerformanceRiskExecutiveSummary | null) {
+  const value = resolveRiskSnapshotPosture(summary);
+  switch (value) {
+    case "Contained":
+      return "success" as const;
+    case "Moderate":
+      return "default" as const;
+    case "Elevated":
+      return "warn" as const;
+    default:
+      return "warn" as const;
+  }
+}
+
+function resolveDrawdownOverviewPosture(response: WorkbenchRiskDrawdownResponse) {
+  const period = response.payload?.periods[0];
+  const summary = period?.summary;
+  if (!summary) {
+    return "Unavailable";
+  }
+  if (summary.is_recovered) {
+    return "Recovered";
+  }
+  const severity = resolveDrawdownSeverity(summary.max_drawdown).label;
+  return severity === "Contained" ? "Open" : "Underwater";
+}
+
+function resolveDrawdownOverviewTone(response: WorkbenchRiskDrawdownResponse) {
+  const posture = resolveDrawdownOverviewPosture(response);
+  switch (posture) {
+    case "Recovered":
+      return "success" as const;
+    case "Open":
+      return "default" as const;
+    case "Underwater":
+      return "warn" as const;
+    default:
+      return "warn" as const;
+  }
+}
+
+function resolveConcentrationOverviewTone(posture: RiskConcentrationPostureState | undefined) {
+  switch (posture) {
+    case "acceptable":
+      return "success" as const;
+    case "moderate":
+      return "default" as const;
+    case "elevated":
+    case "partial":
+      return "warn" as const;
+    case "high":
+      return "danger" as const;
+    default:
+      return "warn" as const;
+  }
+}
+
+function resolveRiskEvidencePosture(
+  supportability: Array<{
+    key: string;
+    label: string;
+    state: WorkbenchRiskModuleState;
+    reason?: string | null;
+  }>,
+  moduleStates: WorkbenchRiskModuleState[]
+) {
+  const blockedOrUnavailable = supportability.filter(
+    (item) => item.state === "blocked" || item.state === "unavailable"
+  );
+  const partial = supportability.filter((item) => item.state === "partial");
+
+  if (!supportability.length || moduleStates.every((state) => state === "unavailable")) {
+    return {
+      label: "Unavailable",
+      support: "Gateway evidence is not available for the selected risk review.",
+      tone: "danger" as const,
+    };
+  }
+  if (!blockedOrUnavailable.length && !partial.length) {
+    return {
+      label: "Ready",
+      support: "Cross-panel evidence is complete enough for first-line review.",
+      tone: "success" as const,
+    };
+  }
+  return {
+    label: "Partial",
+    support:
+      blockedOrUnavailable[0]?.reason ??
+      partial[0]?.reason ??
+      "Some supporting evidence should be qualified on first review.",
+    tone: "warn" as const,
+  };
 }
 
 function metric(

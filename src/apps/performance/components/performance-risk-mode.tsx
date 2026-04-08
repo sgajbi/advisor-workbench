@@ -16,6 +16,8 @@ import RiskAttributionPanel from "./risk/risk-attribution-panel";
 import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
+import RiskWhatMattersNow from "./risk/risk-what-matters-now";
+import RiskWorkspaceOverview from "./risk/risk-workspace-overview";
 
 export default function PerformanceRiskMode({
   workspace,
@@ -112,6 +114,8 @@ export default function PerformanceRiskMode({
         ) : null}
         {statePanel ?? (
           <div className="performance-risk-main-column">
+            <RiskWorkspaceOverview items={viewModel.workspaceOverview} />
+            <RiskWhatMattersNow items={viewModel.whatMattersNow} />
             <RiskSnapshotPanel viewModel={viewModel} />
             <RiskDrawdownPanel
               viewModel={viewModel}
@@ -124,19 +128,21 @@ export default function PerformanceRiskMode({
                 }
               }}
             />
-            <RiskRollingPanel
-              viewModel={viewModel}
-              rollingExpanded={rollingExpanded}
-              onToggleRolling={() => {
-                const nextExpanded = !rollingExpanded;
-                setRollingExpanded(nextExpanded);
-                if (nextExpanded) {
-                  requestRollingDetail();
-                }
-              }}
-            />
-            <RiskAttributionPanel viewModel={viewModel} onSelectAttribution={requestAttribution} />
             <RiskConcentrationPanel viewModel={viewModel} />
+            <div className="performance-risk-secondary-column">
+              <RiskRollingPanel
+                viewModel={viewModel}
+                rollingExpanded={rollingExpanded}
+                onToggleRolling={() => {
+                  const nextExpanded = !rollingExpanded;
+                  setRollingExpanded(nextExpanded);
+                  if (nextExpanded) {
+                    requestRollingDetail();
+                  }
+                }}
+              />
+              <RiskAttributionPanel viewModel={viewModel} onSelectAttribution={requestAttribution} />
+            </div>
           </div>
         )}
       </SectionBlock>

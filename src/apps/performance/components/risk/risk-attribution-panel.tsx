@@ -26,7 +26,7 @@ export default function RiskAttributionPanel({
   return (
     <RiskModuleShell
       title="Historical Risk Attribution"
-      subtitle="Stateful decomposition of total and active risk across supported business dimensions."
+      subtitle="Analytical decomposition of total and active risk across supported business dimensions."
       className="performance-risk-attribution-panel"
       businessReading={
         viewModel.attributionExecutiveSummary ? (

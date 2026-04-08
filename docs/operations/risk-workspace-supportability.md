@@ -15,6 +15,26 @@ The Risk workspace is backed only by Gateway BFF routes over canonical `lotus-ri
 | Rolling Risk | `GET /api/v1/workbench/{portfolioId}/risk/rolling` | rolling summaries on first paint | time series only when explicitly expanded |
 | Historical Risk Attribution | `GET /api/v1/workbench/{portfolioId}/risk/attribution` | lazy-loaded after the shell renders | grouping and attribution selector changes refetch only the attribution module |
 
+## Risk workspace reading order
+
+The Risk page is a front-office review workflow, not a flat analytics stack.
+
+The default reading order is:
+
+1. portfolio context
+2. cross-panel risk overview
+3. what matters now
+4. Risk Snapshot
+5. Drawdown
+6. Concentration
+7. Rolling Risk
+8. Historical Risk Attribution
+
+`Risk Snapshot`, `Drawdown`, and `Concentration` are the primary first-line review modules.
+`Rolling Risk` and `Historical Risk Attribution` remain contract-backed, but they are positioned as
+secondary analytical follow-through after the current book, path, and concentration posture are
+understood.
+
 ## Risk Snapshot first-read contract
 
 Risk Snapshot is the executive first-read module for the Risk workspace.

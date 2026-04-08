@@ -27,6 +27,17 @@ describe("buildPerformanceRiskViewModel", () => {
 
     expect(viewModel.state).toBe("partial");
     expect(viewModel.title).toBe("Stateful Risk");
+    expect(viewModel.workspaceOverview).toEqual([
+      expect.objectContaining({ label: "Risk posture", value: "Contained" }),
+      expect.objectContaining({ label: "Drawdown posture", value: "Underwater" }),
+      expect.objectContaining({ label: "Concentration posture", value: "Partial" }),
+      expect.objectContaining({ label: "Evidence posture", value: "Partial" }),
+    ]);
+    expect(viewModel.whatMattersNow).toEqual([
+      expect.objectContaining({ title: "Total risk posture" }),
+      expect.objectContaining({ title: "Path and recovery" }),
+      expect.objectContaining({ title: "Concentration" }),
+    ]);
     expect(viewModel.snapshotHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Volatility",
       "Sharpe",
@@ -222,6 +233,8 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.state).toBe("loading");
+    expect(viewModel.workspaceOverview).toEqual([]);
+    expect(viewModel.whatMattersNow).toEqual([]);
     expect(viewModel.snapshotHeadlineMetrics).toEqual([]);
     expect(viewModel.snapshotSupportingMetrics).toEqual([]);
     expect(viewModel.concentrationIndicators).toEqual([]);

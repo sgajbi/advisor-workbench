@@ -5106,8 +5106,64 @@ a:hover {
   gap: 1rem;
 }
 
+.performance-risk-secondary-column {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.performance-risk-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.performance-risk-overview-card,
+.performance-risk-matters {
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.performance-risk-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.performance-risk-overview-support {
+  margin-top: 0.45rem;
+  line-height: 1.45;
+}
+
+.performance-risk-matters {
+  display: grid;
+  gap: 0.75rem;
+  background: rgba(248, 250, 252, 0.74);
+}
+
+.performance-risk-matters-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.performance-risk-matters-item {
+  display: grid;
+  gap: 0.2rem;
+}
+
 .performance-risk-panel.section-block {
   box-shadow: none;
+}
+
+.performance-risk-secondary-column .performance-risk-panel.section-block {
+  border-color: rgba(148, 163, 184, 0.14);
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.98) 18%),
+    #ffffff;
 }
 
 .performance-risk-panel .section-block-body {
@@ -5772,6 +5828,11 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .performance-risk-overview,
+  .performance-risk-matters-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .performance-risk-secondary-metrics,
   .performance-risk-context-list {
     grid-template-columns: 1fr;
@@ -5810,6 +5871,8 @@ a:hover {
 }
 
 @media (max-width: 760px) {
+  .performance-risk-overview,
+  .performance-risk-matters-list,
   .performance-risk-snapshot-headline-grid,
   .performance-risk-snapshot-supporting-grid,
   .performance-risk-context-list,
