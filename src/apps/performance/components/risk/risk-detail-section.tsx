@@ -10,7 +10,7 @@ export default function RiskDetailSection({
   className,
   density = "default",
 }: {
-  title: string;
+  title?: string;
   ariaLabel: string;
   toolbar?: ReactNode;
   children: ReactNode;
@@ -28,12 +28,18 @@ export default function RiskDetailSection({
         .join(" ")}
       aria-label={ariaLabel}
     >
-      <div className="performance-risk-section-header">
-        <Text variant="cardTitle" className="performance-risk-section-title">
-          {title}
-        </Text>
-        {toolbar ? <div className="performance-risk-detail-toolbar">{toolbar}</div> : null}
-      </div>
+      {title || toolbar ? (
+        <div className="performance-risk-section-header">
+          {title ? (
+            <Text variant="cardTitle" className="performance-risk-section-title">
+              {title}
+            </Text>
+          ) : (
+            <div />
+          )}
+          {toolbar ? <div className="performance-risk-detail-toolbar">{toolbar}</div> : null}
+        </div>
+      ) : null}
       <div className="performance-risk-detail-body">{children}</div>
     </section>
   );

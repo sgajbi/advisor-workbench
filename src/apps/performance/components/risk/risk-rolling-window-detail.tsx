@@ -29,7 +29,6 @@ export default function RiskRollingWindowDetail({
 
   return (
     <RiskDetailSection
-      title={riskRollingPanelCopy.detailTitle}
       ariaLabel="Rolling risk detail"
       density="compact"
       toolbar={
