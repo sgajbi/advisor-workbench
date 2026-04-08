@@ -5,6 +5,11 @@ import {
   createSandboxSession,
   getReportingSnapshot,
   getWorkbenchAnalytics,
+  getWorkbenchRiskAttributionClient,
+  getWorkbenchRiskConcentrationClient,
+  getWorkbenchRiskDrawdownClient,
+  getWorkbenchRiskRollingClient,
+  getWorkbenchRiskSummaryClient,
   getWorkbenchPerformanceAttributionTrendClient,
   getWorkbenchPerformanceAdvisorBriefClient,
   getWorkbenchPerformanceHorizonComparisonClient,
@@ -534,6 +539,260 @@ describe("workbench api", () => {
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/horizon-comparison?period=EXPLICIT&detail_basis=NET&chart_frequency=monthly&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+    );
+  });
+
+  it("calls the client-side risk summary endpoint with benchmark-aware request context", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskSummaryClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/summary?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
+    );
+  });
+
+  it("omits optional benchmark context from the client-side risk summary request when none is selected", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskSummaryClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/summary?period=YTD&detail_basis=NET&as_of_date=2026-02-24&reporting_currency=USD"
+    );
+    expect(requestedUrl).not.toContain("benchmark_code=");
+  });
+
+  it("calls the client-side risk concentration endpoint without forcing a detail basis", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: {},
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskConcentrationClient("PF_1001", {
+      period: "YTD",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/concentration?period=YTD&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
+    );
+    expect(requestedUrl).not.toContain("detail_basis=");
+  });
+
+  it("keeps underwater detail out of first-paint drawdown requests by default", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "partial",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskDrawdownClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
+    );
+    expect(requestedUrl).not.toContain("include_underwater_series=");
+  });
+
+  it("requests underwater detail explicitly only for drawdown drill-down flows", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskDrawdownClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      includeUnderwaterSeries: true,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD&include_underwater_series=true"
+    );
+  });
+
+  it("keeps rolling series detail out of first-paint rolling requests by default", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "partial",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskRollingClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
+    );
+    expect(requestedUrl).not.toContain("include_time_series=");
+  });
+
+  it("requests rolling series detail explicitly only for rolling drill-down flows", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskRollingClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      includeTimeSeries: true,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD&include_time_series=true"
+    );
+  });
+
+  it("passes attribution type and grouping controls through the client-side attribution request", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskAttributionClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      attributionType: "ACTIVE_RISK",
+      groupingDimension: "SECTOR",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toBe(
+      "/api/bff/api/v1/workbench/PF_1001/risk/attribution?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD&attribution_type=ACTIVE_RISK&grouping_dimension=SECTOR"
     );
   });
 

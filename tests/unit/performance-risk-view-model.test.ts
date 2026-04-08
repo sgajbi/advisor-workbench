@@ -26,28 +26,49 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.state).toBe("partial");
-    expect(viewModel.title).toBe("Stateful Risk");
-    expect(viewModel.snapshotMetrics.map((metric) => metric.label)).toEqual([
+    expect(viewModel.title).toBe("Risk");
+    expect(viewModel.workspaceOverview).toEqual([
+      expect.objectContaining({ label: "Risk posture", value: "Contained" }),
+      expect.objectContaining({ label: "Drawdown posture", value: "Underwater" }),
+      expect.objectContaining({ label: "Concentration posture", value: "Partial" }),
+      expect.objectContaining({ label: "Evidence posture", value: "Partial" }),
+    ]);
+    expect(viewModel.snapshotHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Volatility",
       "Sharpe",
-      "Sortino",
       "Beta",
       "Tracking Error",
+    ]);
+    expect(viewModel.snapshotSupportingMetrics.map((metric) => metric.label)).toEqual([
       "Information Ratio",
+      "Sortino",
       "Value at Risk",
     ]);
-    expect(viewModel.concentrationMetrics.map((metric) => metric.label)).toEqual([
-      "HHI",
-      "Top Position",
-      "Top Issuer",
-      "Issuer Coverage",
+    expect(viewModel.snapshotContextRows[0]).toMatchObject({
+      label: "Portfolio observations",
+    });
+    expect(viewModel.concentrationIndicators.map((metric) => metric.label)).toEqual([
+      "Portfolio Concentration Index",
+      "Issuer Concentration Index",
+      "Largest Position Weight",
+      "Largest Issuer Weight",
+      "Top 10 Weight",
     ]);
+    expect(viewModel.concentrationScales[0]).toMatchObject({
+      label: "Portfolio Concentration Index",
+      interpretationBand: "Moderate",
+    });
+    expect(viewModel.concentrationContextRows[0]).toMatchObject({
+      label: "Issuer Coverage",
+    });
     expect(viewModel.supportability.map((item) => item.key)).toEqual([
       "summary:portfolio_returns",
       "summary:benchmark_returns",
       "summary:risk_free_series",
       "concentration:portfolio_positions",
       "concentration:issuer_enrichment",
+      "concentration:issuer_grouping",
+      "concentration:valuation_basis",
       "attribution:portfolio_returns",
       "attribution:exposure_history",
       "attribution:benchmark_exposure_context",
@@ -61,33 +82,61 @@ describe("buildPerformanceRiskViewModel", () => {
     ]);
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Max Drawdown",
+      "Relative Max Drawdown",
       "Time Under Water",
-      "Ulcer Index",
-      "DaR 95",
-      "CDaR 95",
+      "Recovery Status",
     ]);
+    expect(viewModel.drawdownSupportingMetrics.map((metric) => metric.label)).toEqual([
+      "Ulcer Index",
+    ]);
+    expect(viewModel.drawdownEpisodeInterpretation).toBeNull();
+    expect(viewModel.drawdownContextRows[0]).toMatchObject({
+      label: "Portfolio observations",
+    });
     expect(viewModel.drawdownEpisodes[0]).toMatchObject({
       episode: "DD_0001",
       depth: "-12.45%",
       status: "Open",
     });
-    expect(viewModel.provenance).toContainEqual({
-      label: "Input Mode",
-      value: "Stateful only",
-    });
     expect(viewModel.rollingWindows[0]).toMatchObject({
       label: "21D",
+      horizonLabel: "Short window",
     });
+    expect(viewModel.rollingContextRows[0]).toMatchObject({
+      label: "Window set",
+    });
+    expect(viewModel.rollingContextRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Benchmark-relative review",
+          value: "Qualified",
+        }),
+      ])
+    );
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
+    expect(viewModel.rollingWindows[0]?.headlineMetrics[0]).toMatchObject({
+      label: "Volatility",
+      support: "Above typical but still in range",
+    });
+    expect(viewModel.rollingWindows[0]?.selectedWindowSummary).toMatchObject({
+      title: "21D selected-window review",
+    });
+    expect(viewModel.rollingWindows[0]?.selectedWindowSummary.body).toContain(
+      "Current volatility is 11.32%, above the recent typical."
+    );
+    expect(viewModel.rollingWindows[0]?.detailRowInterpretations[0]).toMatchObject({
+      metric: "Volatility",
+      interpretation: "Current reading is above typical but still in range.",
+    });
     expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
+    expect(viewModel.attributionMethodologyRows[0]).toMatchObject({
+      label: "Reconciled sum",
+    });
     expect(viewModel.attributionRows[0]).toMatchObject({
       group: "Technology",
     });
-    expect(viewModel.rollingQualityFlags).toContain(
-      "metric:ROLLING_BETA:benchmark_variance_zero"
-    );
   });
 
   it("does not imply benchmark-relative risk is ready when benchmark context is absent", () => {
@@ -120,6 +169,19 @@ describe("buildPerformanceRiskViewModel", () => {
       value: "N/A",
       support: "Benchmark-relative drawdown requires benchmark context.",
     });
+    expect(viewModel.snapshotHeadlineMetrics.find((metric) => metric.key === "BETA")).toMatchObject({
+      value: "N/A",
+      support: "Benchmark-relative risk requires benchmark context.",
+      state: "unavailable",
+    });
+    expect(viewModel.rollingContextRows).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Benchmark-relative review",
+          value: "Qualified",
+        }),
+      ])
+    );
     expect(viewModel.attributionControls?.attributionTypes[1]).toMatchObject({
       key: "ACTIVE_RISK",
       disabled: true,
@@ -137,8 +199,10 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.state).toBe("loading");
-    expect(viewModel.snapshotMetrics).toEqual([]);
-    expect(viewModel.concentrationMetrics).toEqual([]);
+    expect(viewModel.workspaceOverview).toEqual([]);
+    expect(viewModel.snapshotHeadlineMetrics).toEqual([]);
+    expect(viewModel.snapshotSupportingMetrics).toEqual([]);
+    expect(viewModel.concentrationIndicators).toEqual([]);
     expect(viewModel.rollingWindows).toEqual([]);
     expect(viewModel.supportability).toEqual([
       expect.objectContaining({ key: "risk_bff", state: "partial" }),
@@ -198,7 +262,6 @@ describe("buildPerformanceRiskViewModel", () => {
       /%$/
     );
     expect(viewModel.attributionState).toBe("blocked");
-    expect(viewModel.attributionTotals).toBeNull();
   });
 
   it("normalizes attribution percentages when upstream returns already-scaled percentage values", () => {

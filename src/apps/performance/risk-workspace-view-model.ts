@@ -23,31 +23,111 @@ export type PerformanceRiskState =
   | "unavailable"
   | "error";
 
+export type RiskConcentrationPostureState =
+  | "acceptable"
+  | "moderate"
+  | "elevated"
+  | "high"
+  | "partial";
+
+export type PerformanceRiskConcentrationIndicator = {
+  key: string;
+  label: string;
+  value: string;
+  support: string;
+  definition: string;
+  tone?: "neutral" | "warn" | "danger";
+};
+
+export type PerformanceRiskConcentrationScale = {
+  key: string;
+  label: string;
+  interpretationBand: string;
+  markerPct: number;
+  definition: string;
+};
+
+export type PerformanceRiskConcentrationContextRow = {
+  key: string;
+  label: string;
+  value: string;
+  definition: string;
+  support: string;
+};
+
+export type PerformanceRiskContextRow = {
+  key: string;
+  label: string;
+  value: string;
+  support: string;
+};
+
+export type PerformanceRiskMetricCard = {
+  key: string;
+  label: string;
+  value: string;
+  support: string;
+  metadata?: string;
+  definition?: string;
+  state: PerformanceRiskState;
+};
+
+export type PerformanceRiskRollingDetailRow = {
+  key: string;
+  metric: string;
+  current: string;
+  typical: string;
+  range: string;
+  interpretation: string;
+  currentPositionPct: number | null;
+  typicalPositionPct: number | null;
+};
+
+export type PerformanceRiskRollingWindow = {
+  key: string;
+  label: string;
+  horizonLabel: string;
+  selectedWindowSummary: {
+    title: string;
+    body: string;
+  };
+  detailRowInterpretations: PerformanceRiskRollingDetailRow[];
+  headlineMetrics: PerformanceRiskMetricCard[];
+  detailRows: PerformanceRiskRollingDetailRow[];
+  seriesRows: Array<{
+    key: string;
+    date: string;
+    values: Record<string, string>;
+  }>;
+  seriesMetricKeys: string[];
+};
+
+export type PerformanceRiskOverviewItem = {
+  key: string;
+  label: string;
+  value: string;
+  tone: "default" | "success" | "warn" | "danger";
+};
+
 export type PerformanceRiskViewModel = {
   state: PerformanceRiskState;
   title: string;
   synopsis: string;
   contextItems: Array<{ label: string; value: string }>;
-  snapshotMetrics: Array<{
-    key: string;
-    label: string;
-    value: string;
-    support: string;
-    state: PerformanceRiskState;
-  }>;
-  concentrationMetrics: Array<{
-    key: string;
-    label: string;
-    value: string;
-    support: string;
-  }>;
-  drawdownHeadlineMetrics: Array<{
-    key: string;
-    label: string;
-    value: string;
-    support: string;
-    state: PerformanceRiskState;
-  }>;
+  workspaceOverview: PerformanceRiskOverviewItem[];
+  snapshotHeadlineMetrics: PerformanceRiskMetricCard[];
+  snapshotSupportingMetrics: PerformanceRiskMetricCard[];
+  snapshotContextRows: PerformanceRiskContextRow[];
+  concentrationIndicators: PerformanceRiskConcentrationIndicator[];
+  concentrationScales: PerformanceRiskConcentrationScale[];
+  concentrationContextRows: PerformanceRiskConcentrationContextRow[];
+  drawdownHeadlineMetrics: PerformanceRiskMetricCard[];
+  drawdownSupportingMetrics: PerformanceRiskMetricCard[];
+  drawdownContextRows: PerformanceRiskContextRow[];
+  drawdownEpisodeInterpretation: {
+    title: string;
+    body: string;
+  } | null;
   drawdownEpisodes: Array<{
     key: string;
     episode: string;
@@ -70,34 +150,9 @@ export type PerformanceRiskViewModel = {
     drawdown: string;
   }>;
   underwaterDetailState: "idle" | "loading" | "ready" | "unavailable";
-  rollingWindows: Array<{
-    key: string;
-    label: string;
-    headlineMetrics: Array<{
-      key: string;
-      label: string;
-      value: string;
-      support: string;
-      state: PerformanceRiskState;
-    }>;
-    summaryRows: Array<{
-      key: string;
-      metric: string;
-      latest: string;
-      average: string;
-      p05: string;
-      p95: string;
-      support: string;
-    }>;
-    seriesRows: Array<{
-      key: string;
-      date: string;
-      values: Record<string, string>;
-    }>;
-    seriesMetricKeys: string[];
-  }>;
-  rollingQualityFlags: string[];
+  rollingWindows: PerformanceRiskRollingWindow[];
   rollingDetailState: "idle" | "loading" | "ready" | "unavailable";
+  rollingContextRows: PerformanceRiskContextRow[];
   attributionControls: {
     selectedAttributionType: string;
     selectedGroupingDimension: string;
@@ -121,14 +176,10 @@ export type PerformanceRiskViewModel = {
     marginalContribution: string;
     componentContribution: string;
     contributionShare: string;
+    contributionShareAbsPct: number | null;
   }>;
-  attributionTotals: {
-    metric: string;
-    totalValue: string;
-    reconciledSum: string;
-    residual: string;
-    support: string;
-  } | null;
+  attributionMaxContributionShareAbsPct: number;
+  attributionMethodologyRows: PerformanceRiskContextRow[];
   attributionState: "idle" | "loading" | "ready" | "blocked" | "unavailable";
   attributionWarnings: string[];
   supportability: Array<{
@@ -137,7 +188,6 @@ export type PerformanceRiskViewModel = {
     state: WorkbenchRiskModuleState;
     reason?: string | null;
   }>;
-  provenance: Array<{ label: string; value: string }>;
   warnings: string[];
   partialFailures: string[];
 };
@@ -241,17 +291,30 @@ export function buildPerformanceRiskViewModel({
 
   return {
     state,
-    title: state === "unavailable" ? "Risk unavailable" : "Stateful Risk",
+    title: state === "unavailable" ? "Risk unavailable" : "Risk",
     synopsis:
       state === "unavailable"
-        ? "Stateful risk is not available for the selected portfolio context."
-        : state === "partial"
-        ? "Risk is available with coverage notes. Review issuer and benchmark supportability before external use."
-        : "Stateful portfolio risk is available for the selected performance context.",
+        ? "Risk is not available for the selected portfolio context."
+        : "Portfolio risk is available for the selected performance context.",
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
-    snapshotMetrics: mapSnapshotMetrics(summary),
-    concentrationMetrics: mapConcentrationMetrics(concentration),
+    workspaceOverview: buildRiskWorkspaceOverview({
+      summary,
+      concentration,
+      drawdown,
+      rolling,
+      attribution,
+      supportability,
+    }),
+    snapshotHeadlineMetrics: mapSnapshotHeadlineMetrics(summary),
+    snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
+    snapshotContextRows: mapSnapshotContextRows(summary),
+    concentrationIndicators: mapConcentrationIndicators(concentration),
+    concentrationScales: mapConcentrationScales(concentration),
+    concentrationContextRows: mapConcentrationContextRows(concentration),
     drawdownHeadlineMetrics: mapDrawdownHeadlineMetrics(drawdown),
+    drawdownSupportingMetrics: mapDrawdownSupportingMetrics(drawdown),
+    drawdownContextRows: mapDrawdownContextRows(drawdown),
+    drawdownEpisodeInterpretation: mapDrawdownEpisodeInterpretation(drawdown),
     drawdownEpisodes: mapDrawdownEpisodes(drawdown),
     drawdownRelativeMetric: mapRelativeDrawdownMetric(drawdown),
     underwaterSeries: mapUnderwaterSeries(drawdownDetail),
@@ -261,15 +324,16 @@ export function buildPerformanceRiskViewModel({
       isDrawdownDetailLoading,
     }),
     rollingWindows: mapRollingWindows(rolling, rollingDetail),
-    rollingQualityFlags: rolling.payload?.periods[0]?.quality_flags ?? [],
     rollingDetailState: resolveRollingDetailState({
       rolling,
       rollingDetail,
       isRollingDetailLoading,
     }),
+    rollingContextRows: mapRollingContextRows(rolling),
     attributionControls: mapAttributionControls(attribution),
     attributionRows: mapAttributionRows(attribution),
-    attributionTotals: mapAttributionTotals(attribution),
+    attributionMaxContributionShareAbsPct: mapAttributionMaxContributionShareAbsPct(attribution),
+    attributionMethodologyRows: mapAttributionMethodologyRows(attribution),
     attributionState: resolveAttributionState({ attribution, isAttributionLoading }),
     attributionWarnings: attribution?.warnings ?? [],
     supportability: supportability.map((item) => ({
@@ -278,13 +342,6 @@ export function buildPerformanceRiskViewModel({
       state: item.state,
       reason: item.reason,
     })),
-    provenance: [
-      { label: "Contract", value: summary.contract_version },
-      { label: "Source", value: "lotus-risk via lotus-gateway" },
-      { label: "Input Mode", value: "Stateful only" },
-      { label: "Cache", value: summary.metadata.cache_status ?? "miss" },
-      { label: "Generated", value: formatDateValue(summary.metadata.generated_at) },
-    ],
     warnings: [
       ...summary.warnings,
       ...concentration.warnings,
@@ -292,13 +349,15 @@ export function buildPerformanceRiskViewModel({
       ...drawdown.warnings,
       ...rolling.warnings,
     ],
-    partialFailures: [
-      ...summary.partial_failures.map((failure) => failure.detail),
-      ...concentration.partial_failures.map((failure) => failure.detail),
-      ...(attribution?.partial_failures.map((failure) => failure.detail) ?? []),
-      ...drawdown.partial_failures.map((failure) => failure.detail),
-      ...rolling.partial_failures.map((failure) => failure.detail),
-    ],
+    partialFailures: Array.from(
+      new Set([
+        ...summary.partial_failures.map((failure) => failure.detail),
+        ...concentration.partial_failures.map((failure) => failure.detail),
+        ...(attribution?.partial_failures.map((failure) => failure.detail) ?? []),
+        ...drawdown.partial_failures.map((failure) => failure.detail),
+        ...rolling.partial_failures.map((failure) => failure.detail),
+      ])
+    ),
   };
 }
 
@@ -400,7 +459,7 @@ export function buildFixtureRiskConcentration(
     source_service: "lotus-risk",
     state: "partial",
     payload: {
-      risk_proxy: { hhi_current: 1260, hhi_proposed: 1260, hhi_delta: 0 },
+      portfolio_concentration: { hhi_current: 1260, hhi_proposed: 1260, hhi_delta: 0 },
       single_position_concentration: {
         top_position_weight_current: 0.184,
         top_position_weight_proposed: 0.184,
@@ -409,6 +468,16 @@ export function buildFixtureRiskConcentration(
         top_n_cumulative_weight_proposed: 0.528,
         top_n_cumulative_weight_delta: 0,
         top_n: 10,
+        top_position_current: {
+          security_id: "FUND_PIMCO_INC",
+          security_name: "PIMCO GIS Income Fund",
+          weight: 0.184,
+        },
+        top_position_proposed: {
+          security_id: "FUND_PIMCO_INC",
+          security_name: "PIMCO GIS Income Fund",
+          weight: 0.184,
+        },
       },
       issuer_concentration: {
         hhi_current: 1448,
@@ -422,10 +491,36 @@ export function buildFixtureRiskConcentration(
         covered_position_count_proposed: 8,
         total_position_count_current: 10,
         total_position_count_proposed: 10,
+        uncovered_position_count_current: 2,
+        uncovered_position_count_proposed: 2,
+        coverage_ratio_current: 0.8,
+        coverage_ratio_proposed: 0.8,
         note: "Issuer enrichment is partial in the current stateful risk contract.",
+        top_issuer_current: {
+          issuer_id: "ISSUER_PIMCO",
+          issuer_name: "Pacific Investment Management Company LLC",
+          weight: 0.214,
+        },
+        top_issuer_proposed: {
+          issuer_id: "ISSUER_PIMCO",
+          issuer_name: "Pacific Investment Management Company LLC",
+          weight: 0.214,
+        },
       },
-      valuation_context: { reporting_currency: workspace.portfolio.base_currency },
-      risk_metadata: { fixture: true },
+      valuation_context: {
+        portfolio_currency: workspace.portfolio.base_currency,
+        reporting_currency: workspace.portfolio.base_currency,
+        position_basis: "market_value_base",
+        weight_basis: "total_market_value_base",
+      },
+      execution_context: {
+        as_of_date: workspace.as_of_date,
+        portfolio_id: workspace.portfolio.portfolio_id,
+        issuer_grouping_level: "ultimate_parent",
+        enrichment_policy: "merge_caller_then_core",
+        include_cash_positions: true,
+        include_zero_quantity_positions: false,
+      },
     },
     supportability: [
       {
@@ -439,6 +534,20 @@ export function buildFixtureRiskConcentration(
         label: "Issuer enrichment",
         state: "partial",
         reason: "Issuer coverage is partial in the current stateful risk contract.",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "issuer_grouping",
+        label: "Issuer grouping",
+        state: "ready",
+        reason: "Ultimate parent grouping with merge caller then core enrichment policy.",
+        source_service: "lotus-risk",
+      },
+      {
+        key: "valuation_basis",
+        label: "Valuation basis",
+        state: "ready",
+        reason: "Total market value base in USD/USD context.",
         source_service: "lotus-risk",
       },
     ],
@@ -859,6 +968,21 @@ export function buildFixtureRiskAttribution(
               },
             ]
           : [],
+      methodology_context: {
+        covariance_method: "EMPIRICAL",
+        annualization_basis: 252,
+        requested_attribution_types: [attributionType],
+        requested_metrics: [attributionType === "ACTIVE_RISK" ? "TRACKING_ERROR" : "VOLATILITY"],
+        requested_grouping_dimensions: [groupingDimension],
+        min_observations_policy: "STRICT",
+        stateful_active_risk_supported_grouping_dimensions: [
+          "POSITION",
+          "SECTOR",
+          "ASSET_CLASS",
+        ],
+        stateful_active_risk_gated_grouping_dimensions: ["ISSUER"],
+        stateful_active_risk_gate_reason: "benchmark issuer exposure semantics unavailable",
+      },
     },
     supportability,
     warnings: state === "ready" ? [] : ["RISK_ATTRIBUTION_BLOCKED"],
@@ -1091,7 +1215,7 @@ function buildStateViewModel(
   const asOfDate = workspace.as_of_date;
   const title =
     state === "loading"
-      ? "Loading stateful risk"
+      ? "Loading risk"
       : state === "unavailable"
         ? "Risk unavailable"
         : "Risk not available";
@@ -1102,21 +1226,30 @@ function buildStateViewModel(
     synopsis:
       state === "loading"
         ? "Risk snapshot and concentration modules are loading from the Gateway BFF contract."
-        : "Stateful risk is not available for the selected portfolio context.",
+        : "Risk is not available for the selected portfolio context.",
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
-    snapshotMetrics: [],
-    concentrationMetrics: [],
+    workspaceOverview: [],
+    snapshotHeadlineMetrics: [],
+    snapshotSupportingMetrics: [],
+    snapshotContextRows: [],
+    concentrationIndicators: [],
+    concentrationScales: [],
+    concentrationContextRows: [],
     drawdownHeadlineMetrics: [],
+    drawdownSupportingMetrics: [],
+    drawdownContextRows: [],
+    drawdownEpisodeInterpretation: null,
     drawdownEpisodes: [],
     drawdownRelativeMetric: null,
     underwaterSeries: [],
     underwaterDetailState: "idle",
     rollingWindows: [],
-    rollingQualityFlags: [],
     rollingDetailState: "idle",
+    rollingContextRows: [],
     attributionControls: null,
     attributionRows: [],
-    attributionTotals: null,
+    attributionMaxContributionShareAbsPct: 0,
+    attributionMethodologyRows: [],
     attributionState: "idle",
     attributionWarnings: [],
     supportability: [
@@ -1129,10 +1262,6 @@ function buildStateViewModel(
             ? "Gateway risk contract is loading."
             : "Gateway risk BFF response is not available.",
       },
-    ],
-    provenance: [
-      { label: "Contract", value: "risk-workspace.v1" },
-      { label: "Input Mode", value: "Stateful only" },
     ],
     warnings: state === "loading" ? [] : ["RISK_WORKSPACE_UNAVAILABLE"],
     partialFailures: [],
@@ -1154,6 +1283,171 @@ function buildContextItems(
   ];
 }
 
+function buildRiskWorkspaceOverview({
+  summary,
+  concentration,
+  drawdown,
+  rolling,
+  attribution,
+  supportability,
+}: {
+  summary: WorkbenchRiskSummaryResponse;
+  concentration: WorkbenchRiskConcentrationResponse;
+  drawdown: WorkbenchRiskDrawdownResponse;
+  rolling: WorkbenchRiskRollingResponse;
+  attribution: WorkbenchRiskAttributionResponse | null;
+  supportability: Array<{
+    key: string;
+    label: string;
+    state: WorkbenchRiskModuleState;
+    reason?: string | null;
+  }>;
+}): PerformanceRiskOverviewItem[] {
+  const concentrationPosture = buildConcentrationPostureModel(concentration);
+  const supportabilityPosture = resolveRiskEvidencePosture(supportability, [
+    summary.state,
+    concentration.state,
+    drawdown.state,
+    rolling.state,
+    attribution?.state ?? "unavailable",
+  ]);
+
+  return [
+    {
+      key: "risk_posture",
+      label: "Risk posture",
+      ...resolveRiskSnapshotOverview(summary),
+    },
+    {
+      key: "drawdown_posture",
+      label: "Drawdown posture",
+      value: resolveDrawdownOverviewPosture(drawdown),
+      tone: resolveDrawdownOverviewTone(drawdown),
+    },
+    {
+      key: "concentration_posture",
+      label: "Concentration posture",
+      value: concentrationPosture.label,
+      tone: resolveConcentrationOverviewTone(concentrationPosture.state),
+    },
+    {
+      key: "evidence_posture",
+      label: "Evidence posture",
+      value: supportabilityPosture.label,
+      tone: supportabilityPosture.tone,
+    },
+  ];
+}
+
+function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pick<
+  PerformanceRiskOverviewItem,
+  "value" | "tone"
+> {
+  const period = response.payload?.periods[0];
+  if (!period) {
+    return { value: "Unavailable", tone: "warn" };
+  }
+
+  const volatility = period.metrics.find((metric) => metric.key === "VOLATILITY");
+  if (!volatility || volatility.state === "unavailable" || volatility.state === "blocked") {
+    return { value: "Unavailable", tone: "warn" };
+  }
+
+  const posture = resolveSnapshotPosture(volatility.value).label;
+  switch (posture) {
+    case "Contained":
+      return { value: posture, tone: "success" };
+    case "Moderate":
+      return { value: posture, tone: "default" };
+    case "Elevated":
+    case "High":
+      return { value: posture, tone: "warn" };
+    default:
+      return { value: "Unavailable", tone: "warn" };
+  }
+}
+
+function resolveDrawdownOverviewPosture(response: WorkbenchRiskDrawdownResponse) {
+  const period = response.payload?.periods[0];
+  const summary = period?.summary;
+  if (!summary) {
+    return "Unavailable";
+  }
+  if (summary.is_recovered) {
+    return "Recovered";
+  }
+  const severity = resolveDrawdownSeverity(summary.max_drawdown).label;
+  return severity === "Contained" ? "Open" : "Underwater";
+}
+
+function resolveDrawdownOverviewTone(response: WorkbenchRiskDrawdownResponse) {
+  const posture = resolveDrawdownOverviewPosture(response);
+  switch (posture) {
+    case "Recovered":
+      return "success" as const;
+    case "Open":
+      return "default" as const;
+    case "Underwater":
+      return "warn" as const;
+    default:
+      return "warn" as const;
+  }
+}
+
+function resolveConcentrationOverviewTone(posture: RiskConcentrationPostureState | undefined) {
+  switch (posture) {
+    case "acceptable":
+      return "success" as const;
+    case "moderate":
+      return "default" as const;
+    case "elevated":
+    case "partial":
+      return "warn" as const;
+    case "high":
+      return "danger" as const;
+    default:
+      return "warn" as const;
+  }
+}
+
+function resolveRiskEvidencePosture(
+  supportability: Array<{
+    key: string;
+    label: string;
+    state: WorkbenchRiskModuleState;
+    reason?: string | null;
+  }>,
+  moduleStates: WorkbenchRiskModuleState[]
+) {
+  const blockedOrUnavailable = supportability.filter(
+    (item) => item.state === "blocked" || item.state === "unavailable"
+  );
+  const partial = supportability.filter((item) => item.state === "partial");
+
+  if (!supportability.length || moduleStates.every((state) => state === "unavailable")) {
+    return {
+      label: "Unavailable",
+      support: "Gateway evidence is not available for the selected risk review.",
+      tone: "danger" as const,
+    };
+  }
+  if (!blockedOrUnavailable.length && !partial.length) {
+    return {
+      label: "Ready",
+      support: "Cross-panel evidence is complete enough for first-line review.",
+      tone: "success" as const,
+    };
+  }
+  return {
+    label: "Partial",
+    support:
+      blockedOrUnavailable[0]?.reason ??
+      partial[0]?.reason ??
+      "Some supporting evidence should be qualified on first review.",
+    tone: "warn" as const,
+  };
+}
+
 function metric(
   key: string,
   label: string,
@@ -1164,92 +1458,439 @@ function metric(
   return { key, label, value, state, details };
 }
 
-function mapSnapshotMetrics(response: WorkbenchRiskSummaryResponse) {
-  const metrics = response.payload?.periods[0]?.metrics ?? [];
-  return metrics.map((item) => ({
-    key: item.key,
-    label: item.label,
-    value: formatRiskMetric(item),
-    support: item.reason ?? (item.state === "ready" ? "Stateful risk metric" : "Not available"),
-    state: resolveMetricState(item.state),
-  }));
+const SNAPSHOT_HEADLINE_METRIC_KEYS = ["VOLATILITY", "SHARPE", "BETA", "TRACKING_ERROR"] as const;
+const SNAPSHOT_SUPPORTING_METRIC_KEYS = ["INFORMATION_RATIO", "SORTINO", "VAR"] as const;
+
+function mapSnapshotHeadlineMetrics(
+  response: WorkbenchRiskSummaryResponse
+): PerformanceRiskMetricCard[] {
+  return partitionSnapshotMetricCards(response).headline;
 }
 
-function mapConcentrationMetrics(response: WorkbenchRiskConcentrationResponse) {
+function mapSnapshotSupportingMetrics(
+  response: WorkbenchRiskSummaryResponse
+): PerformanceRiskMetricCard[] {
+  return partitionSnapshotMetricCards(response).supporting;
+}
+
+function partitionSnapshotMetricCards(response: WorkbenchRiskSummaryResponse): {
+  headline: PerformanceRiskMetricCard[];
+  supporting: PerformanceRiskMetricCard[];
+} {
+  const metrics = response.payload?.periods[0]?.metrics ?? [];
+  const metricCards = metrics.map(mapSnapshotMetricCard);
+  const byKey = new Map(metricCards.map((metricCard) => [metricCard.key, metricCard]));
+
+  const headline = SNAPSHOT_HEADLINE_METRIC_KEYS.map((key) => byKey.get(key)).filter(
+    (metric): metric is PerformanceRiskMetricCard => Boolean(metric)
+  );
+  const supportingPriority = SNAPSHOT_SUPPORTING_METRIC_KEYS.map((key) => byKey.get(key)).filter(
+    (metric): metric is PerformanceRiskMetricCard => Boolean(metric)
+  );
+  const supportingRemainder = metricCards.filter(
+    (metric) =>
+      !SNAPSHOT_HEADLINE_METRIC_KEYS.includes(metric.key as (typeof SNAPSHOT_HEADLINE_METRIC_KEYS)[number]) &&
+      !SNAPSHOT_SUPPORTING_METRIC_KEYS.includes(metric.key as (typeof SNAPSHOT_SUPPORTING_METRIC_KEYS)[number])
+  );
+
+  return {
+    headline,
+    supporting: [...supportingPriority, ...supportingRemainder],
+  };
+}
+
+function mapSnapshotMetricCard(item: WorkbenchRiskMetric): PerformanceRiskMetricCard {
+  return {
+    key: item.key,
+    label: item.label,
+    value: item.state === "ready" || item.state === "partial" ? formatRiskMetric(item) : "N/A",
+    support: describeSnapshotMetric(item),
+    definition: defineSnapshotMetric(item),
+    state: resolveMetricState(item.state),
+  };
+}
+
+function mapSnapshotContextRows(
+  response: WorkbenchRiskSummaryResponse
+): PerformanceRiskContextRow[] {
+  const period = response.payload?.periods[0];
+  if (!period) {
+    return [];
+  }
+  return [
+    {
+      key: "portfolio_observations",
+      label: "Portfolio observations",
+      value: formatInteger(period.portfolio_observation_count),
+      support: "Return observations backing the realized risk reading.",
+    },
+    {
+      key: "benchmark_observations",
+      label: "Benchmark observations",
+      value: formatInteger(period.benchmark_observation_count),
+      support:
+        period.benchmark_context?.reason === "APPLIED"
+          ? `${formatInteger(period.aligned_benchmark_observation_count)} aligned observations used for beta, tracking error, and information ratio.`
+          : period.benchmark_context?.reason
+            ? `Relative risk is currently ${formatEnumLabel(period.benchmark_context.reason)?.toLowerCase()}.`
+            : "Relative risk is not being applied for this selection.",
+    },
+    {
+      key: "benchmark_context",
+      label: "Benchmark context",
+      value: formatEnumLabel(period.benchmark_context?.reason) ?? "Not requested",
+      support:
+        period.benchmark_context?.requested_metrics?.length
+          ? `Requested relative measures: ${period.benchmark_context.requested_metrics.join(", ")}.`
+          : "No benchmark-relative measures requested.",
+    },
+  ];
+}
+
+function describeSnapshotMetric(metric: WorkbenchRiskMetric): string {
+  if (metric.state !== "ready") {
+    if (
+      metric.key === "BETA" ||
+      metric.key === "TRACKING_ERROR" ||
+      metric.key === "INFORMATION_RATIO"
+    ) {
+      return metric.reason ?? "Benchmark-relative risk requires benchmark context.";
+    }
+    return metric.reason ?? "Not available for the current portfolio context.";
+  }
+
+  switch (metric.key) {
+    case "VOLATILITY":
+      return "Overall realised risk level of the portfolio over the selected period.";
+    case "SHARPE":
+      return "Return earned for each unit of total risk taken.";
+    case "BETA":
+      return "Sensitivity of the portfolio to benchmark market moves.";
+    case "TRACKING_ERROR":
+      return "Amount of active risk taken relative to the benchmark.";
+    case "INFORMATION_RATIO":
+      return "Efficiency of active risk taken versus the benchmark.";
+    case "SORTINO":
+      return "Return earned per unit of downside volatility.";
+    case "VAR": {
+      const expectedShortfall = formatRiskExpectedShortfall(metric.details);
+      return expectedShortfall
+        ? `Estimated downside at the configured confidence level. Expected shortfall ${expectedShortfall}.`
+        : "Estimated downside at the configured confidence level.";
+    }
+    default:
+      return metric.reason ?? "Risk measure available for the selected portfolio context.";
+  }
+}
+
+function defineSnapshotMetric(metric: WorkbenchRiskMetric): string {
+  switch (metric.key) {
+    case "VOLATILITY":
+      return "Annualized realized volatility of portfolio returns over the selected period.";
+    case "SHARPE":
+      return "Portfolio excess return per unit of realized volatility.";
+    case "BETA":
+      return "Sensitivity of portfolio returns relative to the assigned benchmark.";
+    case "TRACKING_ERROR":
+      return "Realized standard deviation of active returns versus the benchmark.";
+    case "INFORMATION_RATIO":
+      return "Active return earned per unit of tracking error.";
+    case "SORTINO":
+      return "Return delivered per unit of downside volatility.";
+    case "VAR":
+      return "Value at Risk estimates the configured downside threshold over the selected horizon and confidence level.";
+    default:
+      return metric.reason ?? "Risk measure definition unavailable.";
+  }
+}
+
+function resolveSnapshotPosture(volatility: number | null | undefined): {
+  label: "Contained" | "Moderate" | "Elevated" | "High";
+} {
+  if (typeof volatility !== "number") {
+    return { label: "Moderate" };
+  }
+  if (volatility >= 16) {
+    return { label: "High" };
+  }
+  if (volatility >= 12) {
+    return { label: "Elevated" };
+  }
+  if (volatility >= 8) {
+    return { label: "Moderate" };
+  }
+  return { label: "Contained" };
+}
+
+function formatRiskExpectedShortfall(details: Record<string, unknown> | null | undefined): string | null {
+  const expectedShortfall = details?.expected_shortfall;
+  return typeof expectedShortfall === "number"
+    ? formatRiskPercentValue(expectedShortfall)
+    : null;
+}
+
+function mapConcentrationIndicators(
+  response: WorkbenchRiskConcentrationResponse
+): PerformanceRiskConcentrationIndicator[] {
+  const payload = response.payload;
+  if (!payload) {
+    return [];
+  }
+  const coverageTone = resolveConcentrationIndicatorTone(response.supportability);
+  return [
+    {
+      key: "portfolio_hhi",
+      label: "Portfolio Concentration Index",
+      value: formatNumber(payload.portfolio_concentration.hhi_current, { maximumFractionDigits: 0 }),
+      support: "Position-level concentration across the live book",
+      definition:
+        "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
+    },
+    {
+      key: "issuer_hhi",
+      label: "Issuer Concentration Index",
+      value: formatNumber(payload.issuer_concentration.hhi_current, { maximumFractionDigits: 0 }),
+      support: "Issuer-level concentration after grouping",
+      definition:
+        "Concentration index after holdings are grouped at issuer level using the configured enrichment and grouping policy.",
+      tone: coverageTone,
+    },
+    {
+      key: "top_position_weight",
+      label: "Largest Position Weight",
+      value: formatRiskPercentValue(payload.single_position_concentration.top_position_weight_current),
+      support: "Weight of the largest single holding",
+      definition: "Weight of the single largest holding in the current portfolio.",
+      tone: resolveWeightIndicatorTone(payload.single_position_concentration.top_position_weight_current),
+    },
+    {
+      key: "top_issuer_weight",
+      label: "Largest Issuer Weight",
+      value: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
+      support: "Aggregated exposure to the largest issuer group",
+      definition: "Combined weight of all holdings mapped to the largest issuer group.",
+      tone: resolveWeightIndicatorTone(payload.issuer_concentration.top_issuer_weight_current),
+    },
+    {
+      key: "top_n_cumulative",
+      label: `Top ${payload.single_position_concentration.top_n} Weight`,
+      value: formatRiskPercentValue(
+        payload.single_position_concentration.top_n_cumulative_weight_current
+      ),
+      support: "Cumulative weight of the 10 largest holdings",
+      definition: "Cumulative portfolio weight of the 10 largest holdings.",
+      tone: resolveWeightIndicatorTone(payload.single_position_concentration.top_n_cumulative_weight_current),
+    },
+  ];
+}
+
+function mapConcentrationScales(
+  response: WorkbenchRiskConcentrationResponse
+): PerformanceRiskConcentrationScale[] {
   const payload = response.payload;
   if (!payload) {
     return [];
   }
   return [
     {
-      key: "hhi_current",
-      label: "HHI",
-      value: formatNumber(payload.risk_proxy.hhi_current, { maximumFractionDigits: 0 }),
-      support: "Current portfolio concentration",
+      key: "portfolio_hhi",
+      label: "Portfolio Concentration Index",
+      interpretationBand: resolveConcentrationBand(payload.portfolio_concentration.hhi_current),
+      markerPct: resolveConcentrationIndexMarker(payload.portfolio_concentration.hhi_current),
+      definition:
+        "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
     },
     {
-      key: "top_position_weight",
-      label: "Top Position",
-      value: formatRiskPercentValue(payload.single_position_concentration.top_position_weight_current),
-      support: "Largest single-position weight",
-    },
-    {
-      key: "top_issuer_weight",
-      label: "Top Issuer",
-      value: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
-      support: "Largest issuer exposure",
-    },
-    {
-      key: "issuer_coverage",
-      label: "Issuer Coverage",
-      value: `${payload.issuer_concentration.covered_position_count_current}/${payload.issuer_concentration.total_position_count_current}`,
-      support: payload.issuer_concentration.note ?? "Issuer enrichment coverage",
+      key: "issuer_hhi",
+      label: "Issuer Concentration Index",
+      interpretationBand: resolveConcentrationBand(payload.issuer_concentration.hhi_current),
+      markerPct: resolveConcentrationIndexMarker(payload.issuer_concentration.hhi_current),
+      definition:
+        "Concentration index after holdings are grouped at issuer level using the configured enrichment and grouping policy.",
     },
   ];
 }
 
-function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
-  const summary = response.payload?.periods[0]?.summary;
-  if (!summary) {
+function mapConcentrationContextRows(
+  response: WorkbenchRiskConcentrationResponse
+): PerformanceRiskConcentrationContextRow[] {
+  const payload = response.payload;
+  if (!payload) {
     return [];
   }
+  const executionContext = payload.execution_context;
+  const valuationContext = payload.valuation_context;
+  return [
+    {
+      key: "issuer_coverage",
+      label: "Issuer Coverage",
+      value: formatRiskPercentValue(payload.issuer_concentration.coverage_ratio_current),
+      definition:
+        "Share of positions with issuer mapping sufficient for issuer-level concentration analysis.",
+      support: `${payload.issuer_concentration.covered_position_count_current}/${payload.issuer_concentration.total_position_count_current} positions mapped for issuer analysis`,
+    },
+    {
+      key: "grouping_level",
+      label: "Grouping Level",
+      value: formatEnumLabel(executionContext?.issuer_grouping_level) ?? "N/A",
+      definition: "Issuer grouping level used to aggregate exposures for concentration review.",
+      support: "Aggregation level used for issuer groups",
+    },
+    {
+      key: "enrichment_policy",
+      label: "Enrichment Policy",
+      value: formatEnumLabel(executionContext?.enrichment_policy) ?? "N/A",
+      definition:
+        "Policy used to combine caller-supplied mapping and core enrichment when forming issuer groups.",
+      support: "Caller and core mapping merge posture",
+    },
+    {
+      key: "weight_basis",
+      label: "Weight Basis",
+      value: formatEnumLabel(valuationContext?.weight_basis) ?? "N/A",
+      definition: "Portfolio denominator used to calculate concentration weights.",
+      support: "Denominator used for weight calculations",
+    },
+    {
+      key: "reporting_currency",
+      label: "Reporting Currency",
+      value: valuationContext?.reporting_currency ?? "N/A",
+      definition: "Reporting currency used for the current concentration review.",
+      support: valuationContext?.portfolio_currency ? "Portfolio currency" : "Portfolio currency",
+    },
+  ];
+}
+
+function mapDrawdownHeadlineMetrics(
+  response: WorkbenchRiskDrawdownResponse
+): PerformanceRiskMetricCard[] {
+  const period = response.payload?.periods[0];
+  const summary = period?.summary;
+  if (!period || !summary) {
+    return [];
+  }
+  const relative = period.relative_to_benchmark;
+  const recoveryStatus =
+    relative?.is_recovered === true
+      ? "Recovered"
+      : relative?.is_recovered === false
+        ? "Open"
+        : summary.is_recovered === true
+          ? "Recovered"
+          : summary.is_recovered === false
+            ? "Open"
+            : "N/A";
   return [
     {
       key: "max_drawdown",
       label: "Max Drawdown",
       value: formatDrawdownPercent(summary.max_drawdown),
-      support: buildDrawdownDateRange(summary),
+      support: describeDrawdownHeadlineMetric("max_drawdown", response, period),
+      definition: "Largest realized peak-to-trough decline over the selected window.",
       state: resolveModuleState(response.state),
+    },
+    {
+      key: "relative_max_drawdown",
+      label: "Relative Max Drawdown",
+      value: relative ? formatDrawdownPercent(relative.max_drawdown) : "N/A",
+      support: describeDrawdownHeadlineMetric("relative_max_drawdown", response, period),
+      definition:
+        "Largest drawdown in active performance versus the benchmark over the selected window.",
+      state: relative ? resolveModuleState(response.state) : "unavailable",
     },
     {
       key: "time_under_water_days",
       label: "Time Under Water",
-      value: formatInteger(summary.time_under_water_days),
-      support: "Business days below prior peak",
+      value: formatInteger(relative?.time_under_water_days ?? summary.time_under_water_days),
+      support: describeDrawdownHeadlineMetric("time_under_water_days", response, period),
+      definition: "Number of business days the portfolio remained below its prior peak.",
       state: resolveModuleState(response.state),
     },
+    {
+      key: "recovery_status",
+      label: "Recovery Status",
+      value: recoveryStatus,
+      support: describeDrawdownHeadlineMetric("recovery_status", response, period),
+      definition: "Whether the worst drawdown had recovered by the end of the selected window.",
+      state: resolveModuleState(response.state),
+    },
+  ];
+}
+
+function mapDrawdownSupportingMetrics(
+  response: WorkbenchRiskDrawdownResponse
+): PerformanceRiskMetricCard[] {
+  const summary = response.payload?.periods[0]?.summary;
+  if (!summary) {
+    return [];
+  }
+
+  return [
     {
       key: "ulcer_index",
       label: "Ulcer Index",
       value: formatDrawdownPercent(summary.ulcer_index),
-      support: "Path severity across underwater observations",
-      state: resolveModuleState(response.state),
-    },
-    {
-      key: "drawdown_at_risk_95",
-      label: "DaR 95",
-      value: formatDrawdownPercent(summary.drawdown_at_risk_95),
-      support: "Episode-tail drawdown threshold",
-      state: resolveModuleState(response.state),
-    },
-    {
-      key: "conditional_drawdown_at_risk_95",
-      label: "CDaR 95",
-      value: formatDrawdownPercent(summary.conditional_drawdown_at_risk_95),
-      support: "Average of worst drawdown tail",
+      support: "Shows how persistent and painful the underwater path was, not just how deep it got.",
+      definition:
+        "Path-sensitive drawdown measure that reflects both drawdown depth and time spent underwater.",
       state: resolveModuleState(response.state),
     },
   ];
+}
+
+function mapDrawdownContextRows(
+  response: WorkbenchRiskDrawdownResponse
+): PerformanceRiskContextRow[] {
+  const period = response.payload?.periods[0];
+  const analysisContext = response.payload?.analysis_context;
+  if (!period) {
+    return [];
+  }
+  return [
+    {
+      key: "portfolio_observations",
+      label: "Portfolio observations",
+      value: formatInteger(period.portfolio_observation_count),
+      support: "Observation count supporting the realized loss-path review.",
+    },
+    {
+      key: "benchmark_relative_review",
+      label: "Benchmark-relative review",
+      value: formatEnumLabel(period.relative_to_benchmark_context?.reason) ?? "Not requested",
+      support:
+        period.relative_to_benchmark_context?.applied
+          ? `${formatInteger(period.relative_to_benchmark_context.aligned_observation_count)} aligned observations support relative drawdown.`
+          : "Relative drawdown is not active for this selection.",
+    },
+    {
+      key: "duration_unit",
+      label: "Duration unit",
+      value: formatEnumLabel(analysisContext?.duration_unit) ?? "Business Days",
+      support: "Unit used for time-under-water and episode duration.",
+    },
+  ];
+}
+
+function mapDrawdownEpisodeInterpretation(
+  response: WorkbenchRiskDrawdownResponse
+): { title: string; body: string } | null {
+  const period = response.payload?.periods[0];
+  const summary = period?.summary;
+  const episodes = period?.episodes ?? [];
+  if (!period || !summary) {
+    return null;
+  }
+
+  if (!episodes.length) {
+    return {
+      title: "No retained drawdown episodes",
+      body:
+        typeof summary.max_drawdown === "number" && summary.max_drawdown < 0
+          ? "The portfolio did experience a loss path, but no episode met the retained episode policy for this window."
+          : "The selected window did not produce a retained peak-to-trough loss interval, which indicates drawdown remained controlled over this review period.",
+    };
+  }
+  return null;
 }
 
 function mapDrawdownEpisodes(response: WorkbenchRiskDrawdownResponse) {
@@ -1322,7 +1963,7 @@ function resolveUnderwaterDetailState({
 function mapRollingWindows(
   rolling: WorkbenchRiskRollingResponse,
   rollingDetail: WorkbenchRiskRollingResponse | null
-) {
+): PerformanceRiskRollingWindow[] {
   const summaryWindows = rolling.payload?.periods[0]?.window_results ?? [];
   const detailWindows = new Map(
     (rollingDetail?.payload?.periods[0]?.window_results ?? []).map((window) => [
@@ -1333,37 +1974,49 @@ function mapRollingWindows(
 
   return summaryWindows.map((window) => {
     const detailWindow = detailWindows.get(window.window_length) ?? null;
-    const metricKeys = Array.from(
-      new Set([
-        ...Object.keys(window.metric_summaries),
-        ...Object.keys(detailWindow?.metric_summaries ?? {}),
-      ])
+    const metricKeys = orderRollingMetricKeys(
+      Array.from(
+        new Set([
+          ...Object.keys(window.metric_summaries),
+          ...Object.keys(detailWindow?.metric_summaries ?? {}),
+        ])
+      )
     );
-    return {
-      key: String(window.window_length),
-      label: buildRollingWindowLabel(window.window_length),
-      headlineMetrics: metricKeys.map((metricKey) => {
-        const summary = window.metric_summaries[metricKey];
-        return {
-          key: `${window.window_length}-${metricKey}`,
-          label: resolveRollingMetricLabel(metricKey),
-          value: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
-          support: buildRollingMetricSupport(metricKey, summary),
-          state: summary ? ("ready" as PerformanceRiskState) : ("unavailable" as PerformanceRiskState),
-        };
-      }),
-      summaryRows: metricKeys.map((metricKey) => {
+    const headlineMetricInterpretations = metricKeys.map((metricKey) => {
+      const summary = window.metric_summaries[metricKey];
+      return {
+        key: `${window.window_length}-${metricKey}`,
+        label: resolveRollingMetricLabel(metricKey),
+        value: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
+        support: buildRollingHeadlineInterpretation(metricKey, summary),
+        metadata: buildRollingMetricMetadata(metricKey, summary),
+        definition: describeRollingMetric(metricKey),
+        state: summary ? ("ready" as PerformanceRiskState) : ("unavailable" as PerformanceRiskState),
+      };
+    });
+    const detailRowInterpretations = metricKeys
+      .map((metricKey) => {
         const summary = window.metric_summaries[metricKey];
         return {
           key: `${window.window_length}-${metricKey}`,
           metric: resolveRollingMetricLabel(metricKey),
-          latest: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
-          average: formatRollingMetricSummaryValue(metricKey, summary?.average ?? null),
-          p05: formatRollingMetricSummaryValue(metricKey, summary?.p05 ?? null),
-          p95: formatRollingMetricSummaryValue(metricKey, summary?.p95 ?? null),
-          support: buildRollingMetricSupport(metricKey, summary),
+          current: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
+          typical: formatRollingMetricSummaryValue(metricKey, summary?.average ?? null),
+          range: buildRollingObservedRange(metricKey, summary),
+          interpretation: buildRollingDetailInterpretation(metricKey, summary),
+          currentPositionPct: mapRollingRangePosition(summary?.latest ?? null, summary),
+          typicalPositionPct: mapRollingRangePosition(summary?.average ?? null, summary),
         };
-      }),
+      })
+      .filter((row) => shouldDisplayRollingMetricRow(row.metric, row.current));
+    return {
+      key: String(window.window_length),
+      label: buildRollingWindowLabel(window.window_length),
+      horizonLabel: resolveRollingWindowHorizonLabel(window.window_length),
+      selectedWindowSummary: buildRollingWindowReview(window.window_length, window.metric_summaries),
+      detailRowInterpretations,
+      headlineMetrics: headlineMetricInterpretations,
+      detailRows: detailRowInterpretations,
       seriesRows: mapRollingSeriesRows(detailWindow?.metric_series ?? []),
       seriesMetricKeys: metricKeys,
     };
@@ -1411,20 +2064,21 @@ function mapRollingSeriesRows(
   }));
 }
 
-function buildRollingMetricSupport(
-  metricKey: string,
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  if (!summary) {
-    return "Metric not returned for this rolling request.";
-  }
-  return `Avg ${formatRollingMetricSummaryValue(metricKey, summary.average)} • P05 ${formatRollingMetricSummaryValue(metricKey, summary.p05)} • P95 ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
-}
-
 function buildRollingWindowLabel(windowLength: number) {
   return `${windowLength}D`;
+}
+
+function resolveRollingWindowHorizonLabel(windowLength: number) {
+  if (windowLength <= 21) {
+    return "Short window";
+  }
+  if (windowLength <= 63) {
+    return "Near-term window";
+  }
+  if (windowLength <= 126) {
+    return "Medium window";
+  }
+  return "Annual window";
 }
 
 function resolveRollingMetricLabel(metricKey: string) {
@@ -1486,6 +2140,452 @@ function formatRiskPercentValue(
   });
 }
 
+function describeDrawdownHeadlineMetric(
+  key: "max_drawdown" | "relative_max_drawdown" | "time_under_water_days" | "recovery_status",
+  response: WorkbenchRiskDrawdownResponse,
+  period: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]
+): string {
+  const summary = period.summary;
+  const relative = period.relative_to_benchmark;
+  if (!summary) {
+    return "Drawdown summary unavailable.";
+  }
+  switch (key) {
+    case "max_drawdown":
+      return buildDrawdownDateRange(summary);
+    case "relative_max_drawdown":
+      return relative
+        ? buildRelativeDrawdownDateRange(relative)
+        : response.supportability.find((item) => item.key === "benchmark_relative_drawdown")?.reason ??
+            "Benchmark-relative review unavailable.";
+    case "time_under_water_days":
+      return "Business days the portfolio remained below its prior peak.";
+    case "recovery_status":
+      return summary.is_recovered
+        ? "Worst drawdown recovered before period end."
+        : "Worst drawdown was still open at period end.";
+  }
+}
+
+function resolveDrawdownSeverity(maxDrawdown: number | null | undefined): {
+  label: "Contained" | "Moderate" | "Elevated" | "Severe";
+} {
+  if (typeof maxDrawdown !== "number" || maxDrawdown >= 0) {
+    return { label: "Contained" };
+  }
+
+  const absoluteDepth = Math.abs(maxDrawdown);
+  if (absoluteDepth >= 0.15) {
+    return { label: "Severe" };
+  }
+  if (absoluteDepth >= 0.1) {
+    return { label: "Elevated" };
+  }
+  if (absoluteDepth >= 0.05) {
+    return { label: "Moderate" };
+  }
+  return { label: "Contained" };
+}
+
+function buildRelativeDrawdownDateRange(
+  relative: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["relative_to_benchmark"]
+) {
+  if (!relative?.max_drawdown_peak_date || !relative.max_drawdown_trough_date) {
+    return "Benchmark-relative timing unavailable";
+  }
+  return `${formatDateValue(relative.max_drawdown_peak_date)} to ${formatDateValue(
+    relative.max_drawdown_trough_date
+  )}`;
+}
+
+function mapRollingContextRows(
+  response: WorkbenchRiskRollingResponse
+): PerformanceRiskContextRow[] {
+  const period = response.payload?.periods[0];
+  const requestContext = response.payload?.request_context;
+  if (!period) {
+    return [];
+  }
+  const rows: PerformanceRiskContextRow[] = [
+    {
+      key: "window_coverage",
+      label: "Window set",
+      value: `${formatInteger(period.window_count_emitted)} / ${formatInteger(period.window_count_requested)}`,
+      support: `${(period.window_lengths_emitted ?? []).join(", ")} day windows emitted.`,
+    },
+    {
+      key: "benchmark_dependency",
+      label: "Benchmark alignment",
+      value: formatEnumLabel(period.benchmark_context?.reason) ?? "Not requested",
+      support:
+        period.benchmark_context?.requested
+          ? "Aligned benchmark observations support beta and tracking error review."
+          : "Benchmark-relative review is not active for this request.",
+    },
+    {
+      key: "risk_free_dependency",
+      label: "Risk-free alignment",
+      value: formatEnumLabel(period.risk_free_context?.reason) ?? "Not requested",
+      support:
+        period.risk_free_context?.requested
+          ? "Aligned risk-free observations support Sharpe review."
+          : "Sharpe review is not active for this request.",
+    },
+    {
+      key: "rolling_methodology",
+      label: "Methodology",
+      value: `${formatInteger(requestContext?.annualization_basis)} / ${formatEnumLabel(requestContext?.min_observations_policy) ?? "Strict"}`,
+      support: `${formatEnumLabel(requestContext?.alignment_policy) ?? "Inner Join"} alignment policy.`,
+    },
+  ];
+
+  const notes = new Map<
+    string,
+    PerformanceRiskContextRow
+  >();
+
+  for (const flag of period.quality_flags ?? []) {
+    if (flag === "metric:ROLLING_BETA:benchmark_variance_zero") {
+      notes.set(flag, {
+        key: flag,
+        label: "Benchmark-relative review",
+        value: "Qualified",
+        support:
+          "Benchmark variance was limited in one emitted window, so beta may be less informative for that horizon.",
+      });
+      continue;
+    }
+
+    notes.set(flag, {
+      key: flag,
+      label: "Window caution",
+      value: "Qualified",
+      support: "Some rolling measures may be less informative for the selected horizon.",
+    });
+  }
+
+  if (period.benchmark_context?.requested && period.benchmark_context.reason !== "APPLIED") {
+    notes.set("benchmark_alignment", {
+      key: "benchmark_alignment",
+      label: "Benchmark-relative review",
+      value: "Qualified",
+      support:
+        "Benchmark alignment is not fully ready across the selected horizon, so beta and tracking error should be read with caution.",
+    });
+  }
+
+  if (period.risk_free_context?.requested && period.risk_free_context.reason !== "APPLIED") {
+    notes.set("risk_free_alignment", {
+      key: "risk_free_alignment",
+      label: "Sharpe review",
+      value: "Qualified",
+      support:
+        "Risk-free alignment is not fully ready across the selected horizon, so Sharpe should be treated as supporting context.",
+    });
+  }
+
+  return [...rows, ...notes.values()];
+}
+
+function buildRollingWindowReview(
+  windowLength: number,
+  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"]
+): { title: string; body: string } {
+  const reviewSentences = [
+    buildRollingWindowReviewSentence("ROLLING_VOLATILITY", summaries.ROLLING_VOLATILITY),
+    buildRollingWindowReviewSentence("ROLLING_TRACKING_ERROR", summaries.ROLLING_TRACKING_ERROR),
+    buildRollingWindowReviewSentence("ROLLING_BETA", summaries.ROLLING_BETA),
+    buildRollingWindowReviewSentence("ROLLING_MAX_DRAWDOWN", summaries.ROLLING_MAX_DRAWDOWN),
+  ].filter(Boolean);
+  return {
+    title: `${buildRollingWindowLabel(windowLength)} selected-window review`,
+    body:
+      reviewSentences.slice(0, 3).join(" ") ||
+      "Selected-window rolling diagnostics are not available for this horizon.",
+  };
+}
+
+function buildRollingObservedRange(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return "N/A";
+  }
+  return `${formatRollingMetricSummaryValue(metricKey, summary.p05)} to ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
+}
+
+function mapRollingRangePosition(
+  value: number | null | undefined,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (
+    typeof value !== "number" ||
+    typeof summary?.p05 !== "number" ||
+    typeof summary?.p95 !== "number" ||
+    summary.p05 === summary.p95
+  ) {
+    return null;
+  }
+
+  const min = Math.min(summary.p05, summary.p95);
+  const max = Math.max(summary.p05, summary.p95);
+  return Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+}
+
+function buildRollingDetailInterpretation(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return "Not returned for this window.";
+  }
+  if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(summary.latest)) {
+    return "Current ratio is numerically unstable on this window.";
+  }
+
+  const latest = summary.latest;
+  const average = summary.average;
+  const p05 = summary.p05;
+  const p95 = summary.p95;
+
+  if (metricKey === "ROLLING_MAX_DRAWDOWN") {
+    if (typeof latest !== "number") {
+      return "Current drawdown reading unavailable.";
+    }
+    if (latest === 0) {
+      return "No realized drawdown is showing in the current rolling window.";
+    }
+    if (typeof p05 === "number" && latest <= p05) {
+      return "Current loss path is worse than the recent rolling norm.";
+    }
+    if (typeof p95 === "number" && latest >= p95) {
+      return "Current loss path is shallower than recent rolling history.";
+    }
+    if (typeof average === "number" && latest < average) {
+      return "Current loss path is modestly deeper than typical for this window.";
+    }
+    return "Current loss path is in line with recent rolling history.";
+  }
+
+  if (metricKey === "ROLLING_BETA") {
+    if (typeof latest !== "number") {
+      return "Current market sensitivity unavailable.";
+    }
+    if (latest < 0) {
+      return "Recent market sensitivity is negative versus the longer-run norm.";
+    }
+    if (latest > 1.2) {
+      return "Recent market sensitivity is running above benchmark pace.";
+    }
+    if (latest < 0.8) {
+      return "Recent market sensitivity is running below benchmark pace.";
+    }
+    return "Recent market sensitivity is close to benchmark pace.";
+  }
+
+  if (typeof latest !== "number") {
+    return "Current reading unavailable.";
+  }
+  if (typeof p95 === "number" && latest > p95) {
+    return metricKey === "ROLLING_TRACKING_ERROR"
+      ? "Current active risk is above the recent observed range."
+      : "Current reading is above the recent observed range.";
+  }
+  if (typeof p05 === "number" && latest < p05) {
+    return metricKey === "ROLLING_TRACKING_ERROR"
+      ? "Current active risk is below the recent observed range."
+      : "Current reading is below the recent observed range.";
+  }
+  if (typeof average === "number" && latest > average) {
+    return metricKey === "ROLLING_TRACKING_ERROR"
+      ? "Current active risk is above typical but still in range."
+      : "Current reading is above typical but still in range.";
+  }
+  if (typeof average === "number" && latest < average) {
+    return metricKey === "ROLLING_TRACKING_ERROR"
+      ? "Current active risk is below typical and remains contained."
+      : "Current reading is below typical and remains contained.";
+  }
+  return metricKey === "ROLLING_TRACKING_ERROR"
+    ? "Current active risk is in line with recent rolling history."
+    : "Current reading is in line with recent rolling history.";
+}
+
+function describeRollingMetric(metricKey: string) {
+  switch (metricKey) {
+    case "ROLLING_VOLATILITY":
+      return "Observed variability of portfolio returns over the selected rolling window.";
+    case "ROLLING_TRACKING_ERROR":
+      return "Observed active risk versus the benchmark over the selected rolling window.";
+    case "ROLLING_BETA":
+      return "Sensitivity of portfolio returns to benchmark market moves over the selected rolling window.";
+    case "ROLLING_MAX_DRAWDOWN":
+      return "Worst peak-to-trough loss observed within the selected rolling window.";
+    case "ROLLING_SHARPE":
+      return "Excess return earned per unit of risk over the selected rolling window.";
+    case "ROLLING_INFORMATION_RATIO":
+      return "Active return earned per unit of tracking error over the selected rolling window.";
+    default:
+      return undefined;
+  }
+}
+
+function buildRollingHeadlineInterpretation(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return "Not returned for this rolling request.";
+  }
+  if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(summary.latest)) {
+    return "Current ratio is numerically unstable on this window.";
+  }
+  if (metricKey === "ROLLING_MAX_DRAWDOWN" && summary.latest === 0) {
+    return "No current rolling drawdown is showing";
+  }
+  if (metricKey === "ROLLING_BETA" && typeof summary.latest === "number" && summary.latest < 0) {
+    return "Recent market sensitivity turned negative";
+  }
+  if (metricKey === "ROLLING_BETA") {
+    if (
+      typeof summary.latest === "number" &&
+      typeof summary.average === "number" &&
+      Math.abs(summary.latest - summary.average) >= 0.2
+    ) {
+      return "Market sensitivity changed meaningfully";
+    }
+    return "In line with recent market sensitivity";
+  }
+  if (typeof summary.latest === "number" && typeof summary.p95 === "number" && summary.latest > summary.p95) {
+    return "Above recent typical range";
+  }
+  if (typeof summary.latest === "number" && typeof summary.p05 === "number" && summary.latest < summary.p05) {
+    return "Below recent typical range";
+  }
+  if (typeof summary.latest === "number" && typeof summary.average === "number" && summary.latest > summary.average) {
+    return "Above typical but still in range";
+  }
+  if (typeof summary.latest === "number" && typeof summary.average === "number" && summary.latest < summary.average) {
+    return "Below typical and still contained";
+  }
+  if (metricKey === "ROLLING_MAX_DRAWDOWN") {
+    return "In line with recent drawdown history";
+  }
+  return "In line with recent history";
+}
+
+function buildRollingMetricMetadata(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return undefined;
+  }
+  return `Typical ${formatRollingMetricSummaryValue(metricKey, summary.average)} • Range ${buildRollingObservedRange(metricKey, summary)}`;
+}
+
+function buildRollingWindowReviewSentence(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary || typeof summary.latest !== "number") {
+    return null;
+  }
+
+  switch (metricKey) {
+    case "ROLLING_VOLATILITY":
+      return `Current volatility is ${formatRollingMetricSummaryValue(metricKey, summary.latest)}, ${describeRollingVersusTypical(summary, "well below the recent typical", "above the recent typical", "close to the recent typical")}.`;
+    case "ROLLING_TRACKING_ERROR":
+      return `Tracking error is ${formatRollingMetricSummaryValue(metricKey, summary.latest)}, ${describeRollingVersusTypical(summary, "below the recent normal range", "above the recent normal range", "close to the recent norm")}.`;
+    case "ROLLING_BETA":
+      if (summary.latest < 0) {
+        return "Beta is negative in the current window, which may indicate a short-term change in market sensitivity.";
+      }
+      return `Beta is ${formatRollingMetricSummaryValue(metricKey, summary.latest)} and ${describeRollingVersusTypical(summary, "below the recent norm", "above the recent norm", "close to the recent norm")}.`;
+    case "ROLLING_MAX_DRAWDOWN":
+      return summary.latest === 0
+        ? "No current rolling drawdown is showing."
+        : `Current rolling drawdown is ${formatRollingMetricSummaryValue(metricKey, summary.latest)} and ${describeRollingVersusTypical(summary, "deeper than the recent norm", "shallower than the recent norm", "in line with the recent norm")}.`;
+    default:
+      return null;
+  }
+}
+
+function describeRollingVersusTypical(
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined,
+  belowText: string,
+  aboveText: string,
+  inlineText: string
+) {
+  if (!summary || typeof summary.latest !== "number") {
+    return "not available";
+  }
+  if (typeof summary.p05 === "number" && summary.latest < summary.p05) {
+    return belowText;
+  }
+  if (typeof summary.p95 === "number" && summary.latest > summary.p95) {
+    return aboveText;
+  }
+  if (typeof summary.average === "number" && summary.latest < summary.average) {
+    return belowText;
+  }
+  if (typeof summary.average === "number" && summary.latest > summary.average) {
+    return aboveText;
+  }
+  return inlineText;
+}
+
+function resolveConcentrationIndicatorTone(
+  supportability: WorkbenchRiskConcentrationResponse["supportability"]
+) {
+  const issuerCoverage = supportability.find((item) => item.key === "issuer_enrichment");
+  if (issuerCoverage?.state === "partial" || issuerCoverage?.state === "blocked") {
+    return "warn" as const;
+  }
+  if (issuerCoverage?.state === "unavailable") {
+    return "danger" as const;
+  }
+  return "neutral" as const;
+}
+
+function resolveWeightIndicatorTone(value: number | null | undefined) {
+  if (typeof value !== "number") {
+    return "neutral" as const;
+  }
+  if (value >= 0.25) {
+    return "danger" as const;
+  }
+  if (value >= 0.15) {
+    return "warn" as const;
+  }
+  return "neutral" as const;
+}
+
+function formatEnumLabel(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function formatInteger(value: number | null | undefined) {
   if (typeof value !== "number") {
     return "N/A";
@@ -1496,6 +2596,9 @@ function formatInteger(value: number | null | undefined) {
 function formatRollingMetricSummaryValue(metricKey: string, value: number | null | undefined) {
   if (typeof value !== "number") {
     return "N/A";
+  }
+  if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(value)) {
+    return "Unstable";
   }
   if (
     metricKey === "ROLLING_VOLATILITY" ||
@@ -1661,6 +2764,90 @@ function buildDrawdownDateRange(summary: WorkbenchRiskDrawdownSummary) {
   )}`;
 }
 
+function resolveConcentrationBand(value: number) {
+  if (value < 1000) {
+    return "Diversified";
+  }
+  if (value < 1500) {
+    return "Moderate";
+  }
+  if (value < 2000) {
+    return "Elevated";
+  }
+  return "High";
+}
+
+function resolveConcentrationIndexMarker(value: number) {
+  return Math.max(0, Math.min(100, (value / 2500) * 100));
+}
+
+function buildConcentrationPostureModel(response: WorkbenchRiskConcentrationResponse) {
+  const payload = response.payload;
+  if (!payload) {
+    return {
+      state: "partial" as const,
+      label: "Partial Coverage",
+      principalDriver: "both" as const,
+      summary: "Concentration is available only partially for the current selection.",
+    };
+  }
+  const topPosition = payload.single_position_concentration.top_position_weight_current;
+  const topIssuer = payload.issuer_concentration.top_issuer_weight_current;
+  const topTen = payload.single_position_concentration.top_n_cumulative_weight_current;
+  const coverage = payload.issuer_concentration.coverage_ratio_current;
+  const portfolioBand = resolveConcentrationBand(payload.portfolio_concentration.hhi_current);
+  const issuerBand = resolveConcentrationBand(payload.issuer_concentration.hhi_current);
+  const principalDriver =
+    topIssuer - topPosition >= 0.03
+      ? ("issuer" as const)
+      : topPosition - topIssuer >= 0.03
+        ? ("position" as const)
+        : ("both" as const);
+
+  if (coverage < 0.99) {
+    return {
+      state: "partial" as const,
+      label: "Partial",
+      principalDriver,
+      summary:
+        "Concentration is visible, but issuer interpretation is only partial.",
+    };
+  }
+  if (topTen >= 0.9 || topPosition >= 0.2 || topIssuer >= 0.25) {
+    return {
+      state: "high" as const,
+      label: "High",
+      principalDriver,
+      summary: "Concentration is high and is driven by a small number of holdings.",
+    };
+  }
+  if (topTen >= 0.75 || topPosition >= 0.15 || topIssuer >= 0.2) {
+    return {
+      state: "elevated" as const,
+      label: "Elevated",
+      principalDriver,
+      summary:
+        portfolioBand === "Elevated" && issuerBand === "Elevated"
+          ? "Both position and issuer concentration are materially elevated."
+          : "Concentration is elevated and is driven by a limited number of holdings.",
+    };
+  }
+  if (topTen >= 0.6) {
+    return {
+      state: "moderate" as const,
+      label: "Moderate",
+      principalDriver,
+      summary: "Concentration is moderate and should be reviewed against diversification expectations.",
+    };
+  }
+  return {
+    state: "acceptable" as const,
+    label: "Acceptable",
+    principalDriver,
+    summary: "Concentration appears acceptable for the current selection.",
+  };
+}
+
 function resolveModuleState(state: WorkbenchRiskModuleState): PerformanceRiskState {
   if (state === "ready" || state === "partial" || state === "unavailable") {
     return state;
@@ -1709,28 +2896,172 @@ function mapAttributionRows(response: WorkbenchRiskAttributionResponse | null) {
   if (!selectedSet) {
     return [];
   }
-  return selectedSet.contributors.map((contributor) => ({
-    key: contributor.group_key,
-    group: contributor.group_label,
-    avgWeight: formatRiskPercentValue(contributor.weight_average),
-    marginalContribution: formatRiskPercentValue(contributor.marginal_contribution),
-    componentContribution: formatRiskPercentValue(contributor.component_contribution),
-    contributionShare: formatRiskPercentValue(contributor.percent_contribution),
-  }));
+  return [...selectedSet.contributors]
+    .sort(
+      (left, right) =>
+        Math.abs(right.component_contribution ?? 0) - Math.abs(left.component_contribution ?? 0)
+    )
+    .map((contributor) => ({
+      key: contributor.group_key,
+      group: normalizeAttributionGroupLabel(contributor.group_label),
+      avgWeight: formatRiskPercentValue(contributor.weight_average),
+      marginalContribution: formatRiskPercentValue(contributor.marginal_contribution),
+      componentContribution: formatRiskPercentValue(contributor.component_contribution),
+      contributionShare: formatRiskPercentValue(contributor.percent_contribution),
+      contributionShareAbsPct:
+        typeof contributor.percent_contribution === "number"
+          ? Math.abs(contributor.percent_contribution * 100)
+          : null,
+    }));
 }
 
-function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null) {
+function mapAttributionMaxContributionShareAbsPct(response: WorkbenchRiskAttributionResponse | null) {
   const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
   if (!selectedSet) {
-    return null;
+    return 0;
+  }
+
+  return selectedSet.contributors.reduce((maxValue, contributor) => {
+    const nextValue =
+      typeof contributor.percent_contribution === "number"
+        ? Math.abs(contributor.percent_contribution * 100)
+        : 0;
+    return Math.max(maxValue, nextValue);
+  }, 0);
+}
+
+function resolveAttributionEvidencePosture(
+  response: WorkbenchRiskAttributionResponse,
+  residual: number | null | undefined
+) {
+  const hasQualifiedSupportability = response.supportability.some(
+    (item) => item.state !== "ready"
+  );
+  const residualAbs = Math.abs(residual ?? 0);
+
+  if (hasQualifiedSupportability) {
+    return {
+      value: "Qualified",
+      support: "Supportability should be reviewed before using this decomposition externally.",
+      metadata: "Upstream supportability is not fully ready",
+    };
+  }
+  if (residualAbs >= 0.001) {
+    return {
+      value: "Review",
+      support: "Residual remains visible, so the decomposition should be checked before escalation.",
+      metadata: `Residual ${formatRiskPercentValue(residual)}`,
+    };
   }
   return {
-    metric: `${selectedSet.attribution_type.replaceAll("_", " ")} • ${selectedSet.metric.replaceAll("_", " ")}`,
-    totalValue: formatRiskPercentValue(selectedSet.total_value),
-    reconciledSum: formatRiskPercentValue(selectedSet.reconciled_sum),
-    residual: formatRiskPercentValue(selectedSet.residual),
-    support: selectedSet.grouping_dimension.replaceAll("_", " "),
+    value: "Reliable",
+    support: "Residual is controlled and the current decomposition is suitable for front-office review.",
+    metadata: `Residual ${formatRiskPercentValue(residual)}`,
   };
+}
+
+function mapAttributionMethodologyRows(
+  response: WorkbenchRiskAttributionResponse | null
+): PerformanceRiskContextRow[] {
+  const methodologyContext = response?.payload?.methodology_context;
+  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
+  if (!methodologyContext) {
+    return [];
+  }
+  const evidencePosture = selectedSet
+    ? resolveAttributionEvidencePosture(response as WorkbenchRiskAttributionResponse, selectedSet.residual)
+    : null;
+  return [
+    ...(selectedSet
+      ? [
+          {
+            key: "reconciled_sum",
+            label: "Reconciled sum",
+            value: formatRiskPercentValue(selectedSet.reconciled_sum),
+            support: `Reported total ${formatRiskPercentValue(
+              selectedSet.total_value
+            )} with residual ${formatRiskPercentValue(selectedSet.residual)}.`,
+          },
+          {
+            key: "evidence_posture",
+            label: "Evidence posture",
+            value: evidencePosture?.value ?? "N/A",
+            support: evidencePosture?.support ?? "Attribution evidence posture is not available.",
+          },
+        ]
+      : []),
+    {
+      key: "covariance_method",
+      label: "Covariance method",
+      value: formatEnumLabel(methodologyContext.covariance_method) ?? "N/A",
+      support: "Attribution covariance convention",
+    },
+    {
+      key: "annualization_basis",
+      label: "Annualization basis",
+      value: formatInteger(methodologyContext.annualization_basis),
+      support: "Periods used for annualized attribution metrics",
+    },
+    {
+      key: "requested_metric",
+      label: "Attribution lens",
+      value: methodologyContext.requested_metrics?.join(", ") ?? "N/A",
+      support: methodologyContext.requested_grouping_dimensions?.join(", ") ?? "No grouping selected",
+    },
+    {
+      key: "active_risk_support",
+      label: "Active-risk support",
+      value:
+        methodologyContext.stateful_active_risk_supported_grouping_dimensions?.join(", ") ?? "N/A",
+      support:
+        methodologyContext.stateful_active_risk_gate_reason ??
+        "Supported grouping dimensions for active-risk decomposition",
+    },
+  ];
+}
+
+function isRollingRatioMetric(metricKey: string) {
+  return metricKey === "ROLLING_SHARPE" || metricKey === "ROLLING_INFORMATION_RATIO";
+}
+
+function isRollingRatioUnstable(value: number | null | undefined) {
+  return typeof value === "number" && Math.abs(value) >= 25;
+}
+
+function orderRollingMetricKeys(metricKeys: string[]) {
+  const priority = [
+    "ROLLING_VOLATILITY",
+    "ROLLING_TRACKING_ERROR",
+    "ROLLING_BETA",
+    "ROLLING_MAX_DRAWDOWN",
+    "ROLLING_SHARPE",
+    "ROLLING_INFORMATION_RATIO",
+  ];
+  return [...metricKeys].sort((left, right) => {
+    const leftIndex = priority.indexOf(left);
+    const rightIndex = priority.indexOf(right);
+    if (leftIndex === -1 && rightIndex === -1) {
+      return left.localeCompare(right);
+    }
+    if (leftIndex === -1) {
+      return 1;
+    }
+    if (rightIndex === -1) {
+      return -1;
+    }
+    return leftIndex - rightIndex;
+  });
+}
+
+function shouldDisplayRollingMetricRow(metricLabel: string, latestValue: string) {
+  if ((metricLabel === "Sharpe" || metricLabel === "Information Ratio") && latestValue === "Unstable") {
+    return false;
+  }
+  return true;
+}
+
+function normalizeAttributionGroupLabel(label: string) {
+  return label === "UNKNOWN" ? "Unclassified" : label;
 }
 
 function resolveAttributionState({

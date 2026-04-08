@@ -553,6 +553,17 @@ export type WorkbenchRiskSummaryResponse = {
       label: string;
       start_date: string;
       end_date: string;
+      portfolio_observation_count?: number | null;
+      benchmark_observation_count?: number | null;
+      aligned_benchmark_observation_count?: number | null;
+      benchmark_context?: {
+        requested: boolean;
+        available: boolean;
+        aligned: boolean;
+        reason: string;
+        requested_metric_count?: number | null;
+        requested_metrics?: string[] | null;
+      } | null;
       metrics: WorkbenchRiskMetric[];
     }>;
   } | null;
@@ -577,7 +588,7 @@ export type WorkbenchRiskConcentrationResponse = {
   source_service: "lotus-risk";
   state: WorkbenchRiskModuleState;
   payload: {
-    risk_proxy: {
+    portfolio_concentration: {
       hhi_current: number;
       hhi_proposed: number;
       hhi_delta: number;
@@ -590,6 +601,16 @@ export type WorkbenchRiskConcentrationResponse = {
       top_n_cumulative_weight_proposed: number;
       top_n_cumulative_weight_delta: number;
       top_n: number;
+      top_position_current: {
+        security_id?: string | null;
+        security_name?: string | null;
+        weight: number;
+      };
+      top_position_proposed: {
+        security_id?: string | null;
+        security_name?: string | null;
+        weight: number;
+      };
     };
     issuer_concentration: {
       hhi_current: number;
@@ -603,10 +624,39 @@ export type WorkbenchRiskConcentrationResponse = {
       covered_position_count_proposed: number;
       total_position_count_current: number;
       total_position_count_proposed: number;
+      uncovered_position_count_current: number;
+      uncovered_position_count_proposed: number;
+      coverage_ratio_current: number;
+      coverage_ratio_proposed: number;
       note?: string | null;
+      top_issuer_current: {
+        issuer_id?: string | null;
+        issuer_name?: string | null;
+        weight: number;
+      };
+      top_issuer_proposed: {
+        issuer_id?: string | null;
+        issuer_name?: string | null;
+        weight: number;
+      };
     };
-    valuation_context?: Record<string, unknown> | null;
-    risk_metadata?: Record<string, unknown> | null;
+    valuation_context?: {
+      portfolio_currency?: string | null;
+      reporting_currency?: string | null;
+      position_basis?: string | null;
+      weight_basis?: string | null;
+    } | null;
+    execution_context?: {
+      as_of_date?: string | null;
+      portfolio_id?: string | null;
+      simulation_session_id?: string | null;
+      simulation_session_version?: number | null;
+      session_expires_at?: string | null;
+      issuer_grouping_level: string;
+      enrichment_policy: string;
+      include_cash_positions?: boolean | null;
+      include_zero_quantity_positions?: boolean | null;
+    };
   } | null;
   supportability: WorkbenchRiskSupportabilityItem[];
   warnings: string[];
@@ -650,6 +700,11 @@ export type WorkbenchRiskRelativeDrawdownSummary = {
   max_drawdown: number | null;
   max_drawdown_peak_date?: string | null;
   max_drawdown_trough_date?: string | null;
+  max_drawdown_recovery_date?: string | null;
+  is_recovered?: boolean;
+  days_to_trough?: number | null;
+  days_to_recovery?: number | null;
+  time_under_water_days?: number | null;
 };
 
 export type WorkbenchRiskUnderwaterPoint = {
@@ -672,12 +727,30 @@ export type WorkbenchRiskDrawdownResponse = {
       label: string;
       start_date: string;
       end_date: string;
+      portfolio_observation_count?: number | null;
+      benchmark_observation_count?: number | null;
       summary: WorkbenchRiskDrawdownSummary | null;
       episodes: WorkbenchRiskDrawdownEpisode[];
       relative_to_benchmark?: WorkbenchRiskRelativeDrawdownSummary | null;
+      relative_to_benchmark_context?: {
+        requested: boolean;
+        applied: boolean;
+        reason: string;
+        aligned_observation_count?: number | null;
+      } | null;
       underwater_series?: WorkbenchRiskUnderwaterPoint[] | null;
       error?: string | null;
     }>;
+    analysis_context?: {
+      include_underwater_series?: boolean;
+      include_episode_list?: boolean;
+      top_n_episodes?: number | null;
+      cdar_alpha?: number | null;
+      minimum_episode_depth_bps?: number | null;
+      duration_unit?: string | null;
+      include_benchmark?: boolean;
+      missing_benchmark_policy?: string | null;
+    } | null;
   } | null;
   supportability: WorkbenchRiskSupportabilityItem[];
   warnings: string[];
@@ -691,6 +764,14 @@ export type WorkbenchRiskDrawdownResponse = {
 };
 
 export type WorkbenchRiskRollingMetricSummary = {
+  total_point_count?: number | null;
+  computed_point_count?: number | null;
+  coverage_ratio?: number | null;
+  min_observations_required?: number | null;
+  warmup_point_count?: number | null;
+  non_computed_point_count?: number | null;
+  post_warmup_gap_point_count?: number | null;
+  latest_observation_date?: string | null;
   latest: number | null;
   average: number | null;
   minimum: number | null;
@@ -709,6 +790,12 @@ export type WorkbenchRiskRollingWindowResult = {
   window_length: number;
   metric_summaries: Record<string, WorkbenchRiskRollingMetricSummary>;
   metric_series?: WorkbenchRiskRollingMetricSeriesPoint[] | null;
+  metric_series_context?: {
+    requested: boolean;
+    included: boolean;
+    emitted_point_count?: number | null;
+    reason?: string | null;
+  } | null;
 };
 
 export type WorkbenchRiskRollingResponse = {
@@ -727,10 +814,47 @@ export type WorkbenchRiskRollingResponse = {
       start_date: string;
       end_date: string;
       series_count: number;
+      benchmark_series_count?: number | null;
+      aligned_benchmark_series_count?: number | null;
+      risk_free_series_count?: number | null;
+      aligned_risk_free_series_count?: number | null;
+      window_lengths_requested?: number[] | null;
+      window_count_requested?: number | null;
+      window_lengths_emitted?: number[] | null;
+      window_count_emitted?: number | null;
+      benchmark_context?: {
+        requested: boolean;
+        available: boolean;
+        aligned: boolean;
+        reason: string;
+      } | null;
+      risk_free_context?: {
+        requested: boolean;
+        available: boolean;
+        aligned: boolean;
+        reason: string;
+      } | null;
       window_results: WorkbenchRiskRollingWindowResult[];
       quality_flags: string[];
       error?: string | null;
     }>;
+    request_context?: {
+      annualization_basis?: number | null;
+      alignment_policy?: string | null;
+      min_observations_policy?: string | null;
+      include_time_series?: boolean;
+      requested_metrics?: string[] | null;
+      benchmark_context?: {
+        requested: boolean;
+        requested_metrics?: string[] | null;
+      } | null;
+      risk_free_context?: {
+        requested: boolean;
+        requested_metrics?: string[] | null;
+      } | null;
+      window_lengths_requested?: number[] | null;
+      window_count_requested?: number | null;
+    } | null;
   } | null;
   supportability: WorkbenchRiskSupportabilityItem[];
   warnings: string[];
@@ -806,6 +930,17 @@ export type WorkbenchRiskAttributionResponse = {
   payload: {
     controls: WorkbenchRiskAttributionControls;
     periods: WorkbenchRiskAttributionPeriodResult[];
+    methodology_context?: {
+      covariance_method?: string | null;
+      annualization_basis?: number | null;
+      requested_attribution_types?: string[] | null;
+      requested_metrics?: string[] | null;
+      requested_grouping_dimensions?: string[] | null;
+      min_observations_policy?: string | null;
+      stateful_active_risk_supported_grouping_dimensions?: string[] | null;
+      stateful_active_risk_gated_grouping_dimensions?: string[] | null;
+      stateful_active_risk_gate_reason?: string | null;
+    } | null;
   } | null;
   supportability: WorkbenchRiskSupportabilityItem[];
   warnings: string[];

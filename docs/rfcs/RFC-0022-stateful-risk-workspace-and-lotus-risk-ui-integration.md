@@ -11,6 +11,8 @@
   - lotus-gateway maintainers
   - lotus-risk maintainers
   - lotus-platform maintainers
+- Extends:
+  - RFC-0021: UI Architecture Hardening and Design-System Governance
 
 ## Summary
 
@@ -61,7 +63,10 @@ Approval should be treated as approval for these hard decisions:
 4. The old Gateway `/analytics/workbench/risk-proxy` integration is removed, not wrapped.
 5. `ACTIVE_RISK` attribution is available only where upstream support exists; `ISSUER` remains
    explicitly blocked.
-6. Each risk module is delivered as an independently testable slice using RFC-0021 shared primitives.
+6. Each risk module is delivered as an independently testable slice using RFC-0021 shared
+   primitives.
+7. UI quality is not treated as local polish; it must stay aligned with the shared Workbench UI
+   system and validated backend behavior.
 
 Approval should not be treated as approval for:
 
@@ -70,6 +75,22 @@ Approval should not be treated as approval for:
 3. stateless request builders or user-uploaded return series in Workbench,
 4. fixture-only risk panels that remain after live Gateway contracts exist,
 5. speculative charting or decorative visuals without advisor decision value.
+
+## Scope Clarification
+
+This RFC is:
+
+1. a cross-repo integration RFC,
+2. a front-office risk workflow RFC,
+3. a Gateway contract RFC,
+4. a staged production-hardening RFC for the Risk workspace.
+
+This RFC is not:
+
+1. a decorative dashboard RFC,
+2. a mandate to rebuild unrelated Workbench screens inside the same implementation slice,
+3. a license to weaken RFC-0021 shared-system governance,
+4. a permission slip to add UI states before domain support exists.
 
 ## Why This RFC Is Needed
 
@@ -213,6 +234,20 @@ Allowed execution modes by panel:
 | Rolling Risk | stateful | Risk-free and benchmark-dependent metrics are supportability-gated. |
 | Concentration | stateful by default; simulation when sandbox session exists | Simulation is allowed only for concentration because `lotus-risk` supports it. |
 | Historical Risk Attribution | stateful | `TOTAL_RISK` is available across supported groupings; `ACTIVE_RISK` is available for `POSITION`, `SECTOR`, and `ASSET_CLASS`, while `ISSUER` remains blocked. |
+
+## Hard Implementation Rules
+
+The following rules are mandatory for implementation:
+
+1. validate `lotus-risk` and `lotus-gateway` against each other before or during every risk UI
+   slice,
+2. check units, scaling, nullability, and blocked-state semantics rather than assuming the mapping
+   is correct,
+3. keep heavy detail opt-in and lazy-loaded,
+4. keep Workbench presentation logic separate from Gateway request shaping and domain computation,
+5. do not fabricate supportability or benchmark-relative states in the browser,
+6. update docs and tests in the same slice whenever a contract, behavior, or interaction model
+   changes.
 
 ## Architectural Principles
 
@@ -1213,6 +1248,63 @@ Slice 10 evidence:
    `workbench.dev.lotus`; the environment returned `404` and `502`, so slice closure relies on the
    green contract, integration, lint, and typecheck evidence rather than a healthy local stack
    probe.
+
+## Carry-Forward Gate Before Further Risk Implementation
+
+RFC-0022 is implemented, but one additional governance-grade audit is still required before the
+next major risk hardening wave should be treated as complete.
+
+That audit belongs here because the Risk workspace now depends directly on RFC-0021 shared-system
+quality, not just on domain integration correctness.
+
+### Carry-Forward Slice: Whole-Workbench UI coherence audit and shared-system conformance
+
+Outcome:
+
+1. audit the entire Workbench UI against the shared system established in RFC-0021,
+2. identify every place where typography, spacing, table styling, navigation patterns, badges,
+   metrics, and status treatments still diverge,
+3. refactor remaining inconsistencies so the product feels like one coherent platform rather than
+   multiple individually styled screens,
+4. ensure the Risk workspace is not hardened in isolation while the surrounding product still
+   exhibits visible system drift.
+
+Implementation work:
+
+1. inventory all major surfaces, including `Portfolio`, `Performance`, `Advisor Brief`, shell
+   navigation, evidence/supportability surfaces, and any remaining legacy screens still in active
+   use,
+2. record every divergence from the shared system in a durable audit ledger,
+3. classify each divergence by domain:
+   - typography
+   - spacing
+   - table styling
+   - navigation patterns
+   - badges and semantic states
+   - metric presentation
+   - status and supportability treatment
+4. refactor remaining inconsistencies onto shared primitives, tokens, and composition rules,
+5. add or strengthen regression tests so migrated patterns cannot silently drift back,
+6. update documentation so future Workbench slices inherit the corrected system behavior by default.
+
+Tests:
+
+1. targeted component and integration tests proving migrated screens now consume shared primitives,
+2. regression tests for table density, numeric alignment, and semantic status display where logic
+   exists,
+3. navigation and badge-state tests where route-level drift previously existed,
+4. architecture and grep guards where necessary to prevent reintroduction of route-local variants.
+
+Acceptance:
+
+1. the repo has a complete audit inventory of remaining shared-system drift,
+2. typography, spacing, tables, navigation, badges, metrics, and status treatments are materially
+   more consistent across the full Workbench product,
+3. the Risk workspace no longer feels like a high-quality island inside a partially inconsistent
+   product,
+4. contributors can identify the shared-system source of truth without guessing between route-level
+   variants,
+5. the product reads as one coherent platform rather than multiple individually styled screens.
 
 ## UI Quality Bar
 

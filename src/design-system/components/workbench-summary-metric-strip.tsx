@@ -1,4 +1,5 @@
 import { cx } from "../utils/cx";
+import Tooltip from "@mui/material/Tooltip";
 import Text from "./text";
 
 export type WorkbenchSummaryMetricStripItem = {
@@ -6,6 +7,7 @@ export type WorkbenchSummaryMetricStripItem = {
   label: React.ReactNode;
   value: React.ReactNode;
   support?: React.ReactNode;
+  definition?: React.ReactNode;
   unavailable?: boolean;
   className?: string;
 };
@@ -26,29 +28,42 @@ export default function WorkbenchSummaryMetricStrip({
       className={cx("workbench-summary-metric-strip", className)}
       aria-label={ariaLabel}
     >
-      {items.map((item, index) => (
-        <div
-          key={item.key ?? `${String(item.label)}-${index}`}
-          className={cx(
-            "workbench-summary-metric-card",
-            item.unavailable && "workbench-summary-metric-card-unavailable",
-            itemClassName,
-            item.className
-          )}
-        >
-          <Text variant="label" className="workbench-summary-metric-label">
-            {item.label}
-          </Text>
-          <Text variant="metricValueCompact" className="workbench-summary-metric-value">
-            {item.value}
-          </Text>
-          {item.support ? (
-            <Text variant="metadata" className="workbench-summary-metric-support">
-              {item.support}
+      {items.map((item, index) => {
+        const card = (
+          <div
+            key={item.key ?? `${String(item.label)}-${index}`}
+            className={cx(
+              "workbench-summary-metric-card",
+              item.unavailable && "workbench-summary-metric-card-unavailable",
+              itemClassName,
+              item.className
+            )}
+            title={typeof item.definition === "string" ? item.definition : undefined}
+          >
+            <Text variant="label" className="workbench-summary-metric-label">
+              {item.label}
             </Text>
-          ) : null}
-        </div>
-      ))}
+            <Text variant="metricValueCompact" className="workbench-summary-metric-value">
+              {item.value}
+            </Text>
+            {item.support ? (
+              <Text variant="metadata" className="workbench-summary-metric-support">
+                {item.support}
+              </Text>
+            ) : null}
+          </div>
+        );
+
+        if (!item.definition) {
+          return card;
+        }
+
+        return (
+          <Tooltip key={item.key ?? `${String(item.label)}-${index}`} title={item.definition} arrow>
+            <span>{card}</span>
+          </Tooltip>
+        );
+      })}
     </div>
   );
 }

@@ -521,17 +521,18 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "Risk" }));
 
     expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
-    expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+    expect(screen.getByRole("heading", { name: "Risk" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
       "Technology"
     );
-    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
-    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
-      "Issuer Coverage"
+    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Typical");
+    expect(screen.getByLabelText("Risk concentration indicator strip")).toHaveTextContent(
+      "Portfolio Concentration Index"
     );
-    expect(screen.getByLabelText("Risk support rail")).toHaveTextContent("Risk-free series");
+    expect(screen.queryByLabelText("Risk concentration diagnostic table")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk support rail")).not.toBeInTheDocument();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(
@@ -563,7 +564,7 @@ describe("PerformanceAnalyticsPage", () => {
       fetchMock.mock.calls.some(([input]) => input.toString().includes("lotus-risk"))
     ).toBe(false);
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
@@ -577,6 +578,7 @@ describe("PerformanceAnalyticsPage", () => {
           )
       )
     ).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Close Rolling series detail" }));
 
     fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
     await waitFor(() => {

@@ -1,157 +1,58 @@
-import { useEffect, useState } from "react";
-
-import {
-  AnalyticsTable,
-  DisclosureToggleButton,
-  ScreenStatePanel,
-  SectionBlock,
-  WorkbenchSegmentedControl,
-  WorkbenchStatusRow,
-  WorkbenchSummaryMetricStrip,
-} from "@/design-system";
-
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskModuleShell from "./risk-module-shell";
+import RiskPanelUtilityRow from "./risk-panel-utility-row";
+import RiskRollingHeadlineMetrics from "./risk-rolling-headline-metrics";
+import RiskRollingWindowDetail from "./risk-rolling-window-detail";
+import { riskRollingPanelCopy } from "./risk-secondary-copy";
 
 type RiskRollingPanelProps = {
   viewModel: PerformanceRiskViewModel;
-  rollingExpanded: boolean;
-  onToggleRolling: () => void;
+  selectedWindowKey: string;
+  onWindowChange: (value: string) => void;
+  onViewSeries: (selectedWindowKey: string) => void;
 };
 
 export default function RiskRollingPanel({
   viewModel,
-  rollingExpanded,
-  onToggleRolling,
+  selectedWindowKey,
+  onWindowChange,
+  onViewSeries,
 }: RiskRollingPanelProps) {
   const defaultWindowKey = viewModel.rollingWindows[0]?.key ?? "";
-  const [selectedWindowKey, setSelectedWindowKey] = useState(defaultWindowKey);
-
-  useEffect(() => {
-    setSelectedWindowKey(defaultWindowKey);
-  }, [defaultWindowKey]);
+  const resolvedSelectedWindowKey =
+    viewModel.rollingWindows.find((window) => window.key === selectedWindowKey)?.key ??
+    defaultWindowKey;
 
   const selectedWindow =
-    viewModel.rollingWindows.find((window) => window.key === selectedWindowKey) ??
+    viewModel.rollingWindows.find((window) => window.key === resolvedSelectedWindowKey) ??
     viewModel.rollingWindows[0] ??
     null;
 
   return (
-    <SectionBlock
-      title="Rolling Risk"
-      subtitle="Windowed risk behavior for realized volatility, drawdown pressure, and benchmark-relative drift."
-      className="performance-risk-panel performance-risk-rolling-panel"
+    <RiskModuleShell
+      title={riskRollingPanelCopy.title}
+      priority="secondary"
+      density="compact"
+      className="performance-risk-rolling-panel"
       actions={
-        <DisclosureToggleButton
-          expanded={rollingExpanded}
-          onToggle={onToggleRolling}
-          expandedToggleLabel="Collapse rolling series"
-          collapsedToggleLabel="Expand rolling series"
+        <RiskPanelUtilityRow
+          panelTitle={riskRollingPanelCopy.methodologyPanelTitle}
+          methodologyRows={viewModel.rollingContextRows}
+          drilldownAction={{
+            label: riskRollingPanelCopy.drilldownLabel,
+            onClick: () => onViewSeries(selectedWindow?.key ?? resolvedSelectedWindowKey),
+          }}
         />
       }
-    >
-      {viewModel.rollingWindows.length > 1 ? (
-        <WorkbenchSegmentedControl
-          value={selectedWindow?.key ?? defaultWindowKey}
-          onChange={setSelectedWindowKey}
-          options={viewModel.rollingWindows.map((window) => ({
-            key: window.key,
-            label: window.label,
-          }))}
-          ariaLabel="Rolling risk windows"
-          className="performance-risk-window-toolbar"
+      headlineMetrics={<RiskRollingHeadlineMetrics window={selectedWindow} showMetadata={false} />}
+      detail={
+        <RiskRollingWindowDetail
+          viewModel={viewModel}
+          selectedWindow={selectedWindow}
+          selectedWindowKey={resolvedSelectedWindowKey}
+          onWindowChange={onWindowChange}
         />
-      ) : null}
-      <WorkbenchSummaryMetricStrip
-        ariaLabel="Rolling risk headline metrics"
-        className="performance-risk-metric-strip"
-        items={(selectedWindow?.headlineMetrics ?? []).map((metric) => ({
-          key: metric.key,
-          label: metric.label,
-          value: metric.value,
-          support: metric.support,
-          unavailable: metric.state === "unavailable",
-        }))}
-      />
-      {viewModel.rollingQualityFlags.length ? (
-        <WorkbenchStatusRow
-          label="Rolling quality flags"
-          className="performance-risk-quality-flags"
-          items={viewModel.rollingQualityFlags.map((flag) => ({
-            value: flag,
-            tone: "warn" as const,
-          }))}
-        />
-      ) : null}
-      <AnalyticsTable
-        ariaLabel="Rolling risk summary table"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "metric", label: "Metric" },
-          { key: "latest", label: "Latest", align: "right" },
-          { key: "average", label: "Average", align: "right" },
-          { key: "p05", label: "P05", align: "right" },
-          { key: "p95", label: "P95", align: "right" },
-          { key: "support", label: "Interpretation" },
-        ]}
-        rows={(selectedWindow?.summaryRows ?? []).map((row) => ({
-          key: row.key,
-          cells: [row.metric, row.latest, row.average, row.p05, row.p95, row.support],
-        }))}
-        emptyState={{
-          title: "No rolling risk metrics",
-          body: "Rolling risk windows are not available for this portfolio context.",
-        }}
-      />
-      {rollingExpanded ? (
-        <div className="performance-risk-rolling-detail" aria-label="Rolling series detail">
-          {viewModel.rollingDetailState === "loading" ? (
-            <ScreenStatePanel
-              kind="loading"
-              title="Loading rolling series"
-              body="Fetching time-series risk detail for the selected rolling window."
-              surface="analysis"
-              rows={2}
-            />
-          ) : viewModel.rollingDetailState === "unavailable" ? (
-            <ScreenStatePanel
-              kind="unavailable"
-              title="Rolling series unavailable"
-              body="Time-series rolling detail is not available for the selected portfolio context."
-              surface="analysis"
-            />
-          ) : (
-            <AnalyticsTable
-              ariaLabel="Rolling risk series table"
-              variant="analysis"
-              density="compact"
-              columns={[
-                { key: "date", label: "Date" },
-                ...((selectedWindow?.seriesMetricKeys ?? []).map((metricKey) => ({
-                  key: metricKey,
-                  label:
-                    selectedWindow?.summaryRows.find((row) => row.key.endsWith(metricKey))?.metric ??
-                    metricKey,
-                  align: "right" as const,
-                })) ?? []),
-              ]}
-              rows={(selectedWindow?.seriesRows ?? []).map((row) => ({
-                key: row.key,
-                cells: [
-                  row.date,
-                  ...(selectedWindow?.seriesMetricKeys.map(
-                    (metricKey) => row.values[metricKey] ?? "N/A"
-                  ) ?? []),
-                ],
-              }))}
-              emptyState={{
-                title: "No rolling series",
-                body: "Rolling series detail has not been returned for this window.",
-              }}
-            />
-          )}
-        </div>
-      ) : null}
-    </SectionBlock>
+      }
+    />
   );
 }
