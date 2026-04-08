@@ -46,6 +46,9 @@ describe("RiskSnapshotPanel", () => {
       container.querySelectorAll(".performance-risk-snapshot-headline-grid .ui-text-label")
     ).map((node) => node.textContent?.trim());
     expect(headlineLabels).toEqual(["Volatility", "Sharpe", "Beta", "Tracking Error"]);
+    expect(
+      screen.queryByText("Overall realised risk level of the portfolio over the selected period.")
+    ).not.toBeInTheDocument();
 
     const supportingSection = screen
       .getByRole("heading", { name: "Supporting risk measures" })
@@ -59,9 +62,14 @@ describe("RiskSnapshotPanel", () => {
     expect(within(supportingSection as HTMLElement).getByText("Sortino")).toBeInTheDocument();
     expect(within(supportingSection as HTMLElement).getByText("Value at Risk")).toBeInTheDocument();
     expect(
-      within(supportingSection as HTMLElement).getByText(
+      within(supportingSection as HTMLElement).queryByText(
         "Efficiency of active risk taken versus the benchmark."
       )
+    ).not.toBeInTheDocument();
+    expect(
+      within(supportingSection as HTMLElement).getByRole("button", {
+        name: "Information Ratio: Active return earned per unit of tracking error.",
+      })
     ).toBeInTheDocument();
   });
 
@@ -89,9 +97,6 @@ describe("RiskSnapshotPanel", () => {
 
     expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getAllByText("N/A").length).toBeGreaterThanOrEqual(2);
-    expect(
-      screen.getAllByText("Benchmark-relative risk requires benchmark context.").length
-    ).toBeGreaterThanOrEqual(2);
     fireEvent.click(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" }));
     expect(
       screen.getByRole("dialog", { name: "Risk Snapshot methodology and coverage" })

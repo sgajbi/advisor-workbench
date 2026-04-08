@@ -28,6 +28,7 @@ export default function RiskConcentrationIndicatorStrip({
               "performance-risk-concentration-indicator-tile",
               "performance-risk-concentration-indicator-card",
             ].join(" ")}
+            displaySupport={false}
             ariaLabel={`${indicator.label}: ${indicator.value}. ${indicator.support}. ${indicator.definition}`}
             title={indicator.definition}
           />

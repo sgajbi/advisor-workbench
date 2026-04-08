@@ -33,6 +33,12 @@ describe("RiskConcentrationPanel", () => {
         ".performance-risk-concentration-indicator-grid .performance-risk-metric-card-compact"
       )
     ).toHaveLength(5);
+    expect(screen.queryByText("Position-level concentration across the live book")).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", {
+        name: "Portfolio Concentration Index: Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
+      }).length
+    ).toBeGreaterThan(0);
     const scaleSection = screen
       .getByRole("heading", { name: "Concentration scale" })
       .closest(".performance-risk-detail-section");

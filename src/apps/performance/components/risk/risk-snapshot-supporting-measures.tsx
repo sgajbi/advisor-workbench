@@ -28,8 +28,10 @@ export default function RiskSnapshotSupportingMeasures({
             label={metric.label}
             value={metric.value}
             support={metric.support}
+            definition={metric.definition}
             density="compact"
             className="performance-risk-secondary-metric"
+            displaySupport={false}
           />
         ))}
       </div>

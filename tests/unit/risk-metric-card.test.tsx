@@ -66,4 +66,23 @@ describe("RiskMetricCard", () => {
     expect(screen.queryByText("Overall realised risk level of the portfolio over the selected period.")).not.toBeInTheDocument();
     expect(screen.getByText("Typical 4.07% • Range 0.00% to 12.17%")).toBeInTheDocument();
   });
+
+  it("preserves the hover definition when inline support copy is hidden", () => {
+    render(
+      <RiskMetricCard
+        label="Sharpe"
+        value="2.51"
+        support="Return earned for each unit of total risk taken."
+        definition="Risk-adjusted return based on excess return per unit of realised volatility."
+        displaySupport={false}
+      />
+    );
+
+    expect(screen.queryByText("Return earned for each unit of total risk taken.")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Sharpe: Risk-adjusted return based on excess return per unit of realised volatility.",
+      })
+    ).toBeInTheDocument();
+  });
 });

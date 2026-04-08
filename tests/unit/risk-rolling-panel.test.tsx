@@ -77,6 +77,12 @@ describe("RiskRollingPanel", () => {
       screen.queryByText("Benchmark-relative review is limited in one emitted window")
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Typical 4\.07%/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Below typical and still contained")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Volatility: Observed variability of portfolio returns over the selected rolling window.",
+      })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Rolling Risk methodology and coverage" })
     ).toBeInTheDocument();

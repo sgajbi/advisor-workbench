@@ -78,9 +78,14 @@ describe("RiskDrawdownPanel", () => {
     ).toBeTruthy();
     expect(within(supportingSection as HTMLElement).getByText("Ulcer Index")).toBeInTheDocument();
     expect(
-      within(supportingSection as HTMLElement).getByText(
+      within(supportingSection as HTMLElement).queryByText(
         "Shows how persistent and painful the underwater path was, not just how deep it got."
       )
+    ).not.toBeInTheDocument();
+    expect(
+      within(supportingSection as HTMLElement).getByRole("button", {
+        name: "Ulcer Index: Path-sensitive drawdown measure that reflects both drawdown depth and time spent underwater.",
+      })
     ).toBeInTheDocument();
 
     const episodeSection = screen
@@ -109,9 +114,6 @@ describe("RiskDrawdownPanel", () => {
 
     expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
     expect(within(headlineMetrics).getByText("N/A")).toBeInTheDocument();
-    expect(
-      within(headlineMetrics).getByText("Benchmark-relative drawdown requires benchmark context.")
-    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Drawdown methodology and coverage" }));
 

@@ -16,6 +16,7 @@ export default function RiskSnapshotHeadlineMetrics({
       metrics={metrics}
       className="performance-risk-snapshot-headline-grid"
       itemClassName="performance-risk-snapshot-headline-card"
+      supportMode="hidden"
     />
   );
 }

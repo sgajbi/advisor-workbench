@@ -30,6 +30,7 @@ export default function RiskRollingHeadlineMetrics({
       metrics={metrics}
       className="performance-risk-rolling-headline-grid"
       itemClassName="performance-risk-rolling-headline-card"
+      supportMode="hidden"
       metadataMode={showMetadata ? "full" : "hidden"}
     />
   );

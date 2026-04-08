@@ -16,6 +16,7 @@ export default function RiskDrawdownHeadlineMetrics({
       metrics={metrics}
       className="performance-risk-drawdown-headline-grid"
       itemClassName="performance-risk-drawdown-headline-card"
+      supportMode="hidden"
     />
   );
 }
