@@ -12,6 +12,7 @@ export default function RiskConcentrationDiagnosticsTable({
       ariaLabel="Risk concentration diagnostic table"
       variant="analysis"
       density="comfortable"
+      className="performance-risk-concentration-diagnostic-table"
       columns={[
         { key: "measure", label: "Measure" },
         { key: "reading", label: "Current Reading", align: "right" },

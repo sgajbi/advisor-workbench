@@ -262,7 +262,7 @@ describe("PerformanceRiskMode", () => {
       "Business reading"
     );
     expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
-      "Partial Coverage"
+      "Partial"
     );
     const concentrationMetricStrip = screen.getByLabelText("Risk concentration headline metrics");
     expect(

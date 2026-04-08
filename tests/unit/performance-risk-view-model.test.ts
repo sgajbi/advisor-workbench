@@ -45,10 +45,10 @@ describe("buildPerformanceRiskViewModel", () => {
     ]);
     expect(viewModel.concentrationExecutiveSummary).toMatchObject({
       heading: "Business reading",
-      postureLabel: "Partial Coverage",
+      postureLabel: "Partial",
     });
     expect(viewModel.concentrationDriverAnalysis[0]).toMatchObject({
-      title: "Largest current exposures",
+      eyebrow: "Largest current exposures",
     });
     expect(viewModel.concentrationScales[0]).toMatchObject({
       label: "Portfolio Concentration Index",

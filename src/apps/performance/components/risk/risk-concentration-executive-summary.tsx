@@ -21,10 +21,23 @@ export default function RiskConcentrationExecutiveSummary({
       aria-label="Risk concentration executive summary"
     >
       <div className="performance-risk-concentration-section-header">
-        <Text variant="cardTitle">Business reading</Text>
-        <SemanticBadge tone={POSTURE_TONE[summary.postureState]}>{summary.postureLabel}</SemanticBadge>
+        <Text variant="cardTitle" className="performance-risk-concentration-anchor-title">
+          {summary.heading}
+        </Text>
+        <SemanticBadge
+          tone={POSTURE_TONE[summary.postureState]}
+          emphasis="strong"
+          className="performance-risk-concentration-posture-badge"
+        >
+          {summary.postureLabel}
+        </SemanticBadge>
       </div>
-      <Text variant="body">{summary.summary}</Text>
+      <Text variant="metricValueCompact" className="performance-risk-concentration-briefing-headline">
+        {summary.businessReadingHeadline}
+      </Text>
+      <Text variant="secondary" className="performance-risk-concentration-briefing-detail">
+        {summary.businessReadingDetail}
+      </Text>
       {summary.actionCue ? (
         <Text variant="metadata" className="performance-risk-concentration-action-cue">
           Next: {summary.actionCue}

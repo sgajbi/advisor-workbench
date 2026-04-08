@@ -43,13 +43,14 @@ export type PerformanceRiskConcentrationExecutiveSummary = {
   heading: string;
   postureLabel: string;
   postureState: RiskConcentrationPostureState;
-  summary: string;
+  businessReadingHeadline: string;
+  businessReadingDetail: string;
   actionCue?: string | null;
 };
 
 export type PerformanceRiskConcentrationDriverAnalysisRow = {
   key: string;
-  title: string;
+  eyebrow: string;
   summary: string;
   supportingMetricLabel: string;
   supportingMetricValue: string;
@@ -1380,13 +1381,14 @@ function mapConcentrationExecutiveSummary(
     heading: "Business reading",
     postureLabel: posture.label,
     postureState: posture.state,
-    summary: `${posture.summary} ${driverSummary} ${issuerReliability}`,
+    businessReadingHeadline: posture.summary,
+    businessReadingDetail: `${driverSummary} ${issuerReliability}`,
     actionCue:
       posture.state === "partial"
-        ? "Review issuer coverage before relying on issuer-level concentration."
+        ? "Qualify issuer-level conclusions until coverage is complete."
         : posture.state === "high" || posture.state === "elevated"
           ? `Review ${topPositionName} (${topPositionWeight}) and ${topIssuerName} (${topIssuerWeight}) against diversification expectations.`
-          : "Compare the largest exposures with mandate diversification expectations.",
+          : "Compare the largest exposures with diversification expectations.",
   };
 }
 
@@ -1397,10 +1399,6 @@ function mapConcentrationDriverAnalysis(
   if (!payload) {
     return [];
   }
-  const topPositionName =
-    payload.single_position_concentration.top_position_current.security_name ?? "Largest holding";
-  const topIssuerName =
-    payload.issuer_concentration.top_issuer_current.issuer_name ?? "Largest issuer group";
   const topPositionWeight = formatRiskPercentValue(
     payload.single_position_concentration.top_position_weight_current
   );
@@ -1420,21 +1418,21 @@ function mapConcentrationDriverAnalysis(
   return [
     {
       key: "largest_current_exposures",
-      title: "Largest current exposures",
-      summary: `The largest single holding is ${topPositionWeight} in ${topPositionName}, and the largest issuer group is ${topIssuerWeight} in ${topIssuerName}.`,
+      eyebrow: "Largest current exposures",
+      summary: `The largest single holding is ${topPositionWeight}, and the largest issuer group is ${topIssuerWeight}, indicating concentration is driven by a small number of names.`,
       supportingMetricLabel: "Largest line items",
       supportingMetricValue: `${topPositionWeight} / ${topIssuerWeight}`,
     },
     {
       key: "concentration_breadth",
-      title: "Concentration breadth",
-      summary: `${topTenWeight} of the book sits in the largest ${payload.single_position_concentration.top_n} holdings. ${breadthSummary}`,
+      eyebrow: "Concentration breadth",
+      summary: `The top ${payload.single_position_concentration.top_n} holdings represent ${topTenWeight} of portfolio weight, indicating ${breadthSummary.toLowerCase()}`,
       supportingMetricLabel: `Top ${payload.single_position_concentration.top_n} weight`,
       supportingMetricValue: topTenWeight,
     },
     {
       key: "issuer_interpretation",
-      title: "Issuer interpretation",
+      eyebrow: "Issuer interpretation",
       summary: `${issuerCoverageSummary} Grouping is performed at ${formatEnumLabel(
         payload.execution_context?.issuer_grouping_level
       ) ?? "the configured issuer level"}.`,
@@ -1457,7 +1455,7 @@ function mapConcentrationScales(
       label: "Portfolio Concentration Index",
       value: formatNumber(payload.portfolio_concentration.hhi_current, { maximumFractionDigits: 0 }),
       interpretationBand: resolveConcentrationBand(payload.portfolio_concentration.hhi_current),
-      interpretation: "Position-level concentration is measured across the live book.",
+      interpretation: `Position-level concentration is ${resolveConcentrationBand(payload.portfolio_concentration.hhi_current).toLowerCase()} across the live book.`,
       markerPct: resolveConcentrationIndexMarker(payload.portfolio_concentration.hhi_current),
       definition:
         "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
@@ -1467,7 +1465,7 @@ function mapConcentrationScales(
       label: "Issuer Concentration Index",
       value: formatNumber(payload.issuer_concentration.hhi_current, { maximumFractionDigits: 0 }),
       interpretationBand: resolveConcentrationBand(payload.issuer_concentration.hhi_current),
-      interpretation: "Issuer-level concentration is measured after issuer grouping is applied.",
+      interpretation: `Issuer-level concentration remains ${resolveConcentrationBand(payload.issuer_concentration.hhi_current).toLowerCase()} after issuer grouping.`,
       markerPct: resolveConcentrationIndexMarker(payload.issuer_concentration.hhi_current),
       definition:
         "Concentration index after holdings are grouped at issuer level using the configured enrichment and grouping policy.",
@@ -1497,9 +1495,8 @@ function mapConcentrationContextRows(
       key: "grouping_level",
       label: "Grouping Level",
       value: formatEnumLabel(executionContext?.issuer_grouping_level) ?? "N/A",
-      definition:
-        "Issuer grouping level used to aggregate exposures for concentration review.",
-      support: "Aggregation level used to form issuer groups",
+      definition: "Issuer grouping level used to aggregate exposures for concentration review.",
+      support: "Aggregation level used for issuer groups",
     },
     {
       key: "enrichment_policy",
@@ -1521,9 +1518,7 @@ function mapConcentrationContextRows(
       label: "Reporting Currency",
       value: valuationContext?.reporting_currency ?? "N/A",
       definition: "Reporting currency used for the current concentration review.",
-      support: valuationContext?.portfolio_currency
-        ? `Portfolio currency ${valuationContext.portfolio_currency}`
-        : "Portfolio currency not returned",
+      support: valuationContext?.portfolio_currency ? "Portfolio currency" : "Portfolio currency",
     },
   ];
 }
@@ -1567,7 +1562,7 @@ function mapConcentrationDiagnosticRows(
       key: "largest_issuer_weight",
       measure: "Largest Issuer Weight",
       currentReading: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
-      interpretation: "Issuer grouping confirms the size of the largest issuer bucket.",
+      interpretation: "Largest issuer group remains material after issuer aggregation.",
     },
     {
       key: "top_10_weight",
@@ -1575,7 +1570,7 @@ function mapConcentrationDiagnosticRows(
       currentReading: formatRiskPercentValue(
         payload.single_position_concentration.top_n_cumulative_weight_current
       ),
-      interpretation: buildBreadthSummary(
+      interpretation: buildBreadthDiagnosticSummary(
         payload.single_position_concentration.top_n_cumulative_weight_current
       ),
     },
@@ -2093,15 +2088,28 @@ function buildDrawdownDateRange(summary: WorkbenchRiskDrawdownSummary) {
 
 function buildBreadthSummary(topNWeight: number) {
   if (topNWeight >= 0.9) {
-    return "The book is highly concentrated in a small number of names.";
+    return "limited diversification breadth.";
   }
   if (topNWeight >= 0.75) {
-    return "Concentration is elevated across the largest holdings.";
+    return "elevated breadth concentration.";
   }
   if (topNWeight >= 0.6) {
-    return "The largest holdings still account for a meaningful share of the book.";
+    return "the largest holdings still account for a meaningful share of the book.";
   }
-  return "Concentration is spread more broadly across the portfolio.";
+  return "diversification is broader across the portfolio.";
+}
+
+function buildBreadthDiagnosticSummary(topNWeight: number) {
+  if (topNWeight >= 0.9) {
+    return "Top holdings dominate portfolio weight and leave little diversification breadth.";
+  }
+  if (topNWeight >= 0.75) {
+    return "Top holdings represent an elevated share of portfolio weight.";
+  }
+  if (topNWeight >= 0.6) {
+    return "Top holdings remain meaningful but not dominant.";
+  }
+  return "Weight is spread more broadly across the portfolio.";
 }
 
 function resolveConcentrationBand(value: number) {
@@ -2147,10 +2155,10 @@ function buildConcentrationPostureModel(response: WorkbenchRiskConcentrationResp
   if (coverage < 0.99) {
     return {
       state: "partial" as const,
-      label: "Partial Coverage",
+      label: "Partial",
       principalDriver,
       summary:
-        "Concentration is visible, but issuer-level interpretation should be qualified because coverage is not complete.",
+        "Concentration is visible, but issuer interpretation is only partial.",
     };
   }
   if (topTen >= 0.9 || topPosition >= 0.2 || topIssuer >= 0.25) {
@@ -2158,7 +2166,7 @@ function buildConcentrationPostureModel(response: WorkbenchRiskConcentrationResp
       state: "high" as const,
       label: "High",
       principalDriver,
-      summary: `Concentration is high. ${portfolioBand} position concentration and ${issuerBand.toLowerCase()} issuer concentration are both visible in the current book.`,
+      summary: "Concentration is high and is driven by a small number of holdings.",
     };
   }
   if (topTen >= 0.75 || topPosition >= 0.15 || topIssuer >= 0.2) {
@@ -2166,7 +2174,10 @@ function buildConcentrationPostureModel(response: WorkbenchRiskConcentrationResp
       state: "elevated" as const,
       label: "Elevated",
       principalDriver,
-      summary: `Concentration is elevated and is driven by a limited number of holdings.`,
+      summary:
+        portfolioBand === "Elevated" && issuerBand === "Elevated"
+          ? "Both position and issuer concentration are materially elevated."
+          : "Concentration is elevated and is driven by a limited number of holdings.",
     };
   }
   if (topTen >= 0.6) {
@@ -2174,7 +2185,7 @@ function buildConcentrationPostureModel(response: WorkbenchRiskConcentrationResp
       state: "moderate" as const,
       label: "Moderate",
       principalDriver,
-      summary: "Concentration is moderate and should be reviewed alongside mandate diversification expectations.",
+      summary: "Concentration is moderate and should be reviewed against diversification expectations.",
     };
   }
   return {

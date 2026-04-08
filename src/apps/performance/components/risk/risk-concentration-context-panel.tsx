@@ -21,9 +21,13 @@ export default function RiskConcentrationContextPanel({
           <div key={row.key} className="performance-risk-concentration-context-row">
             <div className="performance-risk-concentration-context-copy">
               <RiskConcentrationTermLabel label={row.label} definition={row.definition} />
-              <Text variant="metadata">{row.support}</Text>
+              <Text variant="metadata" className="performance-risk-concentration-context-support">
+                {row.support}
+              </Text>
             </div>
-            <Text variant="metricValueCompact">{row.value}</Text>
+            <Text variant="metricValueCompact" className="performance-risk-concentration-context-value">
+              {row.value}
+            </Text>
           </div>
         ))}
       </div>

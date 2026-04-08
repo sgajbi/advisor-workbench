@@ -5237,11 +5237,39 @@ a:hover {
   background: rgba(255, 255, 255, 0.96);
 }
 
+.performance-risk-concentration-executive {
+  gap: 0.7rem;
+  border-color: rgba(51, 65, 85, 0.16);
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(255, 255, 255, 0.98) 26%),
+    rgba(255, 255, 255, 0.98);
+}
+
 .performance-risk-concentration-section-header {
   display: flex;
   align-items: start;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.performance-risk-concentration-anchor-title {
+  color: var(--brand-strong);
+}
+
+.performance-risk-concentration-posture-badge {
+  align-self: start;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+}
+
+.performance-risk-concentration-briefing-headline {
+  color: var(--brand-strong);
+  line-height: 1.25;
+}
+
+.performance-risk-concentration-briefing-detail {
+  color: var(--text-muted);
+  line-height: 1.45;
 }
 
 .performance-risk-concentration-action-cue {
@@ -5252,6 +5280,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .performance-risk-term-trigger {
@@ -5268,11 +5297,20 @@ a:hover {
   font-size: 0.68rem;
   line-height: 1;
   cursor: help;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.performance-risk-term-trigger:hover,
+.performance-risk-term-trigger:focus-visible {
+  border-color: rgba(51, 65, 85, 0.34);
+  color: var(--brand-strong);
+  background: rgba(241, 245, 249, 0.98);
+  outline: none;
 }
 
 .performance-risk-concentration-driver-list {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.8rem;
 }
 
 .performance-risk-concentration-driver-row {
@@ -5280,7 +5318,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: start;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.8rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
 
@@ -5295,20 +5333,39 @@ a:hover {
   gap: 0.2rem;
 }
 
+.performance-risk-concentration-driver-eyebrow {
+  color: var(--text-muted);
+}
+
+.performance-risk-concentration-driver-summary {
+  color: var(--brand-strong);
+  line-height: 1.45;
+}
+
 .performance-risk-concentration-driver-metric {
   min-width: 140px;
   justify-items: end;
   text-align: right;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.performance-risk-concentration-driver-metric-label {
+  color: var(--text-muted);
+}
+
+.performance-risk-concentration-driver-metric-value {
+  color: var(--brand-strong);
 }
 
 .performance-risk-concentration-scale-list {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.95rem;
 }
 
 .performance-risk-concentration-scale-card {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 .performance-risk-concentration-scale-header {
@@ -5322,9 +5379,10 @@ a:hover {
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  height: 0.6rem;
+  height: 0.65rem;
   overflow: hidden;
   border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .performance-risk-concentration-scale-band {
@@ -5332,28 +5390,30 @@ a:hover {
 }
 
 .performance-risk-concentration-scale-band-diversified {
-  background: rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.06);
 }
 
 .performance-risk-concentration-scale-band-moderate {
-  background: rgba(51, 65, 85, 0.12);
+  background: rgba(51, 65, 85, 0.1);
 }
 
 .performance-risk-concentration-scale-band-elevated {
-  background: rgba(71, 85, 105, 0.18);
+  background: rgba(71, 85, 105, 0.15);
 }
 
 .performance-risk-concentration-scale-band-high {
-  background: rgba(30, 41, 59, 0.26);
+  background: rgba(30, 41, 59, 0.22);
 }
 
 .performance-risk-concentration-scale-marker {
   position: absolute;
-  top: -0.12rem;
-  width: 2px;
-  height: 0.84rem;
+  top: -0.18rem;
+  width: 3px;
+  height: 1rem;
   background: rgba(15, 23, 42, 0.9);
   transform: translateX(-50%);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
 }
 
 .performance-risk-concentration-scale-legend {
@@ -5362,9 +5422,14 @@ a:hover {
   gap: 0.5rem;
 }
 
+.performance-risk-concentration-scale-reading {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .performance-risk-concentration-context-list {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.6rem;
 }
 
 .performance-risk-concentration-context-row {
@@ -5372,7 +5437,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.9rem;
   align-items: start;
-  padding-bottom: 0.7rem;
+  padding-bottom: 0.6rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
 
@@ -5384,6 +5449,33 @@ a:hover {
 .performance-risk-concentration-context-copy {
   display: grid;
   gap: 0.2rem;
+}
+
+.performance-risk-concentration-context-support {
+  color: var(--text-muted);
+}
+
+.performance-risk-concentration-context-value {
+  color: var(--brand-strong);
+}
+
+.performance-risk-concentration-indicator-warn {
+  border-top: 2px solid rgba(180, 83, 9, 0.48);
+}
+
+.performance-risk-concentration-indicator-danger {
+  border-top: 2px solid rgba(153, 27, 27, 0.52);
+}
+
+.performance-risk-concentration-diagnostic-table .analytics-table-head-cell {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.performance-risk-concentration-diagnostic-table .analytics-table-body-cell {
+  font-size: 0.92rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .performance-risk-partial-failure-row {
@@ -5407,6 +5499,8 @@ a:hover {
   .performance-risk-concentration-driver-metric {
     justify-items: start;
     text-align: left;
+    padding-left: 0;
+    border-left: 0;
   }
 }
 

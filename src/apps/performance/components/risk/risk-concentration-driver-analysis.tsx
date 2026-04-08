@@ -19,12 +19,20 @@ export default function RiskConcentrationDriverAnalysis({
         {rows.map((row) => (
           <div key={row.key} className="performance-risk-concentration-driver-row">
             <div className="performance-risk-concentration-driver-copy">
-              <Text variant="label">{row.title}</Text>
-              <Text variant="body">{row.summary}</Text>
+              <Text variant="eyebrow" className="performance-risk-concentration-driver-eyebrow">
+                {row.eyebrow}
+              </Text>
+              <Text variant="body" className="performance-risk-concentration-driver-summary">
+                {row.summary}
+              </Text>
             </div>
             <div className="performance-risk-concentration-driver-metric">
-              <Text variant="metadata">{row.supportingMetricLabel}</Text>
-              <Text variant="metricValueCompact">{row.supportingMetricValue}</Text>
+              <Text variant="label" className="performance-risk-concentration-driver-metric-label">
+                {row.supportingMetricLabel}
+              </Text>
+              <Text variant="metricValueCompact" className="performance-risk-concentration-driver-metric-value">
+                {row.supportingMetricValue}
+              </Text>
             </div>
           </div>
         ))}

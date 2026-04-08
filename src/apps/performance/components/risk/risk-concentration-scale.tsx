@@ -36,8 +36,8 @@ export default function RiskConcentrationScale({
               <Text variant="metadata">Elevated</Text>
               <Text variant="metadata">High</Text>
             </div>
-            <Text variant="metadata">
-              {scale.interpretationBand}. {scale.interpretation}
+            <Text variant="secondary" className="performance-risk-concentration-scale-reading">
+              {scale.interpretation}
             </Text>
           </div>
         ))}

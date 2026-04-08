@@ -18,6 +18,12 @@ export default function RiskConcentrationIndicatorStrip({
           value: indicator.value,
           support: indicator.support,
           definition: indicator.definition,
+          className:
+            indicator.tone === "danger"
+              ? "performance-risk-concentration-indicator-danger"
+              : indicator.tone === "warn"
+                ? "performance-risk-concentration-indicator-warn"
+                : undefined,
         }))}
       />
     </section>
