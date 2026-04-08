@@ -5110,19 +5110,11 @@ a:hover {
   display: block;
 }
 
-.performance-risk-executive-grid,
-.performance-risk-matters,
-.performance-risk-secondary-group {
-  padding: 0.9rem 0.95rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.94);
-}
-
 .performance-risk-executive-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
+  padding: 0;
 }
 
 .performance-risk-executive-card-primary {
@@ -5171,12 +5163,7 @@ a:hover {
 .performance-risk-primary-group {
   display: grid;
   gap: 0.65rem;
-  padding: 0.82rem 0.88rem 0.88rem;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, rgba(248, 250, 252, 0.72) 0%, rgba(255, 255, 255, 0.98) 16%),
-    #ffffff;
+  padding: 0;
 }
 
 .performance-risk-primary-group-header {
@@ -5224,6 +5211,10 @@ a:hover {
 .performance-risk-secondary-group {
   display: grid;
   gap: 0.72rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .performance-risk-secondary-group-header {
