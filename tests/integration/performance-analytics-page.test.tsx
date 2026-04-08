@@ -567,7 +567,7 @@ describe("PerformanceAnalyticsPage", () => {
       fetchMock.mock.calls.some(([input]) => input.toString().includes("lotus-risk"))
     ).toBe(false);
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand rolling series" }));
+    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
@@ -581,6 +581,7 @@ describe("PerformanceAnalyticsPage", () => {
           )
       )
     ).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Close Rolling series detail" }));
 
     fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
     await waitFor(() => {
