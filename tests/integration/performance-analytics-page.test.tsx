@@ -522,16 +522,19 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
     expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
     expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
       "Technology"
     );
     expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
-    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
-      "Issuer Coverage"
-    );
-    expect(screen.getByLabelText("Risk support rail")).toHaveTextContent("Risk-free series");
+      expect(screen.getByLabelText("Risk concentration current-state cards")).toHaveTextContent(
+        "Portfolio HHI"
+      );
+      expect(screen.getByLabelText("Risk concentration coverage table")).toHaveTextContent(
+        "Coverage Current"
+      );
+    expect(screen.queryByLabelText("Risk support rail")).not.toBeInTheDocument();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(

@@ -37,10 +37,12 @@ describe("buildPerformanceRiskViewModel", () => {
       "Value at Risk",
     ]);
     expect(viewModel.concentrationMetrics.map((metric) => metric.label)).toEqual([
-      "HHI",
+      "Portfolio HHI",
+      "Issuer HHI",
       "Top Position",
       "Top Issuer",
-      "Issuer Coverage",
+      "Top 10",
+      "Coverage",
     ]);
     expect(viewModel.supportability.map((item) => item.key)).toEqual([
       "summary:portfolio_returns",
@@ -48,6 +50,8 @@ describe("buildPerformanceRiskViewModel", () => {
       "summary:risk_free_series",
       "concentration:portfolio_positions",
       "concentration:issuer_enrichment",
+      "concentration:issuer_grouping",
+      "concentration:valuation_basis",
       "attribution:portfolio_returns",
       "attribution:exposure_history",
       "attribution:benchmark_exposure_context",
@@ -59,6 +63,21 @@ describe("buildPerformanceRiskViewModel", () => {
       "rolling:risk_free_series",
       "rolling:rolling_time_series",
     ]);
+    expect(viewModel.concentrationComparisonRows[0]).toMatchObject({
+      metric: "Portfolio HHI",
+      current: "1,260",
+      proposed: "1,260",
+      delta: "0",
+    });
+    expect(viewModel.concentrationHasProposedChanges).toBe(false);
+    expect(viewModel.concentrationDriverRows[0]).toMatchObject({
+      lens: "Largest Position",
+      currentDriver: "PIMCO GIS Income Fund",
+    });
+    expect(viewModel.concentrationCoverageRows[0]).toMatchObject({
+      item: "Grouping Level",
+      value: "Ultimate Parent",
+    });
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Max Drawdown",
       "Time Under Water",
@@ -70,10 +89,6 @@ describe("buildPerformanceRiskViewModel", () => {
       episode: "DD_0001",
       depth: "-12.45%",
       status: "Open",
-    });
-    expect(viewModel.provenance).toContainEqual({
-      label: "Input Mode",
-      value: "Stateful only",
     });
     expect(viewModel.rollingWindows[0]).toMatchObject({
       label: "21D",

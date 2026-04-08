@@ -10,7 +10,7 @@ The Risk workspace is backed only by Gateway BFF routes over canonical `lotus-ri
 | Module | Gateway route | First paint behavior | Detail behavior |
 | --- | --- | --- | --- |
 | Risk Snapshot | `GET /api/v1/workbench/{portfolioId}/risk/summary` | loaded on first paint | no secondary detail fetch |
-| Concentration | `GET /api/v1/workbench/{portfolioId}/risk/concentration` | loaded on first paint | simulation deltas only with explicit `sessionId` |
+| Concentration | `GET /api/v1/workbench/{portfolioId}/risk/concentration` | loaded on first paint with portfolio HHI, issuer HHI, top-driver identities, current/proposed comparisons, and coverage controls | simulation deltas only with explicit `sessionId` |
 | Drawdown | `GET /api/v1/workbench/{portfolioId}/risk/drawdown` | summary and worst episodes on first paint | underwater series only when explicitly expanded |
 | Rolling Risk | `GET /api/v1/workbench/{portfolioId}/risk/rolling` | rolling summaries on first paint | time series only when explicitly expanded |
 | Historical Risk Attribution | `GET /api/v1/workbench/{portfolioId}/risk/attribution` | lazy-loaded after the shell renders | grouping and attribution selector changes refetch only the attribution module |
@@ -59,6 +59,37 @@ Every risk module returns explicit supportability items normalized to:
 4. `blocked`
 
 The UI must render the upstream reason text when a state is not `ready`.
+
+## Concentration contract posture
+
+The concentration workspace uses a Gateway-normalized contract rather than exposing upstream
+`lotus-risk` block names directly.
+
+Current payload blocks:
+
+1. `portfolio_concentration`
+   - portfolio-level HHI current / proposed / delta
+2. `single_position_concentration`
+   - top-position weights
+   - top-`n` cumulative weights
+   - named current / proposed top-position drivers
+3. `issuer_concentration`
+   - issuer HHI current / proposed / delta
+   - named current / proposed top-issuer drivers
+   - coverage ratios and uncovered counts
+4. `valuation_context`
+   - portfolio and reporting currency
+   - position / weight basis
+5. `execution_context`
+   - issuer grouping level
+   - enrichment policy
+   - cash / zero-quantity inclusion posture
+
+This gives the front office three explicit answers on first paint:
+
+1. how concentrated the live book is,
+2. which position and issuer are driving that concentration,
+3. how trustworthy the issuer concentration view is.
 
 ## Cache and refresh posture
 

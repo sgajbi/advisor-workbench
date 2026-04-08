@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceRiskMode from "../../src/apps/performance/components/performance-risk-mode";
@@ -167,7 +167,7 @@ describe("PerformanceRiskMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration diagnostic table")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk concentration current-state cards")).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
@@ -226,14 +226,15 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk support rail")).toHaveTextContent("Benchmark returns");
+      expect(screen.getByLabelText("Relative drawdown summary")).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Risk support rail")).toHaveTextContent(
-      "Benchmark-relative risk requires benchmark context."
+    expect(screen.getByLabelText("Relative drawdown summary")).toHaveTextContent("N/A");
+    expect(screen.getByLabelText("Relative drawdown summary")).toHaveTextContent(
+      "Benchmark-relative drawdown requires benchmark context."
     );
   });
 
-  it("renders enriched concentration interpretation and neutral provenance metadata", async () => {
+  it("renders enriched concentration interpretation without a provenance footer", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
@@ -258,16 +259,43 @@ describe("PerformanceRiskMode", () => {
     });
 
     expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
-      "Portfolio posture"
+      "Business reading"
     );
     expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
-      "Largest exposures"
+      "Coverage posture"
     );
-    expect(screen.getByLabelText("Risk provenance")).toHaveTextContent("Contract");
-    expect(screen.getByLabelText("Risk provenance")).toHaveTextContent("Input Mode");
+    const concentrationMetricStrip = screen.getByLabelText("Risk concentration headline metrics");
+    expect(
+      within(concentrationMetricStrip)
+        .getByText("Portfolio HHI")
+        .closest(".workbench-summary-metric-card")
+    ).toHaveAttribute("title", "Position-level concentration for the current live book");
+    expect(screen.getByLabelText("Risk concentration current-state cards")).toHaveTextContent(
+      "Portfolio HHI"
+    );
+    expect(screen.getByLabelText("Risk concentration current-state cards")).toHaveTextContent(
+      "Issuer HHI"
+    );
+    expect(screen.getByText("Exposure concentration")).toBeInTheDocument();
+    expect(screen.getByText("Largest current exposures")).toBeInTheDocument();
+    expect(screen.getByText("Single-name exposure")).toBeInTheDocument();
+    expect(screen.getByText("Issuer-bucket exposure")).toBeInTheDocument();
+    expect(screen.getByLabelText("Risk concentration interpretation")).toHaveTextContent(
+      "PIMCO GIS Income Fund"
+    );
+    expect(screen.getByLabelText("Risk concentration interpretation")).not.toHaveTextContent(
+      "FUND_PIMCO_INC"
+    );
+    expect(screen.getByLabelText("Risk concentration coverage table")).toHaveTextContent(
+      "Coverage Current"
+    );
+    expect(screen.getByLabelText("Risk concentration controls")).toHaveTextContent(
+      "Grouping Level"
+    );
+    expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
   });
 
-  it("uses a single semantic status badge and shared metadata text in the risk header", async () => {
+  it("uses a single semantic status badge in the risk header", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
@@ -288,13 +316,14 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Input mode");
+      expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Partial");
     });
 
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Input mode");
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Stateful only");
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Evidence");
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Review notes");
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Partial");
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Input mode");
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Evidence");
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Review notes");
     expect(screen.queryByLabelText("Status Stateful only")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Status Source-grounded")).not.toBeInTheDocument();
   });
@@ -313,7 +342,7 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(screen.getByText("Risk unavailable")).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Risk provenance")).toHaveTextContent("Stateful only");
+    expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Risk snapshot metric table")).not.toBeInTheDocument();
   });
 

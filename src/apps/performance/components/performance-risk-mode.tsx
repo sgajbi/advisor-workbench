@@ -13,11 +13,9 @@ import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
 import RiskAttributionPanel from "./risk/risk-attribution-panel";
-import RiskProvenanceStrip from "./risk/risk-provenance-strip";
 import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
-import RiskSupportabilityPanel from "./risk/risk-supportability-panel";
 
 export default function PerformanceRiskMode({
   workspace,
@@ -92,7 +90,7 @@ export default function PerformanceRiskMode({
         title="Stateful Risk"
         subtitle="Portfolio risk, concentration pressure, and supportability for the selected performance context."
         className="performance-risk-shell performance-lotus-stage"
-        actions={<RiskStatusBar state={viewModel.state} warnings={viewModel.warnings} />}
+        actions={<RiskStatusBar state={viewModel.state} />}
       >
         <div className="performance-risk-context-grid" aria-label="Risk context">
           {viewModel.contextItems.map((item) => (
@@ -101,10 +99,6 @@ export default function PerformanceRiskMode({
               <Text variant="cardTitle">{item.value}</Text>
             </div>
           ))}
-        </div>
-        <div className="performance-risk-synopsis">
-          <Text variant="eyebrow">Risk briefing</Text>
-          <Text variant="body">{viewModel.synopsis}</Text>
         </div>
         {viewModel.partialFailures.length ? (
           <WorkbenchStatusRow
@@ -117,43 +111,34 @@ export default function PerformanceRiskMode({
           />
         ) : null}
         {statePanel ?? (
-          <div className="performance-risk-grid">
-            <div className="performance-risk-main-column">
-              <RiskSnapshotPanel viewModel={viewModel} />
-              <RiskDrawdownPanel
-                viewModel={viewModel}
-                underwaterExpanded={underwaterExpanded}
-                onToggleUnderwater={() => {
-                  const nextExpanded = !underwaterExpanded;
-                  setUnderwaterExpanded(nextExpanded);
-                  if (nextExpanded) {
-                    requestDrawdownDetail();
-                  }
-                }}
-              />
-              <RiskRollingPanel
-                viewModel={viewModel}
-                rollingExpanded={rollingExpanded}
-                onToggleRolling={() => {
-                  const nextExpanded = !rollingExpanded;
-                  setRollingExpanded(nextExpanded);
-                  if (nextExpanded) {
-                    requestRollingDetail();
-                  }
-                }}
-              />
-              <RiskAttributionPanel
-                viewModel={viewModel}
-                onSelectAttribution={requestAttribution}
-              />
-              <RiskConcentrationPanel viewModel={viewModel} />
-            </div>
-            <aside className="performance-risk-side-rail" aria-label="Risk support rail">
-              <RiskSupportabilityPanel viewModel={viewModel} />
-            </aside>
+          <div className="performance-risk-main-column">
+            <RiskSnapshotPanel viewModel={viewModel} />
+            <RiskDrawdownPanel
+              viewModel={viewModel}
+              underwaterExpanded={underwaterExpanded}
+              onToggleUnderwater={() => {
+                const nextExpanded = !underwaterExpanded;
+                setUnderwaterExpanded(nextExpanded);
+                if (nextExpanded) {
+                  requestDrawdownDetail();
+                }
+              }}
+            />
+            <RiskRollingPanel
+              viewModel={viewModel}
+              rollingExpanded={rollingExpanded}
+              onToggleRolling={() => {
+                const nextExpanded = !rollingExpanded;
+                setRollingExpanded(nextExpanded);
+                if (nextExpanded) {
+                  requestRollingDetail();
+                }
+              }}
+            />
+            <RiskAttributionPanel viewModel={viewModel} onSelectAttribution={requestAttribution} />
+            <RiskConcentrationPanel viewModel={viewModel} />
           </div>
         )}
-        <RiskProvenanceStrip viewModel={viewModel} />
       </SectionBlock>
     </section>
   );

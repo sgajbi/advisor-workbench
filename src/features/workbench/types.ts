@@ -577,7 +577,7 @@ export type WorkbenchRiskConcentrationResponse = {
   source_service: "lotus-risk";
   state: WorkbenchRiskModuleState;
   payload: {
-    risk_proxy: {
+    portfolio_concentration: {
       hhi_current: number;
       hhi_proposed: number;
       hhi_delta: number;
@@ -590,6 +590,16 @@ export type WorkbenchRiskConcentrationResponse = {
       top_n_cumulative_weight_proposed: number;
       top_n_cumulative_weight_delta: number;
       top_n: number;
+      top_position_current: {
+        security_id?: string | null;
+        security_name?: string | null;
+        weight: number;
+      };
+      top_position_proposed: {
+        security_id?: string | null;
+        security_name?: string | null;
+        weight: number;
+      };
     };
     issuer_concentration: {
       hhi_current: number;
@@ -603,10 +613,39 @@ export type WorkbenchRiskConcentrationResponse = {
       covered_position_count_proposed: number;
       total_position_count_current: number;
       total_position_count_proposed: number;
+      uncovered_position_count_current: number;
+      uncovered_position_count_proposed: number;
+      coverage_ratio_current: number;
+      coverage_ratio_proposed: number;
       note?: string | null;
+      top_issuer_current: {
+        issuer_id?: string | null;
+        issuer_name?: string | null;
+        weight: number;
+      };
+      top_issuer_proposed: {
+        issuer_id?: string | null;
+        issuer_name?: string | null;
+        weight: number;
+      };
     };
-    valuation_context?: Record<string, unknown> | null;
-    risk_metadata?: Record<string, unknown> | null;
+    valuation_context?: {
+      portfolio_currency?: string | null;
+      reporting_currency?: string | null;
+      position_basis?: string | null;
+      weight_basis?: string | null;
+    } | null;
+    execution_context?: {
+      as_of_date?: string | null;
+      portfolio_id?: string | null;
+      simulation_session_id?: string | null;
+      simulation_session_version?: number | null;
+      session_expires_at?: string | null;
+      issuer_grouping_level: string;
+      enrichment_policy: string;
+      include_cash_positions?: boolean | null;
+      include_zero_quantity_positions?: boolean | null;
+    };
   } | null;
   supportability: WorkbenchRiskSupportabilityItem[];
   warnings: string[];
