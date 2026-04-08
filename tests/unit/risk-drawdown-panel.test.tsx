@@ -100,6 +100,16 @@ describe("RiskDrawdownPanel", () => {
     expect(
       screen.getByText(/The worst retained episode reached -12\.45% from 12 Jan 2026 to 03 Feb 2026/)
     ).toBeInTheDocument();
+    const episodeSection = screen
+      .getByRole("heading", { name: "Episode review" })
+      .closest(".performance-risk-detail-section");
+    expect(episodeSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(
+      (episodeSection as HTMLElement).querySelector(".performance-risk-note-card-compact")
+    ).toBeTruthy();
+    expect(
+      (episodeSection as HTMLElement).querySelector(".performance-risk-analytical-table-compact")
+    ).toBeTruthy();
     expect(screen.getByLabelText("Risk drawdown episode table")).toBeInTheDocument();
     expect(screen.queryByLabelText("Risk underwater series table")).not.toBeInTheDocument();
   });
@@ -146,6 +156,13 @@ describe("RiskDrawdownPanel", () => {
         "The portfolio did experience a loss path, but no episode met the retained episode policy for this window."
       )
     ).toBeInTheDocument();
+    const episodeSection = screen
+      .getByRole("heading", { name: "Episode review" })
+      .closest(".performance-risk-detail-section");
+    expect(episodeSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(
+      (episodeSection as HTMLElement).querySelector(".performance-risk-note-card-compact")
+    ).toBeTruthy();
     expect(screen.queryByLabelText("Risk drawdown episode table")).not.toBeInTheDocument();
     expect(screen.queryByText("No drawdown episodes to review")).not.toBeInTheDocument();
   });

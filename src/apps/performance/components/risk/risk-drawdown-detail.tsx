@@ -33,9 +33,9 @@ export default function RiskDrawdownDetail({
         </RiskDetailSection>
       ) : null}
 
-      <RiskDetailSection title="Episode review" ariaLabel="Risk drawdown detail">
+      <RiskDetailSection title="Episode review" ariaLabel="Risk drawdown detail" density="compact">
         {viewModel.drawdownEpisodeInterpretation ? (
-          <div className="performance-risk-note-card performance-risk-drawdown-interpretation-card">
+          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card">
             <div className="performance-risk-note-copy">
               <Text variant="cardTitle">{viewModel.drawdownEpisodeInterpretation.title}</Text>
               <Text variant="secondary">{viewModel.drawdownEpisodeInterpretation.body}</Text>
@@ -46,6 +46,7 @@ export default function RiskDrawdownDetail({
         {viewModel.drawdownEpisodes.length ? (
           <RiskAnalyticalTable
             ariaLabel="Risk drawdown episode table"
+            density="compact"
             columns={[
               { key: "episode", label: "Episode" },
               { key: "depth", label: "Depth", align: "right" },

@@ -5708,6 +5708,10 @@ a:hover {
   background: rgba(248, 250, 252, 0.72);
 }
 
+.performance-risk-note-card-compact {
+  padding: 0.6rem 0.72rem;
+}
+
 .performance-risk-note-copy {
   display: grid;
   gap: 0.2rem;
@@ -5722,7 +5726,7 @@ a:hover {
 
 .performance-risk-drawdown-detail-stack {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.72rem;
 }
 
 .performance-risk-rolling-headline-grid {
