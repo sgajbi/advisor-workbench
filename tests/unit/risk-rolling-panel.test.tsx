@@ -67,7 +67,9 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByRole("columnheader", { name: "Interpretation" })).toBeInTheDocument();
     expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
     expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Context and methodology" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Rolling Risk methodology and coverage" })
+    ).toBeInTheDocument();
   });
 
   it("switches windows through the analytical control and refreshes the review copy", () => {
@@ -106,9 +108,29 @@ describe("RiskRollingPanel", () => {
     );
     expect(screen.queryByText("Tracking Error")).not.toBeInTheDocument();
     expect(screen.queryByText("Beta")).not.toBeInTheDocument();
-    expect(businessReading).toHaveTextContent(
-      "Benchmark-relative review should be qualified for beta and tracking error."
-    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Rolling Risk methodology and coverage" }));
+
+    expect(screen.getByRole("dialog", { name: "Rolling Risk methodology and coverage" })).toBeInTheDocument();
     expect(screen.getByText("Benchmark-relative review is not active for this request.")).toBeInTheDocument();
+  });
+
+  it("reveals rolling methodology and coverage on demand", () => {
+    const viewModel = buildRiskViewModel();
+    render(
+      <RiskRollingPanel
+        viewModel={viewModel}
+        rollingExpanded={false}
+        onToggleRolling={() => {}}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Rolling Risk methodology and coverage" }));
+
+    expect(screen.getByRole("dialog", { name: "Rolling Risk methodology and coverage" })).toBeInTheDocument();
+    expect(screen.getByText("Window set")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark alignment")).toBeInTheDocument();
+    expect(screen.getByText("Risk-free alignment")).toBeInTheDocument();
+    expect(screen.getByText("Methodology")).toBeInTheDocument();
   });
 });

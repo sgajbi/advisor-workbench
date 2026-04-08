@@ -82,6 +82,7 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("What matters now");
     expect(screen.getByLabelText("Primary risk review")).toBeInTheDocument();
     expect(screen.getByLabelText("Secondary risk analysis")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /methodology and coverage$/i })).toHaveLength(5);
     expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk business reading")).toBeInTheDocument();
     expect(
@@ -108,6 +109,7 @@ describe("PerformanceRiskMode", () => {
         ".performance-risk-secondary-group .performance-risk-attribution-panel"
       )
     ).toBeTruthy();
+    expect(screen.queryByText("Coverage and methodology")).not.toBeInTheDocument();
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
@@ -267,6 +269,43 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Evidence posture");
   });
 
+  it("opens panel methodology and coverage on demand without changing data-fetch flow", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+    );
+
+    renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Concentration methodology and coverage" }));
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Concentration methodology and coverage",
+    });
+
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText("Issuer Coverage")).toBeInTheDocument();
+    expect(within(dialog).getByText("Grouping Level")).toBeInTheDocument();
+    expect(within(dialog).getByText("Enrichment Policy")).toBeInTheDocument();
+    expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
+  });
+
   it("renders enriched concentration interpretation without a provenance footer", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
@@ -315,9 +354,15 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk concentration scale")).toHaveTextContent(
       "Diversified"
     );
-    expect(screen.getByLabelText("Risk concentration context")).toHaveTextContent(
-      "Grouping Level"
+    fireEvent.click(
+      screen.getByRole("button", { name: "Concentration methodology and coverage" })
     );
+
+    const concentrationDialog = screen.getByRole("dialog", {
+      name: "Concentration methodology and coverage",
+    });
+
+    expect(concentrationDialog).toHaveTextContent("Grouping Level");
     expect(screen.queryByLabelText("Risk concentration diagnostic table")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
   });

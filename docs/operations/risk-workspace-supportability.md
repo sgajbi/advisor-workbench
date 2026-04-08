@@ -41,6 +41,27 @@ The workspace composition is intentionally split into:
 2. a primary review group for current risk, path, and concentration,
 3. a secondary analysis group for rolling behaviour and attribution drill-down.
 
+## Methodology and coverage access pattern
+
+Coverage, methodology, and supportability details remain available for every risk module, but they
+no longer sit as always-visible blocks in the main review flow.
+
+The implemented interaction pattern is:
+
+1. a compact `Methodology & coverage` action in each panel header,
+2. an on-demand right-side context drawer,
+3. compact labeled rows with value plus one-line explanation,
+4. business-safe wording only, with no raw technical flags exposed to the front office.
+
+This keeps the page focused on business reading, key metrics, and next actions on first paint while
+preserving auditability and supportability detail on demand for:
+
+1. Risk Snapshot
+2. Drawdown
+3. Concentration
+4. Rolling Risk
+5. Historical Risk Attribution
+
 ## Risk Snapshot first-read contract
 
 Risk Snapshot is the executive first-read module for the Risk workspace.

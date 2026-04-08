@@ -5356,6 +5356,84 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-risk-info-trigger {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.84);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.performance-risk-info-trigger:hover,
+.performance-risk-info-trigger:focus-visible {
+  border-color: rgba(51, 65, 85, 0.22);
+  background: rgba(241, 245, 249, 0.96);
+  color: var(--text);
+  outline: none;
+}
+
+.performance-risk-info-drawer {
+  width: min(440px, 100vw);
+}
+
+.performance-risk-info-drawer-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  height: 100%;
+  padding: 1.1rem 1rem 1rem;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.94) 0%, rgba(255, 255, 255, 1) 12%),
+    #ffffff;
+}
+
+.performance-risk-info-drawer-header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.performance-risk-info-drawer-body {
+  overflow: auto;
+}
+
+.performance-risk-info-drawer-body .performance-risk-context-list {
+  grid-template-columns: 1fr;
+}
+
+.performance-risk-info-drawer-body .performance-risk-context-item {
+  padding: 0.85rem 0.9rem;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.performance-risk-info-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.performance-risk-info-dismiss {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
 .performance-risk-detail-section,
 .performance-risk-context-section {
   display: grid;

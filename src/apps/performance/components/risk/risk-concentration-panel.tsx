@@ -2,10 +2,10 @@ import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskConcentrationDriverAnalysis from "./risk-concentration-driver-analysis";
 import RiskConcentrationIndicatorStrip from "./risk-concentration-indicator-strip";
 import RiskConcentrationScale from "./risk-concentration-scale";
-import RiskContextList from "./risk-context-list";
 import RiskDetailSection from "./risk-detail-section";
 import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskModuleShell from "./risk-module-shell";
+import RiskPanelInfoDrawer from "./risk-panel-info-drawer";
 
 const POSTURE_TONE = {
   acceptable: "success",
@@ -25,6 +25,12 @@ export default function RiskConcentrationPanel({
       title="Concentration"
       subtitle="Front-office concentration posture, principal drivers, and issuer-reliability context."
       className="performance-risk-concentration-panel"
+      actions={
+        <RiskPanelInfoDrawer
+          panelTitle="Concentration"
+          rows={viewModel.concentrationContextRows}
+        />
+      }
       businessReading={
         viewModel.concentrationExecutiveSummary ? (
           <RiskExecutiveSummary
@@ -51,11 +57,6 @@ export default function RiskConcentrationPanel({
           <RiskDetailSection title="Concentration scale" ariaLabel="Risk concentration scale detail">
             <RiskConcentrationScale scales={viewModel.concentrationScales} />
           </RiskDetailSection>
-          <RiskContextList
-            rows={viewModel.concentrationContextRows}
-            ariaLabel="Risk concentration context"
-            title="Coverage and methodology"
-          />
         </div>
       }
     />

@@ -4,9 +4,9 @@ import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskExpandAction from "./risk-expand-action";
 import RiskModuleShell from "./risk-module-shell";
 import RiskRollingBusinessReading from "./risk-rolling-business-reading";
-import RiskRollingContextPanel from "./risk-rolling-context-panel";
 import RiskRollingHeadlineMetrics from "./risk-rolling-headline-metrics";
 import RiskRollingWindowDetail from "./risk-rolling-window-detail";
+import RiskPanelInfoDrawer from "./risk-panel-info-drawer";
 
 type RiskRollingPanelProps = {
   viewModel: PerformanceRiskViewModel;
@@ -37,12 +37,18 @@ export default function RiskRollingPanel({
       subtitle="Selected-window behaviour, relative reliability, and next-horizon review."
       className="performance-risk-rolling-panel"
       actions={
-        <RiskExpandAction
-          expanded={rollingExpanded}
-          onToggle={onToggleRolling}
-          expandedLabel="Collapse rolling series"
-          collapsedLabel="Expand rolling series"
-        />
+        <>
+          <RiskPanelInfoDrawer
+            panelTitle="Rolling Risk"
+            rows={viewModel.rollingContextRows}
+          />
+          <RiskExpandAction
+            expanded={rollingExpanded}
+            onToggle={onToggleRolling}
+            expandedLabel="Collapse rolling series"
+            collapsedLabel="Expand rolling series"
+          />
+        </>
       }
       businessReading={
         <RiskRollingBusinessReading
@@ -59,7 +65,6 @@ export default function RiskRollingPanel({
           rollingExpanded={rollingExpanded}
         />
       }
-      context={<RiskRollingContextPanel rows={viewModel.rollingContextRows} />}
     />
   );
 }

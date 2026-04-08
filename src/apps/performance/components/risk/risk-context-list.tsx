@@ -1,10 +1,10 @@
-import { Text } from "@/design-system";
-
 import type {
   PerformanceRiskConcentrationContextRow,
   PerformanceRiskContextRow,
 } from "../../risk-workspace-view-model";
-import RiskTermLabel from "./risk-term-label";
+import { Text } from "@/design-system";
+
+import RiskContextRows from "./risk-context-rows";
 
 export default function RiskContextList({
   rows,
@@ -28,30 +28,7 @@ export default function RiskContextList({
           {title}
         </Text>
       </div>
-      <div
-        className={[
-          "performance-risk-context-list",
-          compact ? "performance-risk-context-list-compact" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {rows.map((row) => (
-          <div key={row.key} className="performance-risk-context-item">
-            <div className="performance-risk-context-item-copy">
-              {"definition" in row && row.definition ? (
-                <RiskTermLabel label={row.label} definition={row.definition} />
-              ) : (
-                <Text variant="label">{row.label}</Text>
-              )}
-              <Text variant="metadata">{row.support}</Text>
-            </div>
-            <Text variant="cardTitle" className="performance-risk-context-item-value">
-              {row.value}
-            </Text>
-          </div>
-        ))}
-      </div>
+      <RiskContextRows rows={rows} compact={compact} />
     </section>
   );
 }
