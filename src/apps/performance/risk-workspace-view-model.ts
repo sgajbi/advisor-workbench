@@ -66,14 +66,6 @@ export type PerformanceRiskConcentrationContextRow = {
   support: string;
 };
 
-export type PerformanceRiskExecutiveSummary = {
-  heading: string;
-  headline: string;
-  detail: string;
-  actionCue?: string | null;
-  postureLabel?: string | null;
-};
-
 export type PerformanceRiskContextRow = {
   key: string;
   label: string;
@@ -1322,7 +1314,6 @@ function buildRiskWorkspaceOverview({
     reason?: string | null;
   }>;
 }): PerformanceRiskOverviewItem[] {
-  const snapshotSummary = mapSnapshotExecutiveSummary(summary);
   const concentrationSummary = mapConcentrationExecutiveSummary(concentration);
   const supportabilityPosture = resolveRiskEvidencePosture(supportability, [
     summary.state,
@@ -1336,8 +1327,7 @@ function buildRiskWorkspaceOverview({
     {
       key: "risk_posture",
       label: "Risk posture",
-      value: resolveRiskSnapshotPosture(snapshotSummary),
-      tone: resolveRiskSnapshotOverviewTone(snapshotSummary),
+      ...resolveRiskSnapshotOverview(summary),
     },
     {
       key: "drawdown_posture",
@@ -1360,31 +1350,31 @@ function buildRiskWorkspaceOverview({
   ];
 }
 
-function resolveRiskSnapshotPosture(summary: PerformanceRiskExecutiveSummary | null) {
-  const headline = summary?.headline.toLowerCase() ?? "";
-  if (headline.includes("unavailable")) {
-    return "Unavailable";
+function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pick<
+  PerformanceRiskOverviewItem,
+  "value" | "tone"
+> {
+  const period = response.payload?.periods[0];
+  if (!period) {
+    return { value: "Unavailable", tone: "warn" };
   }
-  if (headline.includes("elevated")) {
-    return "Elevated";
-  }
-  if (headline.includes("contained")) {
-    return "Contained";
-  }
-  return "Moderate";
-}
 
-function resolveRiskSnapshotOverviewTone(summary: PerformanceRiskExecutiveSummary | null) {
-  const value = resolveRiskSnapshotPosture(summary);
-  switch (value) {
+  const volatility = period.metrics.find((metric) => metric.key === "VOLATILITY");
+  if (!volatility || volatility.state === "unavailable" || volatility.state === "blocked") {
+    return { value: "Unavailable", tone: "warn" };
+  }
+
+  const posture = resolveSnapshotPosture(volatility.value).label;
+  switch (posture) {
     case "Contained":
-      return "success" as const;
+      return { value: posture, tone: "success" };
     case "Moderate":
-      return "default" as const;
+      return { value: posture, tone: "default" };
     case "Elevated":
-      return "warn" as const;
+    case "High":
+      return { value: posture, tone: "warn" };
     default:
-      return "warn" as const;
+      return { value: "Unavailable", tone: "warn" };
   }
 }
 
@@ -1531,42 +1521,6 @@ function mapSnapshotMetricCard(item: WorkbenchRiskMetric): PerformanceRiskMetric
   };
 }
 
-function mapSnapshotExecutiveSummary(
-  response: WorkbenchRiskSummaryResponse
-): PerformanceRiskExecutiveSummary | null {
-  const period = response.payload?.periods[0];
-  if (!period) {
-    return null;
-  }
-  const volatility = period.metrics.find((metric) => metric.key === "VOLATILITY");
-  const sharpe = period.metrics.find((metric) => metric.key === "SHARPE");
-  const beta = period.metrics.find((metric) => metric.key === "BETA");
-  const trackingError = period.metrics.find((metric) => metric.key === "TRACKING_ERROR");
-  const posture = resolveSnapshotPosture(volatility?.value);
-  const reliability = resolveSnapshotBenchmarkReliability(response, period);
-  const volatilityReading = formatRiskMetric(
-    volatility ?? metric("VOLATILITY", "Volatility", null, "unavailable")
-  );
-  const sharpeReading = formatRiskMetric(sharpe ?? metric("SHARPE", "Sharpe", null, "unavailable"));
-  const betaReading = formatRiskMetric(beta ?? metric("BETA", "Beta", null, "unavailable"));
-  const trackingErrorReading = formatRiskMetric(
-    trackingError ?? metric("TRACKING_ERROR", "Tracking Error", null, "unavailable")
-  );
-
-  return {
-    heading: "Business reading",
-    headline: `Risk posture is ${posture.label.toLowerCase()}, and benchmark-relative reading is ${reliability.label.toLowerCase()}.`,
-    detail:
-      reliability.state === "reliable"
-        ? `Volatility is ${volatilityReading}, Sharpe is ${sharpeReading}, beta is ${betaReading}, and tracking error is ${trackingErrorReading}.`
-        : `Volatility is ${volatilityReading} and Sharpe is ${sharpeReading}. Treat beta and tracking error as provisional until benchmark alignment is restored.`,
-    actionCue:
-      reliability.state === "reliable"
-        ? "Next review: confirm active risk remains appropriate through beta and tracking error."
-        : "Next review: rely on total-risk measures first, then confirm benchmark alignment.",
-  };
-}
-
 function mapSnapshotContextRows(
   response: WorkbenchRiskSummaryResponse
 ): PerformanceRiskContextRow[] {
@@ -1677,38 +1631,6 @@ function resolveSnapshotPosture(volatility: number | null | undefined): {
     return { label: "Moderate" };
   }
   return { label: "Contained" };
-}
-
-function resolveSnapshotBenchmarkReliability(
-  response: WorkbenchRiskSummaryResponse,
-  period: NonNullable<WorkbenchRiskSummaryResponse["payload"]>["periods"][number]
-): {
-  label: "Reliable" | "Qualified" | "Unavailable";
-  state: "reliable" | "qualified" | "unavailable";
-} {
-  if (period.benchmark_context?.reason === "APPLIED" && period.benchmark_context.aligned) {
-    return { label: "Reliable", state: "reliable" };
-  }
-
-  const benchmarkSupportability = response.supportability.find(
-    (item) => item.key === "benchmark_returns"
-  );
-  if (benchmarkSupportability?.state === "ready") {
-    return { label: "Reliable", state: "reliable" };
-  }
-
-  if (
-    benchmarkSupportability?.state === "partial" ||
-    benchmarkSupportability?.state === "blocked"
-  ) {
-    return { label: "Qualified", state: "qualified" };
-  }
-
-  if (period.benchmark_context?.requested || period.benchmark_context?.available) {
-    return { label: "Qualified", state: "qualified" };
-  }
-
-  return { label: "Unavailable", state: "unavailable" };
 }
 
 function formatRiskExpectedShortfall(details: Record<string, unknown> | null | undefined): string | null {

@@ -5058,31 +5058,6 @@ a:hover {
   justify-content: flex-end;
 }
 
-.performance-risk-status-summary {
-  display: grid;
-  justify-items: end;
-  gap: 0.45rem;
-}
-
-.performance-risk-status-metadata {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
-.performance-risk-status-metadata-item {
-  display: grid;
-  gap: 0.1rem;
-  justify-items: end;
-  min-width: 0;
-}
-
-.performance-risk-status-note {
-  max-width: 44ch;
-  text-align: right;
-}
-
 .performance-risk-context-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -5123,22 +5098,6 @@ a:hover {
   text-align: left;
 }
 
-.performance-risk-synopsis {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(87, 121, 157, 0.18);
-  border-radius: 12px;
-  background: rgba(247, 250, 252, 0.82);
-}
-
-.performance-risk-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.34fr);
-  gap: 1rem;
-  align-items: start;
-}
-
 .performance-risk-main-column,
 .performance-risk-side-rail {
   display: grid;
@@ -5158,45 +5117,6 @@ a:hover {
 
 .performance-risk-executive-card {
   height: 100%;
-}
-
-.performance-risk-matters {
-  display: grid;
-  gap: 0.6rem;
-  padding: 0.8rem 0.9rem 0.85rem;
-  background:
-    linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%);
-}
-
-.performance-risk-matters-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.performance-risk-matters-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.performance-risk-matters-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.5rem;
-  align-items: start;
-  padding: 0.12rem 0;
-}
-
-.performance-risk-matters-index {
-  min-width: 2ch;
-  color: rgba(51, 65, 85, 0.58);
-}
-
-.performance-risk-matters-copy {
-  display: grid;
-  gap: 0.12rem;
 }
 
 .performance-risk-primary-group {
@@ -6541,8 +6461,7 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-executive-grid,
-  .performance-risk-matters-list {
+  .performance-risk-executive-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -6605,7 +6524,6 @@ a:hover {
 
 @media (max-width: 760px) {
   .performance-risk-executive-grid,
-  .performance-risk-matters-list,
   .performance-risk-snapshot-headline-grid,
   .performance-risk-snapshot-supporting-grid,
   .performance-risk-context-list,
@@ -6615,15 +6533,6 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-matters-item {
-    grid-template-columns: 1fr;
-    gap: 0.2rem;
-  }
-
-  .performance-risk-matters-header {
-    align-items: start;
-    flex-direction: column;
-  }
 }
 
 .performance-advisor-brief-shell {
