@@ -285,12 +285,7 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk concentration context")).toHaveTextContent(
       "Grouping Level"
     );
-    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
-      "Portfolio Concentration Index"
-    );
-    expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
-      "Issuer Coverage"
-    );
+    expect(screen.queryByLabelText("Risk concentration diagnostic table")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
   });
 

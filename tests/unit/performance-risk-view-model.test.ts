@@ -76,10 +76,6 @@ describe("buildPerformanceRiskViewModel", () => {
       "rolling:risk_free_series",
       "rolling:rolling_time_series",
     ]);
-    expect(viewModel.concentrationDiagnosticRows[0]).toMatchObject({
-      measure: "Portfolio Concentration Index",
-      currentReading: "1,260",
-    });
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Max Drawdown",
       "Time Under Water",

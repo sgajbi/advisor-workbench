@@ -17,9 +17,7 @@ export default function RiskConcentrationTermLabel({
           type="button"
           className="performance-risk-term-trigger"
           aria-label={`${label}: ${definition}`}
-        >
-          ?
-        </button>
+        />
       </Tooltip>
     </span>
   );

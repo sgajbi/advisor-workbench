@@ -2,7 +2,6 @@ import { SectionBlock } from "@/design-system";
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskConcentrationContextPanel from "./risk-concentration-context-panel";
-import RiskConcentrationDiagnosticsTable from "./risk-concentration-diagnostics-table";
 import RiskConcentrationDriverAnalysis from "./risk-concentration-driver-analysis";
 import RiskConcentrationExecutiveSummary from "./risk-concentration-executive-summary";
 import RiskConcentrationIndicatorStrip from "./risk-concentration-indicator-strip";
@@ -33,8 +32,6 @@ export default function RiskConcentrationPanel({
           <RiskConcentrationContextPanel rows={viewModel.concentrationContextRows} />
         </div>
       </div>
-
-      <RiskConcentrationDiagnosticsTable rows={viewModel.concentrationDiagnosticRows} />
     </SectionBlock>
   );
 }

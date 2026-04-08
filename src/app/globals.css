@@ -5290,17 +5290,25 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   padding: 0;
   border: 1px solid rgba(148, 163, 184, 0.26);
   border-radius: 999px;
   background: rgba(248, 250, 252, 0.95);
   color: var(--text-muted);
-  font-size: 0.68rem;
   line-height: 1;
   cursor: help;
   transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.performance-risk-term-trigger::before {
+  content: "";
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.72;
 }
 
 .performance-risk-term-trigger:hover,
@@ -5449,19 +5457,19 @@ a:hover {
 }
 
 .performance-risk-concentration-scale-band-diversified {
-  background: rgba(15, 23, 42, 0.06);
+  background: rgba(148, 163, 184, 0.34);
 }
 
 .performance-risk-concentration-scale-band-moderate {
-  background: rgba(51, 65, 85, 0.1);
+  background: rgba(100, 116, 139, 0.34);
 }
 
 .performance-risk-concentration-scale-band-elevated {
-  background: rgba(71, 85, 105, 0.15);
+  background: rgba(71, 85, 105, 0.42);
 }
 
 .performance-risk-concentration-scale-band-high {
-  background: rgba(30, 41, 59, 0.22);
+  background: rgba(30, 41, 59, 0.56);
 }
 
 .performance-risk-concentration-scale-marker {

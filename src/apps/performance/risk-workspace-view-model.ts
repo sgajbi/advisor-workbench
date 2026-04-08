@@ -74,13 +74,6 @@ export type PerformanceRiskConcentrationContextRow = {
   support: string;
 };
 
-export type PerformanceRiskConcentrationDiagnosticRow = {
-  key: string;
-  measure: string;
-  currentReading: string;
-  interpretation: string;
-};
-
 export type PerformanceRiskViewModel = {
   state: PerformanceRiskState;
   title: string;
@@ -98,7 +91,6 @@ export type PerformanceRiskViewModel = {
   concentrationDriverAnalysis: PerformanceRiskConcentrationDriverAnalysisRow[];
   concentrationScales: PerformanceRiskConcentrationScale[];
   concentrationContextRows: PerformanceRiskConcentrationContextRow[];
-  concentrationDiagnosticRows: PerformanceRiskConcentrationDiagnosticRow[];
   drawdownHeadlineMetrics: Array<{
     key: string;
     label: string;
@@ -310,7 +302,6 @@ export function buildPerformanceRiskViewModel({
     concentrationDriverAnalysis: mapConcentrationDriverAnalysis(concentration),
     concentrationScales: mapConcentrationScales(concentration),
     concentrationContextRows: mapConcentrationContextRows(concentration),
-    concentrationDiagnosticRows: mapConcentrationDiagnosticRows(concentration),
     drawdownHeadlineMetrics: mapDrawdownHeadlineMetrics(drawdown),
     drawdownEpisodes: mapDrawdownEpisodes(drawdown),
     drawdownRelativeMetric: mapRelativeDrawdownMetric(drawdown),
@@ -1213,7 +1204,6 @@ function buildStateViewModel(
     concentrationDriverAnalysis: [],
     concentrationScales: [],
     concentrationContextRows: [],
-    concentrationDiagnosticRows: [],
     drawdownHeadlineMetrics: [],
     drawdownEpisodes: [],
     drawdownRelativeMetric: null,
@@ -1332,20 +1322,6 @@ function mapConcentrationIndicators(
       tone: resolveWeightIndicatorTone(payload.single_position_concentration.top_n_cumulative_weight_current),
     },
   ];
-}
-
-function hasConcentrationProposedChanges(response: WorkbenchRiskConcentrationResponse) {
-  const payload = response.payload;
-  if (!payload) {
-    return false;
-  }
-  return [
-    payload.portfolio_concentration.hhi_delta,
-    payload.issuer_concentration.hhi_delta,
-    payload.single_position_concentration.top_position_weight_delta,
-    payload.issuer_concentration.top_issuer_weight_delta,
-    payload.single_position_concentration.top_n_cumulative_weight_delta,
-  ].some((value) => typeof value === "number" && Math.abs(value) > 0.000001);
 }
 
 function mapConcentrationExecutiveSummary(
@@ -1519,66 +1495,6 @@ function mapConcentrationContextRows(
       value: valuationContext?.reporting_currency ?? "N/A",
       definition: "Reporting currency used for the current concentration review.",
       support: valuationContext?.portfolio_currency ? "Portfolio currency" : "Portfolio currency",
-    },
-  ];
-}
-
-function mapConcentrationDiagnosticRows(
-  response: WorkbenchRiskConcentrationResponse
-): PerformanceRiskConcentrationDiagnosticRow[] {
-  const payload = response.payload;
-  if (!payload) {
-    return [];
-  }
-  const coverageInterpretation =
-    payload.issuer_concentration.coverage_ratio_current >= 0.99
-      ? "Coverage is complete for issuer review."
-      : "Coverage is partial, so issuer-level reading should be qualified.";
-  const proposedDelta = hasConcentrationProposedChanges(response);
-  return [
-    {
-      key: "portfolio_hhi",
-      measure: "Portfolio Concentration Index",
-      currentReading: formatNumber(payload.portfolio_concentration.hhi_current, {
-        maximumFractionDigits: 0,
-      }),
-      interpretation: `${resolveConcentrationBand(payload.portfolio_concentration.hhi_current)} position-level concentration across the live book${proposedDelta ? `; proposed delta ${formatSignedNumber(payload.portfolio_concentration.hhi_delta, { maximumFractionDigits: 0 })}` : ""}.`,
-    },
-    {
-      key: "issuer_hhi",
-      measure: "Issuer Concentration Index",
-      currentReading: formatNumber(payload.issuer_concentration.hhi_current, {
-        maximumFractionDigits: 0,
-      }),
-      interpretation: `${resolveConcentrationBand(payload.issuer_concentration.hhi_current)} issuer concentration after grouping${proposedDelta ? `; proposed delta ${formatSignedNumber(payload.issuer_concentration.hhi_delta, { maximumFractionDigits: 0 })}` : ""}.`,
-    },
-    {
-      key: "largest_position_weight",
-      measure: "Largest Position Weight",
-      currentReading: formatRiskPercentValue(payload.single_position_concentration.top_position_weight_current),
-      interpretation: "Largest holding is material for a diversified mandate.",
-    },
-    {
-      key: "largest_issuer_weight",
-      measure: "Largest Issuer Weight",
-      currentReading: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
-      interpretation: "Largest issuer group remains material after issuer aggregation.",
-    },
-    {
-      key: "top_10_weight",
-      measure: "Top 10 Weight",
-      currentReading: formatRiskPercentValue(
-        payload.single_position_concentration.top_n_cumulative_weight_current
-      ),
-      interpretation: buildBreadthDiagnosticSummary(
-        payload.single_position_concentration.top_n_cumulative_weight_current
-      ),
-    },
-    {
-      key: "issuer_coverage",
-      measure: "Issuer Coverage",
-      currentReading: formatRiskPercentValue(payload.issuer_concentration.coverage_ratio_current),
-      interpretation: coverageInterpretation,
     },
   ];
 }
@@ -1887,20 +1803,6 @@ function resolveWeightIndicatorTone(value: number | null | undefined) {
   return "neutral" as const;
 }
 
-function formatSignedNumber(
-  value: number | null | undefined,
-  options: Intl.NumberFormatOptions = {}
-) {
-  if (typeof value !== "number") {
-    return "N/A";
-  }
-  const formatted = formatNumber(Math.abs(value), options);
-  if (formatted === "N/A" || value === 0) {
-    return formatted;
-  }
-  return `${value > 0 ? "+" : "-"}${formatted}`;
-}
-
 function formatEnumLabel(value: string | null | undefined) {
   if (!value) {
     return null;
@@ -2097,19 +1999,6 @@ function buildBreadthSummary(topNWeight: number) {
     return "the largest holdings still account for a meaningful share of the book.";
   }
   return "diversification is broader across the portfolio.";
-}
-
-function buildBreadthDiagnosticSummary(topNWeight: number) {
-  if (topNWeight >= 0.9) {
-    return "Top holdings dominate portfolio weight and leave little diversification breadth.";
-  }
-  if (topNWeight >= 0.75) {
-    return "Top holdings represent an elevated share of portfolio weight.";
-  }
-  if (topNWeight >= 0.6) {
-    return "Top holdings remain meaningful but not dominant.";
-  }
-  return "Weight is spread more broadly across the portfolio.";
 }
 
 function resolveConcentrationBand(value: number) {

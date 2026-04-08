@@ -534,9 +534,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByLabelText("Risk concentration indicator strip")).toHaveTextContent(
         "Portfolio Concentration Index"
       );
-      expect(screen.getByLabelText("Risk concentration diagnostic table")).toHaveTextContent(
-        "Issuer Coverage"
-      );
+      expect(screen.queryByLabelText("Risk concentration diagnostic table")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Risk support rail")).not.toBeInTheDocument();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
