@@ -51,7 +51,6 @@ describe("RiskDrawdownPanel", () => {
     );
     expect(screen.getByRole("heading", { name: "Drawdown" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Episode review" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Drawdown methodology and coverage" })
@@ -66,24 +65,14 @@ describe("RiskDrawdownPanel", () => {
       "Relative Max Drawdown",
       "Time Under Water",
       "Recovery Status",
+      "Ulcer Index",
     ]);
-
-    const supportingSection = screen
-      .getByRole("heading", { name: "Supporting risk measures" })
-      .closest(".performance-risk-detail-section");
-    expect(supportingSection).toBeTruthy();
-    expect(supportingSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(screen.queryByRole("heading", { name: "Supporting risk measures" })).not.toBeInTheDocument();
     expect(
-      (supportingSection as HTMLElement).querySelector(".performance-risk-metric-card-compact")
-    ).toBeTruthy();
-    expect(within(supportingSection as HTMLElement).getByText("Ulcer Index")).toBeInTheDocument();
-    expect(
-      within(supportingSection as HTMLElement).queryByText(
-        "Shows how persistent and painful the underwater path was, not just how deep it got."
-      )
+      screen.queryByText("Shows how persistent and painful the underwater path was, not just how deep it got.")
     ).not.toBeInTheDocument();
     expect(
-      within(supportingSection as HTMLElement).getByRole("button", {
+      screen.getByRole("button", {
         name: "Ulcer Index: Path-sensitive drawdown measure that reflects both drawdown depth and time spent underwater.",
       })
     ).toBeInTheDocument();

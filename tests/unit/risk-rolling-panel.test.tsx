@@ -57,7 +57,17 @@ describe("RiskRollingPanel", () => {
     const headlineLabels = Array.from(
       container.querySelectorAll(".performance-risk-rolling-headline-card .ui-text-label")
     ).map((node) => node.textContent?.trim());
-    expect(headlineLabels).toEqual(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
+    expect(headlineLabels).toEqual(
+      expect.arrayContaining([
+        "Volatility",
+        "Tracking Error",
+        "Beta",
+        "Max Drawdown",
+        "Sharpe",
+        "Information Ratio",
+      ])
+    );
+    expect(headlineLabels.length).toBeGreaterThan(4);
     expect(container.querySelector(".performance-risk-rolling-headline-grid")).toBeTruthy();
 
     expect(screen.getByRole("tab", { name: "21D" })).toHaveAttribute("aria-selected", "true");

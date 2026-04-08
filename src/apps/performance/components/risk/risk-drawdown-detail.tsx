@@ -1,12 +1,8 @@
 import { Text } from "@/design-system";
 
-import type {
-  PerformanceRiskMetricCard,
-  PerformanceRiskViewModel,
-} from "../../risk-workspace-view-model";
+import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailSection from "./risk-detail-section";
-import RiskMetricCard from "./risk-metric-card";
 
 export default function RiskDrawdownDetail({
   viewModel,
@@ -15,24 +11,6 @@ export default function RiskDrawdownDetail({
 }) {
   return (
     <div className="performance-risk-drawdown-detail-stack">
-      {viewModel.drawdownSupportingMetrics.length ? (
-        <RiskDetailSection
-          title="Supporting risk measures"
-          ariaLabel="Drawdown supporting risk measures"
-          className="performance-risk-supporting-detail"
-          density="compact"
-        >
-          <div
-            className="performance-risk-secondary-metrics performance-risk-drawdown-supporting-strip"
-            aria-label="Drawdown supporting measures"
-          >
-            {viewModel.drawdownSupportingMetrics.map((metric) => (
-              <SupportingMetricCard key={metric.key} metric={metric} />
-            ))}
-          </div>
-        </RiskDetailSection>
-      ) : null}
-
       <RiskDetailSection title="Episode review" ariaLabel="Risk drawdown detail" density="compact">
         {viewModel.drawdownEpisodeInterpretation ? (
           <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card">
@@ -76,23 +54,5 @@ export default function RiskDrawdownDetail({
         ) : null}
       </RiskDetailSection>
     </div>
-  );
-}
-
-function SupportingMetricCard({
-  metric,
-}: {
-  metric: PerformanceRiskMetricCard;
-}) {
-  return (
-    <RiskMetricCard
-      label={metric.label}
-      value={metric.value}
-      support={metric.support}
-      definition={metric.definition}
-      density="compact"
-      className="performance-risk-secondary-metric"
-      displaySupport={false}
-    />
   );
 }

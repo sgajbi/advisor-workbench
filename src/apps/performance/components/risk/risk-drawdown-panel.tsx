@@ -27,7 +27,9 @@ export default function RiskDrawdownPanel({
         />
       }
       headlineMetrics={
-        <RiskDrawdownHeadlineMetrics metrics={viewModel.drawdownHeadlineMetrics} />
+        <RiskDrawdownHeadlineMetrics
+          metrics={[...viewModel.drawdownHeadlineMetrics, ...viewModel.drawdownSupportingMetrics]}
+        />
       }
       detail={
         <RiskDrawdownDetail viewModel={viewModel} />

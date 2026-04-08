@@ -4,12 +4,10 @@ import type {
 } from "../../risk-workspace-view-model";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 
-const PRIORITY_METRICS = ["Volatility", "Tracking Error", "Beta", "Max Drawdown"];
-
 export function selectRollingHeadlineMetrics(
   window: PerformanceRiskRollingWindow | null
 ): PerformanceRiskMetricCard[] {
-  return (window?.headlineMetrics ?? []).filter((metric) => PRIORITY_METRICS.includes(metric.label));
+  return window?.headlineMetrics ?? [];
 }
 
 export default function RiskRollingHeadlineMetrics({
