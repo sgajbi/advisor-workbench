@@ -51,6 +51,29 @@ describe("RiskMetricCard", () => {
     expect(container.querySelector(".performance-risk-metric-card-compact")).toBeTruthy();
   });
 
+  it("stacks the value below the header copy in the shared card layout", () => {
+    const { container } = render(
+      <RiskMetricCard
+        label="Volatility"
+        value="9.40%"
+        support="Overall realised risk level of the portfolio over the selected period."
+        definition="Annualized realized volatility of portfolio returns over the selected period."
+        displaySupport={false}
+      />
+    );
+
+    const card = container.querySelector(".performance-risk-metric-card");
+    const copy = container.querySelector(".performance-risk-metric-card-copy");
+    const value = container.querySelector(".performance-risk-metric-card-value");
+
+    expect(card).toBeTruthy();
+    expect(copy).toBeTruthy();
+    expect(value).toBeTruthy();
+    expect(
+      (copy as Node).compareDocumentPosition(value as Node) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
   it("can hide support copy and show metadata for shared key-figure rendering", () => {
     render(
       <RiskMetricCard
