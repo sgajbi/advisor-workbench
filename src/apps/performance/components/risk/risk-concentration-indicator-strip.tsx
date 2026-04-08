@@ -1,6 +1,7 @@
-import { WorkbenchSummaryMetricStrip } from "@/design-system";
+import { Text } from "@/design-system";
 
 import type { PerformanceRiskConcentrationIndicator } from "../../risk-workspace-view-model";
+import RiskConcentrationTermLabel from "./risk-concentration-term-label";
 
 export default function RiskConcentrationIndicatorStrip({
   indicators,
@@ -8,24 +9,48 @@ export default function RiskConcentrationIndicatorStrip({
   indicators: PerformanceRiskConcentrationIndicator[];
 }) {
   return (
-    <section aria-label="Risk concentration indicator strip">
-      <WorkbenchSummaryMetricStrip
-        ariaLabel="Risk concentration headline metrics"
-        className="performance-risk-metric-strip performance-risk-concentration-metric-strip"
-        items={indicators.map((indicator) => ({
-          key: indicator.key,
-          label: indicator.label,
-          value: indicator.value,
-          support: indicator.support,
-          definition: indicator.definition,
-          className:
-            indicator.tone === "danger"
-              ? "performance-risk-concentration-indicator-danger"
-              : indicator.tone === "warn"
-                ? "performance-risk-concentration-indicator-warn"
-                : undefined,
-        }))}
-      />
+    <section
+      className="performance-risk-concentration-indicator-strip"
+      aria-label="Risk concentration indicator strip"
+    >
+      <div
+        className="performance-risk-concentration-indicator-grid"
+        aria-label="Risk concentration headline metrics"
+      >
+        {indicators.map((indicator) => (
+          <article
+            key={indicator.key}
+            className={[
+              "performance-risk-concentration-indicator-tile",
+              indicator.tone === "danger"
+                ? "performance-risk-concentration-indicator-tile-danger"
+                : indicator.tone === "warn"
+                  ? "performance-risk-concentration-indicator-tile-warn"
+                  : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            title={indicator.definition}
+            aria-label={`${indicator.label}: ${indicator.value}. ${indicator.support}. ${indicator.definition}`}
+          >
+            <div className="performance-risk-concentration-indicator-header">
+              <RiskConcentrationTermLabel
+                label={indicator.label}
+                definition={indicator.definition}
+              />
+            </div>
+            <Text
+              variant="metricValueCompact"
+              className="performance-risk-concentration-indicator-value"
+            >
+              {indicator.value}
+            </Text>
+            <Text variant="metadata" className="performance-risk-concentration-indicator-support">
+              {indicator.support}
+            </Text>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }

@@ -268,7 +268,7 @@ describe("PerformanceRiskMode", () => {
     expect(
       within(concentrationMetricStrip)
         .getByText("Portfolio Concentration Index")
-        .closest(".workbench-summary-metric-card")
+        .closest(".performance-risk-concentration-indicator-tile")
     ).toHaveAttribute(
       "title",
       "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings."
