@@ -34,12 +34,11 @@ describe("RiskAttributionPanel", () => {
     expect(screen.getByLabelText("Risk attribution highlights")).toBeInTheDocument();
     expect(screen.getByLabelText("Risk attribution detail")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
-    expect(container.querySelector(".performance-risk-analytical-review-frame")).toBeTruthy();
-    expect(container.querySelector(".performance-risk-attribution-review-frame")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-attribution-detail-table")).toBeTruthy();
     expect(container.querySelector(".performance-risk-attribution-toolbar")).toBeTruthy();
     expect(container.querySelectorAll(".performance-risk-compact-segmented-control")).toHaveLength(2);
+    expect(screen.queryByText("Attribution reconciliation")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Historical Risk Attribution methodology and coverage" })).toBeInTheDocument();
   });
 });

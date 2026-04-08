@@ -7,11 +7,11 @@ import {
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskDetailSection from "./risk-detail-section";
 import RiskAnalyticalTable from "./risk-analytical-table";
-import RiskAnalyticalReviewFrame from "./risk-analytical-review-frame";
 import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
+import { riskAttributionPanelCopy } from "./risk-secondary-copy";
 import RiskTableText from "./risk-table-text";
 
 type RiskAttributionPanelProps = {
@@ -27,14 +27,14 @@ export default function RiskAttributionPanel({
 
   return (
     <RiskModuleShell
-      title="Historical Risk Attribution"
-      subtitle="Analytical decomposition of total and active risk across supported business dimensions."
+      title={riskAttributionPanelCopy.title}
+      subtitle={riskAttributionPanelCopy.subtitle}
       priority="secondary"
       density="compact"
       className="performance-risk-attribution-panel"
       actions={
         <RiskPanelUtilityRow
-          panelTitle="Historical Risk Attribution"
+          panelTitle={riskAttributionPanelCopy.methodologyPanelTitle}
           methodologyRows={viewModel.attributionMethodologyRows}
         />
       }
@@ -64,8 +64,8 @@ export default function RiskAttributionPanel({
       }
       detail={
         <RiskDetailSection
-          title="Contributor review"
-          ariaLabel="Risk attribution detail"
+          title={riskAttributionPanelCopy.detailTitle}
+          ariaLabel={riskAttributionPanelCopy.detailAriaLabel}
           density="compact"
           toolbar={
             controls ? (
@@ -81,7 +81,7 @@ export default function RiskAttributionPanel({
                     disabled: option.disabled,
                     title: option.reason ?? undefined,
                   }))}
-                  ariaLabel="Risk attribution type"
+                  ariaLabel={riskAttributionPanelCopy.attributionTypeAriaLabel}
                   className="performance-risk-compact-segmented-control"
                   buttonClassName="performance-risk-compact-segmented-control-button"
                 />
@@ -96,7 +96,7 @@ export default function RiskAttributionPanel({
                     disabled: option.disabled,
                     title: option.reason ?? undefined,
                   }))}
-                  ariaLabel="Risk attribution grouping"
+                  ariaLabel={riskAttributionPanelCopy.groupingAriaLabel}
                   className="performance-risk-compact-segmented-control"
                   buttonClassName="performance-risk-compact-segmented-control-button"
                 />
@@ -104,73 +104,32 @@ export default function RiskAttributionPanel({
             ) : null
           }
         >
-          <RiskAnalyticalReviewFrame
-            className="performance-risk-attribution-review-frame"
-            summary={
-              viewModel.attributionTotals ? (
-                <div className="performance-risk-note-card performance-risk-attribution-reconciliation">
-                  <div className="performance-risk-note-copy">
-                    <WorkbenchStatusRow
-                      label="Attribution reconciliation"
-                      items={[
-                        {
-                          value: `Total ${viewModel.attributionTotals.totalValue}`,
-                          tone: "default" as const,
-                        },
-                        {
-                          value: `Reconciled sum ${viewModel.attributionTotals.reconciledSum}`,
-                          tone: "default" as const,
-                        },
-                        {
-                          value: `Residual ${viewModel.attributionTotals.residual}`,
-                          tone: "default" as const,
-                        },
-                      ]}
-                    />
-                  </div>
-                </div>
-              ) : null
-            }
-            supplementary={
-              viewModel.attributionWarnings.length ? (
-                <WorkbenchStatusRow
-                  label="Attribution notes"
-                  className="performance-risk-quality-flags"
-                  items={viewModel.attributionWarnings.map((warning) => ({
-                    value: warning,
-                    tone: "warn" as const,
-                  }))}
-                />
-              ) : null
-            }
-          />
-
           {viewModel.attributionState === "loading" ? (
             <ScreenStatePanel
               kind="loading"
-              title="Loading historical risk attribution"
-              body="Fetching stateful attribution contributors for the selected controls."
+              title={riskAttributionPanelCopy.loadingTitle}
+              body={riskAttributionPanelCopy.loadingBody}
               surface="analysis"
               rows={2}
             />
           ) : viewModel.attributionState === "blocked" ? (
             <ScreenStatePanel
               kind="partial"
-              title="Attribution selection blocked"
-              body="The selected attribution combination is blocked by the current stateful support matrix."
-              hint="Choose a supported attribution type and grouping combination to continue."
+              title={riskAttributionPanelCopy.blockedTitle}
+              body={riskAttributionPanelCopy.blockedBody}
+              hint={riskAttributionPanelCopy.blockedHint}
               surface="analysis"
             />
           ) : viewModel.attributionState === "unavailable" ? (
             <ScreenStatePanel
               kind="unavailable"
-              title="Historical risk attribution unavailable"
-              body="Historical risk attribution is not available for the selected portfolio context."
+              title={riskAttributionPanelCopy.unavailableTitle}
+              body={riskAttributionPanelCopy.unavailableBody}
               surface="analysis"
             />
           ) : (
             <RiskAnalyticalTable
-              ariaLabel="Historical risk attribution table"
+              ariaLabel={riskAttributionPanelCopy.tableAriaLabel}
               density="compact"
               className="performance-risk-attribution-detail-table"
               columns={[
@@ -190,12 +149,20 @@ export default function RiskAttributionPanel({
                   row.contributionShare,
                 ],
               }))}
-              emptyState={{
-                title: "No attribution contributors",
-                body: "Historical risk attribution did not return contributor rows for the selected controls.",
-              }}
+              emptyState={riskAttributionPanelCopy.tableEmptyState}
             />
           )}
+
+          {viewModel.attributionWarnings.length ? (
+            <WorkbenchStatusRow
+              label={riskAttributionPanelCopy.warningsLabel}
+              className="performance-risk-quality-flags performance-risk-attribution-warnings-row"
+              items={viewModel.attributionWarnings.map((warning) => ({
+                value: warning,
+                tone: "warn" as const,
+              }))}
+            />
+          ) : null}
         </RiskDetailSection>
       }
     />

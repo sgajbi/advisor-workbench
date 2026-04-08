@@ -4,6 +4,7 @@ import RiskPanelUtilityRow from "./risk-panel-utility-row";
 import RiskRollingBusinessReading from "./risk-rolling-business-reading";
 import RiskRollingHeadlineMetrics from "./risk-rolling-headline-metrics";
 import RiskRollingWindowDetail from "./risk-rolling-window-detail";
+import { riskRollingPanelCopy } from "./risk-secondary-copy";
 
 type RiskRollingPanelProps = {
   viewModel: PerformanceRiskViewModel;
@@ -30,17 +31,17 @@ export default function RiskRollingPanel({
 
   return (
     <RiskModuleShell
-      title="Rolling Risk"
-      subtitle="Selected-window behaviour, relative reliability, and next-horizon review."
+      title={riskRollingPanelCopy.title}
+      subtitle={riskRollingPanelCopy.subtitle}
       priority="secondary"
       density="compact"
       className="performance-risk-rolling-panel"
       actions={
         <RiskPanelUtilityRow
-          panelTitle="Rolling Risk"
+          panelTitle={riskRollingPanelCopy.methodologyPanelTitle}
           methodologyRows={viewModel.rollingContextRows}
           drilldownAction={{
-            label: "View rolling series",
+            label: riskRollingPanelCopy.drilldownLabel,
             onClick: () => onViewSeries(selectedWindow?.key ?? resolvedSelectedWindowKey),
           }}
         />

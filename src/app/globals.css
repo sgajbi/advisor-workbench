@@ -5861,22 +5861,6 @@ a:hover {
   padding: 0.6rem 0.72rem;
 }
 
-.performance-risk-analytical-review-frame {
-  display: grid;
-  gap: 0.56rem;
-  min-width: 0;
-}
-
-.performance-risk-analytical-review-frame-split {
-  grid-template-columns: minmax(0, 1.16fr) minmax(220px, 0.84fr);
-  align-items: start;
-}
-
-.performance-risk-analytical-review-frame-main,
-.performance-risk-analytical-review-frame-side {
-  min-width: 0;
-}
-
 .performance-risk-note-copy {
   display: grid;
   gap: 0.2rem;
@@ -5947,29 +5931,6 @@ a:hover {
   gap: 0.1rem;
 }
 
-.performance-risk-rolling-window-review {
-  background: rgba(248, 250, 252, 0.78);
-}
-
-.performance-risk-rolling-supportability-list {
-  gap: 0.55rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.performance-risk-rolling-supportability-note {
-  background: rgba(248, 250, 252, 0.58);
-}
-
-.performance-risk-rolling-supportability-note-warn {
-  border-color: rgba(202, 138, 4, 0.18);
-  background: rgba(255, 251, 235, 0.46);
-}
-
-.performance-risk-supportability-list {
-  display: grid;
-  gap: 0.75rem;
-}
-
 .performance-risk-attribution-highlights {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -5977,10 +5938,6 @@ a:hover {
 .performance-risk-attribution-highlight-card {
   min-height: 102px;
   padding: 0.82rem 0.88rem;
-}
-
-.performance-risk-attribution-reconciliation {
-  background: rgba(248, 250, 252, 0.6);
 }
 
 .performance-risk-secondary-main .performance-risk-analytical-table-compact,
@@ -6007,18 +5964,6 @@ a:hover {
   gap: 0.44rem;
 }
 
-.performance-risk-secondary-sidecar .performance-risk-attribution-review-frame {
-  gap: 0.46rem;
-}
-
-.performance-risk-secondary-sidecar .performance-risk-attribution-review-frame.performance-risk-analytical-review-frame-split {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.performance-risk-secondary-sidecar .performance-risk-attribution-reconciliation {
-  padding: 0.52rem 0.62rem;
-}
-
 .performance-risk-secondary-sidecar .performance-risk-attribution-detail-table {
   min-width: 0;
 }
@@ -6027,12 +5972,9 @@ a:hover {
   max-height: 288px;
 }
 
-.performance-risk-secondary-main .performance-risk-rolling-window-review {
-  padding: 0.68rem 0.78rem;
-}
-
-.performance-risk-secondary-main .performance-risk-rolling-review-frame {
-  gap: 0.5rem;
+.performance-risk-rolling-supportability-row,
+.performance-risk-attribution-warnings-row {
+  margin-top: 0.18rem;
 }
 
 .performance-risk-secondary-main .performance-risk-rolling-detail-table .analytics-table-shell {
@@ -6566,8 +6508,6 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-analytical-review-frame-split,
-  .performance-risk-rolling-supportability-list,
   .performance-risk-secondary-main .performance-risk-rolling-headline-grid,
   .performance-risk-secondary-sidecar .performance-risk-attribution-highlights {
     grid-template-columns: 1fr;

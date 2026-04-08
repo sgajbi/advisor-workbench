@@ -73,11 +73,8 @@ describe("RiskRollingPanel", () => {
 
     expect(screen.getByRole("tab", { name: "21D" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("Review window")).toBeInTheDocument();
-    expect(screen.getByText("21D selected-window review")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
-    expect(container.querySelector(".performance-risk-analytical-review-frame")).toBeTruthy();
-    expect(container.querySelector(".performance-risk-rolling-review-frame")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-rolling-detail-table")).toBeTruthy();
     expect(container.querySelector(".performance-risk-compact-segmented-control")).toBeTruthy();
@@ -86,6 +83,7 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByRole("columnheader", { name: "Range" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Review note" })).toBeInTheDocument();
     expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Rolling review notes")).toBeInTheDocument();
     expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Rolling Risk methodology and coverage" })
@@ -100,7 +98,6 @@ describe("RiskRollingPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "63D" }));
 
     expect(screen.getByRole("tab", { name: "63D" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("63D selected-window review")).toBeInTheDocument();
     expect(screen.queryByText("21D selected-window review")).not.toBeInTheDocument();
   });
 

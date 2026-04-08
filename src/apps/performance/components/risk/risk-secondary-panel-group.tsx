@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { riskSecondaryGroupCopy } from "./risk-secondary-copy";
+
 export default function RiskSecondaryPanelGroup({
   rolling,
   attribution,
@@ -11,10 +13,9 @@ export default function RiskSecondaryPanelGroup({
     <section className="performance-risk-secondary-group" aria-label="Secondary risk analysis">
       <div className="performance-risk-secondary-group-header">
         <div className="performance-risk-secondary-group-copy">
-          <span className="ui-text ui-text-eyebrow">Analytical follow-through</span>
+          <span className="ui-text ui-text-eyebrow">{riskSecondaryGroupCopy.eyebrow}</span>
           <span className="ui-text ui-text-secondary">
-            Rolling behaviour and attribution stay available as drill-down review after the current
-            book, path, and concentration posture are understood.
+            {riskSecondaryGroupCopy.subtitle}
           </span>
         </div>
       </div>

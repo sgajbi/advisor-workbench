@@ -1,12 +1,13 @@
 import {
   Text,
   WorkbenchSegmentedControl,
+  WorkbenchStatusRow,
 } from "@/design-system";
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskAnalyticalTable from "./risk-analytical-table";
-import RiskAnalyticalReviewFrame from "./risk-analytical-review-frame";
 import RiskDetailSection from "./risk-detail-section";
+import { riskRollingPanelCopy } from "./risk-secondary-copy";
 import RiskTableText from "./risk-table-text";
 
 export default function RiskRollingWindowDetail({
@@ -22,15 +23,15 @@ export default function RiskRollingWindowDetail({
 }) {
   return (
     <RiskDetailSection
-      title="Window detail"
+      title={riskRollingPanelCopy.detailTitle}
       ariaLabel="Rolling risk detail"
       density="compact"
       toolbar={
         viewModel.rollingWindows.length > 1 ? (
           <div className="performance-risk-rolling-window-selector">
             <div className="performance-risk-rolling-window-selector-copy">
-              <Text variant="label">Review window</Text>
-              <Text variant="metadata">Short to long horizon</Text>
+              <Text variant="label">{riskRollingPanelCopy.reviewWindowLabel}</Text>
+              <Text variant="metadata">{riskRollingPanelCopy.reviewWindowSupport}</Text>
             </div>
             <WorkbenchSegmentedControl
               value={selectedWindow?.key ?? selectedWindowKey}
@@ -48,51 +49,8 @@ export default function RiskRollingWindowDetail({
         ) : null
       }
     >
-      <RiskAnalyticalReviewFrame
-        className="performance-risk-rolling-review-frame"
-        summary={
-          selectedWindow?.selectedWindowSummary ? (
-            <div className="performance-risk-note-card performance-risk-rolling-window-review">
-              <div className="performance-risk-note-copy">
-                <Text variant="cardTitle">{selectedWindow.selectedWindowSummary.title}</Text>
-                <Text variant="secondary">{selectedWindow.selectedWindowSummary.body}</Text>
-                <Text variant="metadata" className="performance-risk-briefing-cue">
-                  Next: {selectedWindow.selectedWindowNextStep}
-                </Text>
-              </div>
-            </div>
-          ) : null
-        }
-        supplementary={
-          viewModel.rollingSupportabilityNotes.length ? (
-            <div
-              className="performance-risk-supportability-list performance-risk-rolling-supportability-list"
-              aria-label="Rolling review supportability notes"
-            >
-              {viewModel.rollingSupportabilityNotes.map((note) => (
-                <div
-                  key={note.key}
-                  className={[
-                    "performance-risk-note-card",
-                    "performance-risk-rolling-supportability-note",
-                    note.tone === "warn" ? "performance-risk-rolling-supportability-note-warn" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  <div className="performance-risk-note-copy">
-                    <Text variant="cardTitle">{note.title}</Text>
-                    <Text variant="secondary">{note.body}</Text>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null
-        }
-      />
-
       <RiskAnalyticalTable
-        ariaLabel="Rolling risk summary table"
+        ariaLabel={riskRollingPanelCopy.detailTableAriaLabel}
         density="compact"
         className="performance-risk-rolling-detail-table"
         columns={[
@@ -116,11 +74,19 @@ export default function RiskRollingWindowDetail({
             />,
           ],
         }))}
-        emptyState={{
-          title: "No rolling risk metrics",
-          body: "Rolling risk windows are not available for this portfolio context.",
-        }}
+        emptyState={riskRollingPanelCopy.detailTableEmptyState}
       />
+
+      {viewModel.rollingSupportabilityNotes.length ? (
+        <WorkbenchStatusRow
+          label={riskRollingPanelCopy.supportabilityLabel}
+          className="performance-risk-quality-flags performance-risk-rolling-supportability-row"
+          items={viewModel.rollingSupportabilityNotes.map((note) => ({
+            value: note.title,
+            tone: note.tone === "warn" ? ("warn" as const) : ("default" as const),
+          }))}
+        />
+      ) : null}
     </RiskDetailSection>
   );
 }
