@@ -22,6 +22,7 @@ export default function RiskRollingWindowDetail({
     <RiskDetailSection
       title="Window detail"
       ariaLabel="Rolling risk detail"
+      density="compact"
       toolbar={
         viewModel.rollingWindows.length > 1 ? (
           <div className="performance-risk-rolling-window-selector">
@@ -84,6 +85,7 @@ export default function RiskRollingWindowDetail({
 
       <RiskAnalyticalTable
         ariaLabel="Rolling risk summary table"
+        density="compact"
         columns={[
           { key: "metric", label: "Measure" },
           { key: "current", label: "Current", align: "right" },

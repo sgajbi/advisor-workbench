@@ -62,6 +62,7 @@ export default function RiskAttributionPanel({
         <RiskDetailSection
           title="Contributor review"
           ariaLabel="Risk attribution detail"
+          density="compact"
           toolbar={
             controls ? (
               <div className="performance-risk-attribution-toolbar">
@@ -156,6 +157,7 @@ export default function RiskAttributionPanel({
           ) : (
             <RiskAnalyticalTable
               ariaLabel="Historical risk attribution table"
+              density="compact"
               columns={[
                 { key: "group", label: "Group" },
                 { key: "avgWeight", label: "Average Weight", align: "right" },

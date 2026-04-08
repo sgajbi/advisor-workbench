@@ -26,6 +26,23 @@ describe("RiskAnalyticalTable", () => {
     expect(container.querySelector(".performance-risk-analytical-table")).toBeTruthy();
   });
 
+  it("supports a compact variant for secondary analytical panels", () => {
+    const { container } = render(
+      <RiskAnalyticalTable
+        ariaLabel="Historical risk attribution table"
+        density="compact"
+        columns={[{ key: "group", label: "Group" }]}
+        rows={[{ key: "credit", cells: ["Private Credit"] }]}
+        emptyState={{
+          title: "No attribution contributors",
+          body: "Historical risk attribution did not return contributor rows for the selected controls.",
+        }}
+      />
+    );
+
+    expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
+  });
+
   it("preserves explicit empty-state messaging instead of fabricating fallback rows", () => {
     render(
       <RiskAnalyticalTable

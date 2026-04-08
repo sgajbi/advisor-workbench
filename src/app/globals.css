@@ -5349,6 +5349,16 @@ a:hover {
   gap: 0.85rem;
 }
 
+.performance-risk-secondary-group .performance-risk-rolling-headline-grid,
+.performance-risk-secondary-group .performance-risk-attribution-highlights {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.performance-risk-secondary-group .performance-risk-rolling-headline-card,
+.performance-risk-secondary-group .performance-risk-attribution-highlight-card {
+  min-height: 88px;
+}
+
 .performance-risk-panel .section-block-body {
   display: grid;
   gap: 0.9rem;
@@ -5543,6 +5553,15 @@ a:hover {
   gap: 0.7rem;
 }
 
+.performance-risk-detail-section-compact {
+  gap: 0.6rem;
+  padding: 0.8rem 0.88rem;
+}
+
+.performance-risk-detail-section-compact .performance-risk-detail-body {
+  gap: 0.6rem;
+}
+
 .performance-risk-briefing-card {
   display: grid;
   gap: 0.55rem;
@@ -5664,6 +5683,17 @@ a:hover {
   line-height: 1.5;
 }
 
+.performance-risk-analytical-table-compact {
+  max-height: 316px;
+}
+
+.performance-risk-analytical-table-compact .analytics-table-head-cell,
+.performance-risk-analytical-table-compact .analytics-table-body-cell,
+.performance-risk-analytical-table-compact .analytics-table-footer-cell {
+  padding-top: 0.72rem;
+  padding-bottom: 0.72rem;
+}
+
 .performance-risk-note-card {
   display: grid;
   align-items: start;
@@ -5748,7 +5778,8 @@ a:hover {
 }
 
 .performance-risk-rolling-supportability-list {
-  gap: 0.65rem;
+  gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .performance-risk-rolling-supportability-note {
@@ -6254,6 +6285,12 @@ a:hover {
 
   .performance-risk-secondary-metrics,
   .performance-risk-context-list {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-risk-rolling-supportability-list,
+  .performance-risk-secondary-group .performance-risk-rolling-headline-grid,
+  .performance-risk-secondary-group .performance-risk-attribution-highlights {
     grid-template-columns: 1fr;
   }
 

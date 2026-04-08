@@ -73,6 +73,8 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByText("Review window")).toBeInTheDocument();
     expect(screen.getByText("21D selected-window review")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
+    expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Current" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Observed Range" })).toBeInTheDocument();
