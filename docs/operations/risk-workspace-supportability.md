@@ -36,6 +36,27 @@ Secondary measures such as `Information Ratio`, `Sortino`, and `Value at Risk` r
 contract-backed, but they belong below the headline row as supporting interpretation rather than
 the first executive read.
 
+## Drawdown first-read contract
+
+Drawdown is the front-office loss-path review module for the Risk workspace.
+
+The UI must answer three questions within the first viewport:
+
+1. whether realized drawdown was contained or severe,
+2. whether benchmark-relative drawdown is relevant enough to use,
+3. whether the book recovered or remains underwater.
+
+The first metric row is reserved for:
+
+1. `Max Drawdown`
+2. `Relative Max Drawdown`
+3. `Time Under Water`
+4. `Recovery Status`
+
+`Ulcer Index` remains contract-backed, but it sits below the headline row as a supporting
+path-severity measure. Episode detail is interpretive first and tabular second: a retained-episode
+table is shown only as supporting evidence after the business reading explains what to review.
+
 ## Stateful-only rule
 
 Workbench does not surface stateless risk execution.

@@ -5295,6 +5295,11 @@ a:hover {
   padding-top: 0.25rem;
 }
 
+.performance-risk-drawdown-detail-stack {
+  display: grid;
+  gap: 0.9rem;
+}
+
 .performance-risk-rolling-detail {
   display: grid;
   gap: 0.65rem;

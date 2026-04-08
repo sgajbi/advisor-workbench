@@ -92,10 +92,19 @@ describe("buildPerformanceRiskViewModel", () => {
       "Relative Max Drawdown",
       "Time Under Water",
       "Recovery Status",
+    ]);
+    expect(viewModel.drawdownSupportingMetrics.map((metric) => metric.label)).toEqual([
       "Ulcer Index",
     ]);
     expect(viewModel.drawdownExecutiveSummary).toMatchObject({
       heading: "Business reading",
+      headline:
+        "Drawdown was elevated, benchmark-relative review is relevant, and the book is still underwater.",
+      actionCue:
+        "Next review: inspect the worst episode and confirm whether the remaining underwater path needs action.",
+    });
+    expect(viewModel.drawdownEpisodeInterpretation).toMatchObject({
+      title: "2 drawdown episodes to review",
     });
     expect(viewModel.drawdownContextRows[0]).toMatchObject({
       label: "Portfolio observations",

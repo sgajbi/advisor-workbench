@@ -113,14 +113,13 @@ export type PerformanceRiskViewModel = {
   concentrationScales: PerformanceRiskConcentrationScale[];
   concentrationContextRows: PerformanceRiskConcentrationContextRow[];
   drawdownExecutiveSummary: PerformanceRiskExecutiveSummary | null;
-  drawdownHeadlineMetrics: Array<{
-    key: string;
-    label: string;
-    value: string;
-    support: string;
-    state: PerformanceRiskState;
-  }>;
+  drawdownHeadlineMetrics: PerformanceRiskMetricCard[];
+  drawdownSupportingMetrics: PerformanceRiskMetricCard[];
   drawdownContextRows: PerformanceRiskContextRow[];
+  drawdownEpisodeInterpretation: {
+    title: string;
+    body: string;
+  } | null;
   drawdownEpisodes: Array<{
     key: string;
     episode: string;
@@ -334,7 +333,9 @@ export function buildPerformanceRiskViewModel({
     concentrationContextRows: mapConcentrationContextRows(concentration),
     drawdownExecutiveSummary: mapDrawdownExecutiveSummary(drawdown),
     drawdownHeadlineMetrics: mapDrawdownHeadlineMetrics(drawdown),
+    drawdownSupportingMetrics: mapDrawdownSupportingMetrics(drawdown),
     drawdownContextRows: mapDrawdownContextRows(drawdown),
+    drawdownEpisodeInterpretation: mapDrawdownEpisodeInterpretation(drawdown),
     drawdownEpisodes: mapDrawdownEpisodes(drawdown),
     drawdownRelativeMetric: mapRelativeDrawdownMetric(drawdown),
     underwaterSeries: mapUnderwaterSeries(drawdownDetail),
@@ -1262,7 +1263,9 @@ function buildStateViewModel(
     concentrationContextRows: [],
     drawdownExecutiveSummary: null,
     drawdownHeadlineMetrics: [],
+    drawdownSupportingMetrics: [],
     drawdownContextRows: [],
+    drawdownEpisodeInterpretation: null,
     drawdownEpisodes: [],
     drawdownRelativeMetric: null,
     underwaterSeries: [],
@@ -1789,7 +1792,9 @@ function mapConcentrationContextRows(
   ];
 }
 
-function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
+function mapDrawdownHeadlineMetrics(
+  response: WorkbenchRiskDrawdownResponse
+): PerformanceRiskMetricCard[] {
   const period = response.payload?.periods[0];
   const summary = period?.summary;
   if (!period || !summary) {
@@ -1811,35 +1816,54 @@ function mapDrawdownHeadlineMetrics(response: WorkbenchRiskDrawdownResponse) {
       key: "max_drawdown",
       label: "Max Drawdown",
       value: formatDrawdownPercent(summary.max_drawdown),
-      support: buildDrawdownDateRange(summary),
+      support: describeDrawdownHeadlineMetric("max_drawdown", response, period),
+      definition: "Largest realized peak-to-trough decline over the selected window.",
       state: resolveModuleState(response.state),
     },
     {
       key: "relative_max_drawdown",
       label: "Relative Max Drawdown",
       value: relative ? formatDrawdownPercent(relative.max_drawdown) : "N/A",
-      support: relative ? buildRelativeDrawdownDateRange(relative) : "Benchmark-relative review unavailable",
-      state: resolveModuleState(response.state),
+      support: describeDrawdownHeadlineMetric("relative_max_drawdown", response, period),
+      definition:
+        "Largest drawdown in active performance versus the benchmark over the selected window.",
+      state: relative ? resolveModuleState(response.state) : "unavailable",
     },
     {
       key: "time_under_water_days",
       label: "Time Under Water",
       value: formatInteger(relative?.time_under_water_days ?? summary.time_under_water_days),
-      support: "Business days below prior peak",
+      support: describeDrawdownHeadlineMetric("time_under_water_days", response, period),
+      definition: "Number of business days the portfolio remained below its prior peak.",
       state: resolveModuleState(response.state),
     },
     {
       key: "recovery_status",
       label: "Recovery Status",
       value: recoveryStatus,
-      support: recoveryStatus === "Recovered" ? "Recovered before the period close" : "Recovery remained open at period close",
+      support: describeDrawdownHeadlineMetric("recovery_status", response, period),
+      definition: "Whether the worst drawdown had recovered by the end of the selected window.",
       state: resolveModuleState(response.state),
     },
+  ];
+}
+
+function mapDrawdownSupportingMetrics(
+  response: WorkbenchRiskDrawdownResponse
+): PerformanceRiskMetricCard[] {
+  const summary = response.payload?.periods[0]?.summary;
+  if (!summary) {
+    return [];
+  }
+
+  return [
     {
       key: "ulcer_index",
       label: "Ulcer Index",
       value: formatDrawdownPercent(summary.ulcer_index),
-      support: "Path severity across underwater observations",
+      support: "Shows how persistent and painful the underwater path was, not just how deep it got.",
+      definition:
+        "Path-sensitive drawdown measure that reflects both drawdown depth and time spent underwater.",
       state: resolveModuleState(response.state),
     },
   ];
@@ -1856,20 +1880,24 @@ function mapDrawdownExecutiveSummary(
   const relative = period.relative_to_benchmark;
   const hasPortfolioDrawdown = typeof summary.max_drawdown === "number" && summary.max_drawdown < 0;
   const hasRelativeDrawdown = typeof relative?.max_drawdown === "number" && relative.max_drawdown < 0;
+  const severity = resolveDrawdownSeverity(summary.max_drawdown);
+  const benchmarkRelevance = resolveDrawdownBenchmarkRelevance(period);
+  const recoveryState =
+    summary.is_recovered === true ? "recovered" : hasPortfolioDrawdown ? "still underwater" : "not in drawdown";
 
   return {
     heading: "Business reading",
-    headline: hasPortfolioDrawdown
-      ? `Realized drawdown reached ${formatDrawdownPercent(summary.max_drawdown)} over the selected window.`
-      : hasRelativeDrawdown
-        ? "Absolute drawdown remained contained, but benchmark-relative drawdown is visible."
-        : "No realized drawdown was recorded in the selected window.",
-    detail: hasRelativeDrawdown
-      ? `Benchmark-relative drawdown reached ${formatDrawdownPercent(relative?.max_drawdown)} and remained underwater for ${formatInteger(relative?.time_under_water_days)} business days.`
-      : `Time under water was ${formatInteger(summary.time_under_water_days)} business days and the ulcer index was ${formatDrawdownPercent(summary.ulcer_index)} across the selected window.`,
-    actionCue: hasPortfolioDrawdown || hasRelativeDrawdown
-      ? "Review the largest adverse interval and confirm whether recovery has been completed."
-      : "Use benchmark-relative drawdown and episode evidence for any deeper stress review.",
+    headline: `Drawdown was ${severity.label.toLowerCase()}, benchmark-relative review is ${benchmarkRelevance.label.toLowerCase()}, and the book is ${recoveryState}.`,
+    detail:
+      hasPortfolioDrawdown || hasRelativeDrawdown
+        ? buildDrawdownBusinessReadingDetail(summary, relative, benchmarkRelevance.state)
+        : "No meaningful loss path was retained for the selected window, so drawdown review is currently quiet.",
+    actionCue:
+      hasPortfolioDrawdown || hasRelativeDrawdown
+        ? summary.is_recovered
+          ? "Next review: confirm the worst episode is fully recovered and benchmark-relative stress was acceptable."
+          : "Next review: inspect the worst episode and confirm whether the remaining underwater path needs action."
+        : "Next review: keep drawdown monitoring passive unless benchmark-relative pressure starts to widen.",
   };
 }
 
@@ -1886,7 +1914,7 @@ function mapDrawdownContextRows(
       key: "portfolio_observations",
       label: "Portfolio observations",
       value: formatInteger(period.portfolio_observation_count),
-      support: "Return observations used for drawdown analysis",
+      support: "Observation count supporting the realized loss-path review.",
     },
     {
       key: "benchmark_relative_review",
@@ -1894,16 +1922,47 @@ function mapDrawdownContextRows(
       value: formatEnumLabel(period.relative_to_benchmark_context?.reason) ?? "Not requested",
       support:
         period.relative_to_benchmark_context?.applied
-          ? `${formatInteger(period.relative_to_benchmark_context.aligned_observation_count)} aligned observations`
-          : "Benchmark-relative drawdown not applied",
+          ? `${formatInteger(period.relative_to_benchmark_context.aligned_observation_count)} aligned observations support relative drawdown.`
+          : "Relative drawdown is not active for this selection.",
     },
     {
       key: "duration_unit",
       label: "Duration unit",
       value: formatEnumLabel(analysisContext?.duration_unit) ?? "Business Days",
-      support: "Drawdown duration convention",
+      support: "Unit used for time-under-water and episode duration.",
     },
   ];
+}
+
+function mapDrawdownEpisodeInterpretation(
+  response: WorkbenchRiskDrawdownResponse
+): { title: string; body: string } | null {
+  const period = response.payload?.periods[0];
+  const summary = period?.summary;
+  const episodes = period?.episodes ?? [];
+  if (!period || !summary) {
+    return null;
+  }
+
+  if (!episodes.length) {
+    return {
+      title: "No retained drawdown episodes",
+      body:
+        typeof summary.max_drawdown === "number" && summary.max_drawdown < 0
+          ? "The portfolio did experience a loss path, but no episode met the retained episode policy for this window."
+          : "The selected window did not produce a retained peak-to-trough loss interval, which indicates drawdown remained controlled over this review period.",
+    };
+  }
+
+  const worstEpisode = episodes[0];
+  return {
+    title: `${formatInteger(episodes.length)} drawdown ${episodes.length === 1 ? "episode" : "episodes"} to review`,
+    body: `The worst retained episode reached ${formatDrawdownPercent(
+      worstEpisode.depth
+    )} from ${formatDateValue(worstEpisode.peak_date)} to ${formatDateValue(
+      worstEpisode.trough_date
+    )}${worstEpisode.is_recovered ? ` and recovered by ${formatDateValue(worstEpisode.recovery_date ?? "")}.` : ", and it remains open."}`,
+  };
 }
 
 function mapDrawdownEpisodes(response: WorkbenchRiskDrawdownResponse) {
@@ -2171,6 +2230,93 @@ function mapRollingExecutiveSummary(
           : "Risk-free aligned measures should be qualified for this request.",
     actionCue: "Use shorter windows for current behaviour and longer windows for stability review.",
   };
+}
+
+function describeDrawdownHeadlineMetric(
+  key: "max_drawdown" | "relative_max_drawdown" | "time_under_water_days" | "recovery_status",
+  response: WorkbenchRiskDrawdownResponse,
+  period: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]
+): string {
+  const summary = period.summary;
+  const relative = period.relative_to_benchmark;
+  if (!summary) {
+    return "Drawdown summary unavailable.";
+  }
+  switch (key) {
+    case "max_drawdown":
+      return buildDrawdownDateRange(summary);
+    case "relative_max_drawdown":
+      return relative
+        ? buildRelativeDrawdownDateRange(relative)
+        : response.supportability.find((item) => item.key === "benchmark_relative_drawdown")?.reason ??
+            "Benchmark-relative review unavailable.";
+    case "time_under_water_days":
+      return "Business days the portfolio remained below its prior peak.";
+    case "recovery_status":
+      return summary.is_recovered
+        ? "Worst drawdown recovered before period end."
+        : "Worst drawdown was still open at period end.";
+  }
+}
+
+function resolveDrawdownSeverity(maxDrawdown: number | null | undefined): {
+  label: "Contained" | "Moderate" | "Elevated" | "Severe";
+} {
+  if (typeof maxDrawdown !== "number" || maxDrawdown >= 0) {
+    return { label: "Contained" };
+  }
+
+  const absoluteDepth = Math.abs(maxDrawdown);
+  if (absoluteDepth >= 0.15) {
+    return { label: "Severe" };
+  }
+  if (absoluteDepth >= 0.1) {
+    return { label: "Elevated" };
+  }
+  if (absoluteDepth >= 0.05) {
+    return { label: "Moderate" };
+  }
+  return { label: "Contained" };
+}
+
+function resolveDrawdownBenchmarkRelevance(
+  period: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]
+): {
+  label: "Relevant" | "Qualified" | "Unavailable";
+  state: "relevant" | "qualified" | "unavailable";
+} {
+  if (period.relative_to_benchmark) {
+    const absoluteRelativeDrawdown = Math.abs(period.relative_to_benchmark.max_drawdown ?? 0);
+    return absoluteRelativeDrawdown >= 0.02
+      ? { label: "Relevant", state: "relevant" }
+      : { label: "Qualified", state: "qualified" };
+  }
+
+  if (period.relative_to_benchmark_context?.requested) {
+    return { label: "Qualified", state: "qualified" };
+  }
+
+  return { label: "Unavailable", state: "unavailable" };
+}
+
+function buildDrawdownBusinessReadingDetail(
+  summary: NonNullable<NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["summary"]>,
+  relative: NonNullable<NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["relative_to_benchmark"]> | null | undefined,
+  benchmarkState: "relevant" | "qualified" | "unavailable"
+): string {
+  const absoluteDetail = `Portfolio drawdown reached ${formatDrawdownPercent(
+    summary.max_drawdown
+  )} and spent ${formatInteger(summary.time_under_water_days)} business days below peak.`;
+  if (!relative) {
+    return absoluteDetail;
+  }
+
+  const relativeDetail =
+    benchmarkState === "relevant"
+      ? `Relative drawdown reached ${formatDrawdownPercent(relative.max_drawdown)}, so benchmark-relative stress is meaningful in this window.`
+      : `Relative drawdown reached ${formatDrawdownPercent(relative.max_drawdown)}, but benchmark-relative review should be treated as secondary.`;
+
+  return `${absoluteDetail} ${relativeDetail}`;
 }
 
 function buildRelativeDrawdownDateRange(
