@@ -15,10 +15,10 @@ describe("Risk panel groups", () => {
     );
 
     const primaryGroup = screen.getByLabelText("Primary risk review");
-    expect(within(primaryGroup).getByText("Front-line risk review")).toBeInTheDocument();
     expect(within(primaryGroup).getByLabelText("Snapshot panel")).toBeInTheDocument();
     expect(within(primaryGroup).getByLabelText("Drawdown panel")).toBeInTheDocument();
     expect(within(primaryGroup).getByLabelText("Concentration panel")).toBeInTheDocument();
+    expect(within(primaryGroup).queryByText("Front-line risk review")).not.toBeInTheDocument();
   });
 
   it("keeps rolling and attribution grouped as secondary analysis", () => {
@@ -30,7 +30,6 @@ describe("Risk panel groups", () => {
     );
 
     const secondaryGroup = screen.getByLabelText("Secondary risk analysis");
-    expect(within(secondaryGroup).getByText("Analytical follow-through")).toBeInTheDocument();
     expect(within(secondaryGroup).getByLabelText("Rolling panel")).toBeInTheDocument();
     expect(within(secondaryGroup).getByLabelText("Attribution panel")).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-secondary-workspace")).toBeTruthy();
@@ -38,5 +37,6 @@ describe("Risk panel groups", () => {
     expect(container.querySelector(".performance-risk-secondary-sidecar")).toBeTruthy();
     expect(container.querySelector(".performance-risk-secondary-panel-slot-rolling")).toBeTruthy();
     expect(container.querySelector(".performance-risk-secondary-panel-slot-attribution")).toBeTruthy();
+    expect(within(secondaryGroup).queryByText("Analytical follow-through")).not.toBeInTheDocument();
   });
 });

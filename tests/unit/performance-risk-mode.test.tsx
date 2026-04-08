@@ -77,7 +77,7 @@ describe("PerformanceRiskMode", () => {
     });
     expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Risk posture");
-    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("What matters now");
+    expect(screen.getByLabelText("Risk executive overview")).not.toHaveTextContent("What matters now");
     expect(screen.getByLabelText("Primary risk review")).toBeInTheDocument();
     expect(screen.getByLabelText("Secondary risk analysis")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /methodology and coverage$/i })).toHaveLength(5);

@@ -130,7 +130,6 @@ export default function PerformanceRiskMode({
           <div className="performance-risk-main-column">
             <RiskExecutiveOverview
               overview={viewModel.workspaceOverview}
-              mattersNow={viewModel.whatMattersNow}
             />
             <RiskPrimaryPanelGroup
               snapshot={<RiskSnapshotPanel viewModel={viewModel} />}

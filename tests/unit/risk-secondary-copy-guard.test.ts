@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 import {
   riskAttributionPanelCopy,
   riskRollingPanelCopy,
-  riskSecondaryGroupCopy,
 } from "../../src/apps/performance/components/risk/risk-secondary-copy";
 
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -16,8 +15,7 @@ function readRepoFile(relativePath: string) {
 }
 
 describe("secondary risk copy governance", () => {
-  it("centralizes secondary workspace framing copy in the shared copy contract", () => {
-    expect(riskSecondaryGroupCopy.eyebrow).toBe("Analytical follow-through");
+  it("centralizes only panel-local secondary copy in the shared copy contract", () => {
     expect(riskRollingPanelCopy.title).toBe("Rolling Risk");
     expect(riskAttributionPanelCopy.title).toBe("Historical Risk Attribution");
   });
@@ -42,11 +40,8 @@ describe("secondary risk copy governance", () => {
     const fileExpectations = [
       {
         file: "src/apps/performance/components/risk/risk-secondary-panel-group.tsx",
-        required: ['from "./risk-secondary-copy"'],
-        forbidden: [
-          "Analytical follow-through",
-          "Rolling behaviour and attribution stay available as drill-down review after the current",
-        ],
+        required: [],
+        forbidden: ['from "./risk-secondary-copy"', "Analytical follow-through"],
       },
       {
         file: "src/apps/performance/components/risk/risk-rolling-panel.tsx",

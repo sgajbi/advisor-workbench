@@ -133,14 +133,7 @@ export type PerformanceRiskOverviewItem = {
   key: string;
   label: string;
   value: string;
-  support: string;
   tone: "default" | "success" | "warn" | "danger";
-};
-
-export type PerformanceRiskWhatMattersItem = {
-  key: string;
-  title: string;
-  body: string;
 };
 
 export type PerformanceRiskViewModel = {
@@ -149,7 +142,6 @@ export type PerformanceRiskViewModel = {
   synopsis: string;
   contextItems: Array<{ label: string; value: string }>;
   workspaceOverview: PerformanceRiskOverviewItem[];
-  whatMattersNow: PerformanceRiskWhatMattersItem[];
   snapshotHeadlineMetrics: PerformanceRiskMetricCard[];
   snapshotSupportingMetrics: PerformanceRiskMetricCard[];
   snapshotContextRows: PerformanceRiskContextRow[];
@@ -348,14 +340,6 @@ export function buildPerformanceRiskViewModel({
         : "Stateful portfolio risk is available for the selected performance context.",
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
     workspaceOverview: buildRiskWorkspaceOverview({
-      summary,
-      concentration,
-      drawdown,
-      rolling,
-      attribution,
-      supportability,
-    }),
-    whatMattersNow: buildRiskWhatMattersNow({
       summary,
       concentration,
       drawdown,
@@ -1291,7 +1275,6 @@ function buildStateViewModel(
         : "Stateful risk is not available for the selected portfolio context.",
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     workspaceOverview: [],
-    whatMattersNow: [],
     snapshotHeadlineMetrics: [],
     snapshotSupportingMetrics: [],
     snapshotContextRows: [],
@@ -1371,7 +1354,6 @@ function buildRiskWorkspaceOverview({
   }>;
 }): PerformanceRiskOverviewItem[] {
   const snapshotSummary = mapSnapshotExecutiveSummary(summary);
-  const drawdownSummary = mapDrawdownExecutiveSummary(drawdown);
   const concentrationSummary = mapConcentrationExecutiveSummary(concentration);
   const supportabilityPosture = resolveRiskEvidencePosture(supportability, [
     summary.state,
@@ -1386,112 +1368,25 @@ function buildRiskWorkspaceOverview({
       key: "risk_posture",
       label: "Risk posture",
       value: resolveRiskSnapshotPosture(snapshotSummary),
-      support:
-        snapshotSummary?.detail ??
-        "Current total-risk reading is not available for the selected portfolio context.",
       tone: resolveRiskSnapshotOverviewTone(snapshotSummary),
     },
     {
       key: "drawdown_posture",
       label: "Drawdown posture",
       value: resolveDrawdownOverviewPosture(drawdown),
-      support:
-        drawdownSummary?.detail ??
-        "Drawdown path review is not available for the selected portfolio context.",
       tone: resolveDrawdownOverviewTone(drawdown),
     },
     {
       key: "concentration_posture",
       label: "Concentration posture",
       value: concentrationSummary?.postureLabel ?? "Unavailable",
-      support:
-        concentrationSummary?.businessReadingDetail ??
-        "Concentration review is not available for the selected portfolio context.",
       tone: resolveConcentrationOverviewTone(concentrationSummary?.postureState),
     },
     {
       key: "evidence_posture",
       label: "Evidence posture",
       value: supportabilityPosture.label,
-      support: supportabilityPosture.support,
       tone: supportabilityPosture.tone,
-    },
-  ];
-}
-
-function buildRiskWhatMattersNow({
-  summary,
-  concentration,
-  drawdown,
-  rolling,
-  attribution,
-  supportability,
-}: {
-  summary: WorkbenchRiskSummaryResponse;
-  concentration: WorkbenchRiskConcentrationResponse;
-  drawdown: WorkbenchRiskDrawdownResponse;
-  rolling: WorkbenchRiskRollingResponse;
-  attribution: WorkbenchRiskAttributionResponse | null;
-  supportability: Array<{
-    key: string;
-    label: string;
-    state: WorkbenchRiskModuleState;
-    reason?: string | null;
-  }>;
-}): PerformanceRiskWhatMattersItem[] {
-  const snapshotSummary = mapSnapshotExecutiveSummary(summary);
-  const drawdownSummary = mapDrawdownExecutiveSummary(drawdown);
-  const concentrationSummary = mapConcentrationExecutiveSummary(concentration);
-  const rollingSummary = mapRollingExecutiveSummary(rolling);
-  const attributionSummary = mapAttributionExecutiveSummary(attribution);
-  const benchmarkQualified = supportability.some(
-    (item) =>
-      item.key === "summary:benchmark_returns" ||
-      item.key === "rolling:benchmark_returns" ||
-      item.key === "drawdown:benchmark_relative_drawdown"
-        ? item.state !== "ready"
-        : false
-  );
-
-  const totalRiskBody = snapshotSummary
-    ? `${snapshotSummary.headline.replace(/^Risk posture is /, "").replace(/\.$/, "")}. ${
-        benchmarkQualified
-          ? "Benchmark-relative measures should be treated as qualified."
-          : "Benchmark-relative measures are usable for first review."
-      }`
-    : "Current total-risk posture is not available for first review.";
-
-  const pathBody = drawdownSummary
-    ? `${drawdownSummary.headline.replace(/^Drawdown /, "").replace(/\.$/, "")}.`
-    : "Drawdown path review is not available for the selected context.";
-
-  const concentrationMatters =
-    concentrationSummary?.postureState === "high" ||
-    concentrationSummary?.postureState === "elevated" ||
-    concentrationSummary?.postureState === "partial";
-
-  const thirdTitle = concentrationMatters ? "Concentration" : "Drivers";
-  const thirdBody = concentrationMatters
-    ? `${concentrationSummary?.businessReadingHeadline ?? "Concentration review is qualified."}`
-    : attributionSummary?.headline ??
-      rollingSummary?.headline ??
-      "Cross-panel driver review is not available for the selected context.";
-
-  return [
-    {
-      key: "total_risk",
-      title: "Total risk posture",
-      body: totalRiskBody,
-    },
-    {
-      key: "path_review",
-      title: "Path and recovery",
-      body: pathBody,
-    },
-    {
-      key: "cross_panel_focus",
-      title: thirdTitle,
-      body: thirdBody,
     },
   ];
 }
@@ -2111,38 +2006,6 @@ function mapDrawdownSupportingMetrics(
   ];
 }
 
-function mapDrawdownExecutiveSummary(
-  response: WorkbenchRiskDrawdownResponse
-): PerformanceRiskExecutiveSummary | null {
-  const period = response.payload?.periods[0];
-  const summary = period?.summary;
-  if (!period || !summary) {
-    return null;
-  }
-  const relative = period.relative_to_benchmark;
-  const hasPortfolioDrawdown = typeof summary.max_drawdown === "number" && summary.max_drawdown < 0;
-  const hasRelativeDrawdown = typeof relative?.max_drawdown === "number" && relative.max_drawdown < 0;
-  const severity = resolveDrawdownSeverity(summary.max_drawdown);
-  const benchmarkRelevance = resolveDrawdownBenchmarkRelevance(period);
-  const recoveryState =
-    summary.is_recovered === true ? "recovered" : hasPortfolioDrawdown ? "still underwater" : "not in drawdown";
-
-  return {
-    heading: "Business reading",
-    headline: `Drawdown was ${severity.label.toLowerCase()}, benchmark-relative review is ${benchmarkRelevance.label.toLowerCase()}, and the book is ${recoveryState}.`,
-    detail:
-      hasPortfolioDrawdown || hasRelativeDrawdown
-        ? buildDrawdownBusinessReadingDetail(summary, relative, benchmarkRelevance.state)
-        : "No meaningful loss path was retained for the selected window, so drawdown review is currently quiet.",
-    actionCue:
-      hasPortfolioDrawdown || hasRelativeDrawdown
-        ? summary.is_recovered
-          ? "Next review: confirm the worst episode is fully recovered and benchmark-relative stress was acceptable."
-          : "Next review: inspect the worst episode and confirm whether the remaining underwater path needs action."
-        : "Next review: keep drawdown monitoring passive unless benchmark-relative pressure starts to widen.",
-  };
-}
-
 function mapDrawdownContextRows(
   response: WorkbenchRiskDrawdownResponse
 ): PerformanceRiskContextRow[] {
@@ -2454,29 +2317,6 @@ function formatRiskPercentValue(
   });
 }
 
-function mapRollingExecutiveSummary(
-  response: WorkbenchRiskRollingResponse
-): PerformanceRiskExecutiveSummary | null {
-  const period = response.payload?.periods[0];
-  if (!period) {
-    return null;
-  }
-  const firstWindow = period.window_results[0];
-  if (!firstWindow) {
-    return {
-      heading: "Business reading",
-      headline: "Rolling risk diagnostics are only partially available for the selected request.",
-      detail: "Rolling window evidence is not available for this request.",
-      actionCue: null,
-    };
-  }
-  return buildRollingSelectedWindowBusinessReading(
-    firstWindow.window_length,
-    firstWindow.metric_summaries,
-    period
-  );
-}
-
 function describeDrawdownHeadlineMetric(
   key: "max_drawdown" | "relative_max_drawdown" | "time_under_water_days" | "recovery_status",
   response: WorkbenchRiskDrawdownResponse,
@@ -2522,46 +2362,6 @@ function resolveDrawdownSeverity(maxDrawdown: number | null | undefined): {
     return { label: "Moderate" };
   }
   return { label: "Contained" };
-}
-
-function resolveDrawdownBenchmarkRelevance(
-  period: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]
-): {
-  label: "Relevant" | "Qualified" | "Unavailable";
-  state: "relevant" | "qualified" | "unavailable";
-} {
-  if (period.relative_to_benchmark) {
-    const absoluteRelativeDrawdown = Math.abs(period.relative_to_benchmark.max_drawdown ?? 0);
-    return absoluteRelativeDrawdown >= 0.02
-      ? { label: "Relevant", state: "relevant" }
-      : { label: "Qualified", state: "qualified" };
-  }
-
-  if (period.relative_to_benchmark_context?.requested) {
-    return { label: "Qualified", state: "qualified" };
-  }
-
-  return { label: "Unavailable", state: "unavailable" };
-}
-
-function buildDrawdownBusinessReadingDetail(
-  summary: NonNullable<NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["summary"]>,
-  relative: NonNullable<NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["relative_to_benchmark"]> | null | undefined,
-  benchmarkState: "relevant" | "qualified" | "unavailable"
-): string {
-  const absoluteDetail = `Portfolio drawdown reached ${formatDrawdownPercent(
-    summary.max_drawdown
-  )} and spent ${formatInteger(summary.time_under_water_days)} business days below peak.`;
-  if (!relative) {
-    return absoluteDetail;
-  }
-
-  const relativeDetail =
-    benchmarkState === "relevant"
-      ? `Relative drawdown reached ${formatDrawdownPercent(relative.max_drawdown)}, so benchmark-relative stress is meaningful in this window.`
-      : `Relative drawdown reached ${formatDrawdownPercent(relative.max_drawdown)}, but benchmark-relative review should be treated as secondary.`;
-
-  return `${absoluteDetail} ${relativeDetail}`;
 }
 
 function buildRelativeDrawdownDateRange(
@@ -2818,148 +2618,6 @@ function describeRollingMetric(metricKey: string) {
   }
 }
 
-function resolveRollingShortWindowPosture(
-  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"]
-): {
-  label: "Calm" | "Stable" | "Elevated" | "Unstable";
-  unusual: boolean;
-  drivers: string[];
-} {
-  const drivers: string[] = [];
-  const volatility = summaries.ROLLING_VOLATILITY;
-  const trackingError = summaries.ROLLING_TRACKING_ERROR;
-  const beta = summaries.ROLLING_BETA;
-  const maxDrawdown = summaries.ROLLING_MAX_DRAWDOWN;
-
-  if (typeof beta?.latest === "number" && beta.latest < 0) {
-    drivers.push("beta has turned negative");
-  }
-  if (isAboveObservedRange(volatility)) {
-    drivers.push("volatility is above its recent range");
-  }
-  if (isAboveObservedRange(trackingError)) {
-    drivers.push("tracking error is above its recent range");
-  }
-  if (isDeeperThanObservedRange(maxDrawdown)) {
-    drivers.push("rolling drawdown is deeper than most recent windows");
-  }
-
-  if (drivers.length > 0) {
-    return {
-      label: typeof beta?.latest === "number" && beta.latest < 0 ? "Unstable" : "Elevated",
-      unusual: true,
-      drivers,
-    };
-  }
-
-  if (
-    isAboveTypical(volatility) ||
-    isAboveTypical(trackingError) ||
-    isDeeperThanTypical(maxDrawdown)
-  ) {
-    return {
-      label: "Elevated",
-      unusual: false,
-      drivers: ["risk readings are above typical levels"],
-    };
-  }
-
-  if (
-    isBelowTypical(volatility) &&
-    (!trackingError || isBelowTypical(trackingError)) &&
-    isZeroOrShallowDrawdown(maxDrawdown)
-  ) {
-    return {
-      label: "Calm",
-      unusual: false,
-      drivers: ["short-window readings remain contained versus recent history"],
-    };
-  }
-
-  return {
-    label: "Stable",
-    unusual: false,
-    drivers: ["short-window readings are broadly in line with recent history"],
-  };
-}
-
-function buildRollingSelectedWindowBusinessReading(
-  windowLength: number,
-  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"],
-  period: RiskRollingPayload["periods"][number] | null
-): PerformanceRiskExecutiveSummary {
-  const posture = resolveRollingShortWindowPosture(summaries);
-  const benchmarkReady =
-    period?.benchmark_context?.reason === "APPLIED" ||
-    (!period?.benchmark_context &&
-      Boolean(summaries.ROLLING_BETA || summaries.ROLLING_TRACKING_ERROR));
-  const riskFreeReady = period?.risk_free_context?.reason === "APPLIED";
-
-  return {
-    heading: "Business reading",
-    headline: buildRollingBusinessHeadline(windowLength, posture),
-    detail: buildRollingExecutiveDetail({
-      summaries,
-      benchmarkReady,
-      riskFreeReady,
-      posture,
-    }),
-    actionCue: resolveRollingNextStep(windowLength, posture, benchmarkReady),
-  };
-}
-
-function buildRollingBusinessHeadline(
-  windowLength: number,
-  posture: {
-    label: "Calm" | "Stable" | "Elevated" | "Unstable";
-    unusual: boolean;
-  }
-) {
-  const windowLabel = buildRollingWindowLabel(windowLength);
-  if (posture.label === "Unstable") {
-    return `${windowLabel} behaviour is unstable and looks unusual versus recent history.`;
-  }
-  if (posture.label === "Calm") {
-    return `${windowLabel} behaviour is calm and broadly in line with recent history.`;
-  }
-  if (posture.label === "Elevated" && !posture.unusual) {
-    return "Short-window risk is elevated, but not outside the recent range.";
-  }
-  return `${windowLabel} behaviour is ${posture.label.toLowerCase()} and broadly in line with recent history.`;
-}
-
-function buildRollingExecutiveDetail({
-  summaries,
-  benchmarkReady,
-  riskFreeReady,
-  posture,
-}: {
-  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"];
-  benchmarkReady: boolean;
-  riskFreeReady: boolean;
-  posture: {
-    label: "Calm" | "Stable" | "Elevated" | "Unstable";
-    unusual: boolean;
-    drivers: string[];
-  };
-}) {
-  const driverClauses = [
-    buildRollingDriverClause("ROLLING_VOLATILITY", summaries.ROLLING_VOLATILITY),
-    buildRollingDriverClause("ROLLING_TRACKING_ERROR", summaries.ROLLING_TRACKING_ERROR),
-    buildRollingDriverClause("ROLLING_BETA", summaries.ROLLING_BETA),
-    buildRollingDriverClause("ROLLING_MAX_DRAWDOWN", summaries.ROLLING_MAX_DRAWDOWN),
-  ].filter(Boolean);
-  const dependencyClauses = [
-    benchmarkReady
-      ? "Benchmark-relative review is reliable enough for beta and tracking error."
-      : "Benchmark-relative review should be qualified for beta and tracking error.",
-    riskFreeReady
-      ? "Risk-free alignment is reliable enough for Sharpe review."
-      : "Risk-free alignment should be qualified for Sharpe review.",
-  ];
-  return [...driverClauses.slice(0, posture.unusual ? 2 : 1), ...dependencyClauses].join(" ");
-}
-
 function buildRollingHeadlineInterpretation(
   metricKey: string,
   summary:
@@ -3047,50 +2705,6 @@ function buildRollingWindowReviewSentence(
   }
 }
 
-function buildRollingDriverClause(
-  metricKey: string,
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  if (!summary || typeof summary.latest !== "number") {
-    return null;
-  }
-  switch (metricKey) {
-    case "ROLLING_VOLATILITY":
-      return isAboveObservedRange(summary)
-        ? `Volatility at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is running above the recent range.`
-        : isAboveTypical(summary)
-          ? `Volatility at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is running above the recent norm.`
-        : isBelowTypical(summary)
-          ? `Volatility at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} remains contained versus the recent norm.`
-          : `Volatility at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is close to recent history.`;
-    case "ROLLING_TRACKING_ERROR":
-      return isAboveObservedRange(summary)
-        ? `Tracking error at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is running above the recent range.`
-        : isAboveTypical(summary)
-          ? `Tracking error at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is running above the recent norm.`
-        : isBelowTypical(summary)
-          ? `Tracking error at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} remains contained versus the recent norm.`
-          : `Tracking error at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is close to recent history.`;
-    case "ROLLING_BETA":
-      if (summary.latest < 0) {
-        return "Beta has turned negative, which points to a short-term change in market sensitivity.";
-      }
-      return Math.abs((summary.average ?? summary.latest) - summary.latest) >= 0.2
-        ? `Beta at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} has moved meaningfully versus the recent norm.`
-        : `Beta at ${formatRollingMetricSummaryValue(metricKey, summary.latest)} is close to recent market sensitivity.`;
-    case "ROLLING_MAX_DRAWDOWN":
-      return summary.latest === 0
-        ? "No current rolling drawdown is showing."
-        : isDeeperThanObservedRange(summary)
-          ? "Current rolling drawdown is deeper than most recent windows."
-          : "Rolling drawdown remains within recent history.";
-    default:
-      return null;
-  }
-}
-
 function describeRollingVersusTypical(
   summary:
     | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
@@ -3115,90 +2729,6 @@ function describeRollingVersusTypical(
     return aboveText;
   }
   return inlineText;
-}
-
-function resolveRollingNextStep(
-  windowLength: number,
-  posture: {
-    label: "Calm" | "Stable" | "Elevated" | "Unstable";
-    unusual: boolean;
-  },
-  benchmarkReady: boolean
-) {
-  if (posture.label === "Unstable") {
-    return "review 63D to confirm whether short-window instability is persisting.";
-  }
-  if (!benchmarkReady) {
-    return "compare 21D and 63D before discussing recent benchmark-relative drift.";
-  }
-  if (windowLength < 252) {
-    return `review ${buildRollingWindowLabel(nextRollingWindowLength(windowLength))} to separate short-term noise from longer-horizon posture.`;
-  }
-  return "compare 126D and 252D to separate recent noise from annual posture.";
-}
-
-function nextRollingWindowLength(windowLength: number) {
-  if (windowLength <= 21) {
-    return 63;
-  }
-  if (windowLength <= 63) {
-    return 126;
-  }
-  return 252;
-}
-
-function isAboveObservedRange(
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  return typeof summary?.latest === "number" && typeof summary?.p95 === "number" && summary.latest > summary.p95;
-}
-
-function isAboveTypical(
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  return typeof summary?.latest === "number" && typeof summary?.average === "number" && summary.latest > summary.average;
-}
-
-function isBelowTypical(
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  return typeof summary?.latest === "number" && typeof summary?.average === "number" && summary.latest < summary.average;
-}
-
-function isDeeperThanObservedRange(
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  return typeof summary?.latest === "number" && typeof summary?.p05 === "number" && summary.latest < summary.p05;
-}
-
-function isDeeperThanTypical(
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  return typeof summary?.latest === "number" && typeof summary?.average === "number" && summary.latest < summary.average;
-}
-
-function isZeroOrShallowDrawdown(
-  summary:
-    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
-    | undefined
-) {
-  if (typeof summary?.latest !== "number") {
-    return false;
-  }
-  if (summary.latest === 0) {
-    return true;
-  }
-  return !isDeeperThanTypical(summary);
 }
 
 function resolveConcentrationIndicatorTone(
@@ -3678,31 +3208,6 @@ function resolveAttributionEvidencePosture(
     value: "Reliable",
     support: "Residual is controlled and the current decomposition is suitable for front-office review.",
     metadata: `Residual ${formatRiskPercentValue(residual)}`,
-  };
-}
-
-function mapAttributionExecutiveSummary(
-  response: WorkbenchRiskAttributionResponse | null
-): PerformanceRiskExecutiveSummary | null {
-  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
-  if (!selectedSet) {
-    return null;
-  }
-  const topContributor = [...selectedSet.contributors]
-    .sort(
-      (left, right) =>
-        Math.abs(right.component_contribution ?? 0) - Math.abs(left.component_contribution ?? 0)
-    )[0];
-  return {
-    heading: "Business reading",
-    headline: `${formatEnumLabel(selectedSet.attribution_type) ?? selectedSet.attribution_type} attribution is available by ${formatEnumLabel(selectedSet.grouping_dimension) ?? selectedSet.grouping_dimension}.`,
-    detail: topContributor
-      ? `${topContributor.group_label} is the largest visible contributor with component effect ${formatRiskPercentValue(topContributor.component_contribution)}. Residual remains ${formatRiskPercentValue(selectedSet.residual)} after reconciliation.`
-      : "No contributor rows were returned for the selected attribution controls.",
-    actionCue:
-      selectedSet.attribution_type === "ACTIVE_RISK"
-        ? "Review the largest benchmark-relative contributors before using active-risk decomposition externally."
-        : "Review the largest contributors before presenting total-risk decomposition externally.",
   };
 }
 
