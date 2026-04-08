@@ -34,7 +34,7 @@ export default function RiskRollingPanel({
   return (
     <RiskModuleShell
       title="Rolling Risk"
-      subtitle="Windowed risk behaviour, dependency quality, and short-versus-history context."
+      subtitle="Selected-window behaviour, relative reliability, and next-horizon review."
       className="performance-risk-rolling-panel"
       actions={
         <RiskExpandAction
@@ -45,7 +45,9 @@ export default function RiskRollingPanel({
         />
       }
       businessReading={
-        <RiskRollingBusinessReading summary={viewModel.rollingExecutiveSummary} />
+        <RiskRollingBusinessReading
+          summary={selectedWindow?.selectedWindowBusinessReading ?? viewModel.rollingExecutiveSummary}
+        />
       }
       headlineMetrics={<RiskRollingHeadlineMetrics window={selectedWindow} />}
       detail={

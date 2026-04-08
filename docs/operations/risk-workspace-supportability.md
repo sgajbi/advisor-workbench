@@ -76,7 +76,9 @@ The first metric row is reserved for the selected rolling window:
 
 The selected window detail must compare current, typical, and observed range using concise
 interpretation rather than raw statistical copy. The next review action should point the user to the
-next most relevant window, typically `63D` after the `21D` first read.
+next most relevant window, typically `63D` after the `21D` first read. Raw quality flags are not
+advisor-facing: Gateway and Workbench must map them to business-safe supportability notes such as
+qualified benchmark-relative review or limited benchmark variance in an emitted window.
 
 ## Stateful-only rule
 

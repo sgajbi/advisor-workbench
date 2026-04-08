@@ -116,24 +116,38 @@ describe("buildPerformanceRiskViewModel", () => {
     });
     expect(viewModel.rollingWindows[0]).toMatchObject({
       label: "21D",
+      horizonLabel: "Short window",
     });
     expect(viewModel.rollingExecutiveSummary).toMatchObject({
       heading: "Business reading",
-      headline: "21D behaviour is elevated and remains within recent history.",
-      actionCue:
-        "Review 63D next to confirm whether the current window behaviour is persisting.",
+      headline: "Short-window risk is elevated, but not outside the recent range.",
+      actionCue: "review 63D to separate short-term noise from longer-horizon posture.",
     });
+    expect(viewModel.rollingSupportabilityNotes).toEqual([
+      expect.objectContaining({
+        title: "Benchmark-relative review is limited in one emitted window",
+        tone: "warn",
+      }),
+    ]);
     expect(viewModel.rollingContextRows[0]).toMatchObject({
       label: "Window set",
     });
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
-    expect(viewModel.rollingWindows[0]?.review).toMatchObject({
-      title: "21D window review",
+    expect(viewModel.rollingWindows[0]?.headlineMetricInterpretations[0]).toMatchObject({
+      label: "Volatility",
+      support: "Above typical but still in range",
     });
-    expect(viewModel.rollingWindows[0]?.detailRows[0]).toMatchObject({
+    expect(viewModel.rollingWindows[0]?.selectedWindowSummary).toMatchObject({
+      title: "21D selected-window review",
+    });
+    expect(viewModel.rollingWindows[0]?.selectedWindowSummary.body).toContain(
+      "Current volatility is 11.32%, above the recent typical."
+    );
+    expect(viewModel.rollingWindows[0]?.detailRowInterpretations[0]).toMatchObject({
       metric: "Volatility",
+      interpretation: "Current reading is above typical but still in range.",
     });
     expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
     expect(viewModel.attributionExecutiveSummary).toMatchObject({
@@ -190,6 +204,7 @@ describe("buildPerformanceRiskViewModel", () => {
       support: "Benchmark-relative risk requires benchmark context.",
       state: "unavailable",
     });
+    expect(viewModel.rollingSupportabilityNotes).toEqual([]);
     expect(viewModel.attributionControls?.attributionTypes[1]).toMatchObject({
       key: "ACTIVE_RISK",
       disabled: true,

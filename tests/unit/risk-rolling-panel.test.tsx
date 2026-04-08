@@ -43,32 +43,30 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByRole("heading", { name: "Rolling Risk" })).toBeInTheDocument();
     expect(
       within(businessReading).getByText(
-        "21D behaviour is elevated and remains within recent history."
+        "Short-window risk is elevated, but not outside the recent range."
       )
     ).toBeInTheDocument();
     expect(
       within(businessReading).getByText(
-        /Review 63D next to confirm whether the current window behaviour is persisting\./
+        /review 63D to separate short-term noise from longer-horizon posture\./i
       )
     ).toBeInTheDocument();
 
     const headlineLabels = Array.from(
-      container.querySelectorAll(
-        ".performance-risk-rolling-headline-grid .workbench-summary-metric-label"
-      )
-    ).map((node) => node.textContent?.trim());
+      container.querySelectorAll(".performance-risk-rolling-headline-card")
+    ).map((node) => node.getAttribute("aria-label")?.replace(" headline metric", ""));
     expect(headlineLabels).toEqual(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
 
     expect(screen.getByRole("tab", { name: "21D" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("21D window review")).toBeInTheDocument();
+    expect(screen.getByText("Review window")).toBeInTheDocument();
+    expect(screen.getByText("21D selected-window review")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Current" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Observed Range" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Interpretation" })).toBeInTheDocument();
-    expect(
-      screen.getAllByText("Current reading is above typical but still within range.").length
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
+    expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Context and methodology" })).toBeInTheDocument();
   });
 
@@ -85,8 +83,8 @@ describe("RiskRollingPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "63D" }));
 
     expect(screen.getByRole("tab", { name: "63D" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("63D window review")).toBeInTheDocument();
-    expect(screen.queryByText("21D window review")).not.toBeInTheDocument();
+    expect(screen.getByText("63D selected-window review")).toBeInTheDocument();
+    expect(screen.queryByText("21D selected-window review")).not.toBeInTheDocument();
   });
 
   it("qualifies benchmark-dependent measures when benchmark context is unavailable", () => {
@@ -104,10 +102,13 @@ describe("RiskRollingPanel", () => {
       businessReading
     ).toBeInTheDocument();
     expect(businessReading).toHaveTextContent(
-      "Benchmark alignment is qualified, and risk-free alignment is qualified."
+      "Benchmark-relative review should be qualified for beta and tracking error."
     );
     expect(screen.queryByText("Tracking Error")).not.toBeInTheDocument();
     expect(screen.queryByText("Beta")).not.toBeInTheDocument();
-    expect(screen.getByText("Benchmark-relative rolling metrics are not active for this request.")).toBeInTheDocument();
+    expect(businessReading).toHaveTextContent(
+      "Benchmark-relative review should be qualified for beta and tracking error."
+    );
+    expect(screen.getByText("Benchmark-relative review is not active for this request.")).toBeInTheDocument();
   });
 });

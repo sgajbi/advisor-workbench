@@ -3,7 +3,6 @@ import {
   ScreenStatePanel,
   Text,
   WorkbenchSegmentedControl,
-  WorkbenchStatusRow,
 } from "@/design-system";
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
@@ -28,38 +27,61 @@ export default function RiskRollingWindowDetail({
       ariaLabel="Rolling risk detail"
       toolbar={
         viewModel.rollingWindows.length > 1 ? (
-          <WorkbenchSegmentedControl
-            value={selectedWindow?.key ?? selectedWindowKey}
-            onChange={onWindowChange}
-            options={viewModel.rollingWindows.map((window) => ({
-              key: window.key,
-              label: window.label,
-              title: `${window.label} rolling window`,
-            }))}
-            ariaLabel="Rolling risk windows"
-            className="performance-risk-window-toolbar performance-risk-rolling-window-toolbar"
-            buttonClassName="performance-risk-rolling-window-button"
-          />
+          <div className="performance-risk-rolling-window-selector">
+            <div className="performance-risk-rolling-window-selector-copy">
+              <Text variant="label">Review window</Text>
+              <Text variant="metadata">Short to long horizon</Text>
+            </div>
+            <WorkbenchSegmentedControl
+              value={selectedWindow?.key ?? selectedWindowKey}
+              onChange={onWindowChange}
+              options={viewModel.rollingWindows.map((window) => ({
+                key: window.key,
+                label: window.label,
+                title: `${window.label} rolling window`,
+              }))}
+              ariaLabel="Rolling risk windows"
+              className="performance-risk-window-toolbar performance-risk-rolling-window-toolbar"
+              buttonClassName="performance-risk-rolling-window-button"
+            />
+          </div>
         ) : null
       }
     >
-      {viewModel.rollingQualityFlags.length ? (
-        <WorkbenchStatusRow
-          label="Rolling quality flags"
-          className="performance-risk-quality-flags"
-          items={viewModel.rollingQualityFlags.map((flag) => ({
-            value: flag,
-            tone: "warn" as const,
-          }))}
-        />
-      ) : null}
-
-      {selectedWindow?.review ? (
+      {selectedWindow?.selectedWindowSummary ? (
         <div className="performance-risk-note-card performance-risk-rolling-window-review">
           <div className="performance-risk-note-copy">
-            <Text variant="cardTitle">{selectedWindow.review.title}</Text>
-            <Text variant="secondary">{selectedWindow.review.body}</Text>
+            <Text variant="cardTitle">{selectedWindow.selectedWindowSummary.title}</Text>
+            <Text variant="secondary">{selectedWindow.selectedWindowSummary.body}</Text>
+            <Text variant="metadata" className="performance-risk-briefing-cue">
+              Next: {selectedWindow.selectedWindowNextStep}
+            </Text>
           </div>
+        </div>
+      ) : null}
+
+      {viewModel.rollingSupportabilityNotes.length ? (
+        <div
+          className="performance-risk-supportability-list performance-risk-rolling-supportability-list"
+          aria-label="Rolling review supportability notes"
+        >
+          {viewModel.rollingSupportabilityNotes.map((note) => (
+            <div
+              key={note.key}
+              className={[
+                "performance-risk-note-card",
+                "performance-risk-rolling-supportability-note",
+                note.tone === "warn" ? "performance-risk-rolling-supportability-note-warn" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <div className="performance-risk-note-copy">
+                <Text variant="cardTitle">{note.title}</Text>
+                <Text variant="secondary">{note.body}</Text>
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
 
@@ -74,7 +96,7 @@ export default function RiskRollingWindowDetail({
           { key: "range", label: "Observed Range", align: "right" },
           { key: "interpretation", label: "Interpretation" },
         ]}
-        rows={(selectedWindow?.detailRows ?? []).map((row) => ({
+        rows={(selectedWindow?.detailRowInterpretations ?? []).map((row) => ({
           key: row.key,
           cells: [row.metric, row.current, row.typical, row.range, row.interpretation],
         }))}
@@ -111,8 +133,8 @@ export default function RiskRollingWindowDetail({
                 ...((selectedWindow?.seriesMetricKeys ?? []).map((metricKey) => ({
                   key: metricKey,
                   label:
-                    selectedWindow?.detailRows.find((row) => row.key.endsWith(metricKey))?.metric ??
-                    metricKey,
+                    selectedWindow?.detailRowInterpretations.find((row) => row.key.endsWith(metricKey))
+                      ?.metric ?? metricKey,
                   align: "right" as const,
                 })) ?? []),
               ]}
