@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import RiskExecutiveOverview from "../../src/apps/performance/components/risk/risk-executive-overview";
 
 describe("RiskExecutiveOverview", () => {
-  it("keeps only posture labels and states in the executive overview strip", () => {
+  it("renders posture states through the shared risk metric card layout", () => {
     const { container } = render(
       <RiskExecutiveOverview
         overview={[
@@ -39,8 +39,9 @@ describe("RiskExecutiveOverview", () => {
     const overview = screen.getByLabelText("Risk executive overview");
     expect(within(overview).getByText("Risk posture")).toBeInTheDocument();
     expect(within(overview).getAllByText("Moderate").length).toBeGreaterThan(0);
-    expect(container.querySelector(".performance-risk-executive-band")).toBeTruthy();
-    expect(container.querySelectorAll(".performance-risk-executive-secondary-card")).toHaveLength(3);
+    expect(container.querySelector(".performance-risk-executive-grid")).toBeTruthy();
+    expect(container.querySelectorAll(".performance-risk-executive-card")).toHaveLength(4);
+    expect(container.querySelectorAll(".performance-risk-metric-card")).toHaveLength(4);
     expect(within(overview).queryByText("What matters now")).not.toBeInTheDocument();
   });
 });

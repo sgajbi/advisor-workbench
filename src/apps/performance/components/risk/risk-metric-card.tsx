@@ -21,7 +21,7 @@ export default function RiskMetricCard({
   support: string;
   metadata?: string;
   definition?: string;
-  tone?: "default" | "warn" | "danger";
+  tone?: "default" | "success" | "warn" | "danger";
   density?: "default" | "compact";
   className?: string;
   ariaLabel?: string;
@@ -34,7 +34,9 @@ export default function RiskMetricCard({
       className={[
         "performance-risk-metric-card",
         density === "compact" ? "performance-risk-metric-card-compact" : "",
-        tone === "warn"
+        tone === "success"
+          ? "performance-risk-metric-card-success"
+          : tone === "warn"
           ? "performance-risk-metric-card-warn"
           : tone === "danger"
             ? "performance-risk-metric-card-danger"

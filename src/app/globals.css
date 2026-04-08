@@ -5110,66 +5110,7 @@ a:hover {
   display: block;
 }
 
-.performance-risk-executive-band {
-  display: grid;
-  grid-template-columns: minmax(360px, 1.08fr) minmax(340px, 0.92fr);
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.performance-risk-executive-primary {
-  display: grid;
-  gap: 0.65rem;
-  padding: 1.05rem 1.1rem;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 14px;
-  background:
-    linear-gradient(150deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 58%, rgba(51, 65, 85, 0.92) 100%);
-  color: #f8fafc;
-}
-
-.performance-risk-executive-primary .ui-text,
-.performance-risk-executive-primary .performance-risk-section-title {
-  color: inherit;
-}
-
-.performance-risk-executive-primary-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.performance-risk-executive-primary-copy {
-  display: grid;
-  gap: 0.32rem;
-}
-
-.performance-risk-executive-primary-title {
-  font-size: 1.8rem;
-  line-height: 1.05;
-  margin: 0;
-}
-
-.performance-risk-executive-primary-support {
-  max-width: 48ch;
-  line-height: 1.55;
-  opacity: 0.94;
-}
-
-.performance-risk-executive-side {
-  display: grid;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.performance-risk-executive-secondary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.performance-risk-executive-secondary-card,
+.performance-risk-executive-grid,
 .performance-risk-matters,
 .performance-risk-secondary-group {
   padding: 0.9rem 0.95rem;
@@ -5178,22 +5119,14 @@ a:hover {
   background: rgba(255, 255, 255, 0.94);
 }
 
-.performance-risk-executive-secondary-card {
+.performance-risk-executive-grid {
   display: grid;
-  align-content: start;
-  gap: 0.35rem;
-  min-height: 112px;
-}
-
-.performance-risk-executive-secondary-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.performance-risk-executive-secondary-support {
-  line-height: 1.45;
+.performance-risk-executive-card-primary {
+  grid-column: span 1;
 }
 
 .performance-risk-matters {
@@ -6547,7 +6480,7 @@ a:hover {
 }
 
 @media (max-width: 1180px) {
-  .performance-risk-executive-band,
+  .performance-risk-executive-grid,
   .performance-risk-primary-grid,
   .performance-risk-secondary-workspace,
   .performance-risk-module-body,
@@ -6557,7 +6490,7 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-executive-secondary,
+  .performance-risk-executive-grid,
   .performance-risk-matters-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6620,7 +6553,7 @@ a:hover {
 }
 
 @media (max-width: 760px) {
-  .performance-risk-executive-secondary,
+  .performance-risk-executive-grid,
   .performance-risk-matters-list,
   .performance-risk-snapshot-headline-grid,
   .performance-risk-snapshot-supporting-grid,
