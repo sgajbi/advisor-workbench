@@ -2,7 +2,6 @@ import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
 import RiskSnapshotHeadlineMetrics from "./risk-snapshot-headline-metrics";
-import RiskSnapshotSupportingMeasures from "./risk-snapshot-supporting-measures";
 
 export default function RiskSnapshotPanel({
   viewModel,
@@ -22,10 +21,9 @@ export default function RiskSnapshotPanel({
         />
       }
       headlineMetrics={
-        <RiskSnapshotHeadlineMetrics metrics={viewModel.snapshotHeadlineMetrics} />
-      }
-      detail={
-        <RiskSnapshotSupportingMeasures metrics={viewModel.snapshotSupportingMetrics} />
+        <RiskSnapshotHeadlineMetrics
+          metrics={[...viewModel.snapshotHeadlineMetrics, ...viewModel.snapshotSupportingMetrics]}
+        />
       }
     />
   );

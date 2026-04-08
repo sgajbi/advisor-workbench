@@ -35,7 +35,6 @@ describe("RiskSnapshotPanel", () => {
 
     expect(screen.getByRole("heading", { name: "Risk Snapshot" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Supporting risk measures" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })
     ).toBeInTheDocument();
@@ -45,29 +44,23 @@ describe("RiskSnapshotPanel", () => {
     const headlineLabels = Array.from(
       container.querySelectorAll(".performance-risk-snapshot-headline-grid .ui-text-label")
     ).map((node) => node.textContent?.trim());
-    expect(headlineLabels).toEqual(["Volatility", "Sharpe", "Beta", "Tracking Error"]);
+    expect(headlineLabels).toEqual([
+      "Volatility",
+      "Sharpe",
+      "Beta",
+      "Tracking Error",
+      "Information Ratio",
+      "Sortino",
+      "Value at Risk",
+    ]);
     expect(
       screen.queryByText("Overall realised risk level of the portfolio over the selected period.")
     ).not.toBeInTheDocument();
-
-    const supportingSection = screen
-      .getByRole("heading", { name: "Supporting risk measures" })
-      .closest(".performance-risk-detail-section");
-    expect(supportingSection).toBeTruthy();
-    expect(supportingSection).toHaveClass("performance-risk-detail-section-compact");
+    expect(screen.queryByRole("heading", { name: "Supporting risk measures" })).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".performance-risk-snapshot-headline-card")).toHaveLength(7);
+    expect(screen.queryByText("Efficiency of active risk taken versus the benchmark.")).not.toBeInTheDocument();
     expect(
-      (supportingSection as HTMLElement).querySelectorAll(".performance-risk-metric-card-compact")
-    ).toHaveLength(3);
-    expect(within(supportingSection as HTMLElement).getByText("Information Ratio")).toBeInTheDocument();
-    expect(within(supportingSection as HTMLElement).getByText("Sortino")).toBeInTheDocument();
-    expect(within(supportingSection as HTMLElement).getByText("Value at Risk")).toBeInTheDocument();
-    expect(
-      within(supportingSection as HTMLElement).queryByText(
-        "Efficiency of active risk taken versus the benchmark."
-      )
-    ).not.toBeInTheDocument();
-    expect(
-      within(supportingSection as HTMLElement).getByRole("button", {
+      screen.getByRole("button", {
         name: "Information Ratio: Active return earned per unit of tracking error.",
       })
     ).toBeInTheDocument();
