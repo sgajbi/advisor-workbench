@@ -39,21 +39,10 @@ export type PerformanceRiskConcentrationIndicator = {
   tone?: "neutral" | "warn" | "danger";
 };
 
-export type PerformanceRiskConcentrationExecutiveSummary = {
-  heading: string;
-  postureLabel: string;
-  postureState: RiskConcentrationPostureState;
-  businessReadingHeadline: string;
-  businessReadingDetail: string;
-  actionCue?: string | null;
-};
-
 export type PerformanceRiskConcentrationScale = {
   key: string;
   label: string;
-  value: string;
   interpretationBand: string;
-  interpretation: string;
   markerPct: number;
   definition: string;
 };
@@ -1314,7 +1303,7 @@ function buildRiskWorkspaceOverview({
     reason?: string | null;
   }>;
 }): PerformanceRiskOverviewItem[] {
-  const concentrationSummary = mapConcentrationExecutiveSummary(concentration);
+  const concentrationPosture = buildConcentrationPostureModel(concentration);
   const supportabilityPosture = resolveRiskEvidencePosture(supportability, [
     summary.state,
     concentration.state,
@@ -1338,8 +1327,8 @@ function buildRiskWorkspaceOverview({
     {
       key: "concentration_posture",
       label: "Concentration posture",
-      value: concentrationSummary?.postureLabel ?? "Unavailable",
-      tone: resolveConcentrationOverviewTone(concentrationSummary?.postureState),
+      value: concentrationPosture.label,
+      tone: resolveConcentrationOverviewTone(concentrationPosture.state),
     },
     {
       key: "evidence_posture",
@@ -1695,50 +1684,6 @@ function mapConcentrationIndicators(
   ];
 }
 
-function mapConcentrationExecutiveSummary(
-  response: WorkbenchRiskConcentrationResponse
-): PerformanceRiskConcentrationExecutiveSummary | null {
-  const payload = response.payload;
-  if (!payload) {
-    return null;
-  }
-  const posture = buildConcentrationPostureModel(response);
-  const topPositionName =
-    payload.single_position_concentration.top_position_current.security_name ?? "the largest holding";
-  const topIssuerName =
-    payload.issuer_concentration.top_issuer_current.issuer_name ?? "the largest issuer group";
-  const topPositionWeight = formatRiskPercentValue(
-    payload.single_position_concentration.top_position_weight_current
-  );
-  const topIssuerWeight = formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current);
-
-  const driverSummary =
-    posture.principalDriver === "both"
-      ? "Both position and issuer concentration are contributing materially."
-      : posture.principalDriver === "issuer"
-        ? "Issuer grouping confirms concentration remains issuer-led."
-        : "Single-name exposure is the main concentration driver.";
-
-  const issuerReliability =
-    posture.state === "partial"
-      ? "Issuer interpretation is partial because not all holdings are enriched to issuer level."
-      : "Issuer interpretation is reliable for the current selection.";
-
-  return {
-    heading: "Business reading",
-    postureLabel: posture.label,
-    postureState: posture.state,
-    businessReadingHeadline: posture.summary,
-    businessReadingDetail: `${driverSummary} ${issuerReliability}`,
-    actionCue:
-      posture.state === "partial"
-        ? "Qualify issuer-level conclusions until coverage is complete."
-        : posture.state === "high" || posture.state === "elevated"
-          ? `Review ${topPositionName} (${topPositionWeight}) and ${topIssuerName} (${topIssuerWeight}) against diversification expectations.`
-          : "Compare the largest exposures with diversification expectations.",
-  };
-}
-
 function mapConcentrationScales(
   response: WorkbenchRiskConcentrationResponse
 ): PerformanceRiskConcentrationScale[] {
@@ -1750,9 +1695,7 @@ function mapConcentrationScales(
     {
       key: "portfolio_hhi",
       label: "Portfolio Concentration Index",
-      value: formatNumber(payload.portfolio_concentration.hhi_current, { maximumFractionDigits: 0 }),
       interpretationBand: resolveConcentrationBand(payload.portfolio_concentration.hhi_current),
-      interpretation: `Position-level concentration is ${resolveConcentrationBand(payload.portfolio_concentration.hhi_current).toLowerCase()} across the live book.`,
       markerPct: resolveConcentrationIndexMarker(payload.portfolio_concentration.hhi_current),
       definition:
         "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
@@ -1760,9 +1703,7 @@ function mapConcentrationScales(
     {
       key: "issuer_hhi",
       label: "Issuer Concentration Index",
-      value: formatNumber(payload.issuer_concentration.hhi_current, { maximumFractionDigits: 0 }),
       interpretationBand: resolveConcentrationBand(payload.issuer_concentration.hhi_current),
-      interpretation: `Issuer-level concentration remains ${resolveConcentrationBand(payload.issuer_concentration.hhi_current).toLowerCase()} after issuer grouping.`,
       markerPct: resolveConcentrationIndexMarker(payload.issuer_concentration.hhi_current),
       definition:
         "Concentration index after holdings are grouped at issuer level using the configured enrichment and grouping policy.",

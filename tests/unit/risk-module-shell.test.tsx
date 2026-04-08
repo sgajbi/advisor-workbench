@@ -8,7 +8,6 @@ describe("RiskModuleShell", () => {
     const { container } = render(
       <RiskModuleShell
         title="Risk Snapshot"
-        subtitle="Executive risk posture."
         priority="primary"
         density="compact"
         actions={<button type="button">Utility</button>}
@@ -25,7 +24,6 @@ describe("RiskModuleShell", () => {
     const { container } = render(
       <RiskModuleShell
         title="Rolling Risk"
-        subtitle="Selected-window behaviour."
         priority="secondary"
         detail={<section aria-label="Rolling detail">Detail</section>}
         context={<aside aria-label="Rolling context">Context</aside>}

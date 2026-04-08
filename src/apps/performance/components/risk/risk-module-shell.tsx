@@ -4,7 +4,6 @@ import { SectionBlock } from "@/design-system";
 
 export default function RiskModuleShell({
   title,
-  subtitle,
   actions,
   headlineMetrics,
   detail,
@@ -14,7 +13,6 @@ export default function RiskModuleShell({
   density = "default",
 }: {
   title: string;
-  subtitle?: string;
   actions?: ReactNode;
   headlineMetrics?: ReactNode;
   detail?: ReactNode;
@@ -26,7 +24,6 @@ export default function RiskModuleShell({
   return (
     <SectionBlock
       title={title}
-      subtitle={subtitle}
       actions={actions}
       className={[
         "performance-risk-panel",
