@@ -28,4 +28,5 @@ Governance boundary:
 | RFC-0020 | AI Advisor Brief Copilot for Portfolio and Performance | PROPOSED | `docs/rfcs/RFC-0020-ai-advisor-brief-copilot.md` |
 | RFC-0021 | UI Architecture Hardening and Design-System Governance | IMPLEMENTED | `docs/rfcs/RFC-0021-ui-architecture-hardening-and-design-system-governance.md` |
 | RFC-0022 | Stateful Risk Workspace and lotus-risk UI Integration | IMPLEMENTED | `docs/rfcs/RFC-0022-stateful-risk-workspace-and-lotus-risk-ui-integration.md` |
+| RFC-0023 | Risk Workspace UX Hardening and Production Readiness | PROPOSED | `docs/rfcs/RFC-0023-risk-workspace-ux-hardening-and-production-readiness.md` |
 
