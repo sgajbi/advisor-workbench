@@ -1,6 +1,7 @@
-import { AnalyticsTable, ScreenStatePanel } from "@/design-system";
+import { ScreenStatePanel } from "@/design-system";
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailDrawer from "./risk-detail-drawer";
 
 export default function RiskRollingDetailDrawer({
@@ -60,10 +61,8 @@ export default function RiskRollingDetailDrawer({
           surface="analysis"
         />
       ) : (
-        <AnalyticsTable
+        <RiskAnalyticalTable
           ariaLabel="Rolling risk series table"
-          variant="analysis"
-          density="compact"
           columns={[
             { key: "date", label: "Date" },
             ...((selectedWindow?.seriesMetricKeys ?? []).map((metricKey) => ({

@@ -1,5 +1,4 @@
 import {
-  AnalyticsTable,
   ScreenStatePanel,
   WorkbenchSegmentedControl,
   WorkbenchStatusRow,
@@ -7,6 +6,7 @@ import {
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskDetailSection from "./risk-detail-section";
+import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskExecutiveSummary from "./risk-executive-summary";
 import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
@@ -154,10 +154,8 @@ export default function RiskAttributionPanel({
               surface="analysis"
             />
           ) : (
-            <AnalyticsTable
+            <RiskAnalyticalTable
               ariaLabel="Historical risk attribution table"
-              variant="analysis"
-              density="compact"
               columns={[
                 { key: "group", label: "Group" },
                 { key: "avgWeight", label: "Average Weight", align: "right" },

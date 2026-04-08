@@ -1,7 +1,5 @@
-import { Text } from "@/design-system";
-
 import type { PerformanceRiskConcentrationIndicator } from "../../risk-workspace-view-model";
-import RiskTermLabel from "./risk-term-label";
+import RiskMetricCard from "./risk-metric-card";
 
 export default function RiskConcentrationIndicatorStrip({
   indicators,
@@ -18,34 +16,20 @@ export default function RiskConcentrationIndicatorStrip({
         aria-label="Risk concentration headline metrics"
       >
         {indicators.map((indicator) => (
-          <article
+          <RiskMetricCard
             key={indicator.key}
+            label={indicator.label}
+            value={indicator.value}
+            support={indicator.support}
+            definition={indicator.definition}
+            tone={indicator.tone === "neutral" ? "default" : indicator.tone}
             className={[
               "performance-risk-concentration-indicator-tile",
-              indicator.tone === "danger"
-                ? "performance-risk-concentration-indicator-tile-danger"
-                : indicator.tone === "warn"
-                  ? "performance-risk-concentration-indicator-tile-warn"
-                  : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
+              "performance-risk-concentration-indicator-card",
+            ].join(" ")}
+            ariaLabel={`${indicator.label}: ${indicator.value}. ${indicator.support}. ${indicator.definition}`}
             title={indicator.definition}
-            aria-label={`${indicator.label}: ${indicator.value}. ${indicator.support}. ${indicator.definition}`}
-          >
-            <div className="performance-risk-concentration-indicator-header">
-              <RiskTermLabel label={indicator.label} definition={indicator.definition} />
-            </div>
-            <Text
-              variant="metricValueCompact"
-              className="performance-risk-concentration-indicator-value"
-            >
-              {indicator.value}
-            </Text>
-            <Text variant="metadata" className="performance-risk-concentration-indicator-support">
-              {indicator.support}
-            </Text>
-          </article>
+          />
         ))}
       </div>
     </section>

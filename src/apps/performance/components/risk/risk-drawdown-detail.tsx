@@ -1,10 +1,12 @@
-import { AnalyticsTable, Text } from "@/design-system";
+import { Text } from "@/design-system";
 
 import type {
   PerformanceRiskMetricCard,
   PerformanceRiskViewModel,
 } from "../../risk-workspace-view-model";
+import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailSection from "./risk-detail-section";
+import RiskMetricCard from "./risk-metric-card";
 
 export default function RiskDrawdownDetail({
   viewModel,
@@ -41,10 +43,8 @@ export default function RiskDrawdownDetail({
         ) : null}
 
         {viewModel.drawdownEpisodes.length ? (
-          <AnalyticsTable
+          <RiskAnalyticalTable
             ariaLabel="Risk drawdown episode table"
-            variant="analysis"
-            density="compact"
             columns={[
               { key: "episode", label: "Episode" },
               { key: "depth", label: "Depth", align: "right" },
@@ -83,14 +83,11 @@ function SupportingMetricCard({
   metric: PerformanceRiskMetricCard;
 }) {
   return (
-    <div className="performance-risk-secondary-metric">
-      <div className="performance-risk-secondary-metric-copy">
-        <Text variant="label">{metric.label}</Text>
-        <Text variant="metadata">{metric.support}</Text>
-      </div>
-      <Text variant="cardTitle" className="performance-risk-secondary-metric-value">
-        {metric.value}
-      </Text>
-    </div>
+    <RiskMetricCard
+      label={metric.label}
+      value={metric.value}
+      support={metric.support}
+      className="performance-risk-secondary-metric"
+    />
   );
 }

@@ -1,6 +1,7 @@
-import { AnalyticsTable, ScreenStatePanel } from "@/design-system";
+import { ScreenStatePanel } from "@/design-system";
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailDrawer from "./risk-detail-drawer";
 
 export default function RiskDrawdownDetailDrawer({
@@ -59,10 +60,8 @@ export default function RiskDrawdownDetailDrawer({
           surface="analysis"
         />
       ) : (
-        <AnalyticsTable
+        <RiskAnalyticalTable
           ariaLabel="Risk underwater series table"
-          variant="analysis"
-          density="compact"
           columns={[
             { key: "date", label: "Date" },
             { key: "drawdown", label: "Drawdown", align: "right" },

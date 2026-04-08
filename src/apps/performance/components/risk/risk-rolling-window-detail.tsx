@@ -1,10 +1,10 @@
 import {
-  AnalyticsTable,
   Text,
   WorkbenchSegmentedControl,
 } from "@/design-system";
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailSection from "./risk-detail-section";
 
 export default function RiskRollingWindowDetail({
@@ -82,10 +82,8 @@ export default function RiskRollingWindowDetail({
         </div>
       ) : null}
 
-      <AnalyticsTable
+      <RiskAnalyticalTable
         ariaLabel="Rolling risk summary table"
-        variant="analysis"
-        density="compact"
         columns={[
           { key: "metric", label: "Measure" },
           { key: "current", label: "Current", align: "right" },
