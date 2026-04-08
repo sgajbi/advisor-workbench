@@ -2,9 +2,7 @@ import type {
   PerformanceRiskMetricCard,
   PerformanceRiskRollingWindow,
 } from "../../risk-workspace-view-model";
-import { Text } from "@/design-system";
-
-import RiskTermLabel from "./risk-term-label";
+import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 
 const PRIORITY_METRICS = ["Volatility", "Tracking Error", "Beta", "Max Drawdown"];
 
@@ -27,38 +25,12 @@ export default function RiskRollingHeadlineMetrics({
   }
 
   return (
-    <section
-      className="performance-risk-headline-section"
-      aria-label="Rolling risk headline metrics"
-    >
-      <div className="performance-risk-metric-strip performance-risk-rolling-headline-grid">
-        {metrics.map((metric) => (
-          <article
-            key={metric.key}
-            className="performance-risk-rolling-headline-card"
-            aria-label={`${metric.label} headline metric`}
-          >
-            <div className="performance-risk-rolling-headline-copy">
-              {metric.definition ? (
-                <RiskTermLabel label={metric.label} definition={metric.definition} />
-              ) : (
-                <Text variant="label">{metric.label}</Text>
-              )}
-              <Text variant="metricValue" className="performance-risk-rolling-headline-value">
-                {metric.value}
-              </Text>
-              <Text variant="body" className="performance-risk-rolling-headline-support">
-                {metric.support}
-              </Text>
-              {showMetadata && metric.metadata ? (
-                <Text variant="metadata" className="performance-risk-rolling-headline-metadata">
-                  {metric.metadata}
-                </Text>
-              ) : null}
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+    <RiskHeadlineMetricGrid
+      ariaLabel="Rolling risk headline metrics"
+      metrics={metrics}
+      className="performance-risk-rolling-headline-grid"
+      itemClassName="performance-risk-rolling-headline-card"
+      metadataMode={showMetadata ? "full" : "hidden"}
+    />
   );
 }

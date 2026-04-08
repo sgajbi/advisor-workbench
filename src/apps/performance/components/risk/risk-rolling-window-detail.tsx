@@ -1,7 +1,6 @@
 import {
   Text,
   WorkbenchSegmentedControl,
-  WorkbenchStatusRow,
 } from "@/design-system";
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
@@ -10,6 +9,8 @@ import RiskDetailSection from "./risk-detail-section";
 import RiskRangeIndicator from "./risk-range-indicator";
 import { riskRollingPanelCopy } from "./risk-secondary-copy";
 import RiskTableText from "./risk-table-text";
+
+const PRIMARY_ROLLING_MEASURES = new Set(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
 
 export default function RiskRollingWindowDetail({
   viewModel,
@@ -22,6 +23,10 @@ export default function RiskRollingWindowDetail({
   selectedWindowKey: string;
   onWindowChange: (value: string) => void;
 }) {
+  const detailRows = (selectedWindow?.detailRowInterpretations ?? []).filter(
+    (row) => !PRIMARY_ROLLING_MEASURES.has(row.metric)
+  );
+
   return (
     <RiskDetailSection
       title={riskRollingPanelCopy.detailTitle}
@@ -61,7 +66,7 @@ export default function RiskRollingWindowDetail({
           { key: "range", label: "Range", align: "right" },
           { key: "interpretation", label: "Review note" },
         ]}
-        rows={(selectedWindow?.detailRowInterpretations ?? []).map((row) => ({
+        rows={detailRows.map((row) => ({
           key: row.key,
           cells: [
             <RiskTableText key={`${row.key}-metric`} value={row.metric} />,
@@ -82,17 +87,6 @@ export default function RiskRollingWindowDetail({
         }))}
         emptyState={riskRollingPanelCopy.detailTableEmptyState}
       />
-
-      {viewModel.rollingSupportabilityNotes.length ? (
-        <WorkbenchStatusRow
-          label={riskRollingPanelCopy.supportabilityLabel}
-          className="performance-risk-quality-flags performance-risk-rolling-supportability-row"
-          items={viewModel.rollingSupportabilityNotes.map((note) => ({
-            value: note.title,
-            tone: note.tone === "warn" ? ("warn" as const) : ("default" as const),
-          }))}
-        />
-      ) : null}
     </RiskDetailSection>
   );
 }

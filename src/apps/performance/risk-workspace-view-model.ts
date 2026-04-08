@@ -91,14 +91,6 @@ export type PerformanceRiskMetricCard = {
   state: PerformanceRiskState;
 };
 
-export type PerformanceRiskAttributionHighlight = {
-  key: string;
-  label: string;
-  value: string;
-  support: string;
-  metadata?: string;
-};
-
 export type PerformanceRiskRollingDetailRow = {
   key: string;
   metric: string;
@@ -178,13 +170,6 @@ export type PerformanceRiskViewModel = {
   }>;
   underwaterDetailState: "idle" | "loading" | "ready" | "unavailable";
   rollingWindows: PerformanceRiskRollingWindow[];
-  rollingQualityFlags: string[];
-  rollingSupportabilityNotes: Array<{
-    key: string;
-    title: string;
-    body: string;
-    tone: "default" | "warn";
-  }>;
   rollingDetailState: "idle" | "loading" | "ready" | "unavailable";
   rollingContextRows: PerformanceRiskContextRow[];
   attributionControls: {
@@ -213,14 +198,6 @@ export type PerformanceRiskViewModel = {
     contributionShareAbsPct: number | null;
   }>;
   attributionMaxContributionShareAbsPct: number;
-  attributionTotals: {
-    metric: string;
-    totalValue: string;
-    reconciledSum: string;
-    residual: string;
-    support: string;
-  } | null;
-  attributionHighlights: PerformanceRiskAttributionHighlight[];
   attributionMethodologyRows: PerformanceRiskContextRow[];
   attributionState: "idle" | "loading" | "ready" | "blocked" | "unavailable";
   attributionWarnings: string[];
@@ -366,8 +343,6 @@ export function buildPerformanceRiskViewModel({
       isDrawdownDetailLoading,
     }),
     rollingWindows: mapRollingWindows(rolling, rollingDetail),
-    rollingQualityFlags: rolling.payload?.periods[0]?.quality_flags ?? [],
-    rollingSupportabilityNotes: mapRollingSupportabilityNotes(rolling),
     rollingDetailState: resolveRollingDetailState({
       rolling,
       rollingDetail,
@@ -377,8 +352,6 @@ export function buildPerformanceRiskViewModel({
     attributionControls: mapAttributionControls(attribution),
     attributionRows: mapAttributionRows(attribution),
     attributionMaxContributionShareAbsPct: mapAttributionMaxContributionShareAbsPct(attribution),
-    attributionTotals: mapAttributionTotals(attribution),
-    attributionHighlights: mapAttributionHighlights(attribution),
     attributionMethodologyRows: mapAttributionMethodologyRows(attribution),
     attributionState: resolveAttributionState({ attribution, isAttributionLoading }),
     attributionWarnings: attribution?.warnings ?? [],
@@ -1290,15 +1263,11 @@ function buildStateViewModel(
     underwaterSeries: [],
     underwaterDetailState: "idle",
     rollingWindows: [],
-    rollingQualityFlags: [],
-    rollingSupportabilityNotes: [],
     rollingDetailState: "idle",
     rollingContextRows: [],
     attributionControls: null,
     attributionRows: [],
     attributionMaxContributionShareAbsPct: 0,
-    attributionTotals: null,
-    attributionHighlights: [],
     attributionMethodologyRows: [],
     attributionState: "idle",
     attributionWarnings: [],
@@ -2058,16 +2027,7 @@ function mapDrawdownEpisodeInterpretation(
           : "The selected window did not produce a retained peak-to-trough loss interval, which indicates drawdown remained controlled over this review period.",
     };
   }
-
-  const worstEpisode = episodes[0];
-  return {
-    title: `${formatInteger(episodes.length)} drawdown ${episodes.length === 1 ? "episode" : "episodes"} to review`,
-    body: `The worst retained episode reached ${formatDrawdownPercent(
-      worstEpisode.depth
-    )} from ${formatDateValue(worstEpisode.peak_date)} to ${formatDateValue(
-      worstEpisode.trough_date
-    )}${worstEpisode.is_recovered ? ` and recovered by ${formatDateValue(worstEpisode.recovery_date ?? "")}.` : ", and it remains open."}`,
-  };
+  return null;
 }
 
 function mapDrawdownEpisodes(response: WorkbenchRiskDrawdownResponse) {
@@ -2383,7 +2343,7 @@ function mapRollingContextRows(
   if (!period) {
     return [];
   }
-  return [
+  const rows: PerformanceRiskContextRow[] = [
     {
       key: "window_coverage",
       label: "Window set",
@@ -2415,57 +2375,53 @@ function mapRollingContextRows(
       support: `${formatEnumLabel(requestContext?.alignment_policy) ?? "Inner Join"} alignment policy.`,
     },
   ];
-}
-
-function mapRollingSupportabilityNotes(response: WorkbenchRiskRollingResponse) {
-  const period = response.payload?.periods[0];
-  if (!period) {
-    return [];
-  }
 
   const notes = new Map<
     string,
-    { key: string; title: string; body: string; tone: "default" | "warn" }
+    PerformanceRiskContextRow
   >();
 
   for (const flag of period.quality_flags ?? []) {
     if (flag === "metric:ROLLING_BETA:benchmark_variance_zero") {
       notes.set(flag, {
         key: flag,
-        title: "Benchmark-relative review is limited in one emitted window",
-        body: "Benchmark variance was limited in one emitted window, so beta may be less informative for that horizon.",
-        tone: "warn",
+        label: "Benchmark-relative review",
+        value: "Qualified",
+        support:
+          "Benchmark variance was limited in one emitted window, so beta may be less informative for that horizon.",
       });
       continue;
     }
 
     notes.set(flag, {
       key: flag,
-      title: "Some rolling measures should be qualified",
-      body: "Some rolling measures may be less informative for the selected horizon.",
-      tone: "warn",
+      label: "Window caution",
+      value: "Qualified",
+      support: "Some rolling measures may be less informative for the selected horizon.",
     });
   }
 
   if (period.benchmark_context?.requested && period.benchmark_context.reason !== "APPLIED") {
     notes.set("benchmark_alignment", {
       key: "benchmark_alignment",
-      title: "Benchmark-relative review should be qualified",
-      body: "Benchmark alignment is not fully ready across the selected horizon, so beta and tracking error should be read with caution.",
-      tone: "warn",
+      label: "Benchmark-relative review",
+      value: "Qualified",
+      support:
+        "Benchmark alignment is not fully ready across the selected horizon, so beta and tracking error should be read with caution.",
     });
   }
 
   if (period.risk_free_context?.requested && period.risk_free_context.reason !== "APPLIED") {
     notes.set("risk_free_alignment", {
       key: "risk_free_alignment",
-      title: "Sharpe review should be qualified",
-      body: "Risk-free alignment is not fully ready across the selected horizon, so Sharpe should be treated as supporting context.",
-      tone: "warn",
+      label: "Sharpe review",
+      value: "Qualified",
+      support:
+        "Risk-free alignment is not fully ready across the selected horizon, so Sharpe should be treated as supporting context.",
     });
   }
 
-  return Array.from(notes.values());
+  return [...rows, ...notes.values()];
 }
 
 function buildRollingWindowReview(
@@ -3111,76 +3067,6 @@ function mapAttributionMaxContributionShareAbsPct(response: WorkbenchRiskAttribu
   }, 0);
 }
 
-function mapAttributionTotals(response: WorkbenchRiskAttributionResponse | null) {
-  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
-  if (!selectedSet) {
-    return null;
-  }
-  return {
-    metric: `${selectedSet.attribution_type.replaceAll("_", " ")} • ${selectedSet.metric.replaceAll("_", " ")}`,
-    totalValue: formatRiskPercentValue(selectedSet.total_value),
-    reconciledSum: formatRiskPercentValue(selectedSet.reconciled_sum),
-    residual: formatRiskPercentValue(selectedSet.residual),
-    support: selectedSet.grouping_dimension.replaceAll("_", " "),
-  };
-}
-
-function mapAttributionHighlights(
-  response: WorkbenchRiskAttributionResponse | null
-): PerformanceRiskAttributionHighlight[] {
-  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
-  if (!selectedSet) {
-    return [];
-  }
-
-  const topContributor = [...selectedSet.contributors]
-    .sort(
-      (left, right) =>
-        Math.abs(right.component_contribution ?? 0) - Math.abs(left.component_contribution ?? 0)
-    )[0];
-  const selectedLens = `${formatEnumLabel(selectedSet.attribution_type) ?? selectedSet.attribution_type} • ${formatEnumLabel(selectedSet.grouping_dimension) ?? selectedSet.grouping_dimension}`;
-  const evidencePosture = resolveAttributionEvidencePosture(response, selectedSet.residual);
-
-  return [
-    {
-      key: "selected_lens",
-      label: "Selected lens",
-      value: selectedLens,
-      support: "Current decomposition lens for contributor review.",
-      metadata: selectedSet.metric.replaceAll("_", " "),
-    },
-    {
-      key: "top_contributor",
-      label: "Top contributor",
-      value: topContributor ? normalizeAttributionGroupLabel(topContributor.group_label) : "N/A",
-      support: topContributor
-        ? `Largest visible component effect at ${formatRiskPercentValue(
-            topContributor.component_contribution
-          )}.`
-        : "No contributor rows returned for the current lens.",
-      metadata: topContributor
-        ? `Share ${formatRiskPercentValue(topContributor.percent_contribution)}`
-        : undefined,
-    },
-    {
-      key: "reconciled_sum",
-      label: "Reconciled sum",
-      value: formatRiskPercentValue(selectedSet.reconciled_sum),
-      support: `Reported total ${formatRiskPercentValue(
-        selectedSet.total_value
-      )} with residual ${formatRiskPercentValue(selectedSet.residual)}.`,
-      metadata: "Contributor sum versus reported total",
-    },
-    {
-      key: "evidence_posture",
-      label: "Evidence posture",
-      value: evidencePosture.value,
-      support: evidencePosture.support,
-      metadata: evidencePosture.metadata,
-    },
-  ];
-}
-
 function resolveAttributionEvidencePosture(
   response: WorkbenchRiskAttributionResponse,
   residual: number | null | undefined
@@ -3215,10 +3101,32 @@ function mapAttributionMethodologyRows(
   response: WorkbenchRiskAttributionResponse | null
 ): PerformanceRiskContextRow[] {
   const methodologyContext = response?.payload?.methodology_context;
+  const selectedSet = response?.payload?.periods[0]?.attribution_sets[0];
   if (!methodologyContext) {
     return [];
   }
+  const evidencePosture = selectedSet
+    ? resolveAttributionEvidencePosture(response as WorkbenchRiskAttributionResponse, selectedSet.residual)
+    : null;
   return [
+    ...(selectedSet
+      ? [
+          {
+            key: "reconciled_sum",
+            label: "Reconciled sum",
+            value: formatRiskPercentValue(selectedSet.reconciled_sum),
+            support: `Reported total ${formatRiskPercentValue(
+              selectedSet.total_value
+            )} with residual ${formatRiskPercentValue(selectedSet.residual)}.`,
+          },
+          {
+            key: "evidence_posture",
+            label: "Evidence posture",
+            value: evidencePosture?.value ?? "N/A",
+            support: evidencePosture?.support ?? "Attribution evidence posture is not available.",
+          },
+        ]
+      : []),
     {
       key: "covariance_method",
       label: "Covariance method",

@@ -6,22 +6,28 @@ export default function RiskMetricCard({
   label,
   value,
   support,
+  metadata,
   definition,
   tone = "default",
   density = "default",
   className,
   ariaLabel,
   title,
+  displaySupport = true,
+  displayMetadata = false,
 }: {
   label: string;
   value: string;
   support: string;
+  metadata?: string;
   definition?: string;
   tone?: "default" | "warn" | "danger";
   density?: "default" | "compact";
   className?: string;
   ariaLabel?: string;
   title?: string;
+  displaySupport?: boolean;
+  displayMetadata?: boolean;
 }) {
   return (
     <article
@@ -46,7 +52,16 @@ export default function RiskMetricCard({
         ) : (
           <Text variant="label">{label}</Text>
         )}
-        <Text variant="metadata">{support}</Text>
+        {displaySupport ? (
+          <Text variant="metadata" className="performance-risk-metric-card-support">
+            {support}
+          </Text>
+        ) : null}
+        {displayMetadata && metadata ? (
+          <Text variant="metadata" className="performance-risk-metric-card-metadata">
+            {metadata}
+          </Text>
+        ) : null}
       </div>
       <Text variant="cardTitle" className="performance-risk-metric-card-value">
         {value}

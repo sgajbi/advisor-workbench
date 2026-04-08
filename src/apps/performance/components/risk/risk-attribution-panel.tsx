@@ -7,7 +7,6 @@ import {
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
 import RiskDetailSection from "./risk-detail-section";
 import RiskAnalyticalTable from "./risk-analytical-table";
-import RiskHeadlineMetricGrid from "./risk-headline-metric-grid";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
 import { riskAttributionPanelCopy } from "./risk-secondary-copy";
@@ -37,22 +36,6 @@ export default function RiskAttributionPanel({
           panelTitle={riskAttributionPanelCopy.methodologyPanelTitle}
           methodologyRows={viewModel.attributionMethodologyRows}
         />
-      }
-      headlineMetrics={
-        viewModel.attributionHighlights.length ? (
-          <RiskHeadlineMetricGrid
-            ariaLabel="Risk attribution highlights"
-            className="performance-risk-attribution-highlights"
-            itemClassName="performance-risk-attribution-highlight-card"
-            supportMode="hidden"
-            metrics={viewModel.attributionHighlights.map((highlight) => ({
-              key: highlight.key,
-              label: highlight.label,
-              value: highlight.value,
-              support: highlight.support,
-            }))}
-          />
-        ) : null
       }
       detail={
         <RiskDetailSection

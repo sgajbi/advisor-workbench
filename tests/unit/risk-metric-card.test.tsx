@@ -50,4 +50,20 @@ describe("RiskMetricCard", () => {
 
     expect(container.querySelector(".performance-risk-metric-card-compact")).toBeTruthy();
   });
+
+  it("can hide support copy and show metadata for shared key-figure rendering", () => {
+    render(
+      <RiskMetricCard
+        label="Volatility"
+        value="9.40%"
+        support="Overall realised risk level of the portfolio over the selected period."
+        metadata="Typical 4.07% • Range 0.00% to 12.17%"
+        displaySupport={false}
+        displayMetadata
+      />
+    );
+
+    expect(screen.queryByText("Overall realised risk level of the portfolio over the selected period.")).not.toBeInTheDocument();
+    expect(screen.getByText("Typical 4.07% • Range 0.00% to 12.17%")).toBeInTheDocument();
+  });
 });

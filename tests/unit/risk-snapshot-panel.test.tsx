@@ -43,9 +43,7 @@ describe("RiskSnapshotPanel", () => {
     expect(screen.queryByText("Stateful risk metric")).not.toBeInTheDocument();
 
     const headlineLabels = Array.from(
-      container.querySelectorAll(
-        ".performance-risk-snapshot-headline-grid .workbench-summary-metric-label"
-      )
+      container.querySelectorAll(".performance-risk-snapshot-headline-grid .ui-text-label")
     ).map((node) => node.textContent?.trim());
     expect(headlineLabels).toEqual(["Volatility", "Sharpe", "Beta", "Tracking Error"]);
 

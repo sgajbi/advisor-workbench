@@ -16,6 +16,9 @@ export default function RiskRollingDetailDrawer({
   onClose: () => void;
 }) {
   const summary = selectedWindow?.selectedWindowSummary;
+  const hasQualifiedMethodology = viewModel.rollingContextRows.some(
+    (row) => row.value === "Qualified"
+  );
 
   return (
     <RiskDetailDrawer
@@ -33,8 +36,7 @@ export default function RiskRollingDetailDrawer({
         },
         {
           label: "Evidence",
-          value:
-            viewModel.rollingSupportabilityNotes.length > 0 ? "Qualified" : "Ready",
+          value: hasQualifiedMethodology ? "Qualified" : "Ready",
         },
       ]}
       summaryTitle={summary?.title ?? "Rolling window review"}
@@ -42,7 +44,7 @@ export default function RiskRollingDetailDrawer({
         summary?.body ??
         "Rolling series detail is available for selected-window review."
       }
-      notes={viewModel.rollingSupportabilityNotes}
+      notes={[]}
       onClose={onClose}
     >
       {viewModel.rollingDetailState === "loading" ? (

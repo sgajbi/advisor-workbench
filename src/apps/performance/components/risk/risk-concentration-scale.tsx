@@ -15,7 +15,9 @@ export default function RiskConcentrationScale({
           <div key={scale.key} className="performance-risk-concentration-scale-card">
             <div className="performance-risk-concentration-scale-header">
               <RiskTermLabel label={scale.label} definition={scale.definition} />
-              <Text variant="metricValueCompact">{scale.value}</Text>
+              <Text variant="label" className="performance-risk-concentration-scale-band-label">
+                {scale.interpretationBand}
+              </Text>
             </div>
             <div className="performance-risk-concentration-scale-bands" aria-hidden="true">
               <div className="performance-risk-concentration-scale-band performance-risk-concentration-scale-band-diversified" />
@@ -33,9 +35,6 @@ export default function RiskConcentrationScale({
               <Text variant="metadata">Elevated</Text>
               <Text variant="metadata">High</Text>
             </div>
-            <Text variant="secondary" className="performance-risk-concentration-scale-reading">
-              {scale.interpretation}
-            </Text>
           </div>
         ))}
       </div>

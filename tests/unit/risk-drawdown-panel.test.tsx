@@ -59,9 +59,7 @@ describe("RiskDrawdownPanel", () => {
     expect(screen.getByRole("button", { name: "View underwater path" })).toBeInTheDocument();
 
     const headlineLabels = Array.from(
-      container.querySelectorAll(
-        ".performance-risk-drawdown-headline-grid .workbench-summary-metric-label"
-      )
+      container.querySelectorAll(".performance-risk-drawdown-headline-grid .ui-text-label")
     ).map((node) => node.textContent?.trim());
     expect(headlineLabels).toEqual([
       "Max Drawdown",
@@ -85,17 +83,13 @@ describe("RiskDrawdownPanel", () => {
       )
     ).toBeInTheDocument();
 
-    expect(screen.getByText("2 drawdown episodes to review")).toBeInTheDocument();
-    expect(
-      screen.getByText(/The worst retained episode reached -12\.45% from 12 Jan 2026 to 03 Feb 2026/)
-    ).toBeInTheDocument();
     const episodeSection = screen
       .getByRole("heading", { name: "Episode review" })
       .closest(".performance-risk-detail-section");
     expect(episodeSection).toHaveClass("performance-risk-detail-section-compact");
     expect(
       (episodeSection as HTMLElement).querySelector(".performance-risk-note-card-compact")
-    ).toBeTruthy();
+    ).toBeNull();
     expect(
       (episodeSection as HTMLElement).querySelector(".performance-risk-analytical-table-compact")
     ).toBeTruthy();

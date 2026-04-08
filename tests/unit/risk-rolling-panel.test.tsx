@@ -55,8 +55,8 @@ describe("RiskRollingPanel", () => {
     expect(screen.queryByLabelText("Rolling risk business reading")).not.toBeInTheDocument();
 
     const headlineLabels = Array.from(
-      container.querySelectorAll(".performance-risk-rolling-headline-card")
-    ).map((node) => node.getAttribute("aria-label")?.replace(" headline metric", ""));
+      container.querySelectorAll(".performance-risk-rolling-headline-card .ui-text-label")
+    ).map((node) => node.textContent?.trim());
     expect(headlineLabels).toEqual(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
     expect(container.querySelector(".performance-risk-rolling-headline-grid")).toBeTruthy();
 
@@ -71,12 +71,11 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Range" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Review note" })).toBeInTheDocument();
-    expect(screen.getAllByText("Current reading is above typical but still in range.").length).toBeGreaterThan(0);
-    expect(container.querySelectorAll(".performance-risk-range-indicator")).toHaveLength(
-      viewModel.rollingWindows[0]?.detailRowInterpretations.length ?? 0
-    );
-    expect(screen.getByLabelText("Rolling review notes")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark-relative review is limited in one emitted window")).toBeInTheDocument();
+    expect(container.querySelectorAll(".performance-risk-range-indicator")).toHaveLength(2);
+    expect(screen.queryByLabelText("Rolling review notes")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Benchmark-relative review is limited in one emitted window")
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/Typical 4\.07%/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Rolling Risk methodology and coverage" })
@@ -119,6 +118,12 @@ describe("RiskRollingPanel", () => {
     expect(screen.getByText("Benchmark alignment")).toBeInTheDocument();
     expect(screen.getByText("Risk-free alignment")).toBeInTheDocument();
     expect(screen.getByText("Methodology")).toBeInTheDocument();
+    expect(screen.getAllByText("Benchmark-relative review")).not.toHaveLength(0);
+    expect(
+      screen.getByText(
+        "Benchmark variance was limited in one emitted window, so beta may be less informative for that horizon."
+      )
+    ).toBeInTheDocument();
   });
 
   it("passes the selected window into the drill-down action", () => {

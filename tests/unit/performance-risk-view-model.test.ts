@@ -89,9 +89,7 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.drawdownSupportingMetrics.map((metric) => metric.label)).toEqual([
       "Ulcer Index",
     ]);
-    expect(viewModel.drawdownEpisodeInterpretation).toMatchObject({
-      title: "2 drawdown episodes to review",
-    });
+    expect(viewModel.drawdownEpisodeInterpretation).toBeNull();
     expect(viewModel.drawdownContextRows[0]).toMatchObject({
       label: "Portfolio observations",
     });
@@ -104,15 +102,17 @@ describe("buildPerformanceRiskViewModel", () => {
       label: "21D",
       horizonLabel: "Short window",
     });
-    expect(viewModel.rollingSupportabilityNotes).toEqual([
-      expect.objectContaining({
-        title: "Benchmark-relative review is limited in one emitted window",
-        tone: "warn",
-      }),
-    ]);
     expect(viewModel.rollingContextRows[0]).toMatchObject({
       label: "Window set",
     });
+    expect(viewModel.rollingContextRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Benchmark-relative review",
+          value: "Qualified",
+        }),
+      ])
+    );
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
@@ -132,14 +132,11 @@ describe("buildPerformanceRiskViewModel", () => {
     });
     expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
     expect(viewModel.attributionMethodologyRows[0]).toMatchObject({
-      label: "Covariance method",
+      label: "Reconciled sum",
     });
     expect(viewModel.attributionRows[0]).toMatchObject({
       group: "Technology",
     });
-    expect(viewModel.rollingQualityFlags).toContain(
-      "metric:ROLLING_BETA:benchmark_variance_zero"
-    );
   });
 
   it("does not imply benchmark-relative risk is ready when benchmark context is absent", () => {
@@ -177,7 +174,14 @@ describe("buildPerformanceRiskViewModel", () => {
       support: "Benchmark-relative risk requires benchmark context.",
       state: "unavailable",
     });
-    expect(viewModel.rollingSupportabilityNotes).toEqual([]);
+    expect(viewModel.rollingContextRows).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Benchmark-relative review",
+          value: "Qualified",
+        }),
+      ])
+    );
     expect(viewModel.attributionControls?.attributionTypes[1]).toMatchObject({
       key: "ACTIVE_RISK",
       disabled: true,
@@ -258,7 +262,6 @@ describe("buildPerformanceRiskViewModel", () => {
       /%$/
     );
     expect(viewModel.attributionState).toBe("blocked");
-    expect(viewModel.attributionTotals).toBeNull();
   });
 
   it("normalizes attribution percentages when upstream returns already-scaled percentage values", () => {

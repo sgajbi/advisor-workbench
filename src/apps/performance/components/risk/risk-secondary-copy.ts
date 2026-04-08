@@ -6,7 +6,6 @@ export const riskRollingPanelCopy = {
   detailTitle: "Window detail",
   reviewWindowLabel: "Review window",
   reviewWindowSupport: "Short to long horizon",
-  supportabilityLabel: "Rolling review notes",
   detailTableAriaLabel: "Rolling risk summary table",
   detailTableEmptyState: {
     title: "No rolling risk metrics",
