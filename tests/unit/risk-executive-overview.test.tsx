@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import RiskExecutiveOverview from "../../src/apps/performance/components/risk/risk-executive-overview";
 
 describe("RiskExecutiveOverview", () => {
-  it("keeps posture and what-matters reading in one dense executive briefing band", () => {
+  it("keeps posture and what-matters reading in one compact executive briefing surface", () => {
     const { container } = render(
       <RiskExecutiveOverview
         overview={[
@@ -60,7 +60,8 @@ describe("RiskExecutiveOverview", () => {
     const overview = screen.getByLabelText("Risk executive overview");
     expect(within(overview).getByRole("heading", { name: "Risk posture" })).toBeInTheDocument();
     expect(within(overview).getByText("What matters now")).toBeInTheDocument();
-    expect(container.querySelector(".performance-risk-executive-band .performance-risk-matters")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-executive-band")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-matters")).toBeTruthy();
     expect(container.querySelectorAll(".performance-risk-matters-item")).toHaveLength(3);
     expect(container.querySelectorAll(".performance-risk-executive-secondary-card")).toHaveLength(3);
   });
