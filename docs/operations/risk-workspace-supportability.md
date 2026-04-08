@@ -57,6 +57,27 @@ The first metric row is reserved for:
 path-severity measure. Episode detail is interpretive first and tabular second: a retained-episode
 table is shown only as supporting evidence after the business reading explains what to review.
 
+## Rolling Risk first-read contract
+
+Rolling Risk is the front-office windowed behaviour review module for the Risk workspace.
+
+The UI must answer three questions within the first viewport:
+
+1. whether the current short-window behaviour is calm, elevated, or unstable,
+2. whether the current window looks unusual versus its own recent history,
+3. whether benchmark and risk-free alignment are good enough to trust the dependent measures.
+
+The first metric row is reserved for the selected rolling window:
+
+1. `Volatility`
+2. `Tracking Error`
+3. `Beta`
+4. `Max Drawdown`
+
+The selected window detail must compare current, typical, and observed range using concise
+interpretation rather than raw statistical copy. The next review action should point the user to the
+next most relevant window, typically `63D` after the `21D` first read.
+
 ## Stateful-only rule
 
 Workbench does not surface stateless risk execution.

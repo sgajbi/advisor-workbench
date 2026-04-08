@@ -98,6 +98,32 @@ export type PerformanceRiskMetricCard = {
   state: PerformanceRiskState;
 };
 
+export type PerformanceRiskRollingDetailRow = {
+  key: string;
+  metric: string;
+  current: string;
+  typical: string;
+  range: string;
+  interpretation: string;
+};
+
+export type PerformanceRiskRollingWindow = {
+  key: string;
+  label: string;
+  review: {
+    title: string;
+    body: string;
+  };
+  headlineMetrics: PerformanceRiskMetricCard[];
+  detailRows: PerformanceRiskRollingDetailRow[];
+  seriesRows: Array<{
+    key: string;
+    date: string;
+    values: Record<string, string>;
+  }>;
+  seriesMetricKeys: string[];
+};
+
 export type PerformanceRiskViewModel = {
   state: PerformanceRiskState;
   title: string;
@@ -142,32 +168,7 @@ export type PerformanceRiskViewModel = {
     drawdown: string;
   }>;
   underwaterDetailState: "idle" | "loading" | "ready" | "unavailable";
-  rollingWindows: Array<{
-    key: string;
-    label: string;
-    headlineMetrics: Array<{
-      key: string;
-      label: string;
-      value: string;
-      support: string;
-      state: PerformanceRiskState;
-    }>;
-    summaryRows: Array<{
-      key: string;
-      metric: string;
-      latest: string;
-      average: string;
-      p05: string;
-      p95: string;
-      support: string;
-    }>;
-    seriesRows: Array<{
-      key: string;
-      date: string;
-      values: Record<string, string>;
-    }>;
-    seriesMetricKeys: string[];
-  }>;
+  rollingWindows: PerformanceRiskRollingWindow[];
   rollingQualityFlags: string[];
   rollingDetailState: "idle" | "loading" | "ready" | "unavailable";
   rollingExecutiveSummary: PerformanceRiskExecutiveSummary | null;
@@ -2035,7 +2036,7 @@ function resolveUnderwaterDetailState({
 function mapRollingWindows(
   rolling: WorkbenchRiskRollingResponse,
   rollingDetail: WorkbenchRiskRollingResponse | null
-) {
+): PerformanceRiskRollingWindow[] {
   const summaryWindows = rolling.payload?.periods[0]?.window_results ?? [];
   const detailWindows = new Map(
     (rollingDetail?.payload?.periods[0]?.window_results ?? []).map((window) => [
@@ -2057,6 +2058,7 @@ function mapRollingWindows(
     return {
       key: String(window.window_length),
       label: buildRollingWindowLabel(window.window_length),
+      review: buildRollingWindowReview(window.window_length, window.metric_summaries),
       headlineMetrics: metricKeys.map((metricKey) => {
         const summary = window.metric_summaries[metricKey];
         return {
@@ -2064,21 +2066,21 @@ function mapRollingWindows(
           label: resolveRollingMetricLabel(metricKey),
           value: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
           support: buildRollingMetricSupport(metricKey, summary),
+          definition: describeRollingMetric(metricKey),
           state: summary ? ("ready" as PerformanceRiskState) : ("unavailable" as PerformanceRiskState),
         };
       }),
-      summaryRows: metricKeys.map((metricKey) => {
+      detailRows: metricKeys.map((metricKey) => {
         const summary = window.metric_summaries[metricKey];
         return {
           key: `${window.window_length}-${metricKey}`,
           metric: resolveRollingMetricLabel(metricKey),
-          latest: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
-          average: formatRollingMetricSummaryValue(metricKey, summary?.average ?? null),
-          p05: formatRollingMetricSummaryValue(metricKey, summary?.p05 ?? null),
-          p95: formatRollingMetricSummaryValue(metricKey, summary?.p95 ?? null),
-          support: buildRollingMetricSupport(metricKey, summary),
+          current: formatRollingMetricSummaryValue(metricKey, summary?.latest ?? null),
+          typical: formatRollingMetricSummaryValue(metricKey, summary?.average ?? null),
+          range: buildRollingObservedRange(metricKey, summary),
+          interpretation: buildRollingDetailInterpretation(metricKey, summary),
         };
-      }).filter((row) => shouldDisplayRollingMetricRow(row.metric, row.latest)),
+      }).filter((row) => shouldDisplayRollingMetricRow(row.metric, row.current)),
       seriesRows: mapRollingSeriesRows(detailWindow?.metric_series ?? []),
       seriesMetricKeys: metricKeys,
     };
@@ -2138,7 +2140,7 @@ function buildRollingMetricSupport(
   if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(summary.latest)) {
     return "Excess-return ratio is numerically unstable on this window.";
   }
-  return `Avg ${formatRollingMetricSummaryValue(metricKey, summary.average)} • P05 ${formatRollingMetricSummaryValue(metricKey, summary.p05)} • P95 ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
+  return `Typical ${formatRollingMetricSummaryValue(metricKey, summary.average)} • Range ${buildRollingObservedRange(metricKey, summary)}`;
 }
 
 function buildRollingWindowLabel(windowLength: number) {
@@ -2212,23 +2214,29 @@ function mapRollingExecutiveSummary(
     return null;
   }
   const firstWindow = period.window_results[0];
-  const volatility = firstWindow?.metric_summaries.ROLLING_VOLATILITY;
-  const trackingError = firstWindow?.metric_summaries.ROLLING_TRACKING_ERROR;
-  const riskFreeApplied = period.risk_free_context?.reason === "APPLIED";
+  const summaries = firstWindow?.metric_summaries ?? {};
+  const posture = resolveRollingShortWindowPosture(summaries);
+  const benchmarkReady = period.benchmark_context?.reason === "APPLIED";
+  const riskFreeReady = period.risk_free_context?.reason === "APPLIED";
+  const nextWindow = period.window_results[1]?.window_length ?? firstWindow?.window_length ?? null;
 
   return {
     heading: "Business reading",
-    headline:
-      typeof volatility?.latest === "number"
-        ? `Rolling volatility is ${formatRollingMetricSummaryValue("ROLLING_VOLATILITY", volatility.latest)} on the shortest emitted window.`
-        : "Rolling risk diagnostics are only partially available for the selected request.",
-    detail:
-      typeof trackingError?.latest === "number"
-        ? `Tracking error is ${formatRollingMetricSummaryValue("ROLLING_TRACKING_ERROR", trackingError.latest)}, and ${riskFreeApplied ? "risk-free aligned measures are available for window review." : "risk-free aligned measures should be qualified."}`
-        : riskFreeApplied
-          ? "Risk-free aligned measures are available across the emitted windows."
-          : "Risk-free aligned measures should be qualified for this request.",
-    actionCue: "Use shorter windows for current behaviour and longer windows for stability review.",
+    headline: firstWindow
+      ? `${buildRollingWindowLabel(firstWindow.window_length)} behaviour is ${posture.label.toLowerCase()} and ${posture.unusual ? "looks unusual versus recent history." : "remains within recent history."}`
+      : "Rolling risk diagnostics are only partially available for the selected request.",
+    detail: firstWindow
+      ? buildRollingExecutiveDetail({
+          windowLength: firstWindow.window_length,
+          summaries,
+          benchmarkReady,
+          riskFreeReady,
+          posture,
+        })
+      : "Rolling window evidence is not available for this request.",
+    actionCue: nextWindow
+      ? `Review ${buildRollingWindowLabel(nextWindow)} next to confirm whether the current window behaviour is persisting.`
+      : "Review the next longest window once more rolling evidence is available.",
   };
 }
 
@@ -2343,7 +2351,7 @@ function mapRollingContextRows(
       key: "window_coverage",
       label: "Window set",
       value: `${formatInteger(period.window_count_emitted)} / ${formatInteger(period.window_count_requested)}`,
-      support: `${(period.window_lengths_emitted ?? []).join(", ")} windows emitted`,
+      support: `${(period.window_lengths_emitted ?? []).join(", ")} day windows emitted.`,
     },
     {
       key: "benchmark_dependency",
@@ -2351,8 +2359,8 @@ function mapRollingContextRows(
       value: formatEnumLabel(period.benchmark_context?.reason) ?? "Not requested",
       support:
         period.benchmark_context?.requested
-          ? `${formatInteger(period.aligned_benchmark_series_count)} aligned benchmark observations`
-          : "Benchmark-relative rolling metrics not requested",
+          ? `${formatInteger(period.aligned_benchmark_series_count)} aligned benchmark observations support beta and tracking error.`
+          : "Benchmark-relative rolling metrics are not active for this request.",
     },
     {
       key: "risk_free_dependency",
@@ -2360,16 +2368,264 @@ function mapRollingContextRows(
       value: formatEnumLabel(period.risk_free_context?.reason) ?? "Not requested",
       support:
         period.risk_free_context?.requested
-          ? `${formatInteger(period.aligned_risk_free_series_count)} aligned risk-free observations`
-          : "Risk-free rolling metrics not requested",
+          ? `${formatInteger(period.aligned_risk_free_series_count)} aligned risk-free observations support Sharpe review.`
+          : "Risk-free dependent rolling measures are not active for this request.",
     },
     {
       key: "rolling_methodology",
       label: "Methodology",
       value: `${formatInteger(requestContext?.annualization_basis)} / ${formatEnumLabel(requestContext?.min_observations_policy) ?? "Strict"}`,
-      support: `${formatEnumLabel(requestContext?.alignment_policy) ?? "Inner Join"} alignment`,
+      support: `${formatEnumLabel(requestContext?.alignment_policy) ?? "Inner Join"} alignment policy.`,
     },
   ];
+}
+
+function buildRollingWindowReview(
+  windowLength: number,
+  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"]
+): { title: string; body: string } {
+  const posture = resolveRollingShortWindowPosture(summaries);
+  const volatility = summaries.ROLLING_VOLATILITY;
+  const trackingError = summaries.ROLLING_TRACKING_ERROR;
+
+  return {
+    title: `${buildRollingWindowLabel(windowLength)} window review`,
+    body: `Current volatility is ${formatRollingMetricSummaryValue(
+      "ROLLING_VOLATILITY",
+      volatility?.latest ?? null
+    )}, tracking error is ${formatRollingMetricSummaryValue(
+      "ROLLING_TRACKING_ERROR",
+      trackingError?.latest ?? null
+    )}, and the window reads ${posture.label.toLowerCase()}${posture.unusual ? " versus recent history." : "."}`,
+  };
+}
+
+function buildRollingObservedRange(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return "N/A";
+  }
+  return `${formatRollingMetricSummaryValue(metricKey, summary.p05)} to ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
+}
+
+function buildRollingDetailInterpretation(
+  metricKey: string,
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  if (!summary) {
+    return "Not returned for this window.";
+  }
+  if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(summary.latest)) {
+    return "Current ratio is numerically unstable on this window.";
+  }
+
+  const latest = summary.latest;
+  const average = summary.average;
+  const p05 = summary.p05;
+  const p95 = summary.p95;
+
+  if (metricKey === "ROLLING_MAX_DRAWDOWN") {
+    if (typeof latest !== "number") {
+      return "Current drawdown reading unavailable.";
+    }
+    if (latest === 0) {
+      return "No realized drawdown is showing in the current window.";
+    }
+    if (typeof p05 === "number" && latest <= p05) {
+      return "Current loss path is deeper than most recent windows.";
+    }
+    if (typeof p95 === "number" && latest >= p95) {
+      return "Current loss path is shallower than most recent windows.";
+    }
+    if (typeof average === "number" && latest < average) {
+      return "Current loss path is somewhat deeper than typical.";
+    }
+    return "Current loss path is broadly in line with recent windows.";
+  }
+
+  if (metricKey === "ROLLING_BETA") {
+    if (typeof latest !== "number") {
+      return "Current market sensitivity unavailable.";
+    }
+    if (latest < 0) {
+      return "Recent market sensitivity is negative versus the benchmark.";
+    }
+    if (latest > 1.2) {
+      return "Current market sensitivity is running above benchmark pace.";
+    }
+    if (latest < 0.8) {
+      return "Current market sensitivity is running below benchmark pace.";
+    }
+    return "Current market sensitivity is close to benchmark pace.";
+  }
+
+  if (typeof latest !== "number") {
+    return "Current reading unavailable.";
+  }
+  if (typeof p95 === "number" && latest > p95) {
+    return "Current reading is above the recent observed range.";
+  }
+  if (typeof p05 === "number" && latest < p05) {
+    return "Current reading is below the recent observed range.";
+  }
+  if (typeof average === "number" && latest > average) {
+    return "Current reading is above typical but still within range.";
+  }
+  if (typeof average === "number" && latest < average) {
+    return "Current reading is below typical and remains controlled.";
+  }
+  return "Current reading is broadly in line with recent windows.";
+}
+
+function describeRollingMetric(metricKey: string) {
+  switch (metricKey) {
+    case "ROLLING_VOLATILITY":
+      return "Annualized realized volatility over the selected rolling window.";
+    case "ROLLING_TRACKING_ERROR":
+      return "Annualized active-return volatility versus the benchmark over the selected rolling window.";
+    case "ROLLING_BETA":
+      return "Recent portfolio sensitivity to benchmark moves over the selected rolling window.";
+    case "ROLLING_MAX_DRAWDOWN":
+      return "Worst realized peak-to-trough decline observed within the rolling window.";
+    case "ROLLING_SHARPE":
+      return "Excess return earned per unit of risk over the selected rolling window.";
+    case "ROLLING_INFORMATION_RATIO":
+      return "Active return earned per unit of tracking error over the selected rolling window.";
+    default:
+      return undefined;
+  }
+}
+
+function resolveRollingShortWindowPosture(
+  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"]
+): {
+  label: "Calm" | "Elevated" | "Unstable";
+  unusual: boolean;
+  drivers: string[];
+} {
+  const drivers: string[] = [];
+  const volatility = summaries.ROLLING_VOLATILITY;
+  const trackingError = summaries.ROLLING_TRACKING_ERROR;
+  const beta = summaries.ROLLING_BETA;
+  const maxDrawdown = summaries.ROLLING_MAX_DRAWDOWN;
+
+  if (typeof beta?.latest === "number" && beta.latest < 0) {
+    drivers.push("beta has turned negative");
+  }
+  if (isAboveObservedRange(volatility)) {
+    drivers.push("volatility is above its recent range");
+  }
+  if (isAboveObservedRange(trackingError)) {
+    drivers.push("tracking error is above its recent range");
+  }
+  if (isDeeperThanObservedRange(maxDrawdown)) {
+    drivers.push("rolling drawdown is deeper than most recent windows");
+  }
+
+  if (drivers.length > 0) {
+    return {
+      label: typeof beta?.latest === "number" && beta.latest < 0 ? "Unstable" : "Elevated",
+      unusual: true,
+      drivers,
+    };
+  }
+
+  if (
+    isAboveTypical(volatility) ||
+    isAboveTypical(trackingError) ||
+    isDeeperThanTypical(maxDrawdown)
+  ) {
+    return {
+      label: "Elevated",
+      unusual: false,
+      drivers: ["risk readings are above typical levels"],
+    };
+  }
+
+  return {
+    label: "Calm",
+    unusual: false,
+    drivers: ["short-window risk remains within recent history"],
+  };
+}
+
+function buildRollingExecutiveDetail({
+  windowLength,
+  summaries,
+  benchmarkReady,
+  riskFreeReady,
+  posture,
+}: {
+  windowLength: number;
+  summaries: RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"];
+  benchmarkReady: boolean;
+  riskFreeReady: boolean;
+  posture: {
+    label: "Calm" | "Elevated" | "Unstable";
+    unusual: boolean;
+    drivers: string[];
+  };
+}) {
+  const volatility = summaries.ROLLING_VOLATILITY;
+  const trackingError = summaries.ROLLING_TRACKING_ERROR;
+  const beta = summaries.ROLLING_BETA;
+  const maxDrawdown = summaries.ROLLING_MAX_DRAWDOWN;
+  const metricSentence = `${buildRollingWindowLabel(windowLength)} volatility is ${formatRollingMetricSummaryValue(
+    "ROLLING_VOLATILITY",
+    volatility?.latest ?? null
+  )}, tracking error is ${formatRollingMetricSummaryValue(
+    "ROLLING_TRACKING_ERROR",
+    trackingError?.latest ?? null
+  )}, beta is ${formatRollingMetricSummaryValue(
+    "ROLLING_BETA",
+    beta?.latest ?? null
+  )}, and rolling max drawdown is ${formatRollingMetricSummaryValue(
+    "ROLLING_MAX_DRAWDOWN",
+    maxDrawdown?.latest ?? null
+  )}.`;
+  const comparisonSentence = posture.unusual
+    ? `The main driver is that ${posture.drivers[0]}.`
+    : "Recent readings are not breaking out versus their observed history.";
+  const dependencySentence = `Benchmark alignment is ${benchmarkReady ? "good enough for beta and tracking error review" : "qualified"}, and risk-free alignment is ${riskFreeReady ? "good enough for Sharpe review" : "qualified"}.`;
+  return `${metricSentence} ${comparisonSentence} ${dependencySentence}`;
+}
+
+function isAboveObservedRange(
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  return typeof summary?.latest === "number" && typeof summary?.p95 === "number" && summary.latest > summary.p95;
+}
+
+function isAboveTypical(
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  return typeof summary?.latest === "number" && typeof summary?.average === "number" && summary.latest > summary.average;
+}
+
+function isDeeperThanObservedRange(
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  return typeof summary?.latest === "number" && typeof summary?.p05 === "number" && summary.latest < summary.p05;
+}
+
+function isDeeperThanTypical(
+  summary:
+    | RiskRollingPayload["periods"][number]["window_results"][number]["metric_summaries"][string]
+    | undefined
+) {
+  return typeof summary?.latest === "number" && typeof summary?.average === "number" && summary.latest < summary.average;
 }
 
 function resolveConcentrationIndicatorTone(

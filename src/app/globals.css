@@ -5300,6 +5300,44 @@ a:hover {
   gap: 0.9rem;
 }
 
+.performance-risk-rolling-headline-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.performance-risk-rolling-headline-card {
+  gap: 0.2rem;
+  min-height: 96px;
+  padding: 0.9rem 1rem;
+  border-color: rgba(51, 65, 85, 0.12);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.performance-risk-rolling-headline-card .workbench-summary-metric-value {
+  font-size: 1.15rem;
+  line-height: 1.15;
+}
+
+.performance-risk-rolling-headline-card .workbench-summary-metric-support {
+  line-height: 1.45;
+}
+
+.performance-risk-rolling-window-toolbar {
+  padding: 0.16rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.performance-risk-rolling-window-button {
+  min-width: 64px;
+  padding-inline: 0.8rem;
+  font-weight: 600;
+}
+
+.performance-risk-rolling-window-review {
+  background: rgba(248, 250, 252, 0.78);
+}
+
 .performance-risk-rolling-detail {
   display: grid;
   gap: 0.65rem;

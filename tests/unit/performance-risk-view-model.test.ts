@@ -119,6 +119,9 @@ describe("buildPerformanceRiskViewModel", () => {
     });
     expect(viewModel.rollingExecutiveSummary).toMatchObject({
       heading: "Business reading",
+      headline: "21D behaviour is elevated and remains within recent history.",
+      actionCue:
+        "Review 63D next to confirm whether the current window behaviour is persisting.",
     });
     expect(viewModel.rollingContextRows[0]).toMatchObject({
       label: "Window set",
@@ -126,6 +129,12 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"
     );
+    expect(viewModel.rollingWindows[0]?.review).toMatchObject({
+      title: "21D window review",
+    });
+    expect(viewModel.rollingWindows[0]?.detailRows[0]).toMatchObject({
+      metric: "Volatility",
+    });
     expect(viewModel.attributionControls?.selectedAttributionType).toBe("TOTAL_RISK");
     expect(viewModel.attributionExecutiveSummary).toMatchObject({
       heading: "Business reading",
