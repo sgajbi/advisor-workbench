@@ -33,6 +33,9 @@ describe("Risk panel groups", () => {
     expect(within(secondaryGroup).getByText("Analytical follow-through")).toBeInTheDocument();
     expect(within(secondaryGroup).getByLabelText("Rolling panel")).toBeInTheDocument();
     expect(within(secondaryGroup).getByLabelText("Attribution panel")).toBeInTheDocument();
+    expect(container.querySelector(".performance-risk-secondary-workspace")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-secondary-main")).toBeTruthy();
+    expect(container.querySelector(".performance-risk-secondary-sidecar")).toBeTruthy();
     expect(container.querySelector(".performance-risk-secondary-panel-slot-rolling")).toBeTruthy();
     expect(container.querySelector(".performance-risk-secondary-panel-slot-attribution")).toBeTruthy();
   });
