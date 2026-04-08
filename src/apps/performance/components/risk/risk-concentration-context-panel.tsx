@@ -18,14 +18,17 @@ export default function RiskConcentrationContextPanel({
       </div>
       <div className="performance-risk-concentration-context-list">
         {rows.map((row) => (
-          <div key={row.key} className="performance-risk-concentration-context-row">
+          <div key={row.key} className="performance-risk-concentration-context-item">
             <div className="performance-risk-concentration-context-copy">
               <RiskConcentrationTermLabel label={row.label} definition={row.definition} />
               <Text variant="metadata" className="performance-risk-concentration-context-support">
                 {row.support}
               </Text>
             </div>
-            <Text variant="metricValueCompact" className="performance-risk-concentration-context-value">
+            <Text
+              variant="metricValueCompact"
+              className="performance-risk-concentration-context-value"
+            >
               {row.value}
             </Text>
           </div>
