@@ -3,11 +3,12 @@ import {
   DisclosureToggleButton,
   ScreenStatePanel,
   SectionBlock,
-  Text,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskContextList from "./risk-context-list";
+import RiskExecutiveSummary from "./risk-executive-summary";
 
 type RiskDrawdownPanelProps = {
   viewModel: PerformanceRiskViewModel;
@@ -35,18 +36,10 @@ export default function RiskDrawdownPanel({
       }
     >
       {viewModel.drawdownExecutiveSummary ? (
-        <section className="performance-risk-briefing-card" aria-label="Drawdown business reading">
-          <Text variant="cardTitle">{viewModel.drawdownExecutiveSummary.heading}</Text>
-          <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
-            {viewModel.drawdownExecutiveSummary.headline}
-          </Text>
-          <Text variant="secondary">{viewModel.drawdownExecutiveSummary.detail}</Text>
-          {viewModel.drawdownExecutiveSummary.actionCue ? (
-            <Text variant="metadata" className="performance-risk-briefing-cue">
-              Next: {viewModel.drawdownExecutiveSummary.actionCue}
-            </Text>
-          ) : null}
-        </section>
+        <RiskExecutiveSummary
+          summary={viewModel.drawdownExecutiveSummary}
+          ariaLabel="Drawdown business reading"
+        />
       ) : null}
       <WorkbenchSummaryMetricStrip
         ariaLabel="Risk drawdown headline metrics"
@@ -68,47 +61,46 @@ export default function RiskDrawdownPanel({
           </div>
         </div>
       ) : null}
-      {viewModel.drawdownContextRows.length ? (
-        <div className="performance-risk-context-card-grid" aria-label="Drawdown methodology context">
-          {viewModel.drawdownContextRows.map((row) => (
-            <div key={row.key} className="performance-risk-context-card">
-              <Text variant="label">{row.label}</Text>
-              <Text variant="cardTitle">{row.value}</Text>
-              <Text variant="metadata">{row.support}</Text>
-            </div>
-          ))}
-        </div>
-      ) : null}
-      <AnalyticsTable
-        ariaLabel="Risk drawdown episode table"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "episode", label: "Episode" },
-          { key: "depth", label: "Current Reading", align: "right" },
-          { key: "peak", label: "Peak" },
-          { key: "trough", label: "Trough" },
-          { key: "recovery", label: "Recovery" },
-          { key: "days", label: "Days", align: "right" },
-          { key: "status", label: "Status" },
-        ]}
-        rows={viewModel.drawdownEpisodes.map((episode) => ({
-          key: episode.key,
-          cells: [
-            episode.episode,
-            episode.depth,
-            episode.peakDate,
-            episode.troughDate,
-            episode.recoveryDate,
-            episode.totalDays,
-            episode.status,
-          ],
-        }))}
-        emptyState={{
-          title: "No drawdown episodes",
-          body: "Stateful drawdown episodes are not available for this portfolio context.",
-        }}
-      />
+      <RiskContextList rows={viewModel.drawdownContextRows} ariaLabel="Drawdown methodology context" compact />
+      {viewModel.drawdownEpisodes.length ? (
+        <AnalyticsTable
+          ariaLabel="Risk drawdown episode table"
+          variant="analysis"
+          density="compact"
+          columns={[
+            { key: "episode", label: "Episode" },
+            { key: "depth", label: "Current Reading", align: "right" },
+            { key: "peak", label: "Peak" },
+            { key: "trough", label: "Trough" },
+            { key: "recovery", label: "Recovery" },
+            { key: "days", label: "Days", align: "right" },
+            { key: "status", label: "Status" },
+          ]}
+          rows={viewModel.drawdownEpisodes.map((episode) => ({
+            key: episode.key,
+            cells: [
+              episode.episode,
+              episode.depth,
+              episode.peakDate,
+              episode.troughDate,
+              episode.recoveryDate,
+              episode.totalDays,
+              episode.status,
+            ],
+          }))}
+          emptyState={{
+            title: "No drawdown episodes",
+            body: "Stateful drawdown episodes are not available for this portfolio context.",
+          }}
+        />
+      ) : (
+        <ScreenStatePanel
+          kind="empty"
+          title="No drawdown episodes"
+          body="No discrete drawdown intervals were returned for the selected portfolio window."
+          surface="analysis"
+        />
+      )}
       {underwaterExpanded ? (
         <div className="performance-risk-underwater-detail" aria-label="Underwater path detail">
           {viewModel.underwaterDetailState === "loading" ? (

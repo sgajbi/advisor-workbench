@@ -1,16 +1,21 @@
-import { AnalyticsTable, SectionBlock, Text, WorkbenchSummaryMetricStrip } from "@/design-system";
+import { SectionBlock, Text, WorkbenchSummaryMetricStrip } from "@/design-system";
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskContextList from "./risk-context-list";
+import RiskExecutiveSummary from "./risk-executive-summary";
 
 export default function RiskSnapshotPanel({
   viewModel,
 }: {
   viewModel: PerformanceRiskViewModel;
 }) {
-  const rows = viewModel.snapshotMetrics.map((metric) => ({
-    key: metric.key,
-    cells: [metric.label, metric.value, metric.support],
-  }));
+  const primaryMetricKeys = ["VOLATILITY", "TRACKING_ERROR", "INFORMATION_RATIO", "BETA", "SHARPE"];
+  const primaryMetrics = viewModel.snapshotMetrics.filter((metric) =>
+    primaryMetricKeys.includes(metric.key)
+  );
+  const secondaryMetrics = viewModel.snapshotMetrics.filter(
+    (metric) => !primaryMetricKeys.includes(metric.key)
+  );
 
   return (
     <SectionBlock
@@ -19,23 +24,15 @@ export default function RiskSnapshotPanel({
       className="performance-risk-panel performance-risk-snapshot-panel"
     >
       {viewModel.snapshotExecutiveSummary ? (
-        <section className="performance-risk-briefing-card" aria-label="Risk snapshot business reading">
-          <Text variant="cardTitle">{viewModel.snapshotExecutiveSummary.heading}</Text>
-          <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
-            {viewModel.snapshotExecutiveSummary.headline}
-          </Text>
-          <Text variant="secondary">{viewModel.snapshotExecutiveSummary.detail}</Text>
-          {viewModel.snapshotExecutiveSummary.actionCue ? (
-            <Text variant="metadata" className="performance-risk-briefing-cue">
-              Next: {viewModel.snapshotExecutiveSummary.actionCue}
-            </Text>
-          ) : null}
-        </section>
+        <RiskExecutiveSummary
+          summary={viewModel.snapshotExecutiveSummary}
+          ariaLabel="Risk snapshot business reading"
+        />
       ) : null}
       <WorkbenchSummaryMetricStrip
         ariaLabel="Risk snapshot headline metrics"
         className="performance-risk-metric-strip"
-        items={viewModel.snapshotMetrics.slice(0, 4).map((metric) => ({
+        items={primaryMetrics.map((metric) => ({
           key: metric.key,
           label: metric.label,
           value: metric.value,
@@ -43,32 +40,22 @@ export default function RiskSnapshotPanel({
           unavailable: metric.state === "unavailable",
         }))}
       />
-      {viewModel.snapshotContextRows.length ? (
-        <div className="performance-risk-context-card-grid" aria-label="Risk snapshot context">
-          {viewModel.snapshotContextRows.map((row) => (
-            <div key={row.key} className="performance-risk-context-card">
-              <Text variant="label">{row.label}</Text>
-              <Text variant="cardTitle">{row.value}</Text>
-              <Text variant="metadata">{row.support}</Text>
+      {secondaryMetrics.length ? (
+        <div className="performance-risk-secondary-metrics" aria-label="Risk snapshot supporting measures">
+          {secondaryMetrics.map((metric) => (
+            <div key={metric.key} className="performance-risk-secondary-metric">
+              <div className="performance-risk-secondary-metric-copy">
+                <Text variant="label">{metric.label}</Text>
+                <Text variant="metadata">{metric.support}</Text>
+              </div>
+              <Text variant="cardTitle" className="performance-risk-secondary-metric-value">
+                {metric.value}
+              </Text>
             </div>
           ))}
         </div>
       ) : null}
-      <AnalyticsTable
-        ariaLabel="Risk snapshot metric table"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "metric", label: "Measure" },
-          { key: "value", label: "Current Reading", align: "right" },
-          { key: "support", label: "Interpretation" },
-        ]}
-        rows={rows}
-        emptyState={{
-          title: "No risk metrics",
-          body: "Stateful risk metrics are not available for this portfolio context.",
-        }}
-      />
+      <RiskContextList rows={viewModel.snapshotContextRows} ariaLabel="Risk snapshot context" />
     </SectionBlock>
   );
 }

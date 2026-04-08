@@ -73,7 +73,7 @@ describe("PerformanceRiskMode", () => {
 
     expect(screen.getByText("Loading stateful risk")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+      expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     });
     expect(screen.getByLabelText("Risk snapshot business reading")).toHaveTextContent(
       "Business reading"
@@ -157,7 +157,7 @@ describe("PerformanceRiskMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk snapshot metric table")).toBeInTheDocument();
+      expect(screen.getByLabelText("Risk snapshot headline metrics")).toBeInTheDocument();
     });
 
     rerender(
@@ -345,7 +345,7 @@ describe("PerformanceRiskMode", () => {
       expect(screen.getByText("Risk unavailable")).toBeInTheDocument();
     });
     expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Risk snapshot metric table")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk snapshot headline metrics")).not.toBeInTheDocument();
   });
 
   it("does not request underwater detail on first paint and fetches it only on expand", async () => {
@@ -373,7 +373,7 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk drawdown episode table")).toBeInTheDocument();
+      expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
@@ -556,7 +556,7 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk drawdown episode table")).toBeInTheDocument();
+      expect(screen.getByLabelText("Drawdown business reading")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Expand underwater path" }));

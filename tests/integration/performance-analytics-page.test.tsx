@@ -523,11 +523,11 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Stateful Risk" })).toBeInTheDocument();
     expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
-    expect(screen.getByLabelText("Risk snapshot metric table")).toHaveTextContent("Volatility");
+    expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
       "Technology"
     );
-    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Average");
+    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Typical");
       expect(screen.getByLabelText("Risk concentration executive summary")).toHaveTextContent(
         "Business reading"
       );

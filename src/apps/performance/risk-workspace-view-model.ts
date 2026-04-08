@@ -1346,7 +1346,7 @@ function mapSnapshotExecutiveSummary(
           ? "Realized portfolio volatility is moderate."
           : "Realized portfolio volatility is contained.",
     detail: benchmarkApplied
-      ? `Benchmark-relative metrics are available. Tracking error is ${formatRiskMetric(trackingError ?? metric("TRACKING_ERROR", "Tracking Error", null, "unavailable"))} and information ratio is ${formatRiskMetric(informationRatio ?? metric("INFORMATION_RATIO", "Information Ratio", null, "unavailable"))}.`
+      ? `Tracking error is ${formatRiskMetric(trackingError ?? metric("TRACKING_ERROR", "Tracking Error", null, "unavailable"))} and information ratio is ${formatRiskMetric(informationRatio ?? metric("INFORMATION_RATIO", "Information Ratio", null, "unavailable"))}, so benchmark-relative reading can be used.`
       : "Benchmark-relative metrics should be qualified because benchmark alignment is incomplete.",
     actionCue: benchmarkApplied
       ? "Review volatility, tracking error, and information ratio together before treating the book as benchmark-stable."
@@ -1374,7 +1374,7 @@ function mapSnapshotContextRows(
       value: formatInteger(period.benchmark_observation_count),
       support:
         period.benchmark_context?.reason === "APPLIED"
-          ? `${formatInteger(period.aligned_benchmark_observation_count)} aligned for relative metrics`
+          ? `${formatInteger(period.aligned_benchmark_observation_count)} aligned for relative risk`
           : period.benchmark_context?.reason ?? "Benchmark-relative metrics not applied",
     },
     {
@@ -1684,7 +1684,7 @@ function mapDrawdownExecutiveSummary(
         : "No realized drawdown was recorded in the selected window.",
     detail: hasRelativeDrawdown
       ? `Benchmark-relative drawdown reached ${formatDrawdownPercent(relative?.max_drawdown)} and remained underwater for ${formatInteger(relative?.time_under_water_days)} business days.`
-      : `Time under water was ${formatInteger(summary.time_under_water_days)} business days and the ulcer index was ${formatDrawdownPercent(summary.ulcer_index)}.`,
+      : `Time under water was ${formatInteger(summary.time_under_water_days)} business days and the ulcer index was ${formatDrawdownPercent(summary.ulcer_index)} across the selected window.`,
     actionCue: hasPortfolioDrawdown || hasRelativeDrawdown
       ? "Review the largest adverse interval and confirm whether recovery has been completed."
       : "Use benchmark-relative drawdown and episode evidence for any deeper stress review.",
@@ -1805,11 +1805,13 @@ function mapRollingWindows(
 
   return summaryWindows.map((window) => {
     const detailWindow = detailWindows.get(window.window_length) ?? null;
-    const metricKeys = Array.from(
-      new Set([
-        ...Object.keys(window.metric_summaries),
-        ...Object.keys(detailWindow?.metric_summaries ?? {}),
-      ])
+    const metricKeys = orderRollingMetricKeys(
+      Array.from(
+        new Set([
+          ...Object.keys(window.metric_summaries),
+          ...Object.keys(detailWindow?.metric_summaries ?? {}),
+        ])
+      )
     );
     return {
       key: String(window.window_length),
@@ -1891,6 +1893,9 @@ function buildRollingMetricSupport(
 ) {
   if (!summary) {
     return "Metric not returned for this rolling request.";
+  }
+  if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(summary.latest)) {
+    return "Excess-return ratio is numerically unstable on this window.";
   }
   return `Avg ${formatRollingMetricSummaryValue(metricKey, summary.average)} • P05 ${formatRollingMetricSummaryValue(metricKey, summary.p05)} • P95 ${formatRollingMetricSummaryValue(metricKey, summary.p95)}`;
 }
@@ -1978,7 +1983,7 @@ function mapRollingExecutiveSummary(
         : "Rolling risk diagnostics are only partially available for the selected request.",
     detail:
       typeof trackingError?.latest === "number"
-        ? `Tracking error is ${formatRollingMetricSummaryValue("ROLLING_TRACKING_ERROR", trackingError.latest)}, and ${riskFreeApplied ? "risk-free aligned measures are available." : "risk-free aligned measures should be qualified."}`
+        ? `Tracking error is ${formatRollingMetricSummaryValue("ROLLING_TRACKING_ERROR", trackingError.latest)}, and ${riskFreeApplied ? "risk-free aligned measures are available for window review." : "risk-free aligned measures should be qualified."}`
         : riskFreeApplied
           ? "Risk-free aligned measures are available across the emitted windows."
           : "Risk-free aligned measures should be qualified for this request.",
@@ -1997,13 +2002,13 @@ function mapRollingContextRows(
   return [
     {
       key: "window_coverage",
-      label: "Window coverage",
+      label: "Window set",
       value: `${formatInteger(period.window_count_emitted)} / ${formatInteger(period.window_count_requested)}`,
       support: `${(period.window_lengths_emitted ?? []).join(", ")} windows emitted`,
     },
     {
       key: "benchmark_dependency",
-      label: "Benchmark dependency",
+      label: "Benchmark alignment",
       value: formatEnumLabel(period.benchmark_context?.reason) ?? "Not requested",
       support:
         period.benchmark_context?.requested
@@ -2012,7 +2017,7 @@ function mapRollingContextRows(
     },
     {
       key: "risk_free_dependency",
-      label: "Risk-free dependency",
+      label: "Risk-free alignment",
       value: formatEnumLabel(period.risk_free_context?.reason) ?? "Not requested",
       support:
         period.risk_free_context?.requested
@@ -2074,6 +2079,9 @@ function formatInteger(value: number | null | undefined) {
 function formatRollingMetricSummaryValue(metricKey: string, value: number | null | undefined) {
   if (typeof value !== "number") {
     return "N/A";
+  }
+  if (isRollingRatioMetric(metricKey) && isRollingRatioUnstable(value)) {
+    return "Unstable";
   }
   if (
     metricKey === "ROLLING_VOLATILITY" ||
@@ -2424,7 +2432,7 @@ function mapAttributionExecutiveSummary(
     heading: "Business reading",
     headline: `${formatEnumLabel(selectedSet.attribution_type) ?? selectedSet.attribution_type} attribution is available by ${formatEnumLabel(selectedSet.grouping_dimension) ?? selectedSet.grouping_dimension}.`,
     detail: topContributor
-      ? `${topContributor.group_label} is the largest visible contributor with component effect ${formatRiskPercentValue(topContributor.component_contribution)}. Residual remains ${formatRiskPercentValue(selectedSet.residual)}.`
+      ? `${topContributor.group_label} is the largest visible contributor with component effect ${formatRiskPercentValue(topContributor.component_contribution)}. Residual remains ${formatRiskPercentValue(selectedSet.residual)} after reconciliation.`
       : "No contributor rows were returned for the selected attribution controls.",
     actionCue:
       selectedSet.attribution_type === "ACTIVE_RISK"
@@ -2455,7 +2463,7 @@ function mapAttributionMethodologyRows(
     },
     {
       key: "requested_metric",
-      label: "Requested metric",
+      label: "Attribution lens",
       value: methodologyContext.requested_metrics?.join(", ") ?? "N/A",
       support: methodologyContext.requested_grouping_dimensions?.join(", ") ?? "No grouping selected",
     },
@@ -2469,6 +2477,39 @@ function mapAttributionMethodologyRows(
         "Supported grouping dimensions for active-risk decomposition",
     },
   ];
+}
+
+function isRollingRatioMetric(metricKey: string) {
+  return metricKey === "ROLLING_SHARPE" || metricKey === "ROLLING_INFORMATION_RATIO";
+}
+
+function isRollingRatioUnstable(value: number | null | undefined) {
+  return typeof value === "number" && Math.abs(value) >= 25;
+}
+
+function orderRollingMetricKeys(metricKeys: string[]) {
+  const priority = [
+    "ROLLING_VOLATILITY",
+    "ROLLING_TRACKING_ERROR",
+    "ROLLING_BETA",
+    "ROLLING_MAX_DRAWDOWN",
+    "ROLLING_SHARPE",
+    "ROLLING_INFORMATION_RATIO",
+  ];
+  return [...metricKeys].sort((left, right) => {
+    const leftIndex = priority.indexOf(left);
+    const rightIndex = priority.indexOf(right);
+    if (leftIndex === -1 && rightIndex === -1) {
+      return left.localeCompare(right);
+    }
+    if (leftIndex === -1) {
+      return 1;
+    }
+    if (rightIndex === -1) {
+      return -1;
+    }
+    return leftIndex - rightIndex;
+  });
 }
 
 function resolveAttributionState({

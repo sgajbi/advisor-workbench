@@ -107,7 +107,7 @@ describe("buildPerformanceRiskViewModel", () => {
       heading: "Business reading",
     });
     expect(viewModel.rollingContextRows[0]).toMatchObject({
-      label: "Window coverage",
+      label: "Window set",
     });
     expect(viewModel.rollingWindows[0]?.headlineMetrics.map((metric) => metric.label)).toContain(
       "Volatility"

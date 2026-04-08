@@ -5,13 +5,14 @@ import {
   DisclosureToggleButton,
   ScreenStatePanel,
   SectionBlock,
-  Text,
   WorkbenchSegmentedControl,
   WorkbenchStatusRow,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
 import type { PerformanceRiskViewModel } from "../../risk-workspace-view-model";
+import RiskContextList from "./risk-context-list";
+import RiskExecutiveSummary from "./risk-executive-summary";
 
 type RiskRollingPanelProps = {
   viewModel: PerformanceRiskViewModel;
@@ -35,6 +36,14 @@ export default function RiskRollingPanel({
     viewModel.rollingWindows.find((window) => window.key === selectedWindowKey) ??
     viewModel.rollingWindows[0] ??
     null;
+  const priorityMetrics = ["Volatility", "Tracking Error", "Beta", "Max Drawdown"];
+  const selectedHeadlineMetrics = (selectedWindow?.headlineMetrics ?? []).filter((metric) =>
+    priorityMetrics.includes(metric.label)
+  );
+  const selectedSummaryRows = (selectedWindow?.summaryRows ?? []).map((row) => ({
+    ...row,
+    range: `${row.p05} to ${row.p95}`,
+  }));
 
   return (
     <SectionBlock
@@ -51,18 +60,10 @@ export default function RiskRollingPanel({
       }
     >
       {viewModel.rollingExecutiveSummary ? (
-        <section className="performance-risk-briefing-card" aria-label="Rolling risk business reading">
-          <Text variant="cardTitle">{viewModel.rollingExecutiveSummary.heading}</Text>
-          <Text variant="metricValueCompact" className="performance-risk-briefing-headline">
-            {viewModel.rollingExecutiveSummary.headline}
-          </Text>
-          <Text variant="secondary">{viewModel.rollingExecutiveSummary.detail}</Text>
-          {viewModel.rollingExecutiveSummary.actionCue ? (
-            <Text variant="metadata" className="performance-risk-briefing-cue">
-              Next: {viewModel.rollingExecutiveSummary.actionCue}
-            </Text>
-          ) : null}
-        </section>
+        <RiskExecutiveSummary
+          summary={viewModel.rollingExecutiveSummary}
+          ariaLabel="Rolling risk business reading"
+        />
       ) : null}
       {viewModel.rollingWindows.length > 1 ? (
         <WorkbenchSegmentedControl
@@ -79,7 +80,7 @@ export default function RiskRollingPanel({
       <WorkbenchSummaryMetricStrip
         ariaLabel="Rolling risk headline metrics"
         className="performance-risk-metric-strip"
-        items={(selectedWindow?.headlineMetrics ?? []).map((metric) => ({
+        items={selectedHeadlineMetrics.map((metric) => ({
           key: metric.key,
           label: metric.label,
           value: metric.value,
@@ -97,17 +98,7 @@ export default function RiskRollingPanel({
           }))}
         />
       ) : null}
-      {viewModel.rollingContextRows.length ? (
-        <div className="performance-risk-context-card-grid" aria-label="Rolling risk methodology context">
-          {viewModel.rollingContextRows.map((row) => (
-            <div key={row.key} className="performance-risk-context-card">
-              <Text variant="label">{row.label}</Text>
-              <Text variant="cardTitle">{row.value}</Text>
-              <Text variant="metadata">{row.support}</Text>
-            </div>
-          ))}
-        </div>
-      ) : null}
+      <RiskContextList rows={viewModel.rollingContextRows} ariaLabel="Rolling risk methodology context" compact />
       <AnalyticsTable
         ariaLabel="Rolling risk summary table"
         variant="analysis"
@@ -115,14 +106,13 @@ export default function RiskRollingPanel({
         columns={[
           { key: "metric", label: "Measure" },
           { key: "latest", label: "Current Reading", align: "right" },
-          { key: "average", label: "Average", align: "right" },
-          { key: "p05", label: "P05", align: "right" },
-          { key: "p95", label: "P95", align: "right" },
-          { key: "support", label: "Interpretation" },
+          { key: "average", label: "Typical", align: "right" },
+          { key: "range", label: "Observed Range", align: "right" },
+          { key: "support", label: "Reading" },
         ]}
-        rows={(selectedWindow?.summaryRows ?? []).map((row) => ({
+        rows={selectedSummaryRows.map((row) => ({
           key: row.key,
-          cells: [row.metric, row.latest, row.average, row.p05, row.p95, row.support],
+          cells: [row.metric, row.latest, row.average, row.range, row.support],
         }))}
         emptyState={{
           title: "No rolling risk metrics",
