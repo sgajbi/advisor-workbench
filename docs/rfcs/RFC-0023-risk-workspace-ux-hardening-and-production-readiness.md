@@ -1,6 +1,6 @@
 # RFC-0023: Risk Workspace UX Hardening and Production Readiness
 
-- Status: PROPOSED
+- Status: IMPLEMENTED
 - Date: 2026-04-08
 - Owners:
   - lotus-workbench maintainers
