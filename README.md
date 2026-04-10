@@ -62,6 +62,29 @@ Preferred local entry points follow the RFC-0071 service identity model:
 
 Set `BFF_BASE_URL` to the environment-scoped gateway URL, for example `http://gateway.dev.lotus`.
 
+Canonical local runtime and live validation:
+
+- Runbook: `docs/operations/canonical-front-office-local-runtime.md`
+- Manage the canonical `*.dev.lotus` hosts block from `lotus-platform` with
+  `automation/Sync-Dev-Ingress-Hosts.ps1`
+- Bring up the full front-office stack and validate it:
+
+```bash
+npm run live:stack:up
+```
+
+- Validate an already-running canonical stack:
+
+```bash
+npm run live:validate
+```
+
+The live validator writes browser screenshots and a machine-readable validation artifact to:
+
+```txt
+output/playwright/live-canonical/
+```
+
 ## Quality Gate
 
 Frontend changes are expected to pass a hard CI gate before merge.
@@ -121,9 +144,9 @@ The current flagship demo path is the benchmark-aware performance workstation:
 
 Flagship seeded mandate and benchmarks:
 
-- portfolio: `DEMO_ADV_USD_001`
-- assigned benchmark: `BMK_GLOBAL_BALANCED_60_40` (`Global Balanced 60/40`)
-- alternate benchmark: `BMK_GLOBAL_GROWTH_80_20` (`Global Growth 80/20`)
+- portfolio: `PB_SG_GLOBAL_BAL_001`
+- assigned benchmark: `BMK_PB_GLOBAL_BALANCED_60_40` (`Private Banking Global Balanced 60/40`)
+- alternate benchmark: `BMK_GLOBAL_BALANCED_60_40` (`Global Balanced 60/40`)
 
 Expected live behavior:
 
