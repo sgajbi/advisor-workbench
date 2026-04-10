@@ -89,6 +89,8 @@ describe("IntakePage", () => {
       expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText(/CREATE PORTFOLIO queued\./i)).toBeInTheDocument();
+    expect(
+      await screen.findByText((content) => /CREATE PORTFOLIO queued\./i.test(content))
+    ).toBeInTheDocument();
   });
 });
