@@ -1,9 +1,7 @@
-name: Advisor Workbench Quality Gate
+name: Pull Request Merge Gate
 
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -15,14 +13,14 @@ permissions:
 
 jobs:
   workflow-lint:
-    name: Workflow Lint
+    name: PR Merge Gate / Workflow Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: reviewdog/action-actionlint@v1
 
   quality-gate:
-    name: Lint, Typecheck, Coverage, Build
+    name: PR Merge Gate / Lint Typecheck Coverage Build
     needs: [workflow-lint]
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +49,7 @@ jobs:
           if-no-files-found: error
 
   e2e-smoke:
-    name: Playwright Smoke
+    name: PR Merge Gate / Playwright Smoke
     needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
@@ -64,8 +62,6 @@ jobs:
         run: make install
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
-      - name: Build App
-        run: npm run build
       - name: Run Playwright Smoke
         run: make test-e2e
       - name: Upload Playwright Artifacts
@@ -79,7 +75,7 @@ jobs:
           if-no-files-found: warn
 
   docker-build:
-    name: Validate Docker Build
+    name: PR Merge Gate / Validate Docker Build
     needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
@@ -88,7 +84,7 @@ jobs:
         run: docker build -t lotus-workbench:ci-test .
 
   ci-local-docker:
-    name: CI Local Docker Parity
+    name: PR Merge Gate / CI Local Docker Parity
     needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:

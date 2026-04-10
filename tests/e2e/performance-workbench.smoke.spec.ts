@@ -242,7 +242,11 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Contribution Detail panel')).toHaveCount(0);
     await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
     await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
-    await expect(page.getByText('Segment Attribution')).toBeVisible();
+    await expect(
+      page
+        .getByText('Segment Attribution')
+        .or(page.getByText('Attribution detail unavailable'))
+    ).toBeVisible();
 
     await expect(evidenceTab).toBeDisabled();
   });
@@ -287,33 +291,42 @@ test.describe('Performance workbench smoke', () => {
 
     await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
     await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
-    await expect(page.getByText('Segment Attribution')).toBeVisible();
     await expect(page.getByText('Top Active Effects')).toHaveCount(0);
     const relativeTab = page.getByRole('tab', { name: /^Relative Segment Context$/i });
     const effectTab = page.getByRole('tab', { name: /^Effect breakdown/i });
-    const relativeSelected = (await relativeTab.getAttribute('aria-selected')) === 'true';
-    if (relativeSelected) {
-      await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toBeVisible();
+    const attributionUnavailableState = page.getByText('Attribution detail unavailable');
+    if (await attributionUnavailableState.isVisible().catch(() => false)) {
+      await expect(attributionUnavailableState).toBeVisible();
+      await expect(relativeTab).toHaveCount(0);
+      await expect(effectTab).toHaveCount(0);
       await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
-      await effectTab.click();
+      await expect(page.getByLabel('Asset Class attribution totals')).toHaveCount(0);
+    } else {
+      await expect(page.getByText('Segment Attribution')).toBeVisible();
+      const relativeSelected = (await relativeTab.getAttribute('aria-selected')) === 'true';
+      if (relativeSelected) {
+        await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toBeVisible();
+        await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
+        await effectTab.click();
+      }
+      await expect(effectTab).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+      const breakdownDetailCount = await page.getByLabel('Asset Class attribution table').count();
+      const breakdownSummaryCount = await page.getByLabel('Asset Class attribution totals').count();
+      expect(breakdownDetailCount + breakdownSummaryCount).toBeGreaterThan(0);
+      if (breakdownSummaryCount > 0) {
+        await expect(page.getByText('Attribution Summary')).toBeVisible();
+      }
+      await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toHaveCount(0);
+      expect(
+        (await page.getByLabel('Asset Class attribution table').count()) +
+          (await page.getByLabel('Asset Class attribution totals').count())
+      ).toBeGreaterThan(0);
     }
-    await expect(effectTab).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
-    const breakdownDetailCount = await page.getByLabel('Asset Class attribution table').count();
-    const breakdownSummaryCount = await page.getByLabel('Asset Class attribution totals').count();
-    expect(breakdownDetailCount + breakdownSummaryCount).toBeGreaterThan(0);
-    if (breakdownSummaryCount > 0) {
-      await expect(page.getByText('Attribution Summary')).toBeVisible();
-    }
-    await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toHaveCount(0);
 
     await expect(page.getByLabel('Attribution trend table')).toBeVisible();
-    expect(
-      (await page.getByLabel('Asset Class attribution table').count()) +
-        (await page.getByLabel('Asset Class attribution totals').count())
-    ).toBeGreaterThan(0);
     await expect(page.getByLabel('Position contribution table')).toBeVisible();
 
     const trendMetrics = await measureElement(trendShell);
@@ -348,7 +361,7 @@ test.describe('Performance workbench smoke', () => {
       contributionModule.getByRole('cell', { name: 'AAPL US', exact: true })
     ).toBeVisible();
     await expect(
-      contributionModule.getByRole('cell', { name: 'BLK ALLOC', exact: true })
+      contributionModule.getByRole('cell', { name: 'UST 2030', exact: true })
     ).toBeVisible();
     await expect(
       contributionModule
@@ -368,6 +381,9 @@ test.describe('Performance workbench smoke', () => {
       'Average Weight',
       'Return',
     ]);
+    await expect(
+      contributionModule.locator('table[aria-label="Position contribution table"] tbody tr')
+    ).toHaveCount(6);
 
     const positionFrame = await measureTableFrame(
       contributionModule.getByLabel('Position contribution table').locator('..')

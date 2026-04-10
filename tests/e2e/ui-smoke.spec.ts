@@ -13,8 +13,8 @@ test.describe('UI smoke checks', () => {
       readyName: /Portfolio Intake Operations Console/i,
     },
     {
-      path: '/workbench/DEMO_ADV_USD_001',
-      readyName: /^Advisor Workbench(?:: .+)?$/i,
+      path: '/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001',
+      readyName: /^Portfolio$/i,
     },
   ] as const;
 

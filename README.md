@@ -95,6 +95,12 @@ output/playwright/live-canonical/
 
 Frontend changes are expected to pass a hard CI gate before merge.
 
+Lane model:
+
+- `Remote Feature Lane`: lint, typecheck, and fast `npm run test`
+- `Pull Request Merge Gate`: lint, typecheck, coverage, build, Playwright smoke, Docker validation, and local Docker parity
+- `Main Releasability Gate`: reruns the PR-grade gate on `main` with retained artifacts
+
 Required layers:
 
 - unit and integration tests through Vitest coverage
