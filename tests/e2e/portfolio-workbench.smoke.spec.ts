@@ -51,9 +51,9 @@ async function openSummaryPortfolio(
   }
 
   await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
-  const summaryViewButton = page.getByRole('button', { name: /^Summary$/i });
-  await expect(summaryViewButton).toBeVisible();
-  await expect(summaryViewButton).toHaveAttribute('aria-pressed', 'true');
+  const summaryViewTab = page.getByRole('tab', { name: /^Summary$/i });
+  await expect(summaryViewTab).toBeVisible();
+  await expect(summaryViewTab).toHaveAttribute('aria-selected', 'true');
 
   return { portfolioId, available: true };
 }
@@ -85,10 +85,10 @@ async function openDetailedPortfolio(
 
   await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
 
-  const detailedViewButton = page.getByRole('button', { name: /^Detailed$/i });
-  await expect(detailedViewButton).toBeVisible();
-  await detailedViewButton.click();
-  await expect(detailedViewButton).toHaveAttribute('aria-pressed', 'true');
+  const detailedViewTab = page.getByRole('tab', { name: /^Detailed$/i });
+  await expect(detailedViewTab).toBeVisible();
+  await detailedViewTab.click();
+  await expect(detailedViewTab).toHaveAttribute('aria-selected', 'true');
 
   await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toBeVisible({
     timeout: 15000,
