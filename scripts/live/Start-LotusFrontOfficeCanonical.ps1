@@ -43,6 +43,15 @@ function Test-HttpReady {
   }
 }
 
+function Remove-ContainerIfPresent {
+  param([string]$Name)
+
+  $existing = docker ps -a --format "{{.Names}}" | Where-Object { $_ -eq $Name }
+  if ($existing) {
+    docker rm -f $Name | Out-Null
+  }
+}
+
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
@@ -55,7 +64,7 @@ Invoke-RepoCommand $adviseRepo "docker compose up -d"
 Invoke-RepoCommand $reportRepo "docker compose up -d"
 
 Write-Host "Ensuring direct ingress container is running..."
-docker rm -f lotus-direct-dev-ingress 2>$null | Out-Null
+Remove-ContainerIfPresent "lotus-direct-dev-ingress"
 docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/etc/caddy/Caddyfile" caddy:2.8.4 | Out-Null
 
 Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."

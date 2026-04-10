@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "live:stack:down": "powershell -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1",
     "live:stack:up": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1",
     "live:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1",
     "live:validate:ui": "node scripts/live/validate-canonical-workbench-live.mjs",
