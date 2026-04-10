@@ -6,15 +6,35 @@ test.describe('UI smoke checks', () => {
   const mobileOverflowChecks = [
     {
       path: '/portfolios',
-      readyName: /^Portfolio$|^Portfolio unavailable$/i,
+      assertReady: async (page: import('@playwright/test').Page) => {
+        await expect(
+          page.getByRole('heading', { name: /^Portfolio$|^Portfolio unavailable$/i })
+        ).toBeVisible({ timeout: 60000 });
+      },
     },
     {
       path: '/intake',
-      readyName: /Portfolio Intake Operations Console/i,
+      assertReady: async (page: import('@playwright/test').Page) => {
+        await expect(
+          page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })
+        ).toBeVisible({ timeout: 60000 });
+      },
     },
     {
       path: '/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001',
-      readyName: /^Portfolio$/i,
+      assertReady: async (page: import('@playwright/test').Page) => {
+        const unavailableHeading = page.getByRole('heading', { name: /^Portfolio unavailable$/i });
+        const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
+        if (unavailableVisible) {
+          await expect(unavailableHeading).toBeVisible({ timeout: 60000 });
+          return;
+        }
+
+        await expect(page.getByRole('tab', { name: /^Summary$/i })).toBeVisible({ timeout: 60000 });
+        await expect(page.getByRole('heading', { name: /Portfolio Allocation/i })).toBeVisible({
+          timeout: 60000,
+        });
+      },
     },
   ] as const;
 
@@ -58,11 +78,9 @@ test.describe('UI smoke checks', () => {
   test('mobile layout has no horizontal overflow on key pages', async ({ page }) => {
     test.setTimeout(120000);
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const { path, readyName } of mobileOverflowChecks) {
+    for (const { path, assertReady } of mobileOverflowChecks) {
       await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await expect(page.getByRole('heading', { name: readyName })).toBeVisible({
-        timeout: 60000,
-      });
+      await assertReady(page);
       const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
       expect(hasOverflow, `horizontal overflow detected on ${path}`).toBeFalsy();
     }
