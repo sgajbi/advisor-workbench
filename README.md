@@ -73,6 +73,12 @@ Canonical local runtime and live validation:
 npm run live:stack:up
 ```
 
+- Bring the canonical stack down cleanly:
+
+```bash
+npm run live:stack:down
+```
+
 - Validate an already-running canonical stack:
 
 ```bash

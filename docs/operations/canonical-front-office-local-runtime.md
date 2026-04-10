@@ -97,6 +97,20 @@ That script performs:
 8. canonical `lotus-workbench` startup on port `3000`
 9. end-to-end validation of canonical routes and populated UI panels
 
+## One-command teardown
+
+To stop the canonical local stack cleanly:
+
+```powershell
+npm run live:stack:down
+```
+
+That script:
+
+1. stops canonical host processes on `3000`, `8001`, and `8111`
+2. removes direct ingress if it is present
+3. runs `docker compose down` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, and `lotus-report`
+
 ## One-command validation
 
 To validate an already-running stack:
