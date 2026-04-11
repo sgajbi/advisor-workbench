@@ -1,4 +1,5 @@
 import { createPanelGovernance } from "../../scripts/live/validation/panel-governance.mjs";
+import type { ValidationPanelState } from "../../scripts/live/validation/shared-types";
 
 function createSummary() {
   return {
@@ -7,7 +8,19 @@ function createSummary() {
   };
 }
 
-const registry = {
+type TestRegistry = {
+  panels: Array<{
+    panelId: string;
+    owningService: string;
+    gatewayEndpoint: string | null;
+    requiredSupportState: ValidationPanelState;
+    allowedStates: ValidationPanelState[];
+    knownLimitations: string[];
+    ownerFollowUpRfc: string | null;
+  }>;
+};
+
+const registry: TestRegistry = {
   panels: [
     {
       panelId: "portfolio.summary",

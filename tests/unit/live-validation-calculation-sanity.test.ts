@@ -3,14 +3,19 @@ import {
   assertRiskCalculationSanity,
 } from "../../scripts/live/validation/calculation-sanity.mjs";
 
-function createSummary() {
+type TestValidationSummary = {
+  calculationChecks: Array<Record<string, unknown>>;
+  panelClassifications: Array<Record<string, unknown>>;
+};
+
+function createSummary(): TestValidationSummary {
   return {
     calculationChecks: [],
     panelClassifications: [],
   };
 }
 
-function createClassifier(summary: ReturnType<typeof createSummary>) {
+function createClassifier(summary: TestValidationSummary) {
   return (panel: string, state: string, owner: string, evidence: Record<string, unknown>) => {
     summary.panelClassifications.push({ panel, state, owner, ...evidence });
   };
