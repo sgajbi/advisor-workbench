@@ -25,4 +25,15 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("Browser validation failures must fail the PowerShell command");
     expect(runbook).toContain("stale summaries");
   });
+
+  it("starts the governed seed with the canonical RFC-0075 as-of date", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "Start-LotusFrontOfficeCanonical.ps1"),
+      "utf8"
+    );
+
+    expect(script).toContain("--portfolio-id $PortfolioId");
+    expect(script).toContain("--end-date 2026-04-10");
+    expect(script).toContain("--benchmark-start-date 2025-01-06");
+  });
 });
