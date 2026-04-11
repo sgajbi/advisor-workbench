@@ -1,4 +1,3 @@
-import dns from "node:dns/promises";
 import path from "node:path";
 import process from "node:process";
 import { chromium, expect } from "@playwright/test";
@@ -14,6 +13,7 @@ import {
   writeShotIndex,
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
+import { checkDns, fetchJson, fetchText } from "./validation/probes.mjs";
 
 const {
   portfolioId,
@@ -38,72 +38,6 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
-
-async function checkDns(hostname, required = true) {
-  try {
-    const resolution = await dns.lookup(hostname);
-    const result = { hostname, ok: true, address: resolution.address, required };
-    summary.dns.push(result);
-    return result;
-  } catch (error) {
-    const result = {
-      hostname,
-      ok: false,
-      required,
-      warning: `Optional canonical host '${hostname}' is not resolvable: ${error.message}`,
-    };
-    summary.dns.push(result);
-    if (required) {
-      throw new Error(
-        `Canonical host '${hostname}' is not resolvable. Update your hosts/DNS mapping before running the live validation again.`
-      );
-    }
-    return result;
-  }
-}
-
-async function fetchJson(url, description) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) {
-      throw new Error(`${description} failed (${response.status}) at ${url}`);
-    }
-    const body = await response.text();
-    if (!body.trim()) {
-      throw new Error(`${description} returned HTTP ${response.status} with an empty body at ${url}`);
-    }
-    let payload;
-    try {
-      payload = JSON.parse(body);
-    } catch (error) {
-      throw new Error(
-        `${description} returned non-JSON content at ${url}: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-    summary.apiChecks.push({ description, url, status: response.status, kind: "json" });
-    return payload;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function fetchText(url, description) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) {
-      throw new Error(`${description} failed (${response.status}) at ${url}`);
-    }
-    const payload = await response.text();
-    summary.apiChecks.push({ description, url, status: response.status, kind: "text" });
-    return payload;
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 async function assertListHasItems(locator, description) {
   await expect(locator).toBeVisible({ timeout: timeoutMs });
@@ -486,17 +420,17 @@ async function run() {
   await ensureDirectory(outputDir);
 
   const dnsChecks = await Promise.all([
-    checkDns("workbench.dev.lotus"),
-    checkDns("gateway.dev.lotus"),
-    checkDns("core-query.dev.lotus"),
-    checkDns("core-control.dev.lotus"),
-    checkDns("core-ingestion.dev.lotus"),
-    checkDns("performance.dev.lotus"),
-    checkDns("risk.dev.lotus"),
-    checkDns("advise.dev.lotus"),
-    checkDns("manage.dev.lotus"),
-    checkDns("report.dev.lotus"),
-    checkDns("ai.dev.lotus", false),
+    checkDns(summary, "workbench.dev.lotus"),
+    checkDns(summary, "gateway.dev.lotus"),
+    checkDns(summary, "core-query.dev.lotus"),
+    checkDns(summary, "core-control.dev.lotus"),
+    checkDns(summary, "core-ingestion.dev.lotus"),
+    checkDns(summary, "performance.dev.lotus"),
+    checkDns(summary, "risk.dev.lotus"),
+    checkDns(summary, "advise.dev.lotus"),
+    checkDns(summary, "manage.dev.lotus"),
+    checkDns(summary, "report.dev.lotus"),
+    checkDns(summary, "ai.dev.lotus", { required: false }),
   ]);
 
   dnsChecks
@@ -504,52 +438,68 @@ async function run() {
     .forEach((item) => console.warn(item.warning));
 
   const foundationWorkspace = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/foundation/portfolios/${portfolioId}/workspace`,
-    "Foundation workspace"
+    "Foundation workspace",
+    timeoutMs
   );
   if (foundationWorkspace?.portfolio?.portfolio_id !== portfolioId) {
     throw new Error(`Foundation workspace did not resolve ${portfolioId}.`);
   }
 
   const performanceSummary = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
-    "Performance summary"
+    "Performance summary",
+    timeoutMs
   );
   if (!performanceSummary?.portfolio_id) {
     throw new Error("Performance summary returned no portfolio payload.");
   }
 
   const performanceDetails = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/details?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
-    "Performance details"
+    "Performance details",
+    timeoutMs
   );
   if (!performanceDetails?.portfolio_id) {
     throw new Error("Performance details returned no portfolio payload.");
   }
 
   const riskSummary = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/summary?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}`,
-    "Risk summary"
+    "Risk summary",
+    timeoutMs
   );
   if (!riskSummary?.portfolio_id) {
     throw new Error("Risk summary returned no portfolio payload.");
   }
 
   const riskConcentration = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/concentration?period=YTD&benchmark_code=${benchmarkCode}`,
-    "Risk concentration"
+    "Risk concentration",
+    timeoutMs
   );
   const riskDrawdown = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&include_underwater_series=true`,
-    "Risk drawdown"
+    "Risk drawdown",
+    timeoutMs
   );
   const riskRolling = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&include_time_series=true`,
-    "Risk rolling"
+    "Risk rolling",
+    timeoutMs
   );
   const riskAttribution = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/attribution?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&attribution_type=total_risk&grouping_dimension=sector`,
-    "Risk attribution"
+    "Risk attribution",
+    timeoutMs
   );
   for (const [description, payload] of [
     ["Risk concentration", riskConcentration],
@@ -571,32 +521,40 @@ async function run() {
   );
 
   const advisorBrief = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
-    "Advisor brief"
+    "Advisor brief",
+    timeoutMs
   );
   if (!advisorBrief?.summary) {
     throw new Error("Advisor brief returned no summary.");
   }
 
   const manageCapabilities = await fetchJson(
+    summary,
     "http://manage.dev.lotus/integration/capabilities?consumer_system=lotus-gateway&tenant_id=default",
-    "lotus-manage integration capabilities"
+    "lotus-manage integration capabilities",
+    timeoutMs
   );
   if (!Array.isArray(manageCapabilities?.features) || manageCapabilities.features.length < 1) {
     throw new Error("lotus-manage integration capabilities returned no feature flags.");
   }
 
   const reportCapabilities = await fetchJson(
+    summary,
     "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default",
-    "lotus-report integration capabilities"
+    "lotus-report integration capabilities",
+    timeoutMs
   );
   if (!Array.isArray(reportCapabilities?.features) || reportCapabilities.features.length < 1) {
     throw new Error("lotus-report integration capabilities returned no feature flags.");
   }
 
   const gatewayCapabilities = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/platform/capabilities`,
-    "Gateway platform capabilities"
+    "Gateway platform capabilities",
+    timeoutMs
   );
   const gatewayManageFeatures = gatewayCapabilities?.data?.sources?.lotus_manage?.features;
   if (!Array.isArray(gatewayManageFeatures) || gatewayManageFeatures.length < 1) {
@@ -604,8 +562,10 @@ async function run() {
   }
 
   const gatewayOverview = await fetchJson(
+    summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/overview`,
-    "Gateway workbench overview"
+    "Gateway workbench overview",
+    timeoutMs
   );
   if (gatewayOverview?.portfolio?.portfolio_id !== portfolioId) {
     throw new Error("Gateway workbench overview returned no portfolio payload.");
@@ -623,16 +583,20 @@ async function run() {
   assertPanelSupportabilityAlignment();
 
   const portfolioShell = await fetchText(
+    summary,
     `${workbenchBaseUrl}/portfolio?portfolioId=${portfolioId}`,
-    "Workbench portfolio route"
+    "Workbench portfolio route",
+    timeoutMs
   );
   if (!portfolioShell.includes("Portfolio")) {
     throw new Error("Workbench portfolio route did not render the Portfolio shell.");
   }
 
   const performanceShell = await fetchText(
+    summary,
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}`,
-    "Workbench performance route"
+    "Workbench performance route",
+    timeoutMs
   );
   if (!performanceShell.includes("Performance")) {
     throw new Error("Workbench performance route did not render the Performance shell.");
