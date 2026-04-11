@@ -172,6 +172,11 @@ Machine-readable validation evidence is written to:
 output/playwright/live-canonical/live-validation-summary.json
 ```
 
+The machine-readable summary also records the governed canonical contract identity and version from
+`lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json`. If the
+platform contract file is unavailable, the validator emits a deterministic fallback that still
+identifies the run as governed by `RFC-0076`, instead of silently dropping contract provenance.
+
 The validation script runs the browser validator from the `lotus-workbench` repository root so
 these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
 script. Browser validation failures must fail the PowerShell command; do not treat stale summaries

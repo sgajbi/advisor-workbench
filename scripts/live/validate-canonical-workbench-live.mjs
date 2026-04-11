@@ -4,6 +4,15 @@ import path from "node:path";
 import process from "node:process";
 import { chromium, expect } from "@playwright/test";
 
+const DEFAULT_CANONICAL_CONTRACT = {
+  contractId: "canonical-front-office-demo-data-contract",
+  contractVersion: "1.0.0",
+  governedByRfc: "RFC-0076",
+  portfolioId: "PB_SG_GLOBAL_BAL_001",
+  benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+  canonicalAsOfDate: "2026-04-10",
+};
+
 function parseArgs(argv) {
   const args = new Map();
   for (let index = 0; index < argv.length; index += 1) {
@@ -34,11 +43,13 @@ const summaryPath = path.join(outputDir, "live-validation-summary.json");
 const shotIndexPath = path.join(outputDir, "SHOT-INDEX.md");
 const timeoutMs = Number(args.get("timeout-ms") ?? "60000");
 const canonicalAsOfDate = args.get("as-of-date") ?? "2026-04-10";
+const canonicalContract = await loadCanonicalContractMetadata();
 
 const summary = {
   generatedAt: new Date().toISOString(),
   portfolioId,
   benchmarkCode,
+  canonicalContract,
   workbenchBaseUrl,
   gatewayBaseUrl,
   dns: [],
@@ -48,6 +59,60 @@ const summary = {
   panelClassifications: [],
   screenshots: [],
 };
+
+async function loadCanonicalContractMetadata() {
+  const candidatePaths = [
+    process.env.LOTUS_PLATFORM_REPO
+      ? path.resolve(
+          process.env.LOTUS_PLATFORM_REPO,
+          "context",
+          "contracts",
+          "canonical-front-office-demo-data-contract.json"
+        )
+      : null,
+    path.resolve(
+      process.cwd(),
+      "..",
+      "lotus-platform",
+      "context",
+      "contracts",
+      "canonical-front-office-demo-data-contract.json"
+    ),
+  ].filter(Boolean);
+
+  for (const candidatePath of candidatePaths) {
+    try {
+      const raw = await fs.readFile(candidatePath, "utf8");
+      const payload = JSON.parse(raw);
+      return {
+        contractId: payload.contract_id ?? DEFAULT_CANONICAL_CONTRACT.contractId,
+        contractVersion: payload.contract_version ?? DEFAULT_CANONICAL_CONTRACT.contractVersion,
+        governedByRfc: payload.governed_by_rfc ?? DEFAULT_CANONICAL_CONTRACT.governedByRfc,
+        portfolioId: payload.portfolio?.portfolio_id ?? DEFAULT_CANONICAL_CONTRACT.portfolioId,
+        benchmarkCode:
+          payload.benchmark?.benchmark_id ?? DEFAULT_CANONICAL_CONTRACT.benchmarkCode,
+        canonicalAsOfDate:
+          payload.date_policy?.canonical_as_of_date ??
+          DEFAULT_CANONICAL_CONTRACT.canonicalAsOfDate,
+        sourcePath: candidatePath,
+      };
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        continue;
+      }
+      throw new Error(
+        `Unable to load governed canonical contract metadata from ${candidatePath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  return {
+    ...DEFAULT_CANONICAL_CONTRACT,
+    sourcePath: "deterministic-fallback",
+  };
+}
 
 async function ensureDirectory(target) {
   await fs.mkdir(target, { recursive: true });
@@ -443,6 +508,8 @@ async function writeShotIndex() {
     "# Lotus Canonical Front-Office Screenshots",
     "",
     `- Generated: ${summary.generatedAt}`,
+    `- Contract: ${summary.canonicalContract.contractId} ${summary.canonicalContract.contractVersion}`,
+    `- Governed by: ${summary.canonicalContract.governedByRfc}`,
     `- Portfolio: ${portfolioId}`,
     `- Benchmark: ${benchmarkCode}`,
     `- As of: ${canonicalAsOfDate}`,
