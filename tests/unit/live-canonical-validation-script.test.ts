@@ -48,8 +48,11 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const calculationModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
+      "utf8"
+    );
 
-    expect(script).toContain("calculationChecks");
     expect(script).toContain("assertPerformanceCalculationSanity");
     expect(script).toContain("assertRiskCalculationSanity");
     expect(script).toContain("/performance/details?");
@@ -57,8 +60,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("/risk/drawdown?");
     expect(script).toContain("/risk/rolling?");
     expect(script).toContain("/risk/attribution?");
-    expect(script).toContain("Contribution total does not reconcile with net portfolio return");
-    expect(script).toContain("Historical risk attribution residual is too high");
+    expect(calculationModule).toContain("calculationChecks");
+    expect(calculationModule).toContain("Contribution total does not reconcile with net portfolio return");
+    expect(calculationModule).toContain("Historical risk attribution residual is too high");
   });
 
   it("surfaces governed canonical contract metadata in live validation evidence", () => {
@@ -135,15 +139,19 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const calculationModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
+      "utf8"
+    );
 
     expect(script).toContain("panelClassifications");
     expect(script).toContain("recordPanelClassification");
     expect(script).toContain("assertNoUnsupportedBlankPanels");
     expect(script).toContain("portfolio.summary");
-    expect(script).toContain("performance.analysis.attribution");
-    expect(script).toContain("performance.evidence");
-    expect(script).toContain("performance.risk.historical_attribution");
-    expect(script).toContain("performance.risk.snapshot");
+    expect(calculationModule).toContain("performance.analysis.attribution");
+    expect(calculationModule).toContain("performance.evidence");
+    expect(calculationModule).toContain("performance.risk.historical_attribution");
+    expect(calculationModule).toContain("performance.risk.snapshot");
     expect(script).toContain("supported_blank");
   });
 
