@@ -81,6 +81,45 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("RFC-0076");
   });
 
+  it("loads the governed RFC-0077 panel registry for panel ownership and screenshot policy", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+    const runbook = readFileSync(
+      join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
+      "utf8"
+    );
+
+    expect(script).toContain("DEFAULT_PANEL_REGISTRY");
+    expect(script).toContain("loadWorkbenchPanelRegistryMetadata");
+    expect(script).toContain("workbench-panel-registry.json");
+    expect(script).toContain("panelRegistryById");
+    expect(script).toContain("requiredSupportState");
+    expect(script).toContain("owningService");
+    expect(script).toContain("Panel classification");
+    expect(script).toContain("allowedStates");
+    expect(script).not.toContain("assertRegionHasButtons");
+    expect(runbook).toContain("RFC-0077");
+    expect(runbook).toContain("panel registry");
+  });
+
+  it("fails when governed panel ownership or supportability drifts from the registry", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+
+    expect(script).toContain("supportabilityChecks");
+    expect(script).toContain("assertPanelSupportabilityAlignment");
+    expect(script).toContain("reported owner");
+    expect(script).toContain("registry owner");
+    expect(script).toContain("requiredSupportState");
+    expect(script).toContain("ownerFollowUpRfc");
+    expect(script).toContain("lotus-performance");
+    expect(script).toContain("performance.evidence");
+  });
+
   it("records explicit panel support classifications for demo evidence", () => {
     const script = readFileSync(
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
@@ -93,11 +132,12 @@ describe("canonical live validation script", () => {
     expect(script).toContain("portfolio.summary");
     expect(script).toContain("performance.analysis.attribution");
     expect(script).toContain("performance.evidence");
-    expect(script).toContain("risk.historical_attribution");
+    expect(script).toContain("performance.risk.historical_attribution");
+    expect(script).toContain("performance.risk.snapshot");
     expect(script).toContain("supported_blank");
   });
 
-  it("records demo screenshot evidence with stable names, routes, and absolute paths", () => {
+  it("records demo screenshot evidence with registry-governed names, routes, and absolute paths", () => {
     const script = readFileSync(
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
@@ -108,11 +148,11 @@ describe("canonical live validation script", () => {
     );
 
     expect(script).toContain("canonicalAsOfDate");
-    expect(script).toContain("portfolio-summary-live.png");
-    expect(script).toContain("performance-risk-live.png");
-    expect(script).toContain("performance-evidence-live.png");
-    expect(script).toContain("route: `/performance?portfolioId=${portfolioId}&mode=risk`");
-    expect(script).toContain("panel: \"performance.risk\"");
+    expect(script).toContain("screenshotRegisteredPanel");
+    expect(script).toContain("resolveRegistryRoute");
+    expect(script).toContain("panelId: \"performance.risk.snapshot\"");
+    expect(script).toContain("screenshotName: \"performance-risk-live.png\"");
+    expect(script).toContain("panel: panelId");
     expect(script).toContain("state: \"truthfully_degraded\"");
     expect(script).toContain("path: target");
     expect(script).toContain("SHOT-INDEX.md");
