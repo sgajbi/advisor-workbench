@@ -1,7 +1,8 @@
 param(
   [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
-  [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40"
+  [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [switch]$BuildImages
 )
 
 $ErrorActionPreference = "Stop"
@@ -56,12 +57,16 @@ Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
 Write-Host "Starting Docker-backed upstream services..."
-Invoke-RepoCommand $coreRepo "docker compose up -d"
-Invoke-RepoCommand $performanceRepo "docker compose up -d"
-Invoke-RepoCommand $riskRepo "docker compose up -d"
-Invoke-RepoCommand $aiRepo "docker compose up -d"
-Invoke-RepoCommand $adviseRepo "docker compose up -d"
-Invoke-RepoCommand $reportRepo "docker compose up -d"
+$composeUpCommand = "docker compose up -d"
+if ($BuildImages) {
+  $composeUpCommand = "$composeUpCommand --build"
+}
+Invoke-RepoCommand $coreRepo $composeUpCommand
+Invoke-RepoCommand $performanceRepo $composeUpCommand
+Invoke-RepoCommand $riskRepo $composeUpCommand
+Invoke-RepoCommand $aiRepo $composeUpCommand
+Invoke-RepoCommand $adviseRepo $composeUpCommand
+Invoke-RepoCommand $reportRepo $composeUpCommand
 
 Write-Host "Ensuring direct ingress container is running..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
