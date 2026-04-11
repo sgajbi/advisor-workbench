@@ -66,17 +66,22 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const contractModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
     );
 
-    expect(script).toContain("DEFAULT_CANONICAL_CONTRACT");
+    expect(script).toContain('from "./validation/contract-metadata.mjs"');
     expect(script).toContain("loadCanonicalContractMetadata");
-    expect(script).toContain("canonical-front-office-demo-data-contract.json");
-    expect(script).toContain("LOTUS_PLATFORM_REPO");
     expect(script).toContain("canonicalContract");
-    expect(script).toContain('sourcePath: "deterministic-fallback"');
+    expect(contractModule).toContain("DEFAULT_CANONICAL_CONTRACT");
+    expect(contractModule).toContain("canonical-front-office-demo-data-contract.json");
+    expect(contractModule).toContain("LOTUS_PLATFORM_REPO");
+    expect(contractModule).toContain('sourcePath: "deterministic-fallback"');
     expect(runbook).toContain("contract identity and version");
     expect(runbook).toContain("RFC-0076");
   });
@@ -86,19 +91,24 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const contractModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
     );
 
-    expect(script).toContain("DEFAULT_PANEL_REGISTRY");
+    expect(script).toContain('from "./validation/contract-metadata.mjs"');
     expect(script).toContain("loadWorkbenchPanelRegistryMetadata");
-    expect(script).toContain("workbench-panel-registry.json");
     expect(script).toContain("panelRegistryById");
-    expect(script).toContain("requiredSupportState");
-    expect(script).toContain("owningService");
+    expect(contractModule).toContain("DEFAULT_PANEL_REGISTRY");
+    expect(contractModule).toContain("workbench-panel-registry.json");
+    expect(contractModule).toContain("requiredSupportState");
+    expect(contractModule).toContain("owningService");
     expect(script).toContain("Panel classification");
-    expect(script).toContain("allowedStates");
+    expect(contractModule).toContain("allowedStates");
     expect(script).not.toContain("assertRegionHasButtons");
     expect(runbook).toContain("RFC-0077");
     expect(runbook).toContain("panel registry");
@@ -142,6 +152,14 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const contractModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
+      "utf8"
+    );
+    const evidenceWriter = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "evidence-summary-writer.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
@@ -150,12 +168,12 @@ describe("canonical live validation script", () => {
     expect(script).toContain("canonicalAsOfDate");
     expect(script).toContain("screenshotRegisteredPanel");
     expect(script).toContain("resolveRegistryRoute");
-    expect(script).toContain("panelId: \"performance.risk.snapshot\"");
-    expect(script).toContain("screenshotName: \"performance-risk-live.png\"");
+    expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
+    expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
     expect(script).toContain("panel: panelId");
     expect(script).toContain("state: \"truthfully_degraded\"");
     expect(script).toContain("path: target");
-    expect(script).toContain("SHOT-INDEX.md");
+    expect(evidenceWriter).toContain("SHOT-INDEX.md");
     expect(script).toContain("writeShotIndex");
     expect(runbook).toContain("ScreenshotDirectory");
     expect(runbook).toContain("structured screenshot evidence");

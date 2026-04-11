@@ -1,0 +1,90 @@
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { resolveValidationConfig } from "../../scripts/live/validation/args.mjs";
+import {
+  DEFAULT_CANONICAL_CONTRACT,
+  DEFAULT_PANEL_REGISTRY,
+} from "../../scripts/live/validation/contract-metadata.mjs";
+import {
+  buildSummaryPaths,
+  createValidationSummary,
+  ensureDirectory,
+  writeShotIndex,
+  writeValidationSummary,
+} from "../../scripts/live/validation/evidence-summary-writer.mjs";
+
+describe("live validation contract modules", () => {
+  it("resolves canonical defaults and normalizes trailing slashes", () => {
+    const config = resolveValidationConfig(
+      [
+        "--workbench-base-url",
+        "http://workbench.dev.lotus///",
+        "--gateway-base-url",
+        "http://gateway.dev.lotus//",
+        "--timeout-ms",
+        "45000",
+      ],
+      "C:\\lotus-workbench"
+    );
+
+    expect(config.portfolioId).toBe("PB_SG_GLOBAL_BAL_001");
+    expect(config.benchmarkCode).toBe("BMK_PB_GLOBAL_BALANCED_60_40");
+    expect(config.workbenchBaseUrl).toBe("http://workbench.dev.lotus");
+    expect(config.gatewayBaseUrl).toBe("http://gateway.dev.lotus");
+    expect(config.timeoutMs).toBe(45000);
+    expect(config.outputDir).toContain("output");
+    expect(config.outputDir).toContain("live-canonical");
+  });
+
+  it("builds governed summary evidence with registry metadata and writable artifacts", async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "lotus-validation-"));
+
+    try {
+      const { summaryPath, shotIndexPath } = buildSummaryPaths(tempDir);
+      const summary = createValidationSummary({
+        generatedAt: "2026-04-11T00:00:00.000Z",
+        portfolioId: DEFAULT_CANONICAL_CONTRACT.portfolioId,
+        benchmarkCode: DEFAULT_CANONICAL_CONTRACT.benchmarkCode,
+        canonicalContract: {
+          ...DEFAULT_CANONICAL_CONTRACT,
+          sourcePath: "deterministic-fallback",
+        },
+        panelRegistry: DEFAULT_PANEL_REGISTRY,
+        workbenchBaseUrl: "http://workbench.dev.lotus",
+        gatewayBaseUrl: "http://gateway.dev.lotus",
+      });
+
+      summary.screenshots.push({
+        name: "performance-risk-live.png",
+        path: join(tempDir, "performance-risk-live.png"),
+        route: "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk",
+        panel: "performance.risk.snapshot",
+        portfolioId: DEFAULT_CANONICAL_CONTRACT.portfolioId,
+        benchmarkCode: DEFAULT_CANONICAL_CONTRACT.benchmarkCode,
+        asOfDate: DEFAULT_CANONICAL_CONTRACT.canonicalAsOfDate,
+        state: "demo_ready",
+      });
+
+      await ensureDirectory(tempDir);
+      await writeValidationSummary(summaryPath, summary);
+      await writeShotIndex(shotIndexPath, summary, summaryPath);
+
+      const persistedSummary = JSON.parse(readFileSync(summaryPath, "utf8"));
+      const shotIndex = readFileSync(shotIndexPath, "utf8");
+
+      expect(persistedSummary.panelRegistry.contractId).toBe("workbench-panel-registry");
+      expect(persistedSummary.panelRegistry.governedByRfc).toBe("RFC-0077");
+      expect(persistedSummary.canonicalContract.contractId).toBe(
+        "canonical-front-office-demo-data-contract"
+      );
+      expect(shotIndex).toContain("performance-risk-live.png");
+      expect(shotIndex).toContain("performance.risk.snapshot");
+      expect(shotIndex).toContain(summaryPath);
+      expect(shotIndex).toContain("2026-04-10");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});
