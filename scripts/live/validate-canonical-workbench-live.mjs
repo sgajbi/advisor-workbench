@@ -13,6 +13,88 @@ const DEFAULT_CANONICAL_CONTRACT = {
   canonicalAsOfDate: "2026-04-10",
 };
 
+const DEFAULT_PANEL_REGISTRY = {
+  contractId: "workbench-panel-registry",
+  contractVersion: "1.0.0",
+  governedByRfc: "RFC-0077",
+  canonicalDataContract: "canonical-front-office-demo-data-contract",
+  sourcePath: "deterministic-fallback",
+  panels: [
+    {
+      panelId: "portfolio.summary",
+      route: "/portfolio?portfolioId={portfolioId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "portfolio-summary-live.png",
+    },
+    {
+      panelId: "portfolio.detailed",
+      route: "/portfolio?portfolioId={portfolioId}&tab=detailed",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "portfolio-detailed-live.png",
+    },
+    {
+      panelId: "performance.summary",
+      route: "/performance?portfolioId={portfolioId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-summary-live.png",
+    },
+    {
+      panelId: "performance.analysis.contribution",
+      route: "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-analysis-live.png",
+    },
+    {
+      panelId: "performance.analysis.attribution",
+      route: "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-analysis-live.png",
+    },
+    {
+      panelId: "performance.advisor_brief",
+      route: "/performance?portfolioId={portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-advisor-brief-live.png",
+    },
+    {
+      panelId: "performance.risk.snapshot",
+      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-risk-live.png",
+    },
+    {
+      panelId: "performance.risk.drawdown",
+      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-risk-live.png",
+    },
+    {
+      panelId: "performance.risk.concentration",
+      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-risk-live.png",
+    },
+    {
+      panelId: "performance.risk.rolling",
+      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-risk-live.png",
+    },
+    {
+      panelId: "performance.risk.historical_attribution",
+      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-risk-live.png",
+    },
+    {
+      panelId: "performance.evidence",
+      route: "/performance?portfolioId={portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "performance-evidence-live.png",
+    },
+  ],
+};
+
 function parseArgs(argv) {
   const args = new Map();
   for (let index = 0; index < argv.length; index += 1) {
@@ -44,12 +126,21 @@ const shotIndexPath = path.join(outputDir, "SHOT-INDEX.md");
 const timeoutMs = Number(args.get("timeout-ms") ?? "60000");
 const canonicalAsOfDate = args.get("as-of-date") ?? "2026-04-10";
 const canonicalContract = await loadCanonicalContractMetadata();
+const panelRegistry = await loadWorkbenchPanelRegistryMetadata();
+const panelRegistryById = new Map(panelRegistry.panels.map((panel) => [panel.panelId, panel]));
 
 const summary = {
   generatedAt: new Date().toISOString(),
   portfolioId,
   benchmarkCode,
   canonicalContract,
+  panelRegistry: {
+    contractId: panelRegistry.contractId,
+    contractVersion: panelRegistry.contractVersion,
+    governedByRfc: panelRegistry.governedByRfc,
+    canonicalDataContract: panelRegistry.canonicalDataContract,
+    sourcePath: panelRegistry.sourcePath,
+  },
   workbenchBaseUrl,
   gatewayBaseUrl,
   dns: [],
@@ -112,6 +203,59 @@ async function loadCanonicalContractMetadata() {
     ...DEFAULT_CANONICAL_CONTRACT,
     sourcePath: "deterministic-fallback",
   };
+}
+
+async function loadWorkbenchPanelRegistryMetadata() {
+  const candidatePaths = [
+    process.env.LOTUS_PLATFORM_REPO
+      ? path.resolve(
+          process.env.LOTUS_PLATFORM_REPO,
+          "context",
+          "contracts",
+          "workbench-panel-registry.json"
+        )
+      : null,
+    path.resolve(
+      process.cwd(),
+      "..",
+      "lotus-platform",
+      "context",
+      "contracts",
+      "workbench-panel-registry.json"
+    ),
+  ].filter(Boolean);
+
+  for (const candidatePath of candidatePaths) {
+    try {
+      const raw = await fs.readFile(candidatePath, "utf8");
+      const payload = JSON.parse(raw);
+      return {
+        contractId: payload.contract_id ?? DEFAULT_PANEL_REGISTRY.contractId,
+        contractVersion: payload.contract_version ?? DEFAULT_PANEL_REGISTRY.contractVersion,
+        governedByRfc: payload.governed_by_rfc ?? DEFAULT_PANEL_REGISTRY.governedByRfc,
+        canonicalDataContract:
+          payload.canonical_data_contract ?? DEFAULT_PANEL_REGISTRY.canonicalDataContract,
+        sourcePath: candidatePath,
+        panels: (payload.panels ?? []).map((panel) => ({
+          panelId: panel.panel_id,
+          route: panel.route,
+          allowedStates: panel.allowed_states ?? [],
+          screenshotName: panel.screenshot_policy?.screenshot_name ?? null,
+        })),
+      };
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        continue;
+      }
+      throw new Error(
+        `Unable to load governed panel registry metadata from ${candidatePath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  return DEFAULT_PANEL_REGISTRY;
 }
 
 async function ensureDirectory(target) {
@@ -202,15 +346,6 @@ async function assertTableHasRows(locator, minimumRows, description) {
   summary.uiChecks.push({ description, kind: "table", rowCount: count });
 }
 
-async function assertRegionHasButtons(locator, minimumButtons, description) {
-  await expect(locator).toBeVisible({ timeout: timeoutMs });
-  const count = await locator.getByRole("button").count();
-  if (count < minimumButtons) {
-    throw new Error(`${description} expected at least ${minimumButtons} buttons but found ${count}.`);
-  }
-  summary.uiChecks.push({ description, kind: "buttons", buttonCount: count });
-}
-
 function assertFiniteNumber(value, description) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${description} expected a finite number but received ${String(value)}.`);
@@ -244,6 +379,15 @@ function recordCalculationCheck(description, evidence) {
 }
 
 function recordPanelClassification(panel, state, owner, evidence) {
+  const panelSpec = panelRegistryById.get(panel);
+  if (!panelSpec) {
+    throw new Error(`Panel classification '${panel}' is not present in the governed panel registry.`);
+  }
+  if (!panelSpec.allowedStates.includes(state)) {
+    throw new Error(
+      `Panel classification '${panel}' used unsupported state '${state}'. Allowed states: ${panelSpec.allowedStates.join(", ")}.`
+    );
+  }
   summary.panelClassifications.push({ panel, state, owner, ...evidence });
 }
 
@@ -348,14 +492,10 @@ function assertPerformanceCalculationSanity(performanceSummary, performanceDetai
       fallbackAvailable: attributionCapability.fallback_available === true,
     }
   );
-  recordPanelClassification(
-    "performance.evidence",
-    performanceSummary?.capabilities?.evidence?.state ?? "unknown",
-    "lotus-gateway",
-    {
-      reason: performanceSummary?.capabilities?.evidence?.reason ?? null,
-    }
-  );
+  const evidenceState = performanceSummary?.capabilities?.evidence?.state ?? "unavailable";
+  recordPanelClassification("performance.evidence", evidenceState, "lotus-gateway", {
+    reason: performanceSummary?.capabilities?.evidence?.reason ?? null,
+  });
 }
 
 function assertRiskCalculationSanity(riskSummary, concentration, drawdown, rolling, attribution) {
@@ -466,20 +606,20 @@ function assertRiskCalculationSanity(riskSummary, concentration, drawdown, rolli
     attributionContributorCount: contributors.length,
   });
 
-  recordPanelClassification("risk.snapshot", "ready", "lotus-risk", {
+  recordPanelClassification("performance.risk.snapshot", "ready", "lotus-risk", {
     readyMetricCount: readyMetrics.length,
   });
-  recordPanelClassification("risk.concentration", "ready", "lotus-risk", {
+  recordPanelClassification("performance.risk.concentration", "ready", "lotus-risk", {
     issuerCoverageRatio: concentrationPayload.issuer_concentration?.coverage_ratio_current,
   });
-  recordPanelClassification("risk.drawdown", "ready", "lotus-risk", {
+  recordPanelClassification("performance.risk.drawdown", "ready", "lotus-risk", {
     underwaterSeriesRows: drawdownPeriod.underwater_series.length,
   });
-  recordPanelClassification("risk.rolling", "ready", "lotus-risk", {
+  recordPanelClassification("performance.risk.rolling", "ready", "lotus-risk", {
     windowCount: rollingPeriod.window_count_emitted,
     computableWindows: rollingWindowsWithLatestVolatility,
   });
-  recordPanelClassification("risk.historical_attribution", "ready", "lotus-risk", {
+  recordPanelClassification("performance.risk.historical_attribution", "ready", "lotus-risk", {
     contributorRows: contributors.length,
   });
 }
@@ -496,6 +636,27 @@ async function screenshot(page, name, metadata) {
     benchmarkCode,
     asOfDate: canonicalAsOfDate,
     state: metadata.state ?? "demo_ready",
+  });
+}
+
+function resolveRegistryRoute(routeTemplate) {
+  return routeTemplate
+    .replaceAll("{portfolioId}", portfolioId)
+    .replaceAll("{benchmarkCode}", benchmarkCode);
+}
+
+async function screenshotRegisteredPanel(page, panelId, metadata = {}) {
+  const panelSpec = panelRegistryById.get(panelId);
+  if (!panelSpec) {
+    throw new Error(`Screenshot requested for unregistered panel '${panelId}'.`);
+  }
+  if (!panelSpec.screenshotName) {
+    throw new Error(`Panel '${panelId}' has no governed screenshot name.`);
+  }
+  await screenshot(page, panelSpec.screenshotName, {
+    route: metadata.route ?? resolveRegistryRoute(panelSpec.route),
+    panel: panelId,
+    state: metadata.state,
   });
 }
 
@@ -704,10 +865,7 @@ async function run() {
     await expect(page.getByRole("img", { name: "Allocation donut chart" })).toBeVisible({
       timeout: timeoutMs,
     });
-    await screenshot(page, "portfolio-summary-live.png", {
-      route: `/portfolio?portfolioId=${portfolioId}`,
-      panel: "portfolio.summary",
-    });
+    await screenshotRegisteredPanel(page, "portfolio.summary");
 
     await page.getByRole("tab", { name: "Detailed" }).click();
     await expect(page.getByRole("tab", { name: "Detailed", exact: true, selected: true })).toBeVisible({
@@ -723,10 +881,7 @@ async function run() {
     await expect(page.getByLabel("Projected cashflow summary")).toBeVisible({
       timeout: timeoutMs,
     });
-    await screenshot(page, "portfolio-detailed-live.png", {
-      route: `/portfolio?portfolioId=${portfolioId}&tab=detailed`,
-      panel: "portfolio.detailed",
-    });
+    await screenshotRegisteredPanel(page, "portfolio.detailed");
 
     await page.goto(`${workbenchBaseUrl}/performance?portfolioId=${portfolioId}`, {
       waitUntil: "networkidle",
@@ -749,10 +904,7 @@ async function run() {
       4,
       "Return path observation table"
     );
-    await screenshot(page, "performance-summary-live.png", {
-      route: `/performance?portfolioId=${portfolioId}`,
-      panel: "performance.summary",
-    });
+    await screenshotRegisteredPanel(page, "performance.summary");
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -780,10 +932,7 @@ async function run() {
       1,
       "Contribution detail table"
     );
-    await screenshot(page, "performance-analysis-live.png", {
-      route: `/performance?portfolioId=${portfolioId}&mode=analysis`,
-      panel: "performance.analysis",
-    });
+    await screenshotRegisteredPanel(page, "performance.analysis.contribution");
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -810,10 +959,7 @@ async function run() {
       kind: "buttons",
       buttonCount: sourceMetricButtons,
     });
-    await screenshot(page, "performance-advisor-brief-live.png", {
-      route: `/performance?portfolioId=${portfolioId}&mode=advisor`,
-      panel: "performance.advisor_brief",
-    });
+    await screenshotRegisteredPanel(page, "performance.advisor_brief");
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -842,10 +988,7 @@ async function run() {
       5,
       "Historical risk attribution table"
     );
-    await screenshot(page, "performance-risk-live.png", {
-      route: `/performance?portfolioId=${portfolioId}&mode=risk`,
-      panel: "performance.risk",
-    });
+    await screenshotRegisteredPanel(page, "performance.risk.snapshot");
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -867,9 +1010,7 @@ async function run() {
       });
       summary.uiChecks.push({ description: "Evidence support status", kind: "status-strip", state: "degraded" });
     }
-    await screenshot(page, "performance-evidence-live.png", {
-      route: `/performance?portfolioId=${portfolioId}&mode=evidence`,
-      panel: "performance.evidence",
+    await screenshotRegisteredPanel(page, "performance.evidence", {
       state: "truthfully_degraded",
     });
   } finally {

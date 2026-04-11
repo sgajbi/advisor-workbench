@@ -177,6 +177,11 @@ The machine-readable summary also records the governed canonical contract identi
 platform contract file is unavailable, the validator emits a deterministic fallback that still
 identifies the run as governed by `RFC-0076`, instead of silently dropping contract provenance.
 
+The validator also loads the governed panel registry from
+`lotus-platform/context/contracts/workbench-panel-registry.json`. That registry controls the
+expected panel identifiers, allowed panel states, and screenshot ownership under `RFC-0077`, so
+new panel work must extend the registry instead of introducing ad hoc validator metadata.
+
 The validation script runs the browser validator from the `lotus-workbench` repository root so
 these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
 script. Browser validation failures must fail the PowerShell command; do not treat stale summaries
