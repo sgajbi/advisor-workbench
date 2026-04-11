@@ -67,11 +67,11 @@ Write-Host "Ensuring direct ingress container is running..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
 docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/etc/caddy/Caddyfile" caddy:2.8.4 | Out-Null
 
-Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
-Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-03-28 --benchmark-start-date 2025-01-06 --wait-seconds 300"
-
 Write-Host "Starting canonical Gateway on :8111 ..."
 & (Join-Path $gatewayRepo "scripts\\Start-CanonicalGateway.ps1")
+
+Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
+Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-03-28 --benchmark-start-date 2025-01-06 --wait-seconds 300"
 
 Write-Host "Starting canonical lotus-manage on :8001 ..."
 & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1")
