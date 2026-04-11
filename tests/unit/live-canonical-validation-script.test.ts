@@ -36,4 +36,22 @@ describe("canonical live validation script", () => {
     expect(script).toContain("--end-date 2026-04-10");
     expect(script).toContain("--benchmark-start-date 2025-01-06");
   });
+
+  it("asserts canonical performance and risk calculation sanity", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+
+    expect(script).toContain("calculationChecks");
+    expect(script).toContain("assertPerformanceCalculationSanity");
+    expect(script).toContain("assertRiskCalculationSanity");
+    expect(script).toContain("/performance/details?");
+    expect(script).toContain("/risk/concentration?");
+    expect(script).toContain("/risk/drawdown?");
+    expect(script).toContain("/risk/rolling?");
+    expect(script).toContain("/risk/attribution?");
+    expect(script).toContain("Contribution total does not reconcile with net portfolio return");
+    expect(script).toContain("Historical risk attribution residual is too high");
+  });
 });

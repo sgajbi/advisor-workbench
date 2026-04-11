@@ -131,7 +131,12 @@ Validation layers:
    - platform capabilities
    - workbench overview
    - performance summary
+   - performance details
    - risk summary
+   - risk concentration
+   - risk drawdown
+   - risk rolling
+   - risk attribution
    - advisor brief
 5. browser-level validation for populated UI on:
    - Portfolio summary
@@ -158,6 +163,11 @@ The validation script runs the browser validator from the `lotus-workbench` repo
 these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
 script. Browser validation failures must fail the PowerShell command; do not treat stale summaries
 or partial screenshot output as successful evidence.
+
+The summary includes `calculationChecks` for canonical performance and risk sanity. These checks
+assert numeric ranges, contribution reconciliation, governed attribution fallback posture, risk
+observation coverage, concentration coverage, rolling-window availability, and historical risk
+attribution residuals before screenshots are accepted as demo evidence.
 
 ## Gateway startup rule
 
@@ -225,6 +235,8 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - `Attribution Over Time` renders
   - `Attribution Detail` table is populated
   - `Performance Drivers` table is populated
+  - contribution rows reconcile to the net portfolio return
+  - attribution detail is populated or carries a governed partial fallback
 - Advisor Brief:
   - talking points render
   - source metrics render
@@ -236,6 +248,11 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - `Rolling Risk`
   - `Historical Risk Attribution`
   - attribution table is populated
+  - summary metrics have sufficient observations and ready benchmark-relative metrics
+  - concentration has issuer coverage and top-exposure evidence
+  - drawdown has underwater-series evidence
+  - rolling risk has all configured windows and enough computable windows for the current horizon
+  - historical attribution contributors reconcile with a negligible residual
 - Evidence:
   - Evidence mode opens
   - evidence support strip or truthful degraded state renders
