@@ -65,8 +65,17 @@ Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "Gateway risk summary"
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway advisor brief"
 
-node "$repoRoot\\scripts\\live\\validate-canonical-workbench-live.mjs" `
-  --portfolio-id "$PortfolioId" `
-  --benchmark-code "$BenchmarkCode" `
-  --workbench-base-url "$WorkbenchBaseUrl" `
-  --gateway-base-url "$GatewayBaseUrl"
+Push-Location $repoRoot
+try {
+  node "$repoRoot\\scripts\\live\\validate-canonical-workbench-live.mjs" `
+    --portfolio-id "$PortfolioId" `
+    --benchmark-code "$BenchmarkCode" `
+    --workbench-base-url "$WorkbenchBaseUrl" `
+    --gateway-base-url "$GatewayBaseUrl"
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical Workbench browser validation failed with exit code $LASTEXITCODE."
+  }
+} finally {
+  Pop-Location
+}

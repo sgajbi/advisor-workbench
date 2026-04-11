@@ -90,10 +90,10 @@ That script performs:
 1. preview the canonical hosts block from `lotus-platform`
 2. `docker compose up -d` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, and `lotus-advise`
 3. `docker compose up -d` for `lotus-report`
-4. canonical host-process startup for `lotus-manage` on `8001`
-5. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
+4. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
+5. canonical `lotus-gateway` startup on port `8111`
 6. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
-7. canonical `lotus-gateway` startup on port `8111`
+7. canonical host-process startup for `lotus-manage` on `8001`
 8. canonical `lotus-workbench` startup on port `3000`
 9. end-to-end validation of canonical routes and populated UI panels
 
@@ -153,6 +153,11 @@ Machine-readable validation evidence is written to:
 ```txt
 output/playwright/live-canonical/live-validation-summary.json
 ```
+
+The validation script runs the browser validator from the `lotus-workbench` repository root so
+these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
+script. Browser validation failures must fail the PowerShell command; do not treat stale summaries
+or partial screenshot output as successful evidence.
 
 ## Gateway startup rule
 
