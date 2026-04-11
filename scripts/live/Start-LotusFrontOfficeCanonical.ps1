@@ -2,6 +2,7 @@ param(
   [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [string]$ScreenshotDirectory = "",
   [switch]$BuildImages
 )
 
@@ -98,6 +99,11 @@ if (-not (Test-HttpReady "http://127.0.0.1:3000")) {
 }
 
 Write-Host "Running canonical live validation ..."
-& (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") `
-  -PortfolioId $PortfolioId `
-  -BenchmarkCode $BenchmarkCode
+$validationArguments = @{
+  PortfolioId = $PortfolioId
+  BenchmarkCode = $BenchmarkCode
+}
+if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
+  $validationArguments.ScreenshotDirectory = $ScreenshotDirectory
+}
+& (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") @validationArguments

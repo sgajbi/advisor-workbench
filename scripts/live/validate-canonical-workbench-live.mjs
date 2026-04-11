@@ -31,7 +31,9 @@ const outputDir = path.resolve(
   args.get("output-dir") ?? "output/playwright/live-canonical"
 );
 const summaryPath = path.join(outputDir, "live-validation-summary.json");
+const shotIndexPath = path.join(outputDir, "SHOT-INDEX.md");
 const timeoutMs = Number(args.get("timeout-ms") ?? "60000");
+const canonicalAsOfDate = args.get("as-of-date") ?? "2026-04-10";
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -417,14 +419,46 @@ function assertRiskCalculationSanity(riskSummary, concentration, drawdown, rolli
   });
 }
 
-async function screenshot(page, name) {
+async function screenshot(page, name, metadata) {
   const target = path.join(outputDir, name);
   await page.screenshot({ path: target, fullPage: true });
-  summary.screenshots.push(name);
+  summary.screenshots.push({
+    name,
+    path: target,
+    route: metadata.route,
+    panel: metadata.panel,
+    portfolioId,
+    benchmarkCode,
+    asOfDate: canonicalAsOfDate,
+    state: metadata.state ?? "demo_ready",
+  });
 }
 
 async function writeSummary() {
   await fs.writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
+}
+
+async function writeShotIndex() {
+  const lines = [
+    "# Lotus Canonical Front-Office Screenshots",
+    "",
+    `- Generated: ${summary.generatedAt}`,
+    `- Portfolio: ${portfolioId}`,
+    `- Benchmark: ${benchmarkCode}`,
+    `- As of: ${canonicalAsOfDate}`,
+    `- Validation summary: ${summaryPath}`,
+    "",
+    "## Captures",
+    "",
+  ];
+
+  for (const screenshotEvidence of summary.screenshots) {
+    lines.push(
+      `- ${screenshotEvidence.name} - ${screenshotEvidence.panel} - ${screenshotEvidence.route} - ${screenshotEvidence.state}`
+    );
+  }
+
+  await fs.writeFile(shotIndexPath, `${lines.join("\n")}\n`, "utf8");
 }
 
 async function run() {
@@ -603,7 +637,10 @@ async function run() {
     await expect(page.getByRole("img", { name: "Allocation donut chart" })).toBeVisible({
       timeout: timeoutMs,
     });
-    await screenshot(page, "portfolio-summary-live.png");
+    await screenshot(page, "portfolio-summary-live.png", {
+      route: `/portfolio?portfolioId=${portfolioId}`,
+      panel: "portfolio.summary",
+    });
 
     await page.getByRole("tab", { name: "Detailed" }).click();
     await expect(page.getByRole("tab", { name: "Detailed", exact: true, selected: true })).toBeVisible({
@@ -619,7 +656,10 @@ async function run() {
     await expect(page.getByLabel("Projected cashflow summary")).toBeVisible({
       timeout: timeoutMs,
     });
-    await screenshot(page, "portfolio-detailed-live.png");
+    await screenshot(page, "portfolio-detailed-live.png", {
+      route: `/portfolio?portfolioId=${portfolioId}&tab=detailed`,
+      panel: "portfolio.detailed",
+    });
 
     await page.goto(`${workbenchBaseUrl}/performance?portfolioId=${portfolioId}`, {
       waitUntil: "networkidle",
@@ -642,7 +682,10 @@ async function run() {
       4,
       "Return path observation table"
     );
-    await screenshot(page, "performance-summary-live.png");
+    await screenshot(page, "performance-summary-live.png", {
+      route: `/performance?portfolioId=${portfolioId}`,
+      panel: "performance.summary",
+    });
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -670,7 +713,10 @@ async function run() {
       1,
       "Contribution detail table"
     );
-    await screenshot(page, "performance-analysis-live.png");
+    await screenshot(page, "performance-analysis-live.png", {
+      route: `/performance?portfolioId=${portfolioId}&mode=analysis`,
+      panel: "performance.analysis",
+    });
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -697,7 +743,10 @@ async function run() {
       kind: "buttons",
       buttonCount: sourceMetricButtons,
     });
-    await screenshot(page, "performance-advisor-brief-live.png");
+    await screenshot(page, "performance-advisor-brief-live.png", {
+      route: `/performance?portfolioId=${portfolioId}&mode=advisor`,
+      panel: "performance.advisor_brief",
+    });
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -726,7 +775,10 @@ async function run() {
       5,
       "Historical risk attribution table"
     );
-    await screenshot(page, "performance-risk-live.png");
+    await screenshot(page, "performance-risk-live.png", {
+      route: `/performance?portfolioId=${portfolioId}&mode=risk`,
+      panel: "performance.risk",
+    });
 
     await page.goto(
       `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
@@ -748,12 +800,17 @@ async function run() {
       });
       summary.uiChecks.push({ description: "Evidence support status", kind: "status-strip", state: "degraded" });
     }
-    await screenshot(page, "performance-evidence-live.png");
+    await screenshot(page, "performance-evidence-live.png", {
+      route: `/performance?portfolioId=${portfolioId}&mode=evidence`,
+      panel: "performance.evidence",
+      state: "truthfully_degraded",
+    });
   } finally {
     await browser.close();
   }
 
   await writeSummary();
+  await writeShotIndex();
   console.log(`Live canonical Workbench validation passed for ${portfolioId}. Screenshots: ${outputDir}`);
 }
 

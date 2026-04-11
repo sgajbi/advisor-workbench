@@ -2,7 +2,8 @@ param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$WorkbenchBaseUrl = "http://workbench.dev.lotus",
-  [string]$GatewayBaseUrl = "http://gateway.dev.lotus"
+  [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
+  [string]$ScreenshotDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -67,11 +68,22 @@ Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor
 
 Push-Location $repoRoot
 try {
-  node "$repoRoot\\scripts\\live\\validate-canonical-workbench-live.mjs" `
-    --portfolio-id "$PortfolioId" `
-    --benchmark-code "$BenchmarkCode" `
-    --workbench-base-url "$WorkbenchBaseUrl" `
-    --gateway-base-url "$GatewayBaseUrl"
+  $validatorArguments = @(
+    "$repoRoot\\scripts\\live\\validate-canonical-workbench-live.mjs",
+    "--portfolio-id",
+    $PortfolioId,
+    "--benchmark-code",
+    $BenchmarkCode,
+    "--workbench-base-url",
+    $WorkbenchBaseUrl,
+    "--gateway-base-url",
+    $GatewayBaseUrl
+  )
+  if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
+    $validatorArguments += @("--output-dir", $ScreenshotDirectory)
+  }
+
+  & node @validatorArguments
 
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical Workbench browser validation failed with exit code $LASTEXITCODE."

@@ -119,6 +119,13 @@ To validate an already-running stack:
 npm run live:validate
 ```
 
+To write demo screenshots to a caller-provided directory:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1 `
+  -ScreenshotDirectory C:\Users\Sandeep\AppData\Local\Temp\lotus-risk-module-shots
+```
+
 Validation layers:
 
 1. canonical hostname resolution
@@ -152,6 +159,12 @@ Screenshots are written to:
 ```txt
 output/playwright/live-canonical/
 ```
+
+When `-ScreenshotDirectory` is supplied, screenshots and the live validation summary are written to
+that directory instead. The summary records structured screenshot evidence for each capture:
+stable file name, absolute path, route, panel identifier, portfolio ID, benchmark ID, as-of date,
+and demo readiness state. The validator also writes `SHOT-INDEX.md` in the screenshot directory so
+demo reviewers can quickly identify the captured product surfaces.
 
 Machine-readable validation evidence is written to:
 
