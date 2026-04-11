@@ -182,6 +182,11 @@ The validator also loads the governed panel registry from
 expected panel identifiers, allowed panel states, and screenshot ownership under `RFC-0077`, so
 new panel work must extend the registry instead of introducing ad hoc validator metadata.
 
+The validator implementation is intentionally modular under `scripts/live/validation/`:
+contract metadata, probe behavior, calculation sanity, browser workflows, and panel-governance
+rules are separated so future changes extend the correct boundary instead of re-growing a single
+monolithic validation script.
+
 The validation script runs the browser validator from the `lotus-workbench` repository root so
 these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
 script. Browser validation failures must fail the PowerShell command; do not treat stale summaries

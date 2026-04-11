@@ -1,0 +1,36 @@
+import path from "node:path";
+
+export function parseArgs(argv) {
+  const args = new Map();
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) continue;
+    const key = token.slice(2);
+    const next = argv[index + 1];
+    if (!next || next.startsWith("--")) {
+      args.set(key, "true");
+      continue;
+    }
+    args.set(key, next);
+    index += 1;
+  }
+  return args;
+}
+
+export function resolveValidationConfig(argv, cwd = process.cwd()) {
+  const args = parseArgs(argv);
+
+  return {
+    args,
+    portfolioId: args.get("portfolio-id") ?? "PB_SG_GLOBAL_BAL_001",
+    benchmarkCode: args.get("benchmark-code") ?? "BMK_PB_GLOBAL_BALANCED_60_40",
+    workbenchBaseUrl: (args.get("workbench-base-url") ?? "http://workbench.dev.lotus").replace(
+      /\/+$/,
+      ""
+    ),
+    gatewayBaseUrl: (args.get("gateway-base-url") ?? "http://gateway.dev.lotus").replace(/\/+$/, ""),
+    outputDir: path.resolve(cwd, args.get("output-dir") ?? "output/playwright/live-canonical"),
+    timeoutMs: Number(args.get("timeout-ms") ?? "60000"),
+    canonicalAsOfDate: args.get("as-of-date") ?? "2026-04-10",
+  };
+}

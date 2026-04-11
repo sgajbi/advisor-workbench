@@ -48,8 +48,11 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const calculationModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
+      "utf8"
+    );
 
-    expect(script).toContain("calculationChecks");
     expect(script).toContain("assertPerformanceCalculationSanity");
     expect(script).toContain("assertRiskCalculationSanity");
     expect(script).toContain("/performance/details?");
@@ -57,8 +60,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("/risk/drawdown?");
     expect(script).toContain("/risk/rolling?");
     expect(script).toContain("/risk/attribution?");
-    expect(script).toContain("Contribution total does not reconcile with net portfolio return");
-    expect(script).toContain("Historical risk attribution residual is too high");
+    expect(calculationModule).toContain("calculationChecks");
+    expect(calculationModule).toContain("Contribution total does not reconcile with net portfolio return");
+    expect(calculationModule).toContain("Historical risk attribution residual is too high");
   });
 
   it("surfaces governed canonical contract metadata in live validation evidence", () => {
@@ -66,17 +70,22 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const contractModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
     );
 
-    expect(script).toContain("DEFAULT_CANONICAL_CONTRACT");
+    expect(script).toContain('from "./validation/contract-metadata.mjs"');
     expect(script).toContain("loadCanonicalContractMetadata");
-    expect(script).toContain("canonical-front-office-demo-data-contract.json");
-    expect(script).toContain("LOTUS_PLATFORM_REPO");
     expect(script).toContain("canonicalContract");
-    expect(script).toContain('sourcePath: "deterministic-fallback"');
+    expect(contractModule).toContain("DEFAULT_CANONICAL_CONTRACT");
+    expect(contractModule).toContain("canonical-front-office-demo-data-contract.json");
+    expect(contractModule).toContain("LOTUS_PLATFORM_REPO");
+    expect(contractModule).toContain('sourcePath: "deterministic-fallback"');
     expect(runbook).toContain("contract identity and version");
     expect(runbook).toContain("RFC-0076");
   });
@@ -86,19 +95,28 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const contractModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
+      "utf8"
+    );
+    const panelGovernanceModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "panel-governance.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
     );
 
-    expect(script).toContain("DEFAULT_PANEL_REGISTRY");
+    expect(script).toContain('from "./validation/contract-metadata.mjs"');
     expect(script).toContain("loadWorkbenchPanelRegistryMetadata");
-    expect(script).toContain("workbench-panel-registry.json");
-    expect(script).toContain("panelRegistryById");
-    expect(script).toContain("requiredSupportState");
-    expect(script).toContain("owningService");
-    expect(script).toContain("Panel classification");
-    expect(script).toContain("allowedStates");
+    expect(panelGovernanceModule).toContain("panelRegistryById");
+    expect(contractModule).toContain("DEFAULT_PANEL_REGISTRY");
+    expect(contractModule).toContain("workbench-panel-registry.json");
+    expect(contractModule).toContain("requiredSupportState");
+    expect(contractModule).toContain("owningService");
+    expect(panelGovernanceModule).toContain("Panel classification");
+    expect(contractModule).toContain("allowedStates");
     expect(script).not.toContain("assertRegionHasButtons");
     expect(runbook).toContain("RFC-0077");
     expect(runbook).toContain("panel registry");
@@ -109,15 +127,24 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const calculationModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
+      "utf8"
+    );
+    const panelGovernanceModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "panel-governance.mjs"),
+      "utf8"
+    );
 
-    expect(script).toContain("supportabilityChecks");
-    expect(script).toContain("assertPanelSupportabilityAlignment");
-    expect(script).toContain("reported owner");
-    expect(script).toContain("registry owner");
-    expect(script).toContain("requiredSupportState");
-    expect(script).toContain("ownerFollowUpRfc");
+    expect(panelGovernanceModule).toContain("supportabilityChecks");
+    expect(script).toContain("createPanelGovernance");
+    expect(panelGovernanceModule).toContain("assertPanelSupportabilityAlignment");
+    expect(panelGovernanceModule).toContain("reported owner");
+    expect(panelGovernanceModule).toContain("registry owner");
+    expect(panelGovernanceModule).toContain("requiredSupportState");
+    expect(panelGovernanceModule).toContain("ownerFollowUpRfc");
     expect(script).toContain("lotus-performance");
-    expect(script).toContain("performance.evidence");
+    expect(calculationModule).toContain("performance.evidence");
   });
 
   it("records explicit panel support classifications for demo evidence", () => {
@@ -125,21 +152,42 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const calculationModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
+      "utf8"
+    );
+    const panelGovernanceModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "panel-governance.mjs"),
+      "utf8"
+    );
 
-    expect(script).toContain("panelClassifications");
-    expect(script).toContain("recordPanelClassification");
-    expect(script).toContain("assertNoUnsupportedBlankPanels");
+    expect(panelGovernanceModule).toContain("panelClassifications");
+    expect(script).toContain("createPanelGovernance");
+    expect(panelGovernanceModule).toContain("recordPanelClassification");
+    expect(panelGovernanceModule).toContain("assertNoUnsupportedBlankPanels");
     expect(script).toContain("portfolio.summary");
-    expect(script).toContain("performance.analysis.attribution");
-    expect(script).toContain("performance.evidence");
-    expect(script).toContain("performance.risk.historical_attribution");
-    expect(script).toContain("performance.risk.snapshot");
-    expect(script).toContain("supported_blank");
+    expect(calculationModule).toContain("performance.analysis.attribution");
+    expect(calculationModule).toContain("performance.evidence");
+    expect(calculationModule).toContain("performance.risk.historical_attribution");
+    expect(calculationModule).toContain("performance.risk.snapshot");
+    expect(panelGovernanceModule).toContain("supported_blank");
   });
 
   it("records demo screenshot evidence with registry-governed names, routes, and absolute paths", () => {
     const script = readFileSync(
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+    const contractModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
+      "utf8"
+    );
+    const evidenceWriter = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "evidence-summary-writer.mjs"),
+      "utf8"
+    );
+    const browserWorkflowModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "browser-workflows.mjs"),
       "utf8"
     );
     const runbook = readFileSync(
@@ -148,14 +196,15 @@ describe("canonical live validation script", () => {
     );
 
     expect(script).toContain("canonicalAsOfDate");
-    expect(script).toContain("screenshotRegisteredPanel");
-    expect(script).toContain("resolveRegistryRoute");
-    expect(script).toContain("panelId: \"performance.risk.snapshot\"");
-    expect(script).toContain("screenshotName: \"performance-risk-live.png\"");
-    expect(script).toContain("panel: panelId");
-    expect(script).toContain("state: \"truthfully_degraded\"");
-    expect(script).toContain("path: target");
-    expect(script).toContain("SHOT-INDEX.md");
+    expect(script).toContain("createBrowserValidationHelpers");
+    expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
+    expect(browserWorkflowModule).toContain("resolveRegistryRoute");
+    expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
+    expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
+    expect(browserWorkflowModule).toContain("panel: panelId");
+    expect(browserWorkflowModule).toContain('state: "truthfully_degraded"');
+    expect(browserWorkflowModule).toContain("path: target");
+    expect(evidenceWriter).toContain("SHOT-INDEX.md");
     expect(script).toContain("writeShotIndex");
     expect(runbook).toContain("ScreenshotDirectory");
     expect(runbook).toContain("structured screenshot evidence");
