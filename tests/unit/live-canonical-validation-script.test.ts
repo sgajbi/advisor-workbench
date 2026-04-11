@@ -99,6 +99,10 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "contract-metadata.mjs"),
       "utf8"
     );
+    const panelGovernanceModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "panel-governance.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
@@ -106,12 +110,12 @@ describe("canonical live validation script", () => {
 
     expect(script).toContain('from "./validation/contract-metadata.mjs"');
     expect(script).toContain("loadWorkbenchPanelRegistryMetadata");
-    expect(script).toContain("panelRegistryById");
+    expect(panelGovernanceModule).toContain("panelRegistryById");
     expect(contractModule).toContain("DEFAULT_PANEL_REGISTRY");
     expect(contractModule).toContain("workbench-panel-registry.json");
     expect(contractModule).toContain("requiredSupportState");
     expect(contractModule).toContain("owningService");
-    expect(script).toContain("Panel classification");
+    expect(panelGovernanceModule).toContain("Panel classification");
     expect(contractModule).toContain("allowedStates");
     expect(script).not.toContain("assertRegionHasButtons");
     expect(runbook).toContain("RFC-0077");
@@ -127,13 +131,18 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
       "utf8"
     );
+    const panelGovernanceModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "panel-governance.mjs"),
+      "utf8"
+    );
 
-    expect(script).toContain("supportabilityChecks");
-    expect(script).toContain("assertPanelSupportabilityAlignment");
-    expect(script).toContain("reported owner");
-    expect(script).toContain("registry owner");
-    expect(script).toContain("requiredSupportState");
-    expect(script).toContain("ownerFollowUpRfc");
+    expect(panelGovernanceModule).toContain("supportabilityChecks");
+    expect(script).toContain("createPanelGovernance");
+    expect(panelGovernanceModule).toContain("assertPanelSupportabilityAlignment");
+    expect(panelGovernanceModule).toContain("reported owner");
+    expect(panelGovernanceModule).toContain("registry owner");
+    expect(panelGovernanceModule).toContain("requiredSupportState");
+    expect(panelGovernanceModule).toContain("ownerFollowUpRfc");
     expect(script).toContain("lotus-performance");
     expect(calculationModule).toContain("performance.evidence");
   });
@@ -147,16 +156,21 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
       "utf8"
     );
+    const panelGovernanceModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "panel-governance.mjs"),
+      "utf8"
+    );
 
-    expect(script).toContain("panelClassifications");
-    expect(script).toContain("recordPanelClassification");
-    expect(script).toContain("assertNoUnsupportedBlankPanels");
+    expect(panelGovernanceModule).toContain("panelClassifications");
+    expect(script).toContain("createPanelGovernance");
+    expect(panelGovernanceModule).toContain("recordPanelClassification");
+    expect(panelGovernanceModule).toContain("assertNoUnsupportedBlankPanels");
     expect(script).toContain("portfolio.summary");
     expect(calculationModule).toContain("performance.analysis.attribution");
     expect(calculationModule).toContain("performance.evidence");
     expect(calculationModule).toContain("performance.risk.historical_attribution");
     expect(calculationModule).toContain("performance.risk.snapshot");
-    expect(script).toContain("supported_blank");
+    expect(panelGovernanceModule).toContain("supported_blank");
   });
 
   it("records demo screenshot evidence with registry-governed names, routes, and absolute paths", () => {

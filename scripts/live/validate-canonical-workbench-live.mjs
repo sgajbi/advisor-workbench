@@ -26,6 +26,7 @@ import {
   validatePortfolioPanels,
   validateRiskPanel,
 } from "./validation/browser-workflows.mjs";
+import { createPanelGovernance } from "./validation/panel-governance.mjs";
 
 const {
   portfolioId,
@@ -39,7 +40,6 @@ const {
 const { summaryPath, shotIndexPath } = buildSummaryPaths(outputDir);
 const canonicalContract = await loadCanonicalContractMetadata();
 const panelRegistry = await loadWorkbenchPanelRegistryMetadata();
-const panelRegistryById = new Map(panelRegistry.panels.map((panel) => [panel.panelId, panel]));
 
 const summary = createValidationSummary({
   generatedAt: new Date().toISOString(),
@@ -50,77 +50,7 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
-
-function recordSupportabilityCheck(panel, evidence) {
-  summary.supportabilityChecks.push({ panel, ...evidence });
-}
-
-function recordPanelClassification(panel, state, owner, evidence) {
-  const panelSpec = panelRegistryById.get(panel);
-  if (!panelSpec) {
-    throw new Error(`Panel classification '${panel}' is not present in the governed panel registry.`);
-  }
-  if (!panelSpec.allowedStates.includes(state)) {
-    throw new Error(
-      `Panel classification '${panel}' used unsupported state '${state}'. Allowed states: ${panelSpec.allowedStates.join(", ")}.`
-    );
-  }
-  summary.panelClassifications.push({ panel, state, owner, ...evidence });
-}
-
-function assertNoUnsupportedBlankPanels() {
-  const unsupportedBlankPanels = summary.panelClassifications.filter(
-    (panel) => panel.state === "supported_blank"
-  );
-  if (unsupportedBlankPanels.length > 0) {
-    throw new Error(
-      `Unsupported blank panels found: ${unsupportedBlankPanels
-        .map((panel) => panel.panel)
-        .join(", ")}.`
-    );
-  }
-}
-
-function assertPanelSupportabilityAlignment() {
-  const classifiedPanels = new Set(summary.panelClassifications.map((panel) => panel.panel));
-
-  for (const panelSpec of panelRegistry.panels) {
-    if (!classifiedPanels.has(panelSpec.panelId)) {
-      throw new Error(`Governed panel '${panelSpec.panelId}' was not classified during validation.`);
-    }
-  }
-
-  for (const panel of summary.panelClassifications) {
-    const panelSpec = panelRegistryById.get(panel.panel);
-    if (panel.owner !== panelSpec.owningService) {
-      throw new Error(
-        `Panel '${panel.panel}' reported owner '${panel.owner}' but registry owner is '${panelSpec.owningService}'.`
-      );
-    }
-    if (panel.state !== panelSpec.requiredSupportState) {
-      throw new Error(
-        `Panel '${panel.panel}' reported state '${panel.state}' but registry requires '${panelSpec.requiredSupportState}'.`
-      );
-    }
-    if (
-      (panel.state === "partial" || panel.state === "unavailable") &&
-      !panel.reason &&
-      panelSpec.knownLimitations.length < 1 &&
-      !panelSpec.ownerFollowUpRfc
-    ) {
-      throw new Error(
-        `Panel '${panel.panel}' is ${panel.state} without a governed reason, limitation, or follow-up RFC.`
-      );
-    }
-    recordSupportabilityCheck(panel.panel, {
-      owner: panel.owner,
-      state: panel.state,
-      requiredSupportState: panelSpec.requiredSupportState,
-      gatewayEndpoint: panelSpec.gatewayEndpoint,
-      ownerFollowUpRfc: panelSpec.ownerFollowUpRfc,
-    });
-  }
-}
+const panelGovernance = createPanelGovernance(summary, panelRegistry);
 
 async function run() {
   await ensureDirectory(outputDir);
@@ -221,7 +151,7 @@ async function run() {
     summary,
     performanceSummary,
     performanceDetails,
-    recordPanelClassification,
+    recordPanelClassification: panelGovernance.recordPanelClassification,
   });
   assertRiskCalculationSanity({
     summary,
@@ -230,7 +160,7 @@ async function run() {
     drawdown: riskDrawdown,
     rolling: riskRolling,
     attribution: riskAttribution,
-    recordPanelClassification,
+    recordPanelClassification: panelGovernance.recordPanelClassification,
   });
 
   const advisorBrief = await fetchJson(
@@ -283,17 +213,17 @@ async function run() {
   if (gatewayOverview?.portfolio?.portfolio_id !== portfolioId) {
     throw new Error("Gateway workbench overview returned no portfolio payload.");
   }
-  recordPanelClassification("portfolio.summary", "ready", "lotus-gateway", {
+  panelGovernance.recordPanelClassification("portfolio.summary", "ready", "lotus-gateway", {
     portfolioId,
   });
-  recordPanelClassification("portfolio.detailed", "ready", "lotus-gateway", {
+  panelGovernance.recordPanelClassification("portfolio.detailed", "ready", "lotus-gateway", {
     portfolioId,
   });
-  recordPanelClassification("performance.advisor_brief", "ready", "lotus-performance", {
+  panelGovernance.recordPanelClassification("performance.advisor_brief", "ready", "lotus-performance", {
     sourceMetricMinimum: 3,
   });
-  assertNoUnsupportedBlankPanels();
-  assertPanelSupportabilityAlignment();
+  panelGovernance.assertNoUnsupportedBlankPanels();
+  panelGovernance.assertPanelSupportabilityAlignment();
 
   const portfolioShell = await fetchText(
     summary,
@@ -324,7 +254,7 @@ async function run() {
     benchmarkCode,
     canonicalAsOfDate,
     timeoutMs,
-    panelRegistryById,
+    panelRegistryById: panelGovernance.panelRegistryById,
   });
 
   try {
