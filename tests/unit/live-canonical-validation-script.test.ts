@@ -54,4 +54,20 @@ describe("canonical live validation script", () => {
     expect(script).toContain("Contribution total does not reconcile with net portfolio return");
     expect(script).toContain("Historical risk attribution residual is too high");
   });
+
+  it("records explicit panel support classifications for demo evidence", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+
+    expect(script).toContain("panelClassifications");
+    expect(script).toContain("recordPanelClassification");
+    expect(script).toContain("assertNoUnsupportedBlankPanels");
+    expect(script).toContain("portfolio.summary");
+    expect(script).toContain("performance.analysis.attribution");
+    expect(script).toContain("performance.evidence");
+    expect(script).toContain("risk.historical_attribution");
+    expect(script).toContain("supported_blank");
+  });
 });

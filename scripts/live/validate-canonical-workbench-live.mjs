@@ -43,6 +43,7 @@ const summary = {
   apiChecks: [],
   uiChecks: [],
   calculationChecks: [],
+  panelClassifications: [],
   screenshots: [],
 };
 
@@ -175,6 +176,23 @@ function recordCalculationCheck(description, evidence) {
   summary.calculationChecks.push({ description, ...evidence });
 }
 
+function recordPanelClassification(panel, state, owner, evidence) {
+  summary.panelClassifications.push({ panel, state, owner, ...evidence });
+}
+
+function assertNoUnsupportedBlankPanels() {
+  const unsupportedBlankPanels = summary.panelClassifications.filter(
+    (panel) => panel.state === "supported_blank"
+  );
+  if (unsupportedBlankPanels.length > 0) {
+    throw new Error(
+      `Unsupported blank panels found: ${unsupportedBlankPanels
+        .map((panel) => panel.panel)
+        .join(", ")}.`
+    );
+  }
+}
+
 function assertPerformanceCalculationSanity(performanceSummary, performanceDetails) {
   const netPerformance = performanceSummary?.net_performance ?? {};
   const overview = performanceSummary?.overview ?? {};
@@ -246,6 +264,31 @@ function assertPerformanceCalculationSanity(performanceSummary, performanceDetai
     attributionState: attributionCapability.state,
     attributionRows,
   });
+
+  recordPanelClassification("performance.summary", "ready", "lotus-gateway", {
+    returnPathRows: performanceDetails.net_chart.length,
+  });
+  recordPanelClassification("performance.analysis.contribution", "ready", "lotus-gateway", {
+    contributionRows: contributionRows.length,
+  });
+  recordPanelClassification(
+    "performance.analysis.attribution",
+    attributionFallback ? "partial" : "ready",
+    "lotus-gateway",
+    {
+      attributionState: attributionCapability.state,
+      attributionRows,
+      fallbackAvailable: attributionCapability.fallback_available === true,
+    }
+  );
+  recordPanelClassification(
+    "performance.evidence",
+    performanceSummary?.capabilities?.evidence?.state ?? "unknown",
+    "lotus-gateway",
+    {
+      reason: performanceSummary?.capabilities?.evidence?.reason ?? null,
+    }
+  );
 }
 
 function assertRiskCalculationSanity(riskSummary, concentration, drawdown, rolling, attribution) {
@@ -354,6 +397,23 @@ function assertRiskCalculationSanity(riskSummary, concentration, drawdown, rolli
     rollingWindowResultCount: rollingWindows.length,
     rollingWindowsWithLatestVolatility,
     attributionContributorCount: contributors.length,
+  });
+
+  recordPanelClassification("risk.snapshot", "ready", "lotus-risk", {
+    readyMetricCount: readyMetrics.length,
+  });
+  recordPanelClassification("risk.concentration", "ready", "lotus-risk", {
+    issuerCoverageRatio: concentrationPayload.issuer_concentration?.coverage_ratio_current,
+  });
+  recordPanelClassification("risk.drawdown", "ready", "lotus-risk", {
+    underwaterSeriesRows: drawdownPeriod.underwater_series.length,
+  });
+  recordPanelClassification("risk.rolling", "ready", "lotus-risk", {
+    windowCount: rollingPeriod.window_count_emitted,
+    computableWindows: rollingWindowsWithLatestVolatility,
+  });
+  recordPanelClassification("risk.historical_attribution", "ready", "lotus-risk", {
+    contributorRows: contributors.length,
   });
 }
 
@@ -495,6 +555,16 @@ async function run() {
   if (gatewayOverview?.portfolio?.portfolio_id !== portfolioId) {
     throw new Error("Gateway workbench overview returned no portfolio payload.");
   }
+  recordPanelClassification("portfolio.summary", "ready", "lotus-gateway", {
+    portfolioId,
+  });
+  recordPanelClassification("portfolio.detailed", "ready", "lotus-gateway", {
+    portfolioId,
+  });
+  recordPanelClassification("performance.advisor_brief", "ready", "lotus-gateway", {
+    sourceMetricMinimum: 3,
+  });
+  assertNoUnsupportedBlankPanels();
 
   const portfolioShell = await fetchText(
     `${workbenchBaseUrl}/portfolio?portfolioId=${portfolioId}`,

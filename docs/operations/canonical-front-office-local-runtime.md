@@ -169,6 +169,11 @@ assert numeric ranges, contribution reconciliation, governed attribution fallbac
 observation coverage, concentration coverage, rolling-window availability, and historical risk
 attribution residuals before screenshots are accepted as demo evidence.
 
+The summary also includes `panelClassifications` for the product surfaces validated during the run.
+Panels must be classified as `ready`, `partial`, `unavailable`, or another explicit governed state.
+The validator fails if a supported panel is recorded as blank without a governed empty, partial, or
+unavailable posture.
+
 ## Gateway startup rule
 
 Canonical local Gateway startup must use:
