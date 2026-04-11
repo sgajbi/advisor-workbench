@@ -1,4 +1,3 @@
-import path from "node:path";
 import process from "node:process";
 import { chromium, expect } from "@playwright/test";
 import { resolveValidationConfig } from "./validation/args.mjs";
@@ -18,6 +17,15 @@ import {
   assertPerformanceCalculationSanity,
   assertRiskCalculationSanity,
 } from "./validation/calculation-sanity.mjs";
+import {
+  createBrowserValidationHelpers,
+  validateAdvisorBriefPanel,
+  validateEvidencePanel,
+  validatePerformanceAnalysisPanel,
+  validatePerformanceSummaryPanel,
+  validatePortfolioPanels,
+  validateRiskPanel,
+} from "./validation/browser-workflows.mjs";
 
 const {
   portfolioId,
@@ -42,24 +50,6 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
-
-async function assertListHasItems(locator, description) {
-  await expect(locator).toBeVisible({ timeout: timeoutMs });
-  const count = await locator.locator('[role="listitem"]').count();
-  if (count < 1) {
-    throw new Error(`${description} is visible but empty.`);
-  }
-  summary.uiChecks.push({ description, kind: "list", itemCount: count });
-}
-
-async function assertTableHasRows(locator, minimumRows, description) {
-  await expect(locator).toBeVisible({ timeout: timeoutMs });
-  const count = await locator.locator("tbody tr").count();
-  if (count < minimumRows) {
-    throw new Error(`${description} expected at least ${minimumRows} body rows but found ${count}.`);
-  }
-  summary.uiChecks.push({ description, kind: "table", rowCount: count });
-}
 
 function recordSupportabilityCheck(panel, evidence) {
   summary.supportabilityChecks.push({ panel, ...evidence });
@@ -130,42 +120,6 @@ function assertPanelSupportabilityAlignment() {
       ownerFollowUpRfc: panelSpec.ownerFollowUpRfc,
     });
   }
-}
-
-async function screenshot(page, name, metadata) {
-  const target = path.join(outputDir, name);
-  await page.screenshot({ path: target, fullPage: true });
-  summary.screenshots.push({
-    name,
-    path: target,
-    route: metadata.route,
-    panel: metadata.panel,
-    portfolioId,
-    benchmarkCode,
-    asOfDate: canonicalAsOfDate,
-    state: metadata.state ?? "demo_ready",
-  });
-}
-
-function resolveRegistryRoute(routeTemplate) {
-  return routeTemplate
-    .replaceAll("{portfolioId}", portfolioId)
-    .replaceAll("{benchmarkCode}", benchmarkCode);
-}
-
-async function screenshotRegisteredPanel(page, panelId, metadata = {}) {
-  const panelSpec = panelRegistryById.get(panelId);
-  if (!panelSpec) {
-    throw new Error(`Screenshot requested for unregistered panel '${panelId}'.`);
-  }
-  if (!panelSpec.screenshotName) {
-    throw new Error(`Panel '${panelId}' has no governed screenshot name.`);
-  }
-  await screenshot(page, panelSpec.screenshotName, {
-    route: metadata.route ?? resolveRegistryRoute(panelSpec.route),
-    panel: panelId,
-    state: metadata.state,
-  });
 }
 
 async function run() {
@@ -363,172 +317,62 @@ async function run() {
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1600, height: 1200 } });
+  const browserHelpers = createBrowserValidationHelpers({
+    outputDir,
+    summary,
+    portfolioId,
+    benchmarkCode,
+    canonicalAsOfDate,
+    timeoutMs,
+    panelRegistryById,
+  });
 
   try {
-    await page.goto(`${workbenchBaseUrl}/portfolio?portfolioId=${portfolioId}`, {
-      waitUntil: "networkidle",
-      timeout: timeoutMs,
+    await validatePortfolioPanels(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertListHasItems: browserHelpers.assertListHasItems,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await expect(page.getByRole("heading", { name: "Portfolio", exact: true })).toBeVisible({
-      timeout: timeoutMs,
+    await validatePerformanceSummaryPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await expect(page.getByRole("heading", { name: portfolioId, exact: true })).toBeVisible({
-      timeout: timeoutMs,
+    await validatePerformanceAnalysisPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      benchmarkCode,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await expect(page.getByRole("heading", { name: "Portfolio Allocation" })).toBeVisible({
-      timeout: timeoutMs,
+    await validateAdvisorBriefPanel(page, {
+      summary,
+      workbenchBaseUrl,
+      portfolioId,
+      benchmarkCode,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await assertListHasItems(page.getByRole("list", { name: "Top holdings chart" }), "Top holdings chart");
-    await expect(page.getByRole("img", { name: "Allocation donut chart" })).toBeVisible({
-      timeout: timeoutMs,
+    await validateRiskPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      benchmarkCode,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await screenshotRegisteredPanel(page, "portfolio.summary");
-
-    await page.getByRole("tab", { name: "Detailed" }).click();
-    await expect(page.getByRole("tab", { name: "Detailed", exact: true, selected: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Transactions" })).toBeVisible({ timeout: timeoutMs });
-    await expect(page.getByRole("heading", { name: "Projected Cashflow" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByLabel("Portfolio transactions grid")).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByLabel("Projected cashflow summary")).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await screenshotRegisteredPanel(page, "portfolio.detailed");
-
-    await page.goto(`${workbenchBaseUrl}/performance?portfolioId=${portfolioId}`, {
-      waitUntil: "networkidle",
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Performance", exact: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("tab", { name: "Summary", exact: true, selected: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Net Return Path" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Performance Drivers" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await assertTableHasRows(
-      page.getByRole("table", { name: "Return path observation table" }),
-      4,
-      "Return path observation table"
-    );
-    await screenshotRegisteredPanel(page, "performance.summary");
-
-    await page.goto(
-      `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
-      { waitUntil: "networkidle", timeout: timeoutMs }
-    );
-    await expect(page.getByRole("tab", { name: "Analysis", exact: true, selected: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Attribution Over Time" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Attribution Detail" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Performance Drivers" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await assertTableHasRows(
-      page.getByRole("table", { name: /attribution/i }).first(),
-      1,
-      "Attribution detail table"
-    );
-    await assertTableHasRows(
-      page.getByRole("table", { name: /contribution/i }).first(),
-      1,
-      "Contribution detail table"
-    );
-    await screenshotRegisteredPanel(page, "performance.analysis.contribution");
-
-    await page.goto(
-      `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
-      { waitUntil: "networkidle", timeout: timeoutMs }
-    );
-    await expect(page.getByRole("tab", { name: "Advisor Brief", exact: true, selected: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Performance Advisor Brief" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Client Talking Points" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Source Metrics" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    const sourceMetricButtons = await page.getByRole("region", { name: "Source Metrics" }).getByRole("button").count();
-    if (sourceMetricButtons < 3) {
-      throw new Error(`Advisor brief source metrics expected at least 3 metric buttons but found ${sourceMetricButtons}.`);
-    }
-    summary.uiChecks.push({
-      description: "Advisor brief source metrics",
-      kind: "buttons",
-      buttonCount: sourceMetricButtons,
-    });
-    await screenshotRegisteredPanel(page, "performance.advisor_brief");
-
-    await page.goto(
-      `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
-      { waitUntil: "networkidle", timeout: timeoutMs }
-    );
-    await expect(page.getByRole("tab", { name: "Risk", exact: true, selected: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Risk Snapshot", exact: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Drawdown", exact: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Concentration", exact: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Rolling Risk", exact: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Historical Risk Attribution", exact: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await assertTableHasRows(
-      page.getByRole("table", { name: "Historical risk attribution table" }),
-      5,
-      "Historical risk attribution table"
-    );
-    await screenshotRegisteredPanel(page, "performance.risk.snapshot");
-
-    await page.goto(
-      `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
-      { waitUntil: "networkidle", timeout: timeoutMs }
-    );
-    await expect(page.getByRole("tab", { name: "Evidence", exact: true, selected: true })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    await expect(page.getByRole("heading", { name: "Evidence and Calculation Context" })).toBeVisible({
-      timeout: timeoutMs,
-    });
-    const evidenceStatusStrip = page.getByLabel("Evidence support status");
-    if (await evidenceStatusStrip.count()) {
-      await expect(evidenceStatusStrip).toBeVisible({ timeout: timeoutMs });
-      summary.uiChecks.push({ description: "Evidence support status", kind: "status-strip", state: "supported" });
-    } else {
-      await expect(page.getByText(/Evidence (partially available|unavailable)/)).toBeVisible({
-        timeout: timeoutMs,
-      });
-      summary.uiChecks.push({ description: "Evidence support status", kind: "status-strip", state: "degraded" });
-    }
-    await screenshotRegisteredPanel(page, "performance.evidence", {
-      state: "truthfully_degraded",
+    await validateEvidencePanel(page, {
+      summary,
+      workbenchBaseUrl,
+      portfolioId,
+      benchmarkCode,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
   } finally {
     await browser.close();

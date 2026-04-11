@@ -123,6 +123,10 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
       "utf8"
     );
+    const calculationModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
+      "utf8"
+    );
 
     expect(script).toContain("supportabilityChecks");
     expect(script).toContain("assertPanelSupportabilityAlignment");
@@ -131,7 +135,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("requiredSupportState");
     expect(script).toContain("ownerFollowUpRfc");
     expect(script).toContain("lotus-performance");
-    expect(script).toContain("performance.evidence");
+    expect(calculationModule).toContain("performance.evidence");
   });
 
   it("records explicit panel support classifications for demo evidence", () => {
@@ -168,19 +172,24 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "evidence-summary-writer.mjs"),
       "utf8"
     );
+    const browserWorkflowModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "browser-workflows.mjs"),
+      "utf8"
+    );
     const runbook = readFileSync(
       join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
       "utf8"
     );
 
     expect(script).toContain("canonicalAsOfDate");
-    expect(script).toContain("screenshotRegisteredPanel");
-    expect(script).toContain("resolveRegistryRoute");
+    expect(script).toContain("createBrowserValidationHelpers");
+    expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
+    expect(browserWorkflowModule).toContain("resolveRegistryRoute");
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
-    expect(script).toContain("panel: panelId");
-    expect(script).toContain("state: \"truthfully_degraded\"");
-    expect(script).toContain("path: target");
+    expect(browserWorkflowModule).toContain("panel: panelId");
+    expect(browserWorkflowModule).toContain('state: "truthfully_degraded"');
+    expect(browserWorkflowModule).toContain("path: target");
     expect(evidenceWriter).toContain("SHOT-INDEX.md");
     expect(script).toContain("writeShotIndex");
     expect(runbook).toContain("ScreenshotDirectory");
