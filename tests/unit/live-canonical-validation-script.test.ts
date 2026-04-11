@@ -61,6 +61,26 @@ describe("canonical live validation script", () => {
     expect(script).toContain("Historical risk attribution residual is too high");
   });
 
+  it("surfaces governed canonical contract metadata in live validation evidence", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+    const runbook = readFileSync(
+      join(process.cwd(), "docs", "operations", "canonical-front-office-local-runtime.md"),
+      "utf8"
+    );
+
+    expect(script).toContain("DEFAULT_CANONICAL_CONTRACT");
+    expect(script).toContain("loadCanonicalContractMetadata");
+    expect(script).toContain("canonical-front-office-demo-data-contract.json");
+    expect(script).toContain("LOTUS_PLATFORM_REPO");
+    expect(script).toContain("canonicalContract");
+    expect(script).toContain('sourcePath: "deterministic-fallback"');
+    expect(runbook).toContain("contract identity and version");
+    expect(runbook).toContain("RFC-0076");
+  });
+
   it("records explicit panel support classifications for demo evidence", () => {
     const script = readFileSync(
       join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
