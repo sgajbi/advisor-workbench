@@ -108,7 +108,7 @@ test.describe('Portfolio workbench smoke', () => {
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByRole('heading', { name: /Portfolio Allocation/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Top Holdings/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Top Positions/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Performance Snapshot/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /^Income$/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /^Activity$/i })).toBeVisible();

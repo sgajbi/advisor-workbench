@@ -114,14 +114,12 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("1,250,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("1,145,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("105,000 USD").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("12 holdings")).toBeInTheDocument();
+    expect(screen.getByText("2 accounts")).toBeInTheDocument();
     expect(document.querySelector(".portfolio-summary-band")).toBeTruthy();
-    expect(document.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(6);
-    expect(screen.getByText("Generated 24 Feb 2026 • 14 report rows")).toBeInTheDocument();
+    expect(document.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(4);
     await waitFor(() => {
       expect(screen.getByText("Income Plus")).toBeInTheDocument();
       expect(screen.getAllByText("14,750 USD").length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText("2 booked events")).toBeInTheDocument();
       expect(screen.getByText("Large position dominates portfolio risk")).toBeInTheDocument();
     });
     expect(screen.getByLabelText("As of")).toHaveValue("2026-02-24");
@@ -161,7 +159,7 @@ describe("PortfolioFoundationPage", () => {
     expect(summaryCluster?.querySelector("#portfolio-summary")).toBeTruthy();
     expect(summaryCluster?.querySelector("#portfolio-attention")).toBeTruthy();
     expect(screen.getByRole("heading", { name: /Portfolio Allocation/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Top Holdings/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Top Positions/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Performance Snapshot/i })).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     const performanceSnapshotCard = screen
@@ -232,7 +230,7 @@ describe("PortfolioFoundationPage", () => {
       .getByRole("heading", { name: /Portfolio Allocation/i })
       .closest(".portfolio-summary-module-card");
     const topHoldingsCard = screen
-      .getByRole("heading", { name: /Top Holdings/i })
+      .getByRole("heading", { name: /Top Positions/i })
       .closest(".portfolio-summary-module-card");
     expect(allocationCard).toBeTruthy();
     expect(topHoldingsCard).toBeTruthy();

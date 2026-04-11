@@ -60,11 +60,8 @@ import {
   getRelatedTransactionsForSecurity,
   getActivityDisplayCurrency,
   getBookReadinessStatus,
-  getBookReadinessSupport,
-  getBookReadinessTone,
   getIncomeDisplayCurrency,
   getInvestedAssetWeight,
-  getNetFlowTone,
   getOrderedWorkflowCues,
   getRequestedWindowActivityAmount,
   getRequestedWindowActivityCount,
@@ -410,14 +407,13 @@ export default function PortfolioWorkspaceView({
               className="portfolio-page-frame"
               bodyClassName="portfolio-page-frame-body"
               title="Portfolio"
-              subtitle="Front-office portfolio context, readiness, and decision support"
               actions={
-                <>
-                  <SemanticBadge>{portfolios.length} portfolios</SemanticBadge>
+                <div className="portfolio-page-header-status">
+                  <span>{formatCount(portfolios.length, "portfolio")}</span>
                   <SemanticBadge tone={portfolios.length ? "success" : "warn"}>
                     {portfolios.length ? "Catalog live" : "Catalog unavailable"}
                   </SemanticBadge>
-                </>
+                </div>
               }
             >
               <WorkbenchSectionStack className="portfolio-page-sections">
@@ -439,7 +435,6 @@ export default function PortfolioWorkspaceView({
                       <PortfolioSummaryHeaderSection
                         workspace={workspace}
                         context={context}
-                        activityDisplayCurrency={activityDisplayCurrency}
                         orderedWorkflowCues={orderedWorkflowCues}
                         primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
                         readinessIndicators={priorityReadinessIndicators}
@@ -633,7 +628,6 @@ export default function PortfolioWorkspaceView({
 function PortfolioSummaryHeaderSection({
   workspace,
   context,
-  activityDisplayCurrency,
   orderedWorkflowCues,
   primaryWorkflowCueKey,
   readinessIndicators,
@@ -641,7 +635,6 @@ function PortfolioSummaryHeaderSection({
 }: {
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
-  activityDisplayCurrency: string;
   orderedWorkflowCues: Array<{ key: string; label: string; href: string }>;
   primaryWorkflowCueKey: string | null;
   readinessIndicators: ReturnType<typeof buildPortfolioReadinessIndicators>;
@@ -711,7 +704,7 @@ function PortfolioSummaryHeaderSection({
           },
           {
             key: "available_cash",
-            label: "Available Cash",
+            label: "Cash",
             value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
             definition:
               "Available cash inventory in the portfolio base currency across published cash balances.",
@@ -719,32 +712,12 @@ function PortfolioSummaryHeaderSection({
             onClick: () => onOpenMetricDrawer("available_cash"),
           },
           {
-            key: "holdings",
-            label: "Holdings",
-            value: workspace.summary.position_count,
-            definition: "Number of currently valued holdings in the portfolio book.",
-            support: formatCount(workspace.summary.position_count, "holding"),
-            onClick: () => onOpenMetricDrawer("holdings"),
-          },
-          {
-            key: "net_flow_30d",
-            label: "30D Net Flow",
-            value: formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency),
-            definition:
-              "Net booked portfolio activity across the requested 30-day reporting window, including funding, fees, and other ledger movements.",
-            support: `${getRequestedWindowActivityCount(workspace)} booked events`,
-            tone: getNetFlowTone(workspace),
-            onClick: () => onOpenMetricDrawer("net_flow_30d"),
-          },
-          {
-            key: "book_readiness",
-            label: "Book Readiness",
-            value: getBookReadinessStatus(workspace),
-            definition:
-              "Operational readiness based on holdings coverage, reporting status, publish eligibility, and active blocking exceptions.",
-            support: getBookReadinessSupport(workspace),
-            tone: getBookReadinessTone(workspace),
-            onClick: () => onOpenMetricDrawer("book_readiness"),
+            key: "cash_accounts",
+            label: "Cash Accounts",
+            value: workspace.summary.cash_balance_count ?? 0,
+            definition: "Number of published cash balance records supporting the available cash figure.",
+            support: formatCount(workspace.summary.cash_balance_count ?? 0, "account"),
+            onClick: () => onOpenMetricDrawer("cash_accounts"),
           },
         ]}
       />
@@ -1042,7 +1015,7 @@ function PortfolioInsightsSection({
           <PortfolioCollapsibleModule
             className="portfolio-summary-module-card"
             compact={isSummaryView}
-            title="Top Holdings"
+            title="Top Positions"
             subtitle={`Largest holdings by market value or weight as of ${formatDate(context.selectedAsOfDate)}.`}
             expanded={getSectionExpanded("top-holdings")}
             onToggle={() => toggleSection("top-holdings")}
@@ -1421,6 +1394,7 @@ type PortfolioMetricDrawerKey =
   | "aum"
   | "invested_assets"
   | "available_cash"
+  | "cash_accounts"
   | "holdings"
   | "net_flow_30d"
   | "book_readiness";
@@ -1520,6 +1494,41 @@ function buildMetricDrawer(
             content: renderDrawerParagraphs([
               "Available cash aggregates current cash balances across portfolio cash instruments.",
               "Use it with projected cashflow to assess short-horizon funding capacity.",
+            ]),
+          },
+          {
+            key: "detail",
+            label: "Underlying Detail",
+            content: renderDrawerDefinitionList(
+              (workspace.cash_balances ?? []).length
+                ? (workspace.cash_balances ?? []).map((balance) => [
+                    balance.instrument_name,
+                    formatCurrency(balance.market_value_base ?? balance.quantity, workspace.portfolio.base_currency),
+                  ])
+                : [["Cash Accounts", "No published cash balances available"]]
+            ),
+          },
+        ],
+        fullPageHref: "#portfolio-insights",
+        fullPageLabel: "Open liquidity",
+      };
+    case "cash_accounts":
+      return {
+        kicker: "Metric Detail",
+        title: "Cash Accounts",
+        subtitle: "Published cash balance records supporting available cash and liquidity review.",
+        summaryItems: [
+          { label: "Accounts", value: String(workspace.summary.cash_balance_count ?? 0) },
+          { label: "Available Cash", value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency) },
+          ...commonSummary,
+        ],
+        tabs: [
+          {
+            key: "definition",
+            label: "Definition",
+            content: renderDrawerParagraphs([
+              "Cash accounts counts published cash balances in the current portfolio context.",
+              "Use it with available cash and projected cashflow to assess funding coverage and liquidity completeness.",
             ]),
           },
           {
@@ -1855,7 +1864,7 @@ function resolveExceptionEvidence(
     case "holdings":
       return [
         ["Positions", formatCount(workspace.positions.length, "position")],
-        ["Top Holdings", formatCount(workspace.top_positions.length, "holding")],
+        ["Top Positions", formatCount(workspace.top_positions.length, "holding")],
         ["Reported Position Count", formatCount(workspace.summary.position_count, "holding")],
       ];
     case "pricing":
