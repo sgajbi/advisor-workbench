@@ -95,11 +95,29 @@ describe("canonical live validation script", () => {
     expect(script).toContain("loadWorkbenchPanelRegistryMetadata");
     expect(script).toContain("workbench-panel-registry.json");
     expect(script).toContain("panelRegistryById");
+    expect(script).toContain("requiredSupportState");
+    expect(script).toContain("owningService");
     expect(script).toContain("Panel classification");
     expect(script).toContain("allowedStates");
     expect(script).not.toContain("assertRegionHasButtons");
     expect(runbook).toContain("RFC-0077");
     expect(runbook).toContain("panel registry");
+  });
+
+  it("fails when governed panel ownership or supportability drifts from the registry", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+
+    expect(script).toContain("supportabilityChecks");
+    expect(script).toContain("assertPanelSupportabilityAlignment");
+    expect(script).toContain("reported owner");
+    expect(script).toContain("registry owner");
+    expect(script).toContain("requiredSupportState");
+    expect(script).toContain("ownerFollowUpRfc");
+    expect(script).toContain("lotus-performance");
+    expect(script).toContain("performance.evidence");
   });
 
   it("records explicit panel support classifications for demo evidence", () => {
