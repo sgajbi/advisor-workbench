@@ -1,7 +1,9 @@
 param(
   [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
-  [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40"
+  [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [string]$ScreenshotDirectory = "",
+  [switch]$BuildImages
 )
 
 $ErrorActionPreference = "Stop"
@@ -56,22 +58,26 @@ Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
 Write-Host "Starting Docker-backed upstream services..."
-Invoke-RepoCommand $coreRepo "docker compose up -d"
-Invoke-RepoCommand $performanceRepo "docker compose up -d"
-Invoke-RepoCommand $riskRepo "docker compose up -d"
-Invoke-RepoCommand $aiRepo "docker compose up -d"
-Invoke-RepoCommand $adviseRepo "docker compose up -d"
-Invoke-RepoCommand $reportRepo "docker compose up -d"
+$composeUpCommand = "docker compose up -d"
+if ($BuildImages) {
+  $composeUpCommand = "$composeUpCommand --build"
+}
+Invoke-RepoCommand $coreRepo $composeUpCommand
+Invoke-RepoCommand $performanceRepo $composeUpCommand
+Invoke-RepoCommand $riskRepo $composeUpCommand
+Invoke-RepoCommand $aiRepo $composeUpCommand
+Invoke-RepoCommand $adviseRepo $composeUpCommand
+Invoke-RepoCommand $reportRepo $composeUpCommand
 
 Write-Host "Ensuring direct ingress container is running..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
 docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/etc/caddy/Caddyfile" caddy:2.8.4 | Out-Null
 
-Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
-Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-03-28 --benchmark-start-date 2025-01-06 --wait-seconds 300"
-
 Write-Host "Starting canonical Gateway on :8111 ..."
 & (Join-Path $gatewayRepo "scripts\\Start-CanonicalGateway.ps1")
+
+Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
+Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds 300"
 
 Write-Host "Starting canonical lotus-manage on :8001 ..."
 & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1")
@@ -93,6 +99,11 @@ if (-not (Test-HttpReady "http://127.0.0.1:3000")) {
 }
 
 Write-Host "Running canonical live validation ..."
-& (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") `
-  -PortfolioId $PortfolioId `
-  -BenchmarkCode $BenchmarkCode
+$validationArguments = @{
+  PortfolioId = $PortfolioId
+  BenchmarkCode = $BenchmarkCode
+}
+if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
+  $validationArguments.ScreenshotDirectory = $ScreenshotDirectory
+}
+& (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") @validationArguments

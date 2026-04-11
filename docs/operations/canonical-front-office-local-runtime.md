@@ -90,10 +90,10 @@ That script performs:
 1. preview the canonical hosts block from `lotus-platform`
 2. `docker compose up -d` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, and `lotus-advise`
 3. `docker compose up -d` for `lotus-report`
-4. canonical host-process startup for `lotus-manage` on `8001`
-5. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
+4. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
+5. canonical `lotus-gateway` startup on port `8111`
 6. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
-7. canonical `lotus-gateway` startup on port `8111`
+7. canonical host-process startup for `lotus-manage` on `8001`
 8. canonical `lotus-workbench` startup on port `3000`
 9. end-to-end validation of canonical routes and populated UI panels
 
@@ -119,6 +119,13 @@ To validate an already-running stack:
 npm run live:validate
 ```
 
+To write demo screenshots to a caller-provided directory:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1 `
+  -ScreenshotDirectory C:\Users\Sandeep\AppData\Local\Temp\lotus-risk-module-shots
+```
+
 Validation layers:
 
 1. canonical hostname resolution
@@ -131,7 +138,12 @@ Validation layers:
    - platform capabilities
    - workbench overview
    - performance summary
+   - performance details
    - risk summary
+   - risk concentration
+   - risk drawdown
+   - risk rolling
+   - risk attribution
    - advisor brief
 5. browser-level validation for populated UI on:
    - Portfolio summary
@@ -148,11 +160,32 @@ Screenshots are written to:
 output/playwright/live-canonical/
 ```
 
+When `-ScreenshotDirectory` is supplied, screenshots and the live validation summary are written to
+that directory instead. The summary records structured screenshot evidence for each capture:
+stable file name, absolute path, route, panel identifier, portfolio ID, benchmark ID, as-of date,
+and demo readiness state. The validator also writes `SHOT-INDEX.md` in the screenshot directory so
+demo reviewers can quickly identify the captured product surfaces.
+
 Machine-readable validation evidence is written to:
 
 ```txt
 output/playwright/live-canonical/live-validation-summary.json
 ```
+
+The validation script runs the browser validator from the `lotus-workbench` repository root so
+these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
+script. Browser validation failures must fail the PowerShell command; do not treat stale summaries
+or partial screenshot output as successful evidence.
+
+The summary includes `calculationChecks` for canonical performance and risk sanity. These checks
+assert numeric ranges, contribution reconciliation, governed attribution fallback posture, risk
+observation coverage, concentration coverage, rolling-window availability, and historical risk
+attribution residuals before screenshots are accepted as demo evidence.
+
+The summary also includes `panelClassifications` for the product surfaces validated during the run.
+Panels must be classified as `ready`, `partial`, `unavailable`, or another explicit governed state.
+The validator fails if a supported panel is recorded as blank without a governed empty, partial, or
+unavailable posture.
 
 ## Gateway startup rule
 
@@ -220,6 +253,8 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - `Attribution Over Time` renders
   - `Attribution Detail` table is populated
   - `Performance Drivers` table is populated
+  - contribution rows reconcile to the net portfolio return
+  - attribution detail is populated or carries a governed partial fallback
 - Advisor Brief:
   - talking points render
   - source metrics render
@@ -231,6 +266,11 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - `Rolling Risk`
   - `Historical Risk Attribution`
   - attribution table is populated
+  - summary metrics have sufficient observations and ready benchmark-relative metrics
+  - concentration has issuer coverage and top-exposure evidence
+  - drawdown has underwater-series evidence
+  - rolling risk has all configured windows and enough computable windows for the current horizon
+  - historical attribution contributors reconcile with a negligible residual
 - Evidence:
   - Evidence mode opens
   - evidence support strip or truthful degraded state renders

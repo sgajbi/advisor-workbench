@@ -1,5 +1,7 @@
 param(
-  [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects"
+  [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
+  [switch]$RemoveVolumes,
+  [switch]$RemoveImages
 )
 
 $ErrorActionPreference = "Stop"
@@ -60,12 +62,19 @@ Write-Host "Stopping direct ingress..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
 
 Write-Host "Stopping Docker-backed Lotus services..."
-Invoke-RepoCommand $coreRepo "docker compose down"
-Invoke-RepoCommand $performanceRepo "docker compose down"
-Invoke-RepoCommand $riskRepo "docker compose down"
-Invoke-RepoCommand $aiRepo "docker compose down"
-Invoke-RepoCommand $adviseRepo "docker compose down"
-Invoke-RepoCommand $manageRepo "docker compose down"
-Invoke-RepoCommand $reportRepo "docker compose down"
+$downCommand = "docker compose down --remove-orphans"
+if ($RemoveVolumes) {
+  $downCommand = "$downCommand -v"
+}
+if ($RemoveImages) {
+  $downCommand = "$downCommand --rmi local"
+}
+Invoke-RepoCommand $coreRepo $downCommand
+Invoke-RepoCommand $performanceRepo $downCommand
+Invoke-RepoCommand $riskRepo $downCommand
+Invoke-RepoCommand $aiRepo $downCommand
+Invoke-RepoCommand $adviseRepo $downCommand
+Invoke-RepoCommand $manageRepo $downCommand
+Invoke-RepoCommand $reportRepo $downCommand
 
 Write-Host "Canonical front-office local runtime stopped."
