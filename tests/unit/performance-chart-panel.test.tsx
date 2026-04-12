@@ -87,10 +87,9 @@ describe("PerformanceChartPanel", () => {
     fireEvent.click(screen.getByText("Observation trail"));
     const observationTable = screen.getByLabelText("Return path observation table");
 
-    expect(seriesNames).toContain("Active Period");
-    expect(seriesNames).toContain("Active Cumulative");
-    expect(seriesNames).toContain("Portfolio Return");
-    expect(seriesNames).toContain("Benchmark Period");
+    expect(seriesNames).toContain("Active");
+    expect(seriesNames).toContain("Portfolio");
+    expect(seriesNames).toContain("Benchmark");
     expect(within(observationTable).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(observationTable).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(observationTable).getByText("Active Return")).toBeInTheDocument();
@@ -98,26 +97,17 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
     expect(within(observationTable).getByText("Cumulative Active")).toBeInTheDocument();
 
-    let activeCumulativeSeries = series.find((entry) => entry?.name === "Active Cumulative");
+    let activeCumulativeSeries = series.find((entry) => entry?.name === "Active");
     expect(activeCumulativeSeries?.type).toBe("line");
     expect(activeCumulativeSeries?.data).toEqual([0.3]);
 
-    let activePeriodSeries = series.find((entry) => entry?.name === "Active Period");
-    expect(activePeriodSeries?.type).toBe("bar");
-    expect(activePeriodSeries?.data).toEqual([0.3]);
-    expect(activePeriodSeries?.barWidth).toBe(14);
-    expect(activePeriodSeries?.itemStyle).toMatchObject({
-      borderWidth: 1,
-      borderRadius: [8, 8, 0, 0],
-    });
-
-    const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio Return");
+    const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio");
     expect(portfolioReturnSeries?.smooth).toBe(false);
     expect(portfolioReturnSeries?.symbol).toBe("circle");
-    expect(portfolioReturnSeries?.symbolSize).toBe(6);
-    expect(portfolioReturnSeries?.showSymbol).toBe(true);
+    expect(portfolioReturnSeries?.symbolSize).toBe(7);
+    expect(portfolioReturnSeries?.showSymbol).toBe(false);
     expect(portfolioReturnSeries?.lineStyle).toMatchObject({
-      width: 4,
+      width: 3.6,
       cap: "round",
       join: "round",
     });
@@ -128,10 +118,9 @@ describe("PerformanceChartPanel", () => {
       ? (lastChartOption.series as ChartSeriesProbe[])
       : [];
     seriesNames = series.map((entry) => entry?.name);
-    expect(seriesNames).toContain("Active Period");
-    expect(seriesNames).toContain("Active Cumulative");
-    expect(seriesNames).not.toContain("Portfolio Return");
-    expect(seriesNames).not.toContain("Benchmark Period");
+    expect(seriesNames).toContain("Active");
+    expect(seriesNames).not.toContain("Portfolio");
+    expect(seriesNames).not.toContain("Benchmark");
     expect(within(observationTable).queryByText("Portfolio Return")).not.toBeInTheDocument();
     expect(within(observationTable).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(observationTable).getByText("Active Return")).toBeInTheDocument();
@@ -145,10 +134,9 @@ describe("PerformanceChartPanel", () => {
       ? (lastChartOption.series as ChartSeriesProbe[])
       : [];
     seriesNames = series.map((entry) => entry?.name);
-    expect(seriesNames).toContain("Portfolio Return");
-    expect(seriesNames).toContain("Benchmark Period");
-    expect(seriesNames).not.toContain("Active Period");
-    expect(seriesNames).not.toContain("Active Cumulative");
+    expect(seriesNames).toContain("Portfolio");
+    expect(seriesNames).toContain("Benchmark");
+    expect(seriesNames).not.toContain("Active");
     expect(within(observationTable).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(observationTable).getByText("Benchmark Return")).toBeInTheDocument();
     expect(within(observationTable).queryByText("Active Return")).not.toBeInTheDocument();
@@ -266,11 +254,11 @@ describe("PerformanceChartPanel", () => {
     expect(lastChartOption?.xAxis).toMatchObject({
       axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
     });
-    expect(Array.isArray(lastChartOption?.yAxis) ? lastChartOption?.yAxis?.[0] : undefined).toMatchObject({
+    expect(lastChartOption?.yAxis).toMatchObject({
       splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.11)", width: 1 } },
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
-    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio cumulative");
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("12.84%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("active return");
     expect(lastChartOption?.tooltip).toMatchObject({
@@ -287,14 +275,15 @@ describe("PerformanceChartPanel", () => {
       String(
         (tooltipFormatter as (...args: unknown[]) => string)?.([
           {
-            seriesName: "Portfolio Return",
+            seriesName: "Portfolio",
             value: 12.84,
             axisValue: "2026-03",
+            dataIndex: 0,
             marker: '<span style=\"color:red\">●</span>',
           },
         ])
       )
-    ).toContain("Portfolio Return");
+    ).toContain("Portfolio cumulative");
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {
@@ -459,8 +448,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(compactPattern("Basis Net"));
     expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
-    expect(series.map((entry) => entry?.name)).not.toContain("Active Period");
-    expect(series.map((entry) => entry?.name)).not.toContain("Active Cumulative");
+    expect(series.map((entry) => entry?.name)).not.toContain("Active");
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {

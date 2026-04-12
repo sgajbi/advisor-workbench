@@ -5,6 +5,13 @@ import type { PerformanceChartPoint } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
 
+type ReturnPathTooltipOptions = {
+  points: PerformanceChartPoint[];
+  showAbsoluteSeries: boolean;
+  showBenchmarkSeries: boolean;
+  showActiveSeries: boolean;
+};
+
 export const CHART_COLORS = {
   portfolio: "#da1e28",
   benchmark: "#1f2e45",
@@ -148,4 +155,91 @@ export function formatReturnPathTooltip(params: CallbackDataParams | CallbackDat
     rows,
     "</div>",
   ].join("");
+}
+
+function buildTooltipRow(label: string, value: number | null | undefined, color: string) {
+  const numericValue = toNumeric(value);
+  if (numericValue === null) {
+    return "";
+  }
+
+  return [
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
+    `<span style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:700;"><span style="width:8px;height:8px;border-radius:999px;background:${color};display:inline-block;"></span>${escapeTooltipHtml(label)}</span>`,
+    `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
+    "</div>",
+  ].join("");
+}
+
+export function buildReturnPathTooltipFormatter({
+  points,
+  showAbsoluteSeries,
+  showBenchmarkSeries,
+  showActiveSeries,
+}: ReturnPathTooltipOptions) {
+  return (params: CallbackDataParams | CallbackDataParams[]) => {
+    const entries = Array.isArray(params) ? params : [params];
+    const firstEntry = entries[0];
+    const dataIndex =
+      typeof firstEntry?.dataIndex === "number" ? firstEntry.dataIndex : -1;
+    const point = dataIndex >= 0 ? points[dataIndex] : undefined;
+    const axisLabel = String(
+      (firstEntry as CallbackDataParams & { axisValue?: string })?.axisValue ??
+        firstEntry?.name ??
+        point?.label ??
+        ""
+    );
+
+    if (!point) {
+      return formatReturnPathTooltip(params);
+    }
+
+    const rows = [
+      ...(showAbsoluteSeries
+        ? [
+            buildTooltipRow("Portfolio period", point.portfolio_return_pct, CHART_COLORS.portfolio),
+            ...(showBenchmarkSeries
+              ? [buildTooltipRow("Benchmark period", point.benchmark_return_pct, CHART_COLORS.benchmark)]
+              : []),
+            buildTooltipRow(
+              "Portfolio cumulative",
+              point.cumulative_portfolio_return_pct,
+              CHART_COLORS.portfolio
+            ),
+            ...(showBenchmarkSeries
+              ? [
+                  buildTooltipRow(
+                    "Benchmark cumulative",
+                    point.cumulative_benchmark_return_pct,
+                    CHART_COLORS.benchmark
+                  ),
+                ]
+              : []),
+          ]
+        : []),
+      ...(showActiveSeries
+        ? [
+            buildTooltipRow("Active period", point.active_return_pct, CHART_COLORS.active),
+            buildTooltipRow(
+              "Active cumulative",
+              point.cumulative_active_return_pct,
+              CHART_COLORS.active
+            ),
+          ]
+        : []),
+    ]
+      .filter(Boolean)
+      .join("");
+
+    if (!rows) {
+      return "";
+    }
+
+    return [
+      '<div style="display:grid;gap:8px;min-width:220px;">',
+      `<div style="color:#5f6c7f;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(axisLabel)}</div>`,
+      rows,
+      "</div>",
+    ].join("");
+  };
 }

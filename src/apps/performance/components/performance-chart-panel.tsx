@@ -27,9 +27,9 @@ import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathLegend from "./performance-return-path-legend";
 import {
   buildPercentAxisBounds,
+  buildReturnPathTooltipFormatter,
   CHART_COLORS,
   formatEndLabel,
-  formatReturnPathTooltip,
   resolveReportDates,
   SHARED_CHART_TEXT,
   toNumeric,
@@ -193,26 +193,16 @@ export default function PerformanceChartPanel({
     const activeCumulative = points.map((point) =>
       toNumeric(point.cumulative_active_return_pct)
     );
-    const portfolioPeriodic = points.map((point) => toNumeric(point.portfolio_return_pct));
-    const benchmarkPeriodic = points.map((point) => toNumeric(point.benchmark_return_pct));
-    const activePeriodic = points.map((point) => toNumeric(point.active_return_pct));
     const hasActiveCumulativeSeries = hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
-    const hasActivePeriodicSeries = hasBenchmarkSeries && activePeriodic.some((value) => value !== null);
     const includeAbsoluteSeries = chartViewMode !== "relative";
     const includeRelativeSeries = chartViewMode !== "absolute";
     const showBenchmarkSeries = includeAbsoluteSeries && hasBenchmarkSeries;
     const showActiveCumulativeSeries = includeRelativeSeries && hasActiveCumulativeSeries;
-    const showActivePeriodicSeries = includeRelativeSeries && hasActivePeriodicSeries;
 
     const cumulativeBounds = buildPercentAxisBounds([
       ...(includeAbsoluteSeries ? portfolioCumulative : []),
       ...(showBenchmarkSeries ? benchmarkCumulative : []),
       ...(showActiveCumulativeSeries ? activeCumulative : []),
-    ]);
-    const barBounds = buildPercentAxisBounds([
-      ...(includeAbsoluteSeries ? portfolioPeriodic : []),
-      ...(showBenchmarkSeries ? benchmarkPeriodic : []),
-      ...(showActivePeriodicSeries ? activePeriodic : []),
     ]);
 
     return {
@@ -238,7 +228,16 @@ export default function PerformanceChartPanel({
       },
       tooltip: {
         trigger: "axis",
-        axisPointer: { type: "cross" },
+        axisPointer: {
+          type: "line",
+          snap: true,
+          label: { show: false },
+          lineStyle: {
+            color: "rgba(52, 70, 95, 0.22)",
+            width: 1,
+            type: "dashed",
+          },
+        },
         backgroundColor: "rgba(255, 255, 255, 0.98)",
         borderColor: "rgba(36, 50, 70, 0.14)",
         borderWidth: 1,
@@ -250,7 +249,12 @@ export default function PerformanceChartPanel({
         extraCssText:
           "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.14); border-radius: 10px;",
         padding: SHARED_CHART_TEXT.tooltipPadding,
-        formatter: formatReturnPathTooltip,
+        formatter: buildReturnPathTooltipFormatter({
+          points,
+          showAbsoluteSeries: includeAbsoluteSeries,
+          showBenchmarkSeries,
+          showActiveSeries: showActiveCumulativeSeries,
+        }),
         valueFormatter: (value: unknown) => {
           if (typeof value === "number") {
             return `${value.toFixed(2)}%`;
@@ -264,8 +268,10 @@ export default function PerformanceChartPanel({
       xAxis: {
         type: "category" as const,
         data: categories,
+        boundaryGap: false,
         axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
         axisTick: { show: false },
+        axisPointer: { label: { show: false } },
         axisLabel: {
           color: "#5a6779",
           fontSize: SHARED_CHART_TEXT.axisSize,
@@ -273,106 +279,46 @@ export default function PerformanceChartPanel({
           margin: 14,
         },
       },
-      yAxis: [
-        {
-          type: "value" as const,
-          min: cumulativeBounds.min,
-          max: cumulativeBounds.max,
-          splitNumber: 5,
-          axisLabel: {
-            color: "#637083",
-            formatter: (value: number) => `${value}%`,
-          },
-          axisLine: { show: false },
-          axisTick: { show: false },
-          splitLine: {
-            lineStyle: {
-              color: "rgba(52, 70, 95, 0.11)",
-              width: 1,
-            },
+      yAxis: {
+        type: "value" as const,
+        min: cumulativeBounds.min,
+        max: cumulativeBounds.max,
+        splitNumber: 5,
+        axisPointer: { label: { show: false } },
+        axisLabel: {
+          color: "#637083",
+          formatter: (value: number) => `${value}%`,
+        },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: {
+          lineStyle: {
+            color: "rgba(52, 70, 95, 0.11)",
+            width: 1,
           },
         },
-        {
-          type: "value" as const,
-          min: barBounds.min,
-          max: barBounds.max,
-          show: false,
-        },
-      ],
+      },
       series: [
         ...(includeAbsoluteSeries
           ? [
               {
-                name: "Portfolio Period",
-                type: "bar" as const,
-                yAxisIndex: 1,
-                data: portfolioPeriodic,
-                barWidth: 14,
-                barGap: "18%",
-                barCategoryGap: "34%",
-                z: 1,
-                itemStyle: {
-                  color: "rgba(218, 30, 40, 0.38)",
-                  borderRadius: SHARED_CHART_TEXT.barRadius,
-                  borderColor: "rgba(218, 30, 40, 0.66)",
-                  borderWidth: 1,
-                },
-              },
-            ]
-          : []),
-        ...(showBenchmarkSeries
-          ? [
-              {
-                name: "Benchmark Period",
-                type: "bar" as const,
-                yAxisIndex: 1,
-                data: benchmarkPeriodic,
-                barWidth: 14,
-                z: 1,
-                itemStyle: {
-                  color: "rgba(31, 46, 69, 0.36)",
-                  borderRadius: SHARED_CHART_TEXT.barRadius,
-                  borderColor: "rgba(31, 46, 69, 0.6)",
-                  borderWidth: 1,
-                },
-              },
-            ]
-          : []),
-        ...(showActivePeriodicSeries
-          ? [
-              {
-                name: "Active Period",
-                type: "bar" as const,
-                yAxisIndex: 1,
-                data: activePeriodic,
-                barWidth: 14,
-                z: 1,
-                itemStyle: {
-                  color: "rgba(47, 95, 151, 0.34)",
-                  borderRadius: SHARED_CHART_TEXT.barRadius,
-                  borderColor: "rgba(47, 95, 151, 0.58)",
-                  borderWidth: 1,
-                },
-              },
-            ]
-          : []),
-        ...(includeAbsoluteSeries
-          ? [
-              {
-                name: "Portfolio Return",
+                name: "Portfolio",
                 type: "line" as const,
                 data: portfolioCumulative,
                 smooth: false,
                 symbol: "circle",
-                symbolSize: 6,
-                showSymbol: true,
+                symbolSize: 7,
+                showSymbol: false,
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 4,
+                  width: 3.6,
                   color: CHART_COLORS.portfolio,
                   cap: "round" as const,
                   join: "round" as const,
+                },
+                emphasis: {
+                  focus: "series" as const,
                 },
                 label: {
                   show: true,
@@ -383,7 +329,7 @@ export default function PerformanceChartPanel({
                     formatEndLabel(params, "Portfolio", portfolioCumulative.length - 1),
                 },
                 areaStyle: {
-                  color: "rgba(218, 30, 40, 0.035)",
+                  color: "rgba(218, 30, 40, 0.03)",
                 },
               },
             ]
@@ -391,20 +337,23 @@ export default function PerformanceChartPanel({
         ...(showBenchmarkSeries
           ? [
               {
-                name: returnPathPresentation.benchmarkLabel,
+                name: "Benchmark",
                 type: "line" as const,
                 data: benchmarkCumulative,
                 smooth: false,
                 symbol: "circle",
-                symbolSize: 6,
-                showSymbol: true,
+                symbolSize: 7,
+                showSymbol: false,
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 3.5,
+                  width: 3,
                   color: CHART_COLORS.benchmark,
                   cap: "round" as const,
                   join: "round" as const,
+                },
+                emphasis: {
+                  focus: "series" as const,
                 },
                 label: {
                   show: true,
@@ -420,21 +369,24 @@ export default function PerformanceChartPanel({
         ...(showActiveCumulativeSeries
           ? [
               {
-                name: "Active Cumulative",
+                name: "Active",
                 type: "line" as const,
                 data: activeCumulative,
                 smooth: false,
                 symbol: "circle",
-                symbolSize: 6,
-                showSymbol: true,
+                symbolSize: 7,
+                showSymbol: false,
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 2.2,
+                  width: 2.4,
                   type: "dashed" as const,
                   color: CHART_COLORS.active,
                   cap: "round" as const,
                   join: "round" as const,
+                },
+                emphasis: {
+                  focus: "series" as const,
                 },
                 label: {
                   show: chartViewMode !== "combined",
@@ -449,7 +401,7 @@ export default function PerformanceChartPanel({
           : []),
       ],
     } satisfies EChartsOption;
-  }, [chartViewMode, hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
+  }, [chartViewMode, hasBenchmarkSeries, points]);
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -489,14 +441,14 @@ export default function PerformanceChartPanel({
   const chartLegendItems = [
     {
       key: "portfolio",
-      label: "Portfolio cumulative",
+      label: "Portfolio",
       className: "performance-chart-legend-item-portfolio",
     },
     ...(hasBenchmarkSeries
       ? [
           {
             key: "benchmark",
-            label: returnPathPresentation.benchmarkLabel,
+            label: "Benchmark",
             className: "performance-chart-legend-item-benchmark",
           },
         ]
@@ -505,7 +457,7 @@ export default function PerformanceChartPanel({
       ? [
           {
             key: "active",
-            label: "Active cumulative",
+            label: "Active",
             className: "performance-chart-legend-item-active",
           },
         ]

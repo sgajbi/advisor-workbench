@@ -243,9 +243,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
         "active return"
       );
-      expect(screen.getByLabelText("Return path legend")).toHaveTextContent(
-        "Portfolio cumulative"
-      );
+      expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
