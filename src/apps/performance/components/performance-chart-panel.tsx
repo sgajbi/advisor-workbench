@@ -24,6 +24,7 @@ import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
+import { formatDate, formatPct } from "../formatters";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -119,6 +120,10 @@ function resolveReportDates(
     startDate: reportStartDate || fallbackStartDate,
     endDate: reportEndDate || fallbackEndDate,
   };
+}
+
+function getLatestNumeric(values: Array<number | null | undefined>) {
+  return [...values].reverse().find((value): value is number => value !== null && value !== undefined) ?? null;
 }
 
 export default function PerformanceChartPanel({
@@ -277,30 +282,12 @@ export default function PerformanceChartPanel({
       grid: {
         left: 66,
         right: 28,
-        top: 24,
-        bottom: 58,
+        top: 18,
+        bottom: 34,
         containLabel: true,
       },
       legend: {
-        bottom: 8,
-        left: "center",
-        itemWidth: 18,
-        itemHeight: 10,
-        itemGap: 18,
-        icon: "roundRect",
-        textStyle: {
-          color: "#435164",
-          fontSize: SHARED_CHART_TEXT.legendSize,
-          fontWeight: SHARED_CHART_TEXT.legendWeight,
-        },
-        data: [
-          ...(includeAbsoluteSeries ? ["Portfolio Return"] : []),
-          ...(showBenchmarkSeries ? [returnPathPresentation.benchmarkLabel] : []),
-          ...(showActiveCumulativeSeries ? ["Active Cumulative"] : []),
-          ...(includeAbsoluteSeries ? ["Portfolio Period"] : []),
-          ...(showBenchmarkSeries ? ["Benchmark Period"] : []),
-          ...(showActivePeriodicSeries ? ["Active Period"] : []),
-        ],
+        show: false,
       },
       tooltip: {
         trigger: "axis",
@@ -519,12 +506,70 @@ export default function PerformanceChartPanel({
   }
 
   const outcomeItems = returnPathPresentation.metrics;
+  const latestPortfolioReturn = getLatestNumeric(
+    points.map((point) => point.cumulative_portfolio_return_pct)
+  );
+  const latestBenchmarkReturn = getLatestNumeric(
+    points.map((point) => point.cumulative_benchmark_return_pct)
+  );
+  const latestActiveReturn = getLatestNumeric(
+    points.map((point) => point.cumulative_active_return_pct)
+  );
+  const resolvedWindowLabel =
+    resolvedReportDates.startDate && resolvedReportDates.endDate
+      ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
+      : period;
+  const resolvedBasisLabel = detailBasis === "GROSS" ? "Gross" : "Net";
+  const chartLegendItems = [
+    {
+      key: "portfolio",
+      label: "Portfolio cumulative",
+      value: latestPortfolioReturn == null ? "Unavailable" : formatPct(latestPortfolioReturn),
+      className: "performance-chart-legend-item-portfolio",
+    },
+    ...(hasBenchmarkSeries
+      ? [
+          {
+            key: "benchmark",
+            label: returnPathPresentation.benchmarkLabel,
+            value:
+              latestBenchmarkReturn == null ? "Unavailable" : formatPct(latestBenchmarkReturn),
+            className: "performance-chart-legend-item-benchmark",
+          },
+        ]
+      : []),
+    ...(hasActiveSeries
+      ? [
+          {
+            key: "active",
+            label: "Active cumulative",
+            value: latestActiveReturn == null ? "Unavailable" : formatPct(latestActiveReturn),
+            className: "performance-chart-legend-item-active",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <WorkbenchChartShell
       id={id}
       title={title}
+      subtitle="Cumulative return path, periodic observations, and benchmark-relative outcome for the selected reporting window."
       className="performance-chart-stage workbench-summary-panel"
+      bodyClassName="performance-return-path-body"
+      contextRow={
+        capabilities.returnPath.state === "supported" && points.length ? (
+          <PerformanceChartContextStrip
+            portfolioId={portfolioId}
+            period={period}
+            detailBasis={detailBasis}
+            benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
+            activeReturn={returnPathPresentation.activeReturnValue}
+            reportStartDate={resolvedReportDates.startDate}
+            reportEndDate={resolvedReportDates.endDate}
+          />
+        ) : undefined
+      }
       toolbar={
         <PerformanceAnalysisControlBar
           period={period}
@@ -589,62 +634,97 @@ export default function PerformanceChartPanel({
     >
       {capabilities.returnPath.state === "supported" && points.length ? (
         <>
-          <PerformanceChartContextStrip
-            portfolioId={portfolioId}
-            period={period}
-            detailBasis={detailBasis}
-            benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
-            activeReturn={returnPathPresentation.activeReturnValue}
-            reportStartDate={resolvedReportDates.startDate}
-            reportEndDate={resolvedReportDates.endDate}
-          />
           {returnPathPresentation.benchmarkStateBody ? (
             <div className="performance-chart-benchmark-state">
               <strong>Benchmark unassigned</strong>
               <span>{returnPathPresentation.benchmarkStateBody}</span>
             </div>
           ) : null}
-          <div
-            className="performance-chart-library-frame workbench-summary-visual"
-            role="img"
-            aria-label={`${title} chart`}
-            style={{ position: "relative" }}
-          >
-            <ReactECharts
-              option={chartOption}
-              style={{ width: "100%", height: "360px" }}
-              opts={{ renderer: "svg" }}
-              notMerge
-              lazyUpdate
-            />
-            {isDetailsPending ? (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: lotusThemeTokens.spacing.step3,
-                  right: lotusThemeTokens.spacing.step3,
-                  px: lotusThemeTokens.spacing.step3,
-                  py: lotusThemeTokens.spacing.step1,
-                  borderRadius: SHARED_CHART_TEXT.refreshRadius,
-                  bgcolor: "rgba(255,255,255,0.92)",
-                  border: "1px solid rgba(31,39,51,0.08)",
-                  boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
-                }}
-              >
-                <Text variant="metadata" as="span">
-                  Refreshing analytical series
-                </Text>
-              </Box>
-            ) : null}
+          <div className="performance-chart-analysis-grid">
+            <div
+              className="performance-chart-library-frame workbench-summary-visual"
+              role="img"
+              aria-label={`${title} chart`}
+              style={{ position: "relative" }}
+            >
+              <div className="performance-chart-legend" aria-label="Return path legend">
+                {chartLegendItems.map((item) => (
+                  <span
+                    key={item.key}
+                    className={`performance-chart-legend-item ${item.className}`}
+                  >
+                    <span className="performance-chart-legend-label">{item.label}</span>
+                    <strong className="performance-chart-legend-value">{item.value}</strong>
+                  </span>
+                ))}
+              </div>
+              <ReactECharts
+                option={chartOption}
+                style={{ width: "100%", height: "326px" }}
+                opts={{ renderer: "svg" }}
+                notMerge
+                lazyUpdate
+              />
+              {isDetailsPending ? (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: lotusThemeTokens.spacing.step3,
+                    right: lotusThemeTokens.spacing.step3,
+                    px: lotusThemeTokens.spacing.step3,
+                    py: lotusThemeTokens.spacing.step1,
+                    borderRadius: SHARED_CHART_TEXT.refreshRadius,
+                    bgcolor: "rgba(255,255,255,0.92)",
+                    border: "1px solid rgba(31,39,51,0.08)",
+                    boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
+                  }}
+                >
+                  <Text variant="metadata" as="span">
+                    Refreshing analytical series
+                  </Text>
+                </Box>
+              ) : null}
+            </div>
+            <aside className="performance-chart-readout-panel" aria-label="Return decision readout">
+              <span className="performance-chart-readout-eyebrow">Decision readout</span>
+              <strong>{returnPathPresentation.activeReturnValue} active return</strong>
+              <p>
+                {`${resolvedWindowLabel} • ${resolvedBasisLabel}`}
+              </p>
+              <dl className="performance-chart-readout-list">
+                <div>
+                  <dt>Benchmark</dt>
+                  <dd>{returnPathPresentation.benchmarkContextValue}</dd>
+                </div>
+                <div>
+                  <dt>Comparison basis</dt>
+                  <dd>
+                    {returnPathPresentation.benchmarkSourceLabel
+                      ? `${returnPathPresentation.benchmarkSourceLabel} return series`
+                      : "Benchmark-relative return series"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Observation cadence</dt>
+                  <dd>{chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}</dd>
+                </div>
+              </dl>
+            </aside>
           </div>
-          <AnalyticsTable
-            ariaLabel="Return path observation table"
-            columns={chartTableModel.columns}
-            rows={chartTableModel.rows}
-            density="compact"
-            variant="observation"
-            className="performance-chart-observation-table"
-          />
+          <div className="performance-chart-observation-coupling">
+            <div className="performance-chart-observation-header">
+              <span>Observation trail</span>
+              <strong>{`${chartTableModel.rows.length} published periods`}</strong>
+            </div>
+            <AnalyticsTable
+              ariaLabel="Return path observation table"
+              columns={chartTableModel.columns}
+              rows={chartTableModel.rows}
+              density="compact"
+              variant="observation"
+              className="performance-chart-observation-table"
+            />
+          </div>
         </>
       ) : null}
     </WorkbenchChartShell>

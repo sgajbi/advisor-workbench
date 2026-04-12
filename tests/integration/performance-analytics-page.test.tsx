@@ -239,6 +239,14 @@ describe("PerformanceAnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getAllByText("Horizon Comparison")).toHaveLength(1);
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Performance decision workspace")).toBeInTheDocument();
+      expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
+        "active return"
+      );
+      expect(screen.getByLabelText("Return path legend")).toHaveTextContent(
+        "Portfolio cumulative"
+      );
+      expect(screen.getByText("Observation trail")).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
@@ -250,8 +258,8 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
-    expect(mainShell?.querySelector(".workbench-chart-shell-context")).toBeFalsy();
-    expect(mainShell?.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
+    expect(mainShell?.querySelector(".workbench-chart-shell-context .performance-chart-context-strip")).toBeTruthy();
+    expect(mainShell?.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeFalsy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
     expect(chartSummaryBand).toBeTruthy();
@@ -534,6 +542,12 @@ describe("PerformanceAnalyticsPage", () => {
       )
     ).toBe(true);
     expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
+    expect(screen.getByLabelText("Primary risk review")).toHaveTextContent(
+      "Risk posture, drawdown, and concentration"
+    );
+    expect(screen.getByLabelText("Secondary risk analysis")).toHaveTextContent(
+      "Rolling risk and source-backed contributors"
+    );
     expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
       "Technology"

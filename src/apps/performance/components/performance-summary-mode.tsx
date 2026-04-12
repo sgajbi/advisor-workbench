@@ -75,32 +75,47 @@ export default function PerformanceSummaryMode({
         suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
       />
 
-      <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
-        <PerformanceChartPanel
-          title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
-          points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
-          summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
-          portfolioId={workspace.portfolio.portfolio_id}
-          period={period}
-          detailBasis={detailBasis}
-          contributionDimension={contributionDimension}
-          attributionDimension={attributionDimension}
-          chartFrequency={chartFrequency}
-          benchmark={benchmark}
-          benchmarkOptions={workspace.benchmark_options ?? []}
-          moneyWeightedReturn={workspace.money_weighted_return}
-          reportingCurrency={workspace.portfolio.base_currency}
-          reportStartDate={workspace.report_start_date}
-          reportEndDate={workspace.report_end_date}
-          capabilities={capabilities}
-          onRequestChange={onRequestChange ?? (() => undefined)}
-          isUpdating={isUpdating}
-          isDetailsPending={isDetailsPending}
-          id="performance-trend"
-        />
-      </WorkspaceGrid>
+      <section className="performance-decision-workspace" aria-label="Performance decision workspace">
+        <div className="performance-analytical-zone-header">
+          <div>
+            <span className="performance-analytical-zone-kicker">Decision workspace</span>
+            <h2>Return path and benchmark comparison</h2>
+          </div>
+          <p>
+            Benchmark-relative return path, cash-flow economics, and contribution drivers for
+            the selected mandate.
+          </p>
+        </div>
 
-      <WorkspaceGrid className="performance-detail-grid performance-secondary-zone performance-lotus-stage performance-lotus-stage-secondary workbench-summary-region">
+        <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
+          <PerformanceChartPanel
+            title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
+            points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
+            summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
+            portfolioId={workspace.portfolio.portfolio_id}
+            period={period}
+            detailBasis={detailBasis}
+            contributionDimension={contributionDimension}
+            attributionDimension={attributionDimension}
+            chartFrequency={chartFrequency}
+            benchmark={benchmark}
+            benchmarkOptions={workspace.benchmark_options ?? []}
+            moneyWeightedReturn={workspace.money_weighted_return}
+            reportingCurrency={workspace.portfolio.base_currency}
+            reportStartDate={workspace.report_start_date}
+            reportEndDate={workspace.report_end_date}
+            capabilities={capabilities}
+            onRequestChange={onRequestChange ?? (() => undefined)}
+            isUpdating={isUpdating}
+            isDetailsPending={isDetailsPending}
+            id="performance-trend"
+          />
+        </WorkspaceGrid>
+      </section>
+
+      <WorkspaceGrid
+        className="performance-detail-grid performance-secondary-zone performance-lotus-stage performance-lotus-stage-secondary workbench-summary-region"
+      >
         <WorkbenchDeferredSection
           className="performance-summary-driver-section"
           title="Horizon Comparison"
