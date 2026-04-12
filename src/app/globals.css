@@ -622,6 +622,68 @@ a:hover {
   background: #ffffff;
 }
 
+.workbench-detail-card {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.workbench-detail-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.workbench-detail-card-heading {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.workbench-detail-card-actions {
+  flex: 0 0 auto;
+}
+
+.workbench-definition-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.workbench-definition-row {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.workbench-definition-term {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.workbench-definition-description {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.625rem;
+  margin: 0;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.workbench-definition-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .workbench-rail-card .portfolio-side-card-title {
   font-size: var(--workbench-summary-title-size);
   font-weight: 650;
@@ -1898,35 +1960,21 @@ a:hover {
 }
 
 .portfolio-context-facts {
-  display: grid;
   gap: var(--space-3);
-  margin: 0;
 }
 
 .portfolio-context-row {
-  display: grid;
-  gap: 0.25rem;
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.72);
 }
 
-.portfolio-context-row dt {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--text-muted);
+.portfolio-context-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
-.portfolio-context-row dd {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.625rem;
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 650;
-  line-height: 1.4;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
+.portfolio-context-row .workbench-definition-description {
+  justify-content: space-between;
 }
 
 .portfolio-context-copy {
@@ -2538,19 +2586,23 @@ a:hover {
 }
 
 .portfolio-actions-card .portfolio-workflow-list {
-  gap: 0;
+  gap: var(--space-2);
 }
 
 .portfolio-actions-card .portfolio-workflow-item {
   align-items: start;
   gap: var(--space-3);
-  padding: 0.75rem 0;
-  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0.875rem;
+  grid-template-columns: minmax(0, 1fr);
+  border: 1px solid rgba(226, 232, 240, 0.84);
+  border-radius: 10px;
+  background: var(--surface);
 }
 
 .portfolio-actions-card .portfolio-workflow-item-recommended {
-  padding: 0.75rem;
   margin: 0;
+  border-color: rgba(49, 93, 138, 0.2);
+  background: rgba(248, 251, 255, 0.9);
 }
 
 .portfolio-actions-card .portfolio-workflow-sequence {
@@ -2564,18 +2616,22 @@ a:hover {
 }
 
 .portfolio-actions-card .portfolio-evidence-copy {
-  max-width: 26ch;
+  max-width: 30ch;
   font-size: 0.75rem;
   line-height: 1.5;
 }
 
 .portfolio-actions-card .portfolio-workflow-actions {
   align-self: center;
+  justify-content: flex-start;
+  min-width: 0;
+  padding-left: 2.25rem;
 }
 
 .portfolio-actions-card .portfolio-workflow-cta {
   min-height: 1.875rem;
   padding: 0 0.75rem;
+  text-transform: none;
 }
 
 .portfolio-side-card .portfolio-card-subtitle {
@@ -3193,7 +3249,6 @@ a:hover {
 }
 
 .portfolio-readiness-exception-list {
-  display: grid;
   gap: 0.5rem;
 }
 
@@ -3202,16 +3257,12 @@ a:hover {
   appearance: none;
   display: grid;
   gap: 0.25rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.75rem 0.875rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #f8fafc;
+  border-radius: 10px;
+  background: var(--surface);
   text-align: left;
   cursor: pointer;
-}
-
-.portfolio-readiness-card .portfolio-card-header {
-  margin-bottom: 0;
 }
 
 .portfolio-readiness-card .portfolio-card-subtitle {
@@ -3236,7 +3287,7 @@ a:hover {
 
 .portfolio-readiness-exception-list {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .portfolio-readiness-exception-danger {
@@ -3256,14 +3307,29 @@ a:hover {
 .portfolio-readiness-clear-state {
   display: grid;
   gap: var(--space-1);
+  padding: 0.875rem;
+  border: 1px solid rgba(75, 125, 98, 0.18);
+  border-radius: 10px;
+  background: rgba(242, 248, 244, 0.72);
 }
 
 .portfolio-readiness-footnote {
-  display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin-top: 0;
   padding-top: var(--space-3);
   border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.portfolio-readiness-footnote-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.portfolio-readiness-footnote-row .workbench-definition-description {
+  justify-content: flex-end;
+  text-align: right;
+  font-size: 0.8125rem;
 }
 
 .portfolio-grid-module {

@@ -12,7 +12,9 @@ import {
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
+  DefinitionList,
   DeferredModulePlaceholder,
+  DetailCard,
   DisclosureToggleButton,
   DegradedStatePanel,
   EmptyStatePanel,
@@ -505,6 +507,12 @@ describe("design-system components", () => {
             },
           ]}
         />
+        <DetailCard title="Operational Detail" subtitle="Current source-backed fields.">
+          <DefinitionList
+            ariaLabel="Operational detail"
+            items={[{ label: "Latest transaction", value: "24 Feb 2026" }]}
+          />
+        </DetailCard>
         <ActionListCard
           title="Next Actions"
           subtitle="Recommended workflow sequence."
@@ -529,6 +537,9 @@ describe("design-system components", () => {
     expect(screen.getByText("Pricing not yet published")).toBeInTheDocument();
     expect(screen.getByText("Partial data")).toBeInTheDocument();
     expect(screen.getByText("Portfolio Context")).toBeInTheDocument();
+    expect(screen.getByText("Operational Detail")).toBeInTheDocument();
+    expect(screen.getByText("Latest transaction")).toHaveClass("workbench-definition-term");
+    expect(screen.getByText("24 Feb 2026")).toHaveClass("workbench-definition-value");
     expect(screen.getByText("Fund portfolio")).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: "Why this section is unavailable" }).length

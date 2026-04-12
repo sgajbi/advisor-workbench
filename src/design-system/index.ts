@@ -15,6 +15,9 @@ export type {
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
 export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";
+export { default as DefinitionList } from "./components/definition-list";
+export type { DefinitionListItem } from "./components/definition-list";
+export { default as DetailCard } from "./components/detail-card";
 export { default as DisclosureToggleButton } from "./components/disclosure-toggle-button";
 export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
 export { default as WorkbenchSegmentedControl } from "./components/workbench-segmented-control";
