@@ -926,6 +926,7 @@ function PortfolioInsightsSection({
         title="Portfolio Insights"
         subtitle="Allocation, concentration, liquidity, and recent activity."
       />
+      <div className="portfolio-analytical-surface">
       {showInsightsSummaryBand ? (
         <div className="portfolio-insights-summary-band workbench-summary-region">
           <PortfolioInsightsStrip
@@ -962,129 +963,129 @@ function PortfolioInsightsSection({
           ) : null}
         </div>
       ) : null}
-      <WorkspaceGrid className="portfolio-primary-grid">
+      <WorkspaceGrid className="portfolio-primary-grid portfolio-analytical-zone-grid portfolio-analytical-zone-grid-focus">
           {showAllocationModule ? (
             <PortfolioCollapsibleModule
-              className="portfolio-summary-module-card"
+              className="portfolio-summary-module-card portfolio-analytical-zone-card portfolio-analytical-zone-card-primary"
               compact={isSummaryView}
-            title="Portfolio Allocation"
-            subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
-            expanded={getSectionExpanded("allocation")}
-            onToggle={() => toggleSection("allocation")}
-          >
-            {detailsLoading ? (
-              <WorkbenchLoadingState
-                title="Loading allocation"
-                message="Allocation analytics are loading for the selected portfolio context."
-                chart
-                rows={4}
-              />
-            ) : workspace.allocation_views?.length ? (
-              <DeferredPortfolioAllocationPanel
-                allocationViews={workspace.allocation_views}
-                baseCurrency={workspace.portfolio.base_currency}
-                compact={isSummaryView}
-                selectedAllocation={
-                  holdingsDrilldown?.kind === "allocation" ? holdingsDrilldown.selection : null
-                }
-                onSelectionChange={onSelectAllocation}
-              />
-            ) : (
-              <PortfolioModuleState
-                variant="capability"
-                capability={capabilities.allocation}
-                partialTitle="Allocation is partially available"
-                unavailableTitle="No allocation data yet"
-                body={
-                  capabilities.allocation.reason ??
-                  "Allocation requires funded holdings with current valuations before reliable composition views can be shown."
-                }
-                partialHint="Publish current prices and valuation outputs to complete the allocation tabs."
-                unavailableHint="Book positions and publish prices to generate allocation views."
-                why={{
-                  body:
-                    capabilities.allocation.state === "partial"
-                      ? "Allocation requires valued holdings. Until positions have current prices and market values, composition buckets cannot be calculated reliably."
-                      : "Allocation requires funded holdings with current valuations. Empty or unvalued books cannot produce allocation views.",
-                  label:
-                    capabilities.allocation.state === "partial"
-                      ? "Why allocation is partially available"
-                      : "Why allocation data is unavailable",
-                }}
-                illustration
-              />
-            )}
-          </PortfolioCollapsibleModule>
-        ) : null}
+              title="Portfolio Allocation"
+              subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
+              expanded={getSectionExpanded("allocation")}
+              onToggle={() => toggleSection("allocation")}
+            >
+              {detailsLoading ? (
+                <WorkbenchLoadingState
+                  title="Loading allocation"
+                  message="Allocation analytics are loading for the selected portfolio context."
+                  chart
+                  rows={4}
+                />
+              ) : workspace.allocation_views?.length ? (
+                <DeferredPortfolioAllocationPanel
+                  allocationViews={workspace.allocation_views}
+                  baseCurrency={workspace.portfolio.base_currency}
+                  compact={isSummaryView}
+                  selectedAllocation={
+                    holdingsDrilldown?.kind === "allocation" ? holdingsDrilldown.selection : null
+                  }
+                  onSelectionChange={onSelectAllocation}
+                />
+              ) : (
+                <PortfolioModuleState
+                  variant="capability"
+                  capability={capabilities.allocation}
+                  partialTitle="Allocation is partially available"
+                  unavailableTitle="No allocation data yet"
+                  body={
+                    capabilities.allocation.reason ??
+                    "Allocation requires funded holdings with current valuations before reliable composition views can be shown."
+                  }
+                  partialHint="Publish current prices and valuation outputs to complete the allocation tabs."
+                  unavailableHint="Book positions and publish prices to generate allocation views."
+                  why={{
+                    body:
+                      capabilities.allocation.state === "partial"
+                        ? "Allocation requires valued holdings. Until positions have current prices and market values, composition buckets cannot be calculated reliably."
+                        : "Allocation requires funded holdings with current valuations. Empty or unvalued books cannot produce allocation views.",
+                    label:
+                      capabilities.allocation.state === "partial"
+                        ? "Why allocation is partially available"
+                        : "Why allocation data is unavailable",
+                  }}
+                  illustration
+                />
+              )}
+            </PortfolioCollapsibleModule>
+          ) : null}
 
-        {showTopHoldingsModule ? (
-          <PortfolioCollapsibleModule
-            className="portfolio-summary-module-card"
-            compact={isSummaryView}
-            title="Top Holdings"
-            subtitle={`Largest holdings by market value or weight as of ${formatDate(context.selectedAsOfDate)}.`}
-            expanded={getSectionExpanded("top-holdings")}
-            onToggle={() => toggleSection("top-holdings")}
-          >
-            {detailsLoading ? (
-              <WorkbenchLoadingState
-                title="Loading top holdings"
-                message="Holdings concentration is loading for the selected portfolio context."
-                chart
-                rows={4}
-              />
-            ) : workspace.top_positions.length ? (
-              <DeferredPortfolioTopHoldingsPanel
-                positions={
-                  holdingsDrilldown?.kind === "allocation"
-                    ? filteredPositions
-                        .slice()
-                        .sort((left, right) => (right.market_value_base ?? 0) - (left.market_value_base ?? 0))
-                        .slice(0, 10)
-                        .map((position) => ({
-                          security_id: position.security_id,
-                          instrument_name: position.instrument_name,
-                          asset_class: position.asset_class,
-                          quantity: position.quantity,
-                          market_value_base: position.market_value_base,
-                          weight_pct: position.weight_pct,
-                        }))
-                    : workspace.top_positions
-                }
-                baseCurrency={workspace.portfolio.base_currency}
-                selectedSecurityId={
-                  holdingsDrilldown?.kind === "security" ? holdingsDrilldown.security_id : null
-                }
-                onSelectionChange={onSelectTopHolding}
-              />
-            ) : (
-              <PortfolioModuleState
-                variant="capability"
-                capability={capabilities.topHoldings}
-                partialTitle="Top holdings are not ranked yet"
-                unavailableTitle="No holdings yet"
-                body={
-                  capabilities.topHoldings.reason ??
-                  "Top positions require booked holdings with current market values before concentration can be ranked."
-                }
-                partialHint="Complete valuation and concentration calculations to populate the ranked holdings view."
-                unavailableHint="Book positions and publish pricing to show ranked holdings."
-                why={
-                  capabilities.topHoldings.state === "partial"
-                    ? undefined
-                    : {
-                        body:
-                          "Holdings require booked positions or funded balances. Until the book contains invested or funded inventory, there is nothing to rank.",
-                        label: "Why holdings are unavailable",
-                      }
-                }
-                illustration
-                centered
-              />
-            )}
-          </PortfolioCollapsibleModule>
-        ) : null}
-      </WorkspaceGrid>
+          {showTopHoldingsModule ? (
+            <PortfolioCollapsibleModule
+              className="portfolio-summary-module-card portfolio-analytical-zone-card portfolio-analytical-zone-card-secondary"
+              compact={isSummaryView}
+              title="Top Holdings"
+              subtitle={`Largest holdings by market value or weight as of ${formatDate(context.selectedAsOfDate)}.`}
+              expanded={getSectionExpanded("top-holdings")}
+              onToggle={() => toggleSection("top-holdings")}
+            >
+              {detailsLoading ? (
+                <WorkbenchLoadingState
+                  title="Loading top holdings"
+                  message="Holdings concentration is loading for the selected portfolio context."
+                  chart
+                  rows={4}
+                />
+              ) : workspace.top_positions.length ? (
+                <DeferredPortfolioTopHoldingsPanel
+                  positions={
+                    holdingsDrilldown?.kind === "allocation"
+                      ? filteredPositions
+                          .slice()
+                          .sort((left, right) => (right.market_value_base ?? 0) - (left.market_value_base ?? 0))
+                          .slice(0, 10)
+                          .map((position) => ({
+                            security_id: position.security_id,
+                            instrument_name: position.instrument_name,
+                            asset_class: position.asset_class,
+                            quantity: position.quantity,
+                            market_value_base: position.market_value_base,
+                            weight_pct: position.weight_pct,
+                          }))
+                      : workspace.top_positions
+                  }
+                  baseCurrency={workspace.portfolio.base_currency}
+                  selectedSecurityId={
+                    holdingsDrilldown?.kind === "security" ? holdingsDrilldown.security_id : null
+                  }
+                  onSelectionChange={onSelectTopHolding}
+                />
+              ) : (
+                <PortfolioModuleState
+                  variant="capability"
+                  capability={capabilities.topHoldings}
+                  partialTitle="Top holdings are not ranked yet"
+                  unavailableTitle="No holdings yet"
+                  body={
+                    capabilities.topHoldings.reason ??
+                    "Top positions require booked holdings with current market values before concentration can be ranked."
+                  }
+                  partialHint="Complete valuation and concentration calculations to populate the ranked holdings view."
+                  unavailableHint="Book positions and publish pricing to show ranked holdings."
+                  why={
+                    capabilities.topHoldings.state === "partial"
+                      ? undefined
+                      : {
+                          body:
+                            "Holdings require booked positions or funded balances. Until the book contains invested or funded inventory, there is nothing to rank.",
+                          label: "Why holdings are unavailable",
+                        }
+                  }
+                  illustration
+                  centered
+                />
+              )}
+            </PortfolioCollapsibleModule>
+          ) : null}
+        </WorkspaceGrid>
       {showChangeHighlights ? (
         <PortfolioPairedAnalyticsSection
           workspace={workspace}
@@ -1098,8 +1099,10 @@ function PortfolioInsightsSection({
           onSelectActivityBucket={onSelectActivityBucket}
           getSectionExpanded={getSectionExpanded}
           toggleSection={toggleSection}
+          gridClassName="portfolio-analytical-zone-grid portfolio-analytical-zone-grid-balanced"
         />
       ) : null}
+      </div>
     </section>
   );
 }

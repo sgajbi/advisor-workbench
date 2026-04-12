@@ -144,7 +144,7 @@ export default function PortfolioAllocationPanel({
       </WorkbenchSummaryToolbar>
 
       <div
-        className="portfolio-allocation-card workbench-summary-visual-card"
+        className="portfolio-analytics-canvas portfolio-allocation-card"
         role="tabpanel"
         aria-label={`${activeDimensionLabel} allocation view`}
       >

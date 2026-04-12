@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import {
   WorkbenchSummaryToolbar,
-  WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualLabel,
   WorkbenchSummaryVisualMeta,
   WorkbenchSummaryVisualValue,
@@ -96,7 +95,7 @@ export function PortfolioTopHoldingsPanel({
         </div>
       </WorkbenchSummaryToolbar>
       <div className="portfolio-chart-module-body portfolio-top-holdings-body">
-        <WorkbenchSummaryVisualCard className="portfolio-chart-card portfolio-top-holdings-list-card">
+        <div className="portfolio-analytics-canvas portfolio-chart-card portfolio-top-holdings-list-card">
           {sortedPositions.length ? (
             <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
               {sortedPositions.map((position) => {
@@ -131,9 +130,15 @@ export function PortfolioTopHoldingsPanel({
                     }. Select to filter holdings.`}
                     title={buildTopHoldingTooltip(position, metric, baseCurrency)}
                   >
-                    <WorkbenchSummaryVisualLabel className="portfolio-horizontal-bar-label">
-                      {position.instrument_name}
-                    </WorkbenchSummaryVisualLabel>
+                    <div className="portfolio-horizontal-bar-copy">
+                      <WorkbenchSummaryVisualLabel className="portfolio-horizontal-bar-label">
+                        {position.instrument_name}
+                      </WorkbenchSummaryVisualLabel>
+                      <WorkbenchSummaryVisualMeta className="portfolio-horizontal-bar-meta">
+                        <span>{position.asset_class}</span>
+                        <span>{formatQuantity(position.quantity)}</span>
+                      </WorkbenchSummaryVisualMeta>
+                    </div>
                     <span className="portfolio-horizontal-bar-track">
                       <span
                         className="portfolio-horizontal-bar-fill"
@@ -157,7 +162,7 @@ export function PortfolioTopHoldingsPanel({
               </p>
             </div>
           )}
-        </WorkbenchSummaryVisualCard>
+        </div>
       </div>
     </div>
   );
@@ -305,11 +310,11 @@ export function PortfolioActivityPanel({
   );
 
   return (
-    <WorkbenchSummaryVisualCard
+    <div
       className={
         compact
-          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
-          : "portfolio-chart-card portfolio-chart-card-analytic"
+          ? "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
+          : "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic"
       }
     >
       <div
@@ -385,7 +390,7 @@ export function PortfolioActivityPanel({
           );
         })}
       </div>
-    </WorkbenchSummaryVisualCard>
+    </div>
   );
 }
 
@@ -407,11 +412,11 @@ export function PortfolioIncomePanel({
   );
 
   return (
-    <WorkbenchSummaryVisualCard
+    <div
       className={
         compact
-          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
-          : "portfolio-chart-card portfolio-chart-card-analytic"
+          ? "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
+          : "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic"
       }
     >
       <div
@@ -482,7 +487,7 @@ export function PortfolioIncomePanel({
           );
         })}
       </div>
-    </WorkbenchSummaryVisualCard>
+    </div>
   );
 }
 

@@ -267,7 +267,7 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-summary-module-card.workbench-summary-module-card")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
     expect(document.querySelectorAll(".workbench-summary-toolbar").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".portfolio-analytics-canvas").length).toBeGreaterThanOrEqual(3);
     expect(document.querySelector(".workbench-summary-visual-label")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-value")).toBeTruthy();
     expect(document.querySelector(".workbench-summary-visual-meta")).toBeTruthy();
@@ -288,6 +288,7 @@ describe("PortfolioFoundationPage", () => {
     expect(allocationCard).toBeTruthy();
     expect(topHoldingsCard).toBeTruthy();
     expect(allocationCard?.parentElement).toBe(topHoldingsCard?.parentElement);
+    expect(allocationCard?.parentElement).toHaveClass("portfolio-analytical-zone-grid-focus");
     expect(
       Boolean(
         allocationCard &&

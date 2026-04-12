@@ -61,6 +61,7 @@ type PortfolioPairedAnalyticsSectionProps = {
   title?: string;
   subtitle?: string;
   sectionClassName?: string;
+  gridClassName?: string;
 };
 
 type SummaryStat = {
@@ -84,6 +85,7 @@ export default function PortfolioPairedAnalyticsSection({
   title,
   subtitle,
   sectionClassName,
+  gridClassName,
 }: PortfolioPairedAnalyticsSectionProps) {
   const showIncomeModule = isRenderableCapability(capabilities.income);
   const showActivityModule = isRenderableCapability(capabilities.activity);
@@ -96,8 +98,8 @@ export default function PortfolioPairedAnalyticsSection({
     <WorkspaceGrid
       className={
         isDetailedView
-          ? "portfolio-primary-grid portfolio-paired-analytics-grid portfolio-paired-analytics-grid-detailed workbench-summary-region"
-          : "portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region"
+          ? `portfolio-primary-grid portfolio-paired-analytics-grid portfolio-paired-analytics-grid-detailed workbench-summary-region${gridClassName ? ` ${gridClassName}` : ""}`
+          : `portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region${gridClassName ? ` ${gridClassName}` : ""}`
       }
     >
       {showIncomeModule ? (

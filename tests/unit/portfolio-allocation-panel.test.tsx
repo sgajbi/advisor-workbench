@@ -119,9 +119,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-toolbar.workbench-summary-toolbar")).toBeTruthy();
     expect(container.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
-    expect(
-      container.querySelector(".portfolio-allocation-card.workbench-summary-visual-card")
-    ).toBeTruthy();
+    expect(container.querySelector(".portfolio-analytics-canvas.portfolio-allocation-card")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
     expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();
   });
