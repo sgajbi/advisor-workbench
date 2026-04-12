@@ -1063,9 +1063,6 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40")
     );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Active Return Unavailable")
-    );
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
@@ -1157,7 +1154,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Partial",
         "Relative returns incomplete",
       ],
-      contextExpectations: ["Active Return Unavailable", "Benchmark Global Balanced 60/40"],
+      contextExpectations: ["Benchmark Global Balanced 60/40"],
       horizonExpectations: [
         "Benchmark Global Balanced 60/40",
       ],
@@ -1191,7 +1188,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Attribution detail unavailable",
       ],
       deferredExpectations: ["Contributor ranking is partial"],
-      contextExpectations: ["Active Return Unavailable"],
+      contextExpectations: [],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },

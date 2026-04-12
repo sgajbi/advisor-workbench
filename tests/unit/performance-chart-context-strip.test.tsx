@@ -9,58 +9,48 @@ function compactPattern(text: string) {
 }
 
 describe("PerformanceChartContextStrip", () => {
-  it("renders the selected period, benchmark, and active return without low-value status text", () => {
+  it("renders only benchmark and resolved window context without duplicating metric values", () => {
     render(
       <PerformanceChartContextStrip
-        portfolioId="PB_SG_GLOBAL_BAL_001"
         period="YTD"
         detailBasis="NET"
         benchmarkContextValue="Global Balanced 60/40 • USD"
-        activeReturn="0.80%"
       />
     );
 
     const context = screen.getByRole("group", { name: "Return vs Benchmark" });
-    expect(context).toHaveTextContent(compactPattern("Portfolio PB_SG_GLOBAL_BAL_001"));
     expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40 • USD"));
-    expect(context).toHaveTextContent(compactPattern("Active Return 0.80%"));
     expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Net"));
     expect(context).not.toHaveTextContent("Available");
-    expect(context.querySelectorAll(".performance-chart-context-field")).toHaveLength(4);
+    expect(context.querySelectorAll(".performance-chart-context-field")).toHaveLength(2);
     expect(context.querySelectorAll(".workbench-chart-context-row-item")).toHaveLength(0);
   });
 
-  it("renders an honest unavailable relative context when no benchmark is assigned", () => {
+  it("renders an honest unassigned benchmark state without inventing relative metrics", () => {
     render(
       <PerformanceChartContextStrip
-        portfolioId="PB_SG_GLOBAL_BAL_001"
         period="YTD"
         detailBasis="NET"
         benchmarkContextValue="Unassigned"
-        activeReturn="Unavailable"
       />
     );
 
     const context = screen.getByRole("group", { name: "Return vs Benchmark" });
     expect(context).toHaveTextContent(compactPattern("Benchmark Unassigned"));
-    expect(context).toHaveTextContent(compactPattern("Active Return Unavailable"));
     expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Net"));
   });
 
   it("keeps the assigned benchmark visible when relative comparison is partial", () => {
     render(
       <PerformanceChartContextStrip
-        portfolioId="PB_SG_GLOBAL_BAL_001"
         period="YTD"
         detailBasis="GROSS"
         benchmarkContextValue="Global Balanced 60/40"
-        activeReturn="Unavailable"
       />
     );
 
     const context = screen.getByRole("group", { name: "Return vs Benchmark" });
     expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40"));
-    expect(context).toHaveTextContent(compactPattern("Active Return Unavailable"));
     expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Gross"));
   });
 });

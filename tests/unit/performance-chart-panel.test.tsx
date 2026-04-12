@@ -232,13 +232,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Portfolio DEMO_ADV_USD_001")
-    );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40 • USD")
-    );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Active Return 0.80%")
     );
     expect(screen.getByRole("group", { name: "Return vs Benchmark" })).not.toHaveTextContent(
       "Available"
@@ -270,10 +264,27 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio cumulative");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("active return");
     expect(lastChartOption?.tooltip).toMatchObject({
-      backgroundColor: "rgba(19, 30, 43, 0.96)",
-      borderColor: "rgba(117, 143, 173, 0.48)",
-      textStyle: { color: "#f8fafc", fontWeight: 600 },
+      backgroundColor: "rgba(255, 255, 255, 0.98)",
+      borderColor: "rgba(36, 50, 70, 0.14)",
+      textStyle: { color: "#172033", fontWeight: 600 },
     });
+    const tooltip = Array.isArray(lastChartOption?.tooltip)
+      ? lastChartOption.tooltip[0]
+      : lastChartOption?.tooltip;
+    const tooltipFormatter = tooltip?.formatter;
+    expect(typeof tooltipFormatter).toBe("function");
+    expect(
+      String(
+        (tooltipFormatter as (...args: unknown[]) => string)?.([
+          {
+            seriesName: "Portfolio Return",
+            value: 12.84,
+            axisValue: "2026-03",
+            marker: '<span style=\"color:red\">●</span>',
+          },
+        ])
+      )
+    ).toContain("Portfolio Return");
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {
@@ -438,9 +449,6 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Benchmark Unassigned")
     );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Active Return Unavailable")
-    );
     expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
     expect(series.map((entry) => entry?.name)).not.toContain("Active Period");
@@ -484,9 +492,6 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40 • USD")
-    );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Active Return Unavailable")
     );
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);

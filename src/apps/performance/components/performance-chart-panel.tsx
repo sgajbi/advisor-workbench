@@ -138,6 +138,66 @@ function formatEndLabel(
   return params.dataIndex === lastIndex && value !== null ? `${label} ${formatPct(value)}` : "";
 }
 
+function getTooltipNumericValue(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (Array.isArray(value) && typeof value[1] === "number" && Number.isFinite(value[1])) {
+    return value[1];
+  }
+  return null;
+}
+
+function escapeTooltipHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function formatReturnPathTooltip(params: CallbackDataParams | CallbackDataParams[]) {
+  const entries = (Array.isArray(params) ? params : [params]).filter(
+    (entry) => getTooltipNumericValue(entry.value) !== null
+  );
+
+  if (!entries.length) {
+    return "";
+  }
+
+  const axisLabel = String(
+    (entries[0] as CallbackDataParams & { axisValue?: string })?.axisValue ??
+      entries[0]?.name ??
+      ""
+  );
+  const rows = entries
+    .map((entry) => {
+      const numericValue = getTooltipNumericValue(entry.value);
+      if (numericValue === null) {
+        return "";
+      }
+
+      return [
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
+        `<span style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:700;">${entry.marker ?? ""}${escapeTooltipHtml(entry.seriesName ?? "")}</span>`,
+        `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
+        "</div>",
+      ].join("");
+    })
+    .filter(Boolean)
+    .join("");
+
+  if (!rows) {
+    return "";
+  }
+
+  return [
+    '<div style="display:grid;gap:8px;min-width:180px;">',
+    `<div style="color:#5f6c7f;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(axisLabel)}</div>`,
+    rows,
+    "</div>",
+  ].join("");
+}
+
 export default function PerformanceChartPanel({
   title,
   points,
@@ -310,17 +370,18 @@ export default function PerformanceChartPanel({
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "cross" },
-        backgroundColor: "rgba(19, 30, 43, 0.96)",
-        borderColor: "rgba(117, 143, 173, 0.48)",
+        backgroundColor: "rgba(255, 255, 255, 0.98)",
+        borderColor: "rgba(36, 50, 70, 0.14)",
         borderWidth: 1,
         textStyle: {
-          color: "#f8fafc",
+          color: "#172033",
           fontSize: SHARED_CHART_TEXT.legendSize,
           fontWeight: SHARED_CHART_TEXT.tooltipWeight,
         },
         extraCssText:
-          "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.24); border-radius: 10px;",
+          "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.14); border-radius: 10px;",
         padding: SHARED_CHART_TEXT.tooltipPadding,
+        formatter: formatReturnPathTooltip,
         valueFormatter: (value: unknown) => {
           if (typeof value === "number") {
             return `${value.toFixed(2)}%`;
@@ -603,11 +664,9 @@ export default function PerformanceChartPanel({
       contextRow={
         capabilities.returnPath.state === "supported" && points.length ? (
           <PerformanceChartContextStrip
-            portfolioId={portfolioId}
             period={period}
             detailBasis={detailBasis}
             benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
-            activeReturn={returnPathPresentation.activeReturnValue}
             reportStartDate={resolvedReportDates.startDate}
             reportEndDate={resolvedReportDates.endDate}
           />

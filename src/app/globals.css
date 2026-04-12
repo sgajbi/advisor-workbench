@@ -9543,7 +9543,7 @@ a:hover {
 
 .performance-chart-context-strip {
   display: grid;
-  grid-template-columns: minmax(12rem, 0.95fr) minmax(18rem, 1.35fr) minmax(10rem, 0.75fr) minmax(16rem, 1.05fr);
+  grid-template-columns: minmax(18rem, 1.35fr) minmax(16rem, 1.05fr);
   gap: 0.5rem;
   padding: 0;
 }
