@@ -111,6 +111,13 @@ describe("PerformanceChartPanel", () => {
       cap: "round",
       join: "round",
     });
+    expect(portfolioReturnSeries).toMatchObject({
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: "rgba(22, 58, 92, 0.16)", width: 1, type: "solid" },
+      },
+    });
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
 
@@ -246,10 +253,12 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
     expect(within(observationTable).getByText("2026-02")).toBeInTheDocument();
     expect(lastChartOption?.xAxis).toMatchObject({
-      axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
+      axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
     });
     expect(lastChartOption?.yAxis).toMatchObject({
-      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.11)", width: 1 } },
+      splitLine: {
+        lineStyle: { color: "rgba(22, 58, 92, 0.085)", width: 1, type: "dashed" },
+      },
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");

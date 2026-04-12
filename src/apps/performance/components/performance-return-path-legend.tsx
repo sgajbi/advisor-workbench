@@ -12,12 +12,12 @@ export default function PerformanceReturnPathLegend({
   return (
     <div className="performance-chart-legend" aria-label="Return path legend">
       {items.map((item) => (
-        <span
+        <div
           key={item.key}
           className={`performance-chart-legend-item ${item.className}`}
         >
           <span className="performance-chart-legend-label">{item.label}</span>
-        </span>
+        </div>
       ))}
     </div>
   );

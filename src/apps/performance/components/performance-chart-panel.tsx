@@ -275,7 +275,7 @@ export default function PerformanceChartPanel({
         type: "category" as const,
         data: categories,
         boundaryGap: false,
-        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
+        axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
         axisTick: { show: false },
         axisPointer: { label: { show: false } },
         axisLabel: {
@@ -299,8 +299,9 @@ export default function PerformanceChartPanel({
         axisTick: { show: false },
         splitLine: {
           lineStyle: {
-            color: "rgba(52, 70, 95, 0.11)",
+            color: "rgba(22, 58, 92, 0.085)",
             width: 1,
+            type: "dashed",
           },
         },
       },
@@ -322,6 +323,18 @@ export default function PerformanceChartPanel({
                   color: CHART_COLORS.portfolio,
                   cap: "round" as const,
                   join: "round" as const,
+                },
+                markLine: {
+                  silent: true,
+                  symbol: "none",
+                  animation: false,
+                  label: { show: false },
+                  lineStyle: {
+                    color: "rgba(22, 58, 92, 0.16)",
+                    width: 1,
+                    type: "solid" as const,
+                  },
+                  data: [{ yAxis: 0 }],
                 },
                 emphasis: {
                   focus: "series" as const,
