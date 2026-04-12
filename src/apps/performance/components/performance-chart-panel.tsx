@@ -229,6 +229,7 @@ export default function PerformanceChartPanel({
     {
       key: "portfolio",
       label: "Portfolio",
+      value: returnPathPresentation.portfolioReturnValue,
       className: "performance-chart-legend-item-portfolio",
     },
     ...(hasBenchmarkSeries
@@ -236,6 +237,7 @@ export default function PerformanceChartPanel({
           {
             key: "benchmark",
             label: "Benchmark",
+            value: returnPathPresentation.benchmarkReturnValue,
             className: "performance-chart-legend-item-benchmark",
           },
         ]
@@ -245,6 +247,7 @@ export default function PerformanceChartPanel({
           {
             key: "active",
             label: "Active",
+            value: returnPathPresentation.activeReturnValue,
             className: "performance-chart-legend-item-active",
           },
         ]

@@ -15,7 +15,11 @@ export default function PerformanceDecisionReadout({
 }) {
   return (
     <section className="performance-chart-readout-strip" aria-label="Return decision readout">
-      <dl className="performance-chart-readout-compare">
+      <div className="performance-chart-readout-primary">
+        <span className="performance-chart-readout-eyebrow">Active</span>
+        <strong>{activeReturn}</strong>
+      </div>
+      <dl className="performance-chart-readout-secondary">
         <div>
           <dt>Portfolio</dt>
           <dd>{portfolioReturn}</dd>
@@ -23,10 +27,6 @@ export default function PerformanceDecisionReadout({
         <div>
           <dt>Benchmark</dt>
           <dd>{benchmarkReturn}</dd>
-        </div>
-        <div>
-          <dt>Active</dt>
-          <dd>{activeReturn}</dd>
         </div>
       </dl>
       <div className="performance-chart-readout-meta" aria-label="Return series context">

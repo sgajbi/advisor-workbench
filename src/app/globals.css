@@ -9578,26 +9578,43 @@ a:hover {
   text-transform: uppercase;
 }
 
-.performance-chart-readout-compare {
+.performance-chart-readout-primary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.16rem;
+  padding: 0.74rem 0.78rem 0.68rem;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+}
+
+.performance-chart-readout-primary strong {
+  color: var(--brand-strong);
+  font-size: 1.42rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-chart-readout-secondary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.38rem;
   margin: 0;
   padding: 0;
 }
 
-.performance-chart-readout-compare > div {
+.performance-chart-readout-secondary > div {
   display: grid;
   gap: 0.12rem;
   align-content: start;
   min-width: 0;
-  padding: 0.62rem 0.7rem;
+  padding: 0.52rem 0.62rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.94);
 }
 
-.performance-chart-readout-compare dt {
+.performance-chart-readout-secondary dt {
   color: var(--text-muted);
   font-size: var(--text-2xs);
   font-weight: 800;
@@ -9605,11 +9622,11 @@ a:hover {
   text-transform: uppercase;
 }
 
-.performance-chart-readout-compare dd {
+.performance-chart-readout-secondary dd {
   margin: 0;
   color: var(--brand-strong);
-  font-size: 1.12rem;
-  font-weight: 780;
+  font-size: 0.96rem;
+  font-weight: 760;
   line-height: 1.08;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -9684,6 +9701,14 @@ a:hover {
   font-size: var(--text-xs);
   font-weight: 760;
   line-height: 1.2;
+}
+
+.performance-chart-legend-value {
+  color: var(--brand-strong);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .performance-chart-observation-coupling {

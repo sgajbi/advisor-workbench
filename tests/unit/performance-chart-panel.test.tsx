@@ -303,9 +303,11 @@ describe("PerformanceChartPanel", () => {
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
-    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("12.84%");
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("3.30%");
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("2.50%");
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("0.80%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Portfolio 3.30% Benchmark 2.50% Active 0.80%")
+      compactPattern("Active 0.80% Portfolio 3.30% Benchmark 2.50%")
     );
     expect(screen.getByLabelText("Return series context")).toHaveTextContent(
       compactPattern("Net basis Monthly cadence Calculated return series")
