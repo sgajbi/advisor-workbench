@@ -78,6 +78,7 @@ export default function PerformanceSummaryContributorsSection({
           <PerformanceAnalyticalUnavailableState
             ariaLabel="Contributor ranking partial state"
             status="partial"
+            kicker={null}
             title={presentation.noticeTitle}
             body={presentation.noticeBody}
             hint={presentation.hint}
@@ -127,6 +128,7 @@ export default function PerformanceSummaryContributorsSection({
         <PerformanceAnalyticalUnavailableState
           ariaLabel="Contributor ranking unavailable state"
           status={capabilities.contributionRanking.state === "partial" ? "partial" : "unavailable"}
+          kicker={null}
           title={presentation.noticeTitle}
           body={presentation.noticeBody}
           hint={presentation.hint}

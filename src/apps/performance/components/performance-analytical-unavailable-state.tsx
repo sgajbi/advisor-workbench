@@ -13,6 +13,7 @@ export default function PerformanceAnalyticalUnavailableState({
   hint,
   contextItems,
   availableItems = [],
+  kicker = "Performance contract",
 }: {
   ariaLabel: string;
   status: "partial" | "unavailable";
@@ -21,6 +22,7 @@ export default function PerformanceAnalyticalUnavailableState({
   hint?: string;
   contextItems: PerformanceAnalyticalStateItem[];
   availableItems?: PerformanceAnalyticalStateItem[];
+  kicker?: string | null;
 }) {
   return (
     <section
@@ -29,9 +31,11 @@ export default function PerformanceAnalyticalUnavailableState({
     >
       <header className="performance-analytical-state-header">
         <div className="performance-analytical-state-heading">
-          <span className="performance-analytical-state-kicker">
-            Performance contract
-          </span>
+          {kicker ? (
+            <span className="performance-analytical-state-kicker">
+              {kicker}
+            </span>
+          ) : null}
           <strong>{title}</strong>
         </div>
         <span className="performance-analytical-state-status">

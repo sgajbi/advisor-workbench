@@ -386,6 +386,7 @@ export default function PerformanceMultiHorizonPanel({
         <PerformanceAnalyticalUnavailableState
           ariaLabel="Horizon comparison unavailable state"
           status="unavailable"
+          kicker={null}
           title="Horizon comparison is unavailable for this mandate"
           body={presentation.emptyBody}
           hint="Source-backed multi-horizon observations must be exposed before cross-window comparison can render."
