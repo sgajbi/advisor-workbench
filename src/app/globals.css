@@ -3981,7 +3981,7 @@ a:hover {
 
 .workbench-segmented-control.portfolio-workspace-toolbar-period-control {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 100%;
   max-width: none;
   justify-content: stretch;
@@ -3995,6 +3995,10 @@ a:hover {
   width: 100%;
   padding: 0.35rem 0.35rem;
   font-size: 0.6875rem;
+}
+
+.portfolio-workspace-toolbar-period-control .workbench-segmented-control-button:nth-child(7) {
+  grid-column: 4;
 }
 
 .portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-group-fields,
@@ -4013,6 +4017,8 @@ a:hover {
   min-width: 0;
   width: 100%;
   justify-self: stretch;
+  padding-left: 0.875rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field label,
@@ -4049,7 +4055,7 @@ a:hover {
   justify-content: flex-start;
   justify-self: end;
   padding-bottom: 0.125rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   width: fit-content;
 }
 
@@ -4130,11 +4136,12 @@ a:hover {
     grid-template-areas:
       "actions"
       "period";
+    padding-left: 0;
+    border-left: 0;
   }
 
   .portfolio-workspace-toolbar-actions {
     padding-left: 0;
-    border-left: 0;
   }
 
   .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
