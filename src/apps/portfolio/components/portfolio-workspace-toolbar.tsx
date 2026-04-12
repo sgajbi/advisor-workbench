@@ -163,6 +163,54 @@ export default function PortfolioWorkspaceToolbar({
               </div>
             </div>
           </section>
+        </div>
+
+        <div className="portfolio-workspace-toolbar-sidecar">
+          <div className="portfolio-workspace-toolbar-actions">
+            <Button
+              variant="outlined"
+              size="small"
+              className="portfolio-workspace-toolbar-action"
+              aria-haspopup="menu"
+              aria-expanded={Boolean(filtersAnchor)}
+              aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
+              onClick={(e) => setFiltersAnchor(e.currentTarget)}
+            >
+              {activeFilterCount ? `Filters (${activeFilterCount})` : "Filters"}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              className="portfolio-workspace-toolbar-action"
+              aria-haspopup="menu"
+              aria-expanded={Boolean(columnsAnchor)}
+              aria-label="Columns"
+              onClick={(e) => setColumnsAnchor(e.currentTarget)}
+              disabled={controls.viewMode !== "detailed"}
+            >
+              Columns
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              className="portfolio-workspace-toolbar-action"
+              aria-label="Export portfolio data"
+              onClick={onExport}
+            >
+              Export
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              className="portfolio-workspace-toolbar-action"
+              aria-haspopup="menu"
+              aria-expanded={Boolean(actionsAnchor)}
+              aria-label="More actions"
+              onClick={(e) => setActionsAnchor(e.currentTarget)}
+            >
+              More
+            </Button>
+          </div>
 
           <section
             className="portfolio-workspace-toolbar-group portfolio-workspace-toolbar-group-period"
@@ -171,7 +219,7 @@ export default function PortfolioWorkspaceToolbar({
           >
             <span className="portfolio-workspace-toolbar-group-title">Period</span>
             <div className="portfolio-workspace-toolbar-group-fields">
-              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">
+              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow portfolio-workspace-toolbar-field-presets">
                 <WorkbenchSegmentedControl
                   value={controls.timeWindow}
                   onChange={(timeWindow) => onControlsChange({ timeWindow })}
@@ -186,7 +234,7 @@ export default function PortfolioWorkspaceToolbar({
 
               {supportsCustomRange ? (
                 <>
-                  <div className="portfolio-workspace-toolbar-field">
+                  <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-range-start">
                     <label htmlFor="portfolio-custom-start-date">From</label>
                     <TextField
                       id="portfolio-custom-start-date"
@@ -198,7 +246,7 @@ export default function PortfolioWorkspaceToolbar({
                     />
                   </div>
 
-                  <div className="portfolio-workspace-toolbar-field">
+                  <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-range-end">
                     <label htmlFor="portfolio-custom-end-date">To</label>
                     <TextField
                       id="portfolio-custom-end-date"
@@ -216,52 +264,6 @@ export default function PortfolioWorkspaceToolbar({
               ) : null}
             </div>
           </section>
-        </div>
-
-        <div className="portfolio-workspace-toolbar-actions">
-          <Button
-            variant="outlined"
-            size="small"
-            className="portfolio-workspace-toolbar-action"
-            aria-haspopup="menu"
-            aria-expanded={Boolean(filtersAnchor)}
-            aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
-            onClick={(e) => setFiltersAnchor(e.currentTarget)}
-          >
-            {activeFilterCount ? `Filters (${activeFilterCount})` : "Filters"}
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            className="portfolio-workspace-toolbar-action"
-            aria-haspopup="menu"
-            aria-expanded={Boolean(columnsAnchor)}
-            aria-label="Columns"
-            onClick={(e) => setColumnsAnchor(e.currentTarget)}
-            disabled={controls.viewMode !== "detailed"}
-          >
-            Columns
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            className="portfolio-workspace-toolbar-action"
-            aria-label="Export portfolio data"
-            onClick={onExport}
-          >
-            Export
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            className="portfolio-workspace-toolbar-action"
-            aria-haspopup="menu"
-            aria-expanded={Boolean(actionsAnchor)}
-            aria-label="More actions"
-            onClick={(e) => setActionsAnchor(e.currentTarget)}
-          >
-            More
-          </Button>
         </div>
       </div>
 
