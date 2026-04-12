@@ -10,15 +10,21 @@ import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capab
 import { resolveShellApp } from "./app-registry";
 
 export default function AppSwitcherNav() {
-  const { normalized } = usePlatformCapabilities();
+  const { loading, normalized, shellBootstrapSource } = usePlatformCapabilities();
   const fallback = fallbackNormalizedCapabilities();
-  const workspaceDescriptors =
-    normalized.shellBootstrap?.workspaces?.length
-      ? normalized.shellBootstrap.workspaces
-      : fallback.shellBootstrap.workspaces;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeApp = resolveShellApp(pathname, searchParams);
+  const workspaceDescriptors =
+    shellBootstrapSource === "contract"
+      ? normalized.shellBootstrap.workspaces
+      : shellBootstrapSource === "fallback"
+        ? fallback.shellBootstrap.workspaces
+        : [];
+
+  if (loading && shellBootstrapSource === "loading") {
+    return <div className="shell-workspace-tabs-skeleton" aria-hidden="true" />;
+  }
 
   const items = workspaceDescriptors.map((workspace) => {
     return {

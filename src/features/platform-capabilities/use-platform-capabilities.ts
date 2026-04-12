@@ -10,6 +10,7 @@ type UsePlatformCapabilitiesResult = {
   normalized: PlatformNormalizedCapabilities;
   partialFailure: boolean;
   errors: PlatformCapabilitiesError[];
+  shellBootstrapSource: "loading" | "contract" | "fallback";
 };
 
 export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
@@ -19,6 +20,9 @@ export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
   );
   const [partialFailure, setPartialFailure] = useState(false);
   const [errors, setErrors] = useState<PlatformCapabilitiesError[]>([]);
+  const [shellBootstrapSource, setShellBootstrapSource] = useState<
+    UsePlatformCapabilitiesResult["shellBootstrapSource"]
+  >("loading");
 
   useEffect(() => {
     let active = true;
@@ -26,9 +30,13 @@ export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
       try {
         const data = await getPlatformCapabilities("UI", "default");
         if (!active) return;
-        setNormalized(data.normalized ?? fallbackNormalizedCapabilities());
+        const nextNormalized = data.normalized ?? fallbackNormalizedCapabilities();
+        setNormalized(nextNormalized);
         setPartialFailure(Boolean(data.partialFailure));
         setErrors(data.errors ?? []);
+        setShellBootstrapSource(
+          data.normalized?.shellBootstrap?.workspaces?.length ? "contract" : "fallback"
+        );
       } catch {
         if (!active) return;
         setNormalized(fallbackNormalizedCapabilities());
@@ -40,6 +48,7 @@ export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
             detail: "capability_bootstrap_fallback",
           },
         ]);
+        setShellBootstrapSource("fallback");
       } finally {
         if (active) {
           setLoading(false);
@@ -52,5 +61,5 @@ export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
     };
   }, []);
 
-  return { loading, normalized, partialFailure, errors };
+  return { loading, normalized, partialFailure, errors, shellBootstrapSource };
 }

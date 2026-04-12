@@ -96,6 +96,10 @@ export function PortfolioTopHoldingsPanel({
       </WorkbenchSummaryToolbar>
       <div className="portfolio-chart-module-body portfolio-top-holdings-body">
         <div className="portfolio-analytics-canvas portfolio-chart-card portfolio-top-holdings-list-card">
+          <div className="portfolio-analytical-utility-header">
+            <span>Ranked Holdings</span>
+            <strong>{metric === "market_value" ? "Market Value focus" : "Weight focus"}</strong>
+          </div>
           {sortedPositions.length ? (
             <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
               {sortedPositions.map((position) => {
@@ -317,6 +321,10 @@ export function PortfolioActivityPanel({
           : "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic"
       }
     >
+      <div className="portfolio-analytical-utility-header">
+        <span>Requested Window</span>
+        <strong>{`${formatDate(summary.window_start_date)} - ${formatDate(summary.window_end_date)}`}</strong>
+      </div>
       <div
         className={compact ? "portfolio-flow-chart portfolio-flow-chart-compact" : "portfolio-flow-chart"}
         aria-label="Activity chart"
@@ -419,6 +427,10 @@ export function PortfolioIncomePanel({
           : "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic"
       }
     >
+      <div className="portfolio-analytical-utility-header">
+        <span>Requested Window</span>
+        <strong>{`${formatDate(summary.window_start_date)} - ${formatDate(summary.window_end_date)}`}</strong>
+      </div>
       <div
         className={compact ? "portfolio-income-chart portfolio-income-chart-compact" : "portfolio-income-chart"}
         aria-label="Income chart"

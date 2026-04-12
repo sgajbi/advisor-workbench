@@ -62,6 +62,8 @@ type PortfolioPairedAnalyticsSectionProps = {
   subtitle?: string;
   sectionClassName?: string;
   gridClassName?: string;
+  shellLabel?: string;
+  shellValue?: string;
 };
 
 type SummaryStat = {
@@ -86,6 +88,8 @@ export default function PortfolioPairedAnalyticsSection({
   subtitle,
   sectionClassName,
   gridClassName,
+  shellLabel,
+  shellValue,
 }: PortfolioPairedAnalyticsSectionProps) {
   const showIncomeModule = isRenderableCapability(capabilities.income);
   const showActivityModule = isRenderableCapability(capabilities.activity);
@@ -95,53 +99,61 @@ export default function PortfolioPairedAnalyticsSection({
   }
 
   const content = (
-    <WorkspaceGrid
-      className={
-        isDetailedView
-          ? `portfolio-primary-grid portfolio-paired-analytics-grid portfolio-paired-analytics-grid-detailed workbench-summary-region${gridClassName ? ` ${gridClassName}` : ""}`
-          : `portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region${gridClassName ? ` ${gridClassName}` : ""}`
-      }
-    >
-      {showIncomeModule ? (
-        <PortfolioCollapsibleModule
-          className="portfolio-summary-module-card portfolio-paired-analytics-module portfolio-paired-analytics-module-primary"
-          compact={!isDetailedView}
-          title="Income"
-          subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
-          expanded={getSectionExpanded("income")}
-          onToggle={() => toggleSection("income")}
-        >
-          {renderIncomeModule({
-            workspace,
-            capabilities,
-            detailsLoading,
-            isDetailedView,
-            incomeDisplayCurrency,
-          })}
-        </PortfolioCollapsibleModule>
+    <div className="portfolio-paired-analytics-shell">
+      {shellLabel || shellValue ? (
+        <div className="portfolio-analytical-shell-header">
+          {shellLabel ? <span>{shellLabel}</span> : <span>Analytical cluster</span>}
+          {shellValue ? <strong>{shellValue}</strong> : null}
+        </div>
       ) : null}
+      <WorkspaceGrid
+        className={
+          isDetailedView
+            ? `portfolio-primary-grid portfolio-paired-analytics-grid portfolio-paired-analytics-grid-detailed workbench-summary-region${gridClassName ? ` ${gridClassName}` : ""}`
+            : `portfolio-primary-grid portfolio-paired-analytics-grid workbench-summary-region${gridClassName ? ` ${gridClassName}` : ""}`
+        }
+      >
+        {showIncomeModule ? (
+          <PortfolioCollapsibleModule
+            className="portfolio-summary-module-card portfolio-paired-analytics-module portfolio-paired-analytics-module-primary"
+            compact={!isDetailedView}
+            title="Income"
+            subtitle={`${incomeDisplayCurrency} income for ${formatPeriodContext(context)}.`}
+            expanded={getSectionExpanded("income")}
+            onToggle={() => toggleSection("income")}
+          >
+            {renderIncomeModule({
+              workspace,
+              capabilities,
+              detailsLoading,
+              isDetailedView,
+              incomeDisplayCurrency,
+            })}
+          </PortfolioCollapsibleModule>
+        ) : null}
 
-      {showActivityModule ? (
-        <PortfolioCollapsibleModule
-          className="portfolio-summary-module-card portfolio-paired-analytics-module portfolio-paired-analytics-module-secondary"
-          compact={!isDetailedView}
-          title="Activity"
-          subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
-          expanded={getSectionExpanded("activity")}
-          onToggle={() => toggleSection("activity")}
-        >
-          {renderActivityModule({
-            workspace,
-            capabilities,
-            detailsLoading,
-            isDetailedView,
-            activityDisplayCurrency,
-            transactionDrilldown,
-            onSelectActivityBucket,
-          })}
-        </PortfolioCollapsibleModule>
-      ) : null}
-    </WorkspaceGrid>
+        {showActivityModule ? (
+          <PortfolioCollapsibleModule
+            className="portfolio-summary-module-card portfolio-paired-analytics-module portfolio-paired-analytics-module-secondary"
+            compact={!isDetailedView}
+            title="Activity"
+            subtitle={`${activityDisplayCurrency} activity for ${formatPeriodContext(context)}.`}
+            expanded={getSectionExpanded("activity")}
+            onToggle={() => toggleSection("activity")}
+          >
+            {renderActivityModule({
+              workspace,
+              capabilities,
+              detailsLoading,
+              isDetailedView,
+              activityDisplayCurrency,
+              transactionDrilldown,
+              onSelectActivityBucket,
+            })}
+          </PortfolioCollapsibleModule>
+        ) : null}
+      </WorkspaceGrid>
+    </div>
   );
 
   if (!title) {

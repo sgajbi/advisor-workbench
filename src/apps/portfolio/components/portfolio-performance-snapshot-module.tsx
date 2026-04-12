@@ -113,45 +113,60 @@ export default function PortfolioPerformanceSnapshotModule({
               {compactContextLine}
             </p>
           ) : null}
+          <div className="portfolio-performance-snapshot-overview">
+            <div className="portfolio-performance-snapshot-overview-chart">
+              <div className="portfolio-summary-pair-region-heading">
+                <span>Trend</span>
+                <strong>{trendValue}</strong>
+              </div>
+              {performance?.sparkline_points?.length ? (
+                <PortfolioPerformanceSparkline
+                  points={performance.sparkline_points}
+                  benchmarkLabel={benchmarkLabel}
+                />
+              ) : (
+                <p className="portfolio-performance-snapshot-copy">
+                  Open Performance workspace for source-backed return path detail.
+                </p>
+              )}
+            </div>
+            <div className="portfolio-performance-snapshot-overview-summary">
+              <div className="portfolio-summary-pair-region-heading">
+                <span>Comparison Context</span>
+                <strong>{performance?.period ?? selectedPeriod}</strong>
+              </div>
+              <div className="portfolio-performance-snapshot-overview-grid">
+                <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
+                <MetricRow
+                  label="Method"
+                  value={
+                    performance?.money_weighted_method
+                      ? `MWR ${performance.money_weighted_method}`
+                      : "Unavailable"
+                  }
+                />
+                <MetricRow label="Window" value={resolvedWindow} />
+                <MetricRow label="Active Return" value={formatPct(performance?.excess_return_pct)} />
+              </div>
+            </div>
+          </div>
           {expanded ? (
             <div className="portfolio-performance-snapshot-details">
-              <div className="portfolio-summary-pair-body">
-                <div className="portfolio-performance-snapshot-trend">
-                  <div className="portfolio-summary-pair-region-heading">
-                    <span>Trend</span>
-                    <strong>{trendValue}</strong>
-                  </div>
-                  {performance?.sparkline_points?.length ? (
-                    <PortfolioPerformanceSparkline
-                      points={performance.sparkline_points}
-                      benchmarkLabel={benchmarkLabel}
-                    />
-                  ) : (
-                    <p className="portfolio-performance-snapshot-copy">
-                      Open Performance workspace for source-backed return path detail.
-                    </p>
-                  )}
+              <div className="portfolio-performance-snapshot-context">
+                <div className="portfolio-summary-pair-context-grid">
+                  <MetricRow label="Resolved Window" value={resolvedWindow} />
+                  <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
+                  <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
+                  <MetricRow
+                    label="Method"
+                    value={
+                      performance?.money_weighted_method
+                        ? `MWR ${performance.money_weighted_method}`
+                        : "Unavailable"
+                    }
+                  />
                 </div>
-                <div className="portfolio-performance-snapshot-context">
-                  <div className="portfolio-summary-pair-region-heading">
-                    <span>Context</span>
-                    <strong>{performance?.period ?? selectedPeriod}</strong>
-                  </div>
-                  <div className="portfolio-summary-pair-context-grid">
-                    <MetricRow label="Resolved Window" value={resolvedWindow} />
-                    <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
-                    <MetricRow label="Benchmark Provenance" value={benchmarkProvenance} />
-                    <MetricRow
-                      label="Method"
-                      value={
-                        performance?.money_weighted_method
-                          ? `MWR ${performance.money_weighted_method}`
-                          : "Unavailable"
-                      }
-                    />
-                  </div>
-                  <p className="portfolio-summary-pair-support">{operationalSupport}</p>
-                </div>
+                <p className="portfolio-summary-pair-support">{operationalSupport}</p>
               </div>
             </div>
           ) : null}

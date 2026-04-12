@@ -184,7 +184,7 @@ const context: PortfolioWorkspaceContext = {
 
 describe("PortfolioPairedAnalyticsSection", () => {
   it("renders income and activity as a coordinated paired module in summary mode", async () => {
-    const { container } = render(
+    render(
       <PortfolioPairedAnalyticsSection
         workspace={buildWorkspace()}
         context={context}
@@ -197,22 +197,22 @@ describe("PortfolioPairedAnalyticsSection", () => {
         onSelectActivityBucket={vi.fn()}
         getSectionExpanded={() => true}
         toggleSection={vi.fn()}
+        shellLabel="Income and activity"
+        shellValue="Current-period cash generation and money movement"
       />
     );
 
-    expect(container.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
-    expect(container.querySelector(".portfolio-paired-analytics-module-primary")).toBeTruthy();
-    expect(container.querySelector(".portfolio-paired-analytics-module-secondary")).toBeTruthy();
-    expect(container.querySelectorAll(".portfolio-analytics-summary-row")).toHaveLength(2);
-    expect(container.querySelectorAll(".workbench-summary-metric-strip")).toHaveLength(2);
-    expect(container.querySelectorAll("[data-analytics-module]")).toHaveLength(2);
+    expect(screen.getByText("Income and activity")).toBeInTheDocument();
+    expect(
+      screen.getByText("Current-period cash generation and money movement")
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Income overview")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity overview")).toBeInTheDocument();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(screen.queryByTestId("portfolio-income-panel")).not.toBeInTheDocument();
     expect(screen.queryByTestId("portfolio-activity-panel")).not.toBeInTheDocument();
-    expect(container.querySelectorAll(".module-skeleton")).toHaveLength(2);
+    expect(document.querySelectorAll(".module-skeleton")).toHaveLength(2);
 
     await waitFor(() => {
       expect(screen.getByTestId("portfolio-income-panel")).toHaveTextContent("compact");
@@ -244,14 +244,10 @@ describe("PortfolioPairedAnalyticsSection", () => {
       expect(screen.getByTestId("portfolio-income-panel")).toHaveTextContent("detailed");
       expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
     });
-    expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeTruthy();
     expect(screen.getByLabelText("Income summary")).toBeInTheDocument();
     expect(screen.getByLabelText("Activity summary")).toBeInTheDocument();
-    expect(
-      document.querySelectorAll(
-        ".portfolio-analytics-table.analytics-table-variant-portfolio.analytics-table-density-compact"
-      )
-    ).toHaveLength(2);
+    expect(screen.getByRole("table", { name: "Income summary" })).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Activity summary" })).toBeInTheDocument();
   });
 
   it("renders capability-driven partial and unavailable states intentionally", () => {

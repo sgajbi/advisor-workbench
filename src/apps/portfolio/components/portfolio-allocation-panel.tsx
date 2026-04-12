@@ -148,6 +148,10 @@ export default function PortfolioAllocationPanel({
         role="tabpanel"
         aria-label={`${activeDimensionLabel} allocation view`}
       >
+        <div className="portfolio-analytical-utility-header">
+          <span>Current View</span>
+          <strong>{`${activeDimensionLabel} • ${buckets.length} buckets`}</strong>
+        </div>
         {buckets.length ? (
           <div className="portfolio-allocation-body">
             <div className="portfolio-allocation-visual">

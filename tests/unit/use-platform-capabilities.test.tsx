@@ -44,6 +44,7 @@ describe("usePlatformCapabilities", () => {
 
     expect(result.current.loading).toBe(true);
     expect(result.current.normalized.navigation.portfolio_intake).toBe(true);
+    expect(result.current.shellBootstrapSource).toBe("loading");
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -52,6 +53,7 @@ describe("usePlatformCapabilities", () => {
     expect(getPlatformCapabilitiesMock).toHaveBeenCalledWith("UI", "default");
     expect(result.current.normalized.navigation.portfolio_intake).toBe(false);
     expect(result.current.partialFailure).toBe(true);
+    expect(result.current.shellBootstrapSource).toBe("contract");
     expect(result.current.errors).toEqual([
       { service: "lotus_performance", status_code: 504, detail: "timeout" },
     ]);
@@ -68,6 +70,7 @@ describe("usePlatformCapabilities", () => {
 
     expect(result.current.normalized).toEqual(fallbackNormalizedCapabilities());
     expect(result.current.partialFailure).toBe(true);
+    expect(result.current.shellBootstrapSource).toBe("fallback");
     expect(result.current.errors).toEqual([
       {
         service: "bff",

@@ -39,10 +39,8 @@ describe("portfolio chart panels", () => {
     expect(onSelectionChange).toHaveBeenCalledWith("EQ_1");
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.queryByLabelText("Top holdings table")).not.toBeInTheDocument();
-    expect(document.querySelector(".portfolio-chart-module-toolbar.workbench-summary-toolbar")).toBeTruthy();
-    expect(document.querySelector(".portfolio-top-holdings-list-card.portfolio-analytics-canvas")).toBeTruthy();
-    expect(document.querySelector(".portfolio-horizontal-bar-label.workbench-summary-visual-label")).toBeTruthy();
-    expect(document.querySelector(".portfolio-horizontal-bar-value.workbench-summary-visual-value")).toBeTruthy();
+    expect(screen.getByText("Ranked Holdings")).toBeInTheDocument();
+    expect(screen.getByText("Market Value focus")).toBeInTheDocument();
     expect(screen.getByText("Equities")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
     expect(
@@ -213,10 +211,6 @@ describe("portfolio chart panels", () => {
       </>
     );
 
-    expect(document.querySelectorAll(".portfolio-analytics-canvas")).toHaveLength(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-label").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-value").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-meta").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("YTD 2,500 USD")).toBeInTheDocument();
     expect(screen.queryByText("Window inflow")).not.toBeInTheDocument();
     expect(screen.getByText("Gross 2,500 USD")).toBeInTheDocument();

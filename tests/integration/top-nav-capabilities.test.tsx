@@ -14,6 +14,7 @@ vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
     loading: false,
     partialFailure: false,
     errors: [],
+    shellBootstrapSource: "contract",
     normalized: {
       shellBootstrap: {
         workspaces: [

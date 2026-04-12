@@ -100,7 +100,7 @@ describe("portfolio performance snapshot module", () => {
     );
   });
 
-  it("renders collapsed source-backed performance metrics with compact inline context by default", () => {
+  it("renders source-backed comparison context and trend by default while keeping detailed context collapsed", () => {
     const onToggle = vi.fn();
 
     const { container } = render(
@@ -168,7 +168,7 @@ describe("portfolio performance snapshot module", () => {
 
     expect(screen.getByText("5.12%")).toBeInTheDocument();
     expect(screen.getByText("4.91%")).toBeInTheDocument();
-    expect(screen.getByText("0.21%")).toBeInTheDocument();
+    expect(screen.getAllByText("0.21%")).toHaveLength(2);
     expect(screen.getByText("4.88%")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -183,8 +183,10 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByRole("group", { name: "Performance snapshot metrics" })).toBeInTheDocument();
     expect(container.querySelectorAll(".portfolio-summary-pair-stat")).toHaveLength(4);
     expect(
-      screen.queryByRole("img", { name: "Performance snapshot comparison sparkline" })
-    ).not.toBeInTheDocument();
+      screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Comparison Context")).toBeInTheDocument();
+    expect(screen.getByText("QTD")).toBeInTheDocument();
     expect(container.querySelector(".portfolio-performance-snapshot-context")).toBeNull();
 
     const detailsToggle = screen.getByRole("button", {
@@ -196,7 +198,7 @@ describe("portfolio performance snapshot module", () => {
     expect(onToggle).toHaveBeenCalled();
   });
 
-  it("renders detailed trend and context only when performance details are expanded", () => {
+  it("renders expanded operational context when performance details are opened", () => {
     render(
       <PortfolioPerformanceSnapshotModule
         capability={{ state: "supported" }}
@@ -265,8 +267,9 @@ describe("portfolio performance snapshot module", () => {
     ).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
     expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
-    expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
+    expect(screen.getAllByText("MWR XIRR").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("14 report rows • Rebalance Ready")).toBeInTheDocument();
+    expect(screen.getByText("Comparison Context")).toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
     ).toBeInTheDocument();
