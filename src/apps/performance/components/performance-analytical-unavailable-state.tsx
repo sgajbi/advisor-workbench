@@ -30,7 +30,7 @@ export default function PerformanceAnalyticalUnavailableState({
       <header className="performance-analytical-state-header">
         <div className="performance-analytical-state-heading">
           <span className="performance-analytical-state-kicker">
-            {status === "partial" ? "Analytical partial" : "Analytical unavailable"}
+            Performance contract
           </span>
           <strong>{title}</strong>
         </div>
@@ -50,24 +50,28 @@ export default function PerformanceAnalyticalUnavailableState({
         ))}
       </dl>
 
-      {availableItems.length ? (
-        <div className="performance-analytical-state-support">
-          <span className="performance-analytical-state-section-label">Available now</span>
-          <dl className="performance-analytical-state-list">
-            {availableItems.map((item) => (
-              <div key={item.label}>
-                <dt>{item.label}</dt>
-                <dd>{item.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      ) : null}
+      {availableItems.length || hint ? (
+        <div className="performance-analytical-state-resolution">
+          {availableItems.length ? (
+            <section className="performance-analytical-state-support">
+              <span className="performance-analytical-state-section-label">Still available</span>
+              <dl className="performance-analytical-state-list">
+                {availableItems.map((item) => (
+                  <div key={item.label}>
+                    <dt>{item.label}</dt>
+                    <dd>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
 
-      {hint ? (
-        <div className="performance-analytical-state-footer">
-          <span>Blocked by</span>
-          <p>{hint}</p>
+          {hint ? (
+            <section className="performance-analytical-state-footer">
+              <span>Needs source support</span>
+              <p>{hint}</p>
+            </section>
+          ) : null}
         </div>
       ) : null}
     </section>

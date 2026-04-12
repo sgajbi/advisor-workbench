@@ -439,8 +439,8 @@ describe("PerformanceChartPanel", () => {
         "Published return observations are not available for the selected horizon."
       )
     ).toBeInTheDocument();
-    expect(screen.getByText("Available now")).toBeInTheDocument();
-    expect(screen.getByText("Blocked by")).toBeInTheDocument();
+    expect(screen.getByText("Still available")).toBeInTheDocument();
+    expect(screen.getByText("Needs source support")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Published return observations and benchmark-relative series must be exposed by the underlying performance contract before the cumulative path can render."

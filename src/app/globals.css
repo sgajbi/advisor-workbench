@@ -9904,6 +9904,12 @@ a:hover {
   background: rgba(255, 255, 255, 0.9);
 }
 
+.performance-analytical-state-resolution {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.45rem;
+}
+
 .performance-analytical-state-section-label,
 .performance-analytical-state-footer span {
   color: var(--text-muted);
@@ -9945,8 +9951,10 @@ a:hover {
 .performance-analytical-state-footer {
   display: grid;
   gap: 0.2rem;
-  padding-top: 0.06rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 0.5rem 0.58rem;
+  border: 1px solid rgba(32, 44, 61, 0.07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .performance-page-unavailable-shell {
