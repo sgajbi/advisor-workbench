@@ -3893,8 +3893,8 @@ a:hover {
 }
 
 .portfolio-workspace-toolbar-groups {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(18rem, 1.2fr) minmax(11rem, 0.8fr) minmax(18rem, 1.1fr);
   gap: 0.75rem;
   min-width: 0;
   flex: 1 1 auto;
@@ -3912,15 +3912,15 @@ a:hover {
 }
 
 .portfolio-workspace-toolbar-group-context {
-  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .portfolio-workspace-toolbar-group-view {
-  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .portfolio-workspace-toolbar-group-period {
-  flex: 1 1 24rem;
+  min-width: 0;
 }
 
 .portfolio-workspace-toolbar-group-title {
@@ -3978,6 +3978,11 @@ a:hover {
 }
 
 .portfolio-workspace-toolbar-period-control {
+  width: 100%;
+  max-width: 24rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 0.35rem;
   gap: 0.18rem;
   padding: 0.18rem;
 }
@@ -3987,6 +3992,7 @@ a:hover {
   min-width: 3.35rem;
   padding: 0.4rem 0.6rem;
   font-size: 0.75rem;
+  flex: 0 0 calc(25% - 0.18rem);
 }
 
 .portfolio-workspace-toolbar-actions {
@@ -4116,6 +4122,8 @@ a:hover {
   }
 
   .portfolio-workspace-toolbar-groups {
+    display: flex;
+    flex-wrap: wrap;
     width: 100%;
   }
 
