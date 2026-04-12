@@ -311,6 +311,11 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Net basis Monthly cadence Calculated return series")
     );
     expect(lastChartOption?.tooltip).toMatchObject({
+      trigger: "axis",
+      triggerOn: "mousemove|click",
+      appendToBody: true,
+      renderMode: "html",
+      className: "performance-return-path-tooltip",
       backgroundColor: "rgba(255, 255, 255, 0.98)",
       borderColor: "rgba(36, 50, 70, 0.14)",
       textStyle: { color: "#172033", fontWeight: 600 },

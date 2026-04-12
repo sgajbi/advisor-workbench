@@ -2,8 +2,6 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import type { EChartsOption } from "echarts";
-import type { CallbackDataParams } from "echarts/types/src/util/types.js";
 import { Box } from "@mui/material";
 
 import {
@@ -26,16 +24,11 @@ import PerformanceDecisionReadout from "./performance-decision-readout";
 import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathLegend from "./performance-return-path-legend";
 import {
-  buildPercentAxisBounds,
-  buildReturnPathTooltipFormatter,
-  buildTerminalValueLabelStyle,
-  CHART_COLORS,
-  formatTerminalValueLabel,
-  resolveActiveCumulativeReturn,
+  buildReturnPathChartOption,
   resolveReportDates,
+  resolveActiveCumulativeReturn,
   resolveActivePeriodReturn,
   SHARED_CHART_TEXT,
-  toNumeric,
 } from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
@@ -188,275 +181,11 @@ export default function PerformanceChartPanel({
       : "No published return observations are exposed for this resolved window.";
 
   const chartOption = useMemo(() => {
-    const categories = points.map((point) => point.label);
-    const portfolioCumulative = points.map((point) =>
-      toNumeric(point.cumulative_portfolio_return_pct)
-    );
-    const benchmarkCumulative = points.map((point) =>
-      toNumeric(point.cumulative_benchmark_return_pct)
-    );
-    const activeCumulative = points.map((point) => resolveActiveCumulativeReturn(point));
-    const hasActiveCumulativeSeries =
-      hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
-    const includeAbsoluteSeries = chartViewMode !== "relative";
-    const includeRelativeSeries = chartViewMode !== "absolute";
-    const showBenchmarkSeries = includeAbsoluteSeries && hasBenchmarkSeries;
-    const showActiveCumulativeSeries = includeRelativeSeries && hasActiveCumulativeSeries;
-
-    const cumulativeBounds = buildPercentAxisBounds([
-      ...(includeAbsoluteSeries ? portfolioCumulative : []),
-      ...(showBenchmarkSeries ? benchmarkCumulative : []),
-      ...(showActiveCumulativeSeries ? activeCumulative : []),
-    ]);
-
-    return {
-      animation: false,
-      backgroundColor: "transparent",
-      color: [
-        CHART_COLORS.portfolio,
-        CHART_COLORS.benchmark,
-        CHART_COLORS.active,
-        CHART_COLORS.portfolioBar,
-        CHART_COLORS.benchmarkBar,
-        CHART_COLORS.activeBar,
-      ],
-      grid: {
-        left: 66,
-        right: 138,
-        top: 18,
-        bottom: 34,
-        containLabel: true,
-      },
-      legend: {
-        show: false,
-      },
-      tooltip: {
-        trigger: "axis",
-        confine: true,
-        appendToBody: false,
-        transitionDuration: 0,
-        axisPointer: {
-          type: "line",
-          snap: true,
-          label: { show: false },
-          lineStyle: {
-            color: "rgba(52, 70, 95, 0.22)",
-            width: 1,
-            type: "dashed",
-          },
-        },
-        backgroundColor: "rgba(255, 255, 255, 0.98)",
-        borderColor: "rgba(36, 50, 70, 0.14)",
-        borderWidth: 1,
-        textStyle: {
-          color: "#172033",
-          fontSize: SHARED_CHART_TEXT.legendSize,
-          fontWeight: SHARED_CHART_TEXT.tooltipWeight,
-        },
-        extraCssText:
-          "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.14); border-radius: 10px;",
-        padding: SHARED_CHART_TEXT.tooltipPadding,
-        formatter: buildReturnPathTooltipFormatter({
-          points,
-          showAbsoluteSeries: includeAbsoluteSeries,
-          showBenchmarkSeries,
-          showActiveSeries: showActiveCumulativeSeries,
-        }),
-        valueFormatter: (value: unknown) => {
-          if (typeof value === "number") {
-            return `${value.toFixed(2)}%`;
-          }
-          if (typeof value === "string") {
-            return value;
-          }
-          return "";
-        },
-      },
-      xAxis: {
-        type: "category" as const,
-        data: categories,
-        boundaryGap: false,
-        axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
-        axisTick: { show: false },
-        axisPointer: { label: { show: false } },
-        axisLabel: {
-          color: "#5a6779",
-          fontSize: SHARED_CHART_TEXT.axisSize,
-          fontWeight: SHARED_CHART_TEXT.axisWeight,
-          margin: 14,
-        },
-      },
-      yAxis: {
-        type: "value" as const,
-        min: cumulativeBounds.min,
-        max: cumulativeBounds.max,
-        splitNumber: 5,
-        axisPointer: { label: { show: false } },
-        axisLabel: {
-          color: "#637083",
-          formatter: (value: number) => `${value}%`,
-        },
-        axisLine: { show: false },
-        axisTick: { show: false },
-        splitLine: {
-          lineStyle: {
-            color: "rgba(22, 58, 92, 0.085)",
-            width: 1,
-            type: "dashed",
-          },
-        },
-      },
-      series: [
-        ...(includeAbsoluteSeries
-          ? [
-              {
-                name: "Portfolio",
-                type: "line" as const,
-                data: portfolioCumulative,
-                smooth: false,
-                symbol: "circle",
-                symbolSize: 7,
-                showSymbol: false,
-                connectNulls: true,
-                clip: false,
-                z: 4,
-                lineStyle: {
-                  width: 3.6,
-                  color: CHART_COLORS.portfolio,
-                  cap: "round" as const,
-                  join: "round" as const,
-                },
-                markLine: {
-                  silent: true,
-                  symbol: "none",
-                  animation: false,
-                  label: { show: false },
-                  lineStyle: {
-                    color: "rgba(22, 58, 92, 0.16)",
-                    width: 1,
-                    type: "solid" as const,
-                  },
-                  data: [{ yAxis: 0 }],
-                },
-                emphasis: {
-                  focus: "series" as const,
-                  lineStyle: {
-                    width: 4.2,
-                  },
-                },
-                endLabel: {
-                  ...buildTerminalValueLabelStyle({
-                    color: CHART_COLORS.portfolio,
-                    backgroundColor: "rgba(255, 255, 255, 0.94)",
-                    borderColor: "rgba(22, 58, 92, 0.12)",
-                    fontWeight: 800,
-                  }),
-                  formatter: (params: CallbackDataParams) =>
-                    formatTerminalValueLabel(params, portfolioCumulative.length - 1),
-                },
-                labelLayout: {
-                  hideOverlap: true,
-                  moveOverlap: "shiftY" as const,
-                },
-                areaStyle: {
-                  color: "rgba(22, 58, 92, 0.035)",
-                },
-              },
-            ]
-          : []),
-        ...(showBenchmarkSeries
-          ? [
-              {
-                name: "Benchmark",
-                type: "line" as const,
-                data: benchmarkCumulative,
-                smooth: false,
-                symbol: "circle",
-                symbolSize: 7,
-                showSymbol: false,
-                connectNulls: true,
-                clip: false,
-                z: 4,
-                lineStyle: {
-                  width: 3,
-                  color: CHART_COLORS.benchmark,
-                  cap: "round" as const,
-                  join: "round" as const,
-                },
-                emphasis: {
-                  focus: "series" as const,
-                  lineStyle: {
-                    width: 3.5,
-                  },
-                },
-                endLabel: {
-                  ...buildTerminalValueLabelStyle({
-                    color: CHART_COLORS.benchmark,
-                    backgroundColor: "rgba(255, 255, 255, 0.94)",
-                    borderColor: "rgba(105, 123, 146, 0.14)",
-                    fontWeight: 800,
-                  }),
-                  formatter: (params: CallbackDataParams) =>
-                    formatTerminalValueLabel(params, benchmarkCumulative.length - 1),
-                },
-                labelLayout: {
-                  hideOverlap: true,
-                  moveOverlap: "shiftY" as const,
-                },
-              },
-            ]
-          : []),
-        ...(showActiveCumulativeSeries
-          ? [
-              {
-                name: "Active",
-                type: "line" as const,
-                data: activeCumulative,
-                smooth: false,
-                symbol: "circle",
-                symbolSize: 7,
-                showSymbol: false,
-                connectNulls: true,
-                clip: false,
-                z: 4,
-                lineStyle: {
-                  width: 2.8,
-                  type: "dashed" as const,
-                  color: CHART_COLORS.active,
-                  cap: "round" as const,
-                  join: "round" as const,
-                },
-                emphasis: {
-                  focus: "series" as const,
-                  lineStyle: {
-                    width: 3.2,
-                  },
-                },
-                endLabel: {
-                  ...buildTerminalValueLabelStyle({
-                    color: CHART_COLORS.active,
-                    backgroundColor: "rgba(255, 251, 235, 0.96)",
-                    borderColor: "rgba(155, 122, 31, 0.18)",
-                    fontWeight: 760,
-                  }),
-                  formatter: (params: CallbackDataParams) =>
-                    formatTerminalValueLabel(params, activeCumulative.length - 1),
-                },
-                labelLayout: {
-                  hideOverlap: true,
-                  moveOverlap: "shiftY" as const,
-                },
-                areaStyle:
-                  chartViewMode === "relative"
-                    ? {
-                        color: "rgba(155, 122, 31, 0.05)",
-                      }
-                    : undefined,
-              },
-            ]
-          : []),
-      ],
-    } satisfies EChartsOption;
+    return buildReturnPathChartOption({
+      points,
+      chartViewMode,
+      hasBenchmarkSeries,
+    });
   }, [chartViewMode, hasBenchmarkSeries, points]);
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
