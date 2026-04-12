@@ -1,8 +1,8 @@
 import {
   AnalyticsTable,
-  CapabilityStatePanel,
 } from "@/design-system";
 
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributorBarList from "./performance-contributor-bar-list";
@@ -73,14 +73,34 @@ export default function PerformanceSummaryContributorsSection({
         </div>
       ) : presentation.mode === "partial" ? (
         <div className="performance-contributors-panel">
-          <CapabilityStatePanel
-            capability={capabilities.contributionRanking}
-            partialTitle={presentation.noticeTitle}
-            unavailableTitle={presentation.noticeTitle}
+          <PerformanceAnalyticalUnavailableState
+            ariaLabel="Contributor ranking partial state"
+            status="partial"
+            title={presentation.noticeTitle}
             body={presentation.noticeBody}
-            partialHint={presentation.hint}
-            unavailableHint={presentation.hint}
-            surface="analysis"
+            hint={presentation.hint}
+            contextItems={[
+              { label: "Period", value: workspace.period },
+              {
+                label: "Benchmark",
+                value: workspace.benchmark_code ?? "Not assigned",
+              },
+              {
+                label: "Ranking scope",
+                value: workspace.contribution?.levels?.[0]?.name ?? "Aggregate contribution",
+              },
+              { label: "Detail posture", value: "Position-level ranking not exposed" },
+            ]}
+            availableItems={[
+              {
+                label: "Aggregate evidence",
+                value: "Contribution totals remain available below for the current selection.",
+              },
+              {
+                label: "Supportability",
+                value: "Position-level contributors require source-backed contribution detail.",
+              },
+            ]}
           />
           {workspace.contribution?.levels?.length ? (
             <PerformanceContributionContextNote contribution={workspace.contribution} />
@@ -107,14 +127,31 @@ export default function PerformanceSummaryContributorsSection({
       ) : presentation.mode === "loading" ? (
         <p className="muted">{presentation.body}</p>
       ) : (
-        <CapabilityStatePanel
-          capability={capabilities.contributionRanking}
-          partialTitle={presentation.noticeTitle}
-          unavailableTitle={presentation.noticeTitle}
+        <PerformanceAnalyticalUnavailableState
+          ariaLabel="Contributor ranking unavailable state"
+          status={capabilities.contributionRanking.state === "partial" ? "partial" : "unavailable"}
+          title={presentation.noticeTitle}
           body={presentation.noticeBody}
-          partialHint={presentation.hint}
-          unavailableHint={presentation.hint}
-          surface="analysis"
+          hint={presentation.hint}
+          contextItems={[
+            { label: "Period", value: workspace.period },
+            {
+              label: "Benchmark",
+              value: workspace.benchmark_code ?? "Not assigned",
+            },
+            { label: "Ranking scope", value: "Position-level contribution" },
+            { label: "Coverage", value: "Contribution detail not exposed" },
+          ]}
+          availableItems={[
+            {
+              label: "Executive context",
+              value: "Return-path benchmark posture and summary metrics remain available above.",
+            },
+            {
+              label: "Dependency",
+              value: "Position-level ranking requires source-backed contribution detail.",
+            },
+          ]}
         />
       )}
     </PerformanceSummaryDriverModule>

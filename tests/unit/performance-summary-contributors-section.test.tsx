@@ -127,6 +127,9 @@ describe("PerformanceSummaryContributorsSection", () => {
 
     expect(screen.getByText("Contributor ranking unavailable")).toBeInTheDocument();
     expect(screen.getByText("Contributor ranking is not available for the current selection.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contributor ranking unavailable state")).toBeInTheDocument();
+    expect(screen.getByText("Selection context")).toBeInTheDocument();
+    expect(screen.getByText("Still available")).toBeInTheDocument();
     expect(screen.queryByLabelText("Aggregate contributor summary")).not.toBeInTheDocument();
   });
 
@@ -150,6 +153,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Contributor ranking partial state")).toBeInTheDocument();
     const note = screen.getByRole("note");
     expect(note).toHaveTextContent("High coverage");
     expect(note).toHaveTextContent("Reconciles to return");

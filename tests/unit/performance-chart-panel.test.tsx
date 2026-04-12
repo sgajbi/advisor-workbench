@@ -367,15 +367,19 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Return History Unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Return history is unavailable for the selected window")
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "Published return observations are not available for the selected horizon."
       )
     ).toBeInTheDocument();
+    expect(screen.getByText("Selection context")).toBeInTheDocument();
+    expect(screen.getByText("Still available")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Adjust the period or explicit dates once performance history is available for this resolved window."
+        "Published return observations and benchmark-relative series must be exposed by the underlying performance contract before the cumulative path can render."
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
@@ -508,11 +512,12 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByText("Return History Is Partial")).toBeInTheDocument();
     expect(
-      screen.getByText("Return observations are only partially published for the selected horizon.")
+      screen.getByText(/Return observations are only partially published/)
     ).toBeInTheDocument();
-    expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
+    expect(screen.getByTestId("performance-echart")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Return history partial state")).toBeInTheDocument();
   });
 
   it("disables frequency options that are outside the backend capability contract", () => {

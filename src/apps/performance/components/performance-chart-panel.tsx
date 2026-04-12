@@ -7,7 +7,6 @@ import type { CallbackDataParams } from "echarts/types/src/util/types.js";
 import { Box } from "@mui/material";
 
 import {
-  CapabilityStatePanel,
   Text,
   WorkbenchChartShell,
 } from "@/design-system";
@@ -21,6 +20,7 @@ import type {
 
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import PerformanceDecisionReadout from "./performance-decision-readout";
 import PerformanceObservationTrail from "./performance-observation-trail";
@@ -246,6 +246,12 @@ export default function PerformanceChartPanel({
       }),
     [chartViewMode, hasActiveSeries, hasBenchmarkSeries, points]
   );
+  const hasRenderableReturnPath =
+    points.length > 0 && capabilities.returnPath.state !== "unavailable";
+  const observationCountLabel =
+    chartTableModel.rows.length > 0
+      ? `${chartTableModel.rows.length} published observations remain visible.`
+      : "No published return observations are exposed for this resolved window.";
 
   const chartOption = useMemo(() => {
     const categories = points.map((point) => point.label);
@@ -652,25 +658,69 @@ export default function PerformanceChartPanel({
       }
       fallbackState={
         !isDetailsPending ? (
-          <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
-            <CapabilityStatePanel
-              capability={capabilities.returnPath}
-              partialTitle="Return History Is Partial"
-              unavailableTitle="Return History Unavailable"
-              body={
-                capabilities.returnPath.reason ??
-                "The resolved window does not currently have published performance observations for this mandate."
-              }
-              partialHint="Adjust the period or explicit dates once performance history is available for this resolved window."
-              unavailableHint="Adjust the period or explicit dates once performance history is available for this resolved window."
-              surface="analysis"
-            />
-          </div>
+          <PerformanceAnalyticalUnavailableState
+            ariaLabel={`${title} unavailable`}
+            status={capabilities.returnPath.state === "partial" ? "partial" : "unavailable"}
+            title={
+              capabilities.returnPath.state === "partial"
+                ? "Return history is partially available"
+                : "Return history is unavailable for the selected window"
+            }
+            body={
+              capabilities.returnPath.reason ??
+              "The resolved window does not currently expose published performance observations for this mandate."
+            }
+            hint="Published return observations and benchmark-relative series must be exposed by the underlying performance contract before the cumulative path can render."
+            contextItems={[
+              { label: "Window", value: resolvedWindowLabel },
+              { label: "Basis", value: resolvedBasisLabel },
+              {
+                label: "Cadence",
+                value: chartFrequency === "quarterly" ? "Quarterly" : "Monthly",
+              },
+              {
+                label: "Benchmark",
+                value: returnPathPresentation.benchmarkContextValue,
+              },
+            ]}
+            availableItems={[
+              {
+                label: "Executive summary",
+                value:
+                  capabilities.summaryKpis.state === "unavailable"
+                    ? "Unavailable"
+                    : "Executive return metrics remain available above the chart shell.",
+              },
+              {
+                label: "Benchmark posture",
+                value:
+                  returnPathPresentation.benchmarkSourceLabel ??
+                  "Resolved benchmark assignment remains visible.",
+              },
+              {
+                label: "Evidence posture",
+                value: observationCountLabel,
+              },
+            ]}
+          />
         ) : undefined
       }
     >
-      {capabilities.returnPath.state === "supported" && points.length ? (
+      {hasRenderableReturnPath ? (
         <>
+          {capabilities.returnPath.state === "partial" ? (
+            <div
+              className="performance-analytical-inline-note"
+              role="status"
+              aria-label="Return history partial state"
+            >
+              <span className="performance-analytical-inline-note-label">Partial history</span>
+              <p>
+                {capabilities.returnPath.reason ??
+                  "Return observations are partially published for the selected horizon."}
+              </p>
+            </div>
+          ) : null}
           {returnPathPresentation.benchmarkStateBody ? (
             <div className="performance-chart-benchmark-state">
               <strong>Benchmark unassigned</strong>

@@ -297,6 +297,34 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
   });
 
+  it("renders a designed unavailable state when no horizon rows are exposed", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        rows: [],
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />
+    );
+
+    expect(
+      await screen.findByLabelText("Horizon comparison unavailable state")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Horizon comparison is unavailable for this mandate")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Selection context")).toBeInTheDocument();
+    expect(screen.getByText("Still available")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Multi-horizon return table")).not.toBeInTheDocument();
+  });
+
   it("pushes the resolved horizon frequency back through the shared request handler", async () => {
     const onRequestChange = vi.fn();
     getHorizonComparisonClientMock.mockResolvedValue(

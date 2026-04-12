@@ -23,6 +23,7 @@ import {
   type PerformanceHorizonVisualMode,
 } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
@@ -344,7 +345,31 @@ export default function PerformanceMultiHorizonPanel({
           />
         </>
       ) : (
-        <p className="muted">{presentation.emptyBody}</p>
+        <PerformanceAnalyticalUnavailableState
+          ariaLabel="Horizon comparison unavailable state"
+          status="unavailable"
+          title="Horizon comparison is unavailable for this mandate"
+          body={presentation.emptyBody}
+          hint="Source-backed multi-horizon observations must be exposed before cross-window comparison can render."
+          contextItems={[
+            { label: "Window", value: resolvedWindowLabel },
+            { label: "Benchmark", value: presentation.benchmarkLabel },
+            { label: "Basis", value: formatLabel(detailBasis) },
+            { label: "Cadence", value: formatLabel(comparison?.chart_frequency ?? chartFrequency) },
+          ]}
+          availableItems={[
+            {
+              label: "Selection posture",
+              value: "Benchmark, basis, and reporting window remain locked to the current analytical context.",
+            },
+            {
+              label: "Control support",
+              value: normalizationNotice
+                ? normalizationNotice.message
+                : "Comparison controls remain available for a supported mandate and window.",
+            },
+          ]}
+        />
       )}
     </PerformanceSummaryDriverModule>
   );

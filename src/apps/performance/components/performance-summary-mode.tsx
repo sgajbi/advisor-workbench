@@ -81,10 +81,6 @@ export default function PerformanceSummaryMode({
             <span className="performance-analytical-zone-kicker">Decision workspace</span>
             <h2>Return path and benchmark comparison</h2>
           </div>
-          <p>
-            Benchmark-relative return path, cash-flow economics, and contribution drivers for
-            the selected mandate.
-          </p>
         </div>
 
         <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
