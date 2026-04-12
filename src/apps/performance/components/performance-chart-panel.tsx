@@ -30,7 +30,9 @@ import {
   buildReturnPathTooltipFormatter,
   CHART_COLORS,
   formatEndLabel,
+  resolveActiveCumulativeReturn,
   resolveReportDates,
+  resolveActivePeriodReturn,
   SHARED_CHART_TEXT,
   toNumeric,
 } from "./performance-return-path-chart-model";
@@ -121,7 +123,9 @@ export default function PerformanceChartPanel({
       point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
   );
   const hasActiveSeries = points.some(
-    (point) => point.active_return_pct !== null || point.cumulative_active_return_pct !== null
+    (point) =>
+      resolveActivePeriodReturn(point) !== null ||
+      resolveActiveCumulativeReturn(point) !== null
   );
   const [chartViewMode, setChartViewMode] = useState<PerformanceChartViewMode>(
     hasBenchmarkSeries && hasActiveSeries ? "combined" : "absolute"
@@ -190,10 +194,9 @@ export default function PerformanceChartPanel({
     const benchmarkCumulative = points.map((point) =>
       toNumeric(point.cumulative_benchmark_return_pct)
     );
-    const activeCumulative = points.map((point) =>
-      toNumeric(point.cumulative_active_return_pct)
-    );
-    const hasActiveCumulativeSeries = hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
+    const activeCumulative = points.map((point) => resolveActiveCumulativeReturn(point));
+    const hasActiveCumulativeSeries =
+      hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
     const includeAbsoluteSeries = chartViewMode !== "relative";
     const includeRelativeSeries = chartViewMode !== "absolute";
     const showBenchmarkSeries = includeAbsoluteSeries && hasBenchmarkSeries;
@@ -218,7 +221,7 @@ export default function PerformanceChartPanel({
       ],
       grid: {
         left: 66,
-        right: 28,
+        right: 92,
         top: 18,
         bottom: 34,
         containLabel: true,

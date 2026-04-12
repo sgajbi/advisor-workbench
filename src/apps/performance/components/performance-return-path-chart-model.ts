@@ -44,6 +44,37 @@ export function toNumeric(value: number | null | undefined): number | null {
   return value === null || value === undefined || Number.isNaN(value) ? null : value;
 }
 
+function deriveDifference(
+  minuend: number | null | undefined,
+  subtrahend: number | null | undefined
+) {
+  const resolvedMinuend = toNumeric(minuend);
+  const resolvedSubtrahend = toNumeric(subtrahend);
+
+  if (resolvedMinuend === null || resolvedSubtrahend === null) {
+    return null;
+  }
+
+  return Number((resolvedMinuend - resolvedSubtrahend).toFixed(6));
+}
+
+export function resolveActivePeriodReturn(point: PerformanceChartPoint) {
+  return (
+    toNumeric(point.active_return_pct) ??
+    deriveDifference(point.portfolio_return_pct, point.benchmark_return_pct)
+  );
+}
+
+export function resolveActiveCumulativeReturn(point: PerformanceChartPoint) {
+  return (
+    toNumeric(point.cumulative_active_return_pct) ??
+    deriveDifference(
+      point.cumulative_portfolio_return_pct,
+      point.cumulative_benchmark_return_pct
+    )
+  );
+}
+
 export function buildPercentAxisBounds(values: Array<number | null | undefined>) {
   const numericValues = values
     .map((value) => toNumeric(value))
@@ -219,10 +250,14 @@ export function buildReturnPathTooltipFormatter({
         : []),
       ...(showActiveSeries
         ? [
-            buildTooltipRow("Active period", point.active_return_pct, CHART_COLORS.active),
+            buildTooltipRow(
+              "Active period",
+              resolveActivePeriodReturn(point),
+              CHART_COLORS.active
+            ),
             buildTooltipRow(
               "Active cumulative",
-              point.cumulative_active_return_pct,
+              resolveActiveCumulativeReturn(point),
               CHART_COLORS.active
             ),
           ]

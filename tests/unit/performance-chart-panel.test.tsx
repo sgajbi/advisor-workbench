@@ -525,6 +525,71 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return history partial state")).toBeInTheDocument();
   });
 
+  it("derives active comparison from portfolio and benchmark when explicit active values are absent", () => {
+    render(
+      <PerformanceChartPanel
+        {...buildChartProps({
+          points: [
+            {
+              label: "2026-03",
+              frequency: "monthly",
+              period_start: "2026-03-01",
+              period_end: "2026-03-31",
+              portfolio_return_pct: 1.4,
+              benchmark_return_pct: 1.1,
+              active_return_pct: null,
+              cumulative_portfolio_return_pct: 6.2,
+              cumulative_benchmark_return_pct: 5.8,
+              cumulative_active_return_pct: null,
+            },
+          ],
+          summary: {
+            portfolio_return_pct: 6.2,
+            benchmark_return_pct: 5.8,
+            active_return_pct: 0.4,
+            benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
+          },
+        })}
+      />
+    );
+
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Active");
+
+    fireEvent.click(screen.getByText("Observation trail"));
+    const observationTable = screen.getByLabelText("Return path observation table");
+    expect(within(observationTable).getByText("Active Return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative Active")).toBeInTheDocument();
+    expect(observationTable).toHaveTextContent(compactPattern("0.30%"));
+    expect(observationTable).toHaveTextContent(compactPattern("0.40%"));
+
+    const series: ChartSeriesProbe[] = Array.isArray(lastChartOption?.series)
+      ? (lastChartOption.series as ChartSeriesProbe[])
+      : [];
+    const activeSeries = series.find((entry) => entry?.name === "Active");
+    expect(activeSeries?.data).toEqual([0.4]);
+
+    const tooltip = Array.isArray(lastChartOption?.tooltip)
+      ? lastChartOption.tooltip[0]
+      : lastChartOption?.tooltip;
+    const tooltipFormatter = tooltip?.formatter as
+      | ((params: unknown) => string)
+      | undefined;
+    expect(
+      String(
+        tooltipFormatter?.([
+          {
+            seriesName: "Portfolio",
+            value: 6.2,
+            axisValue: "2026-03",
+            dataIndex: 0,
+            marker: '<span style="color:red">●</span>',
+          },
+        ])
+      )
+    ).toContain("Active cumulative");
+  });
+
   it("disables frequency options that are outside the backend capability contract", () => {
     render(
       <PerformanceChartPanel

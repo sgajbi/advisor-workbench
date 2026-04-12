@@ -13,6 +13,10 @@ import {
   formatPct,
   formatPerformancePositionLabel,
 } from "../formatters";
+import {
+  resolveActiveCumulativeReturn,
+  resolveActivePeriodReturn,
+} from "./performance-return-path-chart-model";
 
 export type PerformanceAnalyticsTableColumn = {
   key: string;
@@ -321,10 +325,10 @@ export function buildPerformanceReturnPathTableModel({
             : "N/A",
         portfolioPeriod: formatPct(point.portfolio_return_pct),
         benchmarkPeriod: formatPct(point.benchmark_return_pct),
-        activePeriod: formatPct(point.active_return_pct),
+        activePeriod: formatPct(resolveActivePeriodReturn(point)),
         portfolioCumulative: formatPct(point.cumulative_portfolio_return_pct),
         benchmarkCumulative: formatPct(point.cumulative_benchmark_return_pct),
-        activeCumulative: formatPct(point.cumulative_active_return_pct),
+        activeCumulative: formatPct(resolveActiveCumulativeReturn(point)),
       };
 
       return {
