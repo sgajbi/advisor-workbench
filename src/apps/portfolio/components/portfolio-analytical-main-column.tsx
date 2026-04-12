@@ -26,9 +26,27 @@ export default function PortfolioAnalyticalMainColumn({
       </section>
 
       <section className="portfolio-detailed-cluster" aria-label="Portfolio analytical detail">
-        {health}
-        {changes}
-        {drilldown}
+        {(health || changes) ? (
+          <div className="portfolio-detailed-primary-shell">
+            <div className="portfolio-analytical-shell-header portfolio-analytical-shell-header-quiet">
+              <span>Decision review</span>
+              <strong>Health, liquidity, performance, and recent flows first</strong>
+            </div>
+            <div className="portfolio-detailed-primary-stack">
+              {health}
+              {changes}
+            </div>
+          </div>
+        ) : null}
+        {drilldown ? (
+          <div className="portfolio-detailed-supporting-shell">
+            <div className="portfolio-analytical-shell-header portfolio-analytical-shell-header-subdued">
+              <span>Supporting records</span>
+              <strong>Underlying grids and forward-liquidity detail on demand</strong>
+            </div>
+            {drilldown}
+          </div>
+        ) : null}
       </section>
     </>
   );

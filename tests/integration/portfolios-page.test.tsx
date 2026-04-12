@@ -241,7 +241,7 @@ describe("PortfolioFoundationPage", () => {
 
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /Where can I drill down/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Detailed Records/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Holdings$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Transactions$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Projected Cashflow/i })).not.toBeInTheDocument();
@@ -400,7 +400,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Detailed Records/i })).toBeInTheDocument();
     expect(
       await screen.findByRole("heading", { name: /^Holdings$/i }, { timeout: 5000 })
     ).toBeInTheDocument();
@@ -529,7 +529,7 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Detailed Records/i })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("heading", { name: /Portfolio Allocation/i })).toBeInTheDocument();
@@ -569,7 +569,7 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Where can I drill down/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Detailed Records/i })).toBeInTheDocument();
     });
 
     const drilldownSection = document.getElementById("portfolio-drilldown");

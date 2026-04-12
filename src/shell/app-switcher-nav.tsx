@@ -8,6 +8,7 @@ import { usePlatformCapabilities } from "@/features/platform-capabilities/use-pl
 import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
 
 import { resolveShellApp } from "./app-registry";
+import { getWorkspaceDisabledTitle } from "./workspace-supportability-copy";
 
 export default function AppSwitcherNav() {
   const { loading, normalized, shellBootstrapSource } = usePlatformCapabilities();
@@ -51,6 +52,5 @@ function buildWorkspaceTitle(workspace: PlatformShellWorkspaceDescriptor): strin
     return workspace.label;
   }
 
-  const reason = workspace.supportability.reasons[0];
-  return reason ? `${workspace.label} (${reason.replaceAll("_", " ")})` : workspace.label;
+  return getWorkspaceDisabledTitle(workspace);
 }

@@ -101,7 +101,7 @@ describe("AppSwitcherNav", () => {
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Proposal")).toHaveAttribute(
       "title",
-      "Proposal (proposal disabled by contract)"
+      "Proposal workspace is not available in this release."
     );
   });
 
