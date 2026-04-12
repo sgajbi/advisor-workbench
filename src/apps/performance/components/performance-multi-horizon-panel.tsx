@@ -355,18 +355,13 @@ export default function PerformanceMultiHorizonPanel({
             { label: "Window", value: resolvedWindowLabel },
             { label: "Benchmark", value: presentation.benchmarkLabel },
             { label: "Basis", value: formatLabel(detailBasis) },
-            { label: "Cadence", value: formatLabel(comparison?.chart_frequency ?? chartFrequency) },
           ]}
           availableItems={[
             {
-              label: "Selection posture",
-              value: "Benchmark, basis, and reporting window remain locked to the current analytical context.",
-            },
-            {
-              label: "Control support",
+              label: "Controls",
               value: normalizationNotice
                 ? normalizationNotice.message
-                : "Comparison controls remain available for a supported mandate and window.",
+                : "Benchmark and comparison controls remain available.",
             },
           ]}
         />

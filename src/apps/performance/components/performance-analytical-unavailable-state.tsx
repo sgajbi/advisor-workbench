@@ -41,21 +41,18 @@ export default function PerformanceAnalyticalUnavailableState({
 
       <p className="performance-analytical-state-body">{body}</p>
 
-      <div className="performance-analytical-state-grid">
-        <section className="performance-analytical-state-section">
-          <span className="performance-analytical-state-section-label">Selection context</span>
-          <dl className="performance-analytical-state-list">
-            {contextItems.map((item) => (
-              <div key={item.label}>
-                <dt>{item.label}</dt>
-                <dd>{item.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+      <dl className="performance-analytical-state-facts">
+        {contextItems.map((item) => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
+          </div>
+        ))}
+      </dl>
 
-        <section className="performance-analytical-state-section">
-          <span className="performance-analytical-state-section-label">Still available</span>
+      {availableItems.length ? (
+        <div className="performance-analytical-state-support">
+          <span className="performance-analytical-state-section-label">Available now</span>
           <dl className="performance-analytical-state-list">
             {availableItems.map((item) => (
               <div key={item.label}>
@@ -64,12 +61,12 @@ export default function PerformanceAnalyticalUnavailableState({
               </div>
             ))}
           </dl>
-        </section>
-      </div>
+        </div>
+      ) : null}
 
       {hint ? (
         <div className="performance-analytical-state-footer">
-          <span>Dependency</span>
+          <span>Blocked by</span>
           <p>{hint}</p>
         </div>
       ) : null}

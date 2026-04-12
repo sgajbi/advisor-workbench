@@ -86,19 +86,14 @@ export default function PerformanceSummaryContributorsSection({
                 value: workspace.benchmark_code ?? "Not assigned",
               },
               {
-                label: "Ranking scope",
+                label: "Scope",
                 value: workspace.contribution?.levels?.[0]?.name ?? "Aggregate contribution",
               },
-              { label: "Detail posture", value: "Position-level ranking not exposed" },
             ]}
             availableItems={[
               {
-                label: "Aggregate evidence",
-                value: "Contribution totals remain available below for the current selection.",
-              },
-              {
-                label: "Supportability",
-                value: "Position-level contributors require source-backed contribution detail.",
+                label: "Available now",
+                value: "Aggregate contribution totals remain available below.",
               },
             ]}
           />
@@ -139,17 +134,12 @@ export default function PerformanceSummaryContributorsSection({
               label: "Benchmark",
               value: workspace.benchmark_code ?? "Not assigned",
             },
-            { label: "Ranking scope", value: "Position-level contribution" },
-            { label: "Coverage", value: "Contribution detail not exposed" },
+            { label: "Scope", value: "Position-level contribution" },
           ]}
           availableItems={[
             {
-              label: "Executive context",
-              value: "Return-path benchmark posture and summary metrics remain available above.",
-            },
-            {
-              label: "Dependency",
-              value: "Position-level ranking requires source-backed contribution detail.",
+              label: "Available now",
+              value: "Return-path context remains available above this module.",
             },
           ]}
         />

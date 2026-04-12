@@ -375,13 +375,17 @@ describe("PerformanceChartPanel", () => {
         "Published return observations are not available for the selected horizon."
       )
     ).toBeInTheDocument();
-    expect(screen.getByText("Selection context")).toBeInTheDocument();
-    expect(screen.getByText("Still available")).toBeInTheDocument();
+    expect(screen.getByText("Available now")).toBeInTheDocument();
+    expect(screen.getByText("Blocked by")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Published return observations and benchmark-relative series must be exposed by the underlying performance contract before the cumulative path can render."
       )
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
+      compactPattern("Money-Weighted Return 5.12%")
+    );
     expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
   });

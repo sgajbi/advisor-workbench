@@ -9336,21 +9336,21 @@ a:hover {
 .performance-analysis-control-bar {
   display: grid;
   grid-template-columns:
-    minmax(13rem, 0.92fr)
-    minmax(20rem, 1.24fr)
-    minmax(15rem, 1.05fr)
-    minmax(12rem, 0.82fr);
-  gap: 0.5rem;
+    minmax(12rem, 0.9fr)
+    minmax(18rem, 1.12fr)
+    minmax(14rem, 0.98fr)
+    minmax(11rem, 0.74fr);
+  gap: 0.42rem;
   align-items: stretch;
 }
 
 .performance-analysis-control-cluster {
   display: grid;
-  gap: 0.38rem;
-  padding: 0.5rem 0.56rem;
+  gap: 0.32rem;
+  padding: 0.42rem 0.48rem;
   border: 1px solid rgba(32, 44, 61, 0.07);
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.72);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.58);
 }
 
 .performance-analysis-control-cluster-selection,
@@ -9368,7 +9368,7 @@ a:hover {
 
 .performance-analysis-control-slot {
   display: grid;
-  gap: 0.18rem;
+  gap: 0.14rem;
   min-width: 0;
 }
 
@@ -9378,7 +9378,7 @@ a:hover {
 }
 
 .performance-analysis-control-slot .MuiInputBase-input {
-  font-size: 0.79rem;
+  font-size: 0.76rem;
   font-weight: 650;
 }
 
@@ -9391,35 +9391,35 @@ a:hover {
 }
 
 .performance-analysis-control-slot .workbench-segmented-control-button {
-  min-height: 30px;
-  padding: 0.28rem 0.52rem;
-  font-size: 0.75rem;
+  min-height: 28px;
+  padding: 0.22rem 0.46rem;
+  font-size: 0.72rem;
 }
 
 .performance-analysis-date-row {
   display: grid;
   grid-template-columns: minmax(17rem, 1fr) auto;
-  gap: 0.42rem;
+  gap: 0.34rem;
   align-items: stretch;
 }
 
 .performance-analysis-date-inputs {
   display: grid;
   grid-template-columns: repeat(2, minmax(8.4rem, 1fr));
-  gap: 0.32rem;
+  gap: 0.28rem;
   width: 100%;
   max-width: 100%;
-  padding: 0.24rem;
+  padding: 0.2rem;
   border: 1px solid rgba(34, 44, 59, 0.1);
-  border-radius: 10px;
+  border-radius: 9px;
   background: linear-gradient(180deg, rgba(250, 251, 253, 0.98) 0%, #ffffff 100%);
 }
 
 .performance-analysis-apply-button.action-button {
-  min-height: 38px;
-  padding-inline: 0.82rem;
+  min-height: 34px;
+  padding-inline: 0.74rem;
   white-space: nowrap;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .performance-outcome-strip {
@@ -9825,9 +9825,9 @@ a:hover {
 
 .performance-analytical-state {
   display: grid;
-  gap: 0.78rem;
+  gap: 0.62rem;
   min-height: 0;
-  padding: 0.86rem 0.9rem;
+  padding: 0.78rem 0.82rem;
   border: 1px solid rgba(217, 224, 231, 0.92);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(249, 250, 252, 0.98) 0%, rgba(255, 255, 255, 0.96) 100%);
@@ -9842,7 +9842,7 @@ a:hover {
 
 .performance-analytical-state-heading {
   display: grid;
-  gap: 0.18rem;
+  gap: 0.14rem;
 }
 
 .performance-analytical-state-kicker {
@@ -9855,8 +9855,8 @@ a:hover {
 
 .performance-analytical-state-heading strong {
   color: var(--brand-strong);
-  font-size: var(--workbench-analytic-heading-size);
-  line-height: 1.18;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
 .performance-analytical-state-status {
@@ -9877,23 +9877,25 @@ a:hover {
 .performance-analytical-state-footer p {
   margin: 0;
   color: var(--text-muted);
-  font-size: var(--workbench-analytic-context-value-size);
-  line-height: 1.42;
+  font-size: 0.82rem;
+  line-height: 1.38;
 }
 
-.performance-analytical-state-grid {
+.performance-analytical-state-facts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.38rem;
+  margin: 0;
 }
 
-.performance-analytical-state-section {
+.performance-analytical-state-facts div,
+.performance-analytical-state-support {
   display: grid;
-  gap: 0.36rem;
+  gap: 0.2rem;
   min-width: 0;
-  padding: 0.62rem 0.68rem;
+  padding: 0.5rem 0.58rem;
   border: 1px solid rgba(32, 44, 61, 0.07);
-  border-radius: 10px;
+  border-radius: 9px;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -9908,7 +9910,7 @@ a:hover {
 
 .performance-analytical-state-list {
   display: grid;
-  gap: 0.42rem;
+  gap: 0.28rem;
   margin: 0;
 }
 
@@ -9917,18 +9919,20 @@ a:hover {
   gap: 0.14rem;
 }
 
+.performance-analytical-state-facts dt,
 .performance-analytical-state-list dt {
   color: #6b7280;
   font-size: 0.71rem;
   line-height: 1.25;
 }
 
+.performance-analytical-state-facts dd,
 .performance-analytical-state-list dd {
   margin: 0;
   color: var(--brand-strong);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  line-height: 1.34;
+  line-height: 1.3;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
@@ -9936,8 +9940,15 @@ a:hover {
 .performance-analytical-state-footer {
   display: grid;
   gap: 0.2rem;
-  padding-top: 0.1rem;
+  padding-top: 0.06rem;
   border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.performance-page-unavailable-shell {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .performance-chart-grid-line {
@@ -11595,7 +11606,7 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-analytical-state-grid {
+  .performance-analytical-state-facts {
     grid-template-columns: 1fr;
   }
 

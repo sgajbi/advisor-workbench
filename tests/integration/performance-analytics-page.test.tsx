@@ -235,8 +235,8 @@ describe("PerformanceAnalyticsPage", () => {
 
     const mainShell = document.querySelector(".workstation-shell-main");
     expect(mainShell).toBeTruthy();
-    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
+      expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
       expect(screen.getAllByText("Horizon Comparison")).toHaveLength(1);
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(screen.getByLabelText("Performance decision workspace")).toBeInTheDocument();
@@ -282,8 +282,8 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
-    expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     await waitFor(() => {
+      expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
     expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
@@ -1220,9 +1220,10 @@ describe("PerformanceAnalyticsPage", () => {
       const trustStrip = screen.getByLabelText("Trust and completeness strip");
 
       if (executiveExpectations.length) {
-        expect(executiveStrip).toBeInTheDocument();
+        const resolvedExecutiveStrip = await screen.findByLabelText("Executive return strip");
+        expect(resolvedExecutiveStrip).toBeInTheDocument();
         for (const text of executiveExpectations) {
-          expect(within(executiveStrip as HTMLElement).queryAllByText(text).length).toBeGreaterThan(0);
+          expect(within(resolvedExecutiveStrip).queryAllByText(text).length).toBeGreaterThan(0);
         }
       } else {
         expect(executiveStrip).not.toBeInTheDocument();

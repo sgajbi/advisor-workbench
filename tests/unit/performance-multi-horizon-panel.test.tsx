@@ -320,8 +320,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(
       screen.getByText("Horizon comparison is unavailable for this mandate")
     ).toBeInTheDocument();
-    expect(screen.getByText("Selection context")).toBeInTheDocument();
-    expect(screen.getByText("Still available")).toBeInTheDocument();
+    expect(screen.getByText("Available now")).toBeInTheDocument();
+    expect(screen.getByText("Blocked by")).toBeInTheDocument();
     expect(screen.queryByLabelText("Multi-horizon return table")).not.toBeInTheDocument();
   });
 

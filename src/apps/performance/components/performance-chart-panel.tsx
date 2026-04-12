@@ -673,32 +673,22 @@ export default function PerformanceChartPanel({
             hint="Published return observations and benchmark-relative series must be exposed by the underlying performance contract before the cumulative path can render."
             contextItems={[
               { label: "Window", value: resolvedWindowLabel },
-              { label: "Basis", value: resolvedBasisLabel },
-              {
-                label: "Cadence",
-                value: chartFrequency === "quarterly" ? "Quarterly" : "Monthly",
-              },
               {
                 label: "Benchmark",
                 value: returnPathPresentation.benchmarkContextValue,
               },
+              { label: "Basis", value: resolvedBasisLabel },
             ]}
             availableItems={[
               {
-                label: "Executive summary",
+                label: "Summary metrics",
                 value:
                   capabilities.summaryKpis.state === "unavailable"
                     ? "Unavailable"
-                    : "Executive return metrics remain available above the chart shell.",
+                    : "Headline return and cash-flow metrics remain available.",
               },
               {
-                label: "Benchmark posture",
-                value:
-                  returnPathPresentation.benchmarkSourceLabel ??
-                  "Resolved benchmark assignment remains visible.",
-              },
-              {
-                label: "Evidence posture",
+                label: "Evidence",
                 value: observationCountLabel,
               },
             ]}

@@ -16,6 +16,7 @@ import {
 import PerformanceWorkspaceModeSwitch, {
 } from "./performance-workspace-mode-switch";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import type {
@@ -159,12 +160,34 @@ export default function PerformanceWorkspaceView({
       mainClassName="performance-main"
       main={
         !workspace ? (
-          <Panel className="degraded-state-panel">
-            <h2>Performance data unavailable</h2>
-            <p className="error-text">
-              The selected portfolio could not be loaded from the performance workspace contract.
-            </p>
-          </Panel>
+          <WorkbenchPageFrame
+            className={`performance-page-frame performance-page-frame-${mode}`}
+            bodyClassName="performance-page-frame-body"
+            title={workspaceTitle}
+            subtitle={workspaceSubtitle}
+          >
+            <WorkbenchSectionStack className="performance-page-sections">
+              <Panel className="performance-page-unavailable-shell">
+                <PerformanceAnalyticalUnavailableState
+                  ariaLabel="Performance workspace unavailable"
+                  status="unavailable"
+                  title="Performance data unavailable"
+                  body="The selected portfolio could not be loaded from the performance workspace contract."
+                  hint="The performance workspace contract must resolve successfully before benchmark-aware return, contribution, and risk surfaces can render."
+                  contextItems={[
+                    { label: "Surface", value: workspaceTitle },
+                    { label: "Mode", value: mode === "risk" ? "Risk" : "Performance" },
+                  ]}
+                  availableItems={[
+                    {
+                      label: "Shell",
+                      value: "Workspace navigation and route context remain available.",
+                    },
+                  ]}
+                />
+              </Panel>
+            </WorkbenchSectionStack>
+          </WorkbenchPageFrame>
         ) : (
           <WorkbenchPageFrame
             className={`performance-page-frame performance-page-frame-${mode}`}
