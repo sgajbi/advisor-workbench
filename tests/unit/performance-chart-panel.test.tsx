@@ -454,6 +454,25 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
   });
 
+  it("renders an analytical loading state while detail series are pending", () => {
+    render(
+      <PerformanceChartPanel
+        {...buildChartProps({
+          points: [],
+          isDetailsPending: true,
+        })}
+      />
+    );
+
+    const loadingState = screen.getByRole("status");
+    expect(loadingState).toHaveTextContent("Resolving return path and benchmark comparison");
+    expect(loadingState).toHaveTextContent(
+      "Loading published observations, benchmark context, and active comparison for the selected reporting window."
+    );
+    expect(screen.queryByText("Return history is unavailable for the selected window")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
+  });
+
   it("renders a compact benchmark-unassigned state without weak placeholders", () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
     const returnPath = buildPerformanceReturnPathScenarioData(scenario, {

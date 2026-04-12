@@ -7,6 +7,7 @@ import { Box } from "@mui/material";
 import {
   Text,
   WorkbenchChartShell,
+  WorkbenchLoadingState,
 } from "@/design-system";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
@@ -305,9 +306,13 @@ export default function PerformanceChartPanel({
       }
       loadingState={
         isDetailsPending ? (
-          <div className="performance-chart-loading-state">
-            <p className="muted">Loading analytical time series and benchmark comparison.</p>
-          </div>
+          <WorkbenchLoadingState
+            className="performance-chart-loading-state"
+            title="Resolving return path and benchmark comparison"
+            message="Loading published observations, benchmark context, and active comparison for the selected reporting window."
+            rows={2}
+            chart
+          />
         ) : undefined
       }
       fallbackState={
