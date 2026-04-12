@@ -253,7 +253,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
-        compactPattern("Active Return 0.51%")
+        compactPattern("Benchmark Global Balanced 60/40")
       );
     });
     fireEvent.click(screen.getByText("Detailed table"));
@@ -1110,9 +1110,6 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(screen.getByText("Detailed table")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active Return Unavailable")
-    );
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40")
     );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
@@ -1162,7 +1159,6 @@ describe("PerformanceAnalyticsPage", () => {
       ],
       contextExpectations: ["Active Return Unavailable", "Benchmark Global Balanced 60/40"],
       horizonExpectations: [
-        "Active Return Unavailable",
         "Benchmark Global Balanced 60/40",
       ],
       absentTexts: ["Benchmark unassigned"],
@@ -1177,7 +1173,7 @@ describe("PerformanceAnalyticsPage", () => {
       ],
       trustExpectations: [],
       deferredExpectations: ["Contributor ranking is partial"],
-      horizonExpectations: ["Active Return 0.51%", "Benchmark Global Balanced 60/40"],
+      horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["AAPL"],
     },
     {
@@ -1196,7 +1192,7 @@ describe("PerformanceAnalyticsPage", () => {
       ],
       deferredExpectations: ["Contributor ranking is partial"],
       contextExpectations: ["Active Return Unavailable"],
-      horizonExpectations: ["Active Return Unavailable", "Benchmark Global Balanced 60/40"],
+      horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },
   ])(

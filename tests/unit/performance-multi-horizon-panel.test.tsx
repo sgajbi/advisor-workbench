@@ -72,9 +72,6 @@ describe("PerformanceMultiHorizonPanel", () => {
       compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
     );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active Return 0.51%")
-    );
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40")
     );
     expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
@@ -88,10 +85,10 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
     expect(
-      within(screen.getByRole("group", { name: "Horizon comparison context" })).getByText(
+      within(screen.getByRole("group", { name: "Horizon comparison context" })).queryByText(
         "Active Return"
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("Portfolio Return").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Benchmark Return").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByText("Detailed table"));
@@ -265,9 +262,6 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active Return Unavailable")
-    );
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       compactPattern("Benchmark Not assigned")
     );

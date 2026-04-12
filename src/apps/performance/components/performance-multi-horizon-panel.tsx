@@ -230,20 +230,15 @@ export default function PerformanceMultiHorizonPanel({
             itemClassName="performance-mini-legend-item"
             label="Horizon comparison context"
             items={[
-                {
-                  key: "resolved-window",
-                  label: "Period Range",
-                  value: resolvedWindowLabel,
-                },
-              {
-                key: "active-return",
-                label: "Active Return",
-                value: presentation.activeReturnLabel,
-              },
               {
                 key: "benchmark",
                 label: "Benchmark",
                 value: presentation.benchmarkLabel,
+              },
+              {
+                key: "resolved-window",
+                label: "Period Range",
+                value: resolvedWindowLabel,
               },
             ]}
           />
