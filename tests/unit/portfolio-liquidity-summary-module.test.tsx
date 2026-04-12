@@ -38,6 +38,7 @@ describe("PortfolioLiquiditySummaryModule", () => {
     expect(screen.getAllByText("10 days").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Projected points included")).toBeInTheDocument();
     expect(container.querySelector(".portfolio-summary-pair-panel")).not.toBeNull();
+    expect(screen.getByRole("group", { name: "Liquidity and projected cash metrics" })).toBeInTheDocument();
     expect(container.querySelectorAll(".portfolio-summary-pair-stat")).toHaveLength(3);
     expect(screen.queryByText("Projected cashflow unavailable")).not.toBeInTheDocument();
   });

@@ -12,6 +12,7 @@ import { buildPerformanceHref } from "@/apps/performance/navigation";
 import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
+import PortfolioMetricSummaryStrip from "./portfolio-metric-summary-strip";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioPerformanceSparkline from "./portfolio-performance-sparkline";
 
@@ -77,18 +78,18 @@ export default function PortfolioPerformanceSnapshotModule({
       {expanded ? (
         hasPerformance ? (
           <div className="portfolio-summary-pair-panel portfolio-performance-snapshot-panel">
-            <div className="portfolio-summary-pair-strip">
-              <SummaryPairStat label="Portfolio Return" value={formatPct(performance?.return_pct)} />
-              <SummaryPairStat
-                label="Benchmark Return"
-                value={formatPct(performance?.benchmark_return_pct)}
-              />
-              <SummaryPairStat label="Active Return" value={formatPct(performance?.excess_return_pct)} />
-              <SummaryPairStat
-                label="Money-Weighted Return"
-                value={formatPct(performance?.money_weighted_return_pct)}
-              />
-            </div>
+            <PortfolioMetricSummaryStrip
+              ariaLabel="Performance snapshot metrics"
+              items={[
+                { label: "Portfolio Return", value: formatPct(performance?.return_pct) },
+                { label: "Benchmark Return", value: formatPct(performance?.benchmark_return_pct) },
+                { label: "Active Return", value: formatPct(performance?.excess_return_pct) },
+                {
+                  label: "Money-Weighted Return",
+                  value: formatPct(performance?.money_weighted_return_pct),
+                },
+              ]}
+            />
             <div className="portfolio-summary-pair-body">
               <div className="portfolio-performance-snapshot-trend">
                 <div className="portfolio-summary-pair-region-heading">
@@ -236,21 +237,6 @@ function buildPerformanceWorkspaceHref({
     reportStartDate: useExplicitWindow ? context.effectivePeriodStartDate : undefined,
     reportEndDate: useExplicitWindow ? context.effectivePeriodEndDate : undefined,
   });
-}
-
-function SummaryPairStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="portfolio-summary-pair-stat">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
 }
 
 function getOperationalSupportLine(

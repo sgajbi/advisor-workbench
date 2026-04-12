@@ -3029,6 +3029,7 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .portfolio-summary-pair-stat {
@@ -3038,6 +3039,7 @@ a:hover {
   border: var(--border-subtle);
   border-radius: 10px;
   background: #fff;
+  min-width: 0;
 }
 
 .portfolio-summary-pair-stat span {
@@ -3052,6 +3054,9 @@ a:hover {
   line-height: 1.2;
   color: var(--text);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .portfolio-summary-pair-body {
@@ -3125,10 +3130,19 @@ a:hover {
 }
 
 .portfolio-summary-pair-context-grid .suite-row {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.72fr) minmax(0, 1.28fr);
+  align-items: baseline;
+  gap: var(--space-3);
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border-top: 0;
   background: #fff;
+}
+
+.portfolio-summary-pair-context-grid .suite-row strong {
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .portfolio-summary-pair-support {
@@ -3570,6 +3584,15 @@ a:hover {
   font-size: 13px;
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
+}
+
+.portfolio-data-grid .portfolio-data-grid-cell-numeric {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.portfolio-data-grid .portfolio-data-grid-header-cell-numeric .ag-header-cell-label {
+  justify-content: flex-end;
 }
 
 .portfolio-grid-empty-state {

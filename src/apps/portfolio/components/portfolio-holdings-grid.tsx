@@ -387,10 +387,17 @@ const DEFAULT_GRID_COLUMN_DEF: ColDef = {
 function buildHoldingsColumn(
   config: ColDef<HoldingsRow> & { key: HoldingsColumnKey }
 ): ColDef<HoldingsRow> {
+  const isNumericColumn = config.type === "numericColumn";
   const columnConfig = { ...config };
   delete (columnConfig as { key?: HoldingsColumnKey }).key;
   return {
     ...columnConfig,
+    cellClass: isNumericColumn
+      ? "portfolio-data-grid-cell portfolio-data-grid-cell-numeric"
+      : "portfolio-data-grid-cell",
+    headerClass: isNumericColumn
+      ? "portfolio-data-grid-header-cell portfolio-data-grid-header-cell-numeric"
+      : "portfolio-data-grid-header-cell",
     tooltipValueGetter: (params) => String(params.value ?? ""),
   };
 }
