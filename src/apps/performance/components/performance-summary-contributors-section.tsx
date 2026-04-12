@@ -60,37 +60,17 @@ export default function PerformanceSummaryContributorsSection({
             <summary className="performance-contributors-table-disclosure-summary">
               <div className="performance-contributors-table-disclosure-copy">
                 <strong>Instrument detail</strong>
-                <span>Open the full instrument-level contribution breakdown for contributors and detractors.</span>
+                <span>Open the full instrument-level contribution breakdown in one ranked table.</span>
               </div>
             </summary>
-            <div className="performance-contributors-table-grid">
-              <section className="performance-contributors-table-card">
-                <div className="performance-contributors-table-header">
-                  <strong>Top Contributors</strong>
-                </div>
-                <AnalyticsTable
-                  ariaLabel="Top Contributors table"
-                  className="performance-contributors-table performance-chart-observation-table"
-                  density="compact"
-                  variant="observation"
-                  columns={presentation.positiveTableModel.columns}
-                  rows={presentation.positiveTableModel.rows}
-                />
-              </section>
-              <section className="performance-contributors-table-card">
-                <div className="performance-contributors-table-header">
-                  <strong>Top Detractors</strong>
-                </div>
-                <AnalyticsTable
-                  ariaLabel="Top Detractors table"
-                  className="performance-contributors-table performance-chart-observation-table"
-                  density="compact"
-                  variant="observation"
-                  columns={presentation.negativeTableModel.columns}
-                  rows={presentation.negativeTableModel.rows}
-                />
-              </section>
-            </div>
+            <AnalyticsTable
+              ariaLabel="Contributor instrument detail table"
+              className="performance-contributors-table performance-chart-observation-table"
+              density="compact"
+              variant="observation"
+              columns={presentation.rankedTableModel.columns}
+              rows={presentation.rankedTableModel.rows}
+            />
           </details>
         </div>
       ) : presentation.mode === "partial" ? (

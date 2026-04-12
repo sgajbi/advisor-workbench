@@ -325,10 +325,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     fireEvent.click(within(contributorsModule as HTMLElement).getByText("Instrument detail"));
-    expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors table")).toBeInTheDocument();
-    expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors table")).toBeInTheDocument();
-    expect(within(contributorsModule as HTMLElement).getAllByText("Instrument").length).toBeGreaterThanOrEqual(2);
-    expect(within(contributorsModule as HTMLElement).getAllByText("Weight").length).toBeGreaterThanOrEqual(2);
+    expect(within(contributorsModule as HTMLElement).getByLabelText("Contributor instrument detail table")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getAllByText("Instrument").length).toBeGreaterThanOrEqual(1);
+    expect(within(contributorsModule as HTMLElement).getAllByText("Weight").length).toBeGreaterThanOrEqual(1);
+    expect(within(contributorsModule as HTMLElement).getByText("Direction")).toBeInTheDocument();
     expect(screen.queryByText("Attribution Over Time")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Contribution Detail")).not.toBeInTheDocument();

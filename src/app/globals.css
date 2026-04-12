@@ -8766,29 +8766,10 @@ a:hover {
   align-items: start;
 }
 
-.performance-contributors-table-card {
-  display: grid;
-  gap: 0.62rem;
-  min-width: 0;
-  align-self: start;
-}
-
 .performance-contributors-ranked-card {
   display: grid;
   min-width: 0;
   align-self: start;
-}
-
-.performance-contributors-table-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.performance-contributors-table-header strong {
-  font-size: var(--workbench-analytic-heading-size);
-  line-height: 1.2;
 }
 
 .performance-contributor-bar-list {
@@ -8968,13 +8949,6 @@ a:hover {
   color: var(--text-muted);
   font-size: var(--text-xs);
   line-height: 1.38;
-}
-
-.performance-contributors-table-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  padding: 0 0.82rem 0.82rem;
 }
 
 .performance-contributors-grid > .workbench-summary-visual-card,

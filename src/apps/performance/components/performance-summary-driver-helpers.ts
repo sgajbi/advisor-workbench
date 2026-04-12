@@ -34,8 +34,7 @@ export type PerformanceContributorsPresentation =
   | {
       mode: "supported";
       frame: PerformanceSummaryDriverModuleFrame;
-      positiveTableModel: PerformanceAnalyticsTableModel;
-      negativeTableModel: PerformanceAnalyticsTableModel;
+      rankedTableModel: PerformanceAnalyticsTableModel;
       positiveRankedItems: PerformanceContributorRankedItem[];
       negativeRankedItems: PerformanceContributorRankedItem[];
       tableModel: PerformanceAnalyticsTableModel;
@@ -136,8 +135,10 @@ export function getPerformanceContributorsPresentation({
     return {
       mode: "supported",
       frame,
-      positiveTableModel: buildPerformanceSummaryContributorTableModel(positiveRows),
-      negativeTableModel: buildPerformanceSummaryContributorTableModel(negativeRows),
+      rankedTableModel: buildPerformanceSummaryContributorTableModel({
+        positiveRows,
+        negativeRows,
+      }),
       positiveRankedItems: buildPerformanceContributorRankedItems(positiveRows, "positive"),
       negativeRankedItems: buildPerformanceContributorRankedItems(negativeRows, "negative"),
       tableModel,
@@ -225,24 +226,35 @@ function getContributorSideRows(
   );
 }
 
-function buildPerformanceSummaryContributorTableModel(
-  rows: ContributionPositionView[]
-): PerformanceAnalyticsTableModel {
+function buildPerformanceSummaryContributorTableModel({
+  positiveRows,
+  negativeRows,
+}: {
+  positiveRows: ContributionPositionView[];
+  negativeRows: ContributionPositionView[];
+}): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
+    { key: "direction", label: "Direction" },
     { key: "instrument", label: "Instrument" },
     { key: "contribution", label: "Contribution", align: "right" },
     { key: "weight", label: "Weight", align: "right" },
     { key: "return", label: "Return", align: "right" },
   ];
 
+  const rows = [
+    ...positiveRows.map((row) => ({ row, direction: "Contributor" })),
+    ...negativeRows.map((row) => ({ row, direction: "Detractor" })),
+  ];
+
   return {
     columns,
-    rows: rows.map((row) => {
+    rows: rows.map(({ row, direction }) => {
       const instrumentLabel = formatPerformancePositionLabel(row.position_id);
       return {
-        key: row.position_id,
-        ariaLabel: `${instrumentLabel} contributor row`,
+        key: `${direction}-${row.position_id}`,
+        ariaLabel: `${instrumentLabel} ${direction.toLowerCase()} row`,
         cells: [
+          direction,
           instrumentLabel,
           formatPct(row.contribution_pct),
           formatPct(row.weight_avg_pct),

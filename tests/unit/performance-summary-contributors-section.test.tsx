@@ -86,28 +86,25 @@ describe("PerformanceSummaryContributorsSection", () => {
 
     fireEvent.click(screen.getByText("Instrument detail"));
 
-    const contributorsTable = screen.getByLabelText("Top Contributors table");
+    const contributorsTable = screen.getByLabelText("Contributor instrument detail table");
     expect(contributorsTable).toBeInTheDocument();
     expect(
       contributorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
     ).toBeTruthy();
+    expect(within(contributorsTable).getByText("Direction")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Instrument")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Contribution")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Weight")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Return")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Contributor")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Detractor")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("AAPL")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("TLT")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("1.50%")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("24.00%")).toBeInTheDocument();
-    expect(within(contributorsTable).getByText("8.00%")).toBeInTheDocument();
-
-    const detractorsTable = screen.getByLabelText("Top Detractors table");
-    expect(detractorsTable).toBeInTheDocument();
-    expect(
-      detractorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
-    ).toBeTruthy();
-    expect(within(detractorsTable).getByText("TLT")).toBeInTheDocument();
-    expect(within(detractorsTable).getByText("-0.20%")).toBeInTheDocument();
-    expect(within(detractorsTable).getByText("-2.00%")).toBeInTheDocument();
+    expect(within(contributorsTable).getAllByText("8.00%")).toHaveLength(2);
+    expect(within(contributorsTable).getByText("-0.20%")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("-2.00%")).toBeInTheDocument();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {
