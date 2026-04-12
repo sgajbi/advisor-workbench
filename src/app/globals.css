@@ -10551,6 +10551,7 @@ a:hover {
 .performance-horizon-toolbar {
   min-width: 0;
   justify-content: flex-end;
+  margin-top: -0.08rem;
 }
 
 .performance-horizon-bars {
@@ -10562,8 +10563,8 @@ a:hover {
 
 .performance-horizon-matrix {
   display: grid;
-  gap: 0.5rem;
-  padding: 0.62rem;
+  gap: 0.36rem;
+  padding: 0.56rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: rgba(248, 250, 252, 0.74);
@@ -10571,14 +10572,14 @@ a:hover {
 
 .performance-horizon-matrix-header {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 0.22fr) minmax(0, 1fr) minmax(0, 1fr) minmax(11rem, 0.5fr);
-  gap: 0.9rem;
-  padding: 0 0.74rem 0.12rem;
+  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr) minmax(10rem, 0.44fr);
+  gap: 0.72rem;
+  padding: 0 0.56rem 0.06rem;
 }
 
 .performance-horizon-matrix-no-support .performance-horizon-matrix-header,
 .performance-horizon-matrix-no-support .performance-horizon-matrix-row {
-  grid-template-columns: minmax(5.5rem, 0.22fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .performance-horizon-matrix-header span {
@@ -10604,10 +10605,10 @@ a:hover {
 
 .performance-horizon-matrix-row {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 0.22fr) minmax(0, 1fr) minmax(0, 1fr) minmax(11rem, 0.5fr);
-  gap: 0.9rem;
+  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr) minmax(10rem, 0.44fr);
+  gap: 0.72rem;
   align-items: stretch;
-  padding: 0.64rem 0.74rem;
+  padding: 0.56rem;
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
@@ -10695,7 +10696,7 @@ a:hover {
   align-content: center;
   align-items: center;
   gap: 0.28rem 0.4rem;
-  padding-left: 0.55rem;
+  padding-left: 0.4rem;
   border-left: 1px solid rgba(148, 163, 184, 0.16);
 }
 
@@ -10709,8 +10710,8 @@ a:hover {
 
 .performance-horizon-table-disclosure {
   display: grid;
-  gap: 0.7rem;
-  margin-top: 0.9rem;
+  gap: 0.55rem;
+  margin-top: 0.72rem;
   border: 1px solid rgba(32, 44, 61, 0.07);
   border-radius: 12px;
   background: rgba(248, 250, 252, 0.68);
@@ -10722,7 +10723,7 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.72rem 0.82rem;
+  padding: 0.64rem 0.74rem;
   cursor: pointer;
   list-style: none;
 }

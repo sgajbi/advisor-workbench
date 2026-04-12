@@ -146,6 +146,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Cumulative")).toBeInTheDocument();
+    expect(screen.queryByText("Active / Cumulative")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
     fireEvent.click(screen.getByRole("tab", { name: "Net" }));
@@ -159,6 +160,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
     expect(screen.getAllByText("Net").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Gross").length).toBeGreaterThan(0);
+    expect(screen.getByText("Fee Drag / Cumulative")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
 

@@ -3,10 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  AnalyticsTable,
   WorkbenchChartContextRow,
-  WorkbenchSegmentedControl,
-  WorkbenchSummaryToolbar,
 } from "@/design-system";
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
@@ -24,6 +21,9 @@ import {
 } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
+import PerformanceHorizonComparisonDisclosure from "./performance-horizon-comparison-disclosure";
+import PerformanceHorizonComparisonMatrix from "./performance-horizon-comparison-matrix";
+import PerformanceHorizonComparisonToolbar from "./performance-horizon-comparison-toolbar";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
@@ -190,10 +190,6 @@ export default function PerformanceMultiHorizonPanel({
   const hasRelativeVisual = (rows ?? []).some(
     (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
   );
-  const showSupportColumn = visualMode !== "relative";
-  const supportHeaderLabel = visualMode === "basis" ? "Fee drag / cumulative" : "Active / cumulative";
-  const supportPrimaryLabel = visualMode === "basis" ? "Fee drag" : "Active";
-  const supportSecondaryLabel = "Cumulative";
 
   useEffect(() => {
     if (visualMode === "relative" && !hasRelativeVisual) {
@@ -231,156 +227,28 @@ export default function PerformanceMultiHorizonPanel({
             label="Horizon comparison context"
             items={[
               {
-                key: "benchmark",
-                label: "Benchmark",
-                value: presentation.benchmarkLabel,
-              },
-              {
                 key: "resolved-window",
                 label: "Period Range",
                 value: resolvedWindowLabel,
               },
+              {
+                key: "benchmark",
+                label: "Benchmark",
+                value: presentation.benchmarkLabel,
+              },
             ]}
           />
-          <WorkbenchSummaryToolbar className="performance-horizon-toolbar">
-            <WorkbenchSegmentedControl
-              ariaLabel="Horizon table view"
-              className="performance-horizon-table-view"
-              value={tableView}
-              onChange={setTableView}
-              options={[
-                { key: "combined", label: "Combined" },
-                { key: "returns", label: "Returns" },
-                { key: "economics", label: "Economics" },
-              ]}
-            />
-            <WorkbenchSegmentedControl
-              ariaLabel="Horizon basis view"
-              className="performance-horizon-basis-view"
-              value={basisView}
-              onChange={setBasisView}
-              options={[
-                { key: "both", label: "Both" },
-                { key: "net", label: "Net" },
-                { key: "gross", label: "Gross" },
-              ]}
-            />
-            <WorkbenchSegmentedControl
-              ariaLabel="Horizon visual mode"
-              className="performance-horizon-visual-mode"
-              value={visualMode}
-              onChange={setVisualMode}
-              options={[
-                { key: "absolute", label: "Absolute" },
-                {
-                  key: "relative",
-                  label: "Relative",
-                  disabled: !hasRelativeVisual,
-                  title: hasRelativeVisual
-                    ? undefined
-                    : "Relative view requires active return observations.",
-                },
-                { key: "basis", label: "Basis" },
-              ]}
-            />
-          </WorkbenchSummaryToolbar>
-          <div
-            className={
-              showSupportColumn
-                ? "performance-horizon-matrix"
-                : "performance-horizon-matrix performance-horizon-matrix-no-support"
-            }
-            aria-label="Multi-horizon returns"
-          >
-            <div className="performance-horizon-matrix-header" aria-hidden="true">
-              <span>Period</span>
-              <span>{visualCards[0]?.leftBarLabel ?? "Portfolio Return"}</span>
-              <span>{visualCards[0]?.rightBarLabel ?? "Benchmark Return"}</span>
-              {showSupportColumn ? (
-                <div className="performance-horizon-matrix-support-header">
-                  <span>{supportHeaderLabel}</span>
-                  <div className="performance-horizon-matrix-support-subheader">
-                    <span>{supportPrimaryLabel}</span>
-                    <span>{supportSecondaryLabel}</span>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            {visualCards.map((card) => (
-              <div key={card.key} className="performance-horizon-matrix-row">
-                <div className="performance-horizon-matrix-period">
-                  <strong>{card.label}</strong>
-                </div>
-                <div className="performance-horizon-matrix-comparison">
-                  <div className="performance-horizon-matrix-metric">
-                    <div className="performance-horizon-matrix-metric-header">
-                      <strong>{card.primaryValue}</strong>
-                    </div>
-                    <div className="performance-horizon-bar-track">
-                      <div
-                        className={card.leftBarClassName}
-                        style={{
-                          width: `${Math.max(card.leftBarHeightPct, 2)}%`,
-                        }}
-                        aria-label={`${card.label} ${card.leftBarLabel}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="performance-horizon-matrix-comparison">
-                  <div className="performance-horizon-matrix-metric">
-                    <div className="performance-horizon-matrix-metric-header">
-                      <strong>{card.secondaryValue}</strong>
-                    </div>
-                    <div className="performance-horizon-bar-track">
-                      <div
-                        className={card.rightBarClassName}
-                        style={{
-                          width: `${Math.max(card.rightBarHeightPct, 2)}%`,
-                        }}
-                        aria-label={`${card.label} ${card.rightBarLabel}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-                {showSupportColumn ? (
-                  <div className="performance-horizon-matrix-support">
-                    {card.tertiaryValue != null ? (
-                      <strong aria-label={`${card.label} ${supportPrimaryLabel}`}>
-                        {card.tertiaryValue}
-                      </strong>
-                    ) : (
-                      <span aria-hidden="true"> </span>
-                    )}
-                    <strong>{card.footerValue}</strong>
-                  </div>
-                ) : null}
-              </div>
-            ))}
-          </div>
-          <details className="performance-horizon-table-disclosure">
-            <summary className="performance-horizon-table-disclosure-summary">
-              <div className="performance-horizon-table-disclosure-copy">
-                <strong>Detailed table</strong>
-                <span>Open the full economics and return breakdown across all reporting windows.</span>
-              </div>
-            </summary>
-            <div
-              className="performance-horizon-table-scroll"
-              role="region"
-              aria-label="Scrollable horizon comparison table"
-              tabIndex={0}
-            >
-              <AnalyticsTable
-                ariaLabel="Multi-horizon return table"
-                columns={tableModel.columns}
-                rows={tableModel.rows}
-                density="compact"
-                variant="observation"
-                className="performance-horizon-table performance-chart-observation-table"
-              />
-            </div>
-          </details>
+          <PerformanceHorizonComparisonToolbar
+            tableView={tableView}
+            basisView={basisView}
+            visualMode={visualMode}
+            hasRelativeVisual={hasRelativeVisual}
+            onTableViewChange={setTableView}
+            onBasisViewChange={setBasisView}
+            onVisualModeChange={setVisualMode}
+          />
+          <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={visualMode} />
+          <PerformanceHorizonComparisonDisclosure tableModel={tableModel} />
         </>
       ) : (
         <PerformanceAnalyticalUnavailableState
