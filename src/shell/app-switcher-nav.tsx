@@ -4,42 +4,30 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 import { WorkspaceTabNav } from "@/design-system";
 import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities/api";
+import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
+import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
 
-import { SHELL_APPS, type ShellApp } from "./app-registry";
-
-function isAppEnabled(app: ShellApp, navigation: Record<string, boolean | undefined>): boolean {
-  if (!app.available) {
-    return false;
-  }
-  if (!app.capabilityKey) {
-    return true;
-  }
-  return navigation[app.capabilityKey] !== false;
-}
+import { resolveShellApp } from "./app-registry";
 
 export default function AppSwitcherNav() {
-  const navigation = fallbackNormalizedCapabilities().navigation;
-  const visibleApps = SHELL_APPS.filter((app) => app.visible !== false);
+  const { normalized } = usePlatformCapabilities();
+  const fallback = fallbackNormalizedCapabilities();
+  const workspaceDescriptors =
+    normalized.shellBootstrap?.workspaces?.length
+      ? normalized.shellBootstrap.workspaces
+      : fallback.shellBootstrap.workspaces;
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const activeApp = resolveShellApp(pathname, searchParams);
 
-  const items = visibleApps.map((app) => {
-    const enabled = isAppEnabled(app, navigation);
-    const isRiskRoute = pathname === "/performance" && searchParams.get("mode") === "risk";
-    const isActive =
-      app.id === "risk"
-        ? isRiskRoute
-        : app.id === "performance"
-          ? pathname === "/performance" && !isRiskRoute
-          : pathname === app.href || pathname?.startsWith(`${app.href}/`);
-
+  const items = workspaceDescriptors.map((workspace) => {
     return {
-      key: app.id,
-      label: app.label,
-      href: enabled ? app.href : undefined,
-      disabled: !enabled,
-      active: isActive,
-      title: app.description,
+      key: workspace.id,
+      label: workspace.label,
+      href: workspace.enabled ? workspace.href : undefined,
+      disabled: !workspace.enabled,
+      active: activeApp.id === workspace.id,
+      title: buildWorkspaceTitle(workspace),
     };
   });
 
@@ -50,4 +38,13 @@ export default function AppSwitcherNav() {
       className="shell-workspace-tabs"
     />
   );
+}
+
+function buildWorkspaceTitle(workspace: PlatformShellWorkspaceDescriptor): string {
+  if (workspace.enabled) {
+    return workspace.label;
+  }
+
+  const reason = workspace.supportability.reasons[0];
+  return reason ? `${workspace.label} (${reason.replaceAll("_", " ")})` : workspace.label;
 }

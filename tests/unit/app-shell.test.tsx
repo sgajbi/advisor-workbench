@@ -18,14 +18,21 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-vi.mock("@/features/platform-capabilities/api", () => ({
-  fallbackNormalizedCapabilities: () => ({
-    navigation: {
-      portfolio_workspace: true,
-      performance_workspace: true,
-      risk_workspace: true,
-      proposal_workspace: false,
-      advisory_workspace: false,
+vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
+  usePlatformCapabilities: () => ({
+    loading: false,
+    partialFailure: false,
+    errors: [],
+    normalized: {
+      shellBootstrap: {
+        workspaces: [
+          { id: "portfolio", label: "Portfolio", href: "/portfolio", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "performance", label: "Performance", href: "/performance", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "risk", label: "Risk", href: "/performance?mode=risk", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "proposal", label: "Proposal", href: "/proposals", enabled: false, supportability: { state: "unavailable", reasons: ["proposal_disabled"] } },
+          { id: "advisory", label: "Advisory", href: "/recommendations", enabled: false, supportability: { state: "unavailable", reasons: ["advisory_disabled"] } },
+        ],
+      },
     },
   }),
 }));

@@ -9,8 +9,9 @@ describe("resolveShellApp", () => {
     expect(resolveShellApp("/intake").id).toBe("portfolio");
   });
 
-  it("maps structured advisor routes correctly", () => {
+  it("maps structured workspace routes correctly", () => {
     expect(resolveShellApp("/performance").id).toBe("performance");
+    expect(resolveShellApp("/performance", new URLSearchParams("mode=risk")).id).toBe("risk");
     expect(resolveShellApp("/workbench/PORT001").id).toBe("home");
     expect(resolveShellApp("/suite").id).toBe("home");
     expect(resolveShellApp("/recommendations").id).toBe("advisory");
