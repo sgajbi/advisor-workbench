@@ -17,11 +17,11 @@ export default function DetailCard({
 }) {
   return (
     <div className={cx("workbench-detail-card", className)}>
-      <div className="workbench-detail-card-header portfolio-card-header">
+      <div className="workbench-detail-card-header">
         <div className="workbench-detail-card-heading">
-          <h3 className="workbench-detail-card-title portfolio-side-card-title">{title}</h3>
+          <h3 className="workbench-detail-card-title">{title}</h3>
           {subtitle ? (
-            <p className="workbench-detail-card-subtitle portfolio-card-subtitle">{subtitle}</p>
+            <p className="workbench-detail-card-subtitle">{subtitle}</p>
           ) : null}
         </div>
         {actions ? <div className="workbench-detail-card-actions">{actions}</div> : null}

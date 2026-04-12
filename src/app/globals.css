@@ -633,6 +633,7 @@ a:hover {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
+  margin-bottom: 0;
 }
 
 .workbench-detail-card-heading {
@@ -643,6 +644,23 @@ a:hover {
 
 .workbench-detail-card-actions {
   flex: 0 0 auto;
+}
+
+.workbench-detail-card-title {
+  margin: 0;
+  font-size: var(--workbench-summary-title-size);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--brand-strong);
+}
+
+.workbench-detail-card-subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-muted);
+  max-width: 30ch;
 }
 
 .workbench-definition-list {
@@ -2585,6 +2603,12 @@ a:hover {
   line-height: 1.35;
 }
 
+.portfolio-actions-card .workbench-detail-card-subtitle {
+  max-width: 24ch;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
 .portfolio-actions-card .portfolio-workflow-list {
   gap: var(--space-2);
 }
@@ -2637,6 +2661,10 @@ a:hover {
 .portfolio-side-card .portfolio-card-subtitle {
   font-size: 0.75rem;
   line-height: 1.45;
+  max-width: 28ch;
+}
+
+.portfolio-side-card .workbench-detail-card-subtitle {
   max-width: 28ch;
 }
 
@@ -3266,6 +3294,10 @@ a:hover {
 }
 
 .portfolio-readiness-card .portfolio-card-subtitle {
+  max-width: 28ch;
+}
+
+.portfolio-readiness-card .workbench-detail-card-subtitle {
   max-width: 28ch;
 }
 
