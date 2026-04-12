@@ -10856,7 +10856,7 @@ a:hover {
   border: 1px solid rgba(32, 44, 61, 0.07);
   border-radius: 12px;
   background: rgba(248, 250, 252, 0.68);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .performance-horizon-table-disclosure-summary {
@@ -10903,6 +10903,15 @@ a:hover {
   color: var(--text-muted);
   font-size: var(--text-xs);
   line-height: 1.38;
+}
+
+.performance-horizon-table.analytics-table-frame {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .performance-horizon-bar-group {
