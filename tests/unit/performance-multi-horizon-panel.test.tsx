@@ -89,8 +89,8 @@ describe("PerformanceMultiHorizonPanel", () => {
         "Active Return"
       )
     ).not.toBeInTheDocument();
-    expect(screen.getAllByText("Portfolio Return").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Benchmark Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Portfolio").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Benchmark").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByText("Detailed table"));
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
     expect(screen.getByRole("region", { name: "Scrollable horizon comparison table" })).toBeInTheDocument();
@@ -142,10 +142,10 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
-    expect(screen.getAllByText("Active Return").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Cumulative Active").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("MTD Active Return")).toBeInTheDocument();
-    expect(screen.getByLabelText("MTD Cumulative Active")).toBeInTheDocument();
+    expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Cumulative")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
     fireEvent.click(screen.getByRole("tab", { name: "Net" }));
@@ -157,10 +157,10 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
-    expect(screen.getAllByText("Net Return").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Gross Return").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("MTD Net Return")).toBeInTheDocument();
-    expect(screen.getByLabelText("MTD Gross Return")).toBeInTheDocument();
+    expect(screen.getAllByText("Net").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Gross").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
     expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();

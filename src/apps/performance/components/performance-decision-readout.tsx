@@ -17,15 +17,15 @@ export default function PerformanceDecisionReadout({
     <section className="performance-chart-readout-strip" aria-label="Return decision readout">
       <dl className="performance-chart-readout-compare">
         <div>
-          <dt>Portfolio Return</dt>
+          <dt>Portfolio</dt>
           <dd>{portfolioReturn}</dd>
         </div>
         <div>
-          <dt>Benchmark Return</dt>
+          <dt>Benchmark</dt>
           <dd>{benchmarkReturn}</dd>
         </div>
         <div>
-          <dt>Active Return</dt>
+          <dt>Active</dt>
           <dd>{activeReturn}</dd>
         </div>
       </dl>

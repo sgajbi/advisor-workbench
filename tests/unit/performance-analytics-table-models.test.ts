@@ -93,8 +93,8 @@ describe("performance analytics table models", () => {
     });
     expect(relativeModel[0]).toMatchObject({
       label: "MTD",
-      leftBarLabel: "Active Return",
-      rightBarLabel: "Cumulative Active",
+      leftBarLabel: "Active",
+      rightBarLabel: "Cumulative",
     });
 
     const basisModel = buildPerformanceHorizonVisualModel({
@@ -104,8 +104,8 @@ describe("performance analytics table models", () => {
     });
     expect(basisModel[2]).toMatchObject({
       label: "YTD",
-      leftBarLabel: "Net Return",
-      rightBarLabel: "Gross Return",
+      leftBarLabel: "Net",
+      rightBarLabel: "Gross",
     });
   });
 

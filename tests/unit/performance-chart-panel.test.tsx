@@ -305,7 +305,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("12.84%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Portfolio Return 3.30% Benchmark Return 2.50% Active Return 0.80%")
+      compactPattern("Portfolio 3.30% Benchmark 2.50% Active 0.80%")
     );
     expect(screen.getByLabelText("Return series context")).toHaveTextContent(
       compactPattern("Net basis Monthly cadence Calculated return series")
@@ -559,7 +559,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Benchmark Return Unavailable")
+      compactPattern("Benchmark Unavailable")
     );
   });
 

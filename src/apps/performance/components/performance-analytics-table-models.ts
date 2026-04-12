@@ -481,13 +481,13 @@ export function buildPerformanceHorizonVisualModel({
         primaryValue: formatPct(row.active_return_pct),
         secondaryValue: formatPct(row.benchmark_return_pct),
         tertiaryValue: formatPct(row.cumulative_active_return_pct),
-        leftBarLabel: "Active Return",
+        leftBarLabel: "Active",
         leftBarHeightPct: Math.abs((row.active_return_pct ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-active",
-        rightBarLabel: "Cumulative Active",
+        rightBarLabel: "Cumulative",
         rightBarHeightPct: Math.abs((row.cumulative_active_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-active-soft",
-        footerValue: "Active Return vs Cumulative Active",
+        footerValue: formatPct(row.cumulative_active_return_pct),
       };
     }
 
@@ -499,10 +499,10 @@ export function buildPerformanceHorizonVisualModel({
         secondaryValue: formatPct(grossReturn),
         tertiaryValue:
           grossReturn != null && netReturn != null ? formatPct(grossReturn - netReturn) : "N/A",
-        leftBarLabel: "Net Return",
+        leftBarLabel: "Net",
         leftBarHeightPct: Math.abs((netReturn ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
-        rightBarLabel: "Gross Return",
+        rightBarLabel: "Gross",
         rightBarHeightPct: Math.abs((grossReturn ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-gross",
         footerValue: formatPct(
@@ -517,10 +517,10 @@ export function buildPerformanceHorizonVisualModel({
         primaryValue: formatPct(basisReturn),
         secondaryValue: formatPct(row.benchmark_return_pct),
         tertiaryValue: formatPct(row.active_return_pct),
-        leftBarLabel: basisView === "gross" ? "Gross Return" : "Portfolio Return",
+        leftBarLabel: basisView === "gross" ? "Gross" : "Portfolio",
         leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
-        rightBarLabel: "Benchmark Return",
+        rightBarLabel: "Benchmark",
         rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
         footerValue: formatPct(

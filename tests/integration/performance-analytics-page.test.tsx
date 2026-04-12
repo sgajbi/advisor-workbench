@@ -241,7 +241,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(screen.getByLabelText("Performance decision workspace")).toBeInTheDocument();
       expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-        /portfolio return/i
+        /portfolio/i
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
@@ -267,7 +267,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Portfolio Return 5.42% Benchmark Return 4.91% Active Return 0.52%")
+      compactPattern("Portfolio 5.42% Benchmark 4.91% Active 0.52%")
     );
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Flow-Adjusted MV")).toBeInTheDocument();
@@ -304,7 +304,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Portfolio Return 5.42% Benchmark Return 4.91% Active Return 0.52%")
+      compactPattern("Portfolio 5.42% Benchmark 4.91% Active 0.52%")
     );
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
