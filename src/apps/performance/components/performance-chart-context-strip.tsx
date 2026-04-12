@@ -2,18 +2,14 @@ import { formatDate } from "../formatters";
 
 type PerformanceChartContextStripProps = {
   period: string;
-  detailBasis: string;
   benchmarkContextValue: string;
-  chartFrequency: string;
   reportStartDate?: string;
   reportEndDate?: string;
 };
 
 export default function PerformanceChartContextStrip({
   period,
-  detailBasis,
   benchmarkContextValue,
-  chartFrequency,
   reportStartDate,
   reportEndDate,
 }: PerformanceChartContextStripProps) {
@@ -31,14 +27,6 @@ export default function PerformanceChartContextStrip({
       <div className="performance-chart-context-field">
         <span className="performance-chart-context-label">Window</span>
         <strong className="performance-chart-context-value">{resolvedWindow}</strong>
-      </div>
-      <div className="performance-chart-context-field">
-        <span className="performance-chart-context-label">Basis</span>
-        <strong className="performance-chart-context-value">{detailBasis === "GROSS" ? "Gross" : "Net"}</strong>
-      </div>
-      <div className="performance-chart-context-field">
-        <span className="performance-chart-context-label">Frequency</span>
-        <strong className="performance-chart-context-value">{chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}</strong>
       </div>
     </div>
   );

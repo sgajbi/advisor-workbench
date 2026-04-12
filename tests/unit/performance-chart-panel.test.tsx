@@ -229,13 +229,7 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Window 01 Jan 2026 - 28 Feb 2026")
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Basis Net")
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40 • USD")
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Frequency Monthly")
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
@@ -336,7 +330,7 @@ describe("PerformanceChartPanel", () => {
       "Global Growth 80/20 • USD • Composite"
     );
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Frequency Monthly")
+      compactPattern("Benchmark Global Growth 80/20 • USD")
     );
   });
 
@@ -445,7 +439,6 @@ describe("PerformanceChartPanel", () => {
     expect(benchmarkState).not.toBeNull();
     expect(benchmarkState).toHaveTextContent("Benchmark unassigned");
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(compactPattern("Basis Net"));
     expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
     expect(series.map((entry) => entry?.name)).not.toContain("Active");
@@ -486,7 +479,6 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(compactPattern("Frequency Monthly"));
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern("Benchmark Return Unavailable")

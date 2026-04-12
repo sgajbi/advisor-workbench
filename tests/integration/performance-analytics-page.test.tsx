@@ -364,9 +364,6 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Basis Net")
-    );
   });
 
   it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
@@ -1062,7 +1059,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Partial")).toBeInTheDocument();
     expect(screen.getAllByText("Relative returns incomplete").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Frequency Monthly")
+      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
     );
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();

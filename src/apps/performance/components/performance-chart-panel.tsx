@@ -484,9 +484,7 @@ export default function PerformanceChartPanel({
         capabilities.returnPath.state === "supported" && points.length ? (
           <PerformanceChartContextStrip
             period={period}
-            detailBasis={detailBasis}
             benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
-            chartFrequency={chartFrequency}
             reportStartDate={resolvedReportDates.startDate}
             reportEndDate={resolvedReportDates.endDate}
           />
