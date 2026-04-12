@@ -7,9 +7,6 @@ import {
   WorkbenchChartContextRow,
   WorkbenchSegmentedControl,
   WorkbenchSummaryToolbar,
-  WorkbenchSummaryVisualCard,
-  WorkbenchSummaryVisualMeta,
-  WorkbenchSummaryVisualValue,
 } from "@/design-system";
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
@@ -293,46 +290,48 @@ export default function PerformanceMultiHorizonPanel({
               ]}
             />
           </WorkbenchSummaryToolbar>
-          <div
-            className="performance-horizon-bars workbench-summary-visual-grid"
-            aria-label="Multi-horizon returns"
-          >
+          <div className="performance-horizon-matrix" aria-label="Multi-horizon returns">
             {visualCards.map((card) => (
-              <WorkbenchSummaryVisualCard
-                key={card.key}
-                className="performance-horizon-bar-group workbench-summary-visual-card"
-              >
-                <div className="performance-horizon-bar-values">
-                  <span className="performance-horizon-bar-period">{card.label}</span>
-                  <WorkbenchSummaryVisualValue className="performance-horizon-bar-primary">
-                    {card.primaryValue}
-                  </WorkbenchSummaryVisualValue>
+              <div key={card.key} className="performance-horizon-matrix-row">
+                <div className="performance-horizon-matrix-period">
+                  <span>{card.label}</span>
+                  <strong>{card.primaryValue}</strong>
                 </div>
-                <div className="performance-horizon-bar-track">
-                  <div
-                    className={card.leftBarClassName}
-                    style={{
-                      height: `${Math.max(card.leftBarHeightPct * 1.2, 2)}px`,
-                    }}
-                    aria-label={`${card.label} ${card.leftBarLabel}`}
-                  />
+                <div className="performance-horizon-matrix-bars">
+                  <span>{card.leftBarLabel}</span>
+                  <div className="performance-horizon-bar-track">
+                    <div
+                      className={card.leftBarClassName}
+                      style={{
+                        width: `${Math.max(card.leftBarHeightPct, 2)}%`,
+                      }}
+                      aria-label={`${card.label} ${card.leftBarLabel}`}
+                    />
+                  </div>
+                </div>
+                <div className="performance-horizon-matrix-bars">
+                  <span>{card.rightBarLabel}</span>
+                  <div className="performance-horizon-bar-track">
                   <div
                     className={card.rightBarClassName}
                     style={{
-                      height: `${Math.max(card.rightBarHeightPct * 1.2, 2)}px`,
+                      width: `${Math.max(card.rightBarHeightPct, 2)}%`,
                     }}
                     aria-label={`${card.label} ${card.rightBarLabel}`}
                   />
+                  </div>
                 </div>
-                <div className="performance-horizon-bar-footer">
-                  <WorkbenchSummaryVisualMeta>
-                    {card.leftBarLabel} vs {card.rightBarLabel}
-                  </WorkbenchSummaryVisualMeta>
-                  <WorkbenchSummaryVisualMeta>
-                    {card.footerLabel}: {card.footerValue}
-                  </WorkbenchSummaryVisualMeta>
+                <div className="performance-horizon-matrix-support">
+                  <span>{card.secondaryLabel}</span>
+                  <strong>{card.secondaryValue}</strong>
+                  {card.tertiaryLabel ? (
+                    <>
+                      <span>{card.tertiaryLabel}</span>
+                      <strong>{card.tertiaryValue}</strong>
+                    </>
+                  ) : null}
                 </div>
-              </WorkbenchSummaryVisualCard>
+              </div>
             ))}
           </div>
           <AnalyticsTable

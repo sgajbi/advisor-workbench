@@ -77,6 +77,8 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("Top Detractors")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("AAPL");
+    expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent("TLT");
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();

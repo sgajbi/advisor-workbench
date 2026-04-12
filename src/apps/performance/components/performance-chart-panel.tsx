@@ -3,10 +3,10 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
+import type { CallbackDataParams } from "echarts/types/src/util/types.js";
 import { Box } from "@mui/material";
 
 import {
-  AnalyticsTable,
   CapabilityStatePanel,
   Text,
   WorkbenchChartShell,
@@ -22,6 +22,9 @@ import type {
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
+import PerformanceDecisionReadout from "./performance-decision-readout";
+import PerformanceObservationTrail from "./performance-observation-trail";
+import PerformanceReturnPathLegend from "./performance-return-path-legend";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
 import { formatDate, formatPct } from "../formatters";
@@ -124,6 +127,15 @@ function resolveReportDates(
 
 function getLatestNumeric(values: Array<number | null | undefined>) {
   return [...values].reverse().find((value): value is number => value !== null && value !== undefined) ?? null;
+}
+
+function formatEndLabel(
+  params: CallbackDataParams,
+  label: string,
+  lastIndex: number
+) {
+  const value = typeof params.value === "number" ? params.value : null;
+  return params.dataIndex === lastIndex && value !== null ? `${label} ${formatPct(value)}` : "";
 }
 
 export default function PerformanceChartPanel({
@@ -322,6 +334,7 @@ export default function PerformanceChartPanel({
           color: "#5a6779",
           fontSize: SHARED_CHART_TEXT.axisSize,
           fontWeight: SHARED_CHART_TEXT.axisWeight,
+          margin: 14,
         },
       },
       yAxis: [
@@ -338,7 +351,7 @@ export default function PerformanceChartPanel({
           axisTick: { show: false },
           splitLine: {
             lineStyle: {
-              color: "rgba(52, 70, 95, 0.14)",
+              color: "rgba(52, 70, 95, 0.11)",
               width: 1,
             },
           },
@@ -420,13 +433,21 @@ export default function PerformanceChartPanel({
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 3.5,
+                  width: 4,
                   color: CHART_COLORS.portfolio,
                   cap: "round" as const,
                   join: "round" as const,
                 },
+                label: {
+                  show: true,
+                  position: "right" as const,
+                  color: CHART_COLORS.portfolio,
+                  fontWeight: 800,
+                  formatter: (params: CallbackDataParams) =>
+                    formatEndLabel(params, "Portfolio", portfolioCumulative.length - 1),
+                },
                 areaStyle: {
-                  color: "rgba(218, 30, 40, 0.045)",
+                  color: "rgba(218, 30, 40, 0.035)",
                 },
               },
             ]
@@ -444,10 +465,18 @@ export default function PerformanceChartPanel({
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 3.25,
+                  width: 3.5,
                   color: CHART_COLORS.benchmark,
                   cap: "round" as const,
                   join: "round" as const,
+                },
+                label: {
+                  show: true,
+                  position: "right" as const,
+                  color: CHART_COLORS.benchmark,
+                  fontWeight: 800,
+                  formatter: (params: CallbackDataParams) =>
+                    formatEndLabel(params, "Benchmark", benchmarkCumulative.length - 1),
                 },
               },
             ]
@@ -465,11 +494,19 @@ export default function PerformanceChartPanel({
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 2.5,
+                  width: 2.2,
                   type: "dashed" as const,
                   color: CHART_COLORS.active,
                   cap: "round" as const,
                   join: "round" as const,
+                },
+                label: {
+                  show: chartViewMode !== "combined",
+                  position: "right" as const,
+                  color: CHART_COLORS.active,
+                  fontWeight: 760,
+                  formatter: (params: CallbackDataParams) =>
+                    formatEndLabel(params, "Active", activeCumulative.length - 1),
                 },
               },
             ]
@@ -647,20 +684,10 @@ export default function PerformanceChartPanel({
               aria-label={`${title} chart`}
               style={{ position: "relative" }}
             >
-              <div className="performance-chart-legend" aria-label="Return path legend">
-                {chartLegendItems.map((item) => (
-                  <span
-                    key={item.key}
-                    className={`performance-chart-legend-item ${item.className}`}
-                  >
-                    <span className="performance-chart-legend-label">{item.label}</span>
-                    <strong className="performance-chart-legend-value">{item.value}</strong>
-                  </span>
-                ))}
-              </div>
+              <PerformanceReturnPathLegend items={chartLegendItems} />
               <ReactECharts
                 option={chartOption}
-                style={{ width: "100%", height: "326px" }}
+                style={{ width: "100%", height: "388px" }}
                 opts={{ renderer: "svg" }}
                 notMerge
                 lazyUpdate
@@ -685,46 +712,20 @@ export default function PerformanceChartPanel({
                 </Box>
               ) : null}
             </div>
-            <aside className="performance-chart-readout-panel" aria-label="Return decision readout">
-              <span className="performance-chart-readout-eyebrow">Decision readout</span>
-              <strong>{returnPathPresentation.activeReturnValue} active return</strong>
-              <p>
-                {`${resolvedWindowLabel} • ${resolvedBasisLabel}`}
-              </p>
-              <dl className="performance-chart-readout-list">
-                <div>
-                  <dt>Benchmark</dt>
-                  <dd>{returnPathPresentation.benchmarkContextValue}</dd>
-                </div>
-                <div>
-                  <dt>Comparison basis</dt>
-                  <dd>
-                    {returnPathPresentation.benchmarkSourceLabel
-                      ? `${returnPathPresentation.benchmarkSourceLabel} return series`
-                      : "Benchmark-relative return series"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Observation cadence</dt>
-                  <dd>{chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}</dd>
-                </div>
-              </dl>
-            </aside>
-          </div>
-          <div className="performance-chart-observation-coupling">
-            <div className="performance-chart-observation-header">
-              <span>Observation trail</span>
-              <strong>{`${chartTableModel.rows.length} published periods`}</strong>
-            </div>
-            <AnalyticsTable
-              ariaLabel="Return path observation table"
-              columns={chartTableModel.columns}
-              rows={chartTableModel.rows}
-              density="compact"
-              variant="observation"
-              className="performance-chart-observation-table"
+            <PerformanceDecisionReadout
+              activeReturn={returnPathPresentation.activeReturnValue}
+              windowLabel={resolvedWindowLabel}
+              basisLabel={resolvedBasisLabel}
+              benchmark={returnPathPresentation.benchmarkContextValue}
+              comparisonBasis={
+                returnPathPresentation.benchmarkSourceLabel
+                  ? `${returnPathPresentation.benchmarkSourceLabel} return series`
+                  : "Benchmark-relative return series"
+              }
+              observationCadence={chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}
             />
           </div>
+          <PerformanceObservationTrail tableModel={chartTableModel} />
         </>
       ) : null}
     </WorkbenchChartShell>

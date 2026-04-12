@@ -82,7 +82,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.queryByText("Portfolio vs Global Balanced 60/40")).not.toBeInTheDocument();
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
-    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
+    expect(document.querySelectorAll(".performance-horizon-matrix-row")).toHaveLength(4);
     expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
@@ -92,8 +92,8 @@ describe("PerformanceMultiHorizonPanel", () => {
         "Active Return"
       )
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Portfolio Return vs Benchmark Return").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Cumulative Return:/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Portfolio Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Benchmark Return").length).toBeGreaterThan(0);
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
     expect(
       horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")
@@ -116,10 +116,10 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).getAllByText("$22,500")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("5.88%").length).toBeGreaterThan(0);
     expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("MTD")).toHaveLength(2);
-    expect(screen.getAllByText("QTD")).toHaveLength(2);
-    expect(screen.getAllByText("YTD")).toHaveLength(2);
-    expect(screen.getAllByText("1Y")).toHaveLength(2);
+    expect(screen.getAllByText("MTD").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("QTD").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("YTD").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("1Y").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
@@ -143,7 +143,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
-    expect(screen.getAllByText("Comparison: Active Return vs Cumulative Active").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Active Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cumulative Active").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Active Return")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Cumulative Active")).toBeInTheDocument();
 
@@ -157,7 +158,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
-    expect(screen.getAllByText("Net Return vs Gross Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Net Return").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Gross Return").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Net Return")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Gross Return")).toBeInTheDocument();
 

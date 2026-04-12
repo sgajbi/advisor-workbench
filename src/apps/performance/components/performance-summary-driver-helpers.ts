@@ -36,6 +36,8 @@ export type PerformanceContributorsPresentation =
       frame: PerformanceSummaryDriverModuleFrame;
       positiveTableModel: PerformanceAnalyticsTableModel;
       negativeTableModel: PerformanceAnalyticsTableModel;
+      positiveRankedItems: PerformanceContributorRankedItem[];
+      negativeRankedItems: PerformanceContributorRankedItem[];
       tableModel: PerformanceAnalyticsTableModel;
     }
   | {
@@ -136,6 +138,8 @@ export function getPerformanceContributorsPresentation({
       frame,
       positiveTableModel: buildPerformanceSummaryContributorTableModel(positiveRows),
       negativeTableModel: buildPerformanceSummaryContributorTableModel(negativeRows),
+      positiveRankedItems: buildPerformanceContributorRankedItems(positiveRows, "positive"),
+      negativeRankedItems: buildPerformanceContributorRankedItems(negativeRows, "negative"),
       tableModel,
     };
   }
@@ -247,6 +251,25 @@ function buildPerformanceSummaryContributorTableModel(
       };
     }),
   };
+}
+
+function buildPerformanceContributorRankedItems(
+  rows: ContributionPositionView[],
+  tone: "positive" | "negative"
+): PerformanceContributorRankedItem[] {
+  const scale = Math.max(0.01, ...rows.map((row) => Math.abs(row.contribution_pct)));
+
+  return rows.map((row) => {
+    const title = formatPerformancePositionLabel(row.position_id);
+    return {
+      key: row.position_id,
+      title,
+      subtitle: `Weight ${formatPct(row.weight_avg_pct)} • Return ${formatPct(row.total_return_pct)}`,
+      value: formatPct(row.contribution_pct),
+      magnitudePct: Math.min(100, Math.abs(row.contribution_pct) / scale * 100),
+      tone,
+    };
+  });
 }
 
 export function getPerformanceHorizonPresentation({

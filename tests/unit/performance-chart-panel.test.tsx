@@ -84,6 +84,7 @@ describe("PerformanceChartPanel", () => {
       ? (lastChartOption.series as ChartSeriesProbe[])
       : [];
     let seriesNames = series.map((entry) => entry?.name);
+    fireEvent.click(screen.getByText("Observation trail"));
     const observationTable = screen.getByLabelText("Return path observation table");
 
     expect(seriesNames).toContain("Active Period");
@@ -116,7 +117,7 @@ describe("PerformanceChartPanel", () => {
     expect(portfolioReturnSeries?.symbolSize).toBe(6);
     expect(portfolioReturnSeries?.showSymbol).toBe(true);
     expect(portfolioReturnSeries?.lineStyle).toMatchObject({
-      width: 3.5,
+      width: 4,
       cap: "round",
       join: "round",
     });
@@ -208,8 +209,8 @@ describe("PerformanceChartPanel", () => {
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-date-inputs")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
-    expect(document.querySelector(".workbench-chart-shell-context")).toBeFalsy();
-    expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeTruthy();
+    expect(document.querySelector(".workbench-chart-shell-context .performance-chart-context-strip")).toBeTruthy();
+    expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeFalsy();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
     expect(screen.getByRole("tablist", { name: "Horizon" })).toBeInTheDocument();
@@ -252,6 +253,7 @@ describe("PerformanceChartPanel", () => {
     );
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
+    fireEvent.click(screen.getByText("Observation trail"));
     const observationTable = screen.getByLabelText("Return path observation table");
     expect(within(observationTable).getByText("Cumulative Portfolio")).toBeInTheDocument();
     expect(within(observationTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
@@ -262,13 +264,11 @@ describe("PerformanceChartPanel", () => {
       axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
     });
     expect(Array.isArray(lastChartOption?.yAxis) ? lastChartOption?.yAxis?.[0] : undefined).toMatchObject({
-      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.14)", width: 1 } },
+      splitLine: { lineStyle: { color: "rgba(52, 70, 95, 0.11)", width: 1 } },
     });
-    expect(lastChartOption?.legend).toMatchObject({
-      icon: "roundRect",
-      itemGap: 18,
-      textStyle: { color: "#435164", fontWeight: 650 },
-    });
+    expect(lastChartOption?.legend).toMatchObject({ show: false });
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio cumulative");
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("active return");
     expect(lastChartOption?.tooltip).toMatchObject({
       backgroundColor: "rgba(19, 30, 43, 0.96)",
       borderColor: "rgba(117, 143, 173, 0.48)",

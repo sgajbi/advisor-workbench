@@ -5,6 +5,7 @@ import {
 
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
+import PerformanceContributorBarList from "./performance-contributor-bar-list";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
 import { getPerformanceContributorsPresentation } from "./performance-summary-driver-helpers";
@@ -39,9 +40,11 @@ export default function PerformanceSummaryContributorsSection({
         <div className="performance-contributors-panel">
           <div className="performance-contributors-compare-grid">
             <section className="performance-contributors-table-card">
-              <div className="performance-contributors-table-header">
-                <strong>Top Contributors</strong>
-              </div>
+              <PerformanceContributorBarList
+                title="Top Contributors"
+                ariaLabel="Top Contributors impact bars"
+                items={presentation.positiveRankedItems}
+              />
               <AnalyticsTable
                 ariaLabel="Top Contributors table"
                 className="performance-contributors-table performance-chart-observation-table"
@@ -52,9 +55,11 @@ export default function PerformanceSummaryContributorsSection({
               />
             </section>
             <section className="performance-contributors-table-card">
-              <div className="performance-contributors-table-header">
-                <strong>Top Detractors</strong>
-              </div>
+              <PerformanceContributorBarList
+                title="Top Detractors"
+                ariaLabel="Top Detractors impact bars"
+                items={presentation.negativeRankedItems}
+              />
               <AnalyticsTable
                 ariaLabel="Top Detractors table"
                 className="performance-contributors-table performance-chart-observation-table"

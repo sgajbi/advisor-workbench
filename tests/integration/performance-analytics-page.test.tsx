@@ -271,6 +271,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       within(chartSummaryBand as HTMLElement).queryByText("Period Range / Basis")
     ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Observation trail"));
     expect(screen.getByLabelText("Return path observation table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
