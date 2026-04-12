@@ -136,7 +136,14 @@ export default function PortfolioPerformanceSnapshotModule({
                 <strong>{performance?.period ?? selectedPeriod}</strong>
               </div>
               <div className="portfolio-performance-snapshot-overview-grid">
-                <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
+                <MetricRow
+                  label="Benchmark"
+                  value={
+                    <span title={benchmarkLabel ?? "Unassigned"}>
+                      {benchmarkLabel ?? "Unassigned"}
+                    </span>
+                  }
+                />
                 <MetricRow
                   label="Method"
                   value={

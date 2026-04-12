@@ -1490,8 +1490,37 @@ a:hover {
   background: rgba(226, 232, 240, 0.88);
 }
 
-.portfolio-performance-snapshot-overview-grid .metric-row {
+.portfolio-performance-snapshot-overview-grid .suite-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 0.25rem;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-top: 0;
   background: #fff;
+}
+
+.portfolio-performance-snapshot-overview-grid .suite-row span,
+.portfolio-performance-snapshot-overview-grid .suite-row strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.portfolio-performance-snapshot-overview-grid .suite-row strong {
+  justify-self: start;
+  max-width: 100%;
+  text-align: left;
+}
+
+.portfolio-performance-snapshot-overview-grid .suite-row strong span {
+  display: inline;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+  color: inherit;
 }
 
 .portfolio-performance-snapshot-details {
@@ -2959,6 +2988,13 @@ a:hover {
   border-right: none;
 }
 
+.portfolio-book-hero .kpi-stat-value {
+  font-size: clamp(1.35rem, 1.8vw, 1.7rem);
+  line-height: 1.08;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
 .portfolio-hero-support {
   margin: 0;
   color: var(--text-muted);
@@ -4113,7 +4149,7 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 1440px) {
+@media (max-width: 1180px) {
   .portfolio-summary-band {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
