@@ -1843,8 +1843,9 @@ a:hover {
 .portfolio-page-header-actions {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
+  align-items: flex-start;
   min-width: max-content;
+  padding-top: 0.2rem;
 }
 
 .portfolio-page-header-status {
@@ -2307,14 +2308,14 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0.375rem 0.75rem;
   min-width: 0;
 }
 
 .portfolio-hero-meta span {
-  font-size: var(--text-xs);
+  font-size: 0.8125rem;
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--text-muted);
 }
 
@@ -3886,8 +3887,57 @@ a:hover {
   display: flex;
   flex-wrap: nowrap;
   gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow-x: visible;
+}
+
+.portfolio-workspace-toolbar-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.portfolio-workspace-toolbar-group {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  min-width: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.portfolio-workspace-toolbar-group-context {
+  flex: 0 1 auto;
+}
+
+.portfolio-workspace-toolbar-group-view {
+  flex: 0 0 auto;
+}
+
+.portfolio-workspace-toolbar-group-period {
+  flex: 1 1 24rem;
+}
+
+.portfolio-workspace-toolbar-group-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.portfolio-workspace-toolbar-group-fields {
+  display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
-  overflow-x: auto;
+  gap: 0.75rem 1rem;
+  min-width: 0;
 }
 
 .portfolio-workspace-toolbar-field {
@@ -3925,6 +3975,18 @@ a:hover {
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-muted);
+}
+
+.portfolio-workspace-toolbar-period-control {
+  gap: 0.18rem;
+  padding: 0.18rem;
+}
+
+.portfolio-workspace-toolbar-period-control .workbench-segmented-control-button {
+  min-height: 34px;
+  min-width: 3.35rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
 }
 
 .portfolio-workspace-toolbar-actions {
@@ -4051,6 +4113,18 @@ a:hover {
   .portfolio-workspace-toolbar-row {
     flex-wrap: wrap;
     overflow-x: visible;
+  }
+
+  .portfolio-workspace-toolbar-groups {
+    width: 100%;
+  }
+
+  .portfolio-workspace-toolbar-group {
+    width: 100%;
+  }
+
+  .portfolio-workspace-toolbar-group-fields {
+    width: 100%;
   }
 
   .portfolio-workspace-toolbar-field,
