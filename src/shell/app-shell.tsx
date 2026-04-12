@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 
 import AppSwitcherNav from "./app-switcher-nav";
@@ -20,7 +21,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="shell-workspace-bar">
-          <AppSwitcherNav />
+          <Suspense fallback={null}>
+            <AppSwitcherNav />
+          </Suspense>
         </div>
       </header>
       <div className="shell-body">{children}</div>
