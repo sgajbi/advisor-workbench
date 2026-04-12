@@ -191,9 +191,9 @@ export default function PerformanceMultiHorizonPanel({
     (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
   );
   const showSupportColumn = visualMode !== "relative";
-  const supportHeaderLabel = visualMode === "basis" ? "Basis" : "Relative";
+  const supportHeaderLabel = "Comparison";
   const supportPrimaryLabel = visualMode === "basis" ? "Fee drag" : "Active";
-  const supportSecondaryLabel = "Cum.";
+  const supportSecondaryLabel = "Cumulative";
 
   useEffect(() => {
     if (visualMode === "relative" && !hasRelativeVisual) {
