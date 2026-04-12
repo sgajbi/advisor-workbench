@@ -254,7 +254,7 @@ describe("PerformanceChartPanel", () => {
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("12.84%");
-    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("active return");
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(/active return/i);
     expect(lastChartOption?.tooltip).toMatchObject({
       backgroundColor: "rgba(255, 255, 255, 0.98)",
       borderColor: "rgba(36, 50, 70, 0.14)",

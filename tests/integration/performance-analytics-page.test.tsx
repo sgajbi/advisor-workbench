@@ -241,7 +241,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(screen.getByLabelText("Performance decision workspace")).toBeInTheDocument();
       expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-        "active return"
+        /active return/i
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();

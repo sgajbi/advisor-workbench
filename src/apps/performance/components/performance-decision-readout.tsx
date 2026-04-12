@@ -12,13 +12,22 @@ export default function PerformanceDecisionReadout({
   observationCadence: string;
 }) {
   return (
-    <aside className="performance-chart-readout-panel" aria-label="Return decision readout">
-      <span className="performance-chart-readout-eyebrow">Decision readout</span>
-      <strong>{activeReturn} active return</strong>
-      <p>{`${windowLabel} • ${basisLabel}`}</p>
+    <section className="performance-chart-readout-strip" aria-label="Return decision readout">
+      <div className="performance-chart-readout-highlight">
+        <span className="performance-chart-readout-eyebrow">Active return</span>
+        <strong>{activeReturn}</strong>
+      </div>
       <dl className="performance-chart-readout-list">
         <div>
+          <dt>Window</dt>
+          <dd>{windowLabel}</dd>
+        </div>
+        <div>
           <dt>Basis</dt>
+          <dd>{basisLabel}</dd>
+        </div>
+        <div>
+          <dt>Series</dt>
           <dd>{comparisonBasis}</dd>
         </div>
         <div>
@@ -26,6 +35,6 @@ export default function PerformanceDecisionReadout({
           <dd>{observationCadence}</dd>
         </div>
       </dl>
-    </aside>
+    </section>
   );
 }

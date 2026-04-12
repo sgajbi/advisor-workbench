@@ -595,6 +595,17 @@ export default function PerformanceChartPanel({
             </div>
           ) : null}
           <div className="performance-chart-analysis-grid">
+            <PerformanceDecisionReadout
+              activeReturn={returnPathPresentation.activeReturnValue}
+              windowLabel={resolvedWindowLabel}
+              basisLabel={resolvedBasisLabel}
+              comparisonBasis={
+                returnPathPresentation.benchmarkSourceLabel
+                  ? `${returnPathPresentation.benchmarkSourceLabel} return series`
+                  : "Benchmark-relative return series"
+              }
+              observationCadence={chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}
+            />
             <div
               className="performance-chart-library-frame workbench-summary-visual"
               role="img"
@@ -629,17 +640,6 @@ export default function PerformanceChartPanel({
                 </Box>
               ) : null}
             </div>
-            <PerformanceDecisionReadout
-              activeReturn={returnPathPresentation.activeReturnValue}
-              windowLabel={resolvedWindowLabel}
-              basisLabel={resolvedBasisLabel}
-              comparisonBasis={
-                returnPathPresentation.benchmarkSourceLabel
-                  ? `${returnPathPresentation.benchmarkSourceLabel} return series`
-                  : "Benchmark-relative return series"
-              }
-              observationCadence={chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}
-            />
           </div>
           <PerformanceObservationTrail tableModel={chartTableModel} />
         </>
