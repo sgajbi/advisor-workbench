@@ -50,6 +50,29 @@ describe("portfolio chart panels", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders a truthful empty state when no top positions match the current view", () => {
+    const onSelectionChange = vi.fn();
+
+    render(
+      <PortfolioTopHoldingsPanel
+        positions={[]}
+        baseCurrency="USD"
+        selectedSecurityId={null}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("No top positions available for this view");
+    expect(
+      screen.getByText(
+        "Ranked positions require booked holdings with current market values. Adjust the allocation filter or publish valuations to populate this view."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+    expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
   it("renders activity, income, and projected cashflow charts with business labels", () => {
     const onActivitySelectionChange = vi.fn();
 

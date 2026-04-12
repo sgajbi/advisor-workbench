@@ -997,9 +997,9 @@ function PortfolioInsightsSection({
                 unavailableTitle="No allocation data yet"
                 body={
                   capabilities.allocation.reason ??
-                  "Allocation becomes available once funded holdings are valued."
+                  "Allocation requires funded holdings with current valuations before reliable composition views can be shown."
                 }
-                partialHint="Publish current prices and valuation outputs to complete the composition view."
+                partialHint="Publish current prices and valuation outputs to complete the allocation tabs."
                 unavailableHint="Book positions and publish prices to generate allocation views."
                 why={{
                   body:
@@ -1065,10 +1065,10 @@ function PortfolioInsightsSection({
                 unavailableTitle="No holdings yet"
                 body={
                   capabilities.topHoldings.reason ??
-                  "Holdings will appear once positions are funded and priced."
+                  "Top positions require booked holdings with current market values before concentration can be ranked."
                 }
-                partialHint="Complete valuation and concentration calculations to populate the ranked view."
-                unavailableHint="Add funding, book a trade, and publish pricing."
+                partialHint="Complete valuation and concentration calculations to populate the ranked holdings view."
+                unavailableHint="Book positions and publish pricing to show ranked holdings."
                 why={
                   capabilities.topHoldings.state === "partial"
                     ? undefined

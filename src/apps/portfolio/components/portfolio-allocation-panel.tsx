@@ -5,7 +5,6 @@ import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 import {
   WorkbenchSegmentedControl,
   WorkbenchSummaryToolbar,
-  WorkbenchSummaryVisualCard,
 } from "@/design-system";
 
 import { formatCurrency, formatPct } from "../formatters";
@@ -83,6 +82,7 @@ export default function PortfolioAllocationPanel({
 
   const activeView = viewsByDimension.get(activeDimension) ?? null;
   const buckets = activeView?.buckets ?? [];
+  const activeDimensionLabel = formatDimensionLabel(activeDimension);
   const totalWeight =
     buckets.reduce((sum, bucket) => sum + Math.max(bucket.weight_pct ?? 0, 0), 0) || 0;
 
@@ -143,126 +143,132 @@ export default function PortfolioAllocationPanel({
         </div>
       </WorkbenchSummaryToolbar>
 
-      <div className="portfolio-allocation-body">
-        <WorkbenchSummaryVisualCard className="portfolio-allocation-chart-card">
-          {buckets.length ? (
-            <>
-              {chartType === "donut" ? (
-                <AllocationDonutChart
-                  buckets={buckets}
-                  totalWeight={totalWeight}
-                  hoveredBucket={hoveredBucket}
-                  selectedBucket={selectedBucket}
-                  onHover={setHoveredBucket}
-                  onSelect={(bucket) =>
-                    onSelectionChange(
-                      selectedBucket === bucket
-                        ? null
-                        : { dimension: activeDimension, bucket }
-                    )
-                  }
-                />
-              ) : null}
-              {chartType === "bar" ? (
-                <AllocationBarChart
-                  buckets={buckets}
-                  hoveredBucket={hoveredBucket}
-                  selectedBucket={selectedBucket}
-                  onHover={setHoveredBucket}
-                  onSelect={(bucket) =>
-                    onSelectionChange(
-                      selectedBucket === bucket
-                        ? null
-                        : { dimension: activeDimension, bucket }
-                    )
-                  }
-                />
-              ) : null}
-              {chartType === "table" ? (
-                <AllocationTableChart
-                  buckets={buckets}
-                  hoveredBucket={hoveredBucket}
-                  selectedBucket={selectedBucket}
-                  onHover={setHoveredBucket}
-                  onSelect={(bucket) =>
-                    onSelectionChange(
-                      selectedBucket === bucket
-                        ? null
-                        : { dimension: activeDimension, bucket }
-                    )
-                  }
-                />
-              ) : null}
-            </>
-          ) : (
-            <AllocationEmptyState dimensionLabel={formatDimensionLabel(activeDimension)} />
-          )}
-        </WorkbenchSummaryVisualCard>
+      <div
+        className="portfolio-allocation-card workbench-summary-visual-card"
+        role="tabpanel"
+        aria-label={`${activeDimensionLabel} allocation view`}
+      >
+        <div className="portfolio-allocation-body">
+          <div className="portfolio-allocation-visual">
+            {buckets.length ? (
+              <>
+                {chartType === "donut" ? (
+                  <AllocationDonutChart
+                    buckets={buckets}
+                    totalWeight={totalWeight}
+                    hoveredBucket={hoveredBucket}
+                    selectedBucket={selectedBucket}
+                    onHover={setHoveredBucket}
+                    onSelect={(bucket) =>
+                      onSelectionChange(
+                        selectedBucket === bucket
+                          ? null
+                          : { dimension: activeDimension, bucket }
+                      )
+                    }
+                  />
+                ) : null}
+                {chartType === "bar" ? (
+                  <AllocationBarChart
+                    buckets={buckets}
+                    hoveredBucket={hoveredBucket}
+                    selectedBucket={selectedBucket}
+                    onHover={setHoveredBucket}
+                    onSelect={(bucket) =>
+                      onSelectionChange(
+                        selectedBucket === bucket
+                          ? null
+                          : { dimension: activeDimension, bucket }
+                      )
+                    }
+                  />
+                ) : null}
+                {chartType === "table" ? (
+                  <AllocationTableChart
+                    buckets={buckets}
+                    hoveredBucket={hoveredBucket}
+                    selectedBucket={selectedBucket}
+                    onHover={setHoveredBucket}
+                    onSelect={(bucket) =>
+                      onSelectionChange(
+                        selectedBucket === bucket
+                          ? null
+                          : { dimension: activeDimension, bucket }
+                      )
+                    }
+                  />
+                ) : null}
+              </>
+            ) : (
+              <AllocationEmptyState dimensionLabel={activeDimensionLabel} />
+            )}
+          </div>
 
-        {!compact ? (
-          <div className="portfolio-allocation-ranked">
-          <div className="portfolio-allocation-ranked-header">
-            <span>Dimension</span>
-            <span>Market Value</span>
-            <span>Weight</span>
-            <span>Positions</span>
-          </div>
-          {buckets.length ? (
-            <div className="portfolio-allocation-ranked-body">
-              {buckets
-                .slice()
-                .sort(
-                  (left, right) =>
-                    (right.market_value_base ?? 0) - (left.market_value_base ?? 0)
-                )
-                .map((bucket, index) => {
-                  const isHovered = hoveredBucket === bucket.bucket;
-                  const isSelected = selectedBucket === bucket.bucket;
-                  return (
-                    <button
-                      key={`${activeDimension}-${bucket.bucket}`}
-                      type="button"
-                      aria-label={`${bucket.bucket}: ${formatCurrency(bucket.market_value_base, baseCurrency)}, ${formatPct(bucket.weight_pct)}, ${bucket.position_count} positions. Filter holdings.`}
-                      title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
-                      className={
-                        isSelected
-                          ? "portfolio-allocation-ranked-row portfolio-allocation-ranked-row-selected"
-                          : isHovered
-                            ? "portfolio-allocation-ranked-row portfolio-allocation-ranked-row-hovered"
-                            : "portfolio-allocation-ranked-row"
-                      }
-                      onMouseEnter={() => setHoveredBucket(bucket.bucket)}
-                      onMouseLeave={() => setHoveredBucket(null)}
-                      onClick={() =>
-                        onSelectionChange(
-                          isSelected
-                            ? null
-                            : { dimension: activeDimension, bucket: bucket.bucket }
-                        )
-                      }
-                    >
-                      <span className="portfolio-allocation-ranked-dimension">
-                        <i
-                          aria-hidden="true"
-                          style={{ backgroundColor: ALLOCATION_COLORS[index % ALLOCATION_COLORS.length] }}
-                        />
-                        {bucket.bucket}
-                      </span>
-                      <span>{formatCurrency(bucket.market_value_base, baseCurrency)}</span>
-                      <span>{formatPct(bucket.weight_pct)}</span>
-                      <span>{bucket.position_count}</span>
-                    </button>
-                  );
-                })}
+          {!compact ? (
+            <div className="portfolio-allocation-ranked">
+              <div className="portfolio-allocation-ranked-header">
+                <span>Dimension</span>
+                <span>Market Value</span>
+                <span>Weight</span>
+                <span>Positions</span>
+              </div>
+              {buckets.length ? (
+                <div className="portfolio-allocation-ranked-body">
+                  {buckets
+                    .slice()
+                    .sort(
+                      (left, right) =>
+                        (right.market_value_base ?? 0) - (left.market_value_base ?? 0)
+                    )
+                    .map((bucket, index) => {
+                      const isHovered = hoveredBucket === bucket.bucket;
+                      const isSelected = selectedBucket === bucket.bucket;
+                      return (
+                        <button
+                          key={`${activeDimension}-${bucket.bucket}`}
+                          type="button"
+                          aria-label={`${bucket.bucket}: ${formatCurrency(bucket.market_value_base, baseCurrency)}, ${formatPct(bucket.weight_pct)}, ${bucket.position_count} positions. Filter holdings.`}
+                          title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
+                          className={
+                            isSelected
+                              ? "portfolio-allocation-ranked-row portfolio-allocation-ranked-row-selected"
+                              : isHovered
+                                ? "portfolio-allocation-ranked-row portfolio-allocation-ranked-row-hovered"
+                                : "portfolio-allocation-ranked-row"
+                          }
+                          onMouseEnter={() => setHoveredBucket(bucket.bucket)}
+                          onMouseLeave={() => setHoveredBucket(null)}
+                          onClick={() =>
+                            onSelectionChange(
+                              isSelected
+                                ? null
+                                : { dimension: activeDimension, bucket: bucket.bucket }
+                            )
+                          }
+                        >
+                          <span className="portfolio-allocation-ranked-dimension">
+                            <i
+                              aria-hidden="true"
+                              style={{ backgroundColor: ALLOCATION_COLORS[index % ALLOCATION_COLORS.length] }}
+                            />
+                            {bucket.bucket}
+                          </span>
+                          <span>{formatCurrency(bucket.market_value_base, baseCurrency)}</span>
+                          <span>{formatPct(bucket.weight_pct)}</span>
+                          <span>{bucket.position_count}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              ) : (
+                <AllocationEmptyState
+                  dimensionLabel={activeDimensionLabel}
+                  compact
+                />
+              )}
             </div>
-          ) : (
-            <div className="portfolio-allocation-ranked-empty">
-              <strong>No allocation data yet</strong>
-              <p className="muted">Book positions and publish prices to generate allocation views.</p>
-            </div>
-          )}
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -437,16 +443,34 @@ function AllocationTableChart({
   );
 }
 
-function AllocationEmptyState({ dimensionLabel }: { dimensionLabel: string }) {
+function AllocationEmptyState({
+  dimensionLabel,
+  compact = false,
+}: {
+  dimensionLabel: string;
+  compact?: boolean;
+}) {
   return (
-    <div className="portfolio-allocation-empty">
-      <div className="portfolio-allocation-empty-chart" aria-hidden="true">
-        <div className="portfolio-allocation-empty-ring" />
-      </div>
+    <div
+      className={
+        compact
+          ? "portfolio-allocation-empty portfolio-allocation-empty-compact"
+          : "portfolio-allocation-empty"
+      }
+    >
+      {!compact ? (
+        <div className="portfolio-allocation-empty-chart" aria-hidden="true">
+          <div className="portfolio-allocation-empty-ring" />
+        </div>
+      ) : null}
       <div className="portfolio-allocation-empty-copy">
-        <strong>No allocation data yet</strong>
-        <p className="muted">{dimensionLabel} allocation becomes available once funded holdings are valued.</p>
-        <p className="muted">Book positions and publish prices to generate allocation views.</p>
+        <strong>{dimensionLabel} allocation is not available yet</strong>
+        <p className="muted">
+          This dimension requires funded holdings with current valuations before a reliable composition view can be shown.
+        </p>
+        {!compact ? (
+          <p className="muted">Book positions and publish prices to generate allocation views.</p>
+        ) : null}
       </div>
     </div>
   );

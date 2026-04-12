@@ -911,8 +911,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.portfolio-top-holdings-list-card,
-.portfolio-top-holdings-table-card {
+.portfolio-top-holdings-list-card {
   min-width: 0;
 }
 
@@ -976,13 +975,6 @@ a:hover {
 
 .portfolio-table-row-hovered td {
   background: #f6f9fc;
-}
-
-.portfolio-top-holdings-table-card .MuiTableContainer-root,
-.portfolio-top-holdings-table-card .MuiPaper-root,
-.portfolio-top-holdings-table-card .MuiTable-root {
-  min-width: 0;
-  width: 100%;
 }
 
 .portfolio-cashflow-summary-strip {
@@ -1290,13 +1282,21 @@ a:hover {
 }
 
 @media (max-width: 1280px) {
-  .portfolio-chart-module-body {
+  .portfolio-chart-module-body,
+  .portfolio-allocation-body {
     grid-template-columns: 1fr;
+  }
+
+  .portfolio-allocation-ranked {
+    border-left: 0;
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+    padding-top: var(--space-3);
   }
 }
 
 @media (max-width: 960px) {
-  .portfolio-chart-module-body {
+  .portfolio-chart-module-body,
+  .portfolio-allocation-body {
     grid-template-columns: 1fr;
   }
 
@@ -4171,11 +4171,6 @@ a:hover {
     line-height: 1.55;
   }
 
-  .portfolio-allocation-stack {
-    display: grid;
-    gap: 0.85rem;
-  }
-
   .portfolio-allocation-panel {
     display: grid;
     gap: 1rem;
@@ -4216,37 +4211,44 @@ a:hover {
     cursor: not-allowed;
   }
 
+  .portfolio-allocation-card.workbench-summary-visual-card {
+    min-width: 0;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 12px;
+    background: var(--panel);
+    padding: var(--space-4);
+  }
+
   .portfolio-allocation-body {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
-    gap: var(--space-3);
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+    gap: var(--space-4);
     align-items: stretch;
   }
 
   .portfolio-allocation-panel-compact .portfolio-allocation-body {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
-  .portfolio-allocation-chart-card,
+  .portfolio-allocation-visual,
   .portfolio-allocation-ranked {
     min-width: 0;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 12px;
-    background: #ffffff;
   }
 
-  .portfolio-allocation-chart-card {
+  .portfolio-allocation-visual {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 20rem;
-    padding: var(--space-4);
   }
 
-  .portfolio-allocation-panel-compact .portfolio-allocation-chart-card {
+  .portfolio-allocation-panel-compact .portfolio-allocation-card.workbench-summary-visual-card {
+    padding: var(--space-3);
+  }
+
+  .portfolio-allocation-panel-compact .portfolio-allocation-visual {
     min-height: 15rem;
-    padding: 0.75rem;
   }
 
   .portfolio-allocation-chart {
@@ -4376,7 +4378,7 @@ a:hover {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     min-height: 20rem;
-    border-color: rgba(226, 232, 240, 0.75);
+    border-left: 1px solid rgba(226, 232, 240, 0.9);
   }
 
   .portfolio-allocation-ranked-header,
@@ -4455,6 +4457,17 @@ a:hover {
     gap: var(--space-3);
   }
 
+  .portfolio-top-holdings-empty {
+    display: grid;
+    gap: var(--space-2);
+    min-height: 12rem;
+    align-content: center;
+    padding: var(--space-4);
+    border: 1px dashed rgba(148, 163, 184, 0.45);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
   .portfolio-horizontal-bar-row {
     gap: var(--space-3);
     padding: 0.75rem;
@@ -4471,6 +4484,13 @@ a:hover {
     gap: 1rem;
     justify-items: center;
     text-align: center;
+  }
+
+  .portfolio-allocation-empty-compact {
+    justify-items: start;
+    align-content: center;
+    text-align: left;
+    min-height: 100%;
   }
 
   .portfolio-allocation-empty-chart {

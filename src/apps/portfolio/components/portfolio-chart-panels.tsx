@@ -97,57 +97,66 @@ export function PortfolioTopHoldingsPanel({
       </WorkbenchSummaryToolbar>
       <div className="portfolio-chart-module-body portfolio-top-holdings-body">
         <WorkbenchSummaryVisualCard className="portfolio-chart-card portfolio-top-holdings-list-card">
-          <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
-            {sortedPositions.map((position) => {
-              const metricValue =
-                metric === "market_value" ? position.market_value_base ?? 0 : position.weight_pct ?? 0;
-              const width = maxMetric > 0 ? `${(metricValue / maxMetric) * 100}%` : "0%";
-              const selected = selectedSecurityId === position.security_id;
-              const hovered = hoveredSecurityId === position.security_id;
-              return (
-                <button
-                  key={position.security_id}
-                  type="button"
-                  role="listitem"
-                  className={
-                    selected
-                      ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-selected"
-                      : hovered
-                        ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-hovered"
-                        : "portfolio-horizontal-bar-row"
-                  }
-                  onMouseEnter={() => setHoveredSecurityId(position.security_id)}
-                  onMouseLeave={() => setHoveredSecurityId(null)}
-                  onClick={() =>
-                    onSelectionChange(
-                      selectedSecurityId === position.security_id ? null : position.security_id
-                    )
-                  }
-                  aria-label={`${position.instrument_name}: ${
-                    metric === "market_value"
-                      ? formatCurrency(position.market_value_base, baseCurrency)
-                      : formatPct(position.weight_pct)
-                  }. Select to filter holdings.`}
-                  title={buildTopHoldingTooltip(position, metric, baseCurrency)}
-                >
-                  <WorkbenchSummaryVisualLabel className="portfolio-horizontal-bar-label">
-                    {position.instrument_name}
-                  </WorkbenchSummaryVisualLabel>
-                  <span className="portfolio-horizontal-bar-track">
-                    <span
-                      className="portfolio-horizontal-bar-fill"
-                      style={{ width, backgroundColor: CHART_COLORS.accent }}
-                    />
-                  </span>
-                  <WorkbenchSummaryVisualValue className="portfolio-horizontal-bar-value">
-                    {metric === "market_value"
-                      ? formatCurrency(position.market_value_base, baseCurrency)
-                      : formatPct(position.weight_pct)}
-                  </WorkbenchSummaryVisualValue>
-                </button>
-              );
-            })}
-          </div>
+          {sortedPositions.length ? (
+            <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
+              {sortedPositions.map((position) => {
+                const metricValue =
+                  metric === "market_value" ? position.market_value_base ?? 0 : position.weight_pct ?? 0;
+                const width = maxMetric > 0 ? `${(metricValue / maxMetric) * 100}%` : "0%";
+                const selected = selectedSecurityId === position.security_id;
+                const hovered = hoveredSecurityId === position.security_id;
+                return (
+                  <button
+                    key={position.security_id}
+                    type="button"
+                    role="listitem"
+                    className={
+                      selected
+                        ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-selected"
+                        : hovered
+                          ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-hovered"
+                          : "portfolio-horizontal-bar-row"
+                    }
+                    onMouseEnter={() => setHoveredSecurityId(position.security_id)}
+                    onMouseLeave={() => setHoveredSecurityId(null)}
+                    onClick={() =>
+                      onSelectionChange(
+                        selectedSecurityId === position.security_id ? null : position.security_id
+                      )
+                    }
+                    aria-label={`${position.instrument_name}: ${
+                      metric === "market_value"
+                        ? formatCurrency(position.market_value_base, baseCurrency)
+                        : formatPct(position.weight_pct)
+                    }. Select to filter holdings.`}
+                    title={buildTopHoldingTooltip(position, metric, baseCurrency)}
+                  >
+                    <WorkbenchSummaryVisualLabel className="portfolio-horizontal-bar-label">
+                      {position.instrument_name}
+                    </WorkbenchSummaryVisualLabel>
+                    <span className="portfolio-horizontal-bar-track">
+                      <span
+                        className="portfolio-horizontal-bar-fill"
+                        style={{ width, backgroundColor: CHART_COLORS.accent }}
+                      />
+                    </span>
+                    <WorkbenchSummaryVisualValue className="portfolio-horizontal-bar-value">
+                      {metric === "market_value"
+                        ? formatCurrency(position.market_value_base, baseCurrency)
+                        : formatPct(position.weight_pct)}
+                    </WorkbenchSummaryVisualValue>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="portfolio-top-holdings-empty" role="status">
+              <strong>No top positions available for this view</strong>
+              <p className="muted">
+                Ranked positions require booked holdings with current market values. Adjust the allocation filter or publish valuations to populate this view.
+              </p>
+            </div>
+          )}
         </WorkbenchSummaryVisualCard>
       </div>
     </div>

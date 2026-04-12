@@ -275,6 +275,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(document.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
+    expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
+    expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
     expect(document.querySelector(".portfolio-allocation-panel-compact .portfolio-allocation-ranked")).toBeFalsy();
     const allocationCard = screen
       .getByRole("heading", { name: /Portfolio Allocation/i })
@@ -603,7 +605,18 @@ describe("PortfolioFoundationPage", () => {
     });
 
     expect(screen.getByText("Allocation is partially available")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Holdings exist, but allocation views are not available in the current contract."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Publish current prices and valuation outputs to complete the allocation tabs.")
+    ).toBeInTheDocument();
     expect(screen.getByText("Top holdings are not ranked yet")).toBeInTheDocument();
+    expect(
+      screen.getByText("Complete valuation and concentration calculations to populate the ranked holdings view.")
+    ).toBeInTheDocument();
     expect(screen.queryByLabelText("Allocation donut chart")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
   }, 30000);
