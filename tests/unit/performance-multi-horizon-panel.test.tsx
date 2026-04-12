@@ -65,7 +65,6 @@ describe("PerformanceMultiHorizonPanel", () => {
       expect(screen.getByText("Horizon Comparison")).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
       expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
@@ -84,6 +83,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
     expect(document.querySelectorAll(".performance-horizon-matrix-row")).toHaveLength(4);
     expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
+    expect(screen.getByText("Detailed table")).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
@@ -94,6 +94,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("Portfolio Return").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Benchmark Return").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText("Detailed table"));
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
     expect(
       horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")

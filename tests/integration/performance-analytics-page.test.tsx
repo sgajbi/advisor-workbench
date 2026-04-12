@@ -251,11 +251,13 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
+      expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
         compactPattern("Active Return 0.51%")
       );
-      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByText("Detailed table"));
+    expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
     expect(mainShell?.querySelector(".workbench-chart-shell-context .performance-chart-context-strip")).toBeTruthy();
@@ -1106,6 +1108,7 @@ describe("PerformanceAnalyticsPage", () => {
     const horizonTitles = await screen.findAllByText("Horizon Comparison");
     expect(horizonTitles).toHaveLength(1);
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(screen.getByText("Detailed table")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
       compactPattern("Active Return Unavailable")
     );

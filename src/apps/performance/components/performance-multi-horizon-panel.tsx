@@ -190,6 +190,12 @@ export default function PerformanceMultiHorizonPanel({
   const hasRelativeVisual = (rows ?? []).some(
     (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
   );
+  const supportHeaderLabel =
+    visualMode === "relative"
+      ? "Comparison"
+      : visualMode === "basis"
+        ? "Basis spread"
+        : "Active and cumulative";
 
   useEffect(() => {
     if (visualMode === "relative" && !hasRelativeVisual) {
@@ -292,57 +298,79 @@ export default function PerformanceMultiHorizonPanel({
             />
           </WorkbenchSummaryToolbar>
           <div className="performance-horizon-matrix" aria-label="Multi-horizon returns">
+            <div className="performance-horizon-matrix-header" aria-hidden="true">
+              <span>Period</span>
+              <span>{visualCards[0]?.leftBarLabel ?? "Portfolio Return"}</span>
+              <span>{visualCards[0]?.rightBarLabel ?? "Benchmark Return"}</span>
+              <span>{supportHeaderLabel}</span>
+            </div>
             {visualCards.map((card) => (
               <div key={card.key} className="performance-horizon-matrix-row">
                 <div className="performance-horizon-matrix-period">
-                  <span>{card.label}</span>
-                  <strong>{card.primaryValue}</strong>
+                  <strong>{card.label}</strong>
                 </div>
-                <div className="performance-horizon-matrix-bars">
-                  <span>{card.leftBarLabel}</span>
-                  <div className="performance-horizon-bar-track">
-                    <div
-                      className={card.leftBarClassName}
-                      style={{
-                        width: `${Math.max(card.leftBarHeightPct, 2)}%`,
-                      }}
-                      aria-label={`${card.label} ${card.leftBarLabel}`}
-                    />
+                <div className="performance-horizon-matrix-comparison">
+                  <div className="performance-horizon-matrix-metric">
+                    <div className="performance-horizon-matrix-metric-header">
+                      <strong>{card.primaryValue}</strong>
+                    </div>
+                    <div className="performance-horizon-bar-track">
+                      <div
+                        className={card.leftBarClassName}
+                        style={{
+                          width: `${Math.max(card.leftBarHeightPct, 2)}%`,
+                        }}
+                        aria-label={`${card.label} ${card.leftBarLabel}`}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="performance-horizon-matrix-bars">
-                  <span>{card.rightBarLabel}</span>
-                  <div className="performance-horizon-bar-track">
-                  <div
-                    className={card.rightBarClassName}
-                    style={{
-                      width: `${Math.max(card.rightBarHeightPct, 2)}%`,
-                    }}
-                    aria-label={`${card.label} ${card.rightBarLabel}`}
-                  />
+                <div className="performance-horizon-matrix-comparison">
+                  <div className="performance-horizon-matrix-metric">
+                    <div className="performance-horizon-matrix-metric-header">
+                      <strong>{card.secondaryValue}</strong>
+                    </div>
+                    <div className="performance-horizon-bar-track">
+                      <div
+                        className={card.rightBarClassName}
+                        style={{
+                          width: `${Math.max(card.rightBarHeightPct, 2)}%`,
+                        }}
+                        aria-label={`${card.label} ${card.rightBarLabel}`}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="performance-horizon-matrix-support">
-                  <span>{card.secondaryLabel}</span>
-                  <strong>{card.secondaryValue}</strong>
+                  <span>{card.tertiaryLabel ?? card.footerLabel}</span>
+                  <strong>{card.tertiaryValue ?? card.footerValue}</strong>
+                  <span>{card.footerLabel}</span>
+                  <strong>{card.footerValue}</strong>
                   {card.tertiaryLabel ? (
-                    <>
-                      <span>{card.tertiaryLabel}</span>
-                      <strong>{card.tertiaryValue}</strong>
-                    </>
+                    <span className="performance-horizon-matrix-support-note">
+                      Benchmark-aware comparison
+                    </span>
                   ) : null}
                 </div>
               </div>
             ))}
           </div>
-          <AnalyticsTable
-            ariaLabel="Multi-horizon return table"
-            columns={tableModel.columns}
-            rows={tableModel.rows}
-            density="compact"
-            variant="observation"
-            className="performance-horizon-table performance-chart-observation-table"
-          />
+          <details className="performance-horizon-table-disclosure">
+            <summary className="performance-horizon-table-disclosure-summary">
+              <div className="performance-horizon-table-disclosure-copy">
+                <strong>Detailed table</strong>
+                <span>Open the full economics and return breakdown across all reporting windows.</span>
+              </div>
+            </summary>
+            <AnalyticsTable
+              ariaLabel="Multi-horizon return table"
+              columns={tableModel.columns}
+              rows={tableModel.rows}
+              density="compact"
+              variant="observation"
+              className="performance-horizon-table performance-chart-observation-table"
+            />
+          </details>
         </>
       ) : (
         <PerformanceAnalyticalUnavailableState
