@@ -43,6 +43,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
+    expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
 
     fireEvent.click(screen.getByRole("tab", { name: "Currency" }));
     expect(screen.getByRole("tabpanel", { name: "Currency allocation view" })).toBeInTheDocument();
@@ -95,12 +96,12 @@ describe("PortfolioAllocationPanel", () => {
 
     expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(2);
+    expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
     expect(
       screen.getAllByText(
         "This dimension requires funded holdings with current valuations before a reliable composition view can be shown."
       )
-    ).toHaveLength(2);
+    ).toHaveLength(1);
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
   });
 

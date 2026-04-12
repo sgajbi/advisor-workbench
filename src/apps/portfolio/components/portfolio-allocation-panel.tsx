@@ -148,71 +148,65 @@ export default function PortfolioAllocationPanel({
         role="tabpanel"
         aria-label={`${activeDimensionLabel} allocation view`}
       >
-        <div className="portfolio-allocation-body">
-          <div className="portfolio-allocation-visual">
-            {buckets.length ? (
-              <>
-                {chartType === "donut" ? (
-                  <AllocationDonutChart
-                    buckets={buckets}
-                    totalWeight={totalWeight}
-                    hoveredBucket={hoveredBucket}
-                    selectedBucket={selectedBucket}
-                    onHover={setHoveredBucket}
-                    onSelect={(bucket) =>
-                      onSelectionChange(
-                        selectedBucket === bucket
-                          ? null
-                          : { dimension: activeDimension, bucket }
-                      )
-                    }
-                  />
-                ) : null}
-                {chartType === "bar" ? (
-                  <AllocationBarChart
-                    buckets={buckets}
-                    hoveredBucket={hoveredBucket}
-                    selectedBucket={selectedBucket}
-                    onHover={setHoveredBucket}
-                    onSelect={(bucket) =>
-                      onSelectionChange(
-                        selectedBucket === bucket
-                          ? null
-                          : { dimension: activeDimension, bucket }
-                      )
-                    }
-                  />
-                ) : null}
-                {chartType === "table" ? (
-                  <AllocationTableChart
-                    buckets={buckets}
-                    hoveredBucket={hoveredBucket}
-                    selectedBucket={selectedBucket}
-                    onHover={setHoveredBucket}
-                    onSelect={(bucket) =>
-                      onSelectionChange(
-                        selectedBucket === bucket
-                          ? null
-                          : { dimension: activeDimension, bucket }
-                      )
-                    }
-                  />
-                ) : null}
-              </>
-            ) : (
-              <AllocationEmptyState dimensionLabel={activeDimensionLabel} />
-            )}
-          </div>
+        {buckets.length ? (
+          <div className="portfolio-allocation-body">
+            <div className="portfolio-allocation-visual">
+              {chartType === "donut" ? (
+                <AllocationDonutChart
+                  buckets={buckets}
+                  totalWeight={totalWeight}
+                  hoveredBucket={hoveredBucket}
+                  selectedBucket={selectedBucket}
+                  onHover={setHoveredBucket}
+                  onSelect={(bucket) =>
+                    onSelectionChange(
+                      selectedBucket === bucket
+                        ? null
+                        : { dimension: activeDimension, bucket }
+                    )
+                  }
+                />
+              ) : null}
+              {chartType === "bar" ? (
+                <AllocationBarChart
+                  buckets={buckets}
+                  hoveredBucket={hoveredBucket}
+                  selectedBucket={selectedBucket}
+                  onHover={setHoveredBucket}
+                  onSelect={(bucket) =>
+                    onSelectionChange(
+                      selectedBucket === bucket
+                        ? null
+                        : { dimension: activeDimension, bucket }
+                    )
+                  }
+                />
+              ) : null}
+              {chartType === "table" ? (
+                <AllocationTableChart
+                  buckets={buckets}
+                  hoveredBucket={hoveredBucket}
+                  selectedBucket={selectedBucket}
+                  onHover={setHoveredBucket}
+                  onSelect={(bucket) =>
+                    onSelectionChange(
+                      selectedBucket === bucket
+                        ? null
+                        : { dimension: activeDimension, bucket }
+                    )
+                  }
+                />
+              ) : null}
+            </div>
 
-          {!compact ? (
-            <div className="portfolio-allocation-ranked">
-              <div className="portfolio-allocation-ranked-header">
-                <span>Dimension</span>
-                <span>Market Value</span>
-                <span>Weight</span>
-                <span>Positions</span>
-              </div>
-              {buckets.length ? (
+            {!compact ? (
+              <div className="portfolio-allocation-ranked">
+                <div className="portfolio-allocation-ranked-header">
+                  <span>Dimension</span>
+                  <span className="portfolio-allocation-ranked-number">Market Value</span>
+                  <span className="portfolio-allocation-ranked-number">Weight</span>
+                  <span className="portfolio-allocation-ranked-number">Positions</span>
+                </div>
                 <div className="portfolio-allocation-ranked-body">
                   {buckets
                     .slice()
@@ -253,22 +247,25 @@ export default function PortfolioAllocationPanel({
                             />
                             {bucket.bucket}
                           </span>
-                          <span>{formatCurrency(bucket.market_value_base, baseCurrency)}</span>
-                          <span>{formatPct(bucket.weight_pct)}</span>
-                          <span>{bucket.position_count}</span>
+                          <span className="portfolio-allocation-ranked-number">
+                            {formatCurrency(bucket.market_value_base, baseCurrency)}
+                          </span>
+                          <span className="portfolio-allocation-ranked-number">
+                            {formatPct(bucket.weight_pct)}
+                          </span>
+                          <span className="portfolio-allocation-ranked-number">
+                            {bucket.position_count}
+                          </span>
                         </button>
                       );
                     })}
                 </div>
-              ) : (
-                <AllocationEmptyState
-                  dimensionLabel={activeDimensionLabel}
-                  compact
-                />
-              )}
-            </div>
-          ) : null}
-        </div>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <AllocationEmptyState dimensionLabel={activeDimensionLabel} />
+        )}
       </div>
     </div>
   );
@@ -443,34 +440,18 @@ function AllocationTableChart({
   );
 }
 
-function AllocationEmptyState({
-  dimensionLabel,
-  compact = false,
-}: {
-  dimensionLabel: string;
-  compact?: boolean;
-}) {
+function AllocationEmptyState({ dimensionLabel }: { dimensionLabel: string }) {
   return (
-    <div
-      className={
-        compact
-          ? "portfolio-allocation-empty portfolio-allocation-empty-compact"
-          : "portfolio-allocation-empty"
-      }
-    >
-      {!compact ? (
-        <div className="portfolio-allocation-empty-chart" aria-hidden="true">
-          <div className="portfolio-allocation-empty-ring" />
-        </div>
-      ) : null}
+    <div className="portfolio-allocation-empty">
+      <div className="portfolio-allocation-empty-chart" aria-hidden="true">
+        <div className="portfolio-allocation-empty-ring" />
+      </div>
       <div className="portfolio-allocation-empty-copy">
         <strong>{dimensionLabel} allocation is not available yet</strong>
         <p className="muted">
           This dimension requires funded holdings with current valuations before a reliable composition view can be shown.
         </p>
-        {!compact ? (
-          <p className="muted">Book positions and publish prices to generate allocation views.</p>
-        ) : null}
+        <p className="muted">Book positions and publish prices to generate allocation views.</p>
       </div>
     </div>
   );
