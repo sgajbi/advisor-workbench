@@ -18,6 +18,7 @@ export default function WorkspaceRailLink({
   return (
     <Link
       href={href}
+      aria-current={active ? "page" : undefined}
       className={cx("portfolio-rail-item", active && "portfolio-rail-item-active")}
     >
       <strong className="portfolio-rail-item-title">{title}</strong>

@@ -34,12 +34,12 @@ describe("PortfolioRail", () => {
     expect(selector.querySelector(".portfolio-selector-list")).toBeTruthy();
     expect(selector.querySelectorAll(".portfolio-selector-list-item")).toHaveLength(2);
 
-    expect(within(selector).getByRole("link", { name: /Global Balanced/i })).toHaveAttribute(
-      "href",
-      "/portfolio?portfolioId=PORT_UI_1001"
-    );
+    const unselectedPortfolio = within(selector).getByRole("link", { name: /Global Balanced/i });
+    expect(unselectedPortfolio).toHaveAttribute("href", "/portfolio?portfolioId=PORT_UI_1001");
+    expect(unselectedPortfolio).not.toHaveAttribute("aria-current");
     const selectedPortfolio = within(selector).getByRole("link", { name: /Income Plus/i });
     expect(selectedPortfolio).toHaveAttribute("href", "/portfolio?portfolioId=PORT_UI_1002");
+    expect(selectedPortfolio).toHaveAttribute("aria-current", "page");
     expect(selectedPortfolio).toHaveClass("portfolio-rail-item-active");
     expect(within(selectedPortfolio).getByText("PORT_UI_1002")).toBeInTheDocument();
     expect(within(selectedPortfolio).getByText("CHF").closest(".portfolio-rail-item-detail")).toBeTruthy();

@@ -2093,7 +2093,7 @@ a:hover {
 .portfolio-selector-rail {
   border-color: rgba(148, 163, 184, 0.28);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--panel);
   padding: 0;
   max-width: none;
 }
@@ -2161,12 +2161,12 @@ a:hover {
 }
 
 .portfolio-selector-rail .portfolio-rail-item:hover {
-  background: #f7f9fb;
+  background: var(--panel-alt);
 }
 
 .portfolio-selector-rail .portfolio-rail-item-active {
   border-color: rgba(54, 95, 139, 0.22);
-  background: #f8fafc;
+  background: var(--panel-alt);
   box-shadow: inset 3px 0 0 rgba(54, 95, 139, 0.55);
 }
 
@@ -2176,7 +2176,7 @@ a:hover {
   border-color: rgba(148, 163, 184, 0.32);
   border-radius: var(--radius-sm);
   padding: var(--space-4);
-  background: #f8fafc;
+  background: var(--panel-alt);
 }
 
 .portfolio-selector-empty strong {
