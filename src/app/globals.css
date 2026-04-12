@@ -3876,8 +3876,8 @@ a:hover {
 
 .portfolio-workspace-toolbar {
   display: grid;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
@@ -3885,7 +3885,7 @@ a:hover {
 
 .portfolio-workspace-toolbar-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem);
+  grid-template-columns: minmax(19.5rem, 21rem) minmax(0, 1fr);
   gap: 0.75rem;
   align-items: flex-start;
   overflow: visible;
@@ -3893,18 +3893,18 @@ a:hover {
 
 .portfolio-workspace-toolbar-groups {
   display: grid;
-  grid-template-columns: minmax(12.5rem, 0.95fr) minmax(7.25rem, 0.65fr);
-  gap: 0.375rem;
+  grid-template-columns: minmax(10.75rem, 1fr) minmax(6.75rem, 0.7fr);
+  gap: 0.4rem;
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .portfolio-workspace-toolbar-group {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
   align-content: start;
   min-width: 0;
-  padding: 0.75rem 0.875rem;
+  padding: 0.625rem 0.75rem;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 10px;
   background: rgba(248, 250, 252, 0.72);
@@ -3912,7 +3912,6 @@ a:hover {
 
 .portfolio-workspace-toolbar-group-context {
   min-width: 0;
-  padding: 0;
 }
 
 .portfolio-workspace-toolbar-group-view {
@@ -3939,19 +3938,19 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.75rem 1rem;
+  gap: 0.5rem 0.75rem;
   min-width: 0;
 }
 
 .portfolio-workspace-toolbar-field {
   display: grid;
   gap: 0.25rem;
-  min-width: 140px;
+  min-width: 7.5rem;
   flex: 0 0 auto;
 }
 
 .portfolio-workspace-toolbar-field-grow {
-  min-width: 220px;
+  min-width: 0;
 }
 
 .portfolio-primary-view-tabs {
@@ -3961,9 +3960,9 @@ a:hover {
 }
 
 .portfolio-primary-view-tabs .workbench-segmented-control-button {
-  min-height: 36px;
-  min-width: 4.8rem;
-  padding: 0.5rem 0.75rem;
+  min-height: 34px;
+  min-width: 4.5rem;
+  padding: 0.4rem 0.625rem;
   font-size: var(--text-xs);
   font-weight: 650;
   letter-spacing: 0;
@@ -3984,7 +3983,7 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   width: 100%;
-  max-width: 20rem;
+  max-width: none;
   justify-content: stretch;
   gap: 0.25rem;
   padding: 0.18rem;
@@ -4000,39 +3999,20 @@ a:hover {
 
 .portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-group-fields,
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
-  gap: 0.5rem 0.75rem;
+  gap: 0.45rem 0.625rem;
 }
 
 .portfolio-workspace-toolbar-sidecar {
   display: grid;
-  gap: 0.7rem;
-  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "actions"
+    "period";
+  gap: 0.875rem;
+  align-items: start;
   min-width: 0;
-  width: min(100%, 34rem);
-  justify-self: end;
-}
-
-.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-group-title,
-.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-group-fields {
-  padding-inline: 0.875rem;
-}
-
-.portfolio-workspace-toolbar-group-view .portfolio-workspace-toolbar-group-title,
-.portfolio-workspace-toolbar-group-view .portfolio-workspace-toolbar-group-fields,
-.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-title,
-.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
-  padding-inline: 0.125rem;
-}
-
-.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field,
-.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field {
-  min-width: 8.4rem;
-}
-
-.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field,
-.portfolio-workspace-toolbar-group-context .MuiFormControl-root {
   width: 100%;
-  max-width: 8.4rem;
+  justify-self: stretch;
 }
 
 .portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field label,
@@ -4044,12 +4024,14 @@ a:hover {
 .portfolio-workspace-toolbar-group-context .MuiInputBase-root,
 .portfolio-workspace-toolbar-group-period .MuiInputBase-root {
   min-height: 36px;
+  height: 36px;
 }
 
 .portfolio-workspace-toolbar-group-context .MuiInputBase-input,
 .portfolio-workspace-toolbar-group-period .MuiInputBase-input {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  font-size: 0.8125rem;
 }
 
 .portfolio-workspace-toolbar-group-context input[type="date"],
@@ -4058,43 +4040,65 @@ a:hover {
 }
 
 .portfolio-workspace-toolbar-actions {
+  grid-area: actions;
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   flex: 0 0 auto;
   align-items: flex-start;
   justify-content: flex-start;
-  padding-left: 0.125rem;
-  border-left: 0;
-  width: 100%;
+  justify-self: end;
+  padding-bottom: 0.125rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  width: fit-content;
 }
 
 .portfolio-workspace-toolbar-group-period {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  grid-area: period;
   width: 100%;
+  margin-left: 0.25rem;
 }
 
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(8.4rem, max-content));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "presets presets"
     "from to";
-  align-items: start;
-  justify-content: start;
-  row-gap: 0.55rem;
+  align-items: end;
+  justify-content: stretch;
+  column-gap: 0.625rem;
+  row-gap: 0.5rem;
 }
 
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-title {
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.1rem;
 }
 
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field-grow {
   min-width: 0;
   width: 100%;
+}
+
+.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field-presets {
+  width: 100%;
+}
+
+.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field,
+.portfolio-workspace-toolbar-group-context .MuiFormControl-root,
+.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field,
+.portfolio-workspace-toolbar-group-period .MuiFormControl-root {
+  width: 100%;
+  max-width: none;
+}
+
+.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field,
+.portfolio-workspace-toolbar-group-period .MuiFormControl-root {
+  min-width: 0;
+}
+
+.portfolio-workspace-toolbar-group-period input[type="date"] {
+  min-width: 0;
 }
 
 .portfolio-workspace-toolbar-field-presets {
@@ -4109,7 +4113,7 @@ a:hover {
   grid-area: to;
 }
 
-@media (max-width: 1440px) {
+@media (max-width: 1280px) {
   .portfolio-workspace-toolbar-row {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -4122,10 +4126,19 @@ a:hover {
   .portfolio-workspace-toolbar-sidecar {
     width: 100%;
     justify-self: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "actions"
+      "period";
   }
 
-  .portfolio-workspace-toolbar-group-context {
-    grid-area: auto;
+  .portfolio-workspace-toolbar-actions {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
