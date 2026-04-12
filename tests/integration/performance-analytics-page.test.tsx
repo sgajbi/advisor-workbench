@@ -363,8 +363,11 @@ describe("PerformanceAnalyticsPage", () => {
     const executiveStrip = await screen.findByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Period Range / Basis 01 Jan 2026 - 24 Feb 2026 • Net")
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Basis Net")
     );
   });
 
@@ -1060,8 +1063,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.getByText("Partial")).toBeInTheDocument();
     expect(screen.getAllByText("Relative returns incomplete").length).toBeGreaterThanOrEqual(1);
-    expect(await screen.findByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
+    expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Frequency Monthly")
     );
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
@@ -1231,7 +1234,7 @@ describe("PerformanceAnalyticsPage", () => {
       }
 
       if (contextExpectations.length) {
-        const returnPathContext = await screen.findByRole("group", { name: "Return vs Benchmark" });
+        const returnPathContext = await screen.findByRole("group", { name: "Return path context" });
         for (const text of contextExpectations) {
           expect(returnPathContext).toHaveTextContent(compactPattern(text));
         }

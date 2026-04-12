@@ -525,6 +525,7 @@ export default function PerformanceChartPanel({
             period={period}
             detailBasis={detailBasis}
             benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
+            chartFrequency={chartFrequency}
             reportStartDate={resolvedReportDates.startDate}
             reportEndDate={resolvedReportDates.endDate}
           />

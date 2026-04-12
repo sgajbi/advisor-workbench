@@ -159,7 +159,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
     await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
     await expect(
-      executiveStrip.getByText('Period Range / Basis', { exact: true })
+      executiveStrip.getByText('Portfolio Return', { exact: true })
     ).toHaveCount(0);
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
@@ -170,7 +170,7 @@ test.describe('Performance workbench smoke', () => {
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
     await expectActiveTab(page, /^Summary$/i);
 
-    await expect(page.getByRole('group', { name: /^Return vs Benchmark$/i })).toBeVisible({
+    await expect(page.getByRole('group', { name: /^Return path context$/i })).toBeVisible({
       timeout: 15000,
     });
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({

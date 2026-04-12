@@ -15,42 +15,53 @@ describe("PerformanceChartContextStrip", () => {
         period="YTD"
         detailBasis="NET"
         benchmarkContextValue="Global Balanced 60/40 • USD"
+        chartFrequency="monthly"
       />
     );
 
-    const context = screen.getByRole("group", { name: "Return vs Benchmark" });
+    const context = screen.getByRole("group", { name: "Return path context" });
     expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40 • USD"));
-    expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Net"));
+    expect(context).toHaveTextContent(compactPattern("Window YTD"));
+    expect(context).toHaveTextContent(compactPattern("Basis Net"));
+    expect(context).toHaveTextContent(compactPattern("Frequency Monthly"));
     expect(context).not.toHaveTextContent("Available");
-    expect(context.querySelectorAll(".performance-chart-context-field")).toHaveLength(2);
+    expect(context.querySelectorAll(".performance-chart-context-field")).toHaveLength(4);
     expect(context.querySelectorAll(".workbench-chart-context-row-item")).toHaveLength(0);
   });
 
-  it("renders an honest unassigned benchmark state without inventing relative metrics", () => {
+  it("renders resolved dates when explicit report dates are present", () => {
     render(
       <PerformanceChartContextStrip
         period="YTD"
         detailBasis="NET"
-        benchmarkContextValue="Unassigned"
+        benchmarkContextValue="Global Balanced 60/40 • USD"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-04-12"
       />
     );
 
-    const context = screen.getByRole("group", { name: "Return vs Benchmark" });
-    expect(context).toHaveTextContent(compactPattern("Benchmark Unassigned"));
-    expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Net"));
+    const context = screen.getByRole("group", { name: "Return path context" });
+    expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40 • USD"));
+    expect(context).toHaveTextContent(compactPattern("Window 01 Jan 2026 - 12 Apr 2026"));
+    expect(context).toHaveTextContent(compactPattern("Basis Net"));
+    expect(context).toHaveTextContent(compactPattern("Frequency Monthly"));
   });
 
-  it("keeps the assigned benchmark visible when relative comparison is partial", () => {
+  it("renders quarterly frequency truthfully", () => {
     render(
       <PerformanceChartContextStrip
         period="YTD"
         detailBasis="GROSS"
         benchmarkContextValue="Global Balanced 60/40"
+        chartFrequency="quarterly"
       />
     );
 
-    const context = screen.getByRole("group", { name: "Return vs Benchmark" });
+    const context = screen.getByRole("group", { name: "Return path context" });
     expect(context).toHaveTextContent(compactPattern("Benchmark Global Balanced 60/40"));
-    expect(context).toHaveTextContent(compactPattern("Period Range / Basis YTD • Gross"));
+    expect(context).toHaveTextContent(compactPattern("Window YTD"));
+    expect(context).toHaveTextContent(compactPattern("Basis Gross"));
+    expect(context).toHaveTextContent(compactPattern("Frequency Quarterly"));
   });
 });

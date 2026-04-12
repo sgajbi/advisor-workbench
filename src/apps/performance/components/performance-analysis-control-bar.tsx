@@ -82,7 +82,7 @@ export default function PerformanceAnalysisControlBar({
   if (!isHydrated) {
     return (
       <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar" aria-busy="true">
-        <div className="performance-analysis-control-cluster performance-analysis-control-cluster-selection">
+      <div className="performance-analysis-control-cluster performance-analysis-control-cluster-selection">
           <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
             <FieldLabel>Horizon</FieldLabel>
             <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
@@ -93,6 +93,12 @@ export default function PerformanceAnalysisControlBar({
             <FieldLabel>Basis</FieldLabel>
             <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
               {detailBasis}
+            </Text>
+          </div>
+          <div className="performance-analysis-control-slot performance-analysis-control-slot-view">
+            <FieldLabel>Return View</FieldLabel>
+            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+              {chartViewMode}
             </Text>
           </div>
         </div>
@@ -115,14 +121,6 @@ export default function PerformanceAnalysisControlBar({
             <FieldLabel>Benchmark</FieldLabel>
             <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
               {benchmark ?? "Default benchmark"}
-            </Text>
-          </div>
-        </div>
-        <div className="performance-analysis-control-cluster performance-analysis-control-cluster-view">
-          <div className="performance-analysis-control-slot">
-            <FieldLabel>Return View</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
-              {chartViewMode}
             </Text>
           </div>
         </div>
@@ -170,6 +168,28 @@ export default function PerformanceAnalysisControlBar({
               label: option,
               disabled: isUpdating && option === detailBasis,
             }))}
+          />
+        </div>
+
+        <div className="performance-analysis-control-slot performance-analysis-control-slot-view">
+          <FieldLabel>Return View</FieldLabel>
+          <WorkbenchSegmentedControl
+            ariaLabel="Return view"
+            className="performance-analysis-view-control"
+            value={chartViewMode}
+            onChange={onChartViewModeChange}
+            options={[
+              { key: "combined", label: "Combined", disabled: !hasBenchmarkSeries },
+              { key: "absolute", label: "Absolute" },
+              {
+                key: "relative",
+                label: "Relative",
+                disabled: !hasActiveSeries,
+                title: hasActiveSeries
+                  ? undefined
+                  : "Relative comparison requires benchmark-relative observations.",
+              },
+            ]}
           />
         </div>
       </div>
@@ -283,30 +303,6 @@ export default function PerformanceAnalysisControlBar({
               </option>
             ))}
           </TextField>
-        </div>
-      </div>
-
-      <div className="performance-analysis-control-cluster performance-analysis-control-cluster-view">
-        <div className="performance-analysis-control-slot">
-          <FieldLabel>Return View</FieldLabel>
-          <WorkbenchSegmentedControl
-            ariaLabel="Return view"
-            className="performance-analysis-view-control"
-            value={chartViewMode}
-            onChange={onChartViewModeChange}
-            options={[
-              { key: "combined", label: "Combined", disabled: !hasBenchmarkSeries },
-              { key: "absolute", label: "Absolute" },
-              {
-                key: "relative",
-                label: "Relative",
-                disabled: !hasActiveSeries,
-                title: hasActiveSeries
-                  ? undefined
-                  : "Relative comparison requires benchmark-relative observations.",
-              },
-            ]}
-          />
         </div>
       </div>
     </div>

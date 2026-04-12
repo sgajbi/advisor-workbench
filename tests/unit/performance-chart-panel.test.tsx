@@ -231,14 +231,23 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40 • USD")
     );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).not.toHaveTextContent(
+    expect(screen.getByRole("group", { name: "Return path context" })).not.toHaveTextContent(
       "Available"
     );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Period Range / Basis 01 Jan 2026 - 28 Feb 2026 • Net")
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Window 01 Jan 2026 - 28 Feb 2026")
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Basis Net")
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Benchmark Global Balanced 60/40 • USD")
+    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Frequency Monthly")
     );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern(
@@ -337,8 +346,8 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Benchmark")).toHaveDisplayValue(
       "Global Growth 80/20 • USD • Composite"
     );
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Benchmark Global Growth 80/20")
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
+      compactPattern("Frequency Monthly")
     );
   });
 
@@ -447,9 +456,7 @@ describe("PerformanceChartPanel", () => {
     expect(benchmarkState).not.toBeNull();
     expect(benchmarkState).toHaveTextContent("Benchmark unassigned");
     expect(screen.getByText("No benchmark is assigned to this mandate.")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Benchmark Unassigned")
-    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(compactPattern("Basis Net"));
     expect(benchmarkState).not.toHaveTextContent("N/A");
     const series = Array.isArray(lastChartOption?.series) ? lastChartOption.series : [];
     expect(series.map((entry) => entry?.name)).not.toContain("Active Period");
@@ -491,9 +498,7 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return vs Benchmark" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40 • USD")
-    );
+    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(compactPattern("Frequency Monthly"));
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
       compactPattern("Benchmark Return Unavailable")
