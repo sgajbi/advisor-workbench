@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
@@ -73,16 +73,17 @@ describe("PerformanceSummaryContributorsSection", () => {
 
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
     expect(screen.getByText("YTD Contribution Ranking")).toBeInTheDocument();
-    expect(screen.getByText("Top Contributors")).toBeInTheDocument();
-    expect(screen.getByText("Top Detractors")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
     expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("AAPL");
     expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent("TLT");
+    expect(screen.getByText("Ranked detail tables")).toBeInTheDocument();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Ranked detail tables"));
 
     const contributorsTable = screen.getByLabelText("Top Contributors table");
     expect(contributorsTable).toBeInTheDocument();

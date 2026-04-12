@@ -39,37 +39,59 @@ export default function PerformanceSummaryContributorsSection({
       {presentation.mode === "supported" ? (
         <div className="performance-contributors-panel">
           <div className="performance-contributors-compare-grid">
-            <section className="performance-contributors-table-card">
+            <section className="performance-contributors-ranked-card">
               <PerformanceContributorBarList
                 title="Top Contributors"
                 ariaLabel="Top Contributors impact bars"
                 items={presentation.positiveRankedItems}
-              />
-              <AnalyticsTable
-                ariaLabel="Top Contributors table"
-                className="performance-contributors-table performance-chart-observation-table"
-                density="compact"
-                variant="observation"
-                columns={presentation.positiveTableModel.columns}
-                rows={presentation.positiveTableModel.rows}
+                emptyBody="No positive position contributors are exposed for the selected period."
               />
             </section>
-            <section className="performance-contributors-table-card">
+            <section className="performance-contributors-ranked-card">
               <PerformanceContributorBarList
                 title="Top Detractors"
                 ariaLabel="Top Detractors impact bars"
                 items={presentation.negativeRankedItems}
-              />
-              <AnalyticsTable
-                ariaLabel="Top Detractors table"
-                className="performance-contributors-table performance-chart-observation-table"
-                density="compact"
-                variant="observation"
-                columns={presentation.negativeTableModel.columns}
-                rows={presentation.negativeTableModel.rows}
+                emptyBody="No detracting positions are exposed for the selected period."
               />
             </section>
           </div>
+          <details className="performance-contributors-table-disclosure">
+            <summary className="performance-contributors-table-disclosure-summary">
+              <div className="performance-contributors-table-disclosure-copy">
+                <strong>Ranked detail tables</strong>
+                <span>Open the full instrument-level contribution breakdown for contributors and detractors.</span>
+              </div>
+            </summary>
+            <div className="performance-contributors-table-grid">
+              <section className="performance-contributors-table-card">
+                <div className="performance-contributors-table-header">
+                  <strong>Top Contributors</strong>
+                </div>
+                <AnalyticsTable
+                  ariaLabel="Top Contributors table"
+                  className="performance-contributors-table performance-chart-observation-table"
+                  density="compact"
+                  variant="observation"
+                  columns={presentation.positiveTableModel.columns}
+                  rows={presentation.positiveTableModel.rows}
+                />
+              </section>
+              <section className="performance-contributors-table-card">
+                <div className="performance-contributors-table-header">
+                  <strong>Top Detractors</strong>
+                </div>
+                <AnalyticsTable
+                  ariaLabel="Top Detractors table"
+                  className="performance-contributors-table performance-chart-observation-table"
+                  density="compact"
+                  variant="observation"
+                  columns={presentation.negativeTableModel.columns}
+                  rows={presentation.negativeTableModel.rows}
+                />
+              </section>
+            </div>
+          </details>
         </div>
       ) : presentation.mode === "partial" ? (
         <div className="performance-contributors-panel">
