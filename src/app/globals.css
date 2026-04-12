@@ -3976,22 +3976,52 @@ a:hover {
   color: var(--text-muted);
 }
 
-.portfolio-workspace-toolbar-period-control {
+.workbench-segmented-control.portfolio-workspace-toolbar-period-control {
   display: grid;
-  grid-template-columns: repeat(4, minmax(3.35rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
-  max-width: 22rem;
+  max-width: 15.75rem;
   justify-content: stretch;
   gap: 0.25rem;
   padding: 0.18rem;
 }
 
 .portfolio-workspace-toolbar-period-control .workbench-segmented-control-button {
-  min-height: 34px;
+  min-height: 32px;
   min-width: 0;
   width: 100%;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.71875rem;
+}
+
+.portfolio-workspace-toolbar-period-control .workbench-segmented-control-button:last-child:nth-child(7) {
+  grid-column: 2;
+}
+
+.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
+  gap: 0.5rem 0.75rem;
+}
+
+.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field {
+  min-width: 8.4rem;
+}
+
+.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field label {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+
+.portfolio-workspace-toolbar-group-period .MuiInputBase-root {
+  min-height: 36px;
+}
+
+.portfolio-workspace-toolbar-group-period .MuiInputBase-input {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.portfolio-workspace-toolbar-group-period input[type="date"] {
+  font-size: 0.8125rem;
 }
 
 .portfolio-workspace-toolbar-actions {
