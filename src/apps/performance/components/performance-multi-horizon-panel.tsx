@@ -190,14 +190,10 @@ export default function PerformanceMultiHorizonPanel({
   const hasRelativeVisual = (rows ?? []).some(
     (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
   );
-  const supportHeaderLabel =
-    visualMode === "relative"
-      ? "Comparison"
-      : visualMode === "basis"
-        ? "Basis spread"
-        : "Active and cumulative";
-  const supportPrimaryLabel = visualCards[0]?.tertiaryLabel ?? null;
-  const supportSecondaryLabel = visualCards[0]?.footerLabel ?? null;
+  const showSupportColumn = visualMode !== "relative";
+  const supportHeaderLabel = visualMode === "basis" ? "Basis context" : "Relative context";
+  const supportPrimaryLabel = visualMode === "basis" ? "Fee drag" : "Active";
+  const supportSecondaryLabel = "Cum.";
 
   useEffect(() => {
     if (visualMode === "relative" && !hasRelativeVisual) {
@@ -299,18 +295,27 @@ export default function PerformanceMultiHorizonPanel({
               ]}
             />
           </WorkbenchSummaryToolbar>
-          <div className="performance-horizon-matrix" aria-label="Multi-horizon returns">
+          <div
+            className={
+              showSupportColumn
+                ? "performance-horizon-matrix"
+                : "performance-horizon-matrix performance-horizon-matrix-no-support"
+            }
+            aria-label="Multi-horizon returns"
+          >
             <div className="performance-horizon-matrix-header" aria-hidden="true">
               <span>Period</span>
               <span>{visualCards[0]?.leftBarLabel ?? "Portfolio Return"}</span>
               <span>{visualCards[0]?.rightBarLabel ?? "Benchmark Return"}</span>
-              <div className="performance-horizon-matrix-support-header">
-                <span>{supportHeaderLabel}</span>
-                <div className="performance-horizon-matrix-support-subheader">
-                  {supportPrimaryLabel ? <span>{supportPrimaryLabel}</span> : <span>Value</span>}
-                  <span>{supportSecondaryLabel ?? "Cumulative Return"}</span>
+              {showSupportColumn ? (
+                <div className="performance-horizon-matrix-support-header">
+                  <span>{supportHeaderLabel}</span>
+                  <div className="performance-horizon-matrix-support-subheader">
+                    <span>{supportPrimaryLabel}</span>
+                    <span>{supportSecondaryLabel}</span>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
             {visualCards.map((card) => (
               <div key={card.key} className="performance-horizon-matrix-row">
@@ -349,14 +354,12 @@ export default function PerformanceMultiHorizonPanel({
                     </div>
                   </div>
                 </div>
-                <div className="performance-horizon-matrix-support">
-                  {card.tertiaryValue != null ? <strong>{card.tertiaryValue}</strong> : <span> </span>}
-                  {visualMode === "relative" ? (
-                    <span className="performance-horizon-matrix-support-text">{card.footerValue}</span>
-                  ) : (
+                {showSupportColumn ? (
+                  <div className="performance-horizon-matrix-support">
+                    {card.tertiaryValue != null ? <strong>{card.tertiaryValue}</strong> : <span> </span>}
                     <strong>{card.footerValue}</strong>
-                  )}
-                </div>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
