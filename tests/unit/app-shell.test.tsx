@@ -15,16 +15,17 @@ vi.mock("next/link", () => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/portfolio",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/features/platform-capabilities/api", () => ({
   fallbackNormalizedCapabilities: () => ({
     navigation: {
-      command_center: true,
-      analytics_studio: true,
-      advisory_pipeline: true,
-      reporting_hub: false,
-      decision_console: true,
+      portfolio_workspace: true,
+      performance_workspace: true,
+      risk_workspace: true,
+      proposal_workspace: false,
+      advisory_workspace: false,
     },
   }),
 }));
@@ -38,11 +39,12 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByRole("link", { name: /Lotus/i })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("navigation", { name: "Application Switcher" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
-    expect(screen.queryByText("Recommendations")).not.toBeInTheDocument();
-    expect(screen.getByText("Relationship Book")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute("href", "/performance?mode=risk");
+    expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText("Advisory")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Portfolio workspace body")).toBeInTheDocument();
   });
 });

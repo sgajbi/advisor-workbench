@@ -40,6 +40,7 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkspaceTabNav,
   WorkbenchDeferredSection,
   WorkbenchInlineRefreshNote,
   WorkbenchSegmentedControl,
@@ -52,6 +53,7 @@ import {
   WorkbenchSectionStack,
   WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
+  WorkbenchToolbarGroup,
   WorkbenchToolbarPlaceholder,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,
@@ -80,6 +82,24 @@ describe("design-system components", () => {
     expect(screen.getByRole("heading", { name: "Portfolio" })).toBeInTheDocument();
     expect(screen.getByText("2 portfolios")).toHaveClass("semantic-badge");
     expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge-success");
+  });
+
+  it("renders shared workspace navigation tabs with active and disabled states", () => {
+    render(
+      <WorkspaceTabNav
+        ariaLabel="Workspace Navigation"
+        items={[
+          { key: "portfolio", label: "Portfolio", href: "/portfolio" },
+          { key: "performance", label: "Performance", href: "/performance", active: true },
+          { key: "proposal", label: "Proposal", disabled: true },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
+    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("renders core panel and row primitives with shared classes", () => {

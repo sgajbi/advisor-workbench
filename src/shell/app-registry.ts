@@ -1,10 +1,10 @@
 export type ShellAppId =
   | "home"
-  | "clients"
   | "portfolio"
   | "performance"
-  | "reporting"
-  | "operations";
+  | "risk"
+  | "proposal"
+  | "advisory";
 
 export type ShellApp = {
   id: ShellAppId;
@@ -28,20 +28,12 @@ export const SHELL_APPS: ShellApp[] = [
     visible: false,
   },
   {
-    id: "clients",
-    label: "Relationship Book",
-    href: "/clients",
-    description: "Client relationships.",
-    matchers: ["/clients"],
-    available: false,
-  },
-  {
     id: "portfolio",
     label: "Portfolio",
     href: "/portfolio",
     description: "Holdings and portfolio position.",
     matchers: ["/portfolio", "/portfolios", "/intake"],
-    capabilityKey: "command_center",
+    capabilityKey: "portfolio_workspace",
     available: true,
   },
   {
@@ -50,27 +42,35 @@ export const SHELL_APPS: ShellApp[] = [
     href: "/performance",
     description: "Performance review.",
     matchers: ["/performance"],
-    capabilityKey: "analytics_studio",
+    capabilityKey: "performance_workspace",
     available: true,
   },
   {
-    id: "reporting",
-    label: "Reporting",
-    href: "/reporting",
-    description: "Client reporting.",
-    matchers: ["/reporting"],
-    capabilityKey: "reporting_hub",
+    id: "risk",
+    label: "Risk",
+    href: "/performance?mode=risk",
+    description: "Risk review.",
+    matchers: ["/performance"],
+    capabilityKey: "risk_workspace",
+    available: true,
+  },
+  {
+    id: "proposal",
+    label: "Proposal",
+    href: "/proposals",
+    description: "Proposal lifecycle.",
+    matchers: ["/proposals"],
+    capabilityKey: "proposal_workspace",
     available: false,
   },
   {
-    id: "operations",
-    label: "Operations",
-    href: "/workbench",
-    description: "Operational workflows.",
-    matchers: ["/workbench", "/suite"],
-    capabilityKey: "decision_console",
-    available: true,
-    visible: false,
+    id: "advisory",
+    label: "Advisory",
+    href: "/recommendations",
+    description: "Advisory workflow.",
+    matchers: ["/recommendations"],
+    capabilityKey: "advisory_workspace",
+    available: false,
   },
 ];
 

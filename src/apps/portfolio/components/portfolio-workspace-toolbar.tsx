@@ -11,7 +11,13 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 
-import { FilterBar, ModeTabs, PageToolbar, WorkbenchSegmentedControl } from "@/design-system";
+import {
+  FilterBar,
+  ModeTabs,
+  PageToolbar,
+  WorkbenchSegmentedControl,
+  WorkbenchToolbarGroup,
+} from "@/design-system";
 
 import { formatDate } from "../formatters";
 import type {
@@ -97,13 +103,11 @@ export default function PortfolioWorkspaceToolbar({
     <PageToolbar className="portfolio-workspace-toolbar">
       <div className="portfolio-workspace-toolbar-row">
         <div className="portfolio-workspace-toolbar-groups">
-          <section
+          <WorkbenchToolbarGroup
+            title="Context"
             className="portfolio-workspace-toolbar-group portfolio-workspace-toolbar-group-context"
-            role="group"
-            aria-label="Context controls"
+            ariaLabel="Context controls"
           >
-            <span className="portfolio-workspace-toolbar-group-title">Context</span>
-            <div className="portfolio-workspace-toolbar-group-fields">
               <div className="portfolio-workspace-toolbar-field">
                 <label htmlFor="portfolio-as-of-date">As of</label>
                 <TextField
@@ -137,16 +141,13 @@ export default function PortfolioWorkspaceToolbar({
                   ))}
                 </TextField>
               </div>
-            </div>
-          </section>
+          </WorkbenchToolbarGroup>
 
-          <section
+          <WorkbenchToolbarGroup
+            title="View"
             className="portfolio-workspace-toolbar-group portfolio-workspace-toolbar-group-view"
-            role="group"
-            aria-label="View controls"
+            ariaLabel="View controls"
           >
-            <span className="portfolio-workspace-toolbar-group-title">View</span>
-            <div className="portfolio-workspace-toolbar-group-fields">
               <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">
                 <ModeTabs
                   value={controls.viewMode}
@@ -161,8 +162,7 @@ export default function PortfolioWorkspaceToolbar({
                   className="portfolio-primary-view-tabs"
                 />
               </div>
-            </div>
-          </section>
+          </WorkbenchToolbarGroup>
         </div>
 
         <div className="portfolio-workspace-toolbar-sidecar">
@@ -212,13 +212,11 @@ export default function PortfolioWorkspaceToolbar({
             </Button>
           </div>
 
-          <section
+          <WorkbenchToolbarGroup
+            title="Period"
             className="portfolio-workspace-toolbar-group portfolio-workspace-toolbar-group-period"
-            role="group"
-            aria-label="Period controls"
+            ariaLabel="Period controls"
           >
-            <span className="portfolio-workspace-toolbar-group-title">Period</span>
-            <div className="portfolio-workspace-toolbar-group-fields">
               <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow portfolio-workspace-toolbar-field-presets">
                 <WorkbenchSegmentedControl
                   value={controls.timeWindow}
@@ -262,8 +260,7 @@ export default function PortfolioWorkspaceToolbar({
                   </div>
                 </>
               ) : null}
-            </div>
-          </section>
+          </WorkbenchToolbarGroup>
         </div>
       </div>
 

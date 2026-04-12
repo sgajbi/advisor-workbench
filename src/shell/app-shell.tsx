@@ -18,6 +18,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <span className="shell-brand-text">Lotus</span>
             </Link>
           </div>
+        </div>
+        <div className="shell-workspace-bar">
           <AppSwitcherNav />
         </div>
       </header>

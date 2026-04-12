@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
+import { WorkspaceTabNav } from "@/design-system";
 import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities/api";
 
 import { SHELL_APPS, type ShellApp } from "./app-registry";
@@ -21,37 +21,33 @@ export default function AppSwitcherNav() {
   const navigation = fallbackNormalizedCapabilities().navigation;
   const visibleApps = SHELL_APPS.filter((app) => app.visible !== false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const items = visibleApps.map((app) => {
+    const enabled = isAppEnabled(app, navigation);
+    const isRiskRoute = pathname === "/performance" && searchParams.get("mode") === "risk";
+    const isActive =
+      app.id === "risk"
+        ? isRiskRoute
+        : app.id === "performance"
+          ? pathname === "/performance" && !isRiskRoute
+          : pathname === app.href || pathname?.startsWith(`${app.href}/`);
+
+    return {
+      key: app.id,
+      label: app.label,
+      href: enabled ? app.href : undefined,
+      disabled: !enabled,
+      active: isActive,
+      title: app.description,
+    };
+  });
 
   return (
-    <nav className="shell-nav" aria-label="Application Switcher">
-      {visibleApps.map((app) => {
-        const enabled = isAppEnabled(app, navigation);
-        const isActive = pathname === app.href || pathname?.startsWith(`${app.href}/`);
-        if (!enabled) {
-          return (
-            <span
-              key={app.id}
-              className="shell-nav-link shell-nav-link-disabled"
-              aria-disabled="true"
-              title={app.description}
-            >
-              {app.label}
-            </span>
-          );
-        }
-
-        return (
-          <Link
-            key={app.id}
-            href={app.href}
-            className={`shell-nav-link${isActive ? " shell-nav-link-active" : ""}`}
-            title={app.description}
-            aria-current={isActive ? "page" : undefined}
-          >
-            {app.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <WorkspaceTabNav
+      items={items}
+      ariaLabel="Workspace Navigation"
+      className="shell-workspace-tabs"
+    />
   );
 }

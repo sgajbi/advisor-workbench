@@ -84,10 +84,13 @@ export { default as WorkbenchSummaryMetricStrip } from "./components/workbench-s
 export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-summary-metric-strip";
 export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
 export { default as WorkbenchInlineRefreshNote } from "./components/workbench-inline-refresh-note";
+export { default as WorkbenchToolbarGroup } from "./components/workbench-toolbar-group";
 export { default as WorkbenchToolbarPlaceholder } from "./components/workbench-toolbar-placeholder";
 export type { WorkbenchToolbarPlaceholderField } from "./components/workbench-toolbar-placeholder";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";
 export { default as WorkspaceStatusPanel } from "./components/workspace-status-panel";
+export { default as WorkspaceTabNav } from "./components/workspace-tab-nav";
+export type { WorkspaceTabNavItem } from "./components/workspace-tab-nav";
 export {
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,

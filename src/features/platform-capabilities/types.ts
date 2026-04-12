@@ -45,4 +45,10 @@ export const DEFAULT_NAVIGATION_FLAGS: Record<string, boolean> = {
   advisory_pipeline: true,
   scenario_builder: true,
   decision_console: true,
+  reporting_hub: false,
+  portfolio_workspace: true,
+  performance_workspace: true,
+  risk_workspace: true,
+  proposal_workspace: false,
+  advisory_workspace: false,
 };

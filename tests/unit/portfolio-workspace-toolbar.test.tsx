@@ -79,9 +79,9 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(contextControls).toBeInTheDocument();
     expect(viewControls).toBeInTheDocument();
     expect(periodControls).toBeInTheDocument();
-    expect(within(contextControls).getByText("Context")).toHaveClass("portfolio-workspace-toolbar-group-title");
-    expect(within(viewControls).getAllByText("View")[0]).toHaveClass("portfolio-workspace-toolbar-group-title");
-    expect(within(periodControls).getAllByText("Period")[0]).toHaveClass("portfolio-workspace-toolbar-group-title");
+    expect(within(contextControls).getByText("Context")).toHaveClass("workbench-toolbar-group-title");
+    expect(within(viewControls).getAllByText("View")[0]).toHaveClass("workbench-toolbar-group-title");
+    expect(within(periodControls).getAllByText("Period")[0]).toHaveClass("workbench-toolbar-group-title");
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
     expect(

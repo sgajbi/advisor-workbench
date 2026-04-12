@@ -815,15 +815,21 @@ a:hover {
   padding: 0.45rem 0.55rem 0.55rem;
 }
 
-.shell-nav {
+.shell-workspace-bar {
+  width: 100%;
+  padding: 0 0.8rem 0.6rem;
+  border-top: 1px solid rgba(87, 121, 157, 0.12);
+}
+
+.workspace-tab-nav {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: 0.55rem;
 }
 
-.shell-nav-link {
+.workspace-tab-nav-link {
   border: 1px solid rgba(87, 121, 157, 0.14);
   border-radius: 8px;
   padding: 0.34rem 0.7rem;
@@ -841,7 +847,7 @@ a:hover {
     box-shadow 140ms ease;
 }
 
-.shell-nav-link:hover {
+.workspace-tab-nav-link:hover {
   transform: translateY(-1px);
   border-color: rgba(87, 121, 157, 0.24);
   background: rgba(255, 255, 255, 0.7);
@@ -849,11 +855,52 @@ a:hover {
   box-shadow: none;
 }
 
-.shell-nav-link-active {
+.workspace-tab-nav-link-active {
   border-color: rgba(23, 32, 43, 0.16);
   background: rgba(255, 255, 255, 0.92);
   color: var(--brand-strong);
   box-shadow: 0 1px 2px rgba(23, 32, 43, 0.06);
+}
+
+.workspace-tab-nav-link-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.workspace-header-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.workbench-toolbar-group {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.workbench-toolbar-group-title {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+  padding-left: 0;
+}
+
+.workbench-toolbar-group-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
 }
 
 :focus-visible {
@@ -1385,7 +1432,7 @@ a:hover {
   }
 }
 
-.shell-nav-link-disabled {
+.workspace-tab-nav-link-disabled {
   color: rgba(91, 108, 128, 0.78);
   border-color: transparent;
   background: transparent;
@@ -3922,26 +3969,6 @@ a:hover {
   min-width: 0;
 }
 
-.portfolio-workspace-toolbar-group-title {
-  display: block;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0;
-  padding-left: 0;
-}
-
-.portfolio-workspace-toolbar-group-fields {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.5rem 0.75rem;
-  min-width: 0;
-}
-
 .portfolio-workspace-toolbar-field {
   display: grid;
   gap: 0.25rem;
@@ -4001,8 +4028,8 @@ a:hover {
   grid-column: 4;
 }
 
-.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-group-fields,
-.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
+.portfolio-workspace-toolbar-group-context .workbench-toolbar-group-fields,
+.portfolio-workspace-toolbar-group-period .workbench-toolbar-group-fields {
   gap: 0.45rem 0.625rem;
 }
 
@@ -4065,7 +4092,7 @@ a:hover {
   margin-left: 0.25rem;
 }
 
-.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
+.portfolio-workspace-toolbar-group-period .workbench-toolbar-group-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
@@ -4077,7 +4104,7 @@ a:hover {
   row-gap: 0.5rem;
 }
 
-.portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-title {
+.portfolio-workspace-toolbar-group-period .workbench-toolbar-group-title {
   margin-bottom: 0.1rem;
 }
 
@@ -9916,7 +9943,7 @@ a:hover {
     align-items: flex-start;
   }
 
-  .shell-nav {
+  .workspace-tab-nav {
     justify-content: flex-start;
   }
 
@@ -10276,7 +10303,7 @@ a:hover {
     gap: 0.9rem;
   }
 
-  .shell-nav {
+  .workspace-tab-nav {
     width: 100%;
     justify-content: flex-start;
   }
@@ -10460,7 +10487,7 @@ a:hover {
     padding: 0.34rem 0.62rem;
   }
 
-.shell-nav-link {
+  .workspace-tab-nav-link {
     font-size: 0.78rem;
     padding: 0.34rem 0.68rem;
   }
@@ -10501,7 +10528,7 @@ a:hover {
 .portfolio-context-copy,
 .portfolio-insight-dismiss,
 .nav-link,
-.shell-nav-link,
+.workspace-tab-nav-link,
 .btn,
 .page-toolbar button,
 .page-toolbar [role="button"] {
@@ -10546,7 +10573,7 @@ a:hover {
 .portfolio-context-copy:focus-visible,
 .portfolio-insight-dismiss:focus-visible,
 .nav-link:focus-visible,
-.shell-nav-link:focus-visible,
+.workspace-tab-nav-link:focus-visible,
 .page-toolbar button:focus-visible,
 .page-toolbar [role="button"]:focus-visible {
   outline: 2px solid rgba(54, 95, 139, 0.72);
