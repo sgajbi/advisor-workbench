@@ -339,7 +339,20 @@ describe("PerformanceChartPanel", () => {
           },
         ])
       )
-    ).toContain("Portfolio cumulative");
+    ).toContain("Portfolio");
+    expect(
+      String(
+        (tooltipFormatter as (...args: unknown[]) => string)?.([
+          {
+            seriesName: "Portfolio",
+            value: 12.84,
+            axisValue: "2026-03",
+            dataIndex: 0,
+            marker: '<span style=\"color:red\">●</span>',
+          },
+        ])
+      )
+    ).toContain("Cumulative");
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {
@@ -659,7 +672,7 @@ describe("PerformanceChartPanel", () => {
           },
         ])
       )
-    ).toContain("Active cumulative");
+    ).toContain("Active");
   });
 
   it("disables frequency options that are outside the backend capability contract", () => {

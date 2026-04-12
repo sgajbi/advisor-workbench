@@ -185,6 +185,43 @@ function buildTooltipContainer(title: string, rows: string, minWidth: number) {
   ].join("");
 }
 
+function buildTooltipGroup(
+  title: string,
+  color: string,
+  rows: Array<{ label: string; value: number | null | undefined }>
+) {
+  const content = rows
+    .map(({ label, value }) => {
+      const numericValue = toNumeric(value);
+      if (numericValue === null) {
+        return "";
+      }
+
+      return [
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
+        `<span style="color:#607086;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">${escapeTooltipHtml(label)}</span>`,
+        `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
+        "</div>",
+      ].join("");
+    })
+    .filter(Boolean)
+    .join("");
+
+  if (!content) {
+    return "";
+  }
+
+  return [
+    '<section style="display:grid;gap:6px;padding:8px 10px;border:1px solid rgba(36, 50, 70, 0.08);border-radius:10px;background:rgba(248,250,252,0.78);">',
+    `<div style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:800;">`,
+    `<span style="width:8px;height:8px;border-radius:999px;background:${color};display:inline-block;"></span>`,
+    `${escapeTooltipHtml(title)}`,
+    "</div>",
+    content,
+    "</section>",
+  ].join("");
+}
+
 function buildTooltipNotice(title: string, body: string) {
   return buildTooltipContainer(
     title,
@@ -233,20 +270,6 @@ export function formatReturnPathTooltip(params: CallbackDataParams | CallbackDat
   return buildTooltipContainer(axisLabel, rows, 180);
 }
 
-function buildTooltipRow(label: string, value: number | null | undefined, color: string) {
-  const numericValue = toNumeric(value);
-  if (numericValue === null) {
-    return "";
-  }
-
-  return [
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
-    `<span style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:700;"><span style="width:8px;height:8px;border-radius:999px;background:${color};display:inline-block;"></span>${escapeTooltipHtml(label)}</span>`,
-    `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
-    "</div>",
-  ].join("");
-}
-
 export function buildReturnPathTooltipFormatter({
   points,
   showAbsoluteSeries,
@@ -273,38 +296,26 @@ export function buildReturnPathTooltipFormatter({
     const rows = [
       ...(showAbsoluteSeries
         ? [
-            buildTooltipRow("Portfolio period", point.portfolio_return_pct, CHART_COLORS.portfolio),
-            ...(showBenchmarkSeries
-              ? [buildTooltipRow("Benchmark period", point.benchmark_return_pct, CHART_COLORS.benchmark)]
-              : []),
-            buildTooltipRow(
-              "Portfolio cumulative",
-              point.cumulative_portfolio_return_pct,
-              CHART_COLORS.portfolio
-            ),
+            buildTooltipGroup("Portfolio", CHART_COLORS.portfolio, [
+              { label: "Period", value: point.portfolio_return_pct },
+              { label: "Cumulative", value: point.cumulative_portfolio_return_pct },
+            ]),
             ...(showBenchmarkSeries
               ? [
-                  buildTooltipRow(
-                    "Benchmark cumulative",
-                    point.cumulative_benchmark_return_pct,
-                    CHART_COLORS.benchmark
-                  ),
+                  buildTooltipGroup("Benchmark", CHART_COLORS.benchmark, [
+                    { label: "Period", value: point.benchmark_return_pct },
+                    { label: "Cumulative", value: point.cumulative_benchmark_return_pct },
+                  ]),
                 ]
               : []),
           ]
         : []),
       ...(showActiveSeries
         ? [
-            buildTooltipRow(
-              "Active period",
-              resolveActivePeriodReturn(point),
-              CHART_COLORS.active
-            ),
-            buildTooltipRow(
-              "Active cumulative",
-              resolveActiveCumulativeReturn(point),
-              CHART_COLORS.active
-            ),
+            buildTooltipGroup("Active", CHART_COLORS.active, [
+              { label: "Period", value: resolveActivePeriodReturn(point) },
+              { label: "Cumulative", value: resolveActiveCumulativeReturn(point) },
+            ]),
           ]
         : []),
     ]
@@ -318,7 +329,7 @@ export function buildReturnPathTooltipFormatter({
       );
     }
 
-    return buildTooltipContainer(axisLabel, rows, 220);
+    return buildTooltipContainer(axisLabel, rows, 260);
   };
 }
 
@@ -543,8 +554,9 @@ export function buildReturnPathChartOption({
               name: "Benchmark",
               data: benchmarkCumulative,
               color: CHART_COLORS.benchmark,
-              lineWidth: 3,
+              lineWidth: 2.6,
               lastIndex: benchmarkCumulative.length - 1,
+              dashed: true,
             }),
           ]
         : []),
