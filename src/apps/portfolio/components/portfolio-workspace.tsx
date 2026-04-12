@@ -58,14 +58,11 @@ import {
   getPositionsNeedingPricing,
   getRelatedTransactionsForSecurity,
   getActivityDisplayCurrency,
-  getBookReadinessStatus,
   getBookReadinessSupport,
   getIncomeDisplayCurrency,
   getInvestedAssetWeight,
   getOrderedWorkflowCues,
-  getRequestedWindowActivityAmount,
   getRequestedWindowActivityCount,
-  getYearToDateActivityAmount,
 } from "../view-model";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
 import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-section";
@@ -439,7 +436,7 @@ export default function PortfolioWorkspaceView({
                         primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
                         readinessIndicators={priorityReadinessIndicators}
                         onOpenMetricDrawer={(metric) =>
-                          setDetailDrawer(buildMetricDrawer(metric, workspace, context, activityDisplayCurrency))
+                          setDetailDrawer(buildMetricDrawer(metric, workspace, context))
                         }
                       />
 
@@ -1402,16 +1399,12 @@ function getDefaultSectionExpanded(
 type PortfolioMetricDrawerKey =
   | "aum"
   | "invested_assets"
-  | "available_cash"
-  | "holdings"
-  | "net_flow_30d"
-  | "book_readiness";
+  | "available_cash";
 
 function buildMetricDrawer(
   metric: PortfolioMetricDrawerKey,
   workspace: PortfolioWorkspace,
-  context: PortfolioWorkspaceContext,
-  activityDisplayCurrency: string
+  context: PortfolioWorkspaceContext
 ): PortfolioDetailDrawerState {
   const commonSummary = [
     { label: "Portfolio", value: workspace.portfolio.portfolio_id },
@@ -1519,113 +1512,6 @@ function buildMetricDrawer(
         ],
         fullPageHref: "#portfolio-insights",
         fullPageLabel: "Open liquidity",
-      };
-    case "holdings":
-      return {
-        kicker: "Metric Detail",
-        title: "Holdings",
-        subtitle: "Current number of holdings with live book and valuation context.",
-        summaryItems: [
-          { label: "Count", value: formatCount(workspace.summary.position_count, "holding") },
-          { label: "Top Holding", value: workspace.top_positions[0]?.instrument_name ?? "N/A" },
-          ...commonSummary,
-        ],
-        tabs: [
-          {
-            key: "definition",
-            label: "Definition",
-            content: renderDrawerParagraphs([
-              "Holdings count is a quick breadth indicator for the current book.",
-              "Use the detailed holdings grid for per-position valuation, exposure, and identifiers.",
-            ]),
-          },
-          {
-            key: "detail",
-            label: "Underlying Detail",
-            content: renderDrawerDefinitionList(
-              workspace.top_positions.slice(0, 5).map((position) => [
-                position.instrument_name,
-                formatCurrency(position.market_value_base, workspace.portfolio.base_currency),
-              ])
-            ),
-          },
-        ],
-        fullPageHref: "#portfolio-drilldown",
-        fullPageLabel: "Open holdings",
-      };
-    case "net_flow_30d":
-      return {
-        kicker: "Metric Detail",
-        title: "30D Net Flow",
-        subtitle: "Net booked portfolio activity across the active reporting window.",
-        summaryItems: [
-          { label: "Net Flow", value: formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency) },
-          { label: "Events", value: String(getRequestedWindowActivityCount(workspace)) },
-          ...commonSummary,
-        ],
-        tabs: [
-          {
-            key: "definition",
-            label: "Definition",
-            content: renderDrawerParagraphs([
-              "Net flow aggregates booked inflows, outflows, fees, and related cash activity over the selected window.",
-              "Positive values indicate net inflows. Negative values indicate net outflows.",
-            ]),
-          },
-          {
-            key: "detail",
-            label: "Underlying Detail",
-            content: renderDrawerDefinitionList([
-              ["Window", context.timeWindow],
-              ["Requested Window Amount", formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency)],
-              ["Requested Window Events", String(getRequestedWindowActivityCount(workspace))],
-              ["Year to Date Amount", formatCurrency(getYearToDateActivityAmount(workspace), activityDisplayCurrency)],
-            ]),
-          },
-        ],
-        fullPageHref: "#portfolio-insights",
-        fullPageLabel: "Open activity",
-      };
-    case "book_readiness":
-      return {
-        kicker: "Metric Detail",
-        title: "Book Readiness",
-        subtitle: "Operational readiness across holdings, pricing, transactions, and reporting.",
-        summaryItems: [
-          { label: "Status", value: getBookReadinessStatus(workspace) },
-          {
-            label: "Exceptions",
-            value: String(
-              (
-                workspace.exception_summaries ??
-                buildPortfolioExceptionSummaries(workspace)
-              ).length
-            ),
-          },
-          ...commonSummary,
-        ],
-        tabs: [
-          {
-            key: "definition",
-            label: "Definition",
-            content: renderDrawerParagraphs([
-              "Book readiness is an operating signal based on coverage, reporting state, publication eligibility, and blockers.",
-              "It is intended to tell RM, CA, and PM whether the book is usable for client and operational workflows.",
-            ]),
-          },
-          {
-            key: "detail",
-            label: "Underlying Detail",
-            content: renderDrawerDefinitionList([
-              ["Holdings", workspace.readiness.has_positions ? "Ready" : "Missing"],
-              ["Reporting", formatStatus(workspace.readiness.reporting.status)],
-              ["Publishing Allowed", formatBooleanFlag(workspace.operations?.publish_allowed)],
-              ["Blocking Controls", formatBooleanFlag(workspace.operations?.controls_blocking)],
-            ]),
-          },
-        ],
-        fullPageHref: "#portfolio-attention",
-        fullPageLabel: "Open readiness",
       };
   }
 }

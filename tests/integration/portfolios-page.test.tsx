@@ -136,7 +136,9 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("1,250,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("1,145,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("105,000 USD").length).toBeGreaterThanOrEqual(1);
-    const keyMetrics = within(hero as HTMLElement).getByLabelText("Portfolio key metrics");
+    const keyMetrics = within(hero as HTMLElement).getByRole("group", {
+      name: "Portfolio key metrics",
+    });
     expect(keyMetrics).toHaveClass("portfolio-summary-band");
     expect(keyMetrics.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(4);
     for (const label of ["AUM", "Invested Assets", "Cash", "Cash Accounts"]) {
@@ -147,6 +149,14 @@ describe("PortfolioFoundationPage", () => {
     expect(within(keyMetrics).queryByText("Holdings")).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByText("30D Net Flow")).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByText("Book Readiness")).not.toBeInTheDocument();
+    expect(within(keyMetrics).getByRole("button", { name: /AUM/i })).toBeInTheDocument();
+    expect(within(keyMetrics).getByRole("button", { name: /Invested Assets/i })).toBeInTheDocument();
+    expect(within(keyMetrics).getByRole("button", { name: /^Cash:/i })).toBeInTheDocument();
+    expect(within(keyMetrics).queryByRole("button", { name: /Cash Accounts/i })).not.toBeInTheDocument();
+    const cashAccountsTile = within(keyMetrics).getByText("Cash Accounts").closest(".kpi-stat-tile");
+    expect(cashAccountsTile).toBeTruthy();
+    expect(cashAccountsTile?.tagName.toLowerCase()).toBe("div");
+    expect(cashAccountsTile).not.toHaveClass("kpi-stat-tile-interactive");
     expect(screen.getByText("Generated 24 Feb 2026 • 14 report rows")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Income Plus")).toBeInTheDocument();
@@ -313,16 +323,35 @@ describe("PortfolioFoundationPage", () => {
       "/performance?portfolioId=PORT_UI_1001"
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: /AUM/i })[0]);
-    await waitFor(() => {
-      expect(screen.getByText("Metric Detail")).toBeInTheDocument();
-    });
-    expect(screen.getByRole("heading", { name: "AUM" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open health snapshot" })).toHaveAttribute(
-      "href",
-      "#portfolio-health"
+    const openKeyMetricDrawer = async (
+      buttonName: RegExp,
+      heading: string,
+      linkName: string,
+      href: string
+    ) => {
+      const currentKeyMetrics = within(hero as HTMLElement).getByRole("group", {
+        name: "Portfolio key metrics",
+      });
+      fireEvent.click(within(currentKeyMetrics).getByRole("button", { name: buttonName }));
+      await waitFor(() => {
+        expect(screen.getByText("Metric Detail")).toBeInTheDocument();
+      });
+      expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: linkName })).toHaveAttribute("href", href);
+      fireEvent.click(screen.getByRole("button", { name: "Close" }));
+      await waitFor(() => {
+        expect(screen.queryByRole("heading", { name: heading })).not.toBeInTheDocument();
+      });
+    };
+
+    await openKeyMetricDrawer(/AUM/i, "AUM", "Open health snapshot", "#portfolio-health");
+    await openKeyMetricDrawer(
+      /Invested Assets/i,
+      "Invested Assets",
+      "Open allocation",
+      "#portfolio-insights"
     );
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await openKeyMetricDrawer(/^Cash:/i, "Available Cash", "Open liquidity", "#portfolio-insights");
 
     fireEvent.click(screen.getByRole("button", { name: /PORTFOLIO CASH BALANCES UNAVAILABLE/i }));
     await waitFor(() => {
