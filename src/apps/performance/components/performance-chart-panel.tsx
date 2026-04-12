@@ -465,7 +465,8 @@ export default function PerformanceChartPanel({
   }
 
   const outcomeItems = returnPathPresentation.metrics.filter(
-    (metric) => metric.key !== "active-return"
+    (metric) =>
+      !["portfolio-return", "benchmark-return", "active-return"].includes(metric.key)
   );
   const resolvedWindowLabel =
     resolvedReportDates.startDate && resolvedReportDates.endDate
@@ -621,8 +622,9 @@ export default function PerformanceChartPanel({
           ) : null}
           <div className="performance-chart-analysis-grid">
             <PerformanceDecisionReadout
+              portfolioReturn={returnPathPresentation.portfolioReturnValue}
+              benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
               activeReturn={returnPathPresentation.activeReturnValue}
-              windowLabel={resolvedWindowLabel}
               basisLabel={resolvedBasisLabel}
               comparisonBasis={
                 returnPathPresentation.benchmarkSourceLabel

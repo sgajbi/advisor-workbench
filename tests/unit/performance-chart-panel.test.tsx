@@ -212,9 +212,6 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Basis" })).toBeInTheDocument();
     const executiveStrip = screen.getByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(executiveStrip).queryByText("Active Return")).not.toBeInTheDocument();
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();
@@ -263,7 +260,12 @@ describe("PerformanceChartPanel", () => {
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("12.84%");
-    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(/active return/i);
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
+      compactPattern("Portfolio Return 3.30% Benchmark Return 2.50% Active Return 0.80%")
+    );
+    expect(screen.getByLabelText("Return series context")).toHaveTextContent(
+      compactPattern("Net basis Monthly cadence Calculated return series")
+    );
     expect(lastChartOption?.tooltip).toMatchObject({
       backgroundColor: "rgba(255, 255, 255, 0.98)",
       borderColor: "rgba(36, 50, 70, 0.14)",
@@ -488,8 +490,7 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
-    expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern("Benchmark Return Unavailable")
     );
   });

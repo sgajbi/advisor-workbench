@@ -241,7 +241,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
       expect(screen.getByLabelText("Performance decision workspace")).toBeInTheDocument();
       expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-        /active return/i
+        /portfolio return/i
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
@@ -263,9 +263,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
     expect(chartSummaryBand).toBeTruthy();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Portfolio Return")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Portfolio Return")).not.toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
+      compactPattern("Portfolio Return 5.42% Benchmark Return 4.91% Active Return 0.52%")
+    );
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
     expect(
@@ -288,9 +291,6 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
     const executiveStrip = screen.getByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(executiveStrip).queryByText("Active Return")).not.toBeInTheDocument();
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();
@@ -303,6 +303,9 @@ describe("PerformanceAnalyticsPage", () => {
       compactPattern("Money-Weighted Return 5.12%")
     );
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
+      compactPattern("Portfolio Return 5.42% Benchmark Return 4.91% Active Return 0.52%")
+    );
     expect(screen.getByText("Assigned")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("Horizon Comparison")).length).toBe(1);
@@ -388,6 +391,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
+    expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
@@ -1125,7 +1129,6 @@ describe("PerformanceAnalyticsPage", () => {
       name: "benchmark-unassigned and return-series-unavailable",
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
       executiveExpectations: [
-        "Portfolio Return",
         "Money-Weighted Return",
         "Flow-Adjusted MV",
       ],
@@ -1145,7 +1148,6 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildPartialBenchmarkPerformanceScenario(),
       executiveExpectations: [
         "Money-Weighted Return",
-        "Portfolio Return",
         "Flow-Adjusted MV",
       ],
       trustExpectations: [
@@ -1163,7 +1165,6 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildAggregateContributionPerformanceScenario(),
       executiveExpectations: [
         "Money-Weighted Return",
-        "Portfolio Return",
         "Flow-Adjusted MV",
       ],
       trustExpectations: [],
@@ -1176,7 +1177,6 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildCombinedPartialPerformanceScenario(),
       executiveExpectations: [
         "Money-Weighted Return",
-        "Portfolio Return",
         "Flow-Adjusted MV",
       ],
       trustExpectations: [

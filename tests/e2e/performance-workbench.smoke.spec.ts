@@ -148,9 +148,6 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const executiveStrip = page.getByLabel('Executive return strip');
-    await expect(executiveStrip.getByText('Portfolio Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Active Return')).toBeVisible();
     await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
     await expect(executiveStrip.getByText('Opening MV')).toBeVisible();
     await expect(executiveStrip.getByText('Opening Cash Flow')).toBeVisible();
@@ -158,9 +155,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
     await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
     await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
-    await expect(
-      executiveStrip.getByText('Portfolio Return', { exact: true })
-    ).toHaveCount(0);
+    await expect(page.getByLabel('Return decision readout')).toContainText('Portfolio Return');
+    await expect(page.getByLabel('Return decision readout')).toContainText('Benchmark Return');
+    await expect(page.getByLabel('Return decision readout')).toContainText('Active Return');
 
     await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);

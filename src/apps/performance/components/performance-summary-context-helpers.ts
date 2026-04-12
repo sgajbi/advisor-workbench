@@ -23,6 +23,8 @@ export type PerformanceReturnPathPresentation = {
   benchmarkLabel: string;
   benchmarkSourceLabel: string | null;
   benchmarkContextValue: string;
+  portfolioReturnValue: string;
+  benchmarkReturnValue: string;
   activeReturnValue: string;
   relativeContextStatus: PerformanceChartContextStatus;
   benchmarkStateBody: string | null;
@@ -98,6 +100,14 @@ export function getPerformanceReturnPathPresentation({
       benchmarkReturnSource: summary.benchmark_return_source,
       benchmarkInputMode: summary.benchmark_input_mode,
     }),
+    portfolioReturnValue:
+      summary.portfolio_return_pct != null
+        ? formatPct(summary.portfolio_return_pct)
+        : "Unavailable",
+    benchmarkReturnValue:
+      benchmarkAssigned && summary.benchmark_return_pct != null
+        ? formatPct(summary.benchmark_return_pct)
+        : "Unavailable",
     activeReturnValue,
     relativeContextStatus,
     benchmarkStateBody: benchmarkAssigned

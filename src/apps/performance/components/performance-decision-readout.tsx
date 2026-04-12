@@ -1,40 +1,39 @@
 export default function PerformanceDecisionReadout({
+  portfolioReturn,
+  benchmarkReturn,
   activeReturn,
-  windowLabel,
   basisLabel,
   comparisonBasis,
   observationCadence,
 }: {
+  portfolioReturn: string;
+  benchmarkReturn: string;
   activeReturn: string;
-  windowLabel: string;
   basisLabel: string;
   comparisonBasis: string;
   observationCadence: string;
 }) {
   return (
     <section className="performance-chart-readout-strip" aria-label="Return decision readout">
-      <div className="performance-chart-readout-highlight">
-        <span className="performance-chart-readout-eyebrow">Active return</span>
-        <strong>{activeReturn}</strong>
-      </div>
-      <dl className="performance-chart-readout-list">
+      <dl className="performance-chart-readout-compare">
         <div>
-          <dt>Window</dt>
-          <dd>{windowLabel}</dd>
+          <dt>Portfolio Return</dt>
+          <dd>{portfolioReturn}</dd>
         </div>
         <div>
-          <dt>Basis</dt>
-          <dd>{basisLabel}</dd>
+          <dt>Benchmark Return</dt>
+          <dd>{benchmarkReturn}</dd>
         </div>
         <div>
-          <dt>Series</dt>
-          <dd>{comparisonBasis}</dd>
-        </div>
-        <div>
-          <dt>Cadence</dt>
-          <dd>{observationCadence}</dd>
+          <dt>Active Return</dt>
+          <dd>{activeReturn}</dd>
         </div>
       </dl>
+      <div className="performance-chart-readout-meta" aria-label="Return series context">
+        <span>{basisLabel} basis</span>
+        <span>{observationCadence} cadence</span>
+        <span>{comparisonBasis}</span>
+      </div>
     </section>
   );
 }
