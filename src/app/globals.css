@@ -52,6 +52,7 @@
   --workbench-metric-strip-gap: 8px;
   --workbench-rail-width: 340px;
   --workbench-rail-card-padding: 20px;
+  --workbench-page-container-max: 1500px;
   --workbench-text-compact: 0.75rem;
   --workbench-text-compact-strong: 0.8125rem;
   --workbench-summary-title-size: 1rem;
@@ -301,6 +302,13 @@ a:hover {
 
 .app-page-shell,
 .main-with-side-rail-layout {
+  min-width: 0;
+}
+
+.workbench-page-container {
+  width: 100%;
+  max-width: var(--workbench-page-container-max);
+  margin-inline: auto;
   min-width: 0;
 }
 
@@ -1482,11 +1490,11 @@ a:hover {
 }
 
 .section-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
   margin-bottom: 0;
   background: var(--panel);
-  padding: var(--space-6);
+  padding: var(--workbench-card-padding);
   box-shadow: none;
 }
 
@@ -1720,6 +1728,13 @@ a:hover {
 .portfolio-page {
   width: 100%;
   max-width: none;
+  min-height: 100%;
+  background: var(--bg);
+}
+
+.portfolio-page-container {
+  display: grid;
+  gap: var(--workstation-shell-gap);
 }
 
 .portfolio-layout {

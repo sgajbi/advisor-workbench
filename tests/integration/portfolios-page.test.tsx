@@ -78,6 +78,9 @@ describe("PortfolioFoundationPage", () => {
       document.querySelector("main.workstation-page.app-page-shell.app-page-shell-portfolio.portfolio-page")
     ).toBeTruthy();
     expect(document.querySelector(".page-container")).toBeFalsy();
+    expect(
+      document.querySelector(".workbench-page-container.portfolio-page-container")
+    ).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();

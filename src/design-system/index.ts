@@ -65,6 +65,7 @@ export {
 export { default as WorkspaceRailLink } from "./components/workspace-rail-link";
 export { default as WorkspaceHeader } from "./components/workspace-header";
 export { default as WorkbenchPageHeader } from "./components/workbench-page-header";
+export { default as WorkbenchPageContainer } from "./components/workbench-page-container";
 export {
   WorkbenchPageFrame,
   WorkbenchSectionStack,

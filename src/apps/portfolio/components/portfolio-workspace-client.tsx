@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  AppPageShell,
   WorkbenchLoadingState,
   WorkbenchToolbarPlaceholder,
 } from "@/design-system";
@@ -27,6 +26,7 @@ import {
   type PortfolioWorkspaceControls,
 } from "../view-model";
 import PortfolioUnavailableWorkspace from "./portfolio-unavailable-workspace";
+import PortfolioPageLayout from "./portfolio-page-layout";
 import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
 
@@ -252,7 +252,7 @@ export default function PortfolioWorkspaceClient({
   }
 
   return (
-    <AppPageShell pageKey="portfolio" className="portfolio-page">
+    <PortfolioPageLayout>
       {!portfolios.length ? (
         <PortfolioUnavailableWorkspace />
       ) : (
@@ -301,7 +301,7 @@ export default function PortfolioWorkspaceClient({
           }
         />
       )}
-    </AppPageShell>
+    </PortfolioPageLayout>
   );
 }
 

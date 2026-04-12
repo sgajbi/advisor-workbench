@@ -41,6 +41,7 @@ import {
   WorkbenchDeferredSection,
   WorkbenchInlineRefreshNote,
   WorkbenchSegmentedControl,
+  WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
   WorkbenchLoadingState,
@@ -163,18 +164,21 @@ describe("design-system components", () => {
   it("renders the shared workbench page frame with shared header and section stack", () => {
     render(
       <WorkstationPage>
-        <WorkbenchPageFrame
-          title="Portfolio"
-          subtitle="Front-office portfolio context"
-          actions={<SemanticBadge>Catalog live</SemanticBadge>}
-        >
-          <WorkbenchSectionStack>
-            <Panel>Summary Section</Panel>
-          </WorkbenchSectionStack>
-        </WorkbenchPageFrame>
+        <WorkbenchPageContainer className="portfolio-page-container">
+          <WorkbenchPageFrame
+            title="Portfolio"
+            subtitle="Front-office portfolio context"
+            actions={<SemanticBadge>Catalog live</SemanticBadge>}
+          >
+            <WorkbenchSectionStack>
+              <Panel>Summary Section</Panel>
+            </WorkbenchSectionStack>
+          </WorkbenchPageFrame>
+        </WorkbenchPageContainer>
       </WorkstationPage>
     );
 
+    expect(document.querySelector(".workbench-page-container.portfolio-page-container")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
