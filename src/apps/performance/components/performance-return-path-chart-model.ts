@@ -119,13 +119,37 @@ export function getLatestNumeric(values: Array<number | null | undefined>) {
   return [...values].reverse().find((value): value is number => value !== null && value !== undefined) ?? null;
 }
 
-export function formatEndLabel(
+export function formatTerminalValueLabel(
   params: CallbackDataParams,
-  label: string,
   lastIndex: number
 ) {
   const value = typeof params.value === "number" ? params.value : null;
-  return params.dataIndex === lastIndex && value !== null ? `${label} ${formatPct(value)}` : "";
+  return params.dataIndex === lastIndex && value !== null ? formatPct(value) : "";
+}
+
+export function buildTerminalValueLabelStyle({
+  color,
+  backgroundColor,
+  borderColor,
+  fontWeight,
+}: {
+  color: string;
+  backgroundColor: string;
+  borderColor: string;
+  fontWeight: number;
+}) {
+  return {
+    show: true,
+    distance: 14,
+    color,
+    backgroundColor,
+    borderColor,
+    borderWidth: 1,
+    borderRadius: 999,
+    padding: [4, 8],
+    fontSize: 11,
+    fontWeight,
+  };
 }
 
 function getTooltipNumericValue(value: unknown): number | null {

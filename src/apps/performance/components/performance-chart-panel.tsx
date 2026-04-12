@@ -28,8 +28,9 @@ import PerformanceReturnPathLegend from "./performance-return-path-legend";
 import {
   buildPercentAxisBounds,
   buildReturnPathTooltipFormatter,
+  buildTerminalValueLabelStyle,
   CHART_COLORS,
-  formatEndLabel,
+  formatTerminalValueLabel,
   resolveActiveCumulativeReturn,
   resolveReportDates,
   resolveActivePeriodReturn,
@@ -221,7 +222,7 @@ export default function PerformanceChartPanel({
       ],
       grid: {
         left: 66,
-        right: 92,
+        right: 138,
         top: 18,
         bottom: 34,
         containLabel: true,
@@ -317,6 +318,7 @@ export default function PerformanceChartPanel({
                 symbolSize: 7,
                 showSymbol: false,
                 connectNulls: true,
+                clip: false,
                 z: 4,
                 lineStyle: {
                   width: 3.6,
@@ -342,13 +344,19 @@ export default function PerformanceChartPanel({
                     width: 4.2,
                   },
                 },
-                label: {
-                  show: true,
-                  position: "right" as const,
-                  color: CHART_COLORS.portfolio,
-                  fontWeight: 800,
+                endLabel: {
+                  ...buildTerminalValueLabelStyle({
+                    color: CHART_COLORS.portfolio,
+                    backgroundColor: "rgba(255, 255, 255, 0.94)",
+                    borderColor: "rgba(22, 58, 92, 0.12)",
+                    fontWeight: 800,
+                  }),
                   formatter: (params: CallbackDataParams) =>
-                    formatEndLabel(params, "Portfolio", portfolioCumulative.length - 1),
+                    formatTerminalValueLabel(params, portfolioCumulative.length - 1),
+                },
+                labelLayout: {
+                  hideOverlap: true,
+                  moveOverlap: "shiftY" as const,
                 },
                 areaStyle: {
                   color: "rgba(22, 58, 92, 0.035)",
@@ -367,6 +375,7 @@ export default function PerformanceChartPanel({
                 symbolSize: 7,
                 showSymbol: false,
                 connectNulls: true,
+                clip: false,
                 z: 4,
                 lineStyle: {
                   width: 3,
@@ -380,13 +389,19 @@ export default function PerformanceChartPanel({
                     width: 3.5,
                   },
                 },
-                label: {
-                  show: true,
-                  position: "right" as const,
-                  color: CHART_COLORS.benchmark,
-                  fontWeight: 800,
+                endLabel: {
+                  ...buildTerminalValueLabelStyle({
+                    color: CHART_COLORS.benchmark,
+                    backgroundColor: "rgba(255, 255, 255, 0.94)",
+                    borderColor: "rgba(105, 123, 146, 0.14)",
+                    fontWeight: 800,
+                  }),
                   formatter: (params: CallbackDataParams) =>
-                    formatEndLabel(params, "Benchmark", benchmarkCumulative.length - 1),
+                    formatTerminalValueLabel(params, benchmarkCumulative.length - 1),
+                },
+                labelLayout: {
+                  hideOverlap: true,
+                  moveOverlap: "shiftY" as const,
                 },
               },
             ]
@@ -402,6 +417,7 @@ export default function PerformanceChartPanel({
                 symbolSize: 7,
                 showSymbol: false,
                 connectNulls: true,
+                clip: false,
                 z: 4,
                 lineStyle: {
                   width: 2.8,
@@ -416,13 +432,19 @@ export default function PerformanceChartPanel({
                     width: 3.2,
                   },
                 },
-                label: {
-                  show: true,
-                  position: "right" as const,
-                  color: CHART_COLORS.active,
-                  fontWeight: 760,
+                endLabel: {
+                  ...buildTerminalValueLabelStyle({
+                    color: CHART_COLORS.active,
+                    backgroundColor: "rgba(255, 251, 235, 0.96)",
+                    borderColor: "rgba(155, 122, 31, 0.18)",
+                    fontWeight: 760,
+                  }),
                   formatter: (params: CallbackDataParams) =>
-                    formatEndLabel(params, "Active", activeCumulative.length - 1),
+                    formatTerminalValueLabel(params, activeCumulative.length - 1),
+                },
+                labelLayout: {
+                  hideOverlap: true,
+                  moveOverlap: "shiftY" as const,
                 },
                 areaStyle:
                   chartViewMode === "relative"

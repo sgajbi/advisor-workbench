@@ -19,10 +19,26 @@ type ChartSeriesProbe = {
   type?: string;
   data?: unknown[];
   smooth?: boolean | number;
+  clip?: boolean;
   symbol?: string;
   symbolSize?: number;
   showSymbol?: boolean;
   barWidth?: number;
+  endLabel?: {
+    show?: boolean;
+    color?: string;
+    backgroundColor?: string;
+    borderColor?: string;
+    borderWidth?: number;
+    borderRadius?: number;
+    fontSize?: number;
+    fontWeight?: number;
+    padding?: number[];
+  };
+  labelLayout?: {
+    hideOverlap?: boolean;
+    moveOverlap?: string;
+  };
   itemStyle?: {
     borderWidth?: number;
     borderRadius?: number[];
@@ -106,10 +122,25 @@ describe("PerformanceChartPanel", () => {
     expect(portfolioReturnSeries?.symbol).toBe("circle");
     expect(portfolioReturnSeries?.symbolSize).toBe(7);
     expect(portfolioReturnSeries?.showSymbol).toBe(false);
+    expect(portfolioReturnSeries?.clip).toBe(false);
     expect(portfolioReturnSeries?.lineStyle).toMatchObject({
       width: 3.6,
       cap: "round",
       join: "round",
+    });
+    expect(portfolioReturnSeries?.endLabel).toMatchObject({
+      show: true,
+      color: "#163a5c",
+      backgroundColor: "rgba(255, 255, 255, 0.94)",
+      borderColor: "rgba(22, 58, 92, 0.12)",
+      borderWidth: 1,
+      borderRadius: 999,
+      fontSize: 11,
+      fontWeight: 800,
+    });
+    expect(portfolioReturnSeries?.labelLayout).toMatchObject({
+      hideOverlap: true,
+      moveOverlap: "shiftY",
     });
     expect(portfolioReturnSeries).toMatchObject({
       markLine: {
@@ -262,6 +293,13 @@ describe("PerformanceChartPanel", () => {
       splitLine: {
         lineStyle: { color: "rgba(22, 58, 92, 0.085)", width: 1, type: "dashed" },
       },
+    });
+    expect(lastChartOption?.grid).toMatchObject({
+      left: 66,
+      right: 138,
+      top: 18,
+      bottom: 34,
+      containLabel: true,
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
