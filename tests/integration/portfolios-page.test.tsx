@@ -124,6 +124,7 @@ describe("PortfolioFoundationPage", () => {
     expect(hero?.classList.contains("portfolio-book-hero")).toBe(true);
     expect(hero?.querySelector(".portfolio-hero-header")).toBeTruthy();
     expect(hero?.querySelector(".portfolio-hero-label")).toBeTruthy();
+    expect(within(hero as HTMLElement).getByText("Portfolio")).toHaveClass("portfolio-hero-label");
     expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeTruthy();
     expect(within(hero as HTMLElement).getByText("USD")).toBeInTheDocument();
     expect(within(hero as HTMLElement).getByText("CIF_1001")).toBeInTheDocument();

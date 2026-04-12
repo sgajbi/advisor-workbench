@@ -646,7 +646,7 @@ function PortfolioSummaryHeaderSection({
         <div className="portfolio-hero-header">
           <div className="portfolio-hero-content">
             <Text variant="label" className="portfolio-hero-label">
-              Portfolio Book
+              Portfolio
             </Text>
             <h2>{workspace.portfolio.display_name}</h2>
             <div className="portfolio-hero-meta">

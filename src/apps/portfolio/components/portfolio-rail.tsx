@@ -22,7 +22,7 @@ export default function PortfolioRail({
     <Panel className="portfolio-rail portfolio-selector-rail">
       <nav aria-label="Portfolio selector">
         <div className="portfolio-rail-header portfolio-selector-header">
-          <div className="portfolio-rail-kicker portfolio-selector-kicker">Relationship Book</div>
+          <div className="portfolio-rail-kicker portfolio-selector-kicker">Portfolio</div>
           <h2>Client Portfolios</h2>
         </div>
         <ul className="portfolio-rail-list portfolio-selector-list">

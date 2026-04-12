@@ -66,6 +66,11 @@ export default function PerformanceWorkspaceView({
 }: PerformanceWorkspaceViewProps) {
   const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
   const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
+  const workspaceTitle = mode === "risk" ? "Risk" : "Performance";
+  const workspaceSubtitle =
+    mode === "risk"
+      ? "Benchmark-aware concentration, drawdown, rolling, and attribution review."
+      : "Benchmark-aware return, attribution, contribution, and evidence review.";
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -164,7 +169,8 @@ export default function PerformanceWorkspaceView({
           <WorkbenchPageFrame
             className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
-            title="Performance"
+            title={workspaceTitle}
+            subtitle={workspaceSubtitle}
             actions={
               <PerformanceWorkspaceModeSwitch
                 value={mode}

@@ -166,6 +166,9 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Benchmark-aware return, attribution, contribution, and evidence review.")
+    ).toHaveClass("workbench-page-header-subtitle");
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
@@ -205,6 +208,10 @@ describe("PerformanceWorkspaceView", () => {
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
+    expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText("Benchmark-aware concentration, drawdown, rolling, and attribution review.")
+    ).toHaveClass("workbench-page-header-subtitle");
     expect(riskModeMock).toHaveBeenCalled();
     expect(riskModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
       workspace: scenario.workspace,

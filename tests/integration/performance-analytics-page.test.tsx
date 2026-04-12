@@ -118,6 +118,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Benchmark-aware return, attribution, contribution, and evidence review.")
+    ).toHaveClass("workbench-page-header-subtitle");
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
@@ -501,6 +504,10 @@ describe("PerformanceAnalyticsPage", () => {
       "aria-selected",
       "true"
     );
+    expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText("Benchmark-aware concentration, drawdown, rolling, and attribution review.")
+    ).toHaveClass("workbench-page-header-subtitle");
     expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
@@ -521,7 +528,11 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "Risk" }));
 
     expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Risk" })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("heading", { name: "Risk" }).some((heading) =>
+        heading.classList.contains("workbench-page-header-title")
+      )
+    ).toBe(true);
     expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
     expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
