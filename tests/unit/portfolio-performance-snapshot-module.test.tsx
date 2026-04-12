@@ -100,7 +100,7 @@ describe("portfolio performance snapshot module", () => {
     );
   });
 
-  it("renders expanded source-backed performance summary fields when performance data exists", () => {
+  it("renders collapsed source-backed performance metrics with compact inline context by default", () => {
     const onToggle = vi.fn();
 
     const { container } = render(
@@ -161,7 +161,7 @@ describe("portfolio performance snapshot module", () => {
         }}
         portfolioId="PORT_UI_1001"
         selectedPeriod="QTD"
-        expanded
+        expanded={false}
         onToggle={onToggle}
       />
     );
@@ -170,21 +170,11 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("4.91%")).toBeInTheDocument();
     expect(screen.getByText("0.21%")).toBeInTheDocument();
     expect(screen.getByText("4.88%")).toBeInTheDocument();
-    expect(screen.getAllByText("Global Balanced 60/40").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
-    expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
-    expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
-    expect(screen.getByText("01 Jan 2026 - 28 Mar 2026")).toBeInTheDocument();
-    expect(screen.getByText("14 report rows • Rebalance Ready")).toBeInTheDocument();
-    expect(screen.queryByText("Reporting Rows")).not.toBeInTheDocument();
-    expect(screen.queryByText("Rebalance Status")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
+      screen.getByText(
+        "Benchmark: Global Balanced 60/40 • Method: MWR XIRR • Window: 01 Jan 2026 - 28 Mar 2026"
+      )
     ).toBeInTheDocument();
-    expect(screen.getByText("Portfolio")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
-    expect(screen.getByText("2026-01 to 2026-03")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Performance" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PORT_UI_1001&period=QTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
@@ -192,44 +182,67 @@ describe("portfolio performance snapshot module", () => {
     expect(container.querySelector(".portfolio-summary-pair-panel")).not.toBeNull();
     expect(screen.getByRole("group", { name: "Performance snapshot metrics" })).toBeInTheDocument();
     expect(container.querySelectorAll(".portfolio-summary-pair-stat")).toHaveLength(4);
-    const trendRegion = container.querySelector(".portfolio-performance-snapshot-trend");
-    const contextRegion = container.querySelector(".portfolio-performance-snapshot-context");
-    expect(trendRegion).not.toBeNull();
-    expect(contextRegion).not.toBeNull();
     expect(
-      Boolean(
-        trendRegion &&
-          contextRegion &&
-          trendRegion.compareDocumentPosition(contextRegion) & Node.DOCUMENT_POSITION_FOLLOWING
-      )
-    ).toBe(true);
+      screen.queryByRole("img", { name: "Performance snapshot comparison sparkline" })
+    ).not.toBeInTheDocument();
+    expect(container.querySelector(".portfolio-performance-snapshot-context")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Collapse" }));
+    const detailsToggle = screen.getByRole("button", {
+      name: "Show performance snapshot details",
+    });
+    expect(detailsToggle).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(detailsToggle);
     expect(onToggle).toHaveBeenCalled();
   });
 
-  it("renders collapsed active-return context when benchmark-relative values are available", () => {
+  it("renders detailed trend and context only when performance details are expanded", () => {
     render(
       <PortfolioPerformanceSnapshotModule
         capability={{ state: "supported" }}
         performance={{
           period: "QTD",
+          report_start_date: "2026-01-01",
+          report_end_date: "2026-03-28",
           return_pct: 5.12,
+          money_weighted_return_pct: 4.88,
+          money_weighted_method: "XIRR",
           benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
           benchmark_label: "Global Balanced 60/40",
           benchmark_return_pct: 4.91,
+          benchmark_return_source: "calculated",
+          benchmark_input_mode: "stateful",
           excess_return_pct: 0.21,
-          sparkline_points: null,
+          sparkline_points: [
+            {
+              label: "2026-01",
+              portfolio_return_pct: 1.1,
+              benchmark_return_pct: 0.9,
+              active_return_pct: 0.2,
+            },
+            {
+              label: "2026-02",
+              portfolio_return_pct: 2.9,
+              benchmark_return_pct: 2.5,
+              active_return_pct: 0.4,
+            },
+            {
+              label: "2026-03",
+              portfolio_return_pct: 5.12,
+              benchmark_return_pct: 4.91,
+              active_return_pct: 0.21,
+            },
+          ],
         }}
-        rebalance={null}
-        reportingRowCount={0}
+        rebalance={{ status: "READY", last_run_at_utc: null, last_rebalance_run_id: null }}
+        reportingRowCount={14}
         context={{
           selectedAsOfDate: "2026-03-28",
           selectedReportingCurrency: "USD",
-          timeWindow: "QTD",
-          periodLabel: "QTD",
-          viewMode: "summary",
-          columnMode: "essential",
+          timeWindow: "YTD",
+          periodLabel: "YTD",
+          viewMode: "detailed",
+          columnMode: "expanded",
           hideEmptyModules: false,
           focusExceptions: false,
           effectivePeriodStartDate: "2026-01-01",
@@ -242,15 +255,22 @@ describe("portfolio performance snapshot module", () => {
         }}
         portfolioId="PORT_UI_1001"
         selectedPeriod="QTD"
-        expanded={false}
+        expanded
         onToggle={vi.fn()}
       />
     );
 
-    expect(screen.getByText("5.12%")).toBeInTheDocument();
     expect(
-      screen.getByText("5.12% total return • active 0.21% vs Global Balanced 60/40 • QTD")
+      screen.getByRole("button", { name: "Hide performance snapshot details" })
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
+    expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
+    expect(screen.getByText("MWR XIRR")).toBeInTheDocument();
+    expect(screen.getByText("14 report rows • Rebalance Ready")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })
     ).toBeInTheDocument();
+    expect(screen.getByText("2026-01 to 2026-03")).toBeInTheDocument();
   });
 
   it("uses an explicit drill-through window for short-horizon snapshot periods", () => {

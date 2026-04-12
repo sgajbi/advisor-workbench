@@ -3025,6 +3025,21 @@ a:hover {
   min-width: 0;
 }
 
+.portfolio-performance-snapshot-details {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-1);
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.portfolio-performance-snapshot-inline-context {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .portfolio-summary-pair-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
