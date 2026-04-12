@@ -245,7 +245,7 @@ describe("PerformanceAnalyticsPage", () => {
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
-      expect(mainShell?.querySelector(".performance-mini-legend.workbench-summary-toolbar")).toBeTruthy();
+      expect(mainShell?.querySelector(".performance-horizon-toolbar.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();

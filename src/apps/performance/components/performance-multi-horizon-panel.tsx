@@ -191,7 +191,7 @@ export default function PerformanceMultiHorizonPanel({
     (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
   );
   const showSupportColumn = visualMode !== "relative";
-  const supportHeaderLabel = visualMode === "basis" ? "Basis context" : "Relative context";
+  const supportHeaderLabel = visualMode === "basis" ? "Basis" : "Relative";
   const supportPrimaryLabel = visualMode === "basis" ? "Fee drag" : "Active";
   const supportSecondaryLabel = "Cum.";
 
@@ -242,13 +242,7 @@ export default function PerformanceMultiHorizonPanel({
               },
             ]}
           />
-          <WorkbenchSummaryToolbar className="performance-mini-legend">
-            <span className="performance-mini-legend-item performance-mini-legend-portfolio">
-              Portfolio
-            </span>
-            <span className="performance-mini-legend-item performance-mini-legend-benchmark">
-              {presentation.benchmarkLegendLabel}
-            </span>
+          <WorkbenchSummaryToolbar className="performance-horizon-toolbar">
             <WorkbenchSegmentedControl
               ariaLabel="Horizon table view"
               className="performance-horizon-table-view"
@@ -365,14 +359,20 @@ export default function PerformanceMultiHorizonPanel({
                 <span>Open the full economics and return breakdown across all reporting windows.</span>
               </div>
             </summary>
-            <AnalyticsTable
-              ariaLabel="Multi-horizon return table"
-              columns={tableModel.columns}
-              rows={tableModel.rows}
-              density="compact"
-              variant="observation"
-              className="performance-horizon-table performance-chart-observation-table"
-            />
+            <div
+              className="performance-horizon-table-scroll"
+              role="region"
+              aria-label="Scrollable horizon comparison table"
+            >
+              <AnalyticsTable
+                ariaLabel="Multi-horizon return table"
+                columns={tableModel.columns}
+                rows={tableModel.rows}
+                density="compact"
+                variant="observation"
+                className="performance-horizon-table performance-chart-observation-table"
+              />
+            </div>
           </details>
         </>
       ) : (

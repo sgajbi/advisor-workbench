@@ -77,7 +77,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
     expect(screen.queryByText("Portfolio vs Global Balanced 60/40")).not.toBeInTheDocument();
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
-    expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
+    expect(document.querySelector(".workbench-summary-toolbar.performance-horizon-toolbar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-horizon-matrix-row")).toHaveLength(4);
     expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
     expect(screen.getByText("Detailed table")).toBeInTheDocument();
@@ -93,6 +93,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("Benchmark Return").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByText("Detailed table"));
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
+    expect(screen.getByRole("region", { name: "Scrollable horizon comparison table" })).toBeInTheDocument();
     expect(
       horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")
     ).toBeTruthy();
