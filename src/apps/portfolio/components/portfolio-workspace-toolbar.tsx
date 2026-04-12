@@ -141,8 +141,8 @@ export default function PortfolioWorkspaceToolbar({
               { key: "summary", label: "Summary" },
               { key: "detailed", label: "Detailed" },
             ]}
-            ariaLabel="Portfolio page view mode"
-            className="portfolio-workspace-view-mode-tabs"
+            ariaLabel="Portfolio view navigation"
+            className="portfolio-primary-view-tabs"
           />
         </div>
 

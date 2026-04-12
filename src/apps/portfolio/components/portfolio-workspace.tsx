@@ -77,6 +77,7 @@ import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot
 import PortfolioDrilldownDisclosure from "./portfolio-drilldown-disclosure";
 import PortfolioLiquiditySummaryModule from "./portfolio-liquidity-summary-module";
 import PortfolioModuleState from "./portfolio-module-state";
+import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
 import PortfolioRail from "./portfolio-rail";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
@@ -412,12 +413,10 @@ export default function PortfolioWorkspaceView({
               title="Portfolio"
               subtitle="Front-office portfolio context, readiness, and decision support"
               actions={
-                <>
-                  <SemanticBadge>{portfolios.length} portfolios</SemanticBadge>
-                  <SemanticBadge tone={portfolios.length ? "success" : "warn"}>
-                    {portfolios.length ? "Catalog live" : "Catalog unavailable"}
-                  </SemanticBadge>
-                </>
+                <PortfolioPageHeaderStatus
+                  label={portfolios.length ? "Catalog live" : "Catalog unavailable"}
+                  tone={portfolios.length ? "success" : "warn"}
+                />
               }
             >
               <WorkbenchSectionStack className="portfolio-page-sections">

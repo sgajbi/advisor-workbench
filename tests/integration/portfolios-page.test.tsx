@@ -85,6 +85,22 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.portfolio-page-sections")).toBeTruthy();
+    const pageHeader = document.querySelector(".portfolio-page-frame .workbench-page-header");
+    expect(pageHeader).toBeTruthy();
+    expect(within(pageHeader as HTMLElement).getByRole("heading", { name: /^Portfolio$/i }))
+      .toHaveClass("workbench-page-header-title");
+    expect(
+      within(pageHeader as HTMLElement).getByText(
+        "Front-office portfolio context, readiness, and decision support"
+      )
+    ).toHaveClass("workbench-page-header-subtitle");
+    expect(
+      within(pageHeader as HTMLElement).getByRole("group", { name: "Portfolio page status" })
+    ).toHaveClass("portfolio-page-header-actions");
+    expect(within(pageHeader as HTMLElement).getByText("Catalog live")).toHaveClass(
+      "portfolio-page-header-status"
+    );
+    expect(within(pageHeader as HTMLElement).queryByText("2 portfolios")).not.toBeInTheDocument();
     expect(
       document.querySelector(
         ".main-with-side-rail-layout.workstation-shell.workstation-shell-both.portfolio-layout"
@@ -133,8 +149,16 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Reporting Currency")).toBeDisabled();
     expect(screen.getByText(/Historical snapshots are not source-backed/i)).toBeInTheDocument();
     expect(screen.getByText(/Reporting currency restatement is pending source support/i)).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Detailed" })).toBeInTheDocument();
+    const viewNavigation = screen.getByRole("tablist", { name: "Portfolio view navigation" });
+    expect(viewNavigation).toHaveClass("mode-tabs", "portfolio-primary-view-tabs");
+    expect(within(viewNavigation).getByRole("tab", { name: "Summary" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(within(viewNavigation).getByRole("tab", { name: "Detailed" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
