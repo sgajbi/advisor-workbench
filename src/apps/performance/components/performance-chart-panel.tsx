@@ -379,7 +379,7 @@ export default function PerformanceChartPanel({
                 connectNulls: true,
                 z: 4,
                 lineStyle: {
-                  width: 2.4,
+                  width: 2.8,
                   type: "dashed" as const,
                   color: CHART_COLORS.active,
                   cap: "round" as const,
@@ -389,13 +389,19 @@ export default function PerformanceChartPanel({
                   focus: "series" as const,
                 },
                 label: {
-                  show: chartViewMode !== "combined",
+                  show: true,
                   position: "right" as const,
                   color: CHART_COLORS.active,
                   fontWeight: 760,
                   formatter: (params: CallbackDataParams) =>
                     formatEndLabel(params, "Active", activeCumulative.length - 1),
                 },
+                areaStyle:
+                  chartViewMode === "relative"
+                    ? {
+                        color: "rgba(47, 95, 151, 0.045)",
+                      }
+                    : undefined,
               },
             ]
           : []),
