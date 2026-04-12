@@ -231,6 +231,9 @@ export default function PerformanceChartPanel({
       },
       tooltip: {
         trigger: "axis",
+        confine: true,
+        appendToBody: false,
+        transitionDuration: 0,
         axisPointer: {
           type: "line",
           snap: true,
@@ -322,6 +325,9 @@ export default function PerformanceChartPanel({
                 },
                 emphasis: {
                   focus: "series" as const,
+                  lineStyle: {
+                    width: 4.2,
+                  },
                 },
                 label: {
                   show: true,
@@ -332,7 +338,7 @@ export default function PerformanceChartPanel({
                     formatEndLabel(params, "Portfolio", portfolioCumulative.length - 1),
                 },
                 areaStyle: {
-                  color: "rgba(218, 30, 40, 0.03)",
+                  color: "rgba(22, 58, 92, 0.035)",
                 },
               },
             ]
@@ -357,6 +363,9 @@ export default function PerformanceChartPanel({
                 },
                 emphasis: {
                   focus: "series" as const,
+                  lineStyle: {
+                    width: 3.5,
+                  },
                 },
                 label: {
                   show: true,
@@ -390,6 +399,9 @@ export default function PerformanceChartPanel({
                 },
                 emphasis: {
                   focus: "series" as const,
+                  lineStyle: {
+                    width: 3.2,
+                  },
                 },
                 label: {
                   show: true,
@@ -402,7 +414,7 @@ export default function PerformanceChartPanel({
                 areaStyle:
                   chartViewMode === "relative"
                     ? {
-                        color: "rgba(47, 95, 151, 0.045)",
+                        color: "rgba(155, 122, 31, 0.05)",
                       }
                     : undefined,
               },

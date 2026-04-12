@@ -13,12 +13,12 @@ type ReturnPathTooltipOptions = {
 };
 
 export const CHART_COLORS = {
-  portfolio: "#da1e28",
-  benchmark: "#1f2e45",
-  active: "#2f5f97",
-  portfolioBar: "rgba(218, 30, 40, 0.28)",
-  benchmarkBar: "rgba(31, 46, 69, 0.24)",
-  activeBar: "rgba(47, 95, 151, 0.24)",
+  portfolio: "#163a5c",
+  benchmark: "#697b92",
+  active: "#9b7a1f",
+  portfolioBar: "rgba(22, 58, 92, 0.24)",
+  benchmarkBar: "rgba(105, 123, 146, 0.22)",
+  activeBar: "rgba(155, 122, 31, 0.22)",
 };
 
 export const SHARED_CHART_TEXT = {
@@ -145,20 +145,39 @@ function escapeTooltipHtml(value: string) {
     .replaceAll(">", "&gt;");
 }
 
+function buildTooltipContainer(title: string, rows: string, minWidth: number) {
+  return [
+    `<div style="display:grid;gap:8px;min-width:${minWidth}px;">`,
+    `<div style="color:#607086;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(title)}</div>`,
+    rows,
+    "</div>",
+  ].join("");
+}
+
+function buildTooltipNotice(title: string, body: string) {
+  return buildTooltipContainer(
+    title,
+    `<div style="color:#334155;font-size:12px;line-height:1.45;">${escapeTooltipHtml(body)}</div>`,
+    180
+  );
+}
+
 export function formatReturnPathTooltip(params: CallbackDataParams | CallbackDataParams[]) {
   const entries = (Array.isArray(params) ? params : [params]).filter(
     (entry) => getTooltipNumericValue(entry.value) !== null
   );
 
+  const firstEntry = Array.isArray(params) ? params[0] : params;
+  const axisLabel = String(
+    (firstEntry as CallbackDataParams & { axisValue?: string })?.axisValue ??
+      firstEntry?.name ??
+      "Observation"
+  );
+
   if (!entries.length) {
-    return "";
+    return buildTooltipNotice(axisLabel, "No published values are available at this point.");
   }
 
-  const axisLabel = String(
-    (entries[0] as CallbackDataParams & { axisValue?: string })?.axisValue ??
-      entries[0]?.name ??
-      ""
-  );
   const rows = entries
     .map((entry) => {
       const numericValue = getTooltipNumericValue(entry.value);
@@ -177,15 +196,10 @@ export function formatReturnPathTooltip(params: CallbackDataParams | CallbackDat
     .join("");
 
   if (!rows) {
-    return "";
+    return buildTooltipNotice(axisLabel, "No published values are available at this point.");
   }
 
-  return [
-    '<div style="display:grid;gap:8px;min-width:180px;">',
-    `<div style="color:#5f6c7f;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(axisLabel)}</div>`,
-    rows,
-    "</div>",
-  ].join("");
+  return buildTooltipContainer(axisLabel, rows, 180);
 }
 
 function buildTooltipRow(label: string, value: number | null | undefined, color: string) {
@@ -267,14 +281,12 @@ export function buildReturnPathTooltipFormatter({
       .join("");
 
     if (!rows) {
-      return "";
+      return buildTooltipNotice(
+        axisLabel,
+        "Return observations are not available for the hovered point."
+      );
     }
 
-    return [
-      '<div style="display:grid;gap:8px;min-width:220px;">',
-      `<div style="color:#5f6c7f;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(axisLabel)}</div>`,
-      rows,
-      "</div>",
-    ].join("");
+    return buildTooltipContainer(axisLabel, rows, 220);
   };
 }
