@@ -3893,8 +3893,8 @@ a:hover {
 
 .portfolio-workspace-toolbar-groups {
   display: grid;
-  grid-template-columns: minmax(18rem, 1.2fr) minmax(11rem, 0.8fr) minmax(18rem, 1.1fr);
-  gap: 0.75rem;
+  grid-template-columns: minmax(15rem, 1.02fr) minmax(8.75rem, 0.62fr) minmax(19.5rem, 1.36fr);
+  gap: 0.625rem;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -3980,7 +3980,7 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
-  max-width: 15.75rem;
+  max-width: 17.25rem;
   justify-content: stretch;
   gap: 0.25rem;
   padding: 0.18rem;
@@ -3998,28 +3998,40 @@ a:hover {
   grid-column: 2;
 }
 
+.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-group-fields,
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-group-fields {
   gap: 0.5rem 0.75rem;
 }
 
+.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field,
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field {
   min-width: 8.4rem;
 }
 
+.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field,
+.portfolio-workspace-toolbar-group-context .MuiFormControl-root {
+  width: 100%;
+  max-width: 8.4rem;
+}
+
+.portfolio-workspace-toolbar-group-context .portfolio-workspace-toolbar-field label,
 .portfolio-workspace-toolbar-group-period .portfolio-workspace-toolbar-field label {
   font-size: 0.6875rem;
   line-height: 1.2;
 }
 
+.portfolio-workspace-toolbar-group-context .MuiInputBase-root,
 .portfolio-workspace-toolbar-group-period .MuiInputBase-root {
   min-height: 36px;
 }
 
+.portfolio-workspace-toolbar-group-context .MuiInputBase-input,
 .portfolio-workspace-toolbar-group-period .MuiInputBase-input {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
+.portfolio-workspace-toolbar-group-context input[type="date"],
 .portfolio-workspace-toolbar-group-period input[type="date"] {
   font-size: 0.8125rem;
 }
@@ -4037,7 +4049,8 @@ a:hover {
 
 @media (max-width: 1440px) {
   .portfolio-workspace-toolbar-groups {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-columns: minmax(10.25rem, 1fr) minmax(7.5rem, 0.64fr);
+    gap: 0.5rem;
     grid-template-areas:
       "context view"
       "period period";
