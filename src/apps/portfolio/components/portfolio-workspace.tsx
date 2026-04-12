@@ -13,7 +13,6 @@ import {
   MetricRow,
   Panel,
   SectionHeader,
-  SectionLabel,
   SemanticBadge,
   Text,
   WorkbenchLoadingState,
@@ -61,10 +60,8 @@ import {
   getActivityDisplayCurrency,
   getBookReadinessStatus,
   getBookReadinessSupport,
-  getBookReadinessTone,
   getIncomeDisplayCurrency,
   getInvestedAssetWeight,
-  getNetFlowTone,
   getOrderedWorkflowCues,
   getRequestedWindowActivityAmount,
   getRequestedWindowActivityCount,
@@ -438,7 +435,6 @@ export default function PortfolioWorkspaceView({
                       <PortfolioSummaryHeaderSection
                         workspace={workspace}
                         context={context}
-                        activityDisplayCurrency={activityDisplayCurrency}
                         orderedWorkflowCues={orderedWorkflowCues}
                         primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
                         readinessIndicators={priorityReadinessIndicators}
@@ -632,7 +628,6 @@ export default function PortfolioWorkspaceView({
 function PortfolioSummaryHeaderSection({
   workspace,
   context,
-  activityDisplayCurrency,
   orderedWorkflowCues,
   primaryWorkflowCueKey,
   readinessIndicators,
@@ -640,7 +635,6 @@ function PortfolioSummaryHeaderSection({
 }: {
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
-  activityDisplayCurrency: string;
   orderedWorkflowCues: Array<{ key: string; label: string; href: string }>;
   primaryWorkflowCueKey: string | null;
   readinessIndicators: ReturnType<typeof buildPortfolioReadinessIndicators>;
@@ -652,101 +646,90 @@ function PortfolioSummaryHeaderSection({
       className="portfolio-workspace-section portfolio-summary-cluster-section portfolio-summary-cluster-hero"
     >
       <Panel className="portfolio-hero portfolio-book-hero">
-        <div className="portfolio-hero-content">
-          <SectionLabel>Portfolio Book</SectionLabel>
-          <h2>{workspace.portfolio.display_name}</h2>
-          <div className="portfolio-hero-meta">
-            <span>{workspace.portfolio.base_currency}</span>
-            {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
-            {workspace.portfolio.booking_center_code ? (
-              <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
-            ) : null}
-            {workspace.profile.status ? (
-              <SemanticBadge className="portfolio-hero-status">
-                {formatStatus(workspace.profile.status)}
-              </SemanticBadge>
-            ) : null}
+        <div className="portfolio-hero-header">
+          <div className="portfolio-hero-content">
+            <Text variant="label" className="portfolio-hero-label">
+              Portfolio Book
+            </Text>
+            <h2>{workspace.portfolio.display_name}</h2>
+            <div className="portfolio-hero-meta">
+              <span>{workspace.portfolio.base_currency}</span>
+              {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
+              {workspace.portfolio.booking_center_code ? (
+                <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
+              ) : null}
+              {workspace.profile.status ? (
+                <SemanticBadge className="portfolio-hero-status">
+                  {formatStatus(workspace.profile.status)}
+                </SemanticBadge>
+              ) : null}
+            </div>
+          </div>
+          <div className="portfolio-hero-actions portfolio-hero-toolbar">
+            {orderedWorkflowCues.map((cue) => (
+              <ActionLink
+                key={cue.key}
+                href={cue.href}
+                className={
+                  cue.key === primaryWorkflowCueKey
+                    ? "portfolio-action-link portfolio-action-link-primary"
+                    : "portfolio-action-link portfolio-action-link-secondary"
+                }
+              >
+                {cue.label}
+              </ActionLink>
+            ))}
           </div>
         </div>
-        <div className="portfolio-hero-actions portfolio-hero-toolbar">
-          {orderedWorkflowCues.map((cue) => (
-            <ActionLink
-              key={cue.key}
-              href={cue.href}
-              className={
-                cue.key === primaryWorkflowCueKey
-                  ? "portfolio-action-link portfolio-action-link-primary"
-                  : "portfolio-action-link portfolio-action-link-secondary"
-              }
-            >
-              {cue.label}
-            </ActionLink>
-          ))}
-        </div>
-      </Panel>
 
-      <PortfolioHealthStrip
-        tiles={[
-          {
-            key: "aum",
-            label: "AUM",
-            value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
-            definition:
-              "Total portfolio market value in the portfolio base currency as of the selected date.",
-            support: `As of ${formatDate(context.selectedAsOfDate)}`,
-            onClick: () => onOpenMetricDrawer("aum"),
-          },
-          {
-            key: "invested_assets",
-            label: "Invested Assets",
-            value: formatCurrency(
-              workspace.summary.invested_market_value_base,
-              workspace.portfolio.base_currency
-            ),
-            definition:
-              "Market value currently invested in funded holdings, excluding operational cash inventory.",
-            support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
-            onClick: () => onOpenMetricDrawer("invested_assets"),
-          },
-          {
-            key: "available_cash",
-            label: "Available Cash",
-            value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
-            definition:
-              "Available cash inventory in the portfolio base currency across published cash balances.",
-            support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,
-            onClick: () => onOpenMetricDrawer("available_cash"),
-          },
-          {
-            key: "holdings",
-            label: "Holdings",
-            value: workspace.summary.position_count,
-            definition: "Number of currently valued holdings in the portfolio book.",
-            support: formatCount(workspace.summary.position_count, "holding"),
-            onClick: () => onOpenMetricDrawer("holdings"),
-          },
-          {
-            key: "net_flow_30d",
-            label: "30D Net Flow",
-            value: formatCurrency(getRequestedWindowActivityAmount(workspace), activityDisplayCurrency),
-            definition:
-              "Net booked portfolio activity across the requested 30-day reporting window, including funding, fees, and other ledger movements.",
-            support: `${getRequestedWindowActivityCount(workspace)} booked events`,
-            tone: getNetFlowTone(workspace),
-            onClick: () => onOpenMetricDrawer("net_flow_30d"),
-          },
-          {
-            key: "book_readiness",
-            label: "Book Readiness",
-            value: getBookReadinessStatus(workspace),
-            definition:
-              "Operational readiness based on holdings coverage, reporting status, publish eligibility, and active blocking exceptions.",
-            support: getBookReadinessSupport(workspace),
-            tone: getBookReadinessTone(workspace),
-            onClick: () => onOpenMetricDrawer("book_readiness"),
-          },
-        ]}
-      />
+        <PortfolioHealthStrip
+          tiles={[
+            {
+              key: "aum",
+              label: "AUM",
+              value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
+              definition:
+                "Total portfolio market value in the portfolio base currency as of the selected date.",
+              support: `As of ${formatDate(context.selectedAsOfDate)}`,
+              onClick: () => onOpenMetricDrawer("aum"),
+            },
+            {
+              key: "invested_assets",
+              label: "Invested Assets",
+              value: formatCurrency(
+                workspace.summary.invested_market_value_base,
+                workspace.portfolio.base_currency
+              ),
+              definition:
+                "Market value currently invested in funded holdings, excluding operational cash inventory.",
+              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
+              onClick: () => onOpenMetricDrawer("invested_assets"),
+            },
+            {
+              key: "available_cash",
+              label: "Cash",
+              value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
+              definition:
+                "Available cash inventory in the portfolio base currency across published cash balances.",
+              support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,
+              onClick: () => onOpenMetricDrawer("available_cash"),
+            },
+            {
+              key: "cash_accounts",
+              label: "Cash Accounts",
+              value: workspace.summary.cash_balance_count ?? 0,
+              definition: "Number of published cash balance accounts in the current portfolio book.",
+              support: formatCount(workspace.summary.cash_balance_count ?? 0, "cash account"),
+            },
+          ]}
+        />
+        <Text variant="metadata" className="portfolio-hero-support">
+          {getBookReadinessSupport(workspace)}
+        </Text>
+        <Text variant="metadata" className="portfolio-hero-support">
+          {getRequestedWindowActivityCount(workspace)} booked events
+        </Text>
+      </Panel>
 
       <PortfolioInsightsStrip
         insights={[]}

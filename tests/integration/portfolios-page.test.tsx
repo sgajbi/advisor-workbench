@@ -122,20 +122,31 @@ describe("PortfolioFoundationPage", () => {
     const hero = screen.getByRole("heading", { name: /Global Balanced/i }).closest(".portfolio-hero");
     expect(hero).toBeTruthy();
     expect(hero?.classList.contains("portfolio-book-hero")).toBe(true);
+    expect(hero?.querySelector(".portfolio-hero-header")).toBeTruthy();
+    expect(hero?.querySelector(".portfolio-hero-label")).toBeTruthy();
     expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeTruthy();
     expect(within(hero as HTMLElement).getByText("USD")).toBeInTheDocument();
     expect(within(hero as HTMLElement).getByText("CIF_1001")).toBeInTheDocument();
     expect(within(hero as HTMLElement).getByText("Singapore")).toBeInTheDocument();
     expect(within(hero as HTMLElement).getByText("Active")).toBeInTheDocument();
+    expect(within(hero as HTMLElement).queryByText("2 portfolios")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Book identity and status for rapid front-office orientation.")
     ).not.toBeInTheDocument();
     expect(screen.getAllByText("1,250,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("1,145,000 USD").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("105,000 USD").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("12 holdings")).toBeInTheDocument();
-    expect(document.querySelector(".portfolio-summary-band")).toBeTruthy();
-    expect(document.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(6);
+    const keyMetrics = within(hero as HTMLElement).getByLabelText("Portfolio key metrics");
+    expect(keyMetrics).toHaveClass("portfolio-summary-band");
+    expect(keyMetrics.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(4);
+    for (const label of ["AUM", "Invested Assets", "Cash", "Cash Accounts"]) {
+      expect(within(keyMetrics).getByText(label)).toHaveClass("kpi-stat-label");
+    }
+    expect(within(keyMetrics).getByText("2")).toHaveClass("kpi-stat-value");
+    expect(within(keyMetrics).getByText("2 cash accounts")).toHaveClass("kpi-stat-support");
+    expect(within(keyMetrics).queryByText("Holdings")).not.toBeInTheDocument();
+    expect(within(keyMetrics).queryByText("30D Net Flow")).not.toBeInTheDocument();
+    expect(within(keyMetrics).queryByText("Book Readiness")).not.toBeInTheDocument();
     expect(screen.getByText("Generated 24 Feb 2026 • 14 report rows")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("Income Plus")).toBeInTheDocument();
