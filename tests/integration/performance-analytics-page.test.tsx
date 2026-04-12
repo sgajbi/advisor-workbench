@@ -270,7 +270,7 @@ describe("PerformanceAnalyticsPage", () => {
       compactPattern("Portfolio Return 5.42% Benchmark Return 4.91% Active Return 0.52%")
     );
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Flow-Adjusted MV")).toBeInTheDocument();
     expect(
       within(chartSummaryBand as HTMLElement).queryByText("Period Range / Basis")
     ).not.toBeInTheDocument();
@@ -293,11 +293,11 @@ describe("PerformanceAnalyticsPage", () => {
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Closing Cash Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
+    expect(executiveStrip).toHaveTextContent("Opening Cash $50,000");
+    expect(executiveStrip).toHaveTextContent("Closing Cash -$8,000");
+    expect(executiveStrip).toHaveTextContent("Ending MV $1,250,000");
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern("Money-Weighted Return 5.12%")

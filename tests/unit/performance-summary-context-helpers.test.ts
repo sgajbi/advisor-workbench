@@ -66,33 +66,17 @@ describe("performance summary context helpers", () => {
         unavailable: false,
       },
       {
-        key: "opening-cash-flow",
-        label: "Opening Cash Flow",
-        value: "$50,000",
-        unavailable: false,
-      },
-      {
-        key: "closing-cash-flow",
-        label: "Closing Cash Flow",
-        value: "-$8,000",
-        unavailable: false,
-      },
-      {
         key: "net-flow",
         label: "Net Flow",
         value: "$42,000",
-        unavailable: false,
-      },
-      {
-        key: "ending-mv",
-        label: "Ending MV",
-        value: "$1,250,000",
+        support: "Opening Cash $50,000 • Closing Cash -$8,000",
         unavailable: false,
       },
       {
         key: "flow-adjusted-mv",
         label: "Flow-Adjusted MV",
         value: "$1,208,000",
+        support: "Ending MV $1,250,000",
         unavailable: false,
       },
     ]);
@@ -270,16 +254,12 @@ describe("performance summary context helpers", () => {
       value: "$42,000",
       unavailable: false,
     });
-    expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
-      label: "Ending MV",
-      value: "$1,250,000",
-      unavailable: false,
-    });
     expect(
       presentation.metrics.find((metric) => metric.key === "flow-adjusted-mv")
     ).toMatchObject({
       label: "Flow-Adjusted MV",
       value: "$1,208,000",
+      support: "Ending MV $1,250,000",
       unavailable: false,
     });
   });

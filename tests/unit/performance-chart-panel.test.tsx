@@ -214,11 +214,11 @@ describe("PerformanceChartPanel", () => {
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Closing Cash Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
+    expect(executiveStrip).toHaveTextContent("Opening Cash $50,000");
+    expect(executiveStrip).toHaveTextContent("Closing Cash -$8,000");
+    expect(executiveStrip).toHaveTextContent("Ending MV $1,250,000");
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
@@ -235,11 +235,17 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Benchmark Global Balanced 60/40 • USD")
     );
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
-      compactPattern(
-        "Money-Weighted Return 5.12% Opening MV $1,200,000 Opening Cash Flow $50,000 Closing Cash Flow -$8,000 Net Flow $42,000 Ending MV $1,250,000 Flow-Adjusted MV $1,208,000"
-      )
-    );
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Money-Weighted Return");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("5.12%");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening MV");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,200,000");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Net Flow");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$42,000");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Flow-Adjusted MV");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,208,000");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening Cash $50,000");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Closing Cash -$8,000");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Ending MV $1,250,000");
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
     fireEvent.click(screen.getByText("Observation trail"));

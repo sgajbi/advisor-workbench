@@ -81,14 +81,19 @@ export function getPerformanceReturnPathPresentation({
     summary.begin_market_value ?? moneyWeightedReturn?.begin_market_value ?? null;
   const resolvedEndMarketValue =
     summary.end_market_value ?? moneyWeightedReturn?.end_market_value ?? null;
-  const resolvedOpeningCashFlow =
-    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
-  const resolvedClosingCashFlow =
-    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
   const resolvedFlowAdjustedEndMarketValue =
     summary.flow_adjusted_end_market_value ??
     moneyWeightedReturn?.flow_adjusted_end_market_value ??
     null;
+  const resolvedMoneyWeightedReturn =
+    moneyWeightedReturn?.money_weighted_return_pct != null
+      ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
+      : "Unavailable";
+  const netFlowSupport = getPerformanceNetFlowSupport(summary, reportingCurrency, moneyWeightedReturn);
+  const flowAdjustedSupport =
+    resolvedEndMarketValue != null
+      ? `Ending MV ${formatCurrency(resolvedEndMarketValue, reportingCurrency)}`
+      : null;
 
   return {
     benchmarkAssigned,
@@ -142,10 +147,7 @@ export function getPerformanceReturnPathPresentation({
       {
         key: "mwrr",
         label: "Money-Weighted Return",
-        value:
-          moneyWeightedReturn?.money_weighted_return_pct != null
-            ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
-            : "Unavailable",
+        value: resolvedMoneyWeightedReturn,
         unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
       },
       {
@@ -155,33 +157,17 @@ export function getPerformanceReturnPathPresentation({
         unavailable: resolvedBeginMarketValue == null,
       },
       {
-        key: "opening-cash-flow",
-        label: "Opening Cash Flow",
-        value: formatCurrency(resolvedOpeningCashFlow, reportingCurrency),
-        unavailable: resolvedOpeningCashFlow == null,
-      },
-      {
-        key: "closing-cash-flow",
-        label: "Closing Cash Flow",
-        value: formatCurrency(resolvedClosingCashFlow, reportingCurrency),
-        unavailable: resolvedClosingCashFlow == null,
-      },
-      {
         key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(resolvedNetCashFlow, reportingCurrency),
+        support: netFlowSupport,
         unavailable: resolvedNetCashFlow == null,
-      },
-      {
-        key: "ending-mv",
-        label: "Ending MV",
-        value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
-        unavailable: resolvedEndMarketValue == null,
       },
       {
         key: "flow-adjusted-mv",
         label: "Flow-Adjusted MV",
         value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
+        support: flowAdjustedSupport ?? undefined,
         unavailable: resolvedFlowAdjustedEndMarketValue == null,
       },
     ],
