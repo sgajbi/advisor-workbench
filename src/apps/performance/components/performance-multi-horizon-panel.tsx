@@ -196,6 +196,8 @@ export default function PerformanceMultiHorizonPanel({
       : visualMode === "basis"
         ? "Basis spread"
         : "Active and cumulative";
+  const supportPrimaryLabel = visualCards[0]?.tertiaryLabel ?? null;
+  const supportSecondaryLabel = visualCards[0]?.footerLabel ?? null;
 
   useEffect(() => {
     if (visualMode === "relative" && !hasRelativeVisual) {
@@ -302,7 +304,13 @@ export default function PerformanceMultiHorizonPanel({
               <span>Period</span>
               <span>{visualCards[0]?.leftBarLabel ?? "Portfolio Return"}</span>
               <span>{visualCards[0]?.rightBarLabel ?? "Benchmark Return"}</span>
-              <span>{supportHeaderLabel}</span>
+              <div className="performance-horizon-matrix-support-header">
+                <span>{supportHeaderLabel}</span>
+                <div className="performance-horizon-matrix-support-subheader">
+                  {supportPrimaryLabel ? <span>{supportPrimaryLabel}</span> : <span>Value</span>}
+                  <span>{supportSecondaryLabel ?? "Cumulative Return"}</span>
+                </div>
+              </div>
             </div>
             {visualCards.map((card) => (
               <div key={card.key} className="performance-horizon-matrix-row">
@@ -342,15 +350,12 @@ export default function PerformanceMultiHorizonPanel({
                   </div>
                 </div>
                 <div className="performance-horizon-matrix-support">
-                  <span>{card.tertiaryLabel ?? card.footerLabel}</span>
-                  <strong>{card.tertiaryValue ?? card.footerValue}</strong>
-                  <span>{card.footerLabel}</span>
-                  <strong>{card.footerValue}</strong>
-                  {card.tertiaryLabel ? (
-                    <span className="performance-horizon-matrix-support-note">
-                      Benchmark-aware comparison
-                    </span>
-                  ) : null}
+                  {card.tertiaryValue != null ? <strong>{card.tertiaryValue}</strong> : <span> </span>}
+                  {visualMode === "relative" ? (
+                    <span className="performance-horizon-matrix-support-text">{card.footerValue}</span>
+                  ) : (
+                    <strong>{card.footerValue}</strong>
+                  )}
                 </div>
               </div>
             ))}
