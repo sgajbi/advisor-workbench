@@ -2,14 +2,12 @@ export default function PerformanceDecisionReadout({
   activeReturn,
   windowLabel,
   basisLabel,
-  benchmark,
   comparisonBasis,
   observationCadence,
 }: {
   activeReturn: string;
   windowLabel: string;
   basisLabel: string;
-  benchmark: string;
   comparisonBasis: string;
   observationCadence: string;
 }) {
@@ -20,15 +18,11 @@ export default function PerformanceDecisionReadout({
       <p>{`${windowLabel} • ${basisLabel}`}</p>
       <dl className="performance-chart-readout-list">
         <div>
-          <dt>Benchmark</dt>
-          <dd>{benchmark}</dd>
-        </div>
-        <div>
-          <dt>Comparison basis</dt>
+          <dt>Basis</dt>
           <dd>{comparisonBasis}</dd>
         </div>
         <div>
-          <dt>Observation cadence</dt>
+          <dt>Cadence</dt>
           <dd>{observationCadence}</dd>
         </div>
       </dl>

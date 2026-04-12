@@ -267,7 +267,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(chartSummaryBand).toBeTruthy();
     expect(within(chartSummaryBand as HTMLElement).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Active Return")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
     expect(
@@ -292,7 +292,7 @@ describe("PerformanceAnalyticsPage", () => {
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).queryByText("Active Return")).not.toBeInTheDocument();
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();

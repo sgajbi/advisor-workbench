@@ -219,7 +219,7 @@ describe("PerformanceChartPanel", () => {
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Portfolio Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Active Return")).toBeInTheDocument();
+    expect(within(executiveStrip).queryByText("Active Return")).not.toBeInTheDocument();
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening Cash Flow")).toBeInTheDocument();
@@ -262,6 +262,7 @@ describe("PerformanceChartPanel", () => {
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio cumulative");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("12.84%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("active return");
     expect(lastChartOption?.tooltip).toMatchObject({
       backgroundColor: "rgba(255, 255, 255, 0.98)",
@@ -494,7 +495,9 @@ describe("PerformanceChartPanel", () => {
       compactPattern("Benchmark Global Balanced 60/40 • USD")
     );
     expect(screen.getByText("Benchmark Return")).toBeInTheDocument();
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
+      compactPattern("Benchmark Return Unavailable")
+    );
   });
 
   it("renders a partial capability notice when return observations are incomplete", () => {

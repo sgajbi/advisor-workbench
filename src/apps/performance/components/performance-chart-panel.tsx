@@ -25,9 +25,18 @@ import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import PerformanceDecisionReadout from "./performance-decision-readout";
 import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathLegend from "./performance-return-path-legend";
+import {
+  buildPercentAxisBounds,
+  CHART_COLORS,
+  formatEndLabel,
+  formatReturnPathTooltip,
+  resolveReportDates,
+  SHARED_CHART_TEXT,
+  toNumeric,
+} from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
-import { formatDate, formatPct } from "../formatters";
+import { formatDate } from "../formatters";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -57,146 +66,6 @@ type ComparativeSummary = {
 };
 
 type PerformanceChartViewMode = "combined" | "absolute" | "relative";
-
-const CHART_COLORS = {
-  portfolio: "#da1e28",
-  benchmark: "#1f2e45",
-  active: "#2f5f97",
-  portfolioBar: "rgba(218, 30, 40, 0.28)",
-  benchmarkBar: "rgba(31, 46, 69, 0.24)",
-  activeBar: "rgba(47, 95, 151, 0.24)",
-};
-
-const SHARED_CHART_TEXT = {
-  legendSize: Number.parseFloat(lotusThemeTokens.typography.size.textSm),
-  axisSize: Number.parseFloat(lotusThemeTokens.typography.size.textXs),
-  legendWeight: lotusThemeTokens.typography.variant.cardTitle.weight,
-  axisWeight: lotusThemeTokens.typography.variant.label.weight,
-  tooltipWeight: 600,
-  tooltipPadding: [
-    Number.parseInt(lotusThemeTokens.spacing.step3, 10),
-    Number.parseInt(lotusThemeTokens.spacing.step4, 10),
-  ] as [number, number],
-  barRadius: [lotusThemeTokens.radius.sm, lotusThemeTokens.radius.sm, 0, 0] as [number, number, number, number],
-  refreshRadius: lotusThemeTokens.radius.control,
-};
-
-function toNumeric(value: number | null | undefined): number | null {
-  return value === null || value === undefined || Number.isNaN(value) ? null : value;
-}
-
-function buildPercentAxisBounds(values: Array<number | null | undefined>) {
-  const numericValues = values
-    .map((value) => toNumeric(value))
-    .filter((value): value is number => value !== null);
-
-  if (!numericValues.length) {
-    return { min: -1, max: 1 };
-  }
-
-  const rawMin = Math.min(...numericValues, 0);
-  const rawMax = Math.max(...numericValues, 0);
-  const spread = rawMax - rawMin || 1;
-  const padding = Math.max(spread * 0.12, 1);
-
-  return {
-    min: Math.floor((rawMin - padding) * 10) / 10,
-    max: Math.ceil((rawMax + padding) * 10) / 10,
-  };
-}
-
-function resolveReportDates(
-  points: PerformanceChartPoint[],
-  reportStartDate?: string,
-  reportEndDate?: string
-) {
-  const fallbackStartDate =
-    points.find((point) => point.period_start)?.period_start ??
-    points.find((point) => point.period_end)?.period_end ??
-    "";
-  const fallbackEndDate =
-    [...points].reverse().find((point) => point.period_end)?.period_end ??
-    [...points].reverse().find((point) => point.period_start)?.period_start ??
-    fallbackStartDate;
-
-  return {
-    startDate: reportStartDate || fallbackStartDate,
-    endDate: reportEndDate || fallbackEndDate,
-  };
-}
-
-function getLatestNumeric(values: Array<number | null | undefined>) {
-  return [...values].reverse().find((value): value is number => value !== null && value !== undefined) ?? null;
-}
-
-function formatEndLabel(
-  params: CallbackDataParams,
-  label: string,
-  lastIndex: number
-) {
-  const value = typeof params.value === "number" ? params.value : null;
-  return params.dataIndex === lastIndex && value !== null ? `${label} ${formatPct(value)}` : "";
-}
-
-function getTooltipNumericValue(value: unknown): number | null {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : null;
-  }
-  if (Array.isArray(value) && typeof value[1] === "number" && Number.isFinite(value[1])) {
-    return value[1];
-  }
-  return null;
-}
-
-function escapeTooltipHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
-
-function formatReturnPathTooltip(params: CallbackDataParams | CallbackDataParams[]) {
-  const entries = (Array.isArray(params) ? params : [params]).filter(
-    (entry) => getTooltipNumericValue(entry.value) !== null
-  );
-
-  if (!entries.length) {
-    return "";
-  }
-
-  const axisLabel = String(
-    (entries[0] as CallbackDataParams & { axisValue?: string })?.axisValue ??
-      entries[0]?.name ??
-      ""
-  );
-  const rows = entries
-    .map((entry) => {
-      const numericValue = getTooltipNumericValue(entry.value);
-      if (numericValue === null) {
-        return "";
-      }
-
-      return [
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
-        `<span style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:700;">${entry.marker ?? ""}${escapeTooltipHtml(entry.seriesName ?? "")}</span>`,
-        `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
-        "</div>",
-      ].join("");
-    })
-    .filter(Boolean)
-    .join("");
-
-  if (!rows) {
-    return "";
-  }
-
-  return [
-    '<div style="display:grid;gap:8px;min-width:180px;">',
-    `<div style="color:#5f6c7f;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(axisLabel)}</div>`,
-    rows,
-    "</div>",
-  ].join("");
-}
 
 export default function PerformanceChartPanel({
   title,
@@ -609,15 +478,8 @@ export default function PerformanceChartPanel({
     });
   }
 
-  const outcomeItems = returnPathPresentation.metrics;
-  const latestPortfolioReturn = getLatestNumeric(
-    points.map((point) => point.cumulative_portfolio_return_pct)
-  );
-  const latestBenchmarkReturn = getLatestNumeric(
-    points.map((point) => point.cumulative_benchmark_return_pct)
-  );
-  const latestActiveReturn = getLatestNumeric(
-    points.map((point) => point.cumulative_active_return_pct)
+  const outcomeItems = returnPathPresentation.metrics.filter(
+    (metric) => metric.key !== "active-return"
   );
   const resolvedWindowLabel =
     resolvedReportDates.startDate && resolvedReportDates.endDate
@@ -628,7 +490,6 @@ export default function PerformanceChartPanel({
     {
       key: "portfolio",
       label: "Portfolio cumulative",
-      value: latestPortfolioReturn == null ? "Unavailable" : formatPct(latestPortfolioReturn),
       className: "performance-chart-legend-item-portfolio",
     },
     ...(hasBenchmarkSeries
@@ -636,8 +497,6 @@ export default function PerformanceChartPanel({
           {
             key: "benchmark",
             label: returnPathPresentation.benchmarkLabel,
-            value:
-              latestBenchmarkReturn == null ? "Unavailable" : formatPct(latestBenchmarkReturn),
             className: "performance-chart-legend-item-benchmark",
           },
         ]
@@ -647,7 +506,6 @@ export default function PerformanceChartPanel({
           {
             key: "active",
             label: "Active cumulative",
-            value: latestActiveReturn == null ? "Unavailable" : formatPct(latestActiveReturn),
             className: "performance-chart-legend-item-active",
           },
         ]
@@ -815,7 +673,6 @@ export default function PerformanceChartPanel({
               activeReturn={returnPathPresentation.activeReturnValue}
               windowLabel={resolvedWindowLabel}
               basisLabel={resolvedBasisLabel}
-              benchmark={returnPathPresentation.benchmarkContextValue}
               comparisonBasis={
                 returnPathPresentation.benchmarkSourceLabel
                   ? `${returnPathPresentation.benchmarkSourceLabel} return series`
