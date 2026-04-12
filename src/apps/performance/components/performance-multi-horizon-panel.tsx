@@ -345,7 +345,13 @@ export default function PerformanceMultiHorizonPanel({
                 </div>
                 {showSupportColumn ? (
                   <div className="performance-horizon-matrix-support">
-                    {card.tertiaryValue != null ? <strong>{card.tertiaryValue}</strong> : <span> </span>}
+                    {card.tertiaryValue != null ? (
+                      <strong aria-label={`${card.label} ${supportPrimaryLabel}`}>
+                        {card.tertiaryValue}
+                      </strong>
+                    ) : (
+                      <span aria-hidden="true"> </span>
+                    )}
                     <strong>{card.footerValue}</strong>
                   </div>
                 ) : null}
@@ -363,6 +369,7 @@ export default function PerformanceMultiHorizonPanel({
               className="performance-horizon-table-scroll"
               role="region"
               aria-label="Scrollable horizon comparison table"
+              tabIndex={0}
             >
               <AnalyticsTable
                 ariaLabel="Multi-horizon return table"

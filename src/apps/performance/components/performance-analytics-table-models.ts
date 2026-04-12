@@ -46,9 +46,7 @@ export type PerformanceHorizonVisualCard = {
   key: string;
   label: string;
   primaryValue: string;
-  secondaryLabel: string;
   secondaryValue: string;
-  tertiaryLabel?: string;
   tertiaryValue?: string;
   leftBarLabel: string;
   leftBarHeightPct: number;
@@ -56,7 +54,6 @@ export type PerformanceHorizonVisualCard = {
   rightBarLabel: string;
   rightBarHeightPct: number;
   rightBarClassName: string;
-  footerLabel: string;
   footerValue: string;
 };
 
@@ -482,9 +479,7 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(row.active_return_pct),
-        secondaryLabel: "Benchmark Return",
         secondaryValue: formatPct(row.benchmark_return_pct),
-        tertiaryLabel: "Cumulative Active",
         tertiaryValue: formatPct(row.cumulative_active_return_pct),
         leftBarLabel: "Active Return",
         leftBarHeightPct: Math.abs((row.active_return_pct ?? 0) / scale) * 100,
@@ -492,7 +487,6 @@ export function buildPerformanceHorizonVisualModel({
         rightBarLabel: "Cumulative Active",
         rightBarHeightPct: Math.abs((row.cumulative_active_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-active-soft",
-        footerLabel: "Comparison",
         footerValue: "Active Return vs Cumulative Active",
       };
     }
@@ -502,9 +496,7 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(netReturn),
-        secondaryLabel: "Gross Return",
         secondaryValue: formatPct(grossReturn),
-        tertiaryLabel: "Fee Drag",
         tertiaryValue:
           grossReturn != null && netReturn != null ? formatPct(grossReturn - netReturn) : "N/A",
         leftBarLabel: "Net Return",
@@ -513,7 +505,6 @@ export function buildPerformanceHorizonVisualModel({
         rightBarLabel: "Gross Return",
         rightBarHeightPct: Math.abs((grossReturn ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-gross",
-        footerLabel: "Cumulative Return",
         footerValue: formatPct(
           basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
         ),
@@ -524,9 +515,7 @@ export function buildPerformanceHorizonVisualModel({
       key: row.period,
         label: row.period,
         primaryValue: formatPct(basisReturn),
-        secondaryLabel: "Benchmark Return",
         secondaryValue: formatPct(row.benchmark_return_pct),
-        tertiaryLabel: "Active Return",
         tertiaryValue: formatPct(row.active_return_pct),
         leftBarLabel: basisView === "gross" ? "Gross Return" : "Portfolio Return",
         leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
@@ -534,7 +523,6 @@ export function buildPerformanceHorizonVisualModel({
         rightBarLabel: "Benchmark Return",
         rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
-        footerLabel: "Cumulative Return",
         footerValue: formatPct(
           basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
         ),
