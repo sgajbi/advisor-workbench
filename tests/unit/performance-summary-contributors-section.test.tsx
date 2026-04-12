@@ -77,13 +77,14 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
     expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("AAPL");
     expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent("TLT");
-    expect(screen.getByText("Ranked detail tables")).toBeInTheDocument();
+    expect(screen.queryAllByText("Contribution to active return")).toHaveLength(0);
+    expect(screen.getByText("Instrument detail")).toBeInTheDocument();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Ranked detail tables"));
+    fireEvent.click(screen.getByText("Instrument detail"));
 
     const contributorsTable = screen.getByLabelText("Top Contributors table");
     expect(contributorsTable).toBeInTheDocument();

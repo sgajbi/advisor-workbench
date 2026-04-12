@@ -318,10 +318,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(contributorsModule?.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
-    expect(within(contributorsModule as HTMLElement).getByText("Ranked detail tables")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByText("Instrument detail")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
-    fireEvent.click(within(contributorsModule as HTMLElement).getByText("Ranked detail tables"));
+    fireEvent.click(within(contributorsModule as HTMLElement).getByText("Instrument detail"));
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors table")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors table")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getAllByText("Instrument").length).toBeGreaterThanOrEqual(2);

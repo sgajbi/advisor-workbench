@@ -59,7 +59,7 @@ export default function PerformanceSummaryContributorsSection({
           <details className="performance-contributors-table-disclosure">
             <summary className="performance-contributors-table-disclosure-summary">
               <div className="performance-contributors-table-disclosure-copy">
-                <strong>Ranked detail tables</strong>
+                <strong>Instrument detail</strong>
                 <span>Open the full instrument-level contribution breakdown for contributors and detractors.</span>
               </div>
             </summary>

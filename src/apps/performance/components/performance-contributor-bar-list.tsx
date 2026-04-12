@@ -18,7 +18,6 @@ export default function PerformanceContributorBarList({
           <strong>{title}</strong>
           <span>{items.length} positions</span>
         </div>
-        <span className="performance-contributor-bar-list-scale">Contribution to active return</span>
       </div>
       {items.length ? (
         <div className="performance-contributor-bars">
