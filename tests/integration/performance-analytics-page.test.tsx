@@ -125,6 +125,16 @@ describe("PerformanceAnalyticsPage", () => {
       .toBeTruthy();
     expect(screen.getByText("Quick Views")).toBeInTheDocument();
     expect(screen.getByText("Client Context")).toBeInTheDocument();
+    const railSections = Array.from(
+      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
+    ).map((node) => node.textContent?.trim());
+    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(
+      screen.queryByText(
+        "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
+      )
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Calendar-to-date window")).not.toBeInTheDocument();
     expect(screen.getByText("Review Context")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();

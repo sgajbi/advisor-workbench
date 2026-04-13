@@ -5472,7 +5472,7 @@ a:hover {
 
 .performance-rail-item-copy {
   display: grid;
-  gap: 0.18rem;
+  gap: 0;
   min-width: 0;
 }
 
@@ -5481,12 +5481,6 @@ a:hover {
   font-weight: 700;
   line-height: 1.35;
   color: var(--brand-strong);
-}
-
-.performance-rail-item-support {
-  font-size: 0.76rem;
-  line-height: 1.45;
-  color: var(--text-muted);
 }
 
 .performance-rail-item-badge {

@@ -169,6 +169,16 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByText("Quick Views")).toBeInTheDocument();
     expect(screen.getByText("Client Context")).toBeInTheDocument();
+    const railSections = Array.from(
+      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
+    ).map((node) => node.textContent?.trim());
+    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(
+      screen.queryByText(
+        "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
+      )
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Current review horizon")).not.toBeInTheDocument();
     expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toHaveTextContent(

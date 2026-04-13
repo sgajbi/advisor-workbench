@@ -78,6 +78,51 @@ export default function PerformanceWorkspaceRail({
 
   return (
     <div className="performance-workspace-rail" aria-label="Performance workspace navigation">
+      <WorkbenchRailCard className="performance-rail-card performance-client-context-card">
+        <div className="performance-rail-section">
+          <Text variant="label" className="performance-rail-section-label">
+            Client Context
+          </Text>
+          <div className="performance-client-context">
+            <div className="performance-client-context-header">
+              <Text variant="cardTitle">
+                {workspace ? workspace.portfolio.portfolio_id : "Portfolio pending"}
+              </Text>
+              <Text variant="secondary" className="performance-client-context-copy">
+                {workspace?.portfolio.client_id
+                  ? `Client ${workspace.portfolio.client_id}`
+                  : "Client identity not published by the current workspace."}
+              </Text>
+            </div>
+            <dl className="performance-client-context-facts">
+              <div className="performance-client-context-row">
+                <dt>Total Assets</dt>
+                <dd>
+                  {workspace
+                    ? formatCurrency(
+                        workspace.overview.market_value_base,
+                        workspace.portfolio.base_currency
+                      )
+                    : "Unavailable"}
+                </dd>
+              </div>
+              <div className="performance-client-context-row">
+                <dt>Base Currency</dt>
+                <dd>{workspace?.portfolio.base_currency ?? "Unavailable"}</dd>
+              </div>
+              <div className="performance-client-context-row">
+                <dt>Primary Benchmark</dt>
+                <dd>{benchmarkLabel}</dd>
+              </div>
+              <div className="performance-client-context-row">
+                <dt>As Of</dt>
+                <dd>{workspace ? formatDate(workspace.as_of_date) : "Unavailable"}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </WorkbenchRailCard>
+
       <WorkbenchRailCard className="performance-rail-card">
         <div className="performance-rail-section">
           <Text variant="label" className="performance-rail-section-label">
@@ -108,12 +153,6 @@ export default function PerformanceWorkspaceRail({
                 >
                   <span className="performance-rail-item-copy">
                     <span className="performance-rail-item-title">{item.label}</span>
-                    <span className="performance-rail-item-support">
-                      {resolveModeSupport(
-                        modeDefinition.intro?.description ?? modeDefinition.workspaceSubtitle,
-                        capability
-                      )}
-                    </span>
                   </span>
                   {capability ? (
                     <SemanticBadge
@@ -165,58 +204,10 @@ export default function PerformanceWorkspaceRail({
                 >
                   <span className="performance-rail-item-copy">
                     <span className="performance-rail-item-title">{item.label}</span>
-                    <span className="performance-rail-item-support">
-                      {resolveQuickViewSupport(item, period)}
-                    </span>
                   </span>
                 </button>
               );
             })}
-          </div>
-        </div>
-      </WorkbenchRailCard>
-
-      <WorkbenchRailCard className="performance-rail-card performance-client-context-card">
-        <div className="performance-rail-section">
-          <Text variant="label" className="performance-rail-section-label">
-            Client Context
-          </Text>
-          <div className="performance-client-context">
-            <div className="performance-client-context-header">
-              <Text variant="cardTitle">
-                {workspace ? workspace.portfolio.portfolio_id : "Portfolio pending"}
-              </Text>
-              <Text variant="secondary" className="performance-client-context-copy">
-                {workspace?.portfolio.client_id
-                  ? `Client ${workspace.portfolio.client_id}`
-                  : "Client identity not published by the current workspace."}
-              </Text>
-            </div>
-            <dl className="performance-client-context-facts">
-              <div className="performance-client-context-row">
-                <dt>Total Assets</dt>
-                <dd>
-                  {workspace
-                    ? formatCurrency(
-                        workspace.overview.market_value_base,
-                        workspace.portfolio.base_currency
-                      )
-                    : "Unavailable"}
-                </dd>
-              </div>
-              <div className="performance-client-context-row">
-                <dt>Base Currency</dt>
-                <dd>{workspace?.portfolio.base_currency ?? "Unavailable"}</dd>
-              </div>
-              <div className="performance-client-context-row">
-                <dt>Primary Benchmark</dt>
-                <dd>{benchmarkLabel}</dd>
-              </div>
-              <div className="performance-client-context-row">
-                <dt>As Of</dt>
-                <dd>{workspace ? formatDate(workspace.as_of_date) : "Unavailable"}</dd>
-              </div>
-            </dl>
           </div>
         </div>
       </WorkbenchRailCard>
@@ -246,24 +237,4 @@ function getCapabilityLabel(capability: WorkspaceCapability) {
     return "Partial";
   }
   return "Unavailable";
-}
-
-function resolveModeSupport(fallback: string, capability: WorkspaceCapability | null | undefined) {
-  return capability?.reason ?? fallback;
-}
-
-function resolveQuickViewSupport(
-  item: (typeof QUICK_VIEW_ITEMS)[number],
-  period: string
-) {
-  if (item.key === "custom-range") {
-    return period === "EXPLICIT" ? "Explicit window active" : "Awaiting explicit date range";
-  }
-  if (item.key === "peer-comparison") {
-    return "Peer-relative panel not yet contract-backed";
-  }
-  if (item.period === period) {
-    return "Current review horizon";
-  }
-  return item.period === "1Y" ? "Trailing annual window" : "Calendar-to-date window";
 }
