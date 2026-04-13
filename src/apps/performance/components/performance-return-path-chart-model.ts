@@ -15,11 +15,11 @@ type ReturnPathChartOptionArgs = {
 
 export const CHART_COLORS = {
   portfolio: "#163a5c",
-  benchmark: "#697b92",
-  active: "#9b7a1f",
+  benchmark: "#c3a056",
+  active: "#8da0ba",
   portfolioBar: "rgba(22, 58, 92, 0.24)",
-  benchmarkBar: "rgba(105, 123, 146, 0.22)",
-  activeBar: "rgba(155, 122, 31, 0.22)",
+  benchmarkBar: "rgba(195, 160, 86, 0.22)",
+  activeBar: "rgba(141, 160, 186, 0.22)",
 };
 
 export const SHARED_CHART_TEXT = {
@@ -240,16 +240,25 @@ function buildReturnPathLineSeries({
     },
     endLabel: {
       ...buildTerminalValueLabelStyle({
-        color,
+        color:
+          name === "Portfolio"
+            ? "#f8fafc"
+            : name === "Benchmark"
+              ? "#fef7e7"
+              : "#4f647f",
         backgroundColor:
-          name === "Active" ? "rgba(255, 251, 235, 0.96)" : "rgba(255, 255, 255, 0.94)",
+          name === "Portfolio"
+            ? "rgba(20, 43, 71, 0.96)"
+            : name === "Benchmark"
+              ? "rgba(195, 160, 86, 0.96)"
+              : "rgba(230, 236, 244, 0.98)",
         borderColor:
           name === "Portfolio"
-            ? "rgba(22, 58, 92, 0.12)"
+            ? "rgba(20, 43, 71, 0.18)"
             : name === "Benchmark"
-              ? "rgba(105, 123, 146, 0.14)"
-              : "rgba(155, 122, 31, 0.18)",
-        fontWeight: name === "Active" ? 760 : 800,
+              ? "rgba(195, 160, 86, 0.24)"
+              : "rgba(141, 160, 186, 0.26)",
+        fontWeight: name === "Active" ? 700 : 800,
       }),
       formatter: (params: CallbackDataParams) =>
         formatTerminalValueLabel(params, lastIndex),
@@ -412,7 +421,7 @@ export function buildReturnPathChartOption({
               name: "Benchmark",
               data: benchmarkCumulative,
               color: CHART_COLORS.benchmark,
-              lineWidth: 2.6,
+              lineWidth: 2.2,
               lastIndex: benchmarkCumulative.length - 1,
               dashed: true,
             }),
@@ -424,14 +433,14 @@ export function buildReturnPathChartOption({
               name: "Active",
               data: activeCumulative,
               color: CHART_COLORS.active,
-              lineWidth: 2.8,
+              lineWidth: 2.2,
               lastIndex: activeCumulative.length - 1,
               fillColor:
                 chartViewMode === "relative"
                   ? buildAreaGradient([
-                      { offset: 0, color: "rgba(155, 122, 31, 0.14)" },
-                      { offset: 0.45, color: "rgba(155, 122, 31, 0.06)" },
-                      { offset: 1, color: "rgba(155, 122, 31, 0.015)" },
+                      { offset: 0, color: "rgba(141, 160, 186, 0.14)" },
+                      { offset: 0.45, color: "rgba(141, 160, 186, 0.06)" },
+                      { offset: 1, color: "rgba(141, 160, 186, 0.015)" },
                     ])
                   : undefined,
               dashed: true,

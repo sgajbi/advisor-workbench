@@ -130,9 +130,9 @@ describe("PerformanceChartPanel", () => {
     });
     expect(portfolioReturnSeries?.endLabel).toMatchObject({
       show: true,
-      color: "#163a5c",
-      backgroundColor: "rgba(255, 255, 255, 0.94)",
-      borderColor: "rgba(22, 58, 92, 0.12)",
+      color: "#f8fafc",
+      backgroundColor: "rgba(20, 43, 71, 0.96)",
+      borderColor: "rgba(20, 43, 71, 0.18)",
       borderWidth: 1,
       borderRadius: 999,
       fontSize: 11,
