@@ -1,15 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import ReactECharts from "echarts-for-react";
-import { Box } from "@mui/material";
 
 import {
-  Text,
   WorkbenchChartShell,
   WorkbenchLoadingState,
 } from "@/design-system";
-import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
@@ -22,14 +18,14 @@ import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import PerformanceObservationTrail from "./performance-observation-trail";
-import PerformanceReturnPathLegend from "./performance-return-path-legend";
+import PerformanceReturnPathChartStage from "./performance-return-path-chart-stage";
+import PerformanceReturnPathNotices from "./performance-return-path-notices";
 import PerformanceReturnPathSummary from "./performance-return-path-summary";
 import {
   buildReturnPathChartOption,
   resolveReportDates,
   resolveActiveCumulativeReturn,
   resolveActivePeriodReturn,
-  SHARED_CHART_TEXT,
 } from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
@@ -357,25 +353,15 @@ export default function PerformanceChartPanel({
     >
       {hasRenderableReturnPath ? (
         <>
-          {capabilities.returnPath.state === "partial" ? (
-            <div
-              className="performance-analytical-inline-note"
-              role="status"
-              aria-label="Return history partial state"
-            >
-              <span className="performance-analytical-inline-note-label">Partial history</span>
-              <p>
-                {capabilities.returnPath.reason ??
-                  "Return observations are partially published for the selected horizon."}
-              </p>
-            </div>
-          ) : null}
-          {returnPathPresentation.benchmarkStateBody ? (
-            <div className="performance-chart-benchmark-state">
-              <strong>Benchmark unassigned</strong>
-              <span>{returnPathPresentation.benchmarkStateBody}</span>
-            </div>
-          ) : null}
+          <PerformanceReturnPathNotices
+            partialReason={
+              capabilities.returnPath.state === "partial"
+                ? capabilities.returnPath.reason ??
+                  "Return observations are partially published for the selected horizon."
+                : null
+            }
+            benchmarkStateBody={returnPathPresentation.benchmarkStateBody}
+          />
           <div className="performance-chart-analysis-grid">
             <PerformanceReturnPathSummary
               portfolioReturn={returnPathPresentation.portfolioReturnValue}
@@ -389,40 +375,12 @@ export default function PerformanceChartPanel({
               }
               observationCadence={chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}
             />
-            <div
-              className="performance-chart-library-frame workbench-summary-visual"
-              role="img"
-              aria-label={`${title} chart`}
-              style={{ position: "relative" }}
-            >
-              <PerformanceReturnPathLegend items={chartLegendItems} />
-              <ReactECharts
-                option={chartOption}
-                style={{ width: "100%", height: "388px" }}
-                opts={{ renderer: "svg" }}
-                notMerge
-                lazyUpdate
-              />
-              {isDetailsPending ? (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: lotusThemeTokens.spacing.step3,
-                    right: lotusThemeTokens.spacing.step3,
-                    px: lotusThemeTokens.spacing.step3,
-                    py: lotusThemeTokens.spacing.step1,
-                    borderRadius: SHARED_CHART_TEXT.refreshRadius,
-                    bgcolor: "rgba(255,255,255,0.92)",
-                    border: "1px solid rgba(31,39,51,0.08)",
-                    boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
-                  }}
-                >
-                  <Text variant="metadata" as="span">
-                    Refreshing analytical series
-                  </Text>
-                </Box>
-              ) : null}
-            </div>
+            <PerformanceReturnPathChartStage
+              title={title}
+              option={chartOption}
+              legendItems={chartLegendItems}
+              isDetailsPending={isDetailsPending}
+            />
           </div>
           <PerformanceObservationTrail tableModel={chartTableModel} />
         </>

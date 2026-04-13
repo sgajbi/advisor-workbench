@@ -1,0 +1,63 @@
+"use client";
+
+import ReactECharts from "echarts-for-react";
+import { Box } from "@mui/material";
+
+import { Text } from "@/design-system";
+import { lotusThemeTokens } from "@/design-system/theme/tokens";
+import type { EChartsOption } from "echarts";
+
+import type { PerformanceReturnPathLegendItem } from "./performance-return-path-legend";
+import PerformanceReturnPathLegend from "./performance-return-path-legend";
+import { SHARED_CHART_TEXT } from "./performance-return-path-chart-model";
+
+type PerformanceReturnPathChartStageProps = {
+  title: string;
+  option: EChartsOption;
+  legendItems: PerformanceReturnPathLegendItem[];
+  isDetailsPending: boolean;
+};
+
+export default function PerformanceReturnPathChartStage({
+  title,
+  option,
+  legendItems,
+  isDetailsPending,
+}: PerformanceReturnPathChartStageProps) {
+  return (
+    <div
+      className="performance-chart-library-frame workbench-summary-visual"
+      role="img"
+      aria-label={`${title} chart`}
+      style={{ position: "relative" }}
+    >
+      <PerformanceReturnPathLegend items={legendItems} />
+      <ReactECharts
+        option={option}
+        style={{ width: "100%", height: "388px" }}
+        opts={{ renderer: "svg" }}
+        notMerge
+        lazyUpdate
+      />
+      {isDetailsPending ? (
+        <Box
+          sx={{
+            position: "absolute",
+            top: lotusThemeTokens.spacing.step3,
+            right: lotusThemeTokens.spacing.step3,
+            px: lotusThemeTokens.spacing.step3,
+            py: lotusThemeTokens.spacing.step1,
+            borderRadius: SHARED_CHART_TEXT.refreshRadius,
+            bgcolor: "rgba(255,255,255,0.92)",
+            border: "1px solid rgba(31,39,51,0.08)",
+            boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
+          }}
+        >
+          <Text variant="metadata" as="span">
+            Refreshing analytical series
+          </Text>
+        </Box>
+      ) : null}
+    </div>
+  );
+}
