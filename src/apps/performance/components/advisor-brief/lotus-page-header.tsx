@@ -2,19 +2,11 @@ import LotusStatusBar from "./lotus-status-bar";
 import type { PerformanceAdvisorBriefStatus } from "../../advisor-brief-view-model";
 
 export default function LotusPageHeader({
-  portfolioId,
-  benchmarkLabel,
-  asOfDate,
-  period,
   summary,
   status,
   noteText,
   onRefresh,
 }: {
-  portfolioId: string;
-  benchmarkLabel: string;
-  asOfDate: string;
-  period: string;
   summary: string;
   status: PerformanceAdvisorBriefStatus;
   noteText: string;
@@ -35,27 +27,6 @@ export default function LotusPageHeader({
               <span className="lotus-page-header-anchor" aria-hidden="true" />
             </div>
           </div>
-          <dl
-            className="lotus-page-header-meta performance-advisor-brief-context-grid"
-            aria-label="Advisor brief context"
-          >
-            <div>
-              <dt>Portfolio</dt>
-              <dd>{portfolioId}</dd>
-            </div>
-            <div>
-              <dt>Benchmark</dt>
-              <dd>{benchmarkLabel}</dd>
-            </div>
-            <div>
-              <dt>Period</dt>
-              <dd>{period}</dd>
-            </div>
-            <div>
-              <dt>As of</dt>
-              <dd>{asOfDate}</dd>
-            </div>
-          </dl>
         </div>
         <p className="performance-advisor-brief-overview-summary" aria-label="Brief synopsis">
           {summary}

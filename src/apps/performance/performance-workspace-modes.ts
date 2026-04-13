@@ -26,7 +26,13 @@ export const PERFORMANCE_WORKSPACE_MODE_DEFINITIONS: PerformanceWorkspaceModeDef
     label: "Summary",
     workspaceTitle: "Performance",
     workspaceSubtitle: "Benchmark-aware return, attribution, contribution, and evidence review.",
-    intro: null,
+    intro: {
+      ariaLabel: "Performance summary mode intro",
+      kicker: "Decision workspace",
+      title: "Return path, horizon comparison, and performance drivers",
+      description:
+        "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis.",
+    },
   },
   {
     key: "analysis",

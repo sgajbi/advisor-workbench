@@ -6,8 +6,12 @@ import {
   WorkbenchDeferredSection,
 } from "@/design-system";
 
+import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import PerformanceChartPanel from "./performance-chart-panel";
 import PerformanceSummaryHeaderSection from "./performance-summary-header-section";
+import PerformanceWorkspaceStageSurface, {
+  buildPerformanceWorkspaceContextItems,
+} from "./performance-workspace-stage-surface";
 import type { PerformanceSummaryModeProps } from "./performance-workspace-types";
 
 // Workbench discipline:
@@ -62,6 +66,14 @@ export default function PerformanceSummaryMode({
   topContributors,
   bottomContributors,
 }: PerformanceSummaryModeProps) {
+  const modeIntro = getPerformanceWorkspaceModeDefinition("summary").intro;
+  const contextItems = buildPerformanceWorkspaceContextItems({
+    workspace,
+    period,
+    detailBasis,
+    benchmark,
+  });
+
   return (
     <>
       <PerformanceSummaryHeaderSection
@@ -75,11 +87,18 @@ export default function PerformanceSummaryMode({
         suspiciousMoneyWeightedReturn={suspiciousMoneyWeightedReturn}
       />
 
-      <section className="performance-decision-workspace" aria-label="Performance decision workspace">
+      <PerformanceWorkspaceStageSurface
+        intro={modeIntro}
+        contextAriaLabel="Performance summary context"
+        contextItems={contextItems}
+        shellClassName="performance-summary-shell"
+        shellAriaLabel="Performance decision workspace"
+      >
         <div className="performance-analytical-zone-header">
           <div>
-            <span className="performance-analytical-zone-kicker">Decision workspace</span>
+            <span className="performance-analytical-zone-kicker">Return review</span>
             <h2>Return path and benchmark comparison</h2>
+            <p>Track realized outcome, benchmark context, and contributor follow-through from one governed summary surface.</p>
           </div>
         </div>
 
@@ -107,53 +126,53 @@ export default function PerformanceSummaryMode({
             id="performance-trend"
           />
         </WorkspaceGrid>
-      </section>
 
-      <WorkspaceGrid
-        className="performance-detail-grid performance-secondary-zone performance-lotus-stage performance-lotus-stage-secondary workbench-summary-region"
-      >
-        <WorkbenchDeferredSection
-          className="performance-summary-driver-section"
-          title="Horizon Comparison"
-          subtitle="Benchmark-aware return comparison across standard reporting windows."
-          loadingTitle="Loading horizons"
-          loadingMessage="Horizon comparisons are loading after first paint."
-          deferHeader
-          hideHeader
-          placeholder={null}
+        <WorkspaceGrid
+          className="performance-detail-grid performance-secondary-zone performance-lotus-stage performance-lotus-stage-secondary workbench-summary-region"
         >
-          <DeferredPerformanceMultiHorizonPanel
-            portfolioId={workspace.portfolio.portfolio_id}
-            period={period}
-            detailBasis={detailBasis}
-            benchmark={workspace.benchmark_code ?? benchmark}
-            chartFrequency={chartFrequency}
-            benchmarkOptions={workspace.benchmark_options ?? []}
-            onRequestChange={onRequestChange}
-          />
-        </WorkbenchDeferredSection>
-        <WorkbenchDeferredSection
-          className="performance-summary-driver-section performance-summary-contributors-section"
-          title="Performance Drivers"
-          subtitle="Top contributors and detractors for the current performance outcome."
-          loadingTitle="Loading contributors"
-          loadingMessage="Contributor ranking is loading after first paint."
-          deferHeader
-          hideHeader
-          placeholder={null}
-        >
-          <DeferredPerformanceSummaryContributorsSection
-            workspace={workspace}
-            capabilities={capabilities}
-            contributorScale={contributorScale}
-            positivePositionContributors={positivePositionContributors}
-            negativePositionContributors={negativePositionContributors}
-            topContributors={topContributors}
-            bottomContributors={bottomContributors}
-            isDetailsPending={isDetailsPending}
-          />
-        </WorkbenchDeferredSection>
-      </WorkspaceGrid>
+          <WorkbenchDeferredSection
+            className="performance-summary-driver-section"
+            title="Horizon Comparison"
+            subtitle="Benchmark-aware return comparison across standard reporting windows."
+            loadingTitle="Loading horizons"
+            loadingMessage="Horizon comparisons are loading after first paint."
+            deferHeader
+            hideHeader
+            placeholder={null}
+          >
+            <DeferredPerformanceMultiHorizonPanel
+              portfolioId={workspace.portfolio.portfolio_id}
+              period={period}
+              detailBasis={detailBasis}
+              benchmark={workspace.benchmark_code ?? benchmark}
+              chartFrequency={chartFrequency}
+              benchmarkOptions={workspace.benchmark_options ?? []}
+              onRequestChange={onRequestChange}
+            />
+          </WorkbenchDeferredSection>
+          <WorkbenchDeferredSection
+            className="performance-summary-driver-section performance-summary-contributors-section"
+            title="Performance Drivers"
+            subtitle="Top contributors and detractors for the current performance outcome."
+            loadingTitle="Loading contributors"
+            loadingMessage="Contributor ranking is loading after first paint."
+            deferHeader
+            hideHeader
+            placeholder={null}
+          >
+            <DeferredPerformanceSummaryContributorsSection
+              workspace={workspace}
+              capabilities={capabilities}
+              contributorScale={contributorScale}
+              positivePositionContributors={positivePositionContributors}
+              negativePositionContributors={negativePositionContributors}
+              topContributors={topContributors}
+              bottomContributors={bottomContributors}
+              isDetailsPending={isDetailsPending}
+            />
+          </WorkbenchDeferredSection>
+        </WorkspaceGrid>
+      </PerformanceWorkspaceStageSurface>
     </>
   );
 }

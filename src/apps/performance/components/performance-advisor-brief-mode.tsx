@@ -1,12 +1,8 @@
 "use client";
 
-import { Panel } from "@/design-system";
-
 import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import { buildPerformanceAdvisorBriefViewModel } from "../advisor-brief-view-model";
-import { formatDate } from "../formatters";
 import { usePerformanceAdvisorBrief } from "../use-performance-advisor-brief";
-import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
 
 import LotusAuditStrip from "./advisor-brief/lotus-audit-strip";
 import LotusDrilldownList from "./advisor-brief/lotus-drilldown-list";
@@ -14,8 +10,10 @@ import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
 import LotusPageHeader from "./advisor-brief/lotus-page-header";
 import LotusSupportabilityPanel from "./advisor-brief/lotus-supportability-panel";
 import LotusTalkingPointCard from "./advisor-brief/lotus-talking-point-card";
-import PerformanceModeIntro from "./performance-mode-intro";
 import PerformanceSectionHeading from "./performance-section-heading";
+import PerformanceWorkspaceStageSurface, {
+  buildPerformanceWorkspaceContextItems,
+} from "./performance-workspace-stage-surface";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
 
 export default function PerformanceAdvisorBriefMode({
@@ -31,6 +29,12 @@ export default function PerformanceAdvisorBriefMode({
   onSelectMode,
 }: PerformanceAdvisorBriefModeProps) {
   const modeIntro = getPerformanceWorkspaceModeDefinition("advisor").intro!;
+  const contextItems = buildPerformanceWorkspaceContextItems({
+    workspace,
+    period,
+    detailBasis,
+    benchmark,
+  });
   const { advisorBrief, advisorBriefUnavailable, isLoading, refresh } = usePerformanceAdvisorBrief({
     request: {
       portfolioId: workspace.portfolio.portfolio_id,
@@ -61,23 +65,13 @@ export default function PerformanceAdvisorBriefMode({
   });
 
   return (
-    <section className="performance-advisor-brief-stage" aria-label="Advisor Brief">
-      <PerformanceModeIntro
-        ariaLabel={modeIntro.ariaLabel}
-        kicker={modeIntro.kicker}
-        title={modeIntro.title}
-        description={modeIntro.description}
-        compact
-      />
-      <Panel className="performance-advisor-brief-shell">
+    <PerformanceWorkspaceStageSurface
+      intro={modeIntro}
+      contextAriaLabel="Advisor brief context"
+      contextItems={contextItems}
+      shellClassName="performance-advisor-brief-shell"
+    >
         <LotusPageHeader
-          portfolioId={workspace.portfolio.portfolio_id}
-          benchmarkLabel={getPerformanceBenchmarkLabel(
-            workspace.benchmark_code ?? benchmark,
-            workspace.benchmark_options ?? []
-          )}
-          asOfDate={formatDate(workspace.as_of_date)}
-          period={period}
           summary={brief.summary}
           status={brief.status}
           noteText={toAdvisorNoteCopy(brief)}
@@ -168,8 +162,7 @@ export default function PerformanceAdvisorBriefMode({
 
         <LotusSupportabilityPanel items={brief.supportability} reviewNotes={brief.reviewNotes} />
         <LotusAuditStrip audit={brief.audit} />
-      </Panel>
-    </section>
+    </PerformanceWorkspaceStageSurface>
   );
 }
 

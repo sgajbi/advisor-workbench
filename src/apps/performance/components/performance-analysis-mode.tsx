@@ -5,7 +5,9 @@ import PerformanceAnalysisDecisionSummary from "./performance-analysis-decision-
 import PerformanceAnalysisAttributionSection from "./performance-analysis-attribution-section";
 import PerformanceAnalysisContributionSection from "./performance-analysis-contribution-section";
 import PerformanceAttributionTrendPanel from "./performance-attribution-trend-panel";
-import PerformanceModeIntro from "./performance-mode-intro";
+import PerformanceWorkspaceStageSurface, {
+  buildPerformanceWorkspaceContextItems,
+} from "./performance-workspace-stage-surface";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 
 export default function PerformanceAnalysisMode({
@@ -25,16 +27,20 @@ export default function PerformanceAnalysisMode({
   attributionEffectScale,
 }: PerformanceAnalysisModeProps) {
   const modeIntro = getPerformanceWorkspaceModeDefinition("analysis").intro!;
+  const contextItems = buildPerformanceWorkspaceContextItems({
+    workspace,
+    period,
+    detailBasis,
+    benchmark,
+  });
 
   return (
-    <>
-      <PerformanceModeIntro
-        ariaLabel={modeIntro.ariaLabel}
-        kicker={modeIntro.kicker}
-        title={modeIntro.title}
-        description={modeIntro.description}
-        compact
-      />
+    <PerformanceWorkspaceStageSurface
+      intro={modeIntro}
+      contextAriaLabel="Performance analysis context"
+      contextItems={contextItems}
+      shellClassName="performance-analysis-shell"
+    >
       <PerformanceAnalysisDecisionSummary
         workspace={workspace}
         detailBasis={detailBasis}
@@ -73,6 +79,6 @@ export default function PerformanceAnalysisMode({
           capabilities={capabilities}
         />
       </WorkspaceGrid>
-    </>
+    </PerformanceWorkspaceStageSurface>
   );
 }

@@ -1,16 +1,19 @@
+import type { HTMLAttributes, ReactNode } from "react";
+
 import { cx } from "../utils/cx";
 
 export default function Panel({
   children,
   className,
   id,
+  ...rest
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   id?: string;
-}) {
+} & HTMLAttributes<HTMLElement>) {
   return (
-    <article id={id} className={cx("section-card", className)}>
+    <article id={id} className={cx("section-card", className)} {...rest}>
       {children}
     </article>
   );
