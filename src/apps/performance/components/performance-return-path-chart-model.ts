@@ -41,6 +41,24 @@ export const SHARED_CHART_TEXT = {
   refreshRadius: lotusThemeTokens.radius.control,
 };
 
+function formatAxisPct(value: number) {
+  if (value > 0) {
+    return `+${value}%`;
+  }
+  return `${value}%`;
+}
+
+function buildAreaGradient(stops: Array<{ offset: number; color: string }>) {
+  return {
+    type: "linear" as const,
+    x: 0,
+    y: 0,
+    x2: 0,
+    y2: 1,
+    colorStops: stops,
+  };
+}
+
 export function toNumeric(value: number | null | undefined): number | null {
   return value === null || value === undefined || Number.isNaN(value) ? null : value;
 }
@@ -168,7 +186,16 @@ function buildReturnPathLineSeries({
   color: string;
   lineWidth: number;
   lastIndex: number;
-  fillColor?: string;
+  fillColor?:
+    | string
+    | {
+        type: "linear";
+        x: number;
+        y: number;
+        x2: number;
+        y2: number;
+        colorStops: Array<{ offset: number; color: string }>;
+      };
   dashed?: boolean;
   baseline?: boolean;
 }) {
@@ -189,6 +216,7 @@ function buildReturnPathLineSeries({
       type: dashed ? ("dashed" as const) : undefined,
       cap: "round" as const,
       join: "round" as const,
+      opacity: dashed ? 0.92 : 1,
     },
     markLine: baseline
       ? {
@@ -230,7 +258,7 @@ function buildReturnPathLineSeries({
       hideOverlap: true,
       moveOverlap: "shiftY" as const,
     },
-    areaStyle: fillColor ? { color: fillColor } : undefined,
+    areaStyle: fillColor ? { color: fillColor, opacity: 1 } : undefined,
   };
 }
 
@@ -272,10 +300,10 @@ export function buildReturnPathChartOption({
       CHART_COLORS.activeBar,
     ],
     grid: {
-      left: 66,
-      right: 138,
-      top: 18,
-      bottom: 34,
+      left: 64,
+      right: 126,
+      top: 20,
+      bottom: 30,
       containLabel: true,
     },
     legend: {
@@ -297,13 +325,13 @@ export function buildReturnPathChartOption({
         snap: true,
         label: { show: false },
         lineStyle: {
-          color: "rgba(52, 70, 95, 0.22)",
+          color: "rgba(22, 58, 92, 0.28)",
           width: 1,
           type: "dashed",
         },
       },
-      backgroundColor: "rgba(255, 255, 255, 0.98)",
-      borderColor: "rgba(36, 50, 70, 0.14)",
+      backgroundColor: "rgba(252, 253, 255, 0.985)",
+      borderColor: "rgba(36, 50, 70, 0.16)",
       borderWidth: 1,
       textStyle: {
         color: "#172033",
@@ -331,7 +359,7 @@ export function buildReturnPathChartOption({
         color: "#5a6779",
         fontSize: SHARED_CHART_TEXT.axisSize,
         fontWeight: SHARED_CHART_TEXT.axisWeight,
-        margin: 14,
+        margin: 12,
       },
     },
     yAxis: {
@@ -342,7 +370,7 @@ export function buildReturnPathChartOption({
       axisPointer: { label: { show: false } },
       axisLabel: {
         color: "#637083",
-        formatter: (value: number) => `${value}%`,
+        formatter: formatAxisPct,
       },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -351,6 +379,12 @@ export function buildReturnPathChartOption({
           color: "rgba(22, 58, 92, 0.085)",
           width: 1,
           type: "dashed",
+        },
+      },
+      splitArea: {
+        show: true,
+        areaStyle: {
+          color: ["rgba(248, 250, 252, 0.38)", "rgba(255, 255, 255, 0.76)"],
         },
       },
     },
@@ -363,7 +397,11 @@ export function buildReturnPathChartOption({
               color: CHART_COLORS.portfolio,
               lineWidth: 3.6,
               lastIndex: portfolioCumulative.length - 1,
-              fillColor: "rgba(22, 58, 92, 0.035)",
+              fillColor: buildAreaGradient([
+                { offset: 0, color: "rgba(22, 58, 92, 0.12)" },
+                { offset: 0.42, color: "rgba(22, 58, 92, 0.05)" },
+                { offset: 1, color: "rgba(22, 58, 92, 0.01)" },
+              ]),
               baseline: true,
             }),
           ]
@@ -389,7 +427,13 @@ export function buildReturnPathChartOption({
               lineWidth: 2.8,
               lastIndex: activeCumulative.length - 1,
               fillColor:
-                chartViewMode === "relative" ? "rgba(155, 122, 31, 0.05)" : undefined,
+                chartViewMode === "relative"
+                  ? buildAreaGradient([
+                      { offset: 0, color: "rgba(155, 122, 31, 0.14)" },
+                      { offset: 0.45, color: "rgba(155, 122, 31, 0.06)" },
+                      { offset: 1, color: "rgba(155, 122, 31, 0.015)" },
+                    ])
+                  : undefined,
               dashed: true,
             }),
           ]

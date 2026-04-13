@@ -290,15 +290,18 @@ describe("PerformanceChartPanel", () => {
       axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
     });
     expect(lastChartOption?.yAxis).toMatchObject({
+      splitArea: {
+        show: true,
+      },
       splitLine: {
         lineStyle: { color: "rgba(22, 58, 92, 0.085)", width: 1, type: "dashed" },
       },
     });
     expect(lastChartOption?.grid).toMatchObject({
-      left: 66,
-      right: 138,
-      top: 18,
-      bottom: 34,
+      left: 64,
+      right: 126,
+      top: 20,
+      bottom: 30,
       containLabel: true,
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
@@ -320,10 +323,17 @@ describe("PerformanceChartPanel", () => {
       appendToBody: true,
       renderMode: "html",
       className: "performance-return-path-tooltip",
-      backgroundColor: "rgba(255, 255, 255, 0.98)",
-      borderColor: "rgba(36, 50, 70, 0.14)",
+      backgroundColor: "rgba(252, 253, 255, 0.985)",
+      borderColor: "rgba(36, 50, 70, 0.16)",
       textStyle: { color: "#172033", fontWeight: 600 },
     });
+    const yAxis = Array.isArray(lastChartOption?.yAxis)
+      ? lastChartOption?.yAxis[0]
+      : lastChartOption?.yAxis;
+    const yAxisFormatter = (yAxis?.axisLabel as { formatter?: (value: number) => string } | undefined)
+      ?.formatter;
+    expect(yAxisFormatter?.(1.2)).toBe("+1.2%");
+    expect(yAxisFormatter?.(-0.4)).toBe("-0.4%");
     const tooltip = Array.isArray(lastChartOption?.tooltip)
       ? lastChartOption.tooltip[0]
       : lastChartOption?.tooltip;
