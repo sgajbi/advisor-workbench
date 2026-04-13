@@ -53,6 +53,15 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute("href", "/performance?mode=risk");
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Advisory")).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByRole("searchbox", { name: "Search clients, accounts, proposals" })
+    ).toHaveAttribute("placeholder", "Search clients, accounts, proposals...");
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Jordan Davis, Private Banker" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Jordan Davis")).toBeInTheDocument();
+    expect(screen.getByText("Private Banker")).toBeInTheDocument();
     expect(screen.getByText("Portfolio workspace body")).toBeInTheDocument();
   });
 });
