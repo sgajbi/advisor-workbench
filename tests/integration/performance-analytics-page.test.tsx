@@ -112,17 +112,22 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-main-only")).toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail.performance-rail-shell")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side.performance-side")).toBeTruthy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".performance-summary-stage")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
-    expect(
-      screen.getByText("Benchmark-aware return, attribution, contribution, and evidence review.")
-    ).toHaveClass("workbench-page-header-subtitle");
+    expect(document.querySelector(".workbench-page-header-subtitle")).toHaveTextContent(
+      "Benchmark-aware return, attribution, contribution, and evidence review."
+    );
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
+    expect(screen.getByText("Quick Views")).toBeInTheDocument();
+    expect(screen.getByText("Client Context")).toBeInTheDocument();
+    expect(screen.getByText("Review Context")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Trust and completeness strip")).toBeInTheDocument();
   });
@@ -306,7 +311,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern("Current spread 0.52% Portfolio 5.42% vs Benchmark 4.91%")
     );
-    expect(screen.getByText("Assigned")).toBeInTheDocument();
+    expect(screen.getAllByText("Assigned").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("Horizon Comparison")).length).toBe(1);
     expect(screen.getAllByText("Performance Drivers").length).toBe(1);
@@ -886,11 +891,17 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
 
-    expect(await screen.findByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+    });
     expect(
-      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
-    ).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-state-panel").length).toBeGreaterThanOrEqual(1);
+      screen.getByText("Attribution detail unavailable", { selector: ".module-state-panel strong" })
+    ).toBeInTheDocument();
+    expect(document.querySelector(".performance-analysis-state-panel-unavailable")).toBeTruthy();
+    expect(document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel"))
+      .toBeTruthy();
+    expect(document.querySelectorAll(".module-state-panel").length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
   });
@@ -963,7 +974,9 @@ describe("PerformanceAnalyticsPage", () => {
         await expectTextPresent(text);
       }
 
-      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      await waitFor(() => {
+        expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      });
       expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(1);
 
       for (const text of absent) {
@@ -1055,7 +1068,9 @@ describe("PerformanceAnalyticsPage", () => {
       for (const text of analysisExpectations) {
         await expectTextPresent(text);
       }
-      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      await waitFor(() => {
+        expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
+      });
       for (const text of analysisAbsent) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
@@ -1117,7 +1132,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
-    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(screen.getAllByText("Partial").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Relative returns incomplete").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
       compactPattern("Window 01 Jan 2026 - 24 Feb 2026")

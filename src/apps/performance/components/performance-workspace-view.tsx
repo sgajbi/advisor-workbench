@@ -22,6 +22,8 @@ import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
+import PerformanceWorkspaceRail from "./performance-workspace-rail";
+import PerformanceWorkspaceSidePanel from "./performance-workspace-side-panel";
 import type {
   PerformanceWorkspaceControls,
   PerformanceWorkspaceViewProps,
@@ -158,7 +160,21 @@ export default function PerformanceWorkspaceView({
   return (
     <MainWithSideRailLayout
       className="performance-layout"
+      railClassName="performance-rail-shell"
       mainClassName="performance-main"
+      sideClassName="performance-side performance-side-wide"
+      sideDensity="comfortable"
+      rail={
+        <PerformanceWorkspaceRail
+          workspace={workspace}
+          mode={mode}
+          period={period}
+          capabilities={capabilities}
+          selectedBenchmarkLabel={selectedBenchmarkLabel}
+          onModeChange={onModeChange}
+          onRequestChange={onRequestChange}
+        />
+      }
       main={
         !workspace ? (
           <WorkbenchPageFrame
@@ -222,6 +238,18 @@ export default function PerformanceWorkspaceView({
             </WorkbenchSectionStack>
           </WorkbenchPageFrame>
         )
+      }
+      side={
+        <PerformanceWorkspaceSidePanel
+          workspace={workspace}
+          mode={mode}
+          period={period}
+          detailBasis={detailBasis}
+          chartFrequency={chartFrequency}
+          capabilities={capabilities}
+          selectedBenchmarkLabel={selectedBenchmarkLabel}
+          onModeChange={onModeChange}
+        />
       }
     />
   );

@@ -157,18 +157,23 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-main-only")).toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail.performance-rail-shell")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side.performance-side")).toBeTruthy();
     expect(document.querySelector(".workspace-layout")).toBeFalsy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-frame.performance-page-frame")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
+    expect(screen.getByText("Quick Views")).toBeInTheDocument();
+    expect(screen.getByText("Client Context")).toBeInTheDocument();
+    expect(screen.getByText("Supportability")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
-    expect(
-      screen.getByText("Benchmark-aware return, attribution, contribution, and evidence review.")
-    ).toHaveClass("workbench-page-header-subtitle");
+    expect(document.querySelector(".workbench-page-header-subtitle")).toHaveTextContent(
+      "Benchmark-aware return, attribution, contribution, and evidence review."
+    );
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
