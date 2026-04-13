@@ -1,8 +1,6 @@
 import { useState } from "react";
 
-import { FormControl, MenuItem, Select } from "@mui/material";
-
-import { AnalyticsTable, FieldLabel, WorkbenchDataGridFrame } from "@/design-system";
+import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
 import {
   buildPerformancePositionContributionTableModel,
@@ -14,7 +12,7 @@ import PerformanceContributionContextNote from "./performance-contribution-conte
 import { formatLabel } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
-import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
+import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 
@@ -49,41 +47,27 @@ export default function PerformanceAnalysisContributionSection({
       })
     : null;
   const segmentLevel = workspace.contribution?.levels?.[0] ?? null;
-  const actions = (
-    <PerformanceAnalysisToolbar>
-      <FormControl size="small" sx={{ minWidth: 180 }}>
-        <FieldLabel>Segment</FieldLabel>
-        <Select
-          aria-label="Contribution Segment"
-          value={contributionDimension}
-          onChange={(event) =>
-            onRequestChange?.({
-              contributionDimension: event.target.value,
-            })
-          }
-          disabled={isUpdating}
-        >
-          {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-            <MenuItem
-              key={option}
-              value={option}
-              disabled={
-                !isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
-              }
-            >
-              {formatLabel(option)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </PerformanceAnalysisToolbar>
-  );
 
   return (
     <WorkbenchDataGridFrame
       id="performance-drivers"
       title="Performance Drivers"
-      actions={actions}
+      actions={
+        <PerformanceAnalysisSegmentToolbar
+          ariaLabel="Contribution Segment"
+          value={contributionDimension}
+          disabled={isUpdating}
+          options={CONTRIBUTION_DIMENSION_OPTIONS}
+          isOptionSupported={(option) =>
+            isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
+          }
+          onChange={(nextValue) =>
+            onRequestChange?.({
+              contributionDimension: nextValue,
+            })
+          }
+        />
+      }
       className="performance-detail-panel-wide performance-analysis-module"
     >
       <PerformanceAnalysisModuleState
