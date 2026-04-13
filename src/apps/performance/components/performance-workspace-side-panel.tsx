@@ -41,6 +41,7 @@ export default function PerformanceWorkspaceSidePanel({
   const trustItems = capabilities
     ? getPerformanceTrustStripPresentation({ capabilities }).items
     : [];
+  const showSupportability = mode !== "summary" && trustItems.length > 0;
 
   return (
     <div className="performance-side-panel" aria-label="Performance workspace context">
@@ -85,27 +86,29 @@ export default function PerformanceWorkspaceSidePanel({
         </dl>
       </WorkbenchRailCard>
 
-      <WorkbenchRailCard className="performance-side-card">
-        <div className="performance-card-header">
-          <Text variant="cardTitle" className="performance-side-card-title">
-            Supportability
-          </Text>
-          <Text variant="secondary" className="performance-card-subtitle">
-            Published module coverage and benchmark-relative readiness for the current selection.
-          </Text>
-        </div>
-        <div className="performance-side-status-list">
-          {trustItems.map((item) => (
-            <div key={item.label} className="performance-side-status-item">
-              <div className="performance-side-status-copy">
-                <span className="performance-side-status-label">{item.label}</span>
-                <span className="performance-side-status-support">{item.support}</span>
+      {showSupportability ? (
+        <WorkbenchRailCard className="performance-side-card">
+          <div className="performance-card-header">
+            <Text variant="cardTitle" className="performance-side-card-title">
+              Supportability
+            </Text>
+            <Text variant="secondary" className="performance-card-subtitle">
+              Published module coverage and benchmark-relative readiness for the current selection.
+            </Text>
+          </div>
+          <div className="performance-side-status-list">
+            {trustItems.map((item) => (
+              <div key={item.label} className="performance-side-status-item">
+                <div className="performance-side-status-copy">
+                  <span className="performance-side-status-label">{item.label}</span>
+                  <span className="performance-side-status-support">{item.support}</span>
+                </div>
+                <SemanticBadge tone={mapItemTone(item.tone)}>{item.value}</SemanticBadge>
               </div>
-              <SemanticBadge tone={mapItemTone(item.tone)}>{item.value}</SemanticBadge>
-            </div>
-          ))}
-        </div>
-      </WorkbenchRailCard>
+            ))}
+          </div>
+        </WorkbenchRailCard>
+      ) : null}
 
       <WorkbenchRailCard className="performance-side-card">
         <div className="performance-card-header">

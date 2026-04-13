@@ -6,7 +6,6 @@ import {
   WorkbenchDeferredSection,
 } from "@/design-system";
 
-import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import PerformanceChartPanel from "./performance-chart-panel";
 import PerformanceSummaryHeaderSection from "./performance-summary-header-section";
 import PerformanceWorkspaceStageSurface, {
@@ -66,7 +65,6 @@ export default function PerformanceSummaryMode({
   topContributors,
   bottomContributors,
 }: PerformanceSummaryModeProps) {
-  const modeIntro = getPerformanceWorkspaceModeDefinition("summary").intro;
   const contextItems = buildPerformanceWorkspaceContextItems({
     workspace,
     period,
@@ -88,20 +86,12 @@ export default function PerformanceSummaryMode({
       />
 
       <PerformanceWorkspaceStageSurface
-        intro={modeIntro}
+        intro={null}
         contextAriaLabel="Performance summary context"
         contextItems={contextItems}
         shellClassName="performance-summary-shell"
         shellAriaLabel="Performance decision workspace"
       >
-        <div className="performance-analytical-zone-header">
-          <div>
-            <span className="performance-analytical-zone-kicker">Return review</span>
-            <h2>Return path and benchmark comparison</h2>
-            <p>Track realized outcome, benchmark context, and contributor follow-through from one governed summary surface.</p>
-          </div>
-        </div>
-
         <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
           <PerformanceChartPanel
             title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}

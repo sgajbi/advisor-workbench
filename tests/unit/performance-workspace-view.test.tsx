@@ -169,7 +169,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByText("Quick Views")).toBeInTheDocument();
     expect(screen.getByText("Client Context")).toBeInTheDocument();
-    expect(screen.getByText("Supportability")).toBeInTheDocument();
+    expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toHaveTextContent(
       "Benchmark-aware return, attribution, contribution, and evidence review."

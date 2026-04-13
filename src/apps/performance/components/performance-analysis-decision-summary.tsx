@@ -1,4 +1,4 @@
-import { Panel, SemanticBadge } from "@/design-system";
+import { KpiStatTile, Panel, SemanticBadge, Text } from "@/design-system";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
@@ -65,40 +65,45 @@ export default function PerformanceAnalysisDecisionSummary({
     capabilities.attributionDetail,
     capabilities.contributionDetail,
   ].filter((capability) => capability.state !== "supported" && capability.reason);
-
-  const summaryRows = [
-    selectedPerformance.active_return_pct != null
-      ? `Active return ${formatPct(selectedPerformance.active_return_pct)}.`
-      : "Active return unavailable.",
-    workspace.attribution?.sum_of_effects_pct != null
-      ? `Effects ${formatPct(workspace.attribution.sum_of_effects_pct)} with residual ${formatPct(workspace.attribution.residual_pct)}.`
-      : "Attribution effects incomplete.",
-    contributionCoverage != null
-      ? `Contribution coverage ${formatPct(contributionCoverage)} of market value.`
-      : "Contribution coverage unavailable.",
-    topDriverLabel ? `Largest observed driver ${topDriverLabel}.` : null,
-  ].filter(Boolean);
+  const headline =
+    topDriverLabel && contributionCoverage != null
+      ? `Largest observed driver ${topDriverLabel}; contribution coverage ${formatPct(
+          contributionCoverage
+        )} of market value.`
+      : topDriverLabel
+        ? `Largest observed driver ${topDriverLabel}.`
+        : contributionCoverage != null
+          ? `Contribution coverage ${formatPct(contributionCoverage)} of market value.`
+          : "Benchmark-relative attribution and contribution remain in focus for the selected window.";
 
   const cards = [
     {
       label: "Active Return",
       value: formatPct(selectedPerformance.active_return_pct),
       support: selectedPerformance.benchmark_id ? "Benchmark-relative outcome" : "Portfolio-only outcome",
+      definition:
+        "Portfolio return less benchmark return for the selected reporting basis and horizon.",
     },
     {
       label: "Effects Sum",
       value: formatPct(workspace.attribution?.sum_of_effects_pct),
       support: workspace.attribution?.model ? `${workspace.attribution.model} model` : "Attribution decomposition",
+      definition:
+        "Combined allocation, selection, and interaction effects before residual reconciliation.",
     },
     {
       label: "Residual",
       value: formatPct(workspace.attribution?.residual_pct),
       support: workspace.attribution?.linking ? `${workspace.attribution.linking} linking` : "Attribution reconciliation",
+      definition:
+        "Difference between attributed effects and total active return after applying the selected linking method.",
     },
     {
       label: "Contribution Coverage",
       value: formatPct(contributionCoverage),
       support: topDriverLabel ? `Top driver ${topDriverLabel}` : "Contribution coverage",
+      definition:
+        "Share of portfolio market value covered by the published contribution dataset for the current selection.",
     },
   ];
 
@@ -106,21 +111,22 @@ export default function PerformanceAnalysisDecisionSummary({
     <section aria-label="Analysis decision summary">
       <Panel className="performance-analysis-summary-band performance-analysis-summary-band-compact">
         <div className="performance-analysis-summary-band-copy">
-          <span className="performance-analysis-summary-band-kicker">Decision Summary</span>
+          <span className="performance-analysis-summary-band-kicker">Analysis Snapshot</span>
           <h3>Benchmark-relative evidence posture</h3>
-          <div className="performance-analysis-summary-band-copy-list">
-            {summaryRows.map((row) => (
-              <p key={row}>{row}</p>
-            ))}
-          </div>
+          <Text variant="secondary" className="performance-analysis-summary-band-lead">
+            {headline}
+          </Text>
         </div>
 
         <div className="performance-analysis-summary-band-grid">
           {cards.map((card) => (
             <article key={card.label} className="performance-analysis-summary-card">
-              <span className="performance-analysis-summary-card-label">{card.label}</span>
-              <strong className="performance-analysis-summary-card-value">{card.value}</strong>
-              <span className="performance-analysis-summary-card-support">{card.support}</span>
+              <KpiStatTile
+                label={card.label}
+                value={card.value}
+                support={card.support}
+                definition={card.definition}
+              />
             </article>
           ))}
         </div>
@@ -142,14 +148,11 @@ export default function PerformanceAnalysisDecisionSummary({
                 {toCapabilityValue(capabilities.contributionDetail.state)}
               </SemanticBadge>
             </div>
-            {evidenceGaps.map((capability) => (
-              <div
-                key={capability.reason}
-                className="performance-analysis-summary-band-gap"
-              >
-                {capability.reason}
+            {evidenceGaps[0]?.reason ? (
+              <div className="performance-analysis-summary-band-gap">
+                {evidenceGaps[0].reason}
               </div>
-            ))}
+            ) : null}
           </div>
         </div>
       </Panel>
