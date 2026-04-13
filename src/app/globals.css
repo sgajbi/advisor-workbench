@@ -9595,41 +9595,34 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.performance-chart-readout-secondary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.38rem;
+.performance-chart-readout-comparison {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.28rem 0.38rem;
   margin: 0;
-  padding: 0;
-}
-
-.performance-chart-readout-secondary > div {
-  display: grid;
-  gap: 0.12rem;
-  align-content: start;
-  min-width: 0;
-  padding: 0.46rem 0.56rem;
+  padding: 0.48rem 0.58rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.94);
-}
-
-.performance-chart-readout-secondary dt {
   color: var(--text-muted);
-  font-size: var(--text-2xs);
-  font-weight: 800;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
+  font-size: var(--text-xs);
+  font-weight: 720;
+  line-height: 1.35;
 }
 
-.performance-chart-readout-secondary dd {
-  margin: 0;
+.performance-chart-readout-comparison strong {
   color: var(--brand-strong);
-  font-size: 0.92rem;
-  font-weight: 760;
-  line-height: 1.08;
+  font-size: 0.94rem;
+  font-weight: 780;
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+.performance-chart-readout-comparison-divider {
+  color: #738196;
+  font-weight: 700;
+  text-transform: lowercase;
 }
 
 .performance-chart-readout-meta {

@@ -312,7 +312,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Active 0.80% Portfolio 3.30% Benchmark 2.50%")
+      compactPattern("Current spread 0.80% Portfolio 3.30% vs Benchmark 2.50%")
     );
     expect(screen.getByLabelText("Return series context")).toHaveTextContent(
       compactPattern("Net basis Monthly cadence Calculated return series")
@@ -365,6 +365,12 @@ describe("PerformanceChartPanel", () => {
         ])
       )
     ).toContain("Cumulative");
+    expect(
+      String((tooltipFormatter as (...args: unknown[]) => string)?.([]))
+    ).toContain("No published values are available at this point.");
+    expect(
+      String((tooltipFormatter as (...args: unknown[]) => string)?.([]))
+    ).toContain("Observation");
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {
@@ -586,7 +592,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Benchmark Unavailable")
+      compactPattern("Portfolio 6.20% vs Benchmark Unavailable")
     );
   });
 

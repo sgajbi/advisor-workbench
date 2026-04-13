@@ -89,16 +89,18 @@ function buildTooltipNotice(title: string, body: string) {
 }
 
 export function formatReturnPathTooltip(params: CallbackDataParams | CallbackDataParams[]) {
-  const entries = (Array.isArray(params) ? params : [params]).filter(
+  const rawEntries = Array.isArray(params) ? params : params ? [params] : [];
+  const entries = rawEntries.filter(
     (entry) => getTooltipNumericValue(entry.value) !== null
   );
 
-  const firstEntry = Array.isArray(params) ? params[0] : params;
-  const axisLabel = String(
-    (firstEntry as CallbackDataParams & { axisValue?: string })?.axisValue ??
-      firstEntry?.name ??
-      "Observation"
-  );
+  const firstEntry = rawEntries[0];
+  const axisLabel =
+    String(
+      (firstEntry as CallbackDataParams & { axisValue?: string } | undefined)?.axisValue ??
+        firstEntry?.name ??
+        ""
+    ).trim() || "Observation";
 
   if (!entries.length) {
     return buildTooltipNotice(axisLabel, "No published values are available at this point.");
@@ -135,16 +137,17 @@ export function buildReturnPathTooltipFormatter({
   showActiveSeries,
 }: ReturnPathTooltipOptions) {
   return (params: CallbackDataParams | CallbackDataParams[]) => {
-    const entries = Array.isArray(params) ? params : [params];
+    const entries = Array.isArray(params) ? params : params ? [params] : [];
     const firstEntry = entries[0];
     const dataIndex = typeof firstEntry?.dataIndex === "number" ? firstEntry.dataIndex : -1;
     const point = dataIndex >= 0 ? points[dataIndex] : undefined;
-    const axisLabel = String(
-      (firstEntry as CallbackDataParams & { axisValue?: string })?.axisValue ??
-        firstEntry?.name ??
-        point?.label ??
-        ""
-    );
+    const axisLabel =
+      String(
+        (firstEntry as CallbackDataParams & { axisValue?: string } | undefined)?.axisValue ??
+          firstEntry?.name ??
+          point?.label ??
+          ""
+      ).trim() || "Observation";
 
     if (!point) {
       return formatReturnPathTooltip(params);

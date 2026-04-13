@@ -21,19 +21,16 @@ export default function PerformanceReturnPathSummary({
       aria-label="Return decision readout"
     >
       <div className="performance-chart-readout-primary">
-        <span className="performance-chart-readout-eyebrow">Active</span>
+        <span className="performance-chart-readout-eyebrow">Current spread</span>
         <strong>{activeReturn}</strong>
       </div>
-      <dl className="performance-chart-readout-secondary">
-        <div>
-          <dt>Portfolio</dt>
-          <dd>{portfolioReturn}</dd>
-        </div>
-        <div>
-          <dt>Benchmark</dt>
-          <dd>{benchmarkReturn}</dd>
-        </div>
-      </dl>
+      <p className="performance-chart-readout-comparison" aria-label="Return comparison summary">
+        <span>Portfolio</span>
+        <strong>{portfolioReturn}</strong>
+        <span className="performance-chart-readout-comparison-divider">vs</span>
+        <span>Benchmark</span>
+        <strong>{benchmarkReturn}</strong>
+      </p>
       <div className="performance-chart-readout-meta" aria-label="Return series context">
         <span>{basisLabel} basis</span>
         <span>{observationCadence} cadence</span>
