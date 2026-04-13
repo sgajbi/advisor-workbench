@@ -5,8 +5,8 @@ import {
   isDeferredRiskReviewNote,
   partitionRiskSupportability,
 } from "../../risk-supportability";
-import PerformanceSectionHeading from "../performance-section-heading";
 import PerformanceSupportabilitySummary from "../performance-supportability-summary";
+import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 function toBadgeTone(state: PerformanceRiskViewModel["supportability"][number]["state"]) {
   if (state === "ready") {
@@ -62,61 +62,61 @@ export default function RiskSupportabilityPanel({
   return (
     <section aria-label="Risk coverage and review notes">
       <Panel className="performance-risk-supportability-panel">
-        <PerformanceSectionHeading
-          className="performance-risk-supportability-panel-heading"
+        <PerformanceWorkspaceSection
+          headingClassName="performance-risk-supportability-panel-heading"
           kicker="Review posture"
           title="Coverage and review notes"
           description="Check what remains partial before treating the risk surface as decision-complete."
-        />
+        >
+          <PerformanceSupportabilitySummary
+            className="performance-risk-supportability-summary"
+            items={[
+              { label: "Ready modules", value: readyItems.length },
+              { label: "Deferred detail", value: deferredItems.length },
+              { label: "Review items", value: reviewItems.length + reviewNotes.length },
+            ]}
+          />
 
-        <PerformanceSupportabilitySummary
-          className="performance-risk-supportability-summary"
-          items={[
-            { label: "Ready modules", value: readyItems.length },
-            { label: "Deferred detail", value: deferredItems.length },
-            { label: "Review items", value: reviewItems.length + reviewNotes.length },
-          ]}
-        />
+          {reviewItems.length ? (
+            <div className="performance-risk-supportability-grid">
+              {reviewItems.map((item) => (
+                <div key={item.key} className="performance-risk-supportability-row">
+                  <span className="performance-risk-supportability-label">
+                    {getSupportabilityLabel(item)}
+                  </span>
+                  <SemanticBadge tone={toBadgeTone(item.state)}>{item.state}</SemanticBadge>
+                  <span className="performance-risk-supportability-detail">
+                    {item.reason ?? "Review before relying on this module."}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="performance-risk-supportability-all-ready">
+              All governed risk modules are ready for the selected context.
+            </div>
+          )}
 
-        {reviewItems.length ? (
-          <div className="performance-risk-supportability-grid">
-            {reviewItems.map((item) => (
-              <div key={item.key} className="performance-risk-supportability-row">
-                <span className="performance-risk-supportability-label">
-                  {getSupportabilityLabel(item)}
-                </span>
-                <SemanticBadge tone={toBadgeTone(item.state)}>{item.state}</SemanticBadge>
-                <span className="performance-risk-supportability-detail">
-                  {item.reason ?? "Review before relying on this module."}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="performance-risk-supportability-all-ready">
-            All governed risk modules are ready for the selected context.
-          </div>
-        )}
+          {deferredItems.length ? (
+            <div className="performance-risk-supportability-notes">
+              {deferredItems.map((item) => (
+                <div key={item.key} className="performance-risk-supportability-note">
+                  {getSupportabilityLabel(item)} loads on demand. {item.reason ?? ""}
+                </div>
+              ))}
+            </div>
+          ) : null}
 
-        {deferredItems.length ? (
-          <div className="performance-risk-supportability-notes">
-            {deferredItems.map((item) => (
-              <div key={item.key} className="performance-risk-supportability-note">
-                {getSupportabilityLabel(item)} loads on demand. {item.reason ?? ""}
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {reviewNotes.length ? (
-          <div className="performance-risk-supportability-notes">
-            {reviewNotes.map((note) => (
-              <div key={note} className="performance-risk-supportability-note">
-                {note}
-              </div>
-            ))}
-          </div>
-        ) : null}
+          {reviewNotes.length ? (
+            <div className="performance-risk-supportability-notes">
+              {reviewNotes.map((note) => (
+                <div key={note} className="performance-risk-supportability-note">
+                  {note}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </PerformanceWorkspaceSection>
       </Panel>
     </section>
   );

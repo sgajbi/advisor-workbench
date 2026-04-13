@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import PerformanceSectionHeading from "../performance-section-heading";
+import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 export default function RiskSecondaryPanelGroup({
   rolling,
@@ -9,13 +9,14 @@ export default function RiskSecondaryPanelGroup({
   attribution: ReactNode;
 }) {
   return (
-    <section className="performance-risk-secondary-group" aria-label="Secondary risk analysis">
-      <PerformanceSectionHeading
-        className="performance-risk-secondary-group-header"
+    <PerformanceWorkspaceSection
+      ariaLabel="Secondary risk analysis"
+      className="performance-risk-secondary-group"
+      headingClassName="performance-risk-secondary-group-header"
         kicker="Stability and attribution"
         title="Rolling stability and contributors"
         description="Use rolling stability and attribution after the primary posture is understood."
-      />
+    >
       <div className="performance-risk-secondary-workspace performance-risk-secondary-workspace-equal">
         <div className="performance-risk-secondary-main performance-risk-secondary-grid-item performance-risk-secondary-grid-item-rolling">
           <div className="performance-risk-secondary-panel-slot performance-risk-secondary-panel-slot-rolling">
@@ -28,6 +29,6 @@ export default function RiskSecondaryPanelGroup({
           </div>
         </aside>
       </div>
-    </section>
+    </PerformanceWorkspaceSection>
   );
 }

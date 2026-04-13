@@ -1,6 +1,6 @@
 import type { PerformanceAdvisorBriefSupportabilityItem } from "../../advisor-brief-view-model";
-import PerformanceSectionHeading from "../performance-section-heading";
 import PerformanceSupportabilitySummary from "../performance-supportability-summary";
+import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 export default function LotusSupportabilityPanel({
   items,
@@ -13,15 +13,13 @@ export default function LotusSupportabilityPanel({
   const reviewItems = items.filter((item) => item.tone !== "success");
 
   return (
-    <section
+    <PerformanceWorkspaceSection
+      ariaLabel="Advisor brief supportability"
       className="lotus-supportability-panel performance-advisor-brief-supportability-panel"
-      aria-label="Advisor brief supportability"
+      headingClassName="performance-advisor-brief-section-heading"
+      kicker="Supportability"
+      title="Decision support coverage"
     >
-      <PerformanceSectionHeading
-        className="performance-advisor-brief-section-heading"
-        kicker="Supportability"
-        title="Decision support coverage"
-      />
       <PerformanceSupportabilitySummary
         className="performance-advisor-brief-supportability-summary"
         items={[
@@ -57,6 +55,6 @@ export default function LotusSupportabilityPanel({
           ))}
         </div>
       ) : null}
-    </section>
+    </PerformanceWorkspaceSection>
   );
 }

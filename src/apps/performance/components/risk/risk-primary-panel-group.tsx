@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import PerformanceSectionHeading from "../performance-section-heading";
+import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 export default function RiskPrimaryPanelGroup({
   snapshot,
@@ -11,18 +11,19 @@ export default function RiskPrimaryPanelGroup({
   concentration: ReactNode;
 }) {
   return (
-    <section className="performance-risk-primary-group" aria-label="Primary risk review">
-      <PerformanceSectionHeading
-        className="performance-risk-primary-group-header"
+    <PerformanceWorkspaceSection
+      ariaLabel="Primary risk review"
+      className="performance-risk-primary-group"
+      headingClassName="performance-risk-primary-group-header"
         kicker="Primary review"
         title="Posture, drawdown, and concentration"
         description="Lead with current posture, downside path, and concentration."
-      />
+    >
       <div className="performance-risk-primary-feature">{snapshot}</div>
       <div className="performance-risk-primary-grid">
         <div className="performance-risk-primary-grid-item">{drawdown}</div>
         <div className="performance-risk-primary-grid-item">{concentration}</div>
       </div>
-    </section>
+    </PerformanceWorkspaceSection>
   );
 }

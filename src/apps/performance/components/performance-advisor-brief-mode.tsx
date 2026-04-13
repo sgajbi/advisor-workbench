@@ -10,10 +10,10 @@ import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
 import LotusPageHeader from "./advisor-brief/lotus-page-header";
 import LotusSupportabilityPanel from "./advisor-brief/lotus-supportability-panel";
 import LotusTalkingPointCard from "./advisor-brief/lotus-talking-point-card";
-import PerformanceSectionHeading from "./performance-section-heading";
 import PerformanceWorkspaceStageSurface, {
   buildPerformanceWorkspaceContextItems,
 } from "./performance-workspace-stage-surface";
+import PerformanceWorkspaceSection from "./performance-workspace-section";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
 
 export default function PerformanceAdvisorBriefMode({
@@ -63,6 +63,64 @@ export default function PerformanceAdvisorBriefMode({
     benchmark,
     isDetailsPending: isDetailsPending || isLoading,
   });
+  const narrativeSections = [
+    {
+      ariaLabel: "Client Talking Points",
+      className: "performance-advisor-brief-section performance-advisor-brief-section-narrative",
+      title: "Client Talking Points",
+      description: "Advisor-ready narrative for the selected period.",
+      content: brief.talkingPoints.length ? (
+        <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-narrative">
+          {brief.talkingPoints.map((item) => (
+            <LotusTalkingPointCard
+              key={item.headline}
+              item={item}
+              onSelectMode={onSelectMode}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="performance-advisor-brief-empty-note">
+          No client talking points are available for this selection.
+        </div>
+      ),
+    },
+    {
+      ariaLabel: "Recommended Actions",
+      className: "performance-advisor-brief-section performance-advisor-brief-section-workflow",
+      title: "Recommended Actions",
+      description: "Next advisor workflow steps from the current brief.",
+      content: (
+        <LotusDrilldownList
+          actions={dedupeAdvisorActions(brief.recommendedActions)}
+          onSelectMode={onSelectMode}
+          variant="workflow"
+        />
+      ),
+    },
+    {
+      ariaLabel: "Risks and Exceptions",
+      className: "performance-advisor-brief-section performance-advisor-brief-section-risk",
+      title: "Risks / Exceptions",
+      description: "Exceptions, evidence gaps, and supportability limits.",
+      content: brief.risksAndExceptions.length ? (
+        <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-risk">
+          {brief.risksAndExceptions.map((item) => (
+            <LotusTalkingPointCard
+              key={item.headline}
+              item={item}
+              onSelectMode={onSelectMode}
+              variant="risk"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="performance-advisor-brief-empty-note">
+          No material supportability exceptions are flagged in the current source bundle.
+        </div>
+      ),
+    },
+  ] as const;
 
   return (
     <PerformanceWorkspaceStageSurface
@@ -82,74 +140,18 @@ export default function PerformanceAdvisorBriefMode({
             className="performance-advisor-brief-main-column"
             aria-label="Advisor brief narrative"
           >
-            <section
-              className="performance-advisor-brief-section performance-advisor-brief-section-narrative"
-              aria-label="Client Talking Points"
-            >
-              <PerformanceSectionHeading
-                className="performance-advisor-brief-section-heading"
-                title="Client Talking Points"
-                description="Advisor-ready narrative for the selected period."
-              />
-              <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-narrative">
-                {brief.talkingPoints.length ? (
-                  brief.talkingPoints.map((item) => (
-                    <LotusTalkingPointCard
-                      key={item.headline}
-                      item={item}
-                      onSelectMode={onSelectMode}
-                    />
-                  ))
-                ) : (
-                  <div className="performance-advisor-brief-empty-note">
-                    No client talking points are available for this selection.
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section
-              className="performance-advisor-brief-section performance-advisor-brief-section-workflow"
-              aria-label="Recommended Actions"
-            >
-              <PerformanceSectionHeading
-                className="performance-advisor-brief-section-heading"
-                title="Recommended Actions"
-                description="Next advisor workflow steps from the current brief."
-              />
-              <LotusDrilldownList
-                actions={dedupeAdvisorActions(brief.recommendedActions)}
-                onSelectMode={onSelectMode}
-                variant="workflow"
-              />
-            </section>
-
-            <section
-              className="performance-advisor-brief-section performance-advisor-brief-section-risk"
-              aria-label="Risks and Exceptions"
-            >
-              <PerformanceSectionHeading
-                className="performance-advisor-brief-section-heading"
-                title="Risks / Exceptions"
-                description="Exceptions, evidence gaps, and supportability limits."
-              />
-              {brief.risksAndExceptions.length ? (
-                <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-risk">
-                  {brief.risksAndExceptions.map((item) => (
-                    <LotusTalkingPointCard
-                      key={item.headline}
-                      item={item}
-                      onSelectMode={onSelectMode}
-                      variant="risk"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="performance-advisor-brief-empty-note">
-                  No material supportability exceptions are flagged in the current source bundle.
-                </div>
-              )}
-            </section>
+            {narrativeSections.map((section) => (
+              <PerformanceWorkspaceSection
+                key={section.title}
+                ariaLabel={section.ariaLabel}
+                className={section.className}
+                headingClassName="performance-advisor-brief-section-heading"
+                title={section.title}
+                description={section.description}
+              >
+                {section.content}
+              </PerformanceWorkspaceSection>
+            ))}
           </section>
 
           <aside
