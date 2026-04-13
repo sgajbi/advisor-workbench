@@ -11,14 +11,14 @@ type PerformanceHorizonComparisonMatrixProps = {
 function getSupportHeader(visualMode: PerformanceHorizonVisualMode) {
   if (visualMode === "basis") {
     return {
-      title: "Fee Drag / Cumulative",
+      title: "Support",
       primary: "Fee Drag",
       secondary: "Cumulative",
     };
   }
 
   return {
-    title: "Active / Cumulative",
+    title: "Support",
     primary: "Active",
     secondary: "Cumulative",
   };
@@ -94,13 +94,26 @@ export default function PerformanceHorizonComparisonMatrix({
           {showSupportColumn ? (
             <div className="performance-horizon-matrix-support">
               {card.tertiaryValue != null ? (
-                <strong aria-label={`${card.label} ${supportHeader.primary}`}>
+                <strong
+                  className="performance-horizon-matrix-support-value"
+                  aria-label={`${card.label} ${supportHeader.primary}`}
+                >
                   {card.tertiaryValue}
                 </strong>
               ) : (
-                <span aria-hidden="true"> </span>
+                <strong
+                  className="performance-horizon-matrix-support-value performance-horizon-matrix-support-value-muted"
+                  aria-hidden="true"
+                >
+                  -
+                </strong>
               )}
-              <strong>{card.footerValue}</strong>
+              <strong
+                className="performance-horizon-matrix-support-value"
+                aria-label={`${card.label} ${supportHeader.secondary}`}
+              >
+                {card.footerValue}
+              </strong>
             </div>
           ) : null}
         </div>

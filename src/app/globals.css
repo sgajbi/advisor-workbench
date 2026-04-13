@@ -10701,6 +10701,20 @@ a:hover {
   border-left: 1px solid rgba(148, 163, 184, 0.16);
 }
 
+.performance-horizon-matrix-support-value {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+  font-weight: 760;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.performance-horizon-matrix-support-value-muted {
+  color: var(--text-subtle);
+}
+
 .performance-horizon-matrix-support strong {
   text-align: right;
 }

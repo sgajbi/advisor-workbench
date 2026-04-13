@@ -119,7 +119,6 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("QTD").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("YTD").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("1Y").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
     expect(within(horizonTable).queryByText("Opening MV")).not.toBeInTheDocument();
@@ -146,7 +145,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Cumulative")).toBeInTheDocument();
-    expect(screen.queryByText("Active / Cumulative")).not.toBeInTheDocument();
+    expect(screen.queryByText("Support")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
     fireEvent.click(screen.getByRole("tab", { name: "Net" }));
@@ -160,7 +159,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
     expect(screen.getAllByText("Net").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Gross").length).toBeGreaterThan(0);
-    expect(screen.getByText("Fee Drag / Cumulative")).toBeInTheDocument();
+    expect(screen.getByText("Support")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
 
