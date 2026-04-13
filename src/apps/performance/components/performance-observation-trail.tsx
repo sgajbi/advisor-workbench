@@ -7,11 +7,17 @@ export default function PerformanceObservationTrail({
 }: {
   tableModel: PerformanceAnalyticsTableModel;
 }) {
+  const periodLabel = `${tableModel.rows.length} ${
+    tableModel.rows.length === 1 ? "period" : "periods"
+  }`;
+
   return (
     <details className="performance-chart-observation-coupling">
       <summary className="performance-chart-observation-header">
-        <span>Observation trail</span>
-        <strong>{`${tableModel.rows.length} published periods`}</strong>
+        <div className="performance-chart-observation-header-copy">
+          <span>Observation trail</span>
+          <strong>{periodLabel}</strong>
+        </div>
       </summary>
       <AnalyticsTable
         ariaLabel="Return path observation table"

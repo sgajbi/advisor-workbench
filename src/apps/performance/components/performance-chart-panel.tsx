@@ -21,9 +21,9 @@ import { buildPerformanceReturnPathTableModel } from "./performance-analytics-ta
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceChartContextStrip from "./performance-chart-context-strip";
-import PerformanceDecisionReadout from "./performance-decision-readout";
 import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathLegend from "./performance-return-path-legend";
+import PerformanceReturnPathSummary from "./performance-return-path-summary";
 import {
   buildReturnPathChartOption,
   resolveReportDates,
@@ -229,7 +229,6 @@ export default function PerformanceChartPanel({
     {
       key: "portfolio",
       label: "Portfolio",
-      value: returnPathPresentation.portfolioReturnValue,
       className: "performance-chart-legend-item-portfolio",
     },
     ...(hasBenchmarkSeries
@@ -237,7 +236,6 @@ export default function PerformanceChartPanel({
           {
             key: "benchmark",
             label: "Benchmark",
-            value: returnPathPresentation.benchmarkReturnValue,
             className: "performance-chart-legend-item-benchmark",
           },
         ]
@@ -247,7 +245,6 @@ export default function PerformanceChartPanel({
           {
             key: "active",
             label: "Active",
-            value: returnPathPresentation.activeReturnValue,
             className: "performance-chart-legend-item-active",
           },
         ]
@@ -380,7 +377,7 @@ export default function PerformanceChartPanel({
             </div>
           ) : null}
           <div className="performance-chart-analysis-grid">
-            <PerformanceDecisionReadout
+            <PerformanceReturnPathSummary
               portfolioReturn={returnPathPresentation.portfolioReturnValue}
               benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
               activeReturn={returnPathPresentation.activeReturnValue}

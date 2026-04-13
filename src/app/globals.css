@@ -9703,14 +9703,6 @@ a:hover {
   line-height: 1.2;
 }
 
-.performance-chart-legend-value {
-  color: var(--brand-strong);
-  font-size: var(--text-xs);
-  font-weight: 800;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
-
 .performance-chart-observation-coupling {
   display: grid;
   gap: 0.42rem;
@@ -9745,6 +9737,11 @@ a:hover {
 
 .performance-chart-observation-coupling[open] .performance-chart-observation-header::after {
   content: "Hide evidence";
+}
+
+.performance-chart-observation-header-copy {
+  display: grid;
+  gap: 0.14rem;
 }
 
 .performance-chart-observation-header strong {

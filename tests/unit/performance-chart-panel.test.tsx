@@ -303,9 +303,11 @@ describe("PerformanceChartPanel", () => {
     });
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
-    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("3.30%");
-    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("2.50%");
-    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("0.80%");
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Benchmark");
+    expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Active");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("3.30%");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern("Active 0.80% Portfolio 3.30% Benchmark 2.50%")
     );
@@ -673,6 +675,20 @@ describe("PerformanceChartPanel", () => {
         ])
       )
     ).toContain("Active");
+  });
+
+  it("keeps evidence disclosure compact while leaving values in the readout rather than the legend", () => {
+    render(<PerformanceChartPanel {...buildChartProps()} />);
+
+    const disclosure = screen.getByText("Observation trail").closest("summary");
+    expect(disclosure).not.toBeNull();
+    expect(disclosure).toHaveTextContent("1 period");
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("5.42%");
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("4.91%");
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("0.52%");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("3.30%");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
+    expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
   });
 
   it("disables frequency options that are outside the backend capability contract", () => {

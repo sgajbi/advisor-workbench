@@ -1,7 +1,6 @@
 export type PerformanceReturnPathLegendItem = {
   key: string;
   label: string;
-  value?: string;
   className: string;
 };
 
@@ -18,9 +17,6 @@ export default function PerformanceReturnPathLegend({
           className={`performance-chart-legend-item ${item.className}`}
         >
           <span className="performance-chart-legend-label">{item.label}</span>
-          {item.value ? (
-            <strong className="performance-chart-legend-value">{item.value}</strong>
-          ) : null}
         </div>
       ))}
     </div>
