@@ -159,13 +159,13 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Return decision readout')).toContainText('Benchmark Return');
     await expect(page.getByLabel('Return decision readout')).toContainText('Active Return');
 
-    await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
 
     const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
     const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
     await expectActiveTab(page, /^Summary$/i);
+    await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
 
     await expect(page.getByRole('group', { name: /^Return path context$/i })).toBeVisible({
       timeout: 15000,

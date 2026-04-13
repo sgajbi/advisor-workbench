@@ -57,15 +57,6 @@ vi.mock("../../src/apps/performance/components/performance-multi-horizon-panel",
   ),
 }));
 
-vi.mock("../../src/apps/performance/components/performance-summary-header-section", () => ({
-  default: ({ selectedBenchmarkLabel }: { selectedBenchmarkLabel?: string | null }) => (
-    <div data-testid="summary-header">
-      <div>Trust and completeness strip</div>
-      <div>{selectedBenchmarkLabel ?? "no benchmark"}</div>
-    </div>
-  ),
-}));
-
 vi.mock("../../src/apps/performance/components/performance-summary-contributors-section", () => ({
   default: ({
     positivePositionContributors,
@@ -150,16 +141,7 @@ describe("PerformanceSummaryMode", () => {
     );
 
     expect(document.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
-    expect(screen.getByTestId("summary-header")).toHaveTextContent(
-      scenario.selectedBenchmarkLabel ?? "no benchmark"
-    );
-    expect(screen.getByText("Trust and completeness strip")).toBeInTheDocument();
-    expect(
-      screen
-        .getByTestId("summary-header")
-        .compareDocumentPosition(screen.getByTestId("chart-panel")) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
+    expect(screen.queryByText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(screen.getByTestId("chart-panel")).toHaveTextContent(
