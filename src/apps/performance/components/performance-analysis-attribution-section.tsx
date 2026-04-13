@@ -17,6 +17,7 @@ import type { PerformanceAnalysisAttributionSectionProps } from "./performance-w
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import {
   getAttributionDetailContextItems,
+  getAttributionReconciliationText,
   getAttributionDetailSummaryItems,
 } from "./performance-attribution-presentations";
 
@@ -50,12 +51,15 @@ export default function PerformanceAnalysisAttributionSection({
     workspace.attribution,
     workspace.benchmark_options ?? []
   );
+  const attributionReconciliation = workspace.attribution
+    ? getAttributionReconciliationText(workspace.attribution)
+    : null;
 
   return (
     <WorkbenchChartShell
       id="performance-attribution"
       title="Attribution Detail"
-      subtitle="Benchmark-relative allocation, selection, and interaction effects by segment."
+      subtitle="Benchmark-relative allocation, selection, and interaction effects."
       actions={
         <PerformanceAnalysisSegmentToolbar
           ariaLabel="Attribution Segment"
@@ -112,7 +116,15 @@ export default function PerformanceAnalysisAttributionSection({
         {workspace.attribution ? (
           <PerformanceAnalysisDetailPane
             title="Segment Attribution"
-            subtitle="Benchmark-relative segment context and Brinson effect breakdown."
+            subtitle="Use relative context for weight and return gaps, then move to effect decomposition."
+            summary={
+              attributionReconciliation ? (
+                <div className="performance-analysis-detail-pane-note" role="note">
+                  <strong>{attributionReconciliation.headline}</strong>
+                  <span>{attributionReconciliation.detail}</span>
+                </div>
+              ) : null
+            }
             value={detailView}
             onChange={setDetailView}
             options={getAttributionDetailOptions({

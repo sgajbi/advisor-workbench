@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import PerformanceSectionHeading from "../performance-section-heading";
 
 export default function RiskPrimaryPanelGroup({
   snapshot,
@@ -11,16 +12,12 @@ export default function RiskPrimaryPanelGroup({
 }) {
   return (
     <section className="performance-risk-primary-group" aria-label="Primary risk review">
-      <div className="performance-risk-primary-group-header">
-        <div className="performance-risk-primary-group-copy">
-          <span className="performance-risk-zone-kicker">Primary review</span>
-          <h2>Risk posture, drawdown, and concentration</h2>
-        </div>
-        <p>
-          Volatility, downside recovery, and mandate concentration are grouped as the first
-          risk decision surface.
-        </p>
-      </div>
+      <PerformanceSectionHeading
+        className="performance-risk-primary-group-header"
+        kicker="Primary review"
+        title="Posture, drawdown, and concentration"
+        description="Lead with current posture, downside path, and concentration."
+      />
       <div className="performance-risk-primary-feature">{snapshot}</div>
       <div className="performance-risk-primary-grid">
         <div className="performance-risk-primary-grid-item">{drawdown}</div>

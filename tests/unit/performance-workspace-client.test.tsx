@@ -36,12 +36,16 @@ vi.mock("../../src/features/workbench/api", () => ({
 vi.mock("../../src/apps/performance/components/performance-workspace-view", () => ({
   default: ({
     workspace,
+    mode,
+    onModeChange,
     period,
     onRequestChange,
     isUpdating,
     isDetailsPending,
   }: {
     workspace: WorkbenchPerformanceWorkspace | null;
+    mode: string;
+    onModeChange?: (mode: "summary" | "analysis" | "advisor" | "risk") => void;
     period: string;
     onRequestChange?: (patch: {
       period?: string;
@@ -57,6 +61,7 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
     isDetailsPending?: boolean;
   }) => (
     <div>
+      <div data-testid="mode">{mode}</div>
       <div data-testid="period">{period}</div>
       <div data-testid="return">
         {workspace?.net_performance.portfolio_return_pct ?? "none"}
@@ -75,6 +80,12 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
         onClick={() => onRequestChange?.({ contributionDimension: "sector" })}
       >
         Switch Contribution Segment
+      </button>
+      <button type="button" onClick={() => onModeChange?.("analysis")}>
+        Switch Analysis Mode
+      </button>
+      <button type="button" onClick={() => onModeChange?.("risk")}>
+        Switch Risk Mode
       </button>
     </div>
   ),
@@ -478,5 +489,56 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("return")).toHaveTextContent("18.4");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
     });
+  });
+
+  it("updates the route immediately for mode switches without refetching summary or details", async () => {
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("summary");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Analysis Mode" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("analysis");
+    });
+
+    expect(replaceMock).toHaveBeenLastCalledWith(
+      "/performance?portfolioId=PF_1001&mode=analysis&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+    expect(getDetailsClientMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Risk Mode" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("risk");
+    });
+
+    expect(replaceMock).toHaveBeenLastCalledWith(
+      "/performance?portfolioId=PF_1001&mode=risk&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+    expect(getDetailsClientMock).not.toHaveBeenCalled();
   });
 });

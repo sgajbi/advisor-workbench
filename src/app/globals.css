@@ -5940,12 +5940,339 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-analysis-summary-band {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.45fr) minmax(16rem, 0.9fr);
+  gap: 0.8rem;
+  padding: 0.82rem 0.9rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(247, 250, 252, 0.96) 0%, #ffffff 24%);
+}
+
+.performance-analysis-summary-band-copy {
+  display: grid;
+  gap: 0.22rem;
+  align-content: start;
+}
+
+.performance-analysis-summary-band-copy-list {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.performance-analysis-summary-band-kicker,
+.performance-analysis-summary-card-label,
+.performance-analysis-summary-band-status-label,
+.performance-risk-supportability-label {
+  margin: 0;
+  font-size: 0.64rem;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.performance-analysis-summary-band-copy h3,
+.performance-risk-supportability-panel-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 680;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--brand-strong);
+}
+
+.performance-analysis-summary-band-copy p,
+.performance-risk-supportability-panel-heading p,
+.performance-analysis-summary-card-support,
+.performance-risk-supportability-detail,
+.performance-risk-supportability-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  line-height: 1.42;
+}
+
+.performance-analysis-summary-band-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.performance-analysis-summary-card {
+  display: grid;
+  gap: 0.16rem;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-analysis-summary-card-value {
+  font-size: 1.08rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-analysis-summary-band-status {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+}
+
+.performance-analysis-summary-band-status-heading span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-strong);
+}
+
+.performance-analysis-summary-band-status-items {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-analysis-summary-band-status-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.performance-analysis-summary-band-gap {
+  padding: 0.54rem 0.62rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.56);
+  color: #6a522a;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.performance-analysis-summary-band {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.45fr) minmax(16rem, 0.9fr);
+  gap: 0.8rem;
+  padding: 0.82rem 0.9rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(247, 250, 252, 0.96) 0%, #ffffff 24%);
+}
+
+.performance-analysis-summary-band-copy {
+  display: grid;
+  gap: 0.22rem;
+  align-content: start;
+}
+
+.performance-analysis-summary-band-copy-list {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.performance-analysis-summary-band-kicker,
+.performance-analysis-summary-card-label,
+.performance-analysis-summary-band-status-label,
+.performance-risk-supportability-label {
+  margin: 0;
+  font-size: 0.64rem;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.performance-analysis-summary-band-copy h3,
+.performance-risk-supportability-panel-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 680;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--brand-strong);
+}
+
+.performance-analysis-summary-band-copy p,
+.performance-risk-supportability-panel-heading p,
+.performance-analysis-summary-card-support,
+.performance-risk-supportability-detail,
+.performance-risk-supportability-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  line-height: 1.42;
+}
+
+.performance-analysis-summary-band-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.performance-analysis-summary-card {
+  display: grid;
+  gap: 0.16rem;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-analysis-summary-card-value {
+  font-size: 1.08rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-analysis-summary-band-status {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+}
+
+.performance-analysis-summary-band-status-heading span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-strong);
+}
+
+.performance-analysis-summary-band-status-items {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-analysis-summary-band-status-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.performance-analysis-summary-band-gap {
+  padding: 0.54rem 0.62rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.56);
+  color: #6a522a;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.performance-mode-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.72rem 0.84rem;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 248, 251, 0.92) 100%),
+    var(--panel);
+}
+
+.performance-mode-intro-copy {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.performance-mode-intro-kicker {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 820;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.performance-mode-intro-title {
+  margin: 0;
+  color: var(--brand-strong);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  font-weight: 720;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.performance-mode-intro-description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  max-width: 88ch;
+}
+
+.performance-mode-intro-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.performance-mode-intro-compact {
+  padding: 0.58rem 0.72rem;
+  gap: 0.6rem;
+}
+
+.performance-mode-intro-compact .performance-mode-intro-copy {
+  gap: 0.16rem;
+}
+
+.performance-mode-intro-compact .performance-mode-intro-title {
+  font-size: var(--text-sm);
+}
+
+.performance-mode-intro-compact .performance-mode-intro-description {
+  font-size: 0.81rem;
+  line-height: 1.38;
+  max-width: 72ch;
+}
+
+.performance-mode-intro-compact {
+  padding: 0.58rem 0.72rem;
+  gap: 0.6rem;
+}
+
+.performance-mode-intro-compact .performance-mode-intro-copy {
+  gap: 0.16rem;
+}
+
+.performance-mode-intro-compact .performance-mode-intro-title {
+  font-size: var(--text-sm);
+}
+
+.performance-mode-intro-compact .performance-mode-intro-description {
+  font-size: 0.81rem;
+  line-height: 1.38;
+  max-width: 72ch;
+}
+
 .performance-advisor-brief-stage {
   width: 100%;
+  display: grid;
+  gap: 0.75rem;
 }
 
 .performance-risk-stage {
   width: 100%;
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .performance-mode-intro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .performance-mode-intro-actions {
+    justify-content: flex-start;
+  }
 }
 
 .performance-risk-shell.section-block {
@@ -5983,8 +6310,8 @@ a:hover {
 .performance-risk-context-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0.45rem;
-  padding: 0.32rem 0 0.36rem;
+  gap: 0.35rem;
+  padding: 0.24rem 0 0.3rem;
   border-top: 1px solid rgba(148, 163, 184, 0.18);
   border-bottom: 1px solid rgba(148, 163, 184, 0.18);
 }
@@ -6000,7 +6327,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   min-height: auto;
-  padding: 0.52rem 0.62rem;
+  padding: 0.44rem 0.56rem;
   background: rgba(248, 250, 252, 0.5);
 }
 
@@ -6033,12 +6360,184 @@ a:hover {
 .performance-risk-executive-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.45rem;
   padding: 0;
 }
 
 .performance-risk-executive-card {
   height: 100%;
+}
+
+.performance-risk-supportability-panel {
+  display: grid;
+  gap: 0.62rem;
+  padding: 0.74rem 0.8rem;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.performance-risk-supportability-panel-heading {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.performance-risk-main-column > .performance-risk-supportability-panel {
+  order: 3;
+}
+
+.performance-risk-supportability-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.performance-surface-supportability-summary,
+.performance-risk-supportability-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.performance-surface-supportability-summary-card,
+.performance-risk-supportability-summary-card,
+.performance-risk-supportability-all-ready,
+.performance-advisor-brief-supportability-all-ready {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.52rem 0.6rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-surface-supportability-summary-label,
+.performance-risk-supportability-label,
+.performance-advisor-brief-supportability-label {
+  color: var(--brand-strong);
+  font-size: 0.79rem;
+  font-weight: 620;
+}
+
+.performance-surface-supportability-summary-card strong,
+.performance-risk-supportability-summary-card strong {
+  font-size: 1rem;
+  line-height: 1.1;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-risk-supportability-row {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.5rem 0.58rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-risk-supportability-detail {
+  min-width: 0;
+}
+
+.performance-risk-supportability-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.performance-risk-supportability-note {
+  padding: 0.5rem 0.58rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.5);
+}
+
+.performance-risk-supportability-panel {
+  display: grid;
+  gap: 0.62rem;
+  padding: 0.74rem 0.8rem;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.performance-risk-supportability-panel-heading {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.performance-risk-main-column > .performance-risk-supportability-panel {
+  order: 3;
+}
+
+.performance-risk-supportability-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.performance-surface-supportability-summary,
+.performance-risk-supportability-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.performance-surface-supportability-summary-card,
+.performance-risk-supportability-summary-card,
+.performance-risk-supportability-all-ready,
+.performance-advisor-brief-supportability-all-ready {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.52rem 0.6rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-surface-supportability-summary-label,
+.performance-risk-supportability-label,
+.performance-advisor-brief-supportability-label {
+  color: var(--brand-strong);
+  font-size: 0.79rem;
+  font-weight: 620;
+}
+
+.performance-surface-supportability-summary-card strong,
+.performance-risk-supportability-summary-card strong {
+  font-size: 1rem;
+  line-height: 1.1;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-risk-supportability-row {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.5rem 0.58rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-risk-supportability-detail {
+  min-width: 0;
+}
+
+.performance-risk-supportability-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.performance-risk-supportability-note {
+  padding: 0.5rem 0.58rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.5);
 }
 
 .performance-risk-primary-group {
@@ -7596,13 +8095,33 @@ a:hover {
 
 .performance-advisor-brief-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem 1.5rem;
-  align-items: end;
-  padding: 0 0 0.15rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0;
 }
 
 .performance-advisor-brief-header-copy {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-overview {
+  padding: 0.9rem 0.95rem 0.95rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(247, 250, 252, 0.96) 0%, #ffffff 24%);
+}
+
+.performance-advisor-brief-overview-topline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem 1.5rem;
+  align-items: end;
+}
+
+.performance-advisor-brief-overview-copy {
   display: grid;
   gap: 0.32rem;
   min-width: 0;
@@ -7688,31 +8207,12 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.performance-advisor-brief-synopsis {
-  display: grid;
-  gap: 0.38rem;
-  padding: 0.95rem 1.05rem;
-  border-radius: 12px;
-  border: 1px solid rgba(23, 32, 43, 0.06);
-  background:
-    linear-gradient(90deg, rgba(236, 242, 247, 0.92), rgba(248, 250, 252, 0.7) 28%, #ffffff 100%);
-  position: relative;
-}
-
-.performance-advisor-brief-synopsis-copy {
+.performance-advisor-brief-overview-summary {
   margin: 0;
   color: #233142;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  max-width: 88ch;
-}
-
-.lotus-synopsis-band::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: linear-gradient(180deg, rgba(87, 121, 157, 0.9), rgba(169, 183, 199, 0.35));
+  font-size: 0.86rem;
+  line-height: 1.5;
+  max-width: 92ch;
 }
 
 .performance-advisor-brief-toolbar {
@@ -7720,9 +8220,7 @@ a:hover {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 0.8rem 0 0.75rem;
-  border-top: 1px solid rgba(23, 32, 43, 0.06);
-  border-bottom: 1px solid rgba(23, 32, 43, 0.06);
+  padding: 0.15rem 0 0;
 }
 
 .performance-advisor-brief-toolbar-status,
@@ -7825,15 +8323,15 @@ a:hover {
 
 .performance-advisor-brief-body-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.58fr) minmax(22rem, 0.9fr);
+  grid-template-columns: minmax(0, 1.72fr) minmax(21rem, 0.84fr);
   align-items: start;
-  gap: 1.05rem;
+  gap: 0.8rem;
 }
 
 .performance-advisor-brief-main-column,
 .performance-advisor-brief-side-column {
   display: grid;
-  gap: 0.95rem;
+  gap: 0.8rem;
   min-width: 0;
   padding: 0;
 }
@@ -7845,7 +8343,7 @@ a:hover {
 
 .performance-advisor-brief-sidecar {
   gap: 0;
-  padding: 0.95rem 0.95rem 0.9rem;
+  padding: 0.85rem 0.88rem 0.82rem;
   border: 1px solid rgba(23, 32, 43, 0.08);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(249, 251, 253, 0.96), #ffffff 24%);
@@ -7876,7 +8374,7 @@ a:hover {
 
 .performance-advisor-brief-section-workflow {
   gap: 0.7rem;
-  padding: 0.95rem 1rem;
+  padding: 0.78rem 0.84rem;
   border: 1px solid rgba(87, 121, 157, 0.08);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(244, 248, 251, 0.85), #ffffff 65%);
@@ -7884,7 +8382,7 @@ a:hover {
 
 .performance-advisor-brief-section-risk {
   gap: 0.72rem;
-  padding: 0.95rem 1rem;
+  padding: 0.78rem 0.84rem;
   border-left: 3px solid rgba(148, 87, 96, 0.45);
   border-radius: 0 12px 12px 0;
   background: rgba(250, 248, 248, 0.92);
@@ -7919,8 +8417,8 @@ a:hover {
 
 .performance-advisor-brief-item {
   display: grid;
-  gap: 0.68rem;
-  padding: 0.95rem 1rem;
+  gap: 0.58rem;
+  padding: 0.82rem 0.88rem;
 }
 
 .performance-advisor-brief-item-positive,
@@ -7976,11 +8474,6 @@ a:hover {
   flex: 0 0 auto;
 }
 
-.performance-advisor-brief-item-support {
-  display: flex;
-  align-items: center;
-}
-
 .performance-advisor-brief-item-support-label {
   color: var(--text-muted);
   font-size: 0.64rem;
@@ -7992,7 +8485,8 @@ a:hover {
 .performance-advisor-brief-evidence-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.42rem;
+  align-items: center;
+  gap: 0.34rem 0.4rem;
 }
 
 .performance-advisor-brief-evidence-chip {
@@ -8035,8 +8529,14 @@ a:hover {
 .performance-advisor-brief-drilldown-list,
 .performance-advisor-brief-item-list {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.58rem;
   min-width: 0;
+}
+
+.performance-advisor-brief-item-list-narrative,
+.performance-advisor-brief-item-list-risk,
+.performance-advisor-brief-section-workflow .performance-advisor-brief-workflow-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .performance-advisor-brief-workflow-action,
@@ -8046,7 +8546,7 @@ a:hover {
   align-items: center;
   gap: 0.85rem;
   width: 100%;
-  padding: 0.88rem 0.92rem;
+  padding: 0.74rem 0.82rem;
   border-radius: 10px;
   border: 1px solid rgba(23, 32, 43, 0.08);
   background: #ffffff;
@@ -8123,7 +8623,7 @@ a:hover {
   display: grid;
   gap: 0.22rem;
   width: 100%;
-  padding: 0.88rem 0.92rem;
+  padding: 0.8rem 0.84rem;
   border: 0;
   border-bottom: 1px solid rgba(23, 32, 43, 0.08);
   background: transparent;
@@ -8159,6 +8659,52 @@ a:hover {
   gap: 0.2rem;
 }
 
+.performance-advisor-brief-supportability-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-supportability-summary-card,
+.performance-advisor-brief-supportability-all-ready {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.52rem 0.6rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-advisor-brief-supportability-summary-card strong {
+  font-size: 1rem;
+  line-height: 1.1;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-advisor-brief-supportability-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-supportability-summary-card,
+.performance-advisor-brief-supportability-all-ready {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.52rem 0.6rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.performance-advisor-brief-supportability-summary-card strong {
+  font-size: 1rem;
+  line-height: 1.1;
+  color: var(--brand-strong);
+  font-variant-numeric: tabular-nums;
+}
+
 .performance-advisor-brief-supportability-row {
   display: flex;
   justify-content: space-between;
@@ -8169,15 +8715,39 @@ a:hover {
   border-top: 1px solid rgba(23, 32, 43, 0.08);
 }
 
+.performance-advisor-brief-supportability-notes {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-supportability-note {
+  padding: 0.52rem 0.6rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.5);
+  color: #6a522a;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.performance-advisor-brief-supportability-notes {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-supportability-note {
+  padding: 0.52rem 0.6rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.5);
+  color: #6a522a;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .performance-advisor-brief-supportability-row:first-child {
   border-top: 0;
   padding-top: 0;
-}
-
-.performance-advisor-brief-supportability-label {
-  color: var(--brand-strong);
-  font-size: 0.79rem;
-  font-weight: 620;
 }
 
 .performance-advisor-brief-supportability-state {
@@ -8208,6 +8778,36 @@ a:hover {
 
 .performance-advisor-brief-supportability-state-danger {
   color: #945760;
+}
+
+.performance-advisor-brief-supportability-notes {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-supportability-note {
+  padding: 0.52rem 0.6rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.5);
+  color: #6a522a;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.performance-advisor-brief-supportability-notes {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.performance-advisor-brief-supportability-note {
+  padding: 0.52rem 0.6rem;
+  border-left: 3px solid rgba(142, 98, 50, 0.28);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 246, 232, 0.5);
+  color: #6a522a;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 .performance-advisor-brief-empty-note {
@@ -8301,18 +8901,25 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-advisor-brief-header {
-    grid-template-columns: 1fr;
-  }
-
   .performance-advisor-brief-context-grid {
     justify-content: start;
+  }
+
+  .performance-advisor-brief-overview-topline {
+    grid-template-columns: 1fr;
   }
 
   .performance-advisor-brief-sidecar {
     padding: 0;
     border: 0;
     background: transparent;
+  }
+
+  .performance-advisor-brief-item-list-narrative,
+  .performance-advisor-brief-item-list-risk,
+  .performance-advisor-brief-section-workflow .performance-advisor-brief-workflow-list,
+  .performance-advisor-brief-supportability-summary {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -8327,6 +8934,12 @@ a:hover {
   .performance-advisor-brief-workflow-action,
   .performance-advisor-brief-drilldown-action {
     width: 100%;
+  }
+
+  .performance-advisor-brief-item-list-narrative,
+  .performance-advisor-brief-item-list-risk,
+  .performance-advisor-brief-section-workflow .performance-advisor-brief-workflow-list {
+    grid-template-columns: 1fr;
   }
 
   .performance-advisor-brief-main-column,
@@ -8706,6 +9319,31 @@ a:hover {
   box-shadow: inset 0 0 0 1px rgba(87, 121, 157, 0.12);
 }
 
+.performance-analysis-detail-pane-summary {
+  min-width: 0;
+}
+
+.performance-analysis-detail-pane-note {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid rgba(23, 32, 43, 0.07);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.performance-analysis-detail-pane-note strong {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--brand-strong);
+}
+
+.performance-analysis-detail-pane-note span {
+  font-size: 0.73rem;
+  line-height: 1.42;
+  color: var(--text-muted);
+}
+
 .performance-analysis-detail-pane-body {
   min-width: 0;
 }
@@ -8966,6 +9604,46 @@ a:hover {
   gap: 0.75rem;
 }
 
+.performance-surface-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.performance-surface-section-heading-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.performance-surface-section-heading-kicker {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.performance-surface-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.performance-surface-section-heading-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.performance-surface-section-heading-kicker {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .performance-section-heading h3,
 .performance-level-heading strong,
 .performance-analysis-level-header strong {
@@ -8985,6 +9663,46 @@ a:hover {
   font-size: var(--text-xl);
   line-height: var(--leading-snug);
   letter-spacing: -0.02em;
+}
+
+.performance-surface-section-heading h3 {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.02em;
+}
+
+.performance-surface-section-heading-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.performance-surface-section-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.performance-surface-section-heading h3 {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.02em;
+}
+
+.performance-surface-section-heading-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.performance-surface-section-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .performance-analysis-level-header strong {
@@ -9460,8 +10178,8 @@ a:hover {
 }
 
 .performance-outcome-strip {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
   gap: 0.26rem;
   padding: 0.18rem 0;
   border: 0;
@@ -9508,13 +10226,13 @@ a:hover {
 }
 
 .performance-outcome-strip-item {
-  display: inline-grid;
-  grid-template-columns: auto auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
   gap: 0.22rem 0.42rem;
   min-height: 0;
-  min-width: 7.7rem;
-  padding: 0.3rem 0.46rem;
+  min-width: 0;
+  padding: 0.42rem 0.54rem;
   border: 1px solid rgba(34, 44, 59, 0.07);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
@@ -9536,11 +10254,12 @@ a:hover {
 
 .performance-outcome-strip-item .workbench-summary-metric-support {
   grid-column: 1 / -1;
-  margin-top: 0.08rem;
+  margin-top: 0.12rem;
   font-size: 0.72rem;
-  line-height: 1.32;
+  line-height: 1.38;
   color: #536274;
-  max-width: 22ch;
+  max-width: none;
+  white-space: pre-line;
 }
 
 .performance-chart-library-frame.workbench-summary-visual {
@@ -9566,7 +10285,7 @@ a:hover {
 .performance-chart-readout-strip {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.38rem;
+  gap: 0.44rem;
   min-width: 0;
 }
 
@@ -9582,7 +10301,7 @@ a:hover {
 .performance-chart-readout-primary {
   display: grid;
   gap: 0.16rem;
-  padding: 0.68rem 0.72rem 0.62rem;
+  padding: 0.72rem 0.76rem 0.68rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
@@ -9597,15 +10316,23 @@ a:hover {
 }
 
 .performance-chart-readout-comparison {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.28rem 0.38rem;
+  display: grid;
+  gap: 0.18rem;
   margin: 0;
-  padding: 0.48rem 0.58rem;
+  padding: 0.56rem 0.62rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.94);
+}
+
+.performance-chart-readout-comparison-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+
+.performance-chart-readout-comparison-label {
   color: var(--text-muted);
   font-size: var(--text-xs);
   font-weight: 720;
@@ -9614,23 +10341,30 @@ a:hover {
 
 .performance-chart-readout-comparison strong {
   color: var(--brand-strong);
-  font-size: 0.94rem;
+  font-size: 0.98rem;
   font-weight: 780;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  justify-self: end;
+}
+
+.performance-chart-readout-comparison-row-divider {
+  padding: 0.06rem 0 0.08rem;
+  border-top: 1px solid rgba(32, 44, 61, 0.07);
+  border-bottom: 1px solid rgba(32, 44, 61, 0.07);
 }
 
 .performance-chart-readout-comparison-divider {
   color: #738196;
   font-weight: 700;
-  text-transform: lowercase;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
 }
 
 .performance-chart-readout-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.28rem 0.42rem;
-  align-items: center;
+  display: grid;
+  gap: 0.16rem;
   padding-inline: 0.08rem;
   color: #5b6778;
   font-size: 0.69rem;
@@ -9639,18 +10373,7 @@ a:hover {
 }
 
 .performance-chart-readout-meta > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.performance-chart-readout-meta > span:not(:last-child)::after {
-  content: "";
-  width: 0.22rem;
-  height: 0.22rem;
-  border-radius: 999px;
-  background: rgba(22, 58, 92, 0.18);
-  margin-left: 0.25rem;
+  display: block;
 }
 
 .performance-chart-legend {
@@ -10964,6 +11687,22 @@ a:hover {
   .performance-analysis-detail-pane-header {
     flex-direction: column;
   }
+
+  .performance-analysis-summary-band {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-analysis-summary-band-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-risk-supportability-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .performance-risk-supportability-detail {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -11089,6 +11828,20 @@ a:hover {
   }
 
   .workbench-split {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-analysis-summary-band-grid,
+  .performance-risk-supportability-notes,
+  .performance-surface-supportability-summary,
+  .performance-risk-supportability-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-analysis-summary-band-grid,
+  .performance-risk-supportability-notes,
+  .performance-surface-supportability-summary,
+  .performance-risk-supportability-summary {
     grid-template-columns: 1fr;
   }
 

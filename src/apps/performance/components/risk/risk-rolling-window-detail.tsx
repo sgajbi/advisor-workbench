@@ -26,6 +26,7 @@ export default function RiskRollingWindowDetail({
   const detailRows = (selectedWindow?.detailRowInterpretations ?? []).filter(
     (row) => !PRIMARY_ROLLING_MEASURES.has(row.metric)
   );
+  const fallbackDetail = resolveRollingFallbackDetail(viewModel);
 
   return (
     <RiskDetailSection
@@ -54,6 +55,14 @@ export default function RiskRollingWindowDetail({
         ) : null
       }
     >
+      {!selectedWindow ? (
+        <div className="performance-risk-note-card performance-risk-note-card-compact">
+          <div className="performance-risk-note-copy">
+            <Text variant="cardTitle">{fallbackDetail.title}</Text>
+            <Text variant="secondary">{fallbackDetail.body}</Text>
+          </div>
+        </div>
+      ) : null}
       <RiskAnalyticalTable
         ariaLabel={riskRollingPanelCopy.detailTableAriaLabel}
         density="compact"
@@ -88,4 +97,21 @@ export default function RiskRollingWindowDetail({
       />
     </RiskDetailSection>
   );
+}
+
+function resolveRollingFallbackDetail(viewModel: PerformanceRiskViewModel) {
+  const failureDetail = viewModel.partialFailures[0];
+
+  if (failureDetail) {
+    return {
+      title: "Rolling stability review is partially available",
+      body: `${failureDetail} Historical attribution remains available, but rolling-window review is incomplete for this selection.`,
+    };
+  }
+
+  return {
+    title: "Rolling stability review is unavailable",
+    body:
+      "Rolling risk windows were not returned for the selected portfolio context. Historical attribution remains available, but stability review is not currently supported.",
+  };
 }

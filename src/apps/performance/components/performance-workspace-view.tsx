@@ -11,6 +11,9 @@ import {
 
 import { getPerformanceWorkspaceCapabilities } from "../capabilities";
 import {
+  getPerformanceWorkspaceModeDefinition,
+} from "../performance-workspace-modes";
+import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
 import PerformanceWorkspaceModeSwitch, {
@@ -67,11 +70,9 @@ export default function PerformanceWorkspaceView({
 }: PerformanceWorkspaceViewProps) {
   const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
   const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
-  const workspaceTitle = mode === "risk" ? "Risk" : "Performance";
-  const workspaceSubtitle =
-    mode === "risk"
-      ? "Benchmark-aware concentration, drawdown, rolling, and attribution review."
-      : "Benchmark-aware return, attribution, contribution, and evidence review.";
+  const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
+  const workspaceTitle = modeDefinition.workspaceTitle;
+  const workspaceSubtitle = modeDefinition.workspaceSubtitle;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -176,7 +177,7 @@ export default function PerformanceWorkspaceView({
                   hint="The performance workspace contract must resolve successfully before benchmark-aware return, contribution, and risk surfaces can render."
                   contextItems={[
                     { label: "Surface", value: workspaceTitle },
-                    { label: "Mode", value: mode === "risk" ? "Risk" : "Performance" },
+                    { label: "Mode", value: modeDefinition.label },
                   ]}
                   availableItems={[
                     {

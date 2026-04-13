@@ -4,7 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 import RiskDrawdownPanel from "../../src/apps/performance/components/risk/risk-drawdown-panel";
 import {
   buildFixtureRiskDrawdown,
+  buildFixtureRiskSummary,
   buildPerformanceRiskViewModel,
+  buildUnavailableRiskDrawdown,
 } from "../../src/apps/performance/risk-workspace-view-model";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
@@ -144,5 +146,30 @@ describe("RiskDrawdownPanel", () => {
 
     expect(onViewUnderwater).toHaveBeenCalledTimes(1);
     expect(screen.queryByLabelText("Risk underwater series table")).not.toBeInTheDocument();
+  });
+
+  it("renders an explicit partial-state note when upstream drawdown detail is missing", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskDrawdown: buildUnavailableRiskDrawdown({
+        workspace: scenario.workspace,
+        period: "YTD",
+        detailBasis: "NET",
+        detail: "Risk drawdown fetch failed.",
+        includeUnderwaterSeries: false,
+      }),
+    });
+
+    render(<RiskDrawdownPanel viewModel={viewModel} onViewUnderwater={() => {}} />);
+
+    expect(screen.getByText("Drawdown review is partially available")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Headline measures remain available, but episode review should be treated as incomplete\./i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk drawdown episode table")).not.toBeInTheDocument();
   });
 });

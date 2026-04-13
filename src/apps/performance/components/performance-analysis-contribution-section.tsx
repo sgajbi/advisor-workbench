@@ -90,6 +90,16 @@ export default function PerformanceAnalysisContributionSection({
         {workspace.contribution ? (
           <PerformanceAnalysisDetailPane
             title="Contribution Breakdown"
+            subtitle="Review ranked positions first, then move to grouped contribution when needed."
+            summary={
+              hasAggregateContributionLevels ? (
+                <PerformanceContributionContextNote
+                  contribution={workspace.contribution}
+                  className="performance-analysis-detail-pane-note performance-contribution-context-note"
+                  showReconciliation={false}
+                />
+              ) : null
+            }
             value={detailView}
             onChange={setDetailView}
             options={getContributionDetailOptions({
@@ -99,12 +109,6 @@ export default function PerformanceAnalysisContributionSection({
             })}
             className="performance-analysis-contribution-detail-pane"
           >
-            {hasAggregateContributionLevels ? (
-              <PerformanceContributionContextNote
-                contribution={workspace.contribution}
-                showReconciliation={false}
-              />
-            ) : null}
             {detailView === "positions" ? (
               positionTableModel ? (
                 <AnalyticsTable

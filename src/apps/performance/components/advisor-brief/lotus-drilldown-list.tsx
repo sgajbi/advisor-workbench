@@ -1,16 +1,11 @@
 import type { PerformanceAdvisorBriefAction } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
-
-const MODE_LABELS: Record<PerformanceWorkspaceMode, string> = {
-  summary: "Open Return Path",
-  analysis: "Open Analysis",
-  advisor: "Open Advisor Brief",
-  risk: "Open Risk",
-  evidence: "Open Evidence",
-};
+import {
+  getPerformanceWorkspaceModeLabel,
+  type PerformanceWorkspaceMode,
+} from "../../performance-workspace-modes";
 
 function resolveActionLabel(action: PerformanceAdvisorBriefAction) {
-  return action.label || MODE_LABELS[action.targetMode];
+  return action.label || `Open ${getPerformanceWorkspaceModeLabel(action.targetMode)}`;
 }
 
 export default function LotusDrilldownList({

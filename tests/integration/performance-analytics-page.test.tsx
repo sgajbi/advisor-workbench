@@ -403,7 +403,15 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
 
+    expect(await screen.findByLabelText("Analysis decision summary")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark-relative evidence posture")).toBeInTheDocument();
+    expect(screen.getByLabelText("Analysis evidence gaps")).toHaveTextContent(
+      "Attribution detail"
+    );
     expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
+    expect(screen.getByLabelText("Performance analysis mode intro")).toHaveTextContent(
+      "Attribution, contribution, and benchmark-relative diagnostics"
+    );
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
@@ -454,6 +462,46 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
   });
 
+  it("accepts the advisor-brief route alias and opens the advisor brief surface on first paint", async () => {
+    installPerformancePageFetchMock();
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          mode: "advisor-brief",
+        }),
+      })
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+      "Source-grounded brief, drilldowns, and supportability"
+    );
+    expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
+  });
+
+  it("accepts the advisor-brief route alias and opens the advisor brief surface on first paint", async () => {
+    installPerformancePageFetchMock();
+
+    render(
+      await PerformanceAnalyticsPage({
+        searchParams: Promise.resolve({
+          mode: "advisor-brief",
+        }),
+      })
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+      "Source-grounded brief, drilldowns, and supportability"
+    );
+    expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
+  });
+
   it("shows Advisor Brief as a first-class mode and allows source drilldown back to Summary and Analysis", async () => {
     installPerformancePageFetchMock();
 
@@ -461,14 +509,20 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Advisor Brief" }));
 
-      expect(
-        await screen.findByRole("heading", { name: "Performance Advisor Brief" })
-      ).toBeInTheDocument();
-      await waitFor(() => {
-        const supportability = screen.getByLabelText("Advisor brief supportability");
-        expect(supportability).toHaveTextContent("Advisor Brief");
-        expect(supportability).toHaveTextContent("Ready");
-      });
+    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+      "Source-grounded brief, drilldowns, and supportability"
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent("Decision support coverage");
+      expect(supportability).toHaveTextContent("Ready modules");
+      expect(supportability).toHaveTextContent("Review items");
+      expect(supportability).toHaveTextContent("Evidence");
+      expect(supportability).toHaveTextContent("Partial");
+    });
     expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
     expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
@@ -537,6 +591,9 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Risk" }));
 
+    expect(screen.getByLabelText("Risk mode intro")).toHaveTextContent(
+      "Downside, concentration, and rolling stability posture"
+    );
     expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
     expect(
       screen.getAllByRole("heading", { name: "Risk" }).some((heading) =>
@@ -545,10 +602,10 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBe(true);
     expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
     expect(screen.getByLabelText("Primary risk review")).toHaveTextContent(
-      "Risk posture, drawdown, and concentration"
+      "Posture, drawdown, and concentration"
     );
     expect(screen.getByLabelText("Secondary risk analysis")).toHaveTextContent(
-      "Rolling risk and source-backed contributors"
+      "Rolling stability and contributors"
     );
     expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(

@@ -87,8 +87,8 @@ vi.mock("../../src/features/workbench/api", () => ({
         "lotus-ai:task:explain.v1",
       ],
     },
-    warnings: [],
-    partial_failures: [],
+    warnings: ["AI provider returned bounded narrative only."],
+    partial_failures: [{ source_service: "lotus-ai", error_code: "PROVIDER_PARTIAL", detail: "AI provider unavailable for full narrative generation." }],
   })),
 }));
 
@@ -122,8 +122,11 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
     await waitFor(() => {
       const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("Advisor Brief");
-      expect(supportability).toHaveTextContent("Ready");
+      expect(supportability).toHaveTextContent("Ready modules");
+      expect(supportability).toHaveTextContent("Review items");
+      expect(supportability).toHaveTextContent("Evidence");
+      expect(supportability).toHaveTextContent("Partial");
+      expect(supportability).toHaveTextContent("AI provider unavailable for full narrative generation.");
     });
     expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
       "Gateway advisor brief is ready with source-grounded talking points."
@@ -131,6 +134,9 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy Note" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+      "Source-grounded brief, drilldowns, and supportability"
+    );
     expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
@@ -185,8 +191,7 @@ describe("PerformanceAdvisorBriefMode", () => {
 
     await waitFor(() => {
       const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("Advisor Brief");
-      expect(supportability).toHaveTextContent("Ready");
+      expect(supportability).toHaveTextContent("Ready modules");
     });
 
     fireEvent.click(
@@ -198,7 +203,118 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(onSelectMode).toHaveBeenCalledWith("summary");
   });
 
-  it("keeps a generating state and defers the Gateway call while details are still pending", () => {
+  it("refreshes the advisor brief in place without requiring a mode change", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockClear();
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() => {
+      expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("recovers from an unavailable advisor brief after an explicit refresh", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient)
+      .mockReset()
+      .mockRejectedValueOnce(new Error("brief unavailable"))
+      .mockResolvedValue({
+        correlation_id: "corr-advisor-brief-retry",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: {
+          portfolio_id: "PF_1001",
+          client_id: "CIF_1001",
+          base_currency: "USD",
+          booking_center_code: "SG",
+        },
+        as_of_date: "2026-02-24",
+        period: "YTD",
+        report_start_date: "2026-01-01",
+        report_end_date: "2026-02-24",
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+        status: "ready",
+        summary: "Recovered advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
+        ai_audit: {
+          task_id: "explain.v1",
+          output_label: "EXPLANATION_ONLY",
+          prompt_version: "foundation.explain.v1",
+          provider_mode: "local_openai_compatible",
+          provider_id: "text.local",
+          adapter_kind: "OPENAI_COMPATIBLE_LOCAL",
+          model_id: "qwen3:8b",
+          generated_at: "2026-02-24T00:00:00Z",
+          stubbed: false,
+        },
+        ai_evidence: { source_refs: ["lotus-gateway:workbench:PF_1001:performance-summary:YTD"] },
+        warnings: [],
+        partial_failures: [],
+      });
+
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risks and Exceptions")).toHaveTextContent(
+        "Advisor brief generation is unavailable."
+      );
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent("Recovered advisor brief.");
+      expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("starts the Gateway call immediately even while details are still pending", async () => {
     vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockClear();
     const workspace = buildSupportedPerformanceScenario().workspace;
 
@@ -220,8 +336,10 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     const supportability = screen.getByLabelText("Advisor brief supportability");
-    expect(supportability).toHaveTextContent("Advisor Brief");
+    expect(supportability).toHaveTextContent("Review items");
     expect(supportability).toHaveTextContent("Generating");
-    expect(getWorkbenchPerformanceAdvisorBriefClient).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenCalledTimes(1);
+    });
   });
 });

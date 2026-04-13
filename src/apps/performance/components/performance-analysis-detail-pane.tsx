@@ -4,6 +4,7 @@ import { cx } from "@/design-system/utils/cx";
 export default function PerformanceAnalysisDetailPane<T extends string>({
   title,
   subtitle,
+  summary,
   value,
   onChange,
   options,
@@ -12,6 +13,7 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
 }: {
   title: string;
   subtitle?: string;
+  summary?: React.ReactNode;
   value: T;
   onChange: (value: T) => void;
   options: Array<WorkbenchSegmentedControlOption<T>>;
@@ -33,6 +35,7 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
           className="performance-analysis-detail-pane-tabs"
         />
       </div>
+      {summary ? <div className="performance-analysis-detail-pane-summary">{summary}</div> : null}
       <div className="performance-analysis-detail-pane-body">{children}</div>
     </div>
   );

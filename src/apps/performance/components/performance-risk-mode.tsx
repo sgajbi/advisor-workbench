@@ -7,8 +7,10 @@ import {
   WorkbenchStatusRow,
 } from "@/design-system";
 
+import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import { buildPerformanceRiskViewModel } from "../risk-workspace-view-model";
 import { usePerformanceRiskContract } from "../use-performance-risk-contract";
+import PerformanceModeIntro from "./performance-mode-intro";
 import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
@@ -21,6 +23,7 @@ import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSecondaryPanelGroup from "./risk/risk-secondary-panel-group";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
+import RiskSupportabilityPanel from "./risk/risk-supportability-panel";
 
 export default function PerformanceRiskMode({
   workspace,
@@ -28,6 +31,7 @@ export default function PerformanceRiskMode({
   detailBasis,
   isDetailsPending,
 }: PerformanceRiskModeProps) {
+  const modeIntro = getPerformanceWorkspaceModeDefinition("risk").intro!;
   const [underwaterDrawerOpen, setUnderwaterDrawerOpen] = useState(false);
   const [rollingDrawerOpen, setRollingDrawerOpen] = useState(false);
   const [selectedRollingWindowKey, setSelectedRollingWindowKey] = useState("");
@@ -102,6 +106,13 @@ export default function PerformanceRiskMode({
 
   return (
     <section className="performance-risk-stage" aria-label="Risk">
+      <PerformanceModeIntro
+        ariaLabel={modeIntro.ariaLabel}
+        kicker={modeIntro.kicker}
+        title={modeIntro.title}
+        description={modeIntro.description}
+        compact
+      />
       <SectionBlock
         title="Risk"
         className="performance-risk-shell performance-lotus-stage"
@@ -127,9 +138,7 @@ export default function PerformanceRiskMode({
         ) : null}
         {statePanel ?? (
           <div className="performance-risk-main-column">
-            <RiskExecutiveOverview
-              overview={viewModel.workspaceOverview}
-            />
+            <RiskExecutiveOverview overview={viewModel.workspaceOverview} />
             <RiskPrimaryPanelGroup
               snapshot={<RiskSnapshotPanel viewModel={viewModel} />}
               drawdown={
@@ -163,6 +172,7 @@ export default function PerformanceRiskMode({
                 />
               }
             />
+            <RiskSupportabilityPanel viewModel={viewModel} />
           </div>
         )}
       </SectionBlock>

@@ -5,8 +5,8 @@ import type {
 } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
+import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import type { PerformanceWorkspacePresentation } from "../view-model";
-import type { PerformanceWorkspaceMode } from "./performance-workspace-mode-switch";
 
 export type PerformanceWorkspaceRequestPatch = {
   portfolioId?: string;

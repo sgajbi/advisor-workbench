@@ -1,6 +1,6 @@
 import { SemanticBadge } from "@/design-system";
 import type { PerformanceAdvisorBriefItem } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
 
 import LotusEvidenceChip from "./lotus-evidence-chip";
 
@@ -43,18 +43,18 @@ export default function LotusTalkingPointCard({
           {toToneLabel(item.tone)}
         </SemanticBadge>
       </header>
-      <div className="performance-advisor-brief-item-support">
-        <span className="performance-advisor-brief-item-support-label">Supporting metrics</span>
-      </div>
-      <div className="performance-advisor-brief-evidence-row" aria-label="Supporting metrics">
-        {item.evidenceRefs.map((evidenceRef) => (
-          <LotusEvidenceChip
-            key={`${item.headline}-${evidenceRef.metricLabel}-${evidenceRef.sourceSurface}`}
-            evidenceRef={evidenceRef}
-            onSelectMode={onSelectMode}
-          />
-        ))}
-      </div>
+      {item.evidenceRefs.length ? (
+        <div className="performance-advisor-brief-evidence-row" aria-label="Supporting metrics">
+          <span className="performance-advisor-brief-item-support-label">Supporting metrics</span>
+          {item.evidenceRefs.map((evidenceRef) => (
+            <LotusEvidenceChip
+              key={`${item.headline}-${evidenceRef.metricLabel}-${evidenceRef.sourceSurface}`}
+              evidenceRef={evidenceRef}
+              onSelectMode={onSelectMode}
+            />
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }

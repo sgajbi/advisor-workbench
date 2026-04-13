@@ -2,25 +2,16 @@
 import { ModeTabs, WorkbenchStatusRow } from "@/design-system";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
+  PERFORMANCE_WORKSPACE_MODE_DEFINITIONS,
+  type PerformanceWorkspaceMode,
+} from "../performance-workspace-modes";
+import {
   isPartialCapability,
   isSupportedCapability,
   type WorkspaceCapability,
 } from "@/shell/workspace-capabilities";
 import { formatDate } from "../formatters";
-export type PerformanceWorkspaceMode =
-  | "summary"
-  | "analysis"
-  | "advisor"
-  | "risk"
-  | "evidence";
-
-const WORKSPACE_MODES: Array<{ key: PerformanceWorkspaceMode; label: string }> = [
-  { key: "summary", label: "Summary" },
-  { key: "analysis", label: "Analysis" },
-  { key: "advisor", label: "Advisor Brief" },
-  { key: "risk", label: "Risk" },
-  { key: "evidence", label: "Evidence" },
-];
+export type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 
 function isModeUsable(capability: WorkspaceCapability) {
   return isSupportedCapability(capability) || isPartialCapability(capability);
@@ -116,7 +107,8 @@ export default function PerformanceWorkspaceModeSwitch({
   const analysisCapability = getAnalysisCapability(capabilities ?? undefined);
   const analysisReadiness = getAnalysisReadiness(capabilities);
   const evidenceCapability = capabilities?.evidence ?? null;
-  const modeOptions = WORKSPACE_MODES.map((mode) => {
+  const modeOptions = PERFORMANCE_WORKSPACE_MODE_DEFINITIONS.map(({ key, label }) => {
+    const mode = { key, label };
     if (mode.key === "analysis" && analysisCapability) {
       return {
         ...mode,

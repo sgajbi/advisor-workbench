@@ -56,6 +56,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         { label: "Advisor Brief", value: "Preview Ready", tone: "success" },
       ])
     );
+    expect(brief.reviewNotes).toEqual([]);
     expect(brief.audit).toEqual(
       expect.objectContaining({
         taskId: "explain.v1",
@@ -118,6 +119,13 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         (risk) => risk.headline === "Analysis details are still loading."
       )
     ).toBe(false);
+    expect(brief.reviewNotes).toEqual(
+      expect.arrayContaining([
+        "A benchmark is assigned, but benchmark-relative returns are incomplete.",
+        "Contribution exists, but only aggregate rows are available.",
+        "Attribution detail is not available for the current selection.",
+      ])
+    );
   });
 
   it("falls back to a portfolio-only brief when contribution detail is unavailable", () => {
@@ -179,6 +187,11 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         { label: "Advisor Brief", value: "Generating", tone: "warn" },
+      ])
+    );
+    expect(brief.reviewNotes).toEqual(
+      expect.arrayContaining([
+        "Deferred analytics are still loading; contribution and attribution evidence may update.",
       ])
     );
   });
@@ -389,5 +402,248 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.talkingPoints[0]?.evidenceRefs[0]?.targetMode).toBe("risk");
     expect(brief.recommendedActions.some((action) => action.targetMode === "risk")).toBe(true);
     expect(brief.sourceMetrics.some((metric) => metric.targetMode === "risk")).toBe(true);
+  });
+
+  it("normalizes gateway advisor-brief supportability to partial when the backend status is partial", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-partial-brief",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "partial",
+        summary: "Partial advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Generating", tone: "warn" }],
+        ai_audit: { stubbed: true },
+        ai_evidence: { source_refs: [] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.status).toBe("partial");
+    expect(brief.supportability).toContainEqual({
+      label: "Advisor Brief",
+      value: "Partial",
+      tone: "warn",
+    });
+  });
+
+  it("normalizes gateway advisor-brief supportability to partial when content is present but the backend status is partial", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-partial-brief",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "partial",
+        summary: "Partial advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Generating", tone: "warn" }],
+        ai_audit: { stubbed: true },
+        ai_evidence: { source_refs: [] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.status).toBe("partial");
+    expect(brief.supportability).toContainEqual({
+      label: "Advisor Brief",
+      value: "Partial",
+      tone: "warn",
+    });
+  });
+
+  it("normalizes gateway advisor-brief supportability to partial when the backend status is partial", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-partial-brief",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "partial",
+        summary: "Partial advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Generating", tone: "warn" }],
+        ai_audit: { stubbed: true },
+        ai_evidence: { source_refs: [] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.status).toBe("partial");
+    expect(brief.supportability).toContainEqual({
+      label: "Advisor Brief",
+      value: "Partial",
+      tone: "warn",
+    });
+  });
+
+  it("normalizes gateway advisor-brief supportability to partial when content is present but the backend status is partial", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-partial-brief",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "partial",
+        summary: "Partial advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Generating", tone: "warn" }],
+        ai_audit: { stubbed: true },
+        ai_evidence: { source_refs: [] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.status).toBe("partial");
+    expect(brief.supportability).toContainEqual({
+      label: "Advisor Brief",
+      value: "Partial",
+      tone: "warn",
+    });
+    expect(brief.reviewNotes).toEqual([]);
+  });
+
+  it("falls back to gateway provenance when advisor brief source refs are empty", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-empty-source-refs",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "partial",
+        summary: "Partial advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Generating", tone: "warn" }],
+        ai_audit: { stubbed: true, source_refs: [] },
+        ai_evidence: { source_refs: [] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.audit.sourceRefs).toEqual([
+      "lotus-gateway:workbench:PF_1001:performance-advisor-brief:YTD",
+    ]);
   });
 });

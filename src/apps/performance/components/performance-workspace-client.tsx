@@ -14,9 +14,9 @@ import type {
 } from "@/features/workbench/types";
 
 import { buildPerformanceHref } from "../navigation";
+import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import PerformanceWorkspaceView from "./performance-workspace-view";
-import type { PerformanceWorkspaceMode } from "./performance-workspace-mode-switch";
 
 type PerformanceWorkspaceClientProps = {
   initialSummary: WorkbenchPerformanceWorkspaceSummary | null;

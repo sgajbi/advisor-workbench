@@ -1,5 +1,5 @@
 import type { PerformanceAdvisorBriefEvidenceRef } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
 
 export default function LotusEvidenceChip({
   evidenceRef,

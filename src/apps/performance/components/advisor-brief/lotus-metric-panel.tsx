@@ -1,5 +1,6 @@
 import type { PerformanceAdvisorBriefMetric } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
+import PerformanceSectionHeading from "../performance-section-heading";
 
 export default function LotusMetricPanel({
   metrics,
@@ -10,12 +11,11 @@ export default function LotusMetricPanel({
 }) {
   return (
     <section className="lotus-metric-panel performance-advisor-brief-section" aria-label="Source Metrics">
-      <div className="performance-advisor-brief-section-heading">
-        <h3>Source Metrics</h3>
-        <p className="performance-advisor-brief-section-note">
-          Current performance measures supporting the brief.
-        </p>
-      </div>
+      <PerformanceSectionHeading
+        className="performance-advisor-brief-section-heading"
+        title="Key Source Metrics"
+        description="Current performance measures supporting the brief and drill-down decisions."
+      />
       <div className="performance-advisor-brief-metric-panel">
         {metrics.map((metric) => (
           <button
