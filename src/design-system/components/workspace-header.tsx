@@ -16,6 +16,7 @@ export default function WorkspaceHeader({
   return (
     <WorkbenchPageHeader
       title={title}
+      titleVariant="workspaceTitle"
       actions={meta ? <div className="workspace-header-meta">{meta}</div> : undefined}
       className={cx("workspace-header", className)}
     />

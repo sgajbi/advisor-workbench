@@ -11,7 +11,13 @@ export default function FieldLabel({
 }) {
   return (
     <label
-      className={cx("ui-text", "ui-text-label", "workbench-field-label", className)}
+      className={cx(
+        "ui-text",
+        "ui-text-label",
+        "ui-text-micro-label",
+        "workbench-field-label",
+        className
+      )}
       {...(htmlFor ? { htmlFor } : {})}
     >
       {children}

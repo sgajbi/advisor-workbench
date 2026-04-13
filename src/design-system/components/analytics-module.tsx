@@ -61,9 +61,9 @@ export default function AnalyticsModule({
               minWidth: 0,
             }}
           >
-            <Box sx={{ minWidth: 0, flex: "1 1 auto" }} className="workbench-summary-card-header">
+              <Box sx={{ minWidth: 0, flex: "1 1 auto" }} className="workbench-summary-card-header">
               {title ? (
-                <Text variant="cardTitle" className="workbench-summary-card-title">
+                <Text variant="panelTitle" className="workbench-summary-card-title">
                   {title}
                 </Text>
               ) : null}
@@ -71,7 +71,7 @@ export default function AnalyticsModule({
             {actions ? <Box sx={{ flexShrink: 0 }}>{actions}</Box> : null}
           </Box>
           {subtitle ? (
-            <Text variant="metadata" as="div" className="workbench-summary-card-subtitle">
+            <Text variant="bodySmall" as="div" className="workbench-summary-card-subtitle">
               {subtitle}
             </Text>
           ) : null}

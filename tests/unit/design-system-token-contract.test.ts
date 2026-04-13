@@ -38,11 +38,15 @@ describe("design-system token contract", () => {
       zIndex: expect.any(Object),
     });
     expect(lotusThemeTokens.typography.variant).toMatchObject({
+      workspaceTitle: expect.any(Object),
       pageTitle: expect.any(Object),
       sectionTitle: expect.any(Object),
-      cardTitle: expect.any(Object),
-      label: expect.any(Object),
-      metricValue: expect.any(Object),
+      panelTitle: expect.any(Object),
+      bodySmall: expect.any(Object),
+      dataLabel: expect.any(Object),
+      tableHeader: expect.any(Object),
+      metricValueL: expect.any(Object),
+      badgeLabel: expect.any(Object),
     });
   });
 
@@ -65,6 +69,7 @@ describe("design-system token contract", () => {
     expect(cssVariables["--danger"]).toBe(lotusThemeTokens.color.semantic.danger);
     expect(cssVariables["--space-4"]).toBe(lotusThemeTokens.spacing.step4);
     expect(cssVariables["--space-6"]).toBe(lotusThemeTokens.spacing.step6);
+    expect(cssVariables["--font-ui"]).toBe(lotusThemeTokens.typography.fontFamily.ui);
     expect(cssVariables["--text-sm"]).toBe(lotusThemeTokens.typography.size.textSm);
     expect(cssVariables["--text-3xl"]).toBe(lotusThemeTokens.typography.size.text3xl);
     expect(cssVariables["--tracking-label"]).toBe(lotusThemeTokens.typography.tracking.label);
