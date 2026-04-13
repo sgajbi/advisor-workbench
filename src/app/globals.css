@@ -9366,38 +9366,38 @@ a:hover {
 
 .performance-analysis-control-bar {
   display: grid;
-  grid-template-columns:
-    minmax(23rem, 1.46fr)
-    minmax(14rem, 0.9fr)
-    minmax(13rem, 0.8fr);
-  gap: 0.3rem;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1.18fr) minmax(18rem, 0.82fr);
+  gap: 0.26rem 0.38rem;
+  align-items: start;
 }
 
 .performance-analysis-control-cluster {
   display: grid;
-  gap: 0.24rem;
-  padding: 0.26rem 0.3rem;
-  border: 1px solid rgba(32, 44, 61, 0.05);
+  gap: 0.18rem;
+  padding: 0.2rem 0.24rem;
+  border: 1px solid rgba(32, 44, 61, 0.04);
   border-radius: 10px;
-  background: rgba(250, 251, 253, 0.42);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  background: rgba(250, 251, 253, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .performance-analysis-control-cluster-selection {
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.66fr) minmax(0, 0.9fr);
   align-content: start;
 }
 
 .performance-analysis-control-slot-horizon {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 
 .performance-analysis-control-cluster-comparison {
-  grid-template-rows: repeat(2, minmax(0, auto));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
 }
 
 .performance-analysis-control-cluster-window {
+  grid-column: 1 / 2;
   align-content: start;
 }
 
@@ -9417,12 +9417,12 @@ a:hover {
 }
 
 .performance-analysis-control-slot .MuiInputBase-input {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 650;
 }
 
 .performance-analysis-control-slot .workbench-segmented-control {
-  min-height: 32px;
+  min-height: 30px;
 }
 
 .performance-analysis-control-slot .workbench-segmented-control {
@@ -9430,30 +9430,30 @@ a:hover {
 }
 
 .performance-analysis-control-slot .workbench-segmented-control-button {
-  min-height: 26px;
-  padding: 0.16rem 0.4rem;
-  font-size: 0.7rem;
+  min-height: 25px;
+  padding: 0.12rem 0.34rem;
+  font-size: 0.68rem;
 }
 
 .performance-analysis-date-row {
   display: grid;
-  grid-template-columns: minmax(14.75rem, 1fr) auto;
-  gap: 0.28rem;
+  grid-template-columns: minmax(13.5rem, 1fr) auto;
+  gap: 0.24rem;
   align-items: stretch;
 }
 
 .performance-analysis-date-inputs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(7.3rem, 1fr));
-  gap: 0.28rem;
+  grid-template-columns: repeat(2, minmax(6.65rem, 1fr));
+  gap: 0.24rem;
   width: 100%;
   max-width: 100%;
   padding: 0;
 }
 
 .performance-analysis-apply-button.action-button {
-  min-height: 32px;
-  padding-inline: 0.68rem;
+  min-height: 30px;
+  padding-inline: 0.62rem;
   white-space: nowrap;
   border-radius: 8px;
 }

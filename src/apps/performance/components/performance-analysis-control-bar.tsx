@@ -96,7 +96,7 @@ export default function PerformanceAnalysisControlBar({
             </Text>
           </div>
           <div className="performance-analysis-control-slot performance-analysis-control-slot-view">
-            <FieldLabel>Return View</FieldLabel>
+            <FieldLabel>View</FieldLabel>
             <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
               {chartViewMode}
             </Text>
@@ -104,7 +104,7 @@ export default function PerformanceAnalysisControlBar({
         </div>
         <div className="performance-analysis-control-cluster performance-analysis-control-cluster-window">
           <div className="performance-analysis-control-slot performance-analysis-control-slot-dates">
-            <FieldLabel>Period Range</FieldLabel>
+            <FieldLabel>Window</FieldLabel>
             <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
               {fromDate} to {toDate}
             </Text>
@@ -172,7 +172,7 @@ export default function PerformanceAnalysisControlBar({
         </div>
 
         <div className="performance-analysis-control-slot performance-analysis-control-slot-view">
-          <FieldLabel>Return View</FieldLabel>
+          <FieldLabel>View</FieldLabel>
           <WorkbenchSegmentedControl
             ariaLabel="Return view"
             className="performance-analysis-view-control"
@@ -199,7 +199,7 @@ export default function PerformanceAnalysisControlBar({
           className="performance-analysis-control-slot performance-analysis-control-slot-dates"
           onSubmit={onApplyExplicitDates}
         >
-          <FieldLabel>Period Range</FieldLabel>
+          <FieldLabel>Window</FieldLabel>
           <div className="performance-analysis-date-row">
             <div className="performance-analysis-date-inputs">
               <TextField
