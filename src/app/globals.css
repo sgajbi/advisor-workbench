@@ -5556,68 +5556,69 @@ a:hover {
 .performance-trust-strip-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.4375rem;
+  gap: 0.3rem;
 }
 
 .performance-trust-strip {
-  padding-top: 0.72rem;
-  padding-bottom: 0.72rem;
-  border-color: rgba(23, 32, 43, 0.06);
-  background: linear-gradient(180deg, rgba(251, 252, 253, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%);
+  padding-top: 0.52rem;
+  padding-bottom: 0.5rem;
+  border-color: rgba(23, 32, 43, 0.05);
+  background: rgba(250, 252, 253, 0.86);
 }
 
 .performance-lotus-trust-strip {
   position: relative;
-  padding-left: 1rem;
-  padding-top: 0.8rem;
-  padding-bottom: 0.74rem;
-  background: linear-gradient(180deg, rgba(250, 252, 253, 0.98) 0%, rgba(244, 247, 250, 0.98) 100%);
+  padding-left: 0.78rem;
+  padding-top: 0.58rem;
+  padding-bottom: 0.54rem;
+  background: rgba(248, 250, 252, 0.94);
 }
 
 .performance-lotus-trust-strip::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 3px;
-  background: linear-gradient(180deg, rgba(87, 121, 157, 0.82), rgba(169, 183, 199, 0.22));
+  width: 2px;
+  background: linear-gradient(180deg, rgba(87, 121, 157, 0.58), rgba(169, 183, 199, 0.16));
 }
 
 .performance-trust-item {
   display: grid;
-  gap: 0.22rem;
+  gap: 0.14rem;
   min-width: 0;
-  padding: 0.0625rem 0;
+  padding: 0.02rem 0;
 }
 
 .performance-trust-item-label {
   font-size: var(--workbench-analytic-label-size);
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.15;
   letter-spacing: var(--workbench-analytic-label-tracking);
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .performance-trust-item-body {
-  display: grid;
-  gap: 0.22rem;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.18rem 0.34rem;
+  align-items: center;
 }
 
 .performance-trust-item-chip {
   justify-self: start;
-  border-radius: 6px;
-  padding: 0.1875rem 0.4375rem;
-  font-size: var(--workbench-analytic-chip-size);
-  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.125rem 0.38rem;
+  font-size: 0.67rem;
+  font-weight: 760;
   letter-spacing: 0.01em;
 }
 
 .performance-trust-item-support {
-  font-size: var(--workbench-analytic-support-size);
-  line-height: 1.34;
-  color: var(--text-muted);
-  max-width: 26ch;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: #6a7688;
+  max-width: 22ch;
 }
 
 .performance-trust-item-chip.semantic-badge-success {
