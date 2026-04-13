@@ -26,7 +26,7 @@ export default function PerformanceReturnPathChartStage({
 }: PerformanceReturnPathChartStageProps) {
   return (
     <div
-      className="performance-chart-library-frame workbench-summary-visual"
+      className="performance-chart-library-frame performance-return-path-chart-stage workbench-summary-visual"
       role="img"
       aria-label={`${title} chart`}
       style={{ position: "relative" }}

@@ -16,7 +16,10 @@ export default function PerformanceReturnPathSummary({
   observationCadence,
 }: PerformanceReturnPathSummaryProps) {
   return (
-    <section className="performance-chart-readout-strip" aria-label="Return decision readout">
+    <section
+      className="performance-chart-readout-strip performance-return-path-summary"
+      aria-label="Return decision readout"
+    >
       <div className="performance-chart-readout-primary">
         <span className="performance-chart-readout-eyebrow">Active</span>
         <strong>{activeReturn}</strong>
