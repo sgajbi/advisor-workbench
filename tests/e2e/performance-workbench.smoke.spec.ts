@@ -199,10 +199,10 @@ test.describe('Performance workbench smoke', () => {
     const topDetractorsHeading = page.getByText('Top Detractors', { exact: true });
     const topContributorsCard = page
       .getByText('Top Contributors', { exact: true })
-      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
+      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]');
     const topDetractorsCard = page
       .getByText('Top Detractors', { exact: true })
-      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
+      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]');
     const [contributorsHeadingBox, detractorsHeadingBox, contributorsBox, detractorsBox] = await Promise.all([
       topContributorsHeading.boundingBox(),
       topDetractorsHeading.boundingBox(),

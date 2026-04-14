@@ -12415,6 +12415,20 @@ a:hover {
   .portfolio-side {
     max-width: none;
   }
+
+  .performance-contributors-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-contributor-bar-row {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+    align-items: start;
+  }
+
+  .performance-contributor-bar-measure {
+    justify-items: start;
+  }
 }
 
 @media (max-width: 768px) {
@@ -12565,10 +12579,6 @@ a:hover {
   }
 
   .performance-contributors-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .performance-contributors-compare-grid {
     grid-template-columns: 1fr;
   }
 
@@ -12905,10 +12915,6 @@ a:hover {
 
   .performance-horizon-matrix-support {
     grid-template-columns: auto auto;
-  }
-
-  .performance-contributor-bar-row {
-    grid-template-columns: 1fr;
   }
 
   .performance-chart-chip {

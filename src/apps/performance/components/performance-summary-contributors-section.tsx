@@ -32,108 +32,63 @@ export default function PerformanceSummaryContributorsSection({
     bottomContributors,
     isDetailsPending,
   });
+  let content: React.ReactNode;
 
-  return (
-    <PerformanceSummaryDriverModule
-      title={presentation.frame.title}
-      subtitle={presentation.frame.subtitle}
-    >
-      {presentation.mode === "supported" ? (
-        <div className="performance-contributors-panel">
-          <div className="performance-contributors-compare-grid">
-            <section className="performance-contributors-ranked-card">
+  if (presentation.mode === "supported") {
+    const rankedContributorGroups = [
+      {
+        key: "contributors",
+        title: "Top Contributors",
+        ariaLabel: "Top Contributors impact bars",
+        items: presentation.positiveRankedItems,
+        emptyBody: "No positive position contributors are exposed for the selected period.",
+      },
+      {
+        key: "detractors",
+        title: "Top Detractors",
+        ariaLabel: "Top Detractors impact bars",
+        items: presentation.negativeRankedItems,
+        emptyBody: "No detracting positions are exposed for the selected period.",
+      },
+    ] as const;
+
+    content = (
+      <div className="performance-contributors-panel">
+        <div className="performance-contributors-compare-grid">
+          {rankedContributorGroups.map((group) => (
+            <section key={group.key} className="performance-contributors-ranked-card">
               <PerformanceContributorBarList
-                title="Top Contributors"
-                ariaLabel="Top Contributors impact bars"
-                items={presentation.positiveRankedItems}
-                emptyBody="No positive position contributors are exposed for the selected period."
+                title={group.title}
+                ariaLabel={group.ariaLabel}
+                items={group.items}
+                emptyBody={group.emptyBody}
               />
             </section>
-            <section className="performance-contributors-ranked-card">
-              <PerformanceContributorBarList
-                title="Top Detractors"
-                ariaLabel="Top Detractors impact bars"
-                items={presentation.negativeRankedItems}
-                emptyBody="No detracting positions are exposed for the selected period."
-              />
-            </section>
-          </div>
-          <PerformanceModuleDisclosure
-            className="performance-contributors-table-disclosure"
-            summaryClassName="performance-contributors-table-disclosure-summary"
-            titleClassName="performance-contributors-table-disclosure-title"
-            title="Instrument detail"
-          >
-            <AnalyticsTable
-              ariaLabel="Contributor instrument detail table"
-              className="performance-contributors-table performance-chart-observation-table"
-              density="compact"
-              variant="observation"
-              columns={presentation.rankedTableModel.columns}
-              rows={presentation.rankedTableModel.rows}
-            />
-          </PerformanceModuleDisclosure>
+          ))}
         </div>
-      ) : presentation.mode === "partial" ? (
-        <div className="performance-contributors-panel">
-          <PerformanceAnalyticalUnavailableState
-            ariaLabel="Contributor ranking partial state"
-            status="partial"
-            kicker={null}
-            title={presentation.noticeTitle}
-            body={presentation.noticeBody}
-            hint={presentation.hint}
-            contextItems={[
-              { label: "Period", value: workspace.period },
-              {
-                label: "Benchmark",
-                value: workspace.benchmark_code ?? "Not assigned",
-              },
-              {
-                label: "Scope",
-                value: workspace.contribution?.levels?.[0]?.name ?? "Aggregate contribution",
-              },
-            ]}
-            availableItems={[
-              {
-                label: "Available now",
-                value: "Aggregate contribution totals remain available below.",
-              },
-            ]}
+        <PerformanceModuleDisclosure
+          className="performance-contributors-table-disclosure"
+          summaryClassName="performance-contributors-table-disclosure-summary"
+          titleClassName="performance-contributors-table-disclosure-title"
+          title="Instrument detail"
+        >
+          <AnalyticsTable
+            ariaLabel="Contributor instrument detail table"
+            className="performance-contributors-table performance-chart-observation-table"
+            density="compact"
+            variant="observation"
+            columns={presentation.rankedTableModel.columns}
+            rows={presentation.rankedTableModel.rows}
           />
-          {workspace.contribution?.levels?.length ? (
-            <PerformanceContributionContextNote contribution={workspace.contribution} />
-          ) : null}
-          {workspace.contribution?.levels?.[0] ? (
-            <PerformanceContributionAggregateTable
-              contribution={workspace.contribution}
-              level={workspace.contribution.levels[0]}
-              ariaLabel="Aggregate contributor summary"
-              className="performance-contributors-table performance-chart-observation-table"
-            />
-          ) : (
-            <AnalyticsTable
-              ariaLabel="Aggregate contributor summary"
-              className="performance-contributors-table performance-chart-observation-table"
-              density="compact"
-              variant="observation"
-              columns={presentation.tableModel.columns}
-              rows={presentation.tableModel.rows}
-              footer={presentation.tableModel.footer}
-            />
-          )}
-        </div>
-      ) : presentation.mode === "loading" ? (
-        <WorkbenchLoadingState
-          className="performance-contributors-loading-state"
-          title="Loading performance drivers"
-          message={presentation.body}
-          rows={4}
-        />
-      ) : (
+        </PerformanceModuleDisclosure>
+      </div>
+    );
+  } else if (presentation.mode === "partial") {
+    content = (
+      <div className="performance-contributors-panel">
         <PerformanceAnalyticalUnavailableState
-          ariaLabel="Contributor ranking unavailable state"
-          status={capabilities.contributionRanking.state === "partial" ? "partial" : "unavailable"}
+          ariaLabel="Contributor ranking partial state"
+          status="partial"
           kicker={null}
           title={presentation.noticeTitle}
           body={presentation.noticeBody}
@@ -144,16 +99,83 @@ export default function PerformanceSummaryContributorsSection({
               label: "Benchmark",
               value: workspace.benchmark_code ?? "Not assigned",
             },
-            { label: "Scope", value: "Position-level contribution" },
+            {
+              label: "Scope",
+              value: workspace.contribution?.levels?.[0]?.name ?? "Aggregate contribution",
+            },
           ]}
           availableItems={[
             {
               label: "Available now",
-              value: "Return-path context remains available above this module.",
+              value: "Aggregate contribution totals remain available below.",
             },
           ]}
         />
-      )}
+        {workspace.contribution?.levels?.length ? (
+          <PerformanceContributionContextNote contribution={workspace.contribution} />
+        ) : null}
+        {workspace.contribution?.levels?.[0] ? (
+          <PerformanceContributionAggregateTable
+            contribution={workspace.contribution}
+            level={workspace.contribution.levels[0]}
+            ariaLabel="Aggregate contributor summary"
+            className="performance-contributors-table performance-chart-observation-table"
+          />
+        ) : (
+          <AnalyticsTable
+            ariaLabel="Aggregate contributor summary"
+            className="performance-contributors-table performance-chart-observation-table"
+            density="compact"
+            variant="observation"
+            columns={presentation.tableModel.columns}
+            rows={presentation.tableModel.rows}
+            footer={presentation.tableModel.footer}
+          />
+        )}
+      </div>
+    );
+  } else if (presentation.mode === "loading") {
+    content = (
+      <WorkbenchLoadingState
+        className="performance-contributors-loading-state"
+        title="Loading performance drivers"
+        message={presentation.body}
+        rows={4}
+      />
+    );
+  } else {
+    content = (
+      <PerformanceAnalyticalUnavailableState
+        ariaLabel="Contributor ranking unavailable state"
+        status={capabilities.contributionRanking.state === "partial" ? "partial" : "unavailable"}
+        kicker={null}
+        title={presentation.noticeTitle}
+        body={presentation.noticeBody}
+        hint={presentation.hint}
+        contextItems={[
+          { label: "Period", value: workspace.period },
+          {
+            label: "Benchmark",
+            value: workspace.benchmark_code ?? "Not assigned",
+          },
+          { label: "Scope", value: "Position-level contribution" },
+        ]}
+        availableItems={[
+          {
+            label: "Available now",
+            value: "Return-path context remains available above this module.",
+          },
+        ]}
+      />
+    );
+  }
+
+  return (
+    <PerformanceSummaryDriverModule
+      title={presentation.frame.title}
+      subtitle={presentation.frame.subtitle}
+    >
+      {content}
     </PerformanceSummaryDriverModule>
   );
 }
