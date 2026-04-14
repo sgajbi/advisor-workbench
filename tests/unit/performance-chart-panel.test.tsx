@@ -121,6 +121,7 @@ describe("PerformanceChartPanel", () => {
       type: "dashed",
     });
     expect(activeCumulativeSeries?.endLabel).toMatchObject({
+      distance: 10,
       color: "#4f647f",
       backgroundColor: "rgba(141, 160, 186, 0.2)",
       borderColor: "rgba(141, 160, 186, 0.32)",
@@ -133,6 +134,7 @@ describe("PerformanceChartPanel", () => {
       type: "dashed",
     });
     expect(benchmarkReturnSeries?.endLabel).toMatchObject({
+      distance: 10,
       color: "#fef7e7",
       backgroundColor: "rgba(195, 160, 86, 0.96)",
       borderColor: "rgba(195, 160, 86, 0.24)",
@@ -152,6 +154,7 @@ describe("PerformanceChartPanel", () => {
     });
     expect(portfolioReturnSeries?.endLabel).toMatchObject({
       show: true,
+      distance: 10,
       color: "#f8fafc",
       backgroundColor: "rgba(20, 43, 71, 0.96)",
       borderColor: "rgba(20, 43, 71, 0.18)",
@@ -315,7 +318,7 @@ describe("PerformanceChartPanel", () => {
     });
     expect(lastChartOption?.grid).toMatchObject({
       left: 72,
-      right: 126,
+      right: 116,
       top: 20,
       bottom: 44,
       containLabel: true,

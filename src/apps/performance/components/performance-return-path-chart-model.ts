@@ -225,7 +225,7 @@ export function buildTerminalValueLabelStyle({
 }) {
   return {
     show: true,
-    distance: 12,
+    distance: 10,
     color,
     backgroundColor,
     borderColor,
@@ -376,7 +376,7 @@ export function buildReturnPathChartOption({
     ],
     grid: {
       left: 72,
-      right: 126,
+      right: 116,
       top: 20,
       bottom: 44,
       containLabel: true,
