@@ -10853,6 +10853,11 @@ a:hover {
   align-content: start;
 }
 
+.performance-contributors-loading-state {
+  min-height: 18rem;
+  align-content: start;
+}
+
 .performance-return-path-chart-shell {
   display: grid;
   grid-template-columns: 1.22rem minmax(0, 1fr);

@@ -1,5 +1,6 @@
 import {
   AnalyticsTable,
+  WorkbenchLoadingState,
 } from "@/design-system";
 
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
@@ -123,7 +124,12 @@ export default function PerformanceSummaryContributorsSection({
           )}
         </div>
       ) : presentation.mode === "loading" ? (
-        <p className="muted">{presentation.body}</p>
+        <WorkbenchLoadingState
+          className="performance-contributors-loading-state"
+          title="Loading performance drivers"
+          message={presentation.body}
+          rows={4}
+        />
       ) : (
         <PerformanceAnalyticalUnavailableState
           ariaLabel="Contributor ranking unavailable state"

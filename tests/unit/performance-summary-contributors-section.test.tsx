@@ -167,4 +167,29 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(within(aggregateTable).getAllByText("5.42%")).toHaveLength(2);
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
+
+  it("renders a structured loading state while contributor details are still resolving", () => {
+    render(
+      <PerformanceSummaryContributorsSection
+        {...buildProps({
+          isDetailsPending: true,
+          capabilities: {
+            ...supportedCapabilities,
+            contributionRanking: {
+              state: "unavailable",
+              reason: "Contribution ranking is still loading.",
+            },
+          },
+          positivePositionContributors: [],
+          negativePositionContributors: [],
+          topContributors: [],
+          bottomContributors: [],
+        })}
+      />
+    );
+
+    const loadingState = screen.getByRole("status");
+    expect(loadingState).toHaveTextContent("Loading performance drivers");
+    expect(loadingState).toHaveTextContent("Loading contribution ranking.");
+  });
 });
