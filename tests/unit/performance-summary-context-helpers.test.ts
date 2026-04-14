@@ -60,6 +60,18 @@ describe("performance summary context helpers", () => {
         unavailable: false,
       },
       {
+        key: "flow-adjusted-mv",
+        label: "Flow-Adjusted MV",
+        value: "$1,208,000",
+        unavailable: false,
+      },
+      {
+        key: "ending-mv",
+        label: "Ending MV",
+        value: "$1,250,000",
+        unavailable: false,
+      },
+      {
         key: "opening-mv",
         label: "Opening MV",
         value: "$1,200,000",
@@ -81,18 +93,6 @@ describe("performance summary context helpers", () => {
         key: "closing-cash",
         label: "Closing Cash",
         value: "-$8,000",
-        unavailable: false,
-      },
-      {
-        key: "flow-adjusted-mv",
-        label: "Flow-Adjusted MV",
-        value: "$1,208,000",
-        unavailable: false,
-      },
-      {
-        key: "ending-mv",
-        label: "Ending MV",
-        value: "$1,250,000",
         unavailable: false,
       },
     ]);
