@@ -304,9 +304,34 @@ export default function PerformanceChartPanel({
     });
   }
 
-  const outcomeItems = returnPathPresentation.metrics.filter(
-    (metric) =>
-      !["portfolio-return", "benchmark-return", "active-return"].includes(metric.key)
+  const moneyWeightedMetric = returnPathPresentation.metrics.find((metric) => metric.key === "mwrr");
+  const summaryItems = [
+    {
+      key: "active-return",
+      label: "Active Return",
+      value: returnPathPresentation.activeReturnValue,
+    },
+    {
+      key: "money-weighted-return",
+      label: "Money-Weighted Return",
+      value: moneyWeightedMetric?.value?.toString() ?? "Unavailable",
+      definition: moneyWeightedMetric?.definition,
+    },
+    {
+      key: "portfolio-return",
+      label: "Portfolio Return",
+      value: returnPathPresentation.portfolioReturnValue,
+    },
+    {
+      key: "benchmark-return",
+      label: "Benchmark Return",
+      value: returnPathPresentation.benchmarkReturnValue,
+    },
+  ];
+  const outcomeItems = returnPathPresentation.metrics.filter((metric) =>
+    hasRenderableReturnPath
+      ? !["portfolio-return", "benchmark-return", "active-return", "mwrr"].includes(metric.key)
+      : !["portfolio-return", "benchmark-return", "active-return"].includes(metric.key)
   );
   const outcomeStrip =
     capabilities.summaryKpis.state !== "unavailable" ? (
@@ -325,11 +350,7 @@ export default function PerformanceChartPanel({
     hasRenderableReturnPath || outcomeStrip ? (
       <div className="performance-return-path-top-stack">
         {hasRenderableReturnPath ? (
-          <PerformanceReturnPathSummary
-            portfolioReturn={returnPathPresentation.portfolioReturnValue}
-            benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
-            activeReturn={returnPathPresentation.activeReturnValue}
-          />
+          <PerformanceReturnPathSummary items={summaryItems} />
         ) : null}
         {outcomeStrip ? (
           <div className="performance-return-path-supporting-strip">{outcomeStrip}</div>

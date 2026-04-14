@@ -62,6 +62,7 @@ type PerformanceSummaryScenario = {
   name: string;
   scenario: PerformancePresentationScenario;
   executiveExpectations?: string[];
+  readoutExpectations?: string[];
   deferredExpectations?: string[];
   contextExpectations?: string[];
   horizonExpectations?: string[];
@@ -274,9 +275,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(chartSummaryBand as HTMLElement).queryByText("Portfolio Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Money-Weighted Return")).not.toBeInTheDocument();
     const returnDecisionReadout = screen.getByLabelText("Return decision readout");
     expect(returnDecisionReadout).toHaveTextContent(
-      compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
+      compactPattern(
+        "Active Return 0.52% Money-Weighted Return 5.12% Portfolio Return 5.42% Benchmark Return 4.91%"
+      )
     );
     expect(
       Boolean(
@@ -308,7 +312,6 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
     const executiveStrip = screen.getByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening Cash")).toBeInTheDocument();
@@ -316,15 +319,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
-    expect(executiveStrip).toHaveTextContent(
-      compactPattern("Money-Weighted Return 5.12%")
-    );
     expect(executiveStrip).toHaveTextContent(compactPattern("Opening Cash $50,000"));
     expect(executiveStrip).toHaveTextContent(compactPattern("Closing Cash -$8,000"));
     expect(executiveStrip).toHaveTextContent(compactPattern("Ending MV $1,250,000"));
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
+      compactPattern(
+        "Active Return 0.52% Money-Weighted Return 5.12% Portfolio Return 5.42% Benchmark Return 4.91%"
+      )
     );
     expect(screen.getAllByLabelText("Status Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("Horizon Comparison")).length).toBe(1);
@@ -381,10 +383,10 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     const executiveStrip = await screen.findByLabelText("Executive return strip");
+    const returnDecisionReadout = await screen.findByLabelText("Return decision readout");
     await waitFor(() => {
-      expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
+      expect(within(returnDecisionReadout).getByText("Money-Weighted Return")).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
   });
@@ -1230,10 +1232,8 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "assigned benchmark with partial relative comparison",
       scenario: buildPartialBenchmarkPerformanceScenario(),
-      executiveExpectations: [
-        "Money-Weighted Return",
-        "Flow-Adjusted MV",
-      ],
+      executiveExpectations: ["Flow-Adjusted MV"],
+      readoutExpectations: ["Money-Weighted Return"],
       horizonExpectations: [
         "Benchmark Global Balanced 60/40",
       ],
@@ -1242,10 +1242,8 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "aggregate-only contribution ranking",
       scenario: buildAggregateContributionPerformanceScenario(),
-      executiveExpectations: [
-        "Money-Weighted Return",
-        "Flow-Adjusted MV",
-      ],
+      executiveExpectations: ["Flow-Adjusted MV"],
+      readoutExpectations: ["Money-Weighted Return"],
       deferredExpectations: ["Contributor ranking is partial"],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["AAPL"],
@@ -1253,10 +1251,8 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "combined benchmark, attribution, and contributor support gaps",
       scenario: buildCombinedPartialPerformanceScenario(),
-      executiveExpectations: [
-        "Money-Weighted Return",
-        "Flow-Adjusted MV",
-      ],
+      executiveExpectations: ["Flow-Adjusted MV"],
+      readoutExpectations: ["Money-Weighted Return"],
       deferredExpectations: ["Contributor ranking is partial"],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
@@ -1266,6 +1262,7 @@ describe("PerformanceAnalyticsPage", () => {
     async ({
       scenario,
       executiveExpectations = [],
+      readoutExpectations = [],
       deferredExpectations = [],
       horizonExpectations = [],
       absentTexts = [],
@@ -1288,6 +1285,13 @@ describe("PerformanceAnalyticsPage", () => {
         expect(executiveStrip).not.toBeInTheDocument();
       }
       expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
+
+      if (readoutExpectations.length) {
+        const returnDecisionReadout = await screen.findByLabelText("Return decision readout");
+        for (const text of readoutExpectations) {
+          expect(within(returnDecisionReadout).queryAllByText(text).length).toBeGreaterThan(0);
+        }
+      }
 
       for (const text of deferredExpectations) {
         expect(await screen.findByText(text)).toBeInTheDocument();

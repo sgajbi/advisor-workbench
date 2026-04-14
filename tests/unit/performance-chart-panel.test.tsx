@@ -241,7 +241,6 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Basis" })).toBeInTheDocument();
     const executiveStrip = screen.getByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening Cash")).toBeInTheDocument();
@@ -252,8 +251,6 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Money-Weighted Return");
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("5.12%");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening MV");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,200,000");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Net Flow");
@@ -301,7 +298,9 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Active Return 0.80% Portfolio Return 3.30% Benchmark Return 2.50%")
+      compactPattern(
+        "Active Return 0.80% Money-Weighted Return 5.12% Portfolio Return 3.30% Benchmark Return 2.50%"
+      )
     );
     expect(screen.queryByLabelText("Return series context")).not.toBeInTheDocument();
     expect(lastChartOption?.tooltip).toMatchObject({
@@ -461,15 +460,15 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern("Money-Weighted Return Unavailable")
     );
     expect(
-      within(screen.getByLabelText("Executive return strip")).getByText(
+      within(screen.getByLabelText("Return decision readout")).getByText(
         "Money-Weighted Return"
       )
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Executive return strip")).not.toHaveTextContent("XIRR");
+    expect(screen.getByLabelText("Return decision readout")).not.toHaveTextContent("XIRR");
   });
 
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
@@ -727,6 +726,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("5.42%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("4.91%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("0.52%");
+    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("5.12%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("3.30%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
@@ -735,7 +735,7 @@ describe("PerformanceChartPanel", () => {
   it("exposes metric definitions through executive strip tooltips instead of inline copy", async () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
-    fireEvent.mouseOver(within(screen.getByLabelText("Executive return strip")).getByText("Money-Weighted Return"));
+    fireEvent.mouseOver(within(screen.getByLabelText("Return decision readout")).getByText("Money-Weighted Return"));
 
     expect(
       await screen.findByText(
