@@ -251,7 +251,6 @@ export default function PerformanceChartPanel({
     <WorkbenchChartShell
       id={id}
       title={title}
-      subtitle="Cumulative return path, periodic observations, and benchmark-relative outcome for the selected reporting window."
       className="performance-chart-stage workbench-summary-panel"
       bodyClassName="performance-return-path-body"
       contextRow={

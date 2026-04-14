@@ -74,7 +74,6 @@ export default function PerformanceWorkspaceView({
   const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
   const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
   const workspaceTitle = modeDefinition.workspaceTitle;
-  const workspaceSubtitle = modeDefinition.workspaceSubtitle;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -177,11 +176,10 @@ export default function PerformanceWorkspaceView({
       }
       main={
         !workspace ? (
-          <WorkbenchPageFrame
+            <WorkbenchPageFrame
             className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
             title={workspaceTitle}
-            subtitle={workspaceSubtitle}
           >
             <WorkbenchSectionStack className="performance-page-sections">
               <Panel className="performance-page-unavailable-shell">
@@ -210,7 +208,6 @@ export default function PerformanceWorkspaceView({
             className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
             title={workspaceTitle}
-            subtitle={workspaceSubtitle}
             actions={
               <PerformanceWorkspaceModeSwitch
                 value={mode}

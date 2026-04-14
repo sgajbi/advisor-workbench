@@ -50,9 +50,6 @@ export default function PerformanceWorkspaceSidePanel({
           <Text variant="cardTitle" className="performance-side-card-title">
             Review Context
           </Text>
-          <Text variant="secondary" className="performance-card-subtitle">
-            Keep every panel anchored to the same benchmark, horizon, and basis.
-          </Text>
         </div>
         <dl className="performance-side-facts">
           <div className="performance-side-fact">

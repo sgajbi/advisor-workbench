@@ -10356,9 +10356,9 @@ a:hover {
 
 .performance-analysis-control-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(18rem, 0.82fr);
+  grid-template-columns: minmax(0, 1.28fr) minmax(22rem, 1fr) minmax(22rem, 1fr);
   gap: 0.26rem 0.38rem;
-  align-items: start;
+  align-items: end;
 }
 
 .performance-analysis-control-cluster {
@@ -10372,7 +10372,6 @@ a:hover {
 }
 
 .performance-analysis-control-cluster-selection {
-  grid-column: 1 / -1;
   grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.66fr) minmax(0, 0.9fr);
   align-content: start;
 }
@@ -10387,7 +10386,6 @@ a:hover {
 }
 
 .performance-analysis-control-cluster-window {
-  grid-column: 1 / 2;
   align-content: start;
 }
 

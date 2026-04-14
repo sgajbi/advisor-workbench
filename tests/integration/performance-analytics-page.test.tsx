@@ -118,9 +118,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-header")).toBeTruthy();
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
-    expect(document.querySelector(".workbench-page-header-subtitle")).toHaveTextContent(
-      "Benchmark-aware return, attribution, contribution, and evidence review."
-    );
+    expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByText("Quick Views")).toBeInTheDocument();
@@ -578,9 +576,7 @@ describe("PerformanceAnalyticsPage", () => {
       "true"
     );
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getByText("Benchmark-aware concentration, drawdown, rolling, and attribution review.")
-    ).toHaveClass("workbench-page-header-subtitle");
+    expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
