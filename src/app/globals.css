@@ -10695,13 +10695,13 @@ a:hover {
 .performance-chart-readout-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.62rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
 .performance-return-path-top-stack {
   display: grid;
-  gap: 0.72rem;
+  gap: 0.44rem;
 }
 
 .performance-chart-readout-eyebrow,
@@ -10717,7 +10717,7 @@ a:hover {
 .performance-chart-readout-primary {
   display: grid;
   gap: 0.16rem;
-  padding: 0.8rem 0.82rem 0.74rem;
+  padding: 0.68rem 0.76rem 0.64rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 252, 0.96));
@@ -10729,6 +10729,19 @@ a:hover {
   font-weight: var(--type-metric-l-weight);
   line-height: var(--type-metric-l-line-height);
   font-variant-numeric: var(--type-financial-numeric);
+}
+
+.performance-return-path-supporting-strip .performance-outcome-strip {
+  gap: 0.5rem;
+}
+
+.performance-return-path-supporting-strip .performance-outcome-strip-item {
+  min-height: 0;
+  padding: 0.72rem 0.8rem;
+}
+
+.performance-return-path-supporting-strip .workbench-summary-metric-value {
+  line-height: 1.18;
 }
 
 .performance-chart-legend {
