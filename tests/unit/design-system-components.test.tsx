@@ -113,6 +113,21 @@ describe("design-system components", () => {
     expect(screen.getByText("Summary")).toHaveClass("pill");
     expect(screen.getByText("Positions")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("12").closest("article")).toHaveClass(
+      "section-card",
+      "panel-shell",
+      "panel-shell-surface-primary",
+      "panel-shell-density-default"
+    );
+  });
+
+  it("renders panel surface and density variants through the shared shell contract", () => {
+    render(<Panel surface="secondary" density="compact">Secondary panel</Panel>);
+
+    expect(screen.getByText("Secondary panel").closest("article")).toHaveClass(
+      "panel-shell-surface-secondary",
+      "panel-shell-density-compact"
+    );
   });
 
   it("renders shared workspace layout primitives with structural classes", () => {
@@ -588,6 +603,7 @@ describe("design-system components", () => {
     render(
       <AnalyticsModule
         compact
+        surface="secondary"
         title="Shared Summary"
         subtitle="Shared subtitle"
         actions={<button type="button">Module Action</button>}
@@ -596,7 +612,11 @@ describe("design-system components", () => {
       </AnalyticsModule>
     );
 
-    expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact")).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".workbench-summary-card.workbench-summary-card-compact.panel-shell-surface-secondary.panel-shell-density-compact"
+      )
+    ).toBeTruthy();
     expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
     expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
     expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();

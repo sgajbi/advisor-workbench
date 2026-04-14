@@ -3,8 +3,13 @@ export const lotusThemeTokens = {
     surface: {
       canvas: "#f3f5f7",
       canvasAlt: "#edf1f4",
+      page: "#f3f5f7",
+      foundation: "#edf1f4",
       panel: "#ffffff",
       panelAlt: "#f7f9fb",
+      primary: "#ffffff",
+      secondary: "#f7f9fb",
+      tertiary: "#f1f5f8",
     },
     text: {
       primary: "#17202b",
@@ -12,6 +17,7 @@ export const lotusThemeTokens = {
     },
     border: {
       default: "#d9e0e7",
+      strong: "#c9d2dc",
       subtle: "1px solid #d9e0e7",
     },
     brand: {
@@ -237,16 +243,23 @@ export const lotusThemeTokens = {
     step4: "16px",
     step5: "20px",
     step6: "24px",
+    step7: "32px",
+    step8: "40px",
+    step9: "48px",
   },
   radius: {
     sm: 8,
     md: 12,
     lg: 16,
-    control: 12,
+    xl: 20,
+    control: 8,
+    tile: 12,
     panel: 16,
   },
   elevation: {
+    none: "none",
     subtle: "0 1px 2px rgba(17, 24, 39, 0.03)",
+    soft: "0 8px 24px rgba(17, 24, 39, 0.04)",
   },
   focus: {
     ring: "0 0 0 2px rgba(54, 95, 139, 0.32)",
@@ -255,11 +268,18 @@ export const lotusThemeTokens = {
     workbenchSectionGap: "16px",
     workbenchCardPadding: "24px",
     workbenchCardPaddingCompact: "20px",
+    workbenchPageEdgePadding: "24px",
+    workbenchPanelGap: "20px",
+    workbenchPanelGapMajor: "24px",
+    panelPaddingDefault: "24px",
+    panelPaddingCompact: "20px",
+    panelPaddingDense: "16px",
     workbenchPageFrameGap: "16px",
     workbenchPageFrameHeaderPadding: "4px",
     workbenchSummaryBodyGap: "12px",
     workbenchTitleGap: "4px",
     workbenchMetricStripGap: "8px",
+    workbenchMetricStripGapDense: "12px",
     workbenchRailWidth: "340px",
     workbenchRailCardPadding: "20px",
     workstationShellGap: "20px",
@@ -269,7 +289,14 @@ export const lotusThemeTokens = {
   control: {
     height: {
       touchTarget: "44px",
+      default: "40px",
       compactToolbar: "36px",
+    },
+  },
+  metricTile: {
+    height: {
+      default: "112px",
+      compact: "96px",
     },
   },
   table: {

@@ -12,6 +12,7 @@ export default function AnalyticsModule({
   className,
   compact = false,
   id,
+  surface = "primary",
 }: {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -20,6 +21,7 @@ export default function AnalyticsModule({
   className?: string;
   compact?: boolean;
   id?: string;
+  surface?: "primary" | "secondary" | "tertiary";
 }) {
   return (
     <Box
@@ -27,27 +29,27 @@ export default function AnalyticsModule({
       className={cx(
         "workbench-summary-card",
         compact && "workbench-summary-card-compact",
+        "panel-shell",
+        `panel-shell-surface-${surface}`,
+        compact ? "panel-shell-density-compact" : "panel-shell-density-default",
         className
       )}
       sx={{
         display: "grid",
         gap: compact
-          ? lotusThemeTokens.spacing.step3
+          ? lotusThemeTokens.layout.workbenchSummaryBodyGap
           : lotusThemeTokens.layout.workbenchSectionGap,
         minWidth: 0,
-        p: compact
-          ? {
-              xs: lotusThemeTokens.layout.workbenchCardPaddingCompact,
-              md: lotusThemeTokens.layout.workbenchCardPadding,
-            }
-          : {
-              xs: lotusThemeTokens.layout.workbenchCardPadding,
-              md: lotusThemeTokens.layout.workbenchCardPadding,
-            },
-        borderRadius: `${lotusThemeTokens.radius.md}px`,
-        border: lotusThemeTokens.color.border.subtle,
-        background: lotusThemeTokens.color.surface.panel,
-        boxShadow: "none",
+        p: compact ? lotusThemeTokens.layout.panelPaddingCompact : lotusThemeTokens.layout.panelPaddingDefault,
+        borderRadius: `${lotusThemeTokens.radius.panel}px`,
+        border: `1px solid ${lotusThemeTokens.color.border.default}`,
+        background:
+          surface === "secondary"
+            ? lotusThemeTokens.color.surface.secondary
+            : surface === "tertiary"
+              ? lotusThemeTokens.color.surface.tertiary
+              : lotusThemeTokens.color.surface.primary,
+        boxShadow: lotusThemeTokens.elevation.none,
       }}
     >
       {title || subtitle || actions ? (

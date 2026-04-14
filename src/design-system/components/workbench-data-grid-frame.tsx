@@ -25,6 +25,7 @@ export default function WorkbenchDataGridFrame({
     <AnalyticsModule
       id={id}
       compact
+      surface="primary"
       title={title}
       subtitle={subtitle}
       actions={actions}

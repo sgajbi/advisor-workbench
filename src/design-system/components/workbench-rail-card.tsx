@@ -9,5 +9,9 @@ export default function WorkbenchRailCard({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <Panel className={cx("workbench-rail-card", className)}>{children}</Panel>;
+  return (
+    <Panel surface="secondary" density="compact" className={cx("workbench-rail-card", className)}>
+      {children}
+    </Panel>
+  );
 }
