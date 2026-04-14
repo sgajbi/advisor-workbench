@@ -26,9 +26,9 @@ export default function PerformanceModeIntro({
       aria-label={ariaLabel}
     >
       <div className="performance-mode-intro-copy">
-        <span className="performance-mode-intro-kicker">{kicker}</span>
+        {!compact ? <span className="performance-mode-intro-kicker">{kicker}</span> : null}
         <p className="performance-mode-intro-title">{title}</p>
-        <p className="performance-mode-intro-description">{description}</p>
+        {!compact ? <p className="performance-mode-intro-description">{description}</p> : null}
       </div>
       {actions ? <div className="performance-mode-intro-actions">{actions}</div> : null}
     </section>

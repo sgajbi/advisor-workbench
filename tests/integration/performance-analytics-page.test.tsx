@@ -419,6 +419,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Performance analysis mode intro")).toHaveTextContent(
       "Attribution, contribution, and benchmark-relative diagnostics"
     );
+    expect(screen.getByLabelText("Performance analysis mode intro")).not.toHaveTextContent(
+      "Analytical follow-through"
+    );
+    expect(screen.getByLabelText("Performance analysis mode intro")).not.toHaveTextContent(
+      "Use the detailed modules to separate return path, allocation effects, and contribution concentration without leaving the governed performance workspace."
+    );
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
@@ -486,6 +492,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
+    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+      "Client-ready narrative"
+    );
     expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
   });
 
@@ -506,6 +515,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
+    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+      "Client-ready narrative"
+    );
     expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
   });
 
@@ -518,6 +530,9 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
+    );
+    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+      "Client-ready narrative"
     );
     expect(
       await screen.findByRole("heading", { name: "Performance Advisor Brief" })
@@ -598,6 +613,10 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(screen.getByLabelText("Risk mode intro")).toHaveTextContent(
       "Downside, concentration, and rolling stability posture"
+    );
+    expect(screen.getByLabelText("Risk mode intro")).not.toHaveTextContent("Risk review");
+    expect(screen.getByLabelText("Risk mode intro")).not.toHaveTextContent(
+      "Compare current mandate risk posture with drawdown path, concentration, and rolling stability before moving into historical attribution detail."
     );
     expect(await screen.findByRole("region", { name: "Risk" })).toBeInTheDocument();
     expect(

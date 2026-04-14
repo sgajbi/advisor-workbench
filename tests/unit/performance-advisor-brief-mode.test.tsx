@@ -137,6 +137,9 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
+    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+      "Client-ready narrative"
+    );
     expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
