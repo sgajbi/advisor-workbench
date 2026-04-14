@@ -1,4 +1,9 @@
-import { KpiStatTile, Panel, SemanticBadge, Text } from "@/design-system";
+import {
+  Panel,
+  SemanticBadge,
+  Text,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
@@ -118,18 +123,18 @@ export default function PerformanceAnalysisDecisionSummary({
           </Text>
         </div>
 
-        <div className="performance-analysis-summary-band-grid">
-          {cards.map((card) => (
-            <article key={card.label} className="performance-analysis-summary-card">
-              <KpiStatTile
-                label={card.label}
-                value={card.value}
-                support={card.support}
-                definition={card.definition}
-              />
-            </article>
-          ))}
-        </div>
+        <WorkbenchSummaryMetricStrip
+          ariaLabel="Analysis snapshot metrics"
+          className="performance-analysis-summary-band-grid"
+          itemClassName="performance-analysis-summary-card"
+          items={cards.map((card) => ({
+            key: card.label,
+            label: card.label,
+            value: card.value,
+            support: card.support,
+            definition: card.definition,
+          }))}
+        />
 
         <div className="performance-analysis-summary-band-status" aria-label="Analysis evidence gaps">
           <div className="performance-analysis-summary-band-status-heading">

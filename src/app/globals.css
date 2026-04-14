@@ -6600,22 +6600,12 @@ a:hover {
 
 .performance-analysis-summary-band {
   display: grid;
-  grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.45fr) minmax(16rem, 0.9fr);
-  gap: 0.8rem;
-  padding: 0.82rem 0.9rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(247, 250, 252, 0.96) 0%, #ffffff 24%);
-}
-
-.performance-analysis-summary-band {
-  display: grid;
-  grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.45fr) minmax(16rem, 0.9fr);
-  gap: 0.8rem;
-  padding: 0.82rem 0.9rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(247, 250, 252, 0.96) 0%, #ffffff 24%);
+  grid-template-columns: minmax(15rem, 0.92fr) minmax(0, 1.35fr) minmax(16rem, 0.88fr);
+  gap: var(--space-4);
+  padding: var(--panel-padding-compact);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface-primary);
 }
 
 .performance-analysis-summary-band-copy {
@@ -6665,17 +6655,32 @@ a:hover {
 
 .performance-analysis-summary-band-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(10.5rem, 1fr));
+  gap: var(--space-3);
+  align-content: start;
 }
 
 .performance-analysis-summary-card {
   display: grid;
-  gap: 0.16rem;
-  padding: 0.72rem 0.78rem;
+  gap: var(--space-2);
+  min-height: var(--metric-tile-height-compact);
+  padding: var(--space-4);
   border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 10px;
-  background: #ffffff;
+  border-radius: var(--radius-tile);
+  background: var(--surface-secondary);
+}
+
+.performance-analysis-summary-card .workbench-summary-metric-label {
+  white-space: normal;
+}
+
+.performance-analysis-summary-card .workbench-summary-metric-value {
+  font-size: var(--type-metric-m-size);
+  line-height: var(--type-metric-m-line-height);
+}
+
+.performance-analysis-summary-card .workbench-summary-metric-support {
+  max-width: 24ch;
 }
 
 .performance-analysis-summary-card-value {
@@ -10399,9 +10404,9 @@ a:hover {
 
 .performance-chart-toolbar-right {
   display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  gap: 0.5rem;
-  min-width: 24rem;
+  grid-template-columns: minmax(8rem, 0.6fr) minmax(14rem, 1fr);
+  gap: var(--space-3);
+  min-width: min(100%, 24rem);
   align-self: start;
 }
 
@@ -10445,8 +10450,8 @@ a:hover {
 
 .performance-analysis-control-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1.28fr) minmax(22rem, 1fr) minmax(22rem, 1fr);
-  gap: 0.26rem 0.38rem;
+  grid-template-columns: minmax(0, 1.08fr) minmax(21rem, 0.88fr) minmax(24rem, 1.12fr);
+  gap: var(--space-2) var(--space-3);
   align-items: end;
 }
 
@@ -10470,7 +10475,7 @@ a:hover {
 }
 
 .performance-analysis-control-cluster-comparison {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(8rem, 0.56fr) minmax(14rem, 1fr);
   align-content: start;
 }
 
@@ -10537,9 +10542,9 @@ a:hover {
 
 .performance-outcome-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-  gap: 0.26rem;
-  padding: 0.18rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-2);
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -10585,15 +10590,15 @@ a:hover {
 
 .performance-outcome-strip-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.22rem 0.42rem;
-  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-1);
+  min-height: var(--metric-tile-height-compact);
   min-width: 0;
-  padding: 0.42rem 0.54rem;
+  padding: var(--space-4);
   border: 1px solid rgba(34, 44, 59, 0.07);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-tile);
+  background: var(--surface-secondary);
 }
 
 .performance-outcome-strip-item .workbench-summary-metric-label {
@@ -10601,25 +10606,34 @@ a:hover {
   line-height: var(--type-micro-label-line-height);
   letter-spacing: var(--tracking-micro);
   color: #6b7280;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .performance-outcome-strip-item .workbench-summary-metric-value {
-  justify-self: end;
+  justify-self: start;
   font-size: var(--type-metric-m-size);
-  font-weight: var(--type-metric-m-weight);
+  font-weight: 700;
   line-height: var(--type-metric-m-line-height);
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .performance-outcome-strip-item .workbench-summary-metric-support {
-  grid-column: 1 / -1;
-  margin-top: 0.12rem;
+  margin-top: 0;
   font-size: var(--type-helper-text-size);
   line-height: var(--type-helper-text-line-height);
   color: #536274;
   max-width: none;
   white-space: pre-line;
+}
+
+.performance-evidence-module-unavailable .workbench-data-grid-frame-body {
+  min-height: clamp(16rem, 34vh, 20rem);
+  display: grid;
+  align-content: start;
+}
+
+.performance-evidence-state-panel {
+  max-width: 42rem;
 }
 
 .performance-chart-library-frame.workbench-summary-visual {
