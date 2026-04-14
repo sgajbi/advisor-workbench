@@ -10699,6 +10699,11 @@ a:hover {
   min-width: 0;
 }
 
+.performance-return-path-top-stack {
+  display: grid;
+  gap: 0.72rem;
+}
+
 .performance-chart-readout-eyebrow,
 .performance-chart-observation-header span {
   color: var(--text-muted);

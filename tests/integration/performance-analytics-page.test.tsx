@@ -274,9 +274,16 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(chartSummaryBand as HTMLElement).queryByText("Portfolio Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
+    const returnDecisionReadout = screen.getByLabelText("Return decision readout");
+    expect(returnDecisionReadout).toHaveTextContent(
       compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
     );
+    expect(
+      Boolean(
+        returnDecisionReadout.compareDocumentPosition(chartSummaryBand as HTMLElement) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Opening Cash")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Closing Cash")).toBeInTheDocument();
@@ -374,7 +381,10 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     const executiveStrip = await screen.findByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
   });

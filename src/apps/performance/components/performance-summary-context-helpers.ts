@@ -153,6 +153,26 @@ export function getPerformanceReturnPathPresentation({
         unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
       },
       {
+        key: "flow-adjusted-mv",
+        label: "Flow-Adjusted MV",
+        value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
+        definition:
+          "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
+        unavailable: resolvedFlowAdjustedEndMarketValue == null,
+      },
+      ...(resolvedEndMarketValue != null
+        ? [
+            {
+              key: "ending-mv",
+              label: "Ending MV",
+              value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
+              definition:
+                "Ending market value at the close of the reporting window after market movement and cash activity are recognized.",
+              unavailable: false,
+            },
+          ]
+        : []),
+      {
         key: "opening-mv",
         label: "Opening MV",
         value: formatCurrency(resolvedBeginMarketValue, reportingCurrency),
@@ -188,26 +208,6 @@ export function getPerformanceReturnPathPresentation({
               value: formatCurrency(resolvedEndingCashFlow, reportingCurrency),
               definition:
                 "Closing external cash position after subscriptions, withdrawals, and other funded activity in the selected window.",
-              unavailable: false,
-            },
-          ]
-        : []),
-      {
-        key: "flow-adjusted-mv",
-        label: "Flow-Adjusted MV",
-        value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
-        definition:
-          "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
-        unavailable: resolvedFlowAdjustedEndMarketValue == null,
-      },
-      ...(resolvedEndMarketValue != null
-        ? [
-            {
-              key: "ending-mv",
-              label: "Ending MV",
-              value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
-              definition:
-                "Ending market value at the close of the reporting window after market movement and cash activity are recognized.",
               unavailable: false,
             },
           ]

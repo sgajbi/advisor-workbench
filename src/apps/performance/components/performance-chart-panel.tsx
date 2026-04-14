@@ -308,6 +308,34 @@ export default function PerformanceChartPanel({
     (metric) =>
       !["portfolio-return", "benchmark-return", "active-return"].includes(metric.key)
   );
+  const outcomeStrip =
+    capabilities.summaryKpis.state !== "unavailable" ? (
+      <PerformanceOutcomeStrip
+        items={outcomeItems.map((metric) => ({
+          key: metric.key,
+          label: metric.label,
+          value: metric.value,
+          support: metric.support,
+          definition: metric.definition,
+          unavailable: metric.unavailable,
+        }))}
+      />
+    ) : null;
+  const topContext =
+    hasRenderableReturnPath || outcomeStrip ? (
+      <div className="performance-return-path-top-stack">
+        {hasRenderableReturnPath ? (
+          <PerformanceReturnPathSummary
+            portfolioReturn={returnPathPresentation.portfolioReturnValue}
+            benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
+            activeReturn={returnPathPresentation.activeReturnValue}
+          />
+        ) : null}
+        {outcomeStrip ? (
+          <div className="performance-return-path-supporting-strip">{outcomeStrip}</div>
+        ) : null}
+      </div>
+    ) : undefined;
   const resolvedWindowLabel =
     resolvedReportDates.startDate && resolvedReportDates.endDate
       ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
@@ -345,6 +373,7 @@ export default function PerformanceChartPanel({
       title={title}
       className="performance-chart-stage workbench-summary-panel"
       bodyClassName="performance-return-path-body"
+      contextRow={topContext}
       toolbar={
         <PerformanceAnalysisControlBar
           period={period}
@@ -367,20 +396,6 @@ export default function PerformanceChartPanel({
           onToDateChange={setToDate}
           onChartViewModeChange={setChartViewMode}
         />
-      }
-      metricStrip={
-        capabilities.summaryKpis.state !== "unavailable" ? (
-          <PerformanceOutcomeStrip
-            items={outcomeItems.map((metric) => ({
-              key: metric.key,
-              label: metric.label,
-              value: metric.value,
-              support: metric.support,
-              definition: metric.definition,
-              unavailable: metric.unavailable,
-            }))}
-          />
-        ) : undefined
       }
       loadingState={
         isDetailsPending ? (
@@ -443,11 +458,6 @@ export default function PerformanceChartPanel({
                 : null
             }
             benchmarkStateBody={returnPathPresentation.benchmarkStateBody}
-          />
-          <PerformanceReturnPathSummary
-            portfolioReturn={returnPathPresentation.portfolioReturnValue}
-            benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
-            activeReturn={returnPathPresentation.activeReturnValue}
           />
           <div className="performance-chart-analysis-grid">
             <PerformanceReturnPathChartStage
