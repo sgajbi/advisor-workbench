@@ -116,6 +116,28 @@ describe("PerformanceChartPanel", () => {
     let activeCumulativeSeries = series.find((entry) => entry?.name === "Active");
     expect(activeCumulativeSeries?.type).toBe("line");
     expect(activeCumulativeSeries?.data).toEqual([0.3]);
+    expect(activeCumulativeSeries?.lineStyle).toMatchObject({
+      color: "#8da0ba",
+      type: "dashed",
+    });
+    expect(activeCumulativeSeries?.endLabel).toMatchObject({
+      color: "#4f647f",
+      backgroundColor: "rgba(141, 160, 186, 0.2)",
+      borderColor: "rgba(141, 160, 186, 0.32)",
+      fontWeight: 700,
+    });
+
+    const benchmarkReturnSeries = series.find((entry) => entry?.name === "Benchmark");
+    expect(benchmarkReturnSeries?.lineStyle).toMatchObject({
+      color: "#c3a056",
+      type: "dashed",
+    });
+    expect(benchmarkReturnSeries?.endLabel).toMatchObject({
+      color: "#fef7e7",
+      backgroundColor: "rgba(195, 160, 86, 0.96)",
+      borderColor: "rgba(195, 160, 86, 0.24)",
+      fontWeight: 800,
+    });
 
     const portfolioReturnSeries = series.find((entry) => entry?.name === "Portfolio");
     expect(portfolioReturnSeries?.smooth).toBe(false);

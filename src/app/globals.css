@@ -10830,11 +10830,11 @@ a:hover {
 }
 
 .performance-chart-legend .performance-chart-legend-item-benchmark::before {
-  background: #697b92;
+  background: #c3a056;
 }
 
 .performance-chart-legend .performance-chart-legend-item-active::before {
-  background: #9b7a1f;
+  background: #8da0ba;
 }
 
 .performance-chart-legend-label {

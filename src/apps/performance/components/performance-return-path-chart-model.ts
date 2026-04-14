@@ -317,13 +317,13 @@ function buildReturnPathLineSeries({
             ? "rgba(20, 43, 71, 0.96)"
             : name === "Benchmark"
               ? "rgba(195, 160, 86, 0.96)"
-              : "rgba(230, 236, 244, 0.98)",
+              : "rgba(141, 160, 186, 0.2)",
         borderColor:
           name === "Portfolio"
             ? "rgba(20, 43, 71, 0.18)"
             : name === "Benchmark"
               ? "rgba(195, 160, 86, 0.24)"
-              : "rgba(141, 160, 186, 0.26)",
+              : "rgba(141, 160, 186, 0.32)",
         fontWeight: name === "Active" ? 700 : 800,
       }),
       formatter: (params: CallbackDataParams) =>
