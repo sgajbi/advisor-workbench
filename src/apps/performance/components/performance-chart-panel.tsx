@@ -116,7 +116,6 @@ export default function PerformanceChartPanel({
   const returnPathPresentation = getPerformanceReturnPathPresentation({
     summary,
     moneyWeightedReturn,
-    points,
     benchmark,
     benchmarkOptions: resolvedBenchmarkOptions,
     capabilities,

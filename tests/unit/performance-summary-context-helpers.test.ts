@@ -32,7 +32,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       moneyWeightedReturn: scenario.workspace.money_weighted_return,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
@@ -117,7 +116,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
@@ -161,20 +159,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: null,
         benchmark_input_mode: null,
       },
-      points: [
-        {
-          label: "2026-03",
-          frequency: "monthly",
-          period_start: "2026-03-01",
-          period_end: "2026-03-27",
-          portfolio_return_pct: 1.4,
-          benchmark_return_pct: null,
-          active_return_pct: null,
-          cumulative_portfolio_return_pct: 6.2,
-          cumulative_benchmark_return_pct: null,
-          cumulative_active_return_pct: null,
-        },
-      ],
       capabilities: {
         ...scenario.capabilities,
         returnPath: { state: "supported" },
@@ -224,7 +208,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       moneyWeightedReturn,
@@ -258,7 +241,6 @@ describe("performance summary context helpers", () => {
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       moneyWeightedReturn: scenario.workspace.money_weighted_return,
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
@@ -301,8 +283,6 @@ describe("performance summary context helpers", () => {
     expect(
       getPerformanceMoneyWeightedAuditSupport({
         explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
-        moneyWeightedReturn: scenario.workspace.money_weighted_return,
-        reportingCurrency: "USD",
       })
     ).toBe("01 Jan 2026 - 24 Feb 2026");
   });
@@ -311,8 +291,6 @@ describe("performance summary context helpers", () => {
     expect(
       getPerformanceMoneyWeightedAuditSupport({
         explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
-        moneyWeightedReturn: null,
-        reportingCurrency: "USD",
       })
     ).toBe("01 Jan 2026 - 24 Feb 2026");
   });
@@ -364,7 +342,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,

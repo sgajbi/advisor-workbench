@@ -120,7 +120,6 @@ export function getAttributionDetailContextItems(
         ? getPerformanceBenchmarkContextValue({
             benchmark: attribution.benchmark_id,
             benchmarkOptions,
-            benchmarkReturnSource: attribution.benchmark_return_source,
           })
         : "Unassigned",
     },
