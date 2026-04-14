@@ -10811,6 +10811,44 @@ a:hover {
   min-height: 27rem;
 }
 
+.performance-return-path-chart-shell {
+  display: grid;
+  grid-template-columns: 1.35rem minmax(0, 1fr);
+  gap: 0.3rem;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.performance-return-path-chart-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.performance-return-path-chart-y-axis-title,
+.performance-return-path-chart-x-axis-title {
+  color: #5f6d80;
+  font-size: var(--type-metadata-size);
+  font-weight: 600;
+  line-height: var(--type-metadata-line-height);
+}
+
+.performance-return-path-chart-y-axis-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 2.25rem 1.95rem;
+}
+
+.performance-return-path-chart-x-axis-title {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0.15rem;
+}
+
 .performance-return-path-single-observation {
   display: grid;
   gap: 0.78rem;

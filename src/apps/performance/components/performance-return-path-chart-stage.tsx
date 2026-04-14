@@ -56,16 +56,24 @@ export default function PerformanceReturnPathChartStage({
           </div>
         </>
       ) : (
-        <>
-          <PerformanceReturnPathLegend items={legendItems} />
-          <ReactECharts
-            option={option}
-            style={{ width: "100%", height: "388px" }}
-            opts={{ renderer: "svg" }}
-            notMerge
-            lazyUpdate
-          />
-        </>
+        <div className="performance-return-path-chart-shell">
+          <div className="performance-return-path-chart-y-axis-title" aria-label="Y axis title">
+            Return
+          </div>
+          <div className="performance-return-path-chart-main">
+            <PerformanceReturnPathLegend items={legendItems} />
+            <ReactECharts
+              option={option}
+              style={{ width: "100%", height: "404px" }}
+              opts={{ renderer: "svg" }}
+              notMerge
+              lazyUpdate
+            />
+            <div className="performance-return-path-chart-x-axis-title" aria-label="X axis title">
+              Reporting Period
+            </div>
+          </div>
+        </div>
       )}
       {isDetailsPending ? (
         <Box

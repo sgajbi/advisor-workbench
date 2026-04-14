@@ -285,12 +285,14 @@ describe("PerformanceChartPanel", () => {
       },
     });
     expect(lastChartOption?.grid).toMatchObject({
-      left: 64,
+      left: 72,
       right: 126,
       top: 20,
-      bottom: 30,
+      bottom: 44,
       containLabel: true,
     });
+    expect(screen.getByLabelText("Y axis title")).toHaveTextContent("Return");
+    expect(screen.getByLabelText("X axis title")).toHaveTextContent("Reporting Period");
     expect(lastChartOption?.legend).toMatchObject({ show: false });
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Benchmark");

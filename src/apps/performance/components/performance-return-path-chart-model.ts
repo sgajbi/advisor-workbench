@@ -352,10 +352,10 @@ export function buildReturnPathChartOption({
       CHART_COLORS.activeBar,
     ],
     grid: {
-      left: 64,
+      left: 72,
       right: 126,
       top: 20,
-      bottom: 30,
+      bottom: 44,
       containLabel: true,
     },
     legend: {
