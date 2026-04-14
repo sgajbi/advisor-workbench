@@ -42,6 +42,7 @@ export default function PerformanceWorkspaceSidePanel({
     ? getPerformanceTrustStripPresentation({ capabilities }).items
     : [];
   const showSupportability = mode !== "summary" && trustItems.length > 0;
+  const workflowActions = buildWorkflowActions(mode);
 
   return (
     <div className="performance-side-panel" aria-label="Performance workspace context">
@@ -117,27 +118,21 @@ export default function PerformanceWorkspaceSidePanel({
           </Text>
         </div>
         <div className="performance-side-actions">
-          <button
-            type="button"
-            className="performance-side-action performance-side-action-primary"
-            onClick={() => onModeChange(nextMode(mode))}
-          >
-            {getPrimaryActionLabel(mode)}
-          </button>
-          <button
-            type="button"
-            className="performance-side-action"
-            onClick={() => onModeChange("advisor")}
-          >
-            Open Advisor Brief
-          </button>
-          <button
-            type="button"
-            className="performance-side-action"
-            onClick={() => onModeChange("risk")}
-          >
-            Review Risk Surface
-          </button>
+          {workflowActions.map((action, index) => (
+            <button
+              key={action.label}
+              type="button"
+              className={[
+                "performance-side-action",
+                index === 0 ? "performance-side-action-primary" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => onModeChange(action.mode)}
+            >
+              {action.label}
+            </button>
+          ))}
           <ActionLink href="/portfolio" className="performance-side-link">
             Return to Portfolio
           </ActionLink>
@@ -160,28 +155,38 @@ function mapItemTone(tone?: "default" | "success" | "warn" | "danger") {
   return "default" as const;
 }
 
-function nextMode(mode: PerformanceWorkspaceMode): PerformanceWorkspaceMode {
-  if (mode === "summary") {
-    return "analysis";
-  }
-  if (mode === "analysis") {
-    return "advisor";
-  }
-  if (mode === "advisor") {
-    return "risk";
-  }
-  return "summary";
-}
+type WorkflowAction = {
+  label: string;
+  mode: PerformanceWorkspaceMode;
+};
 
-function getPrimaryActionLabel(mode: PerformanceWorkspaceMode) {
-  if (mode === "summary") {
-    return "Open Analysis";
+const PRIMARY_WORKFLOW_ACTION: Record<PerformanceWorkspaceMode, WorkflowAction> = {
+  summary: { label: "Open Analysis", mode: "analysis" },
+  analysis: { label: "Draft Advisor Brief", mode: "advisor" },
+  advisor: { label: "Review Risk Surface", mode: "risk" },
+  risk: { label: "Return to Summary", mode: "summary" },
+  evidence: { label: "Return to Summary", mode: "summary" },
+};
+
+const SECONDARY_WORKFLOW_ACTIONS: WorkflowAction[] = [
+  { label: "Open Advisor Brief", mode: "advisor" },
+  { label: "Review Risk Surface", mode: "risk" },
+];
+
+function buildWorkflowActions(mode: PerformanceWorkspaceMode): WorkflowAction[] {
+  const preferred = PRIMARY_WORKFLOW_ACTION[mode];
+  const seenLabels = new Set<string>([preferred.label]);
+  const seenModes = new Set<PerformanceWorkspaceMode>([preferred.mode]);
+  const actions = [preferred];
+
+  for (const action of SECONDARY_WORKFLOW_ACTIONS) {
+    if (action.mode === mode || seenModes.has(action.mode) || seenLabels.has(action.label)) {
+      continue;
+    }
+    seenLabels.add(action.label);
+    seenModes.add(action.mode);
+    actions.push(action);
   }
-  if (mode === "analysis") {
-    return "Draft Advisor Brief";
-  }
-  if (mode === "advisor") {
-    return "Review Risk Surface";
-  }
-  return "Return to Summary";
+
+  return actions;
 }
