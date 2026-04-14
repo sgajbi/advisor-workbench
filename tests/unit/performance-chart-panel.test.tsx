@@ -135,7 +135,7 @@ describe("PerformanceChartPanel", () => {
       borderColor: "rgba(20, 43, 71, 0.18)",
       borderWidth: 1,
       borderRadius: 999,
-      fontSize: 11,
+      fontSize: 10.5,
       fontWeight: 800,
     });
     expect(portfolioReturnSeries?.labelLayout).toMatchObject({
@@ -275,6 +275,13 @@ describe("PerformanceChartPanel", () => {
     expect(lastChartOption?.xAxis).toMatchObject({
       axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
     });
+    const xAxis = Array.isArray(lastChartOption?.xAxis)
+      ? lastChartOption?.xAxis[0]
+      : lastChartOption?.xAxis;
+    const xAxisFormatter = (xAxis?.axisLabel as { formatter?: (value: string) => string } | undefined)
+      ?.formatter;
+    expect(xAxisFormatter?.("2026-01")).toBe("Jan 26");
+    expect(xAxisFormatter?.("2026-04")).toBe("Apr 26");
     expect(lastChartOption?.yAxis).toMatchObject({
       axisLine: { show: true, lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
       splitArea: {

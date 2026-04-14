@@ -23,8 +23,8 @@ export const CHART_COLORS = {
 };
 
 export const SHARED_CHART_TEXT = {
-  legendSize: Number.parseFloat(lotusThemeTokens.typography.size.textSm),
-  axisSize: Number.parseFloat(lotusThemeTokens.typography.size.textXs),
+  legendSize: remTokenToPx(lotusThemeTokens.typography.size.textSm),
+  axisSize: remTokenToPx(lotusThemeTokens.typography.size.textXs),
   legendWeight: lotusThemeTokens.typography.variant.cardTitle.weight,
   axisWeight: lotusThemeTokens.typography.variant.label.weight,
   tooltipWeight: 600,
@@ -45,6 +45,29 @@ const RETURN_PATH_TOOLTIP_EDGE_PADDING = 12;
 const RETURN_PATH_TOOLTIP_CURSOR_GAP_X = 18;
 const RETURN_PATH_TOOLTIP_CURSOR_GAP_Y = 16;
 const RETURN_PATH_TOOLTIP_RIGHT_BADGE_RESERVE = 118;
+
+function remTokenToPx(token: string) {
+  if (token.endsWith("rem")) {
+    return Number.parseFloat(token) * 16;
+  }
+
+  return Number.parseFloat(token);
+}
+
+function formatPeriodAxisLabel(value: string) {
+  const monthMatch = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!monthMatch) {
+    return value;
+  }
+
+  const [, year, month] = monthMatch;
+  const date = new Date(`${year}-${month}-01T00:00:00Z`);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    year: "2-digit",
+    timeZone: "UTC",
+  });
+}
 
 function formatAxisPct(value: number) {
   if (value > 0) {
@@ -202,14 +225,14 @@ export function buildTerminalValueLabelStyle({
 }) {
   return {
     show: true,
-    distance: 14,
+    distance: 12,
     color,
     backgroundColor,
     borderColor,
     borderWidth: 1,
     borderRadius: 999,
-    padding: [4, 8],
-    fontSize: 11,
+    padding: [3, 7],
+    fontSize: 10.5,
     fontWeight,
   };
 }
@@ -416,7 +439,10 @@ export function buildReturnPathChartOption({
         color: "#5a6779",
         fontSize: SHARED_CHART_TEXT.axisSize,
         fontWeight: SHARED_CHART_TEXT.axisWeight,
+        interval: 0,
+        hideOverlap: false,
         margin: 12,
+        formatter: formatPeriodAxisLabel,
       },
     },
     yAxis: {
