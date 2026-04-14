@@ -11,7 +11,7 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
   children,
   className,
 }: {
-  title: string;
+  title?: string;
   subtitle?: string;
   summary?: React.ReactNode;
   value: T;
@@ -22,16 +22,23 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
 }) {
   return (
     <div className={cx("performance-analysis-detail-pane", className)}>
-      <div className="performance-analysis-detail-pane-header">
-        <div className="performance-analysis-detail-pane-copy">
-          <strong>{title}</strong>
-          {subtitle ? <span>{subtitle}</span> : null}
-        </div>
+      <div
+        className={cx(
+          "performance-analysis-detail-pane-header",
+          !(title || subtitle) && "performance-analysis-detail-pane-header-tabs-only"
+        )}
+      >
+        {title || subtitle ? (
+          <div className="performance-analysis-detail-pane-copy">
+            {title ? <strong>{title}</strong> : null}
+            {subtitle ? <span>{subtitle}</span> : null}
+          </div>
+        ) : null}
         <ModeTabs
           value={value}
           onChange={onChange}
           options={options}
-          ariaLabel={`${title} view`}
+          ariaLabel={title ? `${title} view` : "Detail view"}
           className="performance-analysis-detail-pane-tabs"
         />
       </div>

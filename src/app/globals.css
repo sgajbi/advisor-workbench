@@ -9776,13 +9776,14 @@ a:hover {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid rgba(23, 32, 43, 0.06);
+  padding-bottom: 0.15rem;
 }
 
 .performance-analysis-detail-pane-copy {
   display: grid;
   gap: 0.18rem;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .performance-analysis-detail-pane-tabs {
@@ -9844,6 +9845,11 @@ a:hover {
 
 .performance-analysis-detail-pane-body {
   min-width: 0;
+}
+
+.performance-analysis-detail-pane-header-tabs-only {
+  justify-content: flex-end;
+  padding-bottom: 0;
 }
 
 .performance-analysis-detail-stack,
@@ -11915,6 +11921,60 @@ a:hover {
 .performance-analysis-summary-fallback {
   display: grid;
   gap: 0.55rem;
+}
+
+.performance-attribution-summary-band {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.performance-attribution-summary-card {
+  display: grid;
+  gap: 0.24rem;
+  padding: 0.68rem 0.78rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.performance-attribution-summary-card::before {
+  content: "";
+  width: 1.9rem;
+  height: 0.22rem;
+  border-radius: 999px;
+}
+
+.performance-attribution-summary-card-allocation::before {
+  background: #5b9bd5;
+}
+
+.performance-attribution-summary-card-selection::before {
+  background: #7fa65a;
+}
+
+.performance-attribution-summary-card-interaction::before {
+  background: #b07a8e;
+}
+
+.performance-attribution-summary-card-total::before {
+  background: #2d3748;
+}
+
+.performance-attribution-summary-card-label {
+  font-size: var(--workbench-analytic-label-size);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.performance-attribution-summary-card-value {
+  font-size: var(--type-metric-value-m-size);
+  line-height: var(--type-metric-value-m-line-height);
+  font-weight: 700;
+  color: var(--brand-strong);
 }
 
 .performance-analysis-summary-fallback-copy {

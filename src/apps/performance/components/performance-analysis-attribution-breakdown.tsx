@@ -15,12 +15,49 @@ function PerformanceAttributionSummaryFallback({
   level: AttributionSummaryView["levels"][number];
 }) {
   const totals = getAttributionTotals(level);
+  const summaryMetrics = [
+    {
+      key: "allocation",
+      label: "Allocation",
+      value: formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
+      tone: "allocation",
+    },
+    {
+      key: "selection",
+      label: "Selection",
+      value: formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
+      tone: "selection",
+    },
+    {
+      key: "interaction",
+      label: "Interaction",
+      value: formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
+      tone: "interaction",
+    },
+    {
+      key: "total",
+      label: "Total Effect",
+      value: formatPct(totals.totalEffectPct ?? level.total_effect_pct),
+      tone: "total",
+    },
+  ];
 
   return (
     <div
       key={`${level.dimension}-${level.total_effect_pct}`}
       className="performance-analysis-summary-fallback"
     >
+      <div className="performance-attribution-summary-band" aria-label="Attribution summary metrics">
+        {summaryMetrics.map((metric) => (
+          <div
+            key={metric.key}
+            className={`performance-attribution-summary-card performance-attribution-summary-card-${metric.tone}`}
+          >
+            <span className="performance-attribution-summary-card-label">{metric.label}</span>
+            <strong className="performance-attribution-summary-card-value">{metric.value}</strong>
+          </div>
+        ))}
+      </div>
       <AnalyticsTable
         className="performance-analysis-table"
         density="compact"

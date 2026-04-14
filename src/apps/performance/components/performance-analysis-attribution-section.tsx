@@ -108,7 +108,6 @@ export default function PerformanceAnalysisAttributionSection({
       >
         {workspace.attribution ? (
           <PerformanceAnalysisDetailPane
-            title="Segment Attribution"
             value={detailView}
             onChange={setDetailView}
             options={getAttributionDetailOptions({

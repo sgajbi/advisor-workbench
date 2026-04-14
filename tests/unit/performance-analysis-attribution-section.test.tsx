@@ -80,7 +80,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Effects")).not.toBeInTheDocument();
-    expect(screen.getByText("Segment Attribution")).toBeInTheDocument();
+    expect(screen.queryByText("Segment Attribution")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Use relative context for weight and return gaps, then move to effect decomposition.")
     ).not.toBeInTheDocument();
@@ -173,6 +173,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
         "Segment rows are unavailable for this selection. Total benchmark-relative effects remain available below."
       )
     ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Allocation");
+    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Selection");
+    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Interaction");
+    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Total Effect");
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(screen.getByText("Summary Total")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();

@@ -470,7 +470,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
-    expect(screen.getByText("Segment Attribution")).toBeInTheDocument();
+    expect(screen.queryByText("Segment Attribution")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
       "aria-selected",
