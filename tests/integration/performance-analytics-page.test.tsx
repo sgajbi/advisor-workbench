@@ -262,14 +262,13 @@ describe("PerformanceAnalyticsPage", () => {
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
+      expect(mainShell?.querySelector(".performance-horizon-review-bar")).toBeTruthy();
       expect(mainShell?.querySelector(".performance-horizon-toolbar.workbench-summary-toolbar")).toBeTruthy();
       expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
       expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
-      expect(screen.getByLabelText("Horizon comparison context")).toHaveTextContent(
-        compactPattern("Benchmark Global Balanced 60/40")
-      );
+      expect(screen.queryByLabelText("Horizon comparison context")).not.toBeInTheDocument();
     });
     fireEvent.click(screen.getByText("Detailed table"));
     expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
@@ -1193,9 +1192,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(horizonTitles).toHaveLength(1);
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(screen.getByText("Detailed table")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
-    );
+    expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
 
     expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
@@ -1293,12 +1290,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
 
-      if (horizonExpectations.length) {
-        const horizonContext = await screen.findByRole("group", { name: "Horizon comparison context" });
-        for (const text of horizonExpectations) {
-          expect(horizonContext).toHaveTextContent(compactPattern(text));
-        }
-      }
+      expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
 
       for (const text of absentTexts) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();

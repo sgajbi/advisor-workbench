@@ -65,20 +65,15 @@ describe("PerformanceMultiHorizonPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("Horizon Comparison")).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
-      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
     });
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
-    );
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
-    );
-    expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
+    expect(document.querySelector(".performance-horizon-review-bar")).toBeTruthy();
     expect(screen.queryByText("Portfolio vs Global Balanced 60/40")).not.toBeInTheDocument();
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-summary-toolbar.performance-horizon-toolbar")).toBeTruthy();
+    expect(document.querySelector(".performance-horizon-panel-body")).toBeTruthy();
     expect(document.querySelectorAll(".performance-horizon-matrix-row")).toHaveLength(4);
     expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
     expect(screen.getByText("Detailed table")).toBeInTheDocument();
@@ -88,11 +83,6 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("group", { name: "Horizon comparison context" })).queryByText(
-        "Active Return"
-      )
-    ).not.toBeInTheDocument();
     expect(screen.getAllByText("Portfolio").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Benchmark").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByText("Detailed table"));
@@ -214,9 +204,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
       await waitFor(() => {
-        expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-        compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
-        );
+        expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
       });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
 
@@ -230,9 +218,6 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
-    );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });
@@ -265,12 +250,9 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     });
-
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Benchmark Not assigned")
-    );
+    expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
   });
 
   it("shows a normalization notice when the horizon endpoint adjusts an unsupported frequency", async () => {

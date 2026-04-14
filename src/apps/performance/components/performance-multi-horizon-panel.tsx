@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  WorkbenchChartContextRow,
   WorkbenchLoadingState,
 } from "@/design-system";
 import type {
@@ -96,10 +95,6 @@ export default function PerformanceMultiHorizonPanel({
     period,
     selectedPeriodRow,
   });
-  const resolvedWindowLabel =
-    comparison?.report_start_date && comparison?.report_end_date
-      ? `${formatDate(comparison.report_start_date)} - ${formatDate(comparison.report_end_date)}`
-      : presentation.selectedPeriodLabel;
   const tableModel = useMemo(() => {
     return buildPerformanceHorizonTableModel({
       rows: rows ?? [],
@@ -157,34 +152,21 @@ export default function PerformanceMultiHorizonPanel({
               </p>
             </div>
           ) : null}
-          <WorkbenchChartContextRow
-            className="performance-horizon-context-row"
-            itemClassName="performance-mini-legend-item"
-            label="Horizon comparison context"
-            items={[
-              {
-                key: "resolved-window",
-                label: "Period Range",
-                value: resolvedWindowLabel,
-              },
-              {
-                key: "benchmark",
-                label: "Benchmark",
-                value: presentation.benchmarkLabel,
-              },
-            ]}
-          />
-          <PerformanceHorizonComparisonToolbar
-            tableView={tableView}
-            basisView={basisView}
-            visualMode={visualMode}
-            hasRelativeVisual={hasRelativeVisual}
-            onTableViewChange={setTableView}
-            onBasisViewChange={setBasisView}
-            onVisualModeChange={setVisualMode}
-          />
-          <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={visualMode} />
-          <PerformanceHorizonComparisonDisclosure tableModel={tableModel} />
+          <div className="performance-horizon-review-bar">
+            <PerformanceHorizonComparisonToolbar
+              tableView={tableView}
+              basisView={basisView}
+              visualMode={visualMode}
+              hasRelativeVisual={hasRelativeVisual}
+              onTableViewChange={setTableView}
+              onBasisViewChange={setBasisView}
+              onVisualModeChange={setVisualMode}
+            />
+          </div>
+          <div className="performance-horizon-panel-body">
+            <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={visualMode} />
+            <PerformanceHorizonComparisonDisclosure tableModel={tableModel} />
+          </div>
         </>
       ) : (
         <PerformanceAnalyticalUnavailableState
@@ -195,7 +177,13 @@ export default function PerformanceMultiHorizonPanel({
           body={presentation.emptyBody}
           hint="Source-backed multi-horizon observations must be exposed before cross-window comparison can render."
           contextItems={[
-            { label: "Window", value: resolvedWindowLabel },
+            {
+              label: "Window",
+              value:
+                comparison?.report_start_date && comparison?.report_end_date
+                  ? `${formatDate(comparison.report_start_date)} - ${formatDate(comparison.report_end_date)}`
+                  : presentation.selectedPeriodLabel,
+            },
             { label: "Benchmark", value: presentation.benchmarkLabel },
             { label: "Basis", value: formatLabel(detailBasis) },
           ]}
