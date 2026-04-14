@@ -7,6 +7,7 @@ import PerformanceAnalyticalUnavailableState from "./performance-analytical-unav
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
 import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import PerformanceContributorBarList from "./performance-contributor-bar-list";
+import PerformanceModuleDisclosure from "./performance-module-disclosure";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
 import { getPerformanceContributorsPresentation } from "./performance-summary-driver-helpers";
@@ -57,13 +58,12 @@ export default function PerformanceSummaryContributorsSection({
               />
             </section>
           </div>
-          <details className="performance-contributors-table-disclosure">
-            <summary className="performance-contributors-table-disclosure-summary">
-              <div className="performance-contributors-table-disclosure-copy">
-                <strong>Instrument detail</strong>
-                <span>Open the full instrument-level contribution breakdown in one ranked table.</span>
-              </div>
-            </summary>
+          <PerformanceModuleDisclosure
+            className="performance-contributors-table-disclosure"
+            summaryClassName="performance-contributors-table-disclosure-summary"
+            titleClassName="performance-contributors-table-disclosure-title"
+            title="Instrument detail"
+          >
             <AnalyticsTable
               ariaLabel="Contributor instrument detail table"
               className="performance-contributors-table performance-chart-observation-table"
@@ -72,7 +72,7 @@ export default function PerformanceSummaryContributorsSection({
               columns={presentation.rankedTableModel.columns}
               rows={presentation.rankedTableModel.rows}
             />
-          </details>
+          </PerformanceModuleDisclosure>
         </div>
       ) : presentation.mode === "partial" ? (
         <div className="performance-contributors-panel">

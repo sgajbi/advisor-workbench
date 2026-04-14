@@ -79,6 +79,10 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent("TLT");
     expect(screen.queryAllByText("Contribution to active return")).toHaveLength(0);
     expect(screen.getByText("Instrument detail")).toBeInTheDocument();
+    expect(screen.queryByText(/positions/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Open the full instrument-level contribution breakdown in one ranked table.")
+    ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();

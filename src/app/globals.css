@@ -9811,33 +9811,12 @@ a:hover {
 .performance-contributor-bar-list-header {
   display: flex;
   align-items: start;
-  justify-content: space-between;
-  gap: 0.75rem;
 }
 
-.performance-contributor-bar-list-title-block {
-  display: grid;
-  gap: 0.14rem;
-}
-
-.performance-contributor-bar-list-title-block strong {
+.performance-contributor-bar-list-title {
   color: var(--brand-strong);
   font-size: var(--workbench-analytic-heading-size);
   line-height: 1.2;
-}
-
-.performance-contributor-bar-list-title-block span,
-.performance-contributor-bar-list-scale {
-  color: var(--text-muted);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-}
-
-.performance-contributor-bar-list-scale {
-  text-align: right;
-  max-width: 12rem;
 }
 
 .performance-contributor-bars {
@@ -9960,22 +9939,11 @@ a:hover {
   content: "Hide details";
 }
 
-.performance-contributors-table-disclosure-copy {
-  display: grid;
-  gap: 0.16rem;
-}
-
-.performance-contributors-table-disclosure-copy strong {
+.performance-contributors-table-disclosure-title {
   color: var(--brand-strong);
   font-size: var(--text-sm);
   font-weight: 760;
   line-height: 1.28;
-}
-
-.performance-contributors-table-disclosure-copy span {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  line-height: 1.38;
 }
 
 .performance-contributors-grid > .workbench-summary-visual-card,

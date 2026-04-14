@@ -14,10 +14,7 @@ export default function PerformanceContributorBarList({
   return (
     <section className="performance-contributor-bar-list" aria-label={ariaLabel}>
       <div className="performance-contributor-bar-list-header">
-        <div className="performance-contributor-bar-list-title-block">
-          <strong>{title}</strong>
-          <span>{items.length} positions</span>
-        </div>
+        <strong className="performance-contributor-bar-list-title">{title}</strong>
       </div>
       {items.length ? (
         <div className="performance-contributor-bars">

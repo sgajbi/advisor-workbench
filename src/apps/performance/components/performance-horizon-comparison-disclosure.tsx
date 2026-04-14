@@ -1,6 +1,7 @@
 import { AnalyticsTable } from "@/design-system";
 
 import type { PerformanceAnalyticsTableModel } from "./performance-analytics-table-models";
+import PerformanceModuleDisclosure from "./performance-module-disclosure";
 
 type PerformanceHorizonComparisonDisclosureProps = {
   tableModel: PerformanceAnalyticsTableModel;
@@ -10,10 +11,12 @@ export default function PerformanceHorizonComparisonDisclosure({
   tableModel,
 }: PerformanceHorizonComparisonDisclosureProps) {
   return (
-    <details className="performance-horizon-table-disclosure">
-      <summary className="performance-horizon-table-disclosure-summary">
-        <strong className="performance-horizon-table-disclosure-title">Detailed table</strong>
-      </summary>
+    <PerformanceModuleDisclosure
+      className="performance-horizon-table-disclosure"
+      summaryClassName="performance-horizon-table-disclosure-summary"
+      titleClassName="performance-horizon-table-disclosure-title"
+      title="Detailed table"
+    >
       <div
         className="performance-horizon-table-scroll"
         role="region"
@@ -29,6 +32,6 @@ export default function PerformanceHorizonComparisonDisclosure({
           className="performance-horizon-table performance-chart-observation-table"
         />
       </div>
-    </details>
+    </PerformanceModuleDisclosure>
   );
 }
