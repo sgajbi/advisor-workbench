@@ -9876,6 +9876,22 @@ a:hover {
   align-self: start;
 }
 
+.performance-contributors-ranked-card-populated {
+  align-content: start;
+}
+
+.performance-contributors-ranked-card-empty {
+  align-content: stretch;
+}
+
+.performance-contributors-compare-grid-right-empty {
+  grid-template-columns: minmax(0, 1.3fr) minmax(15rem, 0.7fr);
+}
+
+.performance-contributors-compare-grid-left-empty {
+  grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
+}
+
 .performance-contributor-bar-list {
   display: grid;
   gap: 0.62rem;
@@ -9973,6 +9989,7 @@ a:hover {
 .performance-contributor-bar-empty {
   margin: 0;
   padding: 0.1rem 0;
+  max-width: 28ch;
   color: var(--text-muted);
   font-size: var(--text-sm);
   line-height: 1.5;

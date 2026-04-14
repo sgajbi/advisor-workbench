@@ -35,6 +35,8 @@ export default function PerformanceSummaryContributorsSection({
   let content: React.ReactNode;
 
   if (presentation.mode === "supported") {
+    const hasPositiveRankedItems = presentation.positiveRankedItems.length > 0;
+    const hasNegativeRankedItems = presentation.negativeRankedItems.length > 0;
     const rankedContributorGroups = [
       {
         key: "contributors",
@@ -42,6 +44,7 @@ export default function PerformanceSummaryContributorsSection({
         ariaLabel: "Top Contributors impact bars",
         items: presentation.positiveRankedItems,
         emptyBody: "No positive position contributors are exposed for the selected period.",
+        hasItems: hasPositiveRankedItems,
       },
       {
         key: "detractors",
@@ -49,14 +52,37 @@ export default function PerformanceSummaryContributorsSection({
         ariaLabel: "Top Detractors impact bars",
         items: presentation.negativeRankedItems,
         emptyBody: "No detracting positions are exposed for the selected period.",
+        hasItems: hasNegativeRankedItems,
       },
     ] as const;
 
     content = (
       <div className="performance-contributors-panel">
-        <div className="performance-contributors-compare-grid">
+        <div
+          className={[
+            "performance-contributors-compare-grid",
+            hasPositiveRankedItems && !hasNegativeRankedItems
+              ? "performance-contributors-compare-grid-right-empty"
+              : "",
+            hasNegativeRankedItems && !hasPositiveRankedItems
+              ? "performance-contributors-compare-grid-left-empty"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {rankedContributorGroups.map((group) => (
-            <section key={group.key} className="performance-contributors-ranked-card">
+            <section
+              key={group.key}
+              className={[
+                "performance-contributors-ranked-card",
+                group.hasItems
+                  ? "performance-contributors-ranked-card-populated"
+                  : "performance-contributors-ranked-card-empty",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <PerformanceContributorBarList
                 title={group.title}
                 ariaLabel={group.ariaLabel}
