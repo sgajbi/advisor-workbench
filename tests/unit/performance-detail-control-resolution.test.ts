@@ -11,10 +11,11 @@ describe("performance-detail-control-resolution", () => {
     });
     degradedDetails.contribution_dimension = "country";
     degradedDetails.attribution_dimension = "country";
+    const capabilities = degradedDetails.capabilities!;
     degradedDetails.capabilities = {
-      ...degradedDetails.capabilities,
+      ...capabilities,
       return_path: {
-        ...degradedDetails.capabilities.return_path,
+        ...capabilities.return_path,
         state: "unavailable",
         reason: "Published return observations are not available for the selected horizon.",
       },

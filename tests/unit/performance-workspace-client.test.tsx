@@ -261,13 +261,14 @@ describe("PerformanceWorkspaceClient", () => {
   });
 
   it("normalizes stale initial detail dimensions during first client hydration", async () => {
+    const baseDetails = buildDetails();
     const degradedInitialDetails = buildDetails({
       contribution_dimension: "country",
       attribution_dimension: "country",
       segment: "country",
       net_chart: [],
       contribution: {
-        ...buildDetails().contribution!,
+        ...baseDetails.contribution!,
         position_rows: [],
       },
       attribution: null,
@@ -279,19 +280,19 @@ describe("PerformanceWorkspaceClient", () => {
         },
       ],
       capabilities: {
-        ...buildDetails().capabilities,
+        ...baseDetails.capabilities!,
         return_path: {
-          ...buildDetails().capabilities.return_path,
+          ...baseDetails.capabilities!.return_path,
           state: "unavailable",
           reason: "Published return observations are not available for the selected horizon.",
         },
         contribution_ranking: {
-          ...buildDetails().capabilities.contribution_ranking,
+          ...baseDetails.capabilities!.contribution_ranking,
           state: "partial",
           reason: "Contribution exists, but only aggregate rows are available.",
         },
         attribution_detail: {
-          ...buildDetails().capabilities.attribution_detail,
+          ...baseDetails.capabilities!.attribution_detail,
           state: "unavailable",
           reason: "Attribution detail is not available for the current selection.",
         },
