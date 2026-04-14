@@ -485,7 +485,7 @@ describe("PerformanceAnalyticsPage", () => {
       "aria-selected",
       "false"
     );
-    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
@@ -948,7 +948,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
-    expect(await screen.findByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Effect Breakdown/ })).toHaveAttribute(
       "aria-selected",
       "true"

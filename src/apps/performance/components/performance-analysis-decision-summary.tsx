@@ -42,46 +42,47 @@ export default function PerformanceAnalysisDecisionSummary({
 
   const selectedPerformance =
     detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance;
+  const attribution = workspace.attribution;
   const topDriverLabel = getTopDriverLabel(workspace);
   const contributionCoverage = workspace.contribution?.coverage_mv_pct;
   const headline =
-    topDriverLabel && contributionCoverage != null
-      ? `Top driver ${topDriverLabel}. Coverage ${formatPct(contributionCoverage)} of market value.`
-      : topDriverLabel
-        ? `Top driver ${topDriverLabel}.`
-        : contributionCoverage != null
-          ? `Coverage ${formatPct(contributionCoverage)} of market value.`
-          : "Benchmark-relative attribution and contribution for the selected window.";
+    topDriverLabel
+      ? `Largest observed driver ${topDriverLabel}.`
+      : contributionCoverage != null
+        ? `Published contribution covers ${formatPct(contributionCoverage)} of market value.`
+        : "Benchmark-relative attribution and contribution for the selected window.";
+  const analysisActiveReturn =
+    attribution?.active_return_pct ?? selectedPerformance.active_return_pct;
 
   const cards = [
-    selectedPerformance.active_return_pct != null
+    analysisActiveReturn != null
       ? {
           label: "Active Return",
-          value: formatPct(selectedPerformance.active_return_pct),
+          value: formatPct(analysisActiveReturn),
           support: selectedPerformance.benchmark_id
             ? "Benchmark-relative outcome"
             : "Portfolio-only outcome",
           definition:
-            "Portfolio return less benchmark return for the selected reporting basis and horizon.",
+            "Benchmark-relative return reconciled through the selected analysis dataset.",
         }
       : null,
-    workspace.attribution?.sum_of_effects_pct != null
+    attribution?.sum_of_effects_pct != null
       ? {
           label: "Effects Sum",
-          value: formatPct(workspace.attribution?.sum_of_effects_pct),
-          support: workspace.attribution?.model
-            ? `${workspace.attribution.model} model`
+          value: formatPct(attribution.sum_of_effects_pct),
+          support: attribution.model
+            ? `${attribution.model} model`
             : "Attribution decomposition",
           definition:
             "Combined allocation, selection, and interaction effects before residual reconciliation.",
         }
       : null,
-    workspace.attribution?.residual_pct != null
+    attribution?.residual_pct != null
       ? {
           label: "Residual",
-          value: formatPct(workspace.attribution?.residual_pct),
-          support: workspace.attribution?.linking
-            ? `${workspace.attribution.linking} linking`
+          value: formatPct(attribution.residual_pct),
+          support: attribution.linking
+            ? `${attribution.linking} linking`
             : "Attribution reconciliation",
           definition:
             "Difference between attributed effects and total active return after applying the selected linking method.",
@@ -89,20 +90,11 @@ export default function PerformanceAnalysisDecisionSummary({
       : null,
     contributionCoverage != null
       ? {
-      label: "Contribution Coverage",
-      value: formatPct(contributionCoverage),
-      support: topDriverLabel ? `Top driver ${topDriverLabel}` : "Contribution coverage",
-      definition:
-        "Share of portfolio market value covered by the published contribution dataset for the current selection.",
-        }
-      : null,
-    topDriverLabel
-      ? {
-          label: "Top Driver",
-          value: topDriverLabel,
-          support: "Largest observed contribution source",
+          label: "Contribution Coverage",
+          value: formatPct(contributionCoverage),
+          support: topDriverLabel ? `Top driver ${topDriverLabel}` : "Contribution coverage",
           definition:
-            "Largest published positive driver in the current contribution dataset for the selected period.",
+            "Share of portfolio market value covered by the published contribution dataset for the current selection.",
         }
       : null,
   ].filter(Boolean) as WorkbenchSummaryMetricStripItem[];

@@ -69,32 +69,6 @@ export function getAttributionDetailContextItems(
   ];
 }
 
-export function getAttributionDetailSummaryItems(
-  attribution: AttributionSummaryView | null | undefined,
-  _benchmarkOptions: PerformanceBenchmarkOptionView[] = []
-) {
-  void _benchmarkOptions;
-
-  if (!attribution?.benchmark_id) {
-    return [];
-  }
-
-  return [
-    {
-      label: "Active Return",
-      value: formatPct(attribution.active_return_pct),
-    },
-    {
-      label: "Effects Sum",
-      value: formatPct(attribution.sum_of_effects_pct),
-    },
-    {
-      label: "Residual",
-      value: formatPct(attribution.residual_pct),
-    },
-  ];
-}
-
 export function getAttributionTrendSummaryItems(
   trend: WorkbenchPerformanceAttributionTrend | null
 ) {

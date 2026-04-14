@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import {
   WorkbenchChartShell,
-  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
@@ -16,9 +15,6 @@ import PerformanceRelativeSegmentPanel from "./performance-relative-segment-pane
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
-import {
-  getAttributionDetailSummaryItems,
-} from "./performance-attribution-presentations";
 
 type AttributionDetailView = "relative" | "breakdown";
 
@@ -43,10 +39,6 @@ export default function PerformanceAnalysisAttributionSection({
     (capabilities.attributionDetail.state === "partial" &&
       hasAttributionSummaryLevels &&
       !hasDetailedAttributionRows);
-  const attributionSummaryItems = getAttributionDetailSummaryItems(
-    workspace.attribution,
-    workspace.benchmark_options ?? []
-  );
   const attributionMethodologyRows = getAttributionMethodologyRows(
     workspace.attribution,
     workspace.benchmark_options ?? []
@@ -77,15 +69,6 @@ export default function PerformanceAnalysisAttributionSection({
             triggerVariant="inline"
           />
         </div>
-      }
-      metricStrip={
-        attributionSummaryItems.length ? (
-          <WorkbenchSummaryMetricStrip
-            className="performance-analysis-metric-strip"
-            ariaLabel="Attribution summary strip"
-            items={attributionSummaryItems}
-          />
-        ) : undefined
       }
       className="performance-detail-panel-compact performance-analysis-module performance-workspace-panel"
     >

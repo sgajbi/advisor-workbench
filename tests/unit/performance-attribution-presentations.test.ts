@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
-  getAttributionDetailSummaryItems,
   getAttributionTrendSummaryItems,
 } from "../../src/apps/performance/components/performance-attribution-presentations";
 import {
@@ -13,29 +12,15 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 
 describe("performance attribution presentations", () => {
-  it("builds detail context and summary items from the attribution contract", () => {
+  it("builds detail context from the attribution contract", () => {
     const scenario = buildSupportedPerformanceScenario();
     const contextItems = getAttributionDetailContextItems(
-      scenario.workspace.attribution,
-      scenario.workspace.benchmark_options ?? []
-    );
-    const summaryItems = getAttributionDetailSummaryItems(
       scenario.workspace.attribution,
       scenario.workspace.benchmark_options ?? []
     );
 
     expect(contextItems).toEqual([
       { label: "Benchmark", value: "Global Balanced 60/40 • USD" },
-    ]);
-    expect(summaryItems.map((item) => item.label)).toEqual([
-      "Active Return",
-      "Effects Sum",
-      "Residual",
-    ]);
-    expect(summaryItems).toEqual([
-      { label: "Active Return", value: "0.52%" },
-      { label: "Effects Sum", value: "0.50%" },
-      { label: "Residual", value: "0.02%" },
     ]);
   });
 
@@ -58,22 +43,11 @@ describe("performance attribution presentations", () => {
       scenario.workspace.attribution,
       scenario.workspace.benchmark_options ?? []
     );
-    const summaryItems = getAttributionDetailSummaryItems(
-      scenario.workspace.attribution,
-      scenario.workspace.benchmark_options ?? []
-    );
 
     expect(contextItems[0]).toEqual({
       label: "Benchmark",
       value: "Global Balanced 60/40 • USD",
     });
-    expect(summaryItems).toHaveLength(3);
-    expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
-    expect(summaryItems).toEqual([
-      { label: "Active Return", value: "0.52%" },
-      { label: "Effects Sum", value: "0.50%" },
-      { label: "Residual", value: "0.02%" },
-    ]);
   });
 
   it("builds attribution reconciliation text from summary values", () => {

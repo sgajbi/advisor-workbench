@@ -73,7 +73,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByText(/^Versus /i)).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.getByText("View Details")).toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeFalsy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(0);
@@ -162,7 +162,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
       "aria-selected",
       "true"
