@@ -16,8 +16,6 @@ import {
 import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
-import PerformanceWorkspaceModeSwitch, {
-} from "./performance-workspace-mode-switch";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceRiskMode from "./performance-risk-mode";
@@ -208,14 +206,7 @@ export default function PerformanceWorkspaceView({
             className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
             title={workspaceTitle}
-            actions={
-              <PerformanceWorkspaceModeSwitch
-                value={mode}
-                onChange={onModeChange}
-                capabilities={capabilities}
-              />
-            }
-            >
+          >
             <WorkbenchSectionStack className="performance-page-sections">
               {controlNormalizationNotice ? (
                 <div

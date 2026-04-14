@@ -137,7 +137,7 @@ export default function PerformanceWorkspaceRail({
       </WorkbenchRailCard>
 
       <WorkbenchRailCard className="performance-rail-card">
-        <div className="performance-rail-section">
+        <div className="performance-rail-section performance-rail-section-nav">
           <Text variant="label" className="performance-rail-section-label">
             Performance
           </Text>
@@ -149,33 +149,27 @@ export default function PerformanceWorkspaceRail({
               const modeDefinition = getPerformanceWorkspaceModeDefinition(item.mode);
 
               return (
-                <button
+                <PerformanceRailActionItem
                   key={item.mode}
-                  type="button"
-                  className={[
-                    "performance-rail-item",
-                    active ? "performance-rail-item-active" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+                  active={active}
+                  disabled={disabled}
                   aria-current={active ? "page" : undefined}
                   aria-pressed={active}
-                  disabled={disabled}
                   title={disabled ? capability?.reason : modeDefinition.intro?.description}
                   onClick={() => onModeChange(item.mode)}
+                  badge={
+                    capability ? (
+                      <SemanticBadge
+                        tone={getCapabilityTone(capability)}
+                        className="performance-rail-item-badge"
+                      >
+                        {getCapabilityLabel(capability)}
+                      </SemanticBadge>
+                    ) : null
+                  }
                 >
-                  <span className="performance-rail-item-copy">
-                    <span className="performance-rail-item-title">{item.label}</span>
-                  </span>
-                  {capability ? (
-                    <SemanticBadge
-                      tone={getCapabilityTone(capability)}
-                      className="performance-rail-item-badge"
-                    >
-                      {getCapabilityLabel(capability)}
-                    </SemanticBadge>
-                  ) : null}
-                </button>
+                  {item.label}
+                </PerformanceRailActionItem>
               );
             })}
           </div>
@@ -183,7 +177,7 @@ export default function PerformanceWorkspaceRail({
       </WorkbenchRailCard>
 
       <WorkbenchRailCard className="performance-rail-card">
-        <div className="performance-rail-section">
+        <div className="performance-rail-section performance-rail-section-quick-views">
           <Text variant="label" className="performance-rail-section-label">
             Quick Views
           </Text>
@@ -193,18 +187,13 @@ export default function PerformanceWorkspaceRail({
               const active = item.period ? period === item.period : item.mode === mode;
 
               return (
-                <button
+                <PerformanceRailActionItem
                   key={item.key}
-                  type="button"
-                  className={[
-                    "performance-rail-item",
-                    "performance-rail-quick-view",
-                    active ? "performance-rail-item-active" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  aria-current={active ? "page" : undefined}
+                  className="performance-rail-quick-view"
+                  active={active}
                   disabled={disabled}
+                  aria-current={active ? "page" : undefined}
+                  aria-pressed={active}
                   title={disabled ? item.disabledReason : undefined}
                   onClick={() => {
                     if (item.period) {
@@ -215,10 +204,8 @@ export default function PerformanceWorkspaceRail({
                     }
                   }}
                 >
-                  <span className="performance-rail-item-copy">
-                    <span className="performance-rail-item-title">{item.label}</span>
-                  </span>
-                </button>
+                  {item.label}
+                </PerformanceRailActionItem>
               );
             })}
           </div>
@@ -250,4 +237,36 @@ function getCapabilityLabel(capability: WorkspaceCapability) {
     return "Partial";
   }
   return "Unavailable";
+}
+
+function PerformanceRailActionItem({
+  children,
+  className,
+  active = false,
+  disabled = false,
+  badge = null,
+  ...buttonProps
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  active?: boolean;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      className={[
+        "performance-rail-item",
+        active ? "performance-rail-item-active" : "",
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      disabled={disabled}
+      {...buttonProps}
+    >
+      <span className="performance-rail-item-copy">
+        <span className="performance-rail-item-title">{children}</span>
+      </span>
+      {badge ? <span className="performance-rail-item-affordance">{badge}</span> : null}
+    </button>
+  );
 }

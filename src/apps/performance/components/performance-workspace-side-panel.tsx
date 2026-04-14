@@ -1,5 +1,6 @@
 import {
   ActionLink,
+  DefinitionList,
   SemanticBadge,
   Text,
   WorkbenchRailCard,
@@ -51,6 +52,12 @@ export default function PerformanceWorkspaceSidePanel({
     chartFrequency,
     selectedBenchmarkLabel,
   });
+  const [activeSurfaceItem, ...remainingReviewContextItems] = reviewContextItems;
+  const benchmarkItem =
+    remainingReviewContextItems.find((item) => item.label === "Benchmark") ?? null;
+  const reviewFactItems = remainingReviewContextItems.filter(
+    (item) => item.label !== "Benchmark"
+  );
 
   return (
     <div className="performance-side-panel" aria-label="Performance workspace context">
@@ -60,14 +67,34 @@ export default function PerformanceWorkspaceSidePanel({
             Review Context
           </Text>
         </div>
-        <dl className="performance-side-facts">
-          {reviewContextItems.map((item) => (
-            <div key={item.label} className="performance-side-fact">
-              <dt>{item.label}</dt>
-              <dd>{item.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="performance-side-context-summary">
+          <Text variant="label" className="performance-side-context-summary-label">
+            {activeSurfaceItem.label}
+          </Text>
+          <Text variant="metricValueM" className="performance-side-context-summary-value">
+            {activeSurfaceItem.value}
+          </Text>
+        </div>
+        <DefinitionList
+          ariaLabel="Review context facts"
+          className="performance-side-facts"
+          rowClassName="performance-side-fact-row"
+          items={reviewFactItems}
+        />
+        {benchmarkItem ? (
+          <div className="performance-side-context-benchmark">
+            <Text variant="label" className="performance-side-context-benchmark-label">
+              {benchmarkItem.label}
+            </Text>
+            <Text
+              as="div"
+              variant="bodySmall"
+              className="performance-side-context-benchmark-value"
+            >
+              {benchmarkItem.value}
+            </Text>
+          </div>
+        ) : null}
       </WorkbenchRailCard>
 
       {showSupportability ? (
@@ -113,7 +140,7 @@ export default function PerformanceWorkspaceSidePanel({
               {action.label}
             </button>
           ))}
-          <ActionLink href="/portfolio" className="performance-side-link">
+          <ActionLink href="/portfolio" className="performance-side-link performance-side-action">
             Return to Portfolio
           </ActionLink>
         </div>

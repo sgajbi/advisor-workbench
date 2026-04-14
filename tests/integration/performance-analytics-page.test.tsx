@@ -103,7 +103,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(
       document.querySelector("main.workstation-page.app-page-shell.app-page-shell-performance.performance-page")
     ).toBeTruthy();
@@ -121,7 +121,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
-      .toBeTruthy();
+      .toBeFalsy();
     expect(screen.getByText("Quick Views")).toBeInTheDocument();
     expect(screen.getByText("Client Context")).toBeInTheDocument();
     const railSections = Array.from(
@@ -411,7 +411,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
@@ -438,7 +438,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
     expect(await screen.findByLabelText("Analysis decision summary")).toBeInTheDocument();
     expect(screen.getByText("Benchmark-relative evidence posture")).toBeInTheDocument();
@@ -556,7 +556,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Advisor Brief" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Advisor Brief" }));
 
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
@@ -594,7 +594,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Advisor Brief" }));
+    fireEvent.click(screen.getByRole("button", { name: "Advisor Brief" }));
     fireEvent.click(
       within(screen.getByLabelText("Client Talking Points")).getByRole("button", {
         name: /Top Contributor/,
@@ -616,15 +616,15 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    expect(await screen.findByRole("tab", { name: "Risk" })).toHaveAttribute(
-      "aria-selected",
+    expect(await screen.findByRole("button", { name: /^Risk Review/i })).toHaveAttribute(
+      "aria-pressed",
       "true"
     );
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
 
     await waitFor(() => {
       expect(replaceMock).toHaveBeenCalledWith(
@@ -639,7 +639,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Risk" }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Risk Review/i }));
 
     expect(screen.getByLabelText("Risk mode intro")).toHaveTextContent(
       "Downside, concentration, and rolling stability posture"
@@ -837,7 +837,7 @@ describe("PerformanceAnalyticsPage", () => {
         })
       );
 
-      fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+      fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
       await waitFor(() => {
         expect(replaceMock).toHaveBeenCalledWith(
@@ -933,24 +933,14 @@ describe("PerformanceAnalyticsPage", () => {
     }
   });
 
-  it("uses the shared analysis state panel when attribution detail is unavailable", async () => {
+  it("keeps attribution detail out of the analysis stage when attribution data is unavailable", async () => {
     installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
-    expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
-    });
-    expect(
-      screen.getByText("Attribution detail unavailable", { selector: ".module-state-panel strong" })
-    ).toBeInTheDocument();
-    expect(document.querySelector(".performance-analysis-state-panel-unavailable")).toBeTruthy();
-    expect(document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel"))
-      .toBeTruthy();
-    expect(document.querySelectorAll(".module-state-panel").length).toBeGreaterThanOrEqual(1);
+    await screen.findByText("Performance Drivers");
     expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
   });
@@ -960,7 +950,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
@@ -989,7 +979,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "unavailable attribution analysis",
       scenario: buildUnavailableAttributionPerformanceScenario(),
-      expectations: ["Attribution detail unavailable"],
+      expectations: ["Performance Drivers"],
       absent: ["Relative Segment Context"],
     },
     {
@@ -1004,11 +994,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "combined partial analysis",
       scenario: buildCombinedPartialPerformanceScenario(),
-      expectations: [
-        "Attribution detail unavailable",
-        "Performance Drivers",
-        "Equity",
-      ],
+      expectations: ["Performance Drivers", "Equity"],
       absent: ["AAPL"],
     },
   ])(
@@ -1017,16 +1003,11 @@ describe("PerformanceAnalyticsPage", () => {
       installPerformancePageFetchScenario(scenario);
 
       render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
-      fireEvent.click(await screen.findByRole("tab", { name: "Analysis" }));
+      fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
       for (const text of expectations) {
         await expectTextPresent(text);
       }
-
-      await waitFor(() => {
-        expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
-      });
-      expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(1);
 
       for (const text of absent) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
@@ -1039,7 +1020,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    const evidenceTab = await screen.findByRole("tab", { name: "Evidence" });
+    const evidenceTab = await screen.findByRole("button", { name: /^Evidence/i });
     expect(evidenceTab).toBeDisabled();
     fireEvent.click(evidenceTab);
 
@@ -1063,7 +1044,7 @@ describe("PerformanceAnalyticsPage", () => {
       name: "unavailable attribution workspace",
       scenario: buildUnavailableAttributionPerformanceScenario(),
       summaryExpectations: ["Portfolio Return", "Horizon Comparison"],
-      analysisExpectations: ["Attribution detail unavailable", "Performance Drivers"],
+      analysisExpectations: ["Performance Drivers"],
       evidenceExpectations: [],
       analysisAbsent: ["Relative Segment Context"],
     },
@@ -1082,11 +1063,7 @@ describe("PerformanceAnalyticsPage", () => {
       name: "combined partial workspace",
       scenario: buildCombinedPartialPerformanceScenario(),
       summaryExpectations: ["Horizon Comparison", "Performance Drivers"],
-      analysisExpectations: [
-        "Attribution detail unavailable",
-        "Performance Drivers",
-        "Equity",
-      ],
+      analysisExpectations: ["Performance Drivers", "Equity"],
       evidenceExpectations: [],
       analysisAbsent: ["AAPL"],
     },
@@ -1104,7 +1081,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-      expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
       for (const text of summaryExpectations) {
         await expectTextPresent(text);
       }
@@ -1112,24 +1089,21 @@ describe("PerformanceAnalyticsPage", () => {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+      fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
       for (const text of analysisExpectations) {
         await expectTextPresent(text);
       }
-      await waitFor(() => {
-        expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
-      });
       for (const text of analysisAbsent) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(screen.getByRole("tab", { name: "Advisor Brief" }));
+      fireEvent.click(screen.getByRole("button", { name: "Advisor Brief" }));
       expect(
         await screen.findByRole("heading", { name: "Performance Advisor Brief" })
       ).toBeInTheDocument();
       expect(screen.getByLabelText("Source Metrics")).toBeInTheDocument();
 
-      const evidenceTab = screen.getByRole("tab", { name: "Evidence" });
+      const evidenceTab = screen.getByRole("button", { name: /^Evidence/i });
       expect(evidenceTab).toBeDisabled();
       for (const text of evidenceExpectations) {
         await expectTextPresent(text);
@@ -1144,7 +1118,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.getAllByLabelText("Status Unavailable").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
       expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
@@ -1172,7 +1146,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
     await waitFor(() => {
@@ -1186,7 +1160,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
     expect(await screen.findByText("Contributor ranking is partial")).toBeInTheDocument();
     expect(
@@ -1208,7 +1182,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
 
     const horizonTitles = await screen.findAllByText("Horizon Comparison");
@@ -1287,7 +1261,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-      expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
 
       const executiveStrip = screen.queryByLabelText("Executive return strip");
 

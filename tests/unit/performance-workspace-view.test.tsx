@@ -8,7 +8,7 @@ import {
   buildSupportedPerformanceScenario,
   buildUnavailableEvidencePerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
-import type { PerformanceWorkspaceMode } from "../../src/apps/performance/components/performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../src/apps/performance/performance-workspace-modes";
 
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
@@ -85,8 +85,9 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
-      "workbench-segmented-control-button-active"
+    expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
     );
 
     await waitFor(() => {
@@ -107,7 +108,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
 
@@ -116,8 +117,8 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
-    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Performance Overview" }));
+    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
   });
@@ -127,8 +128,8 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("tab", { name: "Analysis" })).not.toBeDisabled();
-    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    expect(screen.getByRole("button", { name: /^Performance Analysis/i })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
@@ -188,11 +189,11 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
-      .toBeTruthy();
-    expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
+      .toBeFalsy();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
-      "workbench-segmented-control-button-active"
+    expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
     );
     await waitFor(() => {
       expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
@@ -206,7 +207,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Risk Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
     expect(screen.getByText("Loading analysis")).toBeInTheDocument();
     expect(document.querySelector(".workbench-deferred-placeholder")).toBeTruthy();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
@@ -222,7 +223,7 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Risk" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Risk Review/i }));
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
@@ -237,8 +238,8 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
-    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /^Evidence/i }));
+    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
     expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
