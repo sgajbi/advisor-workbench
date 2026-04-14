@@ -1,4 +1,5 @@
 import {
+  DefinitionList,
   SemanticBadge,
   Text,
   WorkbenchRailCard,
@@ -75,6 +76,16 @@ export default function PerformanceWorkspaceRail({
   onRequestChange,
 }: PerformanceWorkspaceRailProps) {
   const benchmarkLabel = selectedBenchmarkLabel ?? "Benchmark pending";
+  const clientContextFacts = [
+    {
+      label: "Base Currency",
+      value: workspace?.portfolio.base_currency ?? "Unavailable",
+    },
+    {
+      label: "As Of",
+      value: workspace ? formatDate(workspace.as_of_date) : "Unavailable",
+    },
+  ];
 
   return (
     <div className="performance-workspace-rail" aria-label="Performance workspace navigation">
@@ -90,35 +101,37 @@ export default function PerformanceWorkspaceRail({
               </Text>
               <Text variant="secondary" className="performance-client-context-copy">
                 {workspace?.portfolio.client_id
-                  ? `Client ${workspace.portfolio.client_id}`
+                  ? workspace.portfolio.client_id
                   : "Client identity not published by the current workspace."}
               </Text>
             </div>
-            <dl className="performance-client-context-facts">
-              <div className="performance-client-context-row">
-                <dt>Total Assets</dt>
-                <dd>
-                  {workspace
-                    ? formatCurrency(
-                        workspace.overview.market_value_base,
-                        workspace.portfolio.base_currency
-                      )
-                    : "Unavailable"}
-                </dd>
-              </div>
-              <div className="performance-client-context-row">
-                <dt>Base Currency</dt>
-                <dd>{workspace?.portfolio.base_currency ?? "Unavailable"}</dd>
-              </div>
-              <div className="performance-client-context-row">
-                <dt>Primary Benchmark</dt>
-                <dd>{benchmarkLabel}</dd>
-              </div>
-              <div className="performance-client-context-row">
-                <dt>As Of</dt>
-                <dd>{workspace ? formatDate(workspace.as_of_date) : "Unavailable"}</dd>
-              </div>
-            </dl>
+            <div className="performance-client-context-summary" aria-label="Client context market value">
+              <Text variant="label" className="performance-client-context-summary-label">
+                Total Assets
+              </Text>
+              <Text variant="metricValueM" className="performance-client-context-summary-value">
+                {workspace
+                  ? formatCurrency(
+                      workspace.overview.market_value_base,
+                      workspace.portfolio.base_currency
+                    )
+                  : "Unavailable"}
+              </Text>
+            </div>
+            <div className="performance-client-context-benchmark">
+              <Text variant="label" className="performance-client-context-benchmark-label">
+                Primary Benchmark
+              </Text>
+              <Text variant="body" className="performance-client-context-benchmark-value">
+                {benchmarkLabel}
+              </Text>
+            </div>
+            <DefinitionList
+              ariaLabel="Client context facts"
+              className="performance-client-context-facts"
+              rowClassName="performance-client-context-fact-row"
+              items={clientContextFacts}
+            />
           </div>
         </div>
       </WorkbenchRailCard>

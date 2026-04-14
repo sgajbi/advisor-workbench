@@ -5725,62 +5725,87 @@ a:hover {
 
 .performance-client-context {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 
 .performance-client-context-header {
   display: grid;
-  gap: 0.16rem;
+  gap: var(--space-2);
 }
 
 .performance-client-context-copy {
   margin: 0;
 }
 
+.performance-client-context-summary,
+.performance-client-context-benchmark {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(34, 44, 59, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.94), rgba(255, 255, 255, 0.98));
+}
+
+.performance-client-context-summary-label,
+.performance-client-context-benchmark-label {
+  color: var(--text-muted);
+}
+
+.performance-client-context-summary-value {
+  font-variant-numeric: var(--type-financial-numeric);
+  color: var(--brand-strong);
+}
+
+.performance-client-context-benchmark-value {
+  margin: 0;
+  color: var(--brand-strong);
+  font-weight: 600;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
 .performance-client-context-facts,
 .performance-side-facts {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--space-3);
   margin: 0;
 }
 
-.performance-client-context-row,
+.performance-client-context-fact-row,
 .performance-side-fact,
 .performance-side-status-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-bottom: 0.65rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid rgba(226, 232, 240, 0.72);
 }
 
-.performance-client-context-row:last-child,
+.performance-client-context-fact-row:last-child,
 .performance-side-fact:last-child,
 .performance-side-status-item:last-child {
   padding-bottom: 0;
   border-bottom: 0;
 }
 
-.performance-client-context-row dt,
+.performance-client-context-fact-row .workbench-definition-term,
 .performance-side-fact dt,
 .performance-side-status-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.4;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  align-self: center;
 }
 
-.performance-client-context-row dd,
+.performance-client-context-fact-row .workbench-definition-description,
 .performance-side-fact dd {
   margin: 0;
-  font-size: 0.84rem;
-  font-weight: 650;
-  line-height: 1.4;
-  color: var(--brand-strong);
   text-align: right;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.performance-client-context-fact-row .workbench-definition-value {
+  max-width: 100%;
 }
 
 .performance-side-status-list {
