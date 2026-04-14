@@ -159,11 +159,10 @@ export default function PerformanceAdvisorBriefMode({
             aria-label="Advisor brief source metrics"
           >
             <LotusMetricPanel metrics={brief.sourceMetrics} onSelectMode={onSelectMode} />
+            <LotusSupportabilityPanel items={brief.supportability} reviewNotes={brief.reviewNotes} />
+            <LotusAuditStrip audit={brief.audit} />
           </aside>
         </div>
-
-        <LotusSupportabilityPanel items={brief.supportability} reviewNotes={brief.reviewNotes} />
-        <LotusAuditStrip audit={brief.audit} />
     </PerformanceWorkspaceStageSurface>
   );
 }

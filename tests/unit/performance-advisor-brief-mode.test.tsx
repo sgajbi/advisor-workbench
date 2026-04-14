@@ -150,6 +150,10 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Brief provenance")).toHaveTextContent(
       "Execution local_openai_compatible • text.local • qwen3:8b"
     );
+    const sourceMetricsSidecar = screen.getByLabelText("Advisor brief source metrics");
+    expect(within(sourceMetricsSidecar).getByLabelText("Source Metrics")).toBeInTheDocument();
+    expect(within(sourceMetricsSidecar).getByLabelText("Advisor brief supportability")).toBeInTheDocument();
+    expect(within(sourceMetricsSidecar).getByLabelText("Brief provenance")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Audit metadata"));
 

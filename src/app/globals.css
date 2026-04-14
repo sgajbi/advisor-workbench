@@ -8771,7 +8771,8 @@ a:hover {
 }
 
 .performance-advisor-brief-sidecar > .performance-advisor-brief-section,
-.performance-advisor-brief-sidecar > .lotus-supportability-panel {
+.performance-advisor-brief-sidecar > .lotus-supportability-panel,
+.performance-advisor-brief-sidecar > .performance-advisor-brief-provenance-strip {
   padding-top: 0.95rem;
   border-top: 1px solid rgba(23, 32, 43, 0.08);
 }
@@ -9095,29 +9096,6 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.performance-advisor-brief-supportability-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.performance-advisor-brief-supportability-summary-card,
-.performance-advisor-brief-supportability-all-ready {
-  display: grid;
-  gap: 0.14rem;
-  padding: 0.52rem 0.6rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 10px;
-  background: #ffffff;
-}
-
-.performance-advisor-brief-supportability-summary-card strong {
-  font-size: 1rem;
-  line-height: 1.1;
-  color: var(--brand-strong);
-  font-variant-numeric: tabular-nums;
-}
-
 .performance-advisor-brief-supportability-row {
   display: flex;
   justify-content: space-between;
@@ -9126,21 +9104,6 @@ a:hover {
   min-width: 0;
   padding: 0.58rem 0;
   border-top: 1px solid rgba(23, 32, 43, 0.08);
-}
-
-.performance-advisor-brief-supportability-notes {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.performance-advisor-brief-supportability-note {
-  padding: 0.52rem 0.6rem;
-  border-left: 3px solid rgba(142, 98, 50, 0.28);
-  border-radius: 0 10px 10px 0;
-  background: rgba(255, 246, 232, 0.5);
-  color: #6a522a;
-  font-size: 0.75rem;
-  line-height: 1.4;
 }
 
 .performance-advisor-brief-supportability-notes {
@@ -9231,9 +9194,9 @@ a:hover {
 .performance-advisor-brief-provenance-strip {
   display: grid;
   gap: 0.4rem;
-  margin-top: 0.15rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgba(23, 32, 43, 0.08);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .performance-advisor-brief-provenance-summary {
