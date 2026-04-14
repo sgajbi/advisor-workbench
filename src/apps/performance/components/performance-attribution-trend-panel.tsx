@@ -320,7 +320,7 @@ export default function PerformanceAttributionTrendPanel({
   return (
     <WorkbenchChartShell
       title="Attribution Over Time"
-      className="performance-analysis-module performance-analysis-trend-shell"
+      className="performance-analysis-module performance-analysis-trend-shell performance-workspace-panel"
       actions={
         <span className="performance-analysis-shell-action">
           {trend?.chart_frequency ?? chartFrequency}

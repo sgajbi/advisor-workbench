@@ -77,7 +77,7 @@ export default function PerformanceAnalysisContributionSection({
           />
         </div>
       }
-      className="performance-detail-panel-wide performance-analysis-module"
+      className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
         capability={capabilities.contributionDetail}
