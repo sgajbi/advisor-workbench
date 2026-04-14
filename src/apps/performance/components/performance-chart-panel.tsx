@@ -346,17 +346,15 @@ export default function PerformanceChartPanel({
         }))}
       />
     ) : null;
-  const topContext =
-    hasRenderableReturnPath || outcomeStrip ? (
-      <div className="performance-return-path-top-stack">
-        {hasRenderableReturnPath ? (
-          <PerformanceReturnPathSummary items={summaryItems} />
-        ) : null}
-        {outcomeStrip ? (
-          <div className="performance-return-path-supporting-strip">{outcomeStrip}</div>
-        ) : null}
-      </div>
-    ) : undefined;
+  const topContext = hasRenderableReturnPath ? (
+    <div className="performance-return-path-top-stack">
+      <PerformanceReturnPathSummary items={summaryItems} />
+    </div>
+  ) : outcomeStrip ? (
+    <div className="performance-return-path-top-stack">
+      <div className="performance-return-path-supporting-strip">{outcomeStrip}</div>
+    </div>
+  ) : undefined;
   const resolvedWindowLabel =
     resolvedReportDates.startDate && resolvedReportDates.endDate
       ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
@@ -489,6 +487,9 @@ export default function PerformanceChartPanel({
               singleObservation={singleObservation}
             />
           </div>
+          {outcomeStrip ? (
+            <div className="performance-return-path-secondary-strip">{outcomeStrip}</div>
+          ) : null}
           <PerformanceObservationTrail tableModel={chartTableModel} />
         </>
       ) : null}

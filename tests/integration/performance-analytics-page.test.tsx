@@ -413,6 +413,17 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
+    const returnDecisionReadout = screen.getByLabelText("Return decision readout");
+    const controlBar = screen.getByLabelText("Analysis control bar");
+    const chart = screen.getByRole("img", { name: "Net Return Path chart" });
+    const executiveStrip = screen.getByLabelText("Executive return strip");
+    expect(
+      Boolean(returnDecisionReadout.compareDocumentPosition(controlBar) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+    expect(Boolean(controlBar.compareDocumentPosition(chart) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(
+      Boolean(chart.compareDocumentPosition(executiveStrip) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
     expect(screen.queryByText("Attribution Detail")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
