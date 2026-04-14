@@ -243,7 +243,7 @@ export default function PerformanceAnalysisControlBar({
       </div>
 
       <div className="performance-analysis-control-cluster performance-analysis-control-cluster-comparison">
-        <div className="performance-analysis-control-slot">
+        <div className="performance-analysis-control-slot performance-analysis-control-slot-frequency">
           <FieldLabel>Frequency</FieldLabel>
           <TextField
             select
@@ -276,7 +276,7 @@ export default function PerformanceAnalysisControlBar({
           </TextField>
         </div>
 
-        <div className="performance-analysis-control-slot">
+        <div className="performance-analysis-control-slot performance-analysis-control-slot-benchmark-select">
           <FieldLabel>Benchmark</FieldLabel>
           <TextField
             select
