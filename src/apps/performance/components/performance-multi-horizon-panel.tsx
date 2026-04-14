@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   WorkbenchChartContextRow,
   WorkbenchLoadingState,
 } from "@/design-system";
-import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
   PerformanceBenchmarkOptionView,
-  WorkbenchPerformanceHorizonComparison,
 } from "@/features/workbench/types";
 
 import { formatDate, formatLabel } from "../formatters";
@@ -23,6 +21,7 @@ import {
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceHorizonComparisonDisclosure from "./performance-horizon-comparison-disclosure";
+import { usePerformanceHorizonComparison } from "./performance-horizon-comparison-state";
 import PerformanceHorizonComparisonMatrix from "./performance-horizon-comparison-matrix";
 import PerformanceHorizonComparisonToolbar from "./performance-horizon-comparison-toolbar";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
@@ -49,88 +48,19 @@ export default function PerformanceMultiHorizonPanel({
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 }) {
-  const [comparison, setComparison] = useState<WorkbenchPerformanceHorizonComparison | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
   const [basisView, setBasisView] = useState<PerformanceHorizonBasisView>("both");
   const [visualMode, setVisualMode] = useState<PerformanceHorizonVisualMode>("absolute");
-  const requestIdRef = useRef(0);
-  const cacheRef = useRef<Map<string, WorkbenchPerformanceHorizonComparison>>(new Map());
-
-  useEffect(() => {
-    const cacheKey = JSON.stringify({
-      portfolioId,
-      period,
-      detailBasis,
-      benchmark: benchmark ?? null,
-      chartFrequency,
-      reportStartDate: reportStartDate ?? null,
-      reportEndDate: reportEndDate ?? null,
-    });
-    const cached = cacheRef.current.get(cacheKey);
-    if (cached) {
-      setComparison(cached);
-      setIsLoading(false);
-      return;
-    }
-
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setIsLoading(true);
-
-    void getWorkbenchPerformanceHorizonComparisonClient(portfolioId, {
-      period,
-      detailBasis,
-      benchmark,
-      chartFrequency,
-      reportStartDate,
-      reportEndDate,
-    })
-      .then((result) => {
-        if (requestIdRef.current !== requestId) {
-          return;
-        }
-        cacheRef.current.set(cacheKey, result);
-        setComparison(result);
-      })
-      .catch(() => {
-        if (requestIdRef.current !== requestId) {
-          return;
-        }
-        setComparison({
-          correlation_id: "",
-          contract_version: "v1",
-          portfolio_id: portfolioId,
-          as_of_date: "",
-          period,
-          report_start_date: reportStartDate ?? "",
-          report_end_date: reportEndDate ?? "",
-          reporting_currency: null,
-          detail_basis: detailBasis,
-          chart_frequency: chartFrequency,
-          requested_chart_frequency_supported: true,
-          benchmark_code: benchmark ?? null,
-          benchmark_options: benchmarkOptions,
-          rows: [],
-          warnings: [],
-          partial_failures: [],
-        });
-      })
-      .finally(() => {
-        if (requestIdRef.current === requestId) {
-          setIsLoading(false);
-        }
-      });
-  }, [
-    benchmark,
-    benchmarkOptions,
-    chartFrequency,
-    detailBasis,
+  const { comparison, isLoading } = usePerformanceHorizonComparison({
     portfolioId,
     period,
-    reportEndDate,
+    detailBasis,
+    benchmark,
+    chartFrequency,
     reportStartDate,
-  ]);
+    reportEndDate,
+    benchmarkOptions,
+  });
   const rows = comparison?.rows ?? null;
   const reportingCurrency = comparison?.reporting_currency ?? "USD";
   const normalizationNotice =

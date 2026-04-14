@@ -12129,22 +12129,11 @@ a:hover {
   content: "Hide details";
 }
 
-.performance-horizon-table-disclosure-copy {
-  display: grid;
-  gap: 0.16rem;
-}
-
-.performance-horizon-table-disclosure-copy strong {
+.performance-horizon-table-disclosure-title {
   color: var(--brand-strong);
   font-size: var(--text-sm);
   font-weight: 760;
   line-height: 1.28;
-}
-
-.performance-horizon-table-disclosure-copy span {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  line-height: 1.38;
 }
 
 .performance-horizon-table-scroll {

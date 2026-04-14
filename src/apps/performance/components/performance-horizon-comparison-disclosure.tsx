@@ -12,10 +12,7 @@ export default function PerformanceHorizonComparisonDisclosure({
   return (
     <details className="performance-horizon-table-disclosure">
       <summary className="performance-horizon-table-disclosure-summary">
-        <div className="performance-horizon-table-disclosure-copy">
-          <strong>Detailed table</strong>
-          <span>Open the full economics and return breakdown. Scroll horizontally for wide columns.</span>
-        </div>
+        <strong className="performance-horizon-table-disclosure-title">Detailed table</strong>
       </summary>
       <div
         className="performance-horizon-table-scroll"

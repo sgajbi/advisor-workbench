@@ -82,6 +82,9 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(document.querySelectorAll(".performance-horizon-matrix-row")).toHaveLength(4);
     expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
     expect(screen.getByText("Detailed table")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Open the full economics and return breakdown. Scroll horizontally for wide columns.")
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
