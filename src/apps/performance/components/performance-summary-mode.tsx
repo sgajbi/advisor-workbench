@@ -1,43 +1,12 @@
-import dynamic from "next/dynamic";
-
 import {
-  DeferredModulePlaceholder,
   WorkspaceGrid,
-  WorkbenchDeferredSection,
 } from "@/design-system";
 
 import PerformanceChartPanel from "./performance-chart-panel";
+import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
+import PerformanceSummaryContributorsSection from "./performance-summary-contributors-section";
 import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
 import type { PerformanceSummaryModeProps } from "./performance-workspace-types";
-
-// Workbench discipline:
-// first paint keeps the header and compact summary region light.
-// Heavy charting and secondary analytics modules load immediately after first paint.
-const DeferredPerformanceMultiHorizonPanel = dynamic(
-  () => import("./performance-multi-horizon-panel"),
-  {
-    ssr: false,
-    loading: () => (
-      <DeferredModulePlaceholder
-        title="Loading horizons"
-        message="Horizon comparisons are loading after first paint."
-      />
-    ),
-  }
-);
-
-const DeferredPerformanceSummaryContributorsSection = dynamic(
-  () => import("./performance-summary-contributors-section"),
-  {
-    ssr: false,
-    loading: () => (
-      <DeferredModulePlaceholder
-        title="Loading contributors"
-        message="Contributor ranking is loading after first paint."
-      />
-    ),
-  }
-);
 
 export default function PerformanceSummaryMode({
   workspace,
@@ -91,22 +60,8 @@ export default function PerformanceSummaryMode({
       <WorkspaceGrid
         className="performance-detail-grid performance-secondary-zone performance-lotus-stage performance-lotus-stage-secondary workbench-summary-region"
       >
-        <WorkbenchDeferredSection
-          className="performance-summary-driver-section"
-          title="Horizon Comparison"
-          subtitle="Benchmark-aware return comparison across standard reporting windows."
-          loadingTitle="Loading horizons"
-          loadingMessage="Horizon comparisons are loading after first paint."
-          deferHeader
-          hideHeader
-          placeholder={
-            <DeferredModulePlaceholder
-              title="Loading horizons"
-              message="Horizon comparisons are loading after first paint."
-            />
-          }
-        >
-          <DeferredPerformanceMultiHorizonPanel
+        <section className="performance-summary-driver-section">
+          <PerformanceMultiHorizonPanel
             portfolioId={workspace.portfolio.portfolio_id}
             period={period}
             detailBasis={detailBasis}
@@ -115,23 +70,9 @@ export default function PerformanceSummaryMode({
             benchmarkOptions={workspace.benchmark_options ?? []}
             onRequestChange={onRequestChange}
           />
-        </WorkbenchDeferredSection>
-        <WorkbenchDeferredSection
-          className="performance-summary-driver-section performance-summary-contributors-section"
-          title="Performance Drivers"
-          subtitle="Top contributors and detractors for the current performance outcome."
-          loadingTitle="Loading contributors"
-          loadingMessage="Contributor ranking is loading after first paint."
-          deferHeader
-          hideHeader
-          placeholder={
-            <DeferredModulePlaceholder
-              title="Loading contributors"
-              message="Contributor ranking is loading after first paint."
-            />
-          }
-        >
-          <DeferredPerformanceSummaryContributorsSection
+        </section>
+        <section className="performance-summary-driver-section performance-summary-contributors-section">
+          <PerformanceSummaryContributorsSection
             workspace={workspace}
             capabilities={capabilities}
             contributorScale={contributorScale}
@@ -141,7 +82,7 @@ export default function PerformanceSummaryMode({
             bottomContributors={bottomContributors}
             isDetailsPending={isDetailsPending}
           />
-        </WorkbenchDeferredSection>
+        </section>
       </WorkspaceGrid>
     </PerformanceWorkspaceStageSurface>
   );

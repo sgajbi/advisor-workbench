@@ -13,7 +13,6 @@ import {
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type {
-  PerformanceBenchmarkOptionView,
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
@@ -31,7 +30,6 @@ type Props = {
   attributionDimension: string;
   detailBasis: string;
   benchmark?: string;
-  benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate?: string;
   reportEndDate?: string;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
@@ -62,7 +60,6 @@ export default function PerformanceAttributionTrendPanel({
   attributionDimension,
   detailBasis,
   benchmark,
-  benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
   onRequestChange,

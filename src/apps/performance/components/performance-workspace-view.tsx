@@ -1,8 +1,4 @@
-import dynamic from "next/dynamic";
-
 import {
-  DeferredWorkbenchMount,
-  DeferredModulePlaceholder,
   MainWithSideRailLayout,
   Panel,
   WorkbenchPageFrame,
@@ -17,8 +13,9 @@ import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
+import PerformanceAnalysisMode from "./performance-analysis-mode";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
-import PerformanceAnalysisModePlaceholder from "./performance-analysis-mode-placeholder";
+import PerformanceEvidenceMode from "./performance-evidence-mode";
 import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import PerformanceWorkspaceRail from "./performance-workspace-rail";
@@ -31,24 +28,6 @@ import {
   getBenchmarkLabel,
   getPerformanceControlNormalizationNotice,
 } from "./performance-workspace-view-helpers";
-
-// Workbench discipline:
-// - summary header and compact KPI/status content are first paint
-// - analysis and evidence content are deferred until the user selects those modes
-const DeferredPerformanceAnalysisMode = dynamic(() => import("./performance-analysis-mode"), {
-  ssr: false,
-  loading: () => <PerformanceAnalysisModePlaceholder />,
-});
-
-const DeferredPerformanceEvidenceMode = dynamic(() => import("./performance-evidence-mode"), {
-  ssr: false,
-  loading: () => (
-    <DeferredModulePlaceholder
-      title="Loading evidence"
-      message="Evidence context is loading on demand."
-    />
-  ),
-});
 
 export default function PerformanceWorkspaceView({
   workspace,
@@ -107,18 +86,14 @@ export default function PerformanceWorkspaceView({
       bottomContributors={presentation?.bottomContributors ?? []}
     />
   ) : mode === "analysis" ? (
-    <DeferredWorkbenchMount
-      placeholder={<PerformanceAnalysisModePlaceholder />}
-    >
-      <DeferredPerformanceAnalysisMode
-        workspace={workspace}
-        {...controls}
-        capabilities={capabilities!}
-        relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
-        topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
-        attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
-      />
-    </DeferredWorkbenchMount>
+    <PerformanceAnalysisMode
+      workspace={workspace}
+      {...controls}
+      capabilities={capabilities!}
+      relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
+      topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
+      attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
+    />
   ) : mode === "advisor" ? (
     <PerformanceAdvisorBriefMode
       workspace={workspace}
@@ -133,16 +108,7 @@ export default function PerformanceWorkspaceView({
       capabilities={capabilities!}
     />
   ) : (
-    <DeferredWorkbenchMount
-      placeholder={
-        <DeferredModulePlaceholder
-          title="Loading evidence"
-          message="Evidence context is loading on demand."
-        />
-      }
-    >
-      <DeferredPerformanceEvidenceMode capability={capabilities!.evidence} />
-    </DeferredWorkbenchMount>
+    <PerformanceEvidenceMode capability={capabilities!.evidence} />
   );
 
   return (

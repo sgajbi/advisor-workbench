@@ -11,27 +11,6 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 import type { PerformanceWorkspaceMode } from "../../src/apps/performance/performance-workspace-modes";
 
-vi.mock("next/dynamic", () => ({
-  default: (loader: () => Promise<unknown>) => {
-    const React = require("react");
-    return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState(
-        null as React.ComponentType<Record<string, unknown>> | null
-      );
-      React.useEffect(() => {
-        loader().then((mod: unknown) => {
-          const resolved =
-            typeof mod === "function"
-              ? (mod as React.ComponentType<Record<string, unknown>>)
-              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
-          setComponent(() => resolved ?? null);
-        });
-      }, []);
-      return Component ? React.createElement(Component, props) : null;
-    };
-  },
-}));
-
 const summaryModeMock = vi.fn((_: unknown) => <div>Summary Mode Panel</div>);
 const analysisModeMock = vi.fn((_: unknown) => <div>Analysis Mode Panel</div>);
 const riskModeMock = vi.fn((_: unknown) => <div>Risk Mode Panel</div>);
@@ -228,15 +207,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
-    expect(screen.getByText("Loading analysis summary")).toBeInTheDocument();
-    expect(screen.getByText("Loading attribution trend")).toBeInTheDocument();
-    expect(screen.getByText("Loading attribution detail")).toBeInTheDocument();
-    expect(screen.getByText("Loading contribution detail")).toBeInTheDocument();
-    expect(document.querySelector(".workbench-deferred-placeholder")).toBeTruthy();
-    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
-    });
+    expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     expect(analysisModeMock).toHaveBeenCalled();
     expect(analysisModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
       workspace: scenario.workspace,

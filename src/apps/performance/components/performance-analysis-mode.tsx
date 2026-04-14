@@ -39,7 +39,6 @@ export default function PerformanceAnalysisMode({
           attributionDimension={attributionDimension}
           detailBasis={detailBasis}
           benchmark={workspace.benchmark_code ?? benchmark}
-          benchmarkOptions={workspace.benchmark_options ?? []}
           reportStartDate={workspace.report_start_date}
           reportEndDate={workspace.report_end_date}
           onRequestChange={onRequestChange}

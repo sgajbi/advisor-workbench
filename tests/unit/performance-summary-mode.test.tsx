@@ -1,30 +1,9 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PerformanceSummaryMode from "../../src/apps/performance/components/performance-summary-mode";
 import { buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
-
-vi.mock("next/dynamic", () => ({
-  default: (loader: () => Promise<unknown>) => {
-    const React = require("react");
-    return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState(
-        null as React.ComponentType<Record<string, unknown>> | null
-      );
-      React.useEffect(() => {
-        loader().then((mod: unknown) => {
-          const resolved =
-            typeof mod === "function"
-              ? (mod as React.ComponentType<Record<string, unknown>>)
-              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
-          setComponent(() => resolved ?? null);
-        });
-      }, []);
-      return Component ? React.createElement(Component, props) : null;
-    };
-  },
-}));
 
 const { chartPanelMock } = vi.hoisted(() => ({
   chartPanelMock: vi.fn(({ title, id }: { title: string; id?: string }) => (
@@ -147,26 +126,10 @@ describe("PerformanceSummaryMode", () => {
     expect(screen.getByTestId("chart-panel")).toHaveTextContent(
       "Gross Return Path:performance-trend"
     );
-    expect(screen.queryByTestId("multi-horizon-panel")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();
-    expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
-    expect(screen.queryByText("Performance Drivers")).not.toBeInTheDocument();
-    expect(screen.getByText("Loading horizons")).toBeInTheDocument();
-    expect(screen.getByText("Horizon comparisons are loading after first paint.")).toBeInTheDocument();
-    expect(screen.getByText("Loading contributors")).toBeInTheDocument();
-    expect(screen.getByText("Contributor ranking is loading after first paint.")).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
-        `${scenario.workspace.portfolio_id}:YTD:GROSS:${scenario.selectedBenchmarkCode}`
-      );
-      expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
-    });
-
-    expect(screen.queryByText("Loading horizons")).not.toBeInTheDocument();
-    expect(screen.queryByText("Loading contributors")).not.toBeInTheDocument();
-    expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
-    expect(screen.queryByText("Performance Drivers")).not.toBeInTheDocument();
+    expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
+      `${scenario.workspace.portfolio_id}:YTD:GROSS:${scenario.selectedBenchmarkCode}`
+    );
+    expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
     expect(chartPanelMock).toHaveBeenCalledTimes(1);
     expect(chartPanelMock).toHaveBeenCalledWith(
       expect.objectContaining({
