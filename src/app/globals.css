@@ -10738,10 +10738,23 @@ a:hover {
 .performance-return-path-supporting-strip .performance-outcome-strip-item {
   min-height: 0;
   padding: 0.72rem 0.8rem;
+  border-color: rgba(34, 44, 59, 0.055);
+  background: linear-gradient(180deg, rgba(250, 252, 255, 0.94), rgba(247, 250, 253, 0.9));
+}
+
+.performance-return-path-supporting-strip .workbench-summary-metric-label {
+  color: #778498;
 }
 
 .performance-return-path-supporting-strip .workbench-summary-metric-value {
+  font-size: var(--type-metric-m-size);
+  font-weight: 650;
   line-height: 1.18;
+  color: #17263a;
+}
+
+.performance-return-path-supporting-strip .workbench-summary-metric-support {
+  color: #617185;
 }
 
 .performance-chart-legend {
