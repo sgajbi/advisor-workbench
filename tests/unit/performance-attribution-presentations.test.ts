@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getAttributionDetailClassificationGapBody,
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
   getAttributionTrendUnavailableBody,
@@ -84,6 +85,24 @@ describe("performance attribution presentations", () => {
 
     expect(getAttributionTrendUnavailableBody(trend)).toBe(
       "Attribution trend is not available for the current selection."
+    );
+  });
+
+  it("explains missing benchmark classification when attribution detail is unavailable", () => {
+    expect(
+      getAttributionDetailClassificationGapBody({
+        attributionDimension: "sector",
+        partialFailures: [
+          {
+            source_service: "lotus-performance",
+            error_code: "HTTP_422",
+            detail:
+              "Benchmark component IDX_GLOBAL_BOND_TR missing classification label for sector.",
+          },
+        ],
+      })
+    ).toBe(
+      "Sector attribution detail is unavailable because the selected benchmark does not expose complete sector classification for every component."
     );
   });
 });

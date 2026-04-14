@@ -187,6 +187,40 @@ describe("PerformanceAnalysisAttributionSection", () => {
     ).toBeTruthy();
   });
 
+  it("suppresses summary fallback when the requested attribution segment has a benchmark classification gap", () => {
+    const scenario = buildPartialAttributionPerformanceScenario();
+    scenario.workspace.partial_failures = [
+      {
+        source_service: "lotus-performance",
+        error_code: "HTTP_422",
+        detail:
+          "Benchmark component IDX_GLOBAL_BOND_TR missing classification label for sector.",
+      },
+    ];
+
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({
+          workspace: scenario.workspace,
+          attributionDimension: "sector",
+          capabilities: scenario.capabilities,
+          relativeSegmentRows: [],
+          topAttributionEffectRows: [],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Sector attribution detail is unavailable because the selected benchmark does not expose complete sector classification for every component."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution summary metrics")).not.toBeInTheDocument();
+    expect(screen.queryByText("Summary Total")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Sector attribution totals")).not.toBeInTheDocument();
+  });
+
   it("shows only one attribution detail surface at a time and switches to the effect breakdown grid", () => {
     render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
 

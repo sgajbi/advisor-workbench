@@ -2,6 +2,7 @@ import type {
   AttributionSummaryView,
   PerformanceBenchmarkOptionView,
   WorkbenchPerformanceAttributionTrend,
+  WorkbenchOverview,
 } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
@@ -96,12 +97,9 @@ export function getAttributionTrendSummaryItems(
 export function getAttributionTrendUnavailableBody(
   trend: WorkbenchPerformanceAttributionTrend | null
 ): string {
-  const upstreamFailure = trend?.partial_failures?.find(
-    (failure) =>
-      failure.source_service === "lotus-performance" &&
-      failure.error_code === "HTTP_422" &&
-      typeof failure.detail === "string" &&
-      failure.detail.toLowerCase().includes("missing classification label")
+  const upstreamFailure = getMissingClassificationFailure(
+    trend?.partial_failures,
+    trend?.attribution_dimension
   );
 
   if (upstreamFailure?.detail) {
@@ -110,4 +108,48 @@ export function getAttributionTrendUnavailableBody(
   }
 
   return "Attribution trend is not available for the current selection.";
+}
+
+export function getAttributionDetailClassificationGapBody(args: {
+  partialFailures?: WorkbenchOverview["partial_failures"] | null;
+  attributionDimension?: string | null;
+}): string | null {
+  const upstreamFailure = getMissingClassificationFailure(
+    args.partialFailures,
+    args.attributionDimension
+  );
+
+  if (!upstreamFailure?.detail) {
+    return null;
+  }
+
+  const requestedDimension = formatLabel(args.attributionDimension ?? "selection");
+  return `${requestedDimension} attribution detail is unavailable because the selected benchmark does not expose complete ${requestedDimension.toLowerCase()} classification for every component.`;
+}
+
+function getMissingClassificationFailure(
+  partialFailures: WorkbenchOverview["partial_failures"] | null | undefined,
+  requestedDimension?: string | null
+) {
+  const normalizedDimension = requestedDimension?.toLowerCase();
+  return partialFailures?.find((failure) => {
+    if (
+      failure.source_service !== "lotus-performance" ||
+      failure.error_code !== "HTTP_422" ||
+      typeof failure.detail !== "string"
+    ) {
+      return false;
+    }
+
+    const detail = failure.detail.toLowerCase();
+    if (!detail.includes("missing classification label")) {
+      return false;
+    }
+
+    if (!normalizedDimension) {
+      return true;
+    }
+
+    return detail.includes(`for ${normalizedDimension}`);
+  });
 }

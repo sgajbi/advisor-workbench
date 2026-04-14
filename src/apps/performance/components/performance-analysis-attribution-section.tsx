@@ -12,6 +12,7 @@ import PerformanceAnalysisModuleState from "./performance-analysis-module-state"
 import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
 import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
+import { getAttributionDetailClassificationGapBody } from "./performance-attribution-presentations";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
@@ -39,6 +40,17 @@ export default function PerformanceAnalysisAttributionSection({
     (capabilities.attributionDetail.state === "partial" &&
       hasAttributionSummaryLevels &&
       !hasDetailedAttributionRows);
+  const attributionClassificationGapBody = getAttributionDetailClassificationGapBody({
+    partialFailures: workspace.partial_failures,
+    attributionDimension,
+  });
+  const effectiveAttributionCapability = attributionClassificationGapBody
+    ? {
+        ...capabilities.attributionDetail,
+        state: "partial" as const,
+        reason: attributionClassificationGapBody,
+      }
+    : capabilities.attributionDetail;
   const attributionMethodologyRows = getAttributionMethodologyRows(
     workspace.attribution,
     workspace.benchmark_options ?? []
@@ -73,21 +85,24 @@ export default function PerformanceAnalysisAttributionSection({
       className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
-        capability={capabilities.attributionDetail}
+        capability={effectiveAttributionCapability}
         isDetailsPending={isDetailsPending}
         loadingText="Loading attribution effects and benchmark-relative decomposition."
         partialTitle="Attribution detail is partial"
         unavailableTitle="Attribution detail unavailable"
         body={
-          capabilities.attributionDetail.reason ??
+          attributionClassificationGapBody ??
+          effectiveAttributionCapability.reason ??
           "Attribution detail is not available for the current selection."
         }
         hint={
-          hasAttributionSummaryLevels
+          attributionClassificationGapBody
+            ? "Select a supported segment or use a benchmark with complete classification coverage for this dimension."
+            : hasAttributionSummaryLevels
             ? "Summary-level attribution remains available even when segment rows are absent."
             : "Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
         }
-        allowPartialContent={hasAttributionSummaryLevels}
+        allowPartialContent={hasAttributionSummaryLevels && !attributionClassificationGapBody}
       >
         {workspace.attribution ? (
           <PerformanceAnalysisDetailPane
