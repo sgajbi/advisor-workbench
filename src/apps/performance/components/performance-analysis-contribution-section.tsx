@@ -98,8 +98,6 @@ export default function PerformanceAnalysisContributionSection({
       >
         {workspace.contribution ? (
           <PerformanceAnalysisDetailPane
-            title="Contribution Breakdown"
-            subtitle="Review ranked positions first, then move to grouped contribution when needed."
             value={detailView}
             onChange={setDetailView}
             options={getContributionDetailOptions({

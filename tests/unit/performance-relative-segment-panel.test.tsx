@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import PerformanceRelativeSegmentPanel from "../../src/apps/performance/components/performance-relative-segment-panel";
 
 describe("PerformanceRelativeSegmentPanel", () => {
-  it("renders the relative segment matrix inside the shared chart shell", () => {
+  it("renders the relative segment matrix inside the compact detail surface", () => {
     render(
       <PerformanceRelativeSegmentPanel
         rows={[
@@ -26,10 +26,7 @@ describe("PerformanceRelativeSegmentPanel", () => {
       />
     );
 
-    expect(
-      document.querySelector(".performance-relative-segment-module.workbench-chart-shell")
-    ).toBeTruthy();
-    expect(screen.getByText("Relative Segment Context")).toBeInTheDocument();
+    expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
     expect(screen.getByText("Active Weight")).toBeInTheDocument();
     expect(screen.getByText("Active Return")).toBeInTheDocument();
     expect(screen.getByText("Total Effect")).toBeInTheDocument();
@@ -43,13 +40,10 @@ describe("PerformanceRelativeSegmentPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a compact empty state inside the shared chart shell", () => {
+  it("renders a compact empty state inside the detail surface", () => {
     render(<PerformanceRelativeSegmentPanel rows={[]} />);
 
-    expect(
-      document.querySelector(".performance-relative-segment-module.workbench-chart-shell")
-    ).toBeTruthy();
-    expect(screen.getByText("Relative Segment Context")).toBeInTheDocument();
+    expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
     expect(screen.getByText("Relative segment context unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(

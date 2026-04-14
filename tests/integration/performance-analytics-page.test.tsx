@@ -462,12 +462,12 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelector(".performance-relative-segment-module.workbench-chart-shell")).toBeTruthy();
+    expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
     expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeFalsy();
     expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(0);
     expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution Detail panel")).not.toBeInTheDocument();
-    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
+    expect(screen.queryByText("Contribution Breakdown")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Segment Attribution")).not.toBeInTheDocument();
@@ -486,9 +486,7 @@ describe("PerformanceAnalyticsPage", () => {
       "false"
     );
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Relative Segment Context" })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
     const attributionTable = await screen.findByLabelText("Asset Class attribution table");

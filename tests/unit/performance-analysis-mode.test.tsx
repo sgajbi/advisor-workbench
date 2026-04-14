@@ -43,7 +43,7 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
-    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
+    expect(screen.queryByText("Contribution Breakdown")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
     expect(

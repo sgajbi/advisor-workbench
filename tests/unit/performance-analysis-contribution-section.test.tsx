@@ -37,7 +37,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution Detail panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Top / Bottom Contributors")).not.toBeInTheDocument();
-    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
+    expect(screen.queryByText("Contribution Breakdown")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Position-level and segment-level contribution for the selected period.")
     ).not.toBeInTheDocument();
