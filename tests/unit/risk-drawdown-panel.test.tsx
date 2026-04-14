@@ -130,6 +130,9 @@ describe("RiskDrawdownPanel", () => {
     expect(
       (episodeSection as HTMLElement).querySelector(".performance-risk-note-card-compact")
     ).toBeTruthy();
+    expect(
+      (episodeSection as HTMLElement).querySelector(".performance-risk-drawdown-empty-note")
+    ).toBeTruthy();
     expect(screen.queryByLabelText("Risk drawdown episode table")).not.toBeInTheDocument();
     expect(screen.queryByText("No drawdown episodes to review")).not.toBeInTheDocument();
   });

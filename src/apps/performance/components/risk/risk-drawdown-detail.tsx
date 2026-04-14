@@ -17,7 +17,7 @@ export default function RiskDrawdownDetail({
     <div className="performance-risk-drawdown-detail-stack">
       <RiskDetailSection ariaLabel="Risk drawdown detail" density="compact">
         {viewModel.drawdownEpisodeInterpretation ? (
-          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card">
+          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card performance-risk-drawdown-empty-note">
             <div className="performance-risk-note-copy">
               <Text variant="cardTitle">{viewModel.drawdownEpisodeInterpretation.title}</Text>
               <Text variant="secondary">{viewModel.drawdownEpisodeInterpretation.body}</Text>
@@ -56,7 +56,7 @@ export default function RiskDrawdownDetail({
             }}
           />
         ) : !hasStructuredDetail ? (
-          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card">
+          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card performance-risk-drawdown-empty-note">
             <div className="performance-risk-note-copy">
               <Text variant="cardTitle">{fallbackDetail.title}</Text>
               <Text variant="secondary">{fallbackDetail.body}</Text>
