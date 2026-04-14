@@ -54,29 +54,6 @@ export default function PerformanceAnalysisContributionSection({
     <WorkbenchDataGridFrame
       id="performance-drivers"
       title="Performance Drivers"
-      actions={
-        <div className="performance-analysis-panel-actions">
-          <PerformanceAnalysisSegmentToolbar
-            ariaLabel="Contribution Segment"
-            value={contributionDimension}
-            disabled={isUpdating}
-            options={CONTRIBUTION_DIMENSION_OPTIONS}
-            isOptionSupported={(option) =>
-              isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
-            }
-            onChange={(nextValue) =>
-              onRequestChange?.({
-                contributionDimension: nextValue,
-              })
-            }
-          />
-          <PerformancePanelInfoDrawer
-            panelTitle="Performance Drivers"
-            rows={contributionMethodologyRows}
-            triggerVariant="inline"
-          />
-        </div>
-      }
       className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
@@ -105,6 +82,29 @@ export default function PerformanceAnalysisContributionSection({
               segmentCount: segmentLevel?.rows.length ?? 0,
               hasSegmentBreakdown: hasAggregateContributionLevels,
             })}
+            actions={
+              <div className="performance-analysis-panel-actions performance-analysis-panel-actions-inline">
+                <PerformanceAnalysisSegmentToolbar
+                  ariaLabel="Contribution Segment"
+                  value={contributionDimension}
+                  disabled={isUpdating}
+                  options={CONTRIBUTION_DIMENSION_OPTIONS}
+                  isOptionSupported={(option) =>
+                    isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
+                  }
+                  onChange={(nextValue) =>
+                    onRequestChange?.({
+                      contributionDimension: nextValue,
+                    })
+                  }
+                />
+                <PerformancePanelInfoDrawer
+                  panelTitle="Performance Drivers"
+                  rows={contributionMethodologyRows}
+                  triggerVariant="inline"
+                />
+              </div>
+            }
             className="performance-analysis-contribution-detail-pane"
           >
             {detailView === "positions" ? (

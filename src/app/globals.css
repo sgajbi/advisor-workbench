@@ -9790,6 +9790,23 @@ a:hover {
   flex: 0 0 auto;
 }
 
+.performance-analysis-detail-pane-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.performance-analysis-detail-pane-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .performance-analysis-detail-pane-tabs.mode-tabs,
 .performance-analysis-detail-pane-tabs.lotus-mode-tabs {
   border-bottom: 0;
@@ -9850,6 +9867,14 @@ a:hover {
 .performance-analysis-detail-pane-header-tabs-only {
   justify-content: flex-end;
   padding-bottom: 0;
+}
+
+.performance-analysis-panel-actions-inline .performance-analysis-toolbar {
+  margin-left: auto;
+}
+
+.performance-analysis-panel-actions-inline .performance-analysis-toolbar .MuiFormControl-root {
+  min-width: 9rem;
 }
 
 .performance-analysis-detail-stack,
