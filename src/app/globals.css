@@ -9632,6 +9632,11 @@ a:hover {
   height: auto;
 }
 
+.performance-analysis-stage {
+  display: grid;
+  gap: 0.72rem;
+}
+
 .performance-chart-panel,
 .performance-measurement-panel {
   display: grid;
@@ -9714,8 +9719,8 @@ a:hover {
 .performance-analysis-insight-pane,
 .performance-analysis-detail-pane {
   display: grid;
-  gap: 0.65rem;
-  padding: 0.85rem;
+  gap: 0.56rem;
+  padding: 0.72rem;
   border: 1px solid rgba(23, 32, 43, 0.08);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(250, 252, 253, 0.96) 0%, #ffffff 22%);
@@ -9770,8 +9775,8 @@ a:hover {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding-bottom: 0.15rem;
+  gap: 0.6rem;
+  padding-bottom: 0.1rem;
 }
 
 .performance-analysis-detail-pane-copy {
@@ -9797,7 +9802,7 @@ a:hover {
 
 .performance-analysis-detail-pane-tabs.mode-tabs .workbench-segmented-control-button,
 .performance-analysis-detail-pane-tabs.lotus-mode-tabs .workbench-segmented-control-button {
-  padding: 0.42rem 0.62rem;
+  padding: 0.38rem 0.56rem;
   border-radius: 8px;
   font-size: 0.74rem;
 }
@@ -9850,7 +9855,7 @@ a:hover {
 .performance-analysis-detail-stack,
 .performance-attribution-insight-pane {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.56rem;
 }
 
 .performance-analysis-detail-empty {

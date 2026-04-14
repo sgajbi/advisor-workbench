@@ -364,7 +364,7 @@ export default function PerformanceAttributionTrendPanel({
           >
             <ReactECharts
               option={chartOption}
-              style={{ width: "100%", height: "320px" }}
+              style={{ width: "100%", height: "344px" }}
               opts={{ renderer: "svg" }}
               notMerge
               lazyUpdate

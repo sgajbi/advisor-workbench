@@ -70,7 +70,7 @@ export default function PerformanceAnalysisAttributionSection({
           />
         </div>
       }
-      className="performance-detail-panel-compact performance-analysis-module performance-workspace-panel"
+      className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
         capability={capabilities.attributionDetail}

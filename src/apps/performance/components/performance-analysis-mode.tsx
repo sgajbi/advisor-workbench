@@ -1,5 +1,3 @@
-import { WorkspaceGrid } from "@/design-system";
-
 import PerformanceAnalysisDecisionSummary from "./performance-analysis-decision-summary";
 import PerformanceAnalysisAttributionSection from "./performance-analysis-attribution-section";
 import PerformanceAnalysisContributionSection from "./performance-analysis-contribution-section";
@@ -33,7 +31,7 @@ export default function PerformanceAnalysisMode({
         detailBasis={detailBasis}
         capabilities={capabilities}
       />
-      <WorkspaceGrid className="performance-detail-grid performance-analysis-stage performance-lotus-stage performance-lotus-stage-analysis">
+      <section className="performance-analysis-stage performance-lotus-stage performance-lotus-stage-analysis">
         <PerformanceAttributionTrendPanel
           portfolioId={workspace.portfolio.portfolio_id}
           period={period}
@@ -65,7 +63,7 @@ export default function PerformanceAnalysisMode({
           isDetailsPending={isDetailsPending}
           capabilities={capabilities}
         />
-      </WorkspaceGrid>
+      </section>
     </PerformanceWorkspaceStageSurface>
   );
 }
