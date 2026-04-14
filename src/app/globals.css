@@ -10629,7 +10629,7 @@ a:hover {
   line-height: var(--type-helper-text-line-height);
   color: #536274;
   max-width: none;
-  white-space: pre-line;
+  white-space: normal;
 }
 
 .performance-evidence-module-unavailable .workbench-data-grid-frame-body {

@@ -90,11 +90,12 @@ export function getPerformanceReturnPathPresentation({
     moneyWeightedReturn?.money_weighted_return_pct != null
       ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
       : "Unavailable";
-  const netFlowSupport = getPerformanceNetFlowSupport(summary, reportingCurrency, moneyWeightedReturn);
-  const flowAdjustedSupport =
-    resolvedEndMarketValue != null
-      ? `Ending MV ${formatCurrency(resolvedEndMarketValue, reportingCurrency)}`
-      : null;
+  const netFlowSupport = getPerformanceNetFlowSupport(
+    summary,
+    reportingCurrency,
+    moneyWeightedReturn,
+    resolvedEndMarketValue
+  );
 
   return {
     benchmarkAssigned,
@@ -174,7 +175,6 @@ export function getPerformanceReturnPathPresentation({
         key: "flow-adjusted-mv",
         label: "Flow-Adjusted MV",
         value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
-        support: flowAdjustedSupport ?? undefined,
         definition:
           "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
         unavailable: resolvedFlowAdjustedEndMarketValue == null,
@@ -190,7 +190,8 @@ export function getPerformanceNetFlowSupport(
     fees?: number | null;
   },
   reportingCurrency: string,
-  moneyWeightedReturn?: MoneyWeightedReturnSummary | null
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null,
+  endingMarketValue?: number | null
 ) {
   const beginningCashFlow =
     summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
@@ -205,6 +206,9 @@ export function getPerformanceNetFlowSupport(
         : null,
       endingCashFlow != null
         ? `Closing Cash ${formatCurrency(endingCashFlow, reportingCurrency)}`
+        : null,
+      endingMarketValue != null
+        ? `Ending MV ${formatCurrency(endingMarketValue, reportingCurrency)}`
         : null,
     ].filter(Boolean);
 
