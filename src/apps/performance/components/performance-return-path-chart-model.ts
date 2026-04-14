@@ -429,7 +429,13 @@ export function buildReturnPathChartOption({
         color: "#637083",
         formatter: formatAxisPct,
       },
-      axisLine: { show: false },
+      axisLine: {
+        show: true,
+        lineStyle: {
+          color: "rgba(22, 58, 92, 0.18)",
+          width: 1,
+        },
+      },
       axisTick: { show: false },
       splitLine: {
         lineStyle: {

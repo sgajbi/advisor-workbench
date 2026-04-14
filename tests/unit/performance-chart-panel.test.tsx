@@ -276,6 +276,7 @@ describe("PerformanceChartPanel", () => {
       axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
     });
     expect(lastChartOption?.yAxis).toMatchObject({
+      axisLine: { show: true, lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
       splitArea: {
         show: true,
       },
