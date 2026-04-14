@@ -98,18 +98,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     });
 
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
-    expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Period Range 01 Jan 2026 - 27 Mar 2026")
-    );
-    expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Basis NET")
-    );
-    expect(
-      document.querySelectorAll(
-        ".performance-analysis-context-row .workbench-chart-context-row-item"
-      )
-    ).toHaveLength(2);
+    expect(screen.queryByLabelText("Attribution trend context")).not.toBeInTheDocument();
     const trendSummaryStrip = screen.getByLabelText("Attribution trend summary strip");
     expect(trendSummaryStrip).toBeInTheDocument();
     expect(screen.getByText("Total Effect")).toBeInTheDocument();

@@ -7,7 +7,6 @@ import ReactECharts from "echarts-for-react";
 import {
   AnalyticsTable,
   ScreenStatePanel,
-  WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
@@ -22,7 +21,6 @@ import { formatLabel } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import {
-  getAttributionTrendContextItems,
   getAttributionTrendSummaryItems,
 } from "./performance-attribution-presentations";
 
@@ -279,18 +277,6 @@ export default function PerformanceAttributionTrendPanel({
     () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
     [rows]
   );
-  const contextItems = useMemo(
-    () =>
-      getAttributionTrendContextItems({
-        trend,
-        detailBasis,
-        attributionDimension,
-        benchmark,
-        benchmarkOptions,
-        period,
-      }),
-    [attributionDimension, benchmark, benchmarkOptions, detailBasis, period, trend]
-  );
   const metricItems = useMemo(
     () => getAttributionTrendSummaryItems(trend),
     [trend]
@@ -339,13 +325,6 @@ export default function PerformanceAttributionTrendPanel({
         <span className="performance-analysis-shell-action">
           {trend?.chart_frequency ?? chartFrequency}
         </span>
-      }
-      contextRow={
-        <WorkbenchChartContextRow
-          label="Attribution trend context"
-          className="performance-analysis-context-row"
-          items={contextItems}
-        />
       }
       metricStrip={
         metricItems.length ? (

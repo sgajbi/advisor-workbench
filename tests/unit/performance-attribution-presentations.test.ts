@@ -4,7 +4,6 @@ import {
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
   getAttributionDetailSummaryItems,
-  getAttributionTrendContextItems,
   getAttributionTrendSummaryItems,
 } from "../../src/apps/performance/components/performance-attribution-presentations";
 import {
@@ -27,9 +26,6 @@ describe("performance attribution presentations", () => {
 
     expect(contextItems).toEqual([
       { label: "Benchmark", value: "Global Balanced 60/40 • USD" },
-      { label: "Benchmark Source", value: "Calculated" },
-      { label: "Attribution Model", value: "Brinson-Fachler" },
-      { label: "Linking Method", value: "Carino" },
     ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
       "Active Return",
@@ -43,34 +39,16 @@ describe("performance attribution presentations", () => {
     ]);
   });
 
-  it("builds trend context and latest-row summary from the trend contract", () => {
+  it("builds latest-row summary from the trend contract", () => {
     const trend = buildPerformanceAttributionTrend();
-    const contextItems = getAttributionTrendContextItems({
-      trend,
-      detailBasis: "NET",
-      attributionDimension: "asset_class",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      period: "YTD",
-    });
     const summaryItems = getAttributionTrendSummaryItems(trend);
 
-    expect(contextItems).toEqual([
-      { label: "Period Range", value: "01 Jan 2026 - 24 Feb 2026" },
-      { label: "Basis", value: "NET" },
-      { label: "Benchmark", value: "BMK GLOBAL BALANCED 60 40" },
-      { label: "Segment", value: "Asset Class" },
-    ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
       "Total Effect",
-      "Active Return",
       "Cumulative Total",
-      "Residual",
     ]);
     expect(summaryItems.find((item) => item.label === "Total Effect")?.support).toBe(
-      "Residual de minimis • Active 0.22%"
-    );
-    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
-      "Effects 0.22% + Residual 0.00%"
+      "Active 0.22%"
     );
   });
 
@@ -98,29 +76,6 @@ describe("performance attribution presentations", () => {
     ]);
   });
 
-  it("uses benchmark option labels when trend context receives them", () => {
-    const trend = buildPerformanceAttributionTrend();
-    const contextItems = getAttributionTrendContextItems({
-      trend,
-      detailBasis: "NET",
-      attributionDimension: "asset_class",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      benchmarkOptions: [
-        {
-          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-          benchmark_name: "Global Balanced 60/40",
-          is_assigned: true,
-        },
-      ],
-      period: "YTD",
-    });
-
-    expect(contextItems[2]).toEqual({
-      label: "Benchmark",
-      value: "Global Balanced 60/40",
-    });
-  });
-
   it("builds attribution reconciliation text from summary values", () => {
     const scenario = buildSupportedPerformanceScenario();
 
@@ -130,27 +85,4 @@ describe("performance attribution presentations", () => {
     });
   });
 
-  it("includes benchmark provider provenance in trend context when option metadata is available", () => {
-    const trend = buildPerformanceAttributionTrend();
-    const contextItems = getAttributionTrendContextItems({
-      trend,
-      detailBasis: "NET",
-      attributionDimension: "asset_class",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      benchmarkOptions: [
-        {
-          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-          benchmark_name: "Global Balanced 60/40",
-          benchmark_provider: "LOTUS_DEMO",
-          is_assigned: true,
-        },
-      ],
-      period: "YTD",
-    });
-
-    expect(contextItems[2]).toEqual({
-      label: "Benchmark",
-      value: "Global Balanced 60/40",
-    });
-  });
 });

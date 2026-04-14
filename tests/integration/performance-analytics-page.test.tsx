@@ -452,7 +452,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByLabelText("Performance analysis mode intro")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Performance analysis context")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
-    expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Attribution trend context")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();

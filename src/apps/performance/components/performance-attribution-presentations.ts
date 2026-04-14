@@ -4,7 +4,7 @@ import type {
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
-import { formatDate, formatPct } from "../formatters";
+import { formatPct } from "../formatters";
 import {
   getPerformanceBenchmarkContextValue,
 } from "./performance-summary-context-helpers";
@@ -91,42 +91,6 @@ export function getAttributionDetailSummaryItems(
     {
       label: "Residual",
       value: formatPct(attribution.residual_pct),
-    },
-  ];
-}
-
-export function getAttributionTrendContextItems({
-  trend,
-  detailBasis,
-  attributionDimension,
-  benchmark,
-  benchmarkOptions = [],
-  period,
-}: {
-  trend: WorkbenchPerformanceAttributionTrend | null;
-  detailBasis: string;
-  attributionDimension: string;
-  benchmark?: string;
-  benchmarkOptions?: PerformanceBenchmarkOptionView[];
-  period: string;
-}) {
-  void attributionDimension;
-  void benchmark;
-  void benchmarkOptions;
-
-  const resolvedWindowLabel =
-    trend?.report_start_date && trend?.report_end_date
-      ? `${formatDate(trend.report_start_date)} - ${formatDate(trend.report_end_date)}`
-      : period;
-
-  return [
-    {
-      label: "Period Range",
-      value: resolvedWindowLabel,
-    },
-    {
-      label: "Basis",
-      value: detailBasis,
     },
   ];
 }
