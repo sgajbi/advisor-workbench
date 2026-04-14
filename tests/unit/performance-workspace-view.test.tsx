@@ -6,6 +6,7 @@ import PerformanceWorkspaceView from "../../src/apps/performance/components/perf
 import {
   buildNormalizedControlsPerformanceScenario,
   buildSupportedPerformanceScenario,
+  buildUnavailableAttributionPerformanceScenario,
   buildUnavailableEvidencePerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 import type { PerformanceWorkspaceMode } from "../../src/apps/performance/performance-workspace-modes";
@@ -56,9 +57,11 @@ describe("PerformanceWorkspaceView", () => {
   function renderWorkspaceView({
     mode = "summary",
     workspace = buildSupportedPerformanceScenario().workspace,
+    isDetailsPending = false,
   }: {
     mode?: PerformanceWorkspaceMode;
     workspace?: ReturnType<typeof buildSupportedPerformanceScenario>["workspace"];
+    isDetailsPending?: boolean;
   }) {
     function Harness() {
       const [selectedMode, setSelectedMode] = React.useState<PerformanceWorkspaceMode>(mode);
@@ -73,6 +76,7 @@ describe("PerformanceWorkspaceView", () => {
           attributionDimension="asset_class"
           chartFrequency="monthly"
           onModeChange={setSelectedMode}
+          isDetailsPending={isDetailsPending}
         />
       );
     }
@@ -130,6 +134,22 @@ describe("PerformanceWorkspaceView", () => {
 
     expect(screen.getByRole("button", { name: /^Performance Analysis/i })).not.toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
+    });
+  });
+
+  it("keeps analysis navigable while detail availability is still hydrating", async () => {
+    const scenario = buildUnavailableAttributionPerformanceScenario();
+
+    renderWorkspaceView({ workspace: scenario.workspace, isDetailsPending: true });
+
+    const analysisButton = screen.getByRole("button", { name: /^Performance Analysis/i });
+    expect(analysisButton).not.toBeDisabled();
+    expect(analysisButton).toHaveAttribute("title", "Analysis availability is loading.");
+    expect(screen.getByText("Loading")).toBeInTheDocument();
+
+    fireEvent.click(analysisButton);
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });

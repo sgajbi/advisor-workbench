@@ -166,6 +166,7 @@ export default function PerformanceWorkspaceView({
           workspace={workspace}
           mode={mode}
           period={period}
+          isDetailsPending={isDetailsPending}
           capabilities={capabilities}
           selectedBenchmarkLabel={selectedBenchmarkLabel}
           onModeChange={onModeChange}

@@ -23,6 +23,7 @@ type PerformanceWorkspaceRailProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   mode: PerformanceWorkspaceMode;
   period: string;
+  isDetailsPending?: boolean;
   capabilities?: PerformanceWorkspaceCapabilities | null;
   selectedBenchmarkLabel?: string | null;
   onModeChange: (mode: PerformanceWorkspaceMode) => void;
@@ -70,6 +71,7 @@ export default function PerformanceWorkspaceRail({
   workspace,
   mode,
   period,
+  isDetailsPending = false,
   capabilities,
   selectedBenchmarkLabel,
   onModeChange,
@@ -144,9 +146,32 @@ export default function PerformanceWorkspaceRail({
           <div className="performance-rail-item-list">
             {WORKSPACE_NAV_ITEMS.map((item) => {
               const capability = item.capabilityKey ? capabilities?.[item.capabilityKey] : null;
-              const disabled = capability ? !isInteractiveCapability(capability) : false;
+              const isPendingAnalysisAvailability =
+                item.mode === "analysis" &&
+                isDetailsPending &&
+                capability?.state === "unavailable";
+              const disabled =
+                capability && !isPendingAnalysisAvailability
+                  ? !isInteractiveCapability(capability)
+                  : false;
               const active = mode === item.mode;
               const modeDefinition = getPerformanceWorkspaceModeDefinition(item.mode);
+              const badge = isPendingAnalysisAvailability ? (
+                <SemanticBadge
+                  tone="default"
+                  className="performance-rail-item-badge"
+                  title="Analysis availability is still loading."
+                >
+                  Loading
+                </SemanticBadge>
+              ) : capability ? (
+                <SemanticBadge
+                  tone={getCapabilityTone(capability)}
+                  className="performance-rail-item-badge"
+                >
+                  {getCapabilityLabel(capability)}
+                </SemanticBadge>
+              ) : null;
 
               return (
                 <PerformanceRailActionItem
@@ -155,18 +180,15 @@ export default function PerformanceWorkspaceRail({
                   disabled={disabled}
                   aria-current={active ? "page" : undefined}
                   aria-pressed={active}
-                  title={disabled ? capability?.reason : modeDefinition.intro?.description}
-                  onClick={() => onModeChange(item.mode)}
-                  badge={
-                    capability ? (
-                      <SemanticBadge
-                        tone={getCapabilityTone(capability)}
-                        className="performance-rail-item-badge"
-                      >
-                        {getCapabilityLabel(capability)}
-                      </SemanticBadge>
-                    ) : null
+                  title={
+                    isPendingAnalysisAvailability
+                      ? "Analysis availability is loading."
+                      : disabled
+                        ? capability?.reason
+                        : modeDefinition.intro?.description
                   }
+                  onClick={() => onModeChange(item.mode)}
+                  badge={badge}
                 >
                   {item.label}
                 </PerformanceRailActionItem>
