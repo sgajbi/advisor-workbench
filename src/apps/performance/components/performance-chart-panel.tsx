@@ -191,28 +191,24 @@ export default function PerformanceChartPanel({
     returnPathPresentation,
     hasRenderableReturnPath
   );
+  const outcomeStripItems = outcomeItems.map((metric) => ({
+    key: metric.key,
+    label: metric.label,
+    value: metric.value,
+    support: metric.support,
+    definition: metric.definition,
+    unavailable: metric.unavailable,
+  }));
   const outcomeStrip =
     capabilities.summaryKpis.state !== "unavailable" ? (
       <PerformanceOutcomeStrip
-        items={outcomeItems.map((metric) => ({
-          key: metric.key,
-          label: metric.label,
-          value: metric.value,
-          support: metric.support,
-          definition: metric.definition,
-          unavailable: metric.unavailable,
-        }))}
+        className="performance-return-path-outcome-strip"
+        items={outcomeStripItems}
       />
     ) : null;
-  const topContext = hasRenderableReturnPath ? (
-    <div className="performance-return-path-top-stack">
-      <PerformanceReturnPathSummary items={summaryItems} />
-    </div>
-  ) : outcomeStrip ? (
-    <div className="performance-return-path-top-stack">
-      <div className="performance-return-path-supporting-strip">{outcomeStrip}</div>
-    </div>
-  ) : undefined;
+  const topContext = hasRenderableReturnPath
+    ? <PerformanceReturnPathSummary items={summaryItems} />
+    : outcomeStrip;
   const { resolvedWindowLabel, resolvedBasisLabel } = resolveWindowAndBasisLabels({
     period,
     detailBasis,
@@ -326,7 +322,10 @@ export default function PerformanceChartPanel({
             />
           </div>
           {outcomeStrip ? (
-            <div className="performance-return-path-secondary-strip">{outcomeStrip}</div>
+            <PerformanceOutcomeStrip
+              className="performance-return-path-outcome-strip performance-return-path-outcome-strip-secondary"
+              items={outcomeStripItems}
+            />
           ) : null}
           <PerformanceObservationTrail tableModel={chartTableModel} />
         </>

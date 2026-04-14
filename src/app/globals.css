@@ -10604,26 +10604,21 @@ a:hover {
 }
 
 .performance-return-path-body {
-  gap: 0.58rem;
+  gap: 0.52rem;
 }
 
 .performance-chart-analysis-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.56rem;
+  gap: 0.48rem;
   align-items: start;
 }
 
 .performance-chart-readout-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.42rem;
   min-width: 0;
-}
-
-.performance-return-path-top-stack {
-  display: grid;
-  gap: 0.28rem;
 }
 
 .performance-chart-readout-eyebrow,
@@ -10639,7 +10634,7 @@ a:hover {
 .performance-chart-readout-primary {
   display: grid;
   gap: 0.16rem;
-  padding: 0.68rem 0.76rem 0.64rem;
+  padding: 0.6rem 0.72rem 0.58rem;
   border: 1px solid rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 252, 0.96));
@@ -10653,22 +10648,16 @@ a:hover {
   font-variant-numeric: var(--type-financial-numeric);
 }
 
-.performance-return-path-supporting-strip .performance-outcome-strip {
+.performance-return-path-outcome-strip {
   gap: 0.5rem;
 }
 
-.performance-return-path-secondary-strip {
-  display: grid;
-  gap: 0.42rem;
-  padding-top: 0.08rem;
-}
-
-.performance-return-path-secondary-strip .performance-outcome-strip {
+.performance-return-path-outcome-strip-secondary {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.36rem;
 }
 
-.performance-return-path-secondary-strip .performance-outcome-strip-item {
+.performance-return-path-outcome-strip-secondary .performance-outcome-strip-item {
   min-height: 0;
   gap: 0.14rem;
   padding: 0.54rem 0.68rem 0.5rem;
@@ -10676,43 +10665,43 @@ a:hover {
   background: linear-gradient(180deg, rgba(250, 252, 255, 0.88), rgba(247, 250, 253, 0.82));
 }
 
-.performance-return-path-secondary-strip .workbench-summary-metric-label {
+.performance-return-path-outcome-strip-secondary .workbench-summary-metric-label {
   color: #8592a2;
   letter-spacing: 0.07em;
 }
 
-.performance-return-path-secondary-strip .workbench-summary-metric-value {
+.performance-return-path-outcome-strip-secondary .workbench-summary-metric-value {
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.16;
   color: #223247;
 }
 
-.performance-return-path-secondary-strip .workbench-summary-metric-support {
+.performance-return-path-outcome-strip-secondary .workbench-summary-metric-support {
   font-size: var(--type-metadata-size);
   line-height: var(--type-metadata-line-height);
   color: #728196;
 }
 
-.performance-return-path-supporting-strip .performance-outcome-strip-item {
+.performance-return-path-outcome-strip .performance-outcome-strip-item {
   min-height: 0;
-  padding: 0.72rem 0.8rem;
+  padding: 0.64rem 0.76rem;
   border-color: rgba(34, 44, 59, 0.055);
   background: linear-gradient(180deg, rgba(250, 252, 255, 0.94), rgba(247, 250, 253, 0.9));
 }
 
-.performance-return-path-supporting-strip .workbench-summary-metric-label {
+.performance-return-path-outcome-strip .workbench-summary-metric-label {
   color: #778498;
 }
 
-.performance-return-path-supporting-strip .workbench-summary-metric-value {
+.performance-return-path-outcome-strip .workbench-summary-metric-value {
   font-size: var(--type-metric-m-size);
   font-weight: 650;
   line-height: 1.18;
   color: #17263a;
 }
 
-.performance-return-path-supporting-strip .workbench-summary-metric-support {
+.performance-return-path-outcome-strip .workbench-summary-metric-support {
   color: #617185;
 }
 
@@ -10763,7 +10752,7 @@ a:hover {
 }
 
 .performance-return-path-chart-stage {
-  min-height: 27rem;
+  min-height: 28.5rem;
 }
 
 .performance-horizon-loading-state {
