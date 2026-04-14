@@ -199,7 +199,7 @@ describe("performance summary driver helpers", () => {
     });
   });
 
-  it("builds a partial contributor presentation with aggregate rows when position ranking is unavailable", () => {
+  it("builds an aggregate contributor presentation when position ranking is unavailable", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 
     const presentation = getPerformanceContributorsPresentation(
@@ -213,15 +213,15 @@ describe("performance summary driver helpers", () => {
       })
     );
 
-    expect(presentation).toMatchObject({
-      mode: "partial",
-      noticeTitle: "Contributor ranking is partial",
-      noticeBody: "Contribution exists, but only aggregate rows are available.",
-      hint: "Aggregate contribution remains available even when position-level ranking is absent.",
-    });
-    if (presentation.mode !== "partial") {
-      throw new Error("expected partial contributor presentation");
+    expect(presentation.mode).toBe("supported");
+    if (presentation.mode !== "supported") {
+      throw new Error("expected supported contributor presentation");
     }
+    expect(presentation.detailDisclosureTitle).toBe("Segment detail");
+    expect(presentation.positiveRankedItems[0]).toMatchObject({
+      title: "Equity",
+      value: "3.80%",
+    });
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
   });
 

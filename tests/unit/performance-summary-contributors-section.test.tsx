@@ -155,7 +155,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.queryByLabelText("Aggregate contributor summary")).not.toBeInTheDocument();
   });
 
-  it("renders a partial-state panel with an aggregate table when only aggregate contributor support exists", () => {
+  it("renders contributor and detractor cards from aggregate rows when only aggregate contributor support exists", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 
     render(
@@ -170,24 +170,16 @@ describe("PerformanceSummaryContributorsSection", () => {
       />
     );
 
-    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
-    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
-    expect(
-      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Contributor ranking partial state")).toBeInTheDocument();
-    const note = screen.getByRole("note");
-    expect(note).toHaveTextContent("High coverage");
-    expect(note).toHaveTextContent("Reconciles to return");
-    expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
-    const aggregateTable = screen.getByLabelText("Aggregate contributor summary");
+    expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("Equity");
+    expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent(
+      "No detracting segment contributors are exposed for the selected period."
+    );
+    expect(screen.getByText("Segment detail")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Segment detail"));
+    const aggregateTable = screen.getByLabelText("Contributor instrument detail table");
     expect(aggregateTable).toBeInTheDocument();
-    expect(
-      aggregateTable.closest(".performance-contributors-table.performance-chart-observation-table")
-    ).toBeTruthy();
     expect(within(aggregateTable).getByText("Equity")).toBeInTheDocument();
-    expect(within(aggregateTable).getByText("Total")).toBeInTheDocument();
-    expect(within(aggregateTable).getAllByText("5.42%")).toHaveLength(2);
+    expect(within(aggregateTable).getByText("Contribution")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 

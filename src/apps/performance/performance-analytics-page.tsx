@@ -1,5 +1,4 @@
 import {
-  getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummary,
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
@@ -94,16 +93,7 @@ export default async function PerformanceAnalyticsPage({
         selectedPortfolioId,
         workspaceRequest
       );
-      workspaceDetails = await getWorkbenchPerformanceWorkspaceDetails(selectedPortfolioId, {
-        period: workspaceSummary.period,
-        chartFrequency: workspaceSummary.chart_frequency,
-        contributionDimension,
-        attributionDimension,
-        detailBasis: workspaceSummary.detail_basis,
-        benchmark: workspaceSummary.benchmark_code ?? benchmark,
-        reportStartDate: workspaceSummary.report_start_date,
-        reportEndDate: workspaceSummary.report_end_date,
-      });
+      workspaceDetails = null;
     } catch {
       workspaceSummary = null;
       workspaceDetails = null;

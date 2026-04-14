@@ -260,6 +260,82 @@ describe("PerformanceWorkspaceClient", () => {
     });
   });
 
+  it("normalizes stale initial detail dimensions during first client hydration", async () => {
+    const degradedInitialDetails = buildDetails({
+      contribution_dimension: "country",
+      attribution_dimension: "country",
+      segment: "country",
+      net_chart: [],
+      contribution: {
+        ...buildDetails().contribution!,
+        position_rows: [],
+      },
+      attribution: null,
+      partial_failures: [
+        {
+          source_service: "lotus-performance",
+          error_code: "HTTP_422",
+          detail: "Benchmark component missing classification label for country.",
+        },
+      ],
+      capabilities: {
+        ...buildDetails().capabilities,
+        return_path: {
+          ...buildDetails().capabilities.return_path,
+          state: "unavailable",
+          reason: "Published return observations are not available for the selected horizon.",
+        },
+        contribution_ranking: {
+          ...buildDetails().capabilities.contribution_ranking,
+          state: "partial",
+          reason: "Contribution exists, but only aggregate rows are available.",
+        },
+        attribution_detail: {
+          ...buildDetails().capabilities.attribution_detail,
+          state: "unavailable",
+          reason: "Attribution detail is not available for the current selection.",
+        },
+      },
+    });
+    const normalizedDetails = buildDetails();
+
+    getDetailsClientMock
+      .mockResolvedValueOnce(degradedInitialDetails)
+      .mockResolvedValueOnce(normalizedDetails);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="country"
+        initialAttributionDimension="country"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
+    expect(getDetailsClientMock.mock.calls[0]?.[1]).toMatchObject({
+      contributionDimension: "country",
+      attributionDimension: "country",
+    });
+    expect(getDetailsClientMock.mock.calls[1]?.[1]).toMatchObject({
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+    });
+    expect(replaceMock).toHaveBeenCalledWith(
+      "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+  });
+
   it("normalizes stale initial control params to the server-resolved detail controls", async () => {
     render(
       <PerformanceWorkspaceClient

@@ -200,12 +200,12 @@ describe("PerformanceAnalyticsPage", () => {
             .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
         )
       ).toBe(true);
-      expect(
-        fetchMock.mock.calls.some(([input]) =>
-          isServerDetailsCall(input.toString(), "PB_SG_GLOBAL_BAL_001")
-        )
-      ).toBe(true);
     });
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        isServerDetailsCall(input.toString(), "PB_SG_GLOBAL_BAL_001")
+      )
+    ).toBe(false);
   });
 
   it("falls back to the demo performance portfolio when the front-office seed is unavailable", async () => {
@@ -222,12 +222,12 @@ describe("PerformanceAnalyticsPage", () => {
             .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")
         )
       ).toBe(true);
-      expect(
-        fetchMock.mock.calls.some(([input]) =>
-          isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001")
-        )
-      ).toBe(true);
     });
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001")
+      )
+    ).toBe(false);
     expect(await screen.findByLabelText("Benchmark")).toHaveValue("BMK_GLOBAL_BALANCED_60_40");
   });
 
@@ -1139,25 +1139,16 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
   });
 
-  it("renders a contributor-ranking partial state when only aggregate contribution rows are available", async () => {
+  it("renders top contributor and detractor cards when only aggregate contribution rows are available", async () => {
     installPerformancePageFetchScenario(buildAggregateContributionPerformanceScenario());
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
-    expect(await screen.findByText("Contributor ranking is partial")).toBeInTheDocument();
-    expect(
-      screen.getByText("Contribution exists, but only aggregate rows are available.")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("note")).toHaveTextContent("High coverage");
-    expect(screen.getByRole("note")).toHaveTextContent("Average weight");
-    expect(screen.getByText("Reconciles to return")).toBeInTheDocument();
-    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("Equity");
+    expect(screen.getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
+    expect(screen.queryByText("Contributor ranking is partial")).not.toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
@@ -1177,13 +1168,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
 
     expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
-    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
-    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
-    expect(
-      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Aggregate contributor summary")).toBeInTheDocument();
-    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top Contributors impact bars")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
+    expect(screen.queryByText("Contributor ranking is partial")).not.toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
   });
 
@@ -1216,7 +1203,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildAggregateContributionPerformanceScenario(),
       executiveExpectations: ["Flow-Adjusted MV"],
       readoutExpectations: ["Money-Weighted Return"],
-      deferredExpectations: ["Contributor ranking is partial"],
+      deferredExpectations: ["Top Contributors", "Top Detractors"],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["AAPL"],
     },
@@ -1225,7 +1212,7 @@ describe("PerformanceAnalyticsPage", () => {
       scenario: buildCombinedPartialPerformanceScenario(),
       executiveExpectations: ["Flow-Adjusted MV"],
       readoutExpectations: ["Money-Weighted Return"],
-      deferredExpectations: ["Contributor ranking is partial"],
+      deferredExpectations: ["Top Contributors", "Top Detractors"],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },
@@ -1295,15 +1282,10 @@ describe("PerformanceAnalyticsPage", () => {
     const summaryCall = fetchMock.mock.calls.find(([input]) =>
       input.toString().includes("/api/v1/workbench/PF_1001/performance/summary")
     );
-    await waitFor(() => {
-      expect(
-        fetchMock.mock.calls.some(([input]) =>
-          isServerDetailsCall(input.toString(), "PF_1001")
-        )
-      ).toBe(true);
-    });
     const detailsCall = fetchMock.mock.calls.find(([input]) =>
-      isServerDetailsCall(input.toString(), "PF_1001")
+      input
+        .toString()
+        .includes("/api/bff/api/v1/workbench/PF_1001/performance/details")
     );
     expect(summaryCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");
     expect(detailsCall?.[0].toString()).toContain("benchmark_code=BMK_GLOBAL_BALANCED_60_40");

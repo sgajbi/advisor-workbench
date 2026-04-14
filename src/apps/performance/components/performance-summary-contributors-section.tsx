@@ -47,7 +47,7 @@ export default function PerformanceSummaryContributorsSection({
         title: "Top Contributors",
         ariaLabel: "Top Contributors impact bars",
         items: presentation.positiveRankedItems,
-        emptyBody: "No positive position contributors are exposed for the selected period.",
+        emptyBody: presentation.positiveEmptyBody,
         hasItems: hasPositiveRankedItems,
       },
       {
@@ -55,7 +55,7 @@ export default function PerformanceSummaryContributorsSection({
         title: "Top Detractors",
         ariaLabel: "Top Detractors impact bars",
         items: presentation.negativeRankedItems,
-        emptyBody: "No detracting positions are exposed for the selected period.",
+        emptyBody: presentation.negativeEmptyBody,
         hasItems: hasNegativeRankedItems,
       },
     ] as const;
@@ -63,14 +63,14 @@ export default function PerformanceSummaryContributorsSection({
     const secondaryGroup =
       rankedContributorGroups.find((group) => group.key !== primaryGroup.key) ?? rankedContributorGroups[1];
     const instrumentDetailDisclosure = (
-      <PerformanceModuleDisclosure
-        className="performance-contributors-table-disclosure"
-        summaryClassName="performance-contributors-table-disclosure-summary"
-        titleClassName="performance-contributors-table-disclosure-title"
-        title="Instrument detail"
-      >
-        <AnalyticsTable
-          ariaLabel="Contributor instrument detail table"
+        <PerformanceModuleDisclosure
+          className="performance-contributors-table-disclosure"
+          summaryClassName="performance-contributors-table-disclosure-summary"
+          titleClassName="performance-contributors-table-disclosure-title"
+          title={presentation.detailDisclosureTitle}
+        >
+          <AnalyticsTable
+            ariaLabel="Contributor instrument detail table"
           className="performance-contributors-table performance-chart-observation-table"
           density="compact"
           variant="observation"
