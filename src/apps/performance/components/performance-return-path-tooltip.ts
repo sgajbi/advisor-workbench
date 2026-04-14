@@ -36,9 +36,18 @@ function escapeTooltipHtml(value: string) {
 
 function buildTooltipContainer(title: string, rows: string, minWidth: number) {
   return [
-    `<div style="display:grid;gap:8px;min-width:${minWidth}px;">`,
-    `<div style="color:#607086;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeTooltipHtml(title)}</div>`,
+    `<div style="display:grid;gap:10px;min-width:${minWidth}px;max-width:320px;">`,
+    `<div style="color:#607086;font-size:11px;font-weight:800;letter-spacing:0.08em;line-height:1.3;text-transform:uppercase;">${escapeTooltipHtml(title)}</div>`,
     rows,
+    "</div>",
+  ].join("");
+}
+
+function buildTooltipMetricRow(label: string, value: number) {
+  return [
+    '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:2px;">',
+    `<span style="color:#607086;font-size:11px;font-weight:800;letter-spacing:0.06em;line-height:1.3;text-transform:uppercase;white-space:nowrap;">${escapeTooltipHtml(label)}</span>`,
+    `<strong style="color:#172033;font-size:12px;font-weight:800;line-height:1.35;font-variant-numeric:tabular-nums slashed-zero;white-space:nowrap;text-align:right;">${escapeTooltipHtml(formatPct(value))}</strong>`,
     "</div>",
   ].join("");
 }
@@ -55,12 +64,7 @@ function buildTooltipGroup(
         return "";
       }
 
-      return [
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
-        `<span style="color:#607086;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">${escapeTooltipHtml(label)}</span>`,
-        `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
-        "</div>",
-      ].join("");
+      return buildTooltipMetricRow(label, numericValue);
     })
     .filter(Boolean)
     .join("");
@@ -70,12 +74,12 @@ function buildTooltipGroup(
   }
 
   return [
-    '<section style="display:grid;gap:6px;padding:8px 10px;border:1px solid rgba(36, 50, 70, 0.08);border-radius:10px;background:rgba(248,250,252,0.78);">',
-    `<div style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:800;">`,
+    '<section style="display:grid;gap:8px;padding:9px 10px;border:1px solid rgba(36, 50, 70, 0.08);border-radius:10px;background:rgba(248,250,252,0.78);">',
+    `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:8px;color:#334155;font-size:12px;font-weight:800;line-height:1.35;">`,
     `<span style="width:8px;height:8px;border-radius:999px;background:${color};display:inline-block;"></span>`,
-    `${escapeTooltipHtml(title)}`,
+    `<span style="min-width:0;white-space:nowrap;">${escapeTooltipHtml(title)}</span>`,
     "</div>",
-    content,
+    `<div style="display:grid;gap:4px;">${content}</div>`,
     "</section>",
   ].join("");
 }
@@ -114,9 +118,9 @@ export function formatReturnPathTooltip(params: CallbackDataParams | CallbackDat
       }
 
       return [
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">',
-        `<span style="display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:700;">${entry.marker ?? ""}${escapeTooltipHtml(entry.seriesName ?? "")}</span>`,
-        `<strong style="color:#172033;font-size:12px;font-weight:800;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
+        '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;">',
+        `<span style="display:inline-flex;align-items:center;gap:8px;min-width:0;color:#334155;font-size:12px;font-weight:700;line-height:1.35;">${entry.marker ?? ""}<span style="white-space:nowrap;">${escapeTooltipHtml(entry.seriesName ?? "")}</span></span>`,
+        `<strong style="color:#172033;font-size:12px;font-weight:800;line-height:1.35;font-variant-numeric:tabular-nums slashed-zero;white-space:nowrap;text-align:right;">${escapeTooltipHtml(formatPct(numericValue))}</strong>`,
         "</div>",
       ].join("");
     })
