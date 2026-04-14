@@ -1,6 +1,5 @@
 import {
   Panel,
-  SemanticBadge,
   Text,
   type WorkbenchSummaryMetricStripItem,
   WorkbenchSummaryMetricStrip,
@@ -17,30 +16,6 @@ import {
   getTopPositionContributionRows,
   hasPositionContributionRanking,
 } from "../view-model";
-
-function toCapabilityTone(
-  state: PerformanceWorkspaceCapabilities["attributionDetail"]["state"]
-): "success" | "warn" | "danger" {
-  if (state === "supported") {
-    return "success";
-  }
-  if (state === "partial") {
-    return "warn";
-  }
-  return "danger";
-}
-
-function toCapabilityValue(
-  state: PerformanceWorkspaceCapabilities["attributionDetail"]["state"]
-): string {
-  if (state === "supported") {
-    return "Ready";
-  }
-  if (state === "partial") {
-    return "Partial";
-  }
-  return "Unavailable";
-}
 
 function getTopDriverLabel(workspace: WorkbenchPerformanceWorkspace): string | null {
   if (hasPositionContributionRanking(workspace)) {
@@ -63,14 +38,12 @@ export default function PerformanceAnalysisDecisionSummary({
   detailBasis: string;
   capabilities: PerformanceWorkspaceCapabilities;
 }) {
+  void capabilities;
+
   const selectedPerformance =
     detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance;
   const topDriverLabel = getTopDriverLabel(workspace);
   const contributionCoverage = workspace.contribution?.coverage_mv_pct;
-  const evidenceGaps = [
-    capabilities.attributionDetail,
-    capabilities.contributionDetail,
-  ].filter((capability) => capability.state !== "supported" && capability.reason);
   const headline =
     topDriverLabel && contributionCoverage != null
       ? `Largest observed driver ${topDriverLabel}; contribution coverage ${formatPct(
@@ -154,31 +127,6 @@ export default function PerformanceAnalysisDecisionSummary({
             items={cards}
           />
         ) : null}
-
-        <div className="performance-analysis-summary-band-status" aria-label="Analysis evidence gaps">
-          <div className="performance-analysis-summary-band-status-heading">
-            <span>Coverage</span>
-          </div>
-          <div className="performance-analysis-summary-band-status-items">
-            <div className="performance-analysis-summary-band-status-item">
-              <span className="performance-analysis-summary-band-status-label">Attribution detail</span>
-              <SemanticBadge tone={toCapabilityTone(capabilities.attributionDetail.state)}>
-                {toCapabilityValue(capabilities.attributionDetail.state)}
-              </SemanticBadge>
-            </div>
-            <div className="performance-analysis-summary-band-status-item">
-              <span className="performance-analysis-summary-band-status-label">Contribution detail</span>
-              <SemanticBadge tone={toCapabilityTone(capabilities.contributionDetail.state)}>
-                {toCapabilityValue(capabilities.contributionDetail.state)}
-              </SemanticBadge>
-            </div>
-            {evidenceGaps[0]?.reason ? (
-              <div className="performance-analysis-summary-band-gap">
-                {evidenceGaps[0].reason}
-              </div>
-            ) : null}
-          </div>
-        </div>
       </Panel>
     </section>
   );

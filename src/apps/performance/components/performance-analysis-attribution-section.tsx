@@ -12,9 +12,11 @@ import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import { getAttributionDetailOptions } from "./performance-analysis-detail-options";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
+import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
+import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
 import {
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
@@ -51,6 +53,10 @@ export default function PerformanceAnalysisAttributionSection({
     workspace.attribution,
     workspace.benchmark_options ?? []
   );
+  const attributionMethodologyRows = getAttributionMethodologyRows(
+    workspace.attribution,
+    workspace.benchmark_options ?? []
+  );
   const attributionReconciliation = workspace.attribution
     ? getAttributionReconciliationText(workspace.attribution)
     : null;
@@ -61,20 +67,27 @@ export default function PerformanceAnalysisAttributionSection({
       title="Attribution Detail"
       subtitle="Benchmark-relative allocation, selection, and interaction effects."
       actions={
-        <PerformanceAnalysisSegmentToolbar
-          ariaLabel="Attribution Segment"
-          value={attributionDimension}
-          disabled={disableAttributionSegmentControl}
-          options={ATTRIBUTION_DIMENSION_OPTIONS}
-          isOptionSupported={(option) =>
-            isCapabilityOptionSupported(capabilities.attributionDetail, "dimension", option)
-          }
-          onChange={(nextValue) =>
-            onRequestChange?.({
-              attributionDimension: nextValue,
-            })
-          }
-        />
+        <div className="performance-analysis-panel-actions">
+          <PerformanceAnalysisSegmentToolbar
+            ariaLabel="Attribution Segment"
+            value={attributionDimension}
+            disabled={disableAttributionSegmentControl}
+            options={ATTRIBUTION_DIMENSION_OPTIONS}
+            isOptionSupported={(option) =>
+              isCapabilityOptionSupported(capabilities.attributionDetail, "dimension", option)
+            }
+            onChange={(nextValue) =>
+              onRequestChange?.({
+                attributionDimension: nextValue,
+              })
+            }
+          />
+          <PerformancePanelInfoDrawer
+            panelTitle="Attribution Detail"
+            rows={attributionMethodologyRows}
+            triggerVariant="inline"
+          />
+        </div>
       }
       contextRow={
         workspace.attribution ? (
@@ -129,6 +142,7 @@ export default function PerformanceAnalysisAttributionSection({
             onChange={setDetailView}
             options={getAttributionDetailOptions({
               hasSummaryOnlyBreakdown: hasAttributionSummaryLevels && !hasDetailedAttributionRows,
+              hasRelativeSegmentContext: hasRelativeSegmentRows,
             })}
           >
             {detailView === "relative" ? (

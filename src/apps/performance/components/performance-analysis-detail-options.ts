@@ -38,14 +38,19 @@ export function getContributionDetailOptions({
 
 export function getAttributionDetailOptions({
   hasSummaryOnlyBreakdown,
+  hasRelativeSegmentContext,
 }: {
   hasSummaryOnlyBreakdown: boolean;
+  hasRelativeSegmentContext: boolean;
 }): Array<WorkbenchSegmentedControlOption<AttributionDetailView>> {
   return [
     {
       key: "relative",
       label: "Relative Segment Context",
-      title: "Relative segment context for the selected attribution dimension",
+      disabled: !hasRelativeSegmentContext,
+      title: hasRelativeSegmentContext
+        ? "Relative segment context for the selected attribution dimension"
+        : "Relative segment context is unavailable for this selection",
     },
     {
       key: "breakdown",

@@ -103,21 +103,19 @@ describe("PerformanceAttributionTrendPanel", () => {
       compactPattern("Period Range 01 Jan 2026 - 27 Mar 2026")
     );
     expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
+      compactPattern("Basis NET")
     );
     expect(
       document.querySelectorAll(
         ".performance-analysis-context-row .workbench-chart-context-row-item"
       )
-    ).toHaveLength(4);
+    ).toHaveLength(2);
     const trendSummaryStrip = screen.getByLabelText("Attribution trend summary strip");
     expect(trendSummaryStrip).toBeInTheDocument();
     expect(screen.getByText("Total Effect")).toBeInTheDocument();
-    expect(within(trendSummaryStrip).getByText("Active Return")).toBeInTheDocument();
     expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
-    expect(
-      within(trendSummaryStrip).getByText("Residual")
-    ).toBeInTheDocument();
+    expect(within(trendSummaryStrip).queryByText("Active Return")).not.toBeInTheDocument();
+    expect(within(trendSummaryStrip).queryByText("Residual")).not.toBeInTheDocument();
     expect(screen.getByTestId("performance-attribution-trend-chart")).toBeInTheDocument();
     const chartOption = JSON.parse(
       screen.getByTestId("performance-attribution-trend-chart").getAttribute("data-option") ?? "{}"

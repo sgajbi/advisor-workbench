@@ -9495,6 +9495,35 @@ a:hover {
   min-width: 0;
 }
 
+.performance-analysis-panel-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.performance-panel-inline-action {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--brand-600);
+  font: inherit;
+  font-size: var(--type-button-size);
+  font-weight: 600;
+  line-height: var(--type-button-line-height);
+  padding: 0.25rem 0;
+  cursor: pointer;
+}
+
+.performance-panel-inline-action:hover,
+.performance-panel-inline-action:focus-visible {
+  color: var(--brand-700);
+  text-decoration: underline;
+  outline: none;
+}
+
 .performance-analysis-toolbar .MuiFormControl-root .MuiOutlinedInput-root {
   border-radius: 10px;
   background: rgba(248, 250, 252, 0.94);

@@ -75,17 +75,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
       /Benchmark\s*Global Balanced 60\/40\s*•\s*USD/i
     );
-    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
-      /Benchmark Source\s*Calculated/i
-    );
-    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
-      /Attribution Model\s*Brinson-Fachler/i
-    );
-    expect(screen.getByRole("group", { name: "Attribution detail context" })).toHaveTextContent(
-      /Linking Method\s*Carino/i
-    );
+    expect(screen.getByText("View Details")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent(/Active return/i);
+    expect(screen.getByRole("note")).toHaveTextContent(/residual/i);
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeFalsy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(0);
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
@@ -93,7 +86,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByText("Top Effects")).not.toBeInTheDocument();
     expect(screen.getByText("Segment Attribution")).toBeInTheDocument();
     expect(
-      screen.getByText("Benchmark-relative segment context and Brinson effect breakdown.")
+      screen.getByText("Use relative context for weight and return gaps, then move to effect decomposition.")
     ).toBeInTheDocument();
     expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.queryByText("Top Active Effects")).not.toBeInTheDocument();
@@ -117,6 +110,13 @@ describe("PerformanceAnalysisAttributionSection", () => {
       "true"
     );
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Attribution Detail methodology and coverage" }));
+
+    const drawer = screen.getByRole("dialog", { name: "Attribution Detail methodology and coverage" });
+    expect(drawer).toHaveTextContent("Benchmark Source");
+    expect(drawer).toHaveTextContent("Attribution Model");
+    expect(drawer).toHaveTextContent("Linking Method");
   });
 
   it("renders an actionable fallback when attribution detail is unavailable", () => {
@@ -165,7 +165,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(
       screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
     ).toBeInTheDocument();
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent(/Active return/i);
+    expect(screen.getByRole("note")).toHaveTextContent(/residual/i);
     expect(screen.getByRole("group", { name: "Attribution detail context" })).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution summary strip")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
@@ -213,6 +214,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
       "aria-selected",
       "true"
     );
+    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
@@ -225,6 +230,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
 
     expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
       "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
+      "aria-disabled",
       "true"
     );
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();

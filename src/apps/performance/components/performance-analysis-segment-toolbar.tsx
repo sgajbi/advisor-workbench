@@ -1,9 +1,8 @@
 import { FormControl, MenuItem, Select } from "@mui/material";
 
-import { FieldLabel } from "@/design-system";
+import { FieldLabel, WorkbenchSummaryToolbar } from "@/design-system";
 
 import { formatLabel } from "../formatters";
-import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
 
 type PerformanceAnalysisSegmentToolbarProps = {
   fieldLabel?: string;
@@ -25,7 +24,7 @@ export default function PerformanceAnalysisSegmentToolbar({
   onChange,
 }: PerformanceAnalysisSegmentToolbarProps) {
   return (
-    <PerformanceAnalysisToolbar>
+    <WorkbenchSummaryToolbar className="performance-analysis-toolbar">
       <FormControl size="small" sx={{ minWidth: 180 }}>
         <FieldLabel>{fieldLabel}</FieldLabel>
         <Select
@@ -41,6 +40,6 @@ export default function PerformanceAnalysisSegmentToolbar({
           ))}
         </Select>
       </FormControl>
-    </PerformanceAnalysisToolbar>
+    </WorkbenchSummaryToolbar>
   );
 }

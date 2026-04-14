@@ -48,6 +48,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByText("Contribution Coverage")).not.toBeInTheDocument();
     expect(screen.queryByText("Total Contribution")).not.toBeInTheDocument();
     expect(screen.queryByText("Reconciles to return")).not.toBeInTheDocument();
+    expect(screen.getByText("View Details")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
       "aria-selected",
@@ -252,7 +253,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     );
   });
 
-  it("surfaces weighting provenance when live contribution summary includes it", () => {
+  it("moves contribution methodology and coverage into the details drawer", () => {
     const workspace = buildWorkspace();
     if (!workspace.contribution) {
       throw new Error("Expected contribution detail in supported workspace fixture");
@@ -270,24 +271,11 @@ describe("PerformanceAnalysisContributionSection", () => {
       />
     );
 
-    expect(screen.getByRole("note")).toHaveTextContent("High coverage • BOD weighting");
-  });
+    fireEvent.click(screen.getByRole("button", { name: "Performance Drivers methodology and coverage" }));
 
-  it("shows a contribution context note when aggregate rows are present", () => {
-    render(
-      <PerformanceAnalysisContributionSection
-        workspace={buildWorkspace()}
-        contributionDimension="asset_class"
-        onRequestChange={undefined}
-        isUpdating={false}
-        isDetailsPending={false}
-        capabilities={supportedCapabilities}
-      />
-    );
-
-    const note = screen.getByRole("note");
-    expect(note).toHaveTextContent("High coverage");
-    expect(note).toHaveTextContent("Average weight");
-    expect(note).not.toHaveTextContent("Reconciles to return");
+    const drawer = screen.getByRole("dialog", { name: "Performance Drivers methodology and coverage" });
+    expect(drawer).toHaveTextContent("Coverage");
+    expect(drawer).toHaveTextContent("Weighting Scheme");
+    expect(drawer).toHaveTextContent("BOD weighting");
   });
 });

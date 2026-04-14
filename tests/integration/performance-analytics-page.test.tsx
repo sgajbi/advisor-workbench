@@ -447,7 +447,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Analysis decision summary")).toHaveTextContent(
       "Analysis Snapshot"
     );
-    expect(screen.getByLabelText("Analysis evidence gaps")).toHaveTextContent("Attribution detail");
+    expect(screen.queryByLabelText("Analysis evidence gaps")).not.toBeInTheDocument();
     expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
     expect(screen.queryByLabelText("Performance analysis mode intro")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Performance analysis context")).not.toBeInTheDocument();

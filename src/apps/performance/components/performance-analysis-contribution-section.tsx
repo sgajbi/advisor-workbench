@@ -7,14 +7,15 @@ import {
 } from "./performance-analytics-table-models";
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import { getContributionDetailOptions } from "./performance-analysis-detail-options";
+import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
-import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import { formatLabel } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
+import { getContributionMethodologyRows } from "./performance-analysis-methodology-rows";
 
 type ContributionDetailView = "positions" | "segments";
 
@@ -47,26 +48,34 @@ export default function PerformanceAnalysisContributionSection({
       })
     : null;
   const segmentLevel = workspace.contribution?.levels?.[0] ?? null;
+  const contributionMethodologyRows = getContributionMethodologyRows(workspace.contribution);
 
   return (
     <WorkbenchDataGridFrame
       id="performance-drivers"
       title="Performance Drivers"
       actions={
-        <PerformanceAnalysisSegmentToolbar
-          ariaLabel="Contribution Segment"
-          value={contributionDimension}
-          disabled={isUpdating}
-          options={CONTRIBUTION_DIMENSION_OPTIONS}
-          isOptionSupported={(option) =>
-            isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
-          }
-          onChange={(nextValue) =>
-            onRequestChange?.({
-              contributionDimension: nextValue,
-            })
-          }
-        />
+        <div className="performance-analysis-panel-actions">
+          <PerformanceAnalysisSegmentToolbar
+            ariaLabel="Contribution Segment"
+            value={contributionDimension}
+            disabled={isUpdating}
+            options={CONTRIBUTION_DIMENSION_OPTIONS}
+            isOptionSupported={(option) =>
+              isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
+            }
+            onChange={(nextValue) =>
+              onRequestChange?.({
+                contributionDimension: nextValue,
+              })
+            }
+          />
+          <PerformancePanelInfoDrawer
+            panelTitle="Performance Drivers"
+            rows={contributionMethodologyRows}
+            triggerVariant="inline"
+          />
+        </div>
       }
       className="performance-detail-panel-wide performance-analysis-module"
     >
@@ -91,15 +100,6 @@ export default function PerformanceAnalysisContributionSection({
           <PerformanceAnalysisDetailPane
             title="Contribution Breakdown"
             subtitle="Review ranked positions first, then move to grouped contribution when needed."
-            summary={
-              hasAggregateContributionLevels ? (
-                <PerformanceContributionContextNote
-                  contribution={workspace.contribution}
-                  className="performance-analysis-detail-pane-note performance-contribution-context-note"
-                  showReconciliation={false}
-                />
-              ) : null
-            }
             value={detailView}
             onChange={setDetailView}
             options={getContributionDetailOptions({
