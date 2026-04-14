@@ -27,13 +27,13 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Period Range",
-      "Active Return",
-      "Cumulative Active",
+      "Window",
+      "Active",
+      "Cum. Active",
     ]);
     expect(model.rows[0]?.cells).toEqual([
       "2026-01",
-      "01 Jan 2026 - 31 Jan 2026",
+      "01-31 Jan 2026",
       "0.30%",
       "0.30%",
     ]);
@@ -51,7 +51,7 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Period Range",
+      "Window",
       "Opening MV",
       "Opening Cash Flow",
       "Ending MV",
