@@ -181,9 +181,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Current review horizon")).not.toBeInTheDocument();
     expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
-    expect(document.querySelector(".workbench-page-header-subtitle")).toHaveTextContent(
-      "Benchmark-aware return, attribution, contribution, and evidence review."
-    );
+    expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeTruthy();
     expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
@@ -224,9 +222,7 @@ describe("PerformanceWorkspaceView", () => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getByText("Benchmark-aware concentration, drawdown, rolling, and attribution review.")
-    ).toHaveClass("workbench-page-header-subtitle");
+    expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(riskModeMock).toHaveBeenCalled();
     expect(riskModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
       workspace: scenario.workspace,

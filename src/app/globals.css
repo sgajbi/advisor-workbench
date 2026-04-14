@@ -5600,10 +5600,6 @@ a:hover {
     box-shadow: none;
   }
 
-.performance-rail {
-  gap: 1rem;
-}
-
 .performance-layout {
   --workstation-rail-width: 260px;
   --workstation-side-width: 296px;
@@ -8319,10 +8315,6 @@ a:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .performance-chart-context-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .performance-risk-executive-grid,
   .performance-risk-primary-grid,
   .performance-risk-secondary-workspace,
@@ -8404,10 +8396,6 @@ a:hover {
   .performance-risk-primary-group,
   .performance-risk-secondary-group {
     padding: 0.62rem;
-  }
-
-  .performance-chart-context-strip {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .performance-chart-legend {
@@ -10588,44 +10576,6 @@ a:hover {
   border: 0;
   border-radius: 0;
   background: transparent;
-}
-
-.performance-chart-context-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0;
-}
-
-.performance-chart-context-field {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.34rem;
-  min-width: 0;
-  padding: 0.36rem 0.56rem;
-  border: 1px solid rgba(34, 44, 59, 0.07);
-  border-radius: 999px;
-  background: rgba(249, 250, 252, 0.9);
-}
-
-.performance-chart-context-label {
-  color: var(--text-muted);
-  font-size: var(--type-label-size);
-  font-weight: var(--type-label-weight);
-  line-height: var(--type-label-line-height);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.performance-chart-context-value {
-  color: #172234;
-  font-size: var(--type-table-cell-size);
-  font-weight: 600;
-  line-height: var(--type-table-cell-line-height);
-  font-variant-numeric: var(--type-financial-numeric);
-  overflow-wrap: anywhere;
-  white-space: nowrap;
 }
 
 .performance-outcome-strip-item {
@@ -13274,10 +13224,6 @@ a:hover {
   .performance-analysis-control-slot-benchmark-select .MuiInputBase-input {
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .performance-chart-context-strip {
-    grid-template-columns: 1fr;
   }
 
   .performance-chart-date-stack {
