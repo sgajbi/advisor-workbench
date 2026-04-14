@@ -3,7 +3,8 @@ param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
-  [switch]$BuildImages
+  [switch]$BuildImages,
+  [switch]$RunValidation
 )
 
 $ErrorActionPreference = "Stop"
@@ -96,6 +97,21 @@ if (-not (Test-HttpReady "http://127.0.0.1:3000")) {
   Start-Sleep -Seconds 10
 } else {
   Write-Host "Workbench already responding on :3000"
+}
+
+if (-not $RunValidation) {
+  if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
+    Write-Warning "ScreenshotDirectory is ignored unless -RunValidation is also supplied."
+  }
+
+  Write-Host ""
+  Write-Host "Canonical front-office stack is up."
+  Write-Host "  Workbench: http://workbench.dev.lotus"
+  Write-Host "  Gateway:   http://gateway.dev.lotus"
+  Write-Host "  Manage:    http://manage.dev.lotus"
+  Write-Host ""
+  Write-Host "Run 'npm run live:validate' from lotus-workbench when you want end-to-end validation."
+  return
 }
 
 Write-Host "Running canonical live validation ..."
