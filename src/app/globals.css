@@ -8128,7 +8128,7 @@ a:hover {
 
 .performance-risk-concentration-scale-card {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.56rem;
   min-width: 0;
 }
 
@@ -8190,13 +8190,15 @@ a:hover {
 
 .performance-risk-concentration-scale-legend {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.24rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.32rem;
+  padding-top: 0.04rem;
 }
 
 .performance-risk-concentration-scale-legend .ui-text-metadata {
   font-size: 0.68rem;
   line-height: 1.35;
+  text-align: center;
 }
 
 .performance-risk-concentration-scale-reading {
@@ -8224,6 +8226,10 @@ a:hover {
 .performance-risk-concentration-panel .performance-risk-concentration-scale-list {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.58rem;
+}
+
+.performance-risk-concentration-panel .performance-risk-concentration-scale-legend {
+  gap: 0.28rem;
 }
 
 .performance-risk-concentration-panel .performance-risk-concentration-scale .ui-text-card-title {
@@ -8361,6 +8367,11 @@ a:hover {
   .performance-risk-concentration-context-list,
   .performance-risk-concentration-indicator-grid {
     grid-template-columns: 1fr;
+  }
+
+  .performance-risk-concentration-scale-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 0.24rem;
   }
 
   .performance-risk-detail-toolbar {
