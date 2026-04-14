@@ -180,6 +180,11 @@ describe("PerformanceWorkspaceView", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Current review horizon")).not.toBeInTheDocument();
     expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Move between summary, diagnostics, advisory narrative, and risk review without losing context."
+      )
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))

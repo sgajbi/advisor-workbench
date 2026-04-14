@@ -134,6 +134,11 @@ describe("PerformanceAnalyticsPage", () => {
       )
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Calendar-to-date window")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Move between summary, diagnostics, advisory narrative, and risk review without losing context."
+      )
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Review Context")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();

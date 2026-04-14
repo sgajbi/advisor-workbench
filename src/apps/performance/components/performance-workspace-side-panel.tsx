@@ -43,6 +43,14 @@ export default function PerformanceWorkspaceSidePanel({
     : [];
   const showSupportability = mode !== "summary" && trustItems.length > 0;
   const workflowActions = buildWorkflowActions(mode);
+  const reviewContextItems = buildReviewContextItems({
+    workspace,
+    modeLabel: modeDefinition.label,
+    period,
+    detailBasis,
+    chartFrequency,
+    selectedBenchmarkLabel,
+  });
 
   return (
     <div className="performance-side-panel" aria-label="Performance workspace context">
@@ -53,34 +61,12 @@ export default function PerformanceWorkspaceSidePanel({
           </Text>
         </div>
         <dl className="performance-side-facts">
-          <div className="performance-side-fact">
-            <dt>Active Surface</dt>
-            <dd>{modeDefinition.label}</dd>
-          </div>
-          <div className="performance-side-fact">
-            <dt>Review Window</dt>
-            <dd>
-              {workspace
-                ? `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`
-                : "Unavailable"}
-            </dd>
-          </div>
-          <div className="performance-side-fact">
-            <dt>Horizon</dt>
-            <dd>{formatLabel(period)}</dd>
-          </div>
-          <div className="performance-side-fact">
-            <dt>Basis</dt>
-            <dd>{formatLabel(detailBasis)}</dd>
-          </div>
-          <div className="performance-side-fact">
-            <dt>Frequency</dt>
-            <dd>{formatLabel(chartFrequency)}</dd>
-          </div>
-          <div className="performance-side-fact">
-            <dt>Benchmark</dt>
-            <dd>{selectedBenchmarkLabel ?? "Benchmark pending"}</dd>
-          </div>
+          {reviewContextItems.map((item) => (
+            <div key={item.label} className="performance-side-fact">
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
         </dl>
       </WorkbenchRailCard>
 
@@ -89,9 +75,6 @@ export default function PerformanceWorkspaceSidePanel({
           <div className="performance-card-header">
             <Text variant="cardTitle" className="performance-side-card-title">
               Supportability
-            </Text>
-            <Text variant="secondary" className="performance-card-subtitle">
-              Published module coverage and benchmark-relative readiness for the current selection.
             </Text>
           </div>
           <div className="performance-side-status-list">
@@ -112,9 +95,6 @@ export default function PerformanceWorkspaceSidePanel({
         <div className="performance-card-header">
           <Text variant="cardTitle" className="performance-side-card-title">
             Workflow
-          </Text>
-          <Text variant="secondary" className="performance-card-subtitle">
-            Move between summary, diagnostics, advisory narrative, and risk review without losing context.
           </Text>
         </div>
         <div className="performance-side-actions">
@@ -140,6 +120,41 @@ export default function PerformanceWorkspaceSidePanel({
       </WorkbenchRailCard>
     </div>
   );
+}
+
+type ReviewContextItem = {
+  label: string;
+  value: string;
+};
+
+function buildReviewContextItems({
+  workspace,
+  modeLabel,
+  period,
+  detailBasis,
+  chartFrequency,
+  selectedBenchmarkLabel,
+}: {
+  workspace: WorkbenchPerformanceWorkspace | null;
+  modeLabel: string;
+  period: string;
+  detailBasis: string;
+  chartFrequency: string;
+  selectedBenchmarkLabel?: string | null;
+}): ReviewContextItem[] {
+  return [
+    { label: "Active Surface", value: modeLabel },
+    {
+      label: "Review Window",
+      value: workspace
+        ? `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`
+        : "Unavailable",
+    },
+    { label: "Horizon", value: formatLabel(period) },
+    { label: "Basis", value: formatLabel(detailBasis) },
+    { label: "Frequency", value: formatLabel(chartFrequency) },
+    { label: "Benchmark", value: selectedBenchmarkLabel ?? "Benchmark pending" },
+  ];
 }
 
 function mapItemTone(tone?: "default" | "success" | "warn" | "danger") {
