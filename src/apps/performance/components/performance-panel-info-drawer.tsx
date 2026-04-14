@@ -73,14 +73,17 @@ export default function PerformancePanelInfoDrawer({
           </div>
 
           <div className="performance-risk-info-drawer-body">
-            <div className="performance-risk-context-list performance-risk-context-list-compact">
+            <div className="performance-risk-context-list performance-risk-context-list-compact performance-panel-info-list">
               {rows.map((row) => (
-                <div key={row.key} className="performance-risk-context-item">
-                  <div className="performance-risk-context-item-copy">
+                <div key={row.key} className="performance-risk-context-item performance-panel-info-row">
+                  <div className="performance-risk-context-item-copy performance-panel-info-row-copy">
                     <Text variant="label">{row.label}</Text>
                     <Text variant="metadata">{row.support}</Text>
                   </div>
-                  <Text variant="cardTitle" className="performance-risk-context-item-value">
+                  <Text
+                    variant="cardTitle"
+                    className="performance-risk-context-item-value performance-panel-info-row-value"
+                  >
                     {row.value}
                   </Text>
                 </div>

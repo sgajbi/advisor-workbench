@@ -7587,6 +7587,31 @@ a:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.performance-panel-info-list.performance-risk-context-list-compact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.performance-panel-info-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.42rem;
+}
+
+.performance-panel-info-row-copy {
+  min-width: 0;
+}
+
+.performance-panel-info-row-value {
+  text-align: left;
+  justify-self: stretch;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--type-panel-title-size);
+  line-height: 1.35;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .performance-risk-window-toolbar {
   justify-self: start;
 }
