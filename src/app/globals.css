@@ -8831,8 +8831,9 @@ a:hover {
 
 .performance-advisor-brief-item {
   display: grid;
-  gap: 0.58rem;
-  padding: 0.82rem 0.88rem;
+  gap: var(--space-3);
+  min-height: var(--metric-tile-height-compact);
+  padding: var(--space-4);
 }
 
 .performance-advisor-brief-item-positive,
@@ -8943,14 +8944,14 @@ a:hover {
 .performance-advisor-brief-drilldown-list,
 .performance-advisor-brief-item-list {
   display: grid;
-  gap: 0.58rem;
+  gap: var(--space-3);
   min-width: 0;
 }
 
 .performance-advisor-brief-item-list-narrative,
 .performance-advisor-brief-item-list-risk,
 .performance-advisor-brief-section-workflow .performance-advisor-brief-workflow-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
 }
 
 .performance-advisor-brief-workflow-action,
@@ -8960,7 +8961,8 @@ a:hover {
   align-items: center;
   gap: 0.85rem;
   width: 100%;
-  padding: 0.74rem 0.82rem;
+  min-height: var(--metric-tile-height-compact);
+  padding: var(--space-3) var(--space-4);
   border-radius: 10px;
   border: 1px solid rgba(23, 32, 43, 0.08);
   background: #ffffff;

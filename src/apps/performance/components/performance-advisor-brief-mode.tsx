@@ -7,6 +7,10 @@ import { usePerformanceAdvisorBrief } from "../use-performance-advisor-brief";
 import LotusAuditStrip from "./advisor-brief/lotus-audit-strip";
 import LotusDrilldownList from "./advisor-brief/lotus-drilldown-list";
 import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
+import {
+  dedupeAdvisorActions,
+  toAdvisorNoteCopy,
+} from "./advisor-brief/performance-advisor-brief-helpers";
 import LotusPageHeader from "./advisor-brief/lotus-page-header";
 import LotusSupportabilityPanel from "./advisor-brief/lotus-supportability-panel";
 import LotusTalkingPointCard from "./advisor-brief/lotus-talking-point-card";
@@ -165,37 +169,4 @@ export default function PerformanceAdvisorBriefMode({
         </div>
     </PerformanceWorkspaceStageSurface>
   );
-}
-
-function dedupeAdvisorActions(
-  actions: ReturnType<typeof buildPerformanceAdvisorBriefViewModel>["recommendedActions"]
-) {
-  const seen = new Set<string>();
-  return actions.filter((action) => {
-    const key = `${action.targetMode}:${action.label}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-}
-
-function toAdvisorNoteCopy(brief: ReturnType<typeof buildPerformanceAdvisorBriefViewModel>) {
-  const sections = [
-    brief.summary,
-    "",
-    "Client Talking Points",
-    ...brief.talkingPoints.map((item) => `- ${item.headline} ${item.detail}`),
-    "",
-    "Recommended Actions",
-    ...brief.recommendedActions.map((action) => `- ${action.label}`),
-    "",
-    "Risks / Exceptions",
-    ...(brief.risksAndExceptions.length
-      ? brief.risksAndExceptions.map((item) => `- ${item.headline} ${item.detail}`)
-      : ["- No material supportability exceptions are flagged."]),
-  ];
-
-  return sections.join("\n");
 }
