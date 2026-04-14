@@ -151,10 +151,10 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
     await expect(executiveStrip.getByText('Opening MV')).toBeVisible();
     await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
+    await expect(executiveStrip.getByText('Opening Cash')).toBeVisible();
+    await expect(executiveStrip.getByText('Closing Cash')).toBeVisible();
     await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
-    await expect(executiveStrip).toContainText('Opening Cash');
-    await expect(executiveStrip).toContainText('Closing Cash');
-    await expect(executiveStrip).toContainText('Ending MV');
+    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
     await expect(page.getByLabel('Return decision readout')).toContainText('Portfolio Return');
     await expect(page.getByLabel('Return decision readout')).toContainText('Benchmark Return');
     await expect(page.getByLabel('Return decision readout')).toContainText('Active Return');

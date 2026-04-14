@@ -86,16 +86,14 @@ export function getPerformanceReturnPathPresentation({
     summary.flow_adjusted_end_market_value ??
     moneyWeightedReturn?.flow_adjusted_end_market_value ??
     null;
+  const resolvedBeginningCashFlow =
+    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
+  const resolvedEndingCashFlow =
+    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
   const resolvedMoneyWeightedReturn =
     moneyWeightedReturn?.money_weighted_return_pct != null
       ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
       : "Unavailable";
-  const netFlowSupport = getPerformanceNetFlowSupport(
-    summary,
-    reportingCurrency,
-    moneyWeightedReturn,
-    resolvedEndMarketValue
-  );
 
   return {
     benchmarkAssigned,
@@ -166,11 +164,34 @@ export function getPerformanceReturnPathPresentation({
         key: "net-flow",
         label: "Net Flow",
         value: formatCurrency(resolvedNetCashFlow, reportingCurrency),
-        support: netFlowSupport,
         definition:
           "Net external cash movement during the reporting window after subscriptions, withdrawals, and other funded activity.",
         unavailable: resolvedNetCashFlow == null,
       },
+      ...(resolvedBeginningCashFlow != null
+        ? [
+            {
+              key: "opening-cash",
+              label: "Opening Cash",
+              value: formatCurrency(resolvedBeginningCashFlow, reportingCurrency),
+              definition:
+                "Opening external cash position resolved for the reporting window before current-period activity is applied.",
+              unavailable: false,
+            },
+          ]
+        : []),
+      ...(resolvedEndingCashFlow != null
+        ? [
+            {
+              key: "closing-cash",
+              label: "Closing Cash",
+              value: formatCurrency(resolvedEndingCashFlow, reportingCurrency),
+              definition:
+                "Closing external cash position after subscriptions, withdrawals, and other funded activity in the selected window.",
+              unavailable: false,
+            },
+          ]
+        : []),
       {
         key: "flow-adjusted-mv",
         label: "Flow-Adjusted MV",
@@ -179,49 +200,20 @@ export function getPerformanceReturnPathPresentation({
           "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
         unavailable: resolvedFlowAdjustedEndMarketValue == null,
       },
+      ...(resolvedEndMarketValue != null
+        ? [
+            {
+              key: "ending-mv",
+              label: "Ending MV",
+              value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
+              definition:
+                "Ending market value at the close of the reporting window after market movement and cash activity are recognized.",
+              unavailable: false,
+            },
+          ]
+        : []),
     ],
   };
-}
-
-export function getPerformanceNetFlowSupport(
-  summary: {
-    beginning_cash_flow?: number | null;
-    ending_cash_flow?: number | null;
-    fees?: number | null;
-  },
-  reportingCurrency: string,
-  moneyWeightedReturn?: MoneyWeightedReturnSummary | null,
-  endingMarketValue?: number | null
-) {
-  const beginningCashFlow =
-    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
-  const endingCashFlow =
-    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
-  const fees = summary.fees ?? moneyWeightedReturn?.fees ?? null;
-
-  if (beginningCashFlow != null || endingCashFlow != null) {
-    const supportSegments = [
-      beginningCashFlow != null
-        ? `Opening Cash ${formatCurrency(beginningCashFlow, reportingCurrency)}`
-        : null,
-      endingCashFlow != null
-        ? `Closing Cash ${formatCurrency(endingCashFlow, reportingCurrency)}`
-        : null,
-      endingMarketValue != null
-        ? `Ending MV ${formatCurrency(endingMarketValue, reportingCurrency)}`
-        : null,
-    ].filter(Boolean);
-
-    if (supportSegments.length > 0) {
-      return supportSegments.join(" • ");
-    }
-  }
-
-  if (fees != null) {
-    return `Fees ${formatCurrency(fees, reportingCurrency)}`;
-  }
-
-  return undefined;
 }
 
 export function getPerformanceMoneyWeightedAuditSupport({

@@ -278,7 +278,10 @@ describe("PerformanceAnalyticsPage", () => {
       compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
     );
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Opening Cash")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Closing Cash")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Flow-Adjusted MV")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
     expect(
       within(chartSummaryBand as HTMLElement).queryByText("Period Range / Basis")
     ).not.toBeInTheDocument();
@@ -301,14 +304,17 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening Cash")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Closing Cash")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
-    expect(executiveStrip).toHaveTextContent("Opening Cash $50,000");
-    expect(executiveStrip).toHaveTextContent("Closing Cash -$8,000");
-    expect(executiveStrip).toHaveTextContent("Ending MV $1,250,000");
+    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(executiveStrip).toHaveTextContent(
       compactPattern("Money-Weighted Return 5.12%")
     );
+    expect(executiveStrip).toHaveTextContent(compactPattern("Opening Cash $50,000"));
+    expect(executiveStrip).toHaveTextContent(compactPattern("Closing Cash -$8,000"));
+    expect(executiveStrip).toHaveTextContent(compactPattern("Ending MV $1,250,000"));
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
