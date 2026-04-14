@@ -10746,29 +10746,34 @@ a:hover {
 }
 
 .performance-return-path-secondary-strip .performance-outcome-strip {
-  gap: 0.42rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.36rem;
 }
 
 .performance-return-path-secondary-strip .performance-outcome-strip-item {
   min-height: 0;
-  padding: 0.64rem 0.76rem;
-  border-color: rgba(34, 44, 59, 0.05);
-  background: linear-gradient(180deg, rgba(250, 252, 255, 0.92), rgba(247, 250, 253, 0.88));
+  gap: 0.14rem;
+  padding: 0.54rem 0.68rem 0.5rem;
+  border-color: rgba(34, 44, 59, 0.042);
+  background: linear-gradient(180deg, rgba(250, 252, 255, 0.88), rgba(247, 250, 253, 0.82));
 }
 
 .performance-return-path-secondary-strip .workbench-summary-metric-label {
-  color: #7a8798;
+  color: #8592a2;
+  letter-spacing: 0.07em;
 }
 
 .performance-return-path-secondary-strip .workbench-summary-metric-value {
-  font-size: var(--type-metric-m-size);
-  font-weight: 650;
-  line-height: 1.18;
-  color: #17263a;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.16;
+  color: #223247;
 }
 
 .performance-return-path-secondary-strip .workbench-summary-metric-support {
-  color: #667588;
+  font-size: var(--type-metadata-size);
+  line-height: var(--type-metadata-line-height);
+  color: #728196;
 }
 
 .performance-return-path-supporting-strip .performance-outcome-strip-item {
