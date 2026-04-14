@@ -20,6 +20,7 @@ import { formatLabel } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import {
+  getAttributionTrendUnavailableBody,
   getAttributionTrendSummaryItems,
 } from "./performance-attribution-presentations";
 
@@ -380,7 +381,7 @@ export default function PerformanceAttributionTrendPanel({
         <ScreenStatePanel
           kind="unavailable"
           title="Attribution trend unavailable"
-          body="Attribution trend is not available for the current selection."
+          body={getAttributionTrendUnavailableBody(trend)}
           surface="analysis"
         />
       )}

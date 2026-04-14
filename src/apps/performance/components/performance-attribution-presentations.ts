@@ -4,7 +4,7 @@ import type {
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
-import { formatPct } from "../formatters";
+import { formatLabel, formatPct } from "../formatters";
 import {
   getPerformanceBenchmarkContextValue,
 } from "./performance-summary-context-helpers";
@@ -91,4 +91,23 @@ export function getAttributionTrendSummaryItems(
       value: formatPct(latestRow.cumulative_total_effect_pct),
     },
   ];
+}
+
+export function getAttributionTrendUnavailableBody(
+  trend: WorkbenchPerformanceAttributionTrend | null
+): string {
+  const upstreamFailure = trend?.partial_failures?.find(
+    (failure) =>
+      failure.source_service === "lotus-performance" &&
+      failure.error_code === "HTTP_422" &&
+      typeof failure.detail === "string" &&
+      failure.detail.toLowerCase().includes("missing classification label")
+  );
+
+  if (upstreamFailure?.detail) {
+    const requestedDimension = formatLabel(trend?.attribution_dimension ?? "selection");
+    return `${requestedDimension} attribution trend is unavailable because the selected benchmark does not expose complete ${requestedDimension.toLowerCase()} classification for every component.`;
+  }
+
+  return "Attribution trend is not available for the current selection.";
 }

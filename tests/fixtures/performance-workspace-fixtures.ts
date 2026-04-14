@@ -885,7 +885,15 @@ export function buildPerformanceHorizonComparisonForScenario(
   };
 }
 
-export function buildPerformanceAttributionTrend(portfolioId = "PF_1001") {
+export function buildPerformanceAttributionTrend(
+  portfolioIdOrOverrides: string | Record<string, unknown> = "PF_1001",
+  overrides: Record<string, unknown> = {}
+) {
+  const portfolioId =
+    typeof portfolioIdOrOverrides === "string" ? portfolioIdOrOverrides : "PF_1001";
+  const trendOverrides =
+    typeof portfolioIdOrOverrides === "string" ? overrides : portfolioIdOrOverrides;
+
   return {
     correlation_id: "corr-performance",
     contract_version: "v1",
@@ -917,5 +925,6 @@ export function buildPerformanceAttributionTrend(portfolioId = "PF_1001") {
     ],
     warnings: [],
     partial_failures: [],
+    ...trendOverrides,
   };
 }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
+  getAttributionTrendUnavailableBody,
   getAttributionTrendSummaryItems,
 } from "../../src/apps/performance/components/performance-attribution-presentations";
 import {
@@ -59,4 +60,30 @@ describe("performance attribution presentations", () => {
     });
   });
 
+  it("explains missing benchmark classification when attribution trend is unavailable", () => {
+    const trend = buildPerformanceAttributionTrend({
+      attribution_dimension: "sector",
+      rows: [],
+      partial_failures: [
+        {
+          source_service: "lotus-performance",
+          error_code: "HTTP_422",
+          detail:
+            "Benchmark component IDX_GLOBAL_BOND_TR missing classification label for sector.",
+        },
+      ],
+    });
+
+    expect(getAttributionTrendUnavailableBody(trend)).toBe(
+      "Sector attribution trend is unavailable because the selected benchmark does not expose complete sector classification for every component."
+    );
+  });
+
+  it("falls back to the generic attribution trend unavailable copy", () => {
+    const trend = buildPerformanceAttributionTrend({ rows: [] });
+
+    expect(getAttributionTrendUnavailableBody(trend)).toBe(
+      "Attribution trend is not available for the current selection."
+    );
+  });
 });
