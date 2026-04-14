@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import {
-  WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
@@ -18,8 +17,6 @@ import type { PerformanceAnalysisAttributionSectionProps } from "./performance-w
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
 import {
-  getAttributionDetailContextItems,
-  getAttributionReconciliationText,
   getAttributionDetailSummaryItems,
 } from "./performance-attribution-presentations";
 
@@ -46,9 +43,6 @@ export default function PerformanceAnalysisAttributionSection({
     (capabilities.attributionDetail.state === "partial" &&
       hasAttributionSummaryLevels &&
       !hasDetailedAttributionRows);
-  const attributionContextItems = workspace.attribution
-    ? getAttributionDetailContextItems(workspace.attribution, workspace.benchmark_options ?? [])
-    : [];
   const attributionSummaryItems = getAttributionDetailSummaryItems(
     workspace.attribution,
     workspace.benchmark_options ?? []
@@ -57,15 +51,10 @@ export default function PerformanceAnalysisAttributionSection({
     workspace.attribution,
     workspace.benchmark_options ?? []
   );
-  const attributionReconciliation = workspace.attribution
-    ? getAttributionReconciliationText(workspace.attribution)
-    : null;
-
   return (
     <WorkbenchChartShell
       id="performance-attribution"
       title="Attribution Detail"
-      subtitle="Benchmark-relative allocation, selection, and interaction effects."
       actions={
         <div className="performance-analysis-panel-actions">
           <PerformanceAnalysisSegmentToolbar
@@ -88,15 +77,6 @@ export default function PerformanceAnalysisAttributionSection({
             triggerVariant="inline"
           />
         </div>
-      }
-      contextRow={
-        workspace.attribution ? (
-          <WorkbenchChartContextRow
-            label="Attribution detail context"
-            className="performance-analysis-context-row"
-            items={attributionContextItems}
-          />
-        ) : undefined
       }
       metricStrip={
         attributionSummaryItems.length ? (
@@ -129,15 +109,6 @@ export default function PerformanceAnalysisAttributionSection({
         {workspace.attribution ? (
           <PerformanceAnalysisDetailPane
             title="Segment Attribution"
-            subtitle="Use relative context for weight and return gaps, then move to effect decomposition."
-            summary={
-              attributionReconciliation ? (
-                <div className="performance-analysis-detail-pane-note" role="note">
-                  <strong>{attributionReconciliation.headline}</strong>
-                  <span>{attributionReconciliation.detail}</span>
-                </div>
-              ) : null
-            }
             value={detailView}
             onChange={setDetailView}
             options={getAttributionDetailOptions({

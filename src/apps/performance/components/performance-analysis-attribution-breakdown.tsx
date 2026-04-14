@@ -21,13 +21,6 @@ function PerformanceAttributionSummaryFallback({
       key={`${level.dimension}-${level.total_effect_pct}`}
       className="performance-analysis-summary-fallback"
     >
-      <div className="performance-analysis-summary-fallback-copy">
-        <strong>Attribution Summary</strong>
-        <span>
-          Segment rows are unavailable for this selection. Total benchmark-relative effects remain
-          available below.
-        </span>
-      </div>
       <AnalyticsTable
         className="performance-analysis-table"
         density="compact"
