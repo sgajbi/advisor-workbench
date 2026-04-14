@@ -6,8 +6,10 @@ import PortfolioWorkspaceClient from "../../src/apps/portfolio/components/portfo
 
 const getSummaryDetailsMock = vi.fn();
 const getDetailedDetailsMock = vi.fn();
+const getShellWorkspaceMock = vi.fn();
 
 vi.mock("../../src/apps/portfolio/api", () => ({
+  getPortfolioWorkspaceShell: (...args: unknown[]) => getShellWorkspaceMock(...args),
   getPortfolioWorkspaceSummaryDetails: (...args: unknown[]) => getSummaryDetailsMock(...args),
   getPortfolioWorkspaceDetailedDetails: (...args: unknown[]) => getDetailedDetailsMock(...args),
   mergePortfolioWorkspace: (current: any, details: any) => ({ ...current, ...details }),
@@ -97,12 +99,14 @@ function buildWorkspace() {
 
 describe("PortfolioWorkspaceClient", () => {
   afterEach(() => {
+    getShellWorkspaceMock.mockReset();
     getSummaryDetailsMock.mockReset();
     getDetailedDetailsMock.mockReset();
     window.localStorage.clear();
   });
 
   it("does not duplicate summary or detailed fetches in strict mode", async () => {
+    getShellWorkspaceMock.mockResolvedValue(buildWorkspace());
     getSummaryDetailsMock.mockResolvedValue({
       positions: [{ security_id: "EQ_1" }],
       top_positions: [],
@@ -166,6 +170,55 @@ describe("PortfolioWorkspaceClient", () => {
       asOfDate: "2026-03-28",
       startDate: "2026-02-26",
       endDate: "2026-03-28",
+    });
+  });
+
+  it("recovers by fetching the portfolio shell when the server-rendered shell is unavailable", async () => {
+    const recoveredWorkspace = buildWorkspace();
+
+    getShellWorkspaceMock.mockResolvedValue(recoveredWorkspace);
+    getSummaryDetailsMock.mockResolvedValue({
+      positions: [{ security_id: "EQ_1" }],
+      top_positions: [],
+      allocations: [],
+      allocation_views: [],
+      income_summary: null,
+      activity_summary: null,
+    });
+    getDetailedDetailsMock.mockResolvedValue(null);
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "MANUAL_PB_USD_001",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={null}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent("MANUAL_PB_USD_001");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("details-loading")).toHaveTextContent("false");
+    });
+
+    expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
+    expect(getShellWorkspaceMock).toHaveBeenCalledWith("MANUAL_PB_USD_001");
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-02-26",
+      reportEndDate: "2026-03-28",
+      usesCustomDateRange: false,
     });
   });
 });
