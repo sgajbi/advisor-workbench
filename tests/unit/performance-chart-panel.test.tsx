@@ -307,8 +307,8 @@ describe("PerformanceChartPanel", () => {
       : lastChartOption?.xAxis;
     const xAxisFormatter = (xAxis?.axisLabel as { formatter?: (value: string) => string } | undefined)
       ?.formatter;
-    expect(xAxisFormatter?.("2026-01")).toBe("Jan 26");
-    expect(xAxisFormatter?.("2026-04")).toBe("Apr 26");
+    expect(xAxisFormatter?.("2026-01")).toBe("Jan '26");
+    expect(xAxisFormatter?.("2026-04")).toBe("Apr '26");
     expect(lastChartOption?.yAxis).toMatchObject({
       axisLine: { show: true, lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
       splitArea: {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   WorkbenchChartContextRow,
+  WorkbenchLoadingState,
 } from "@/design-system";
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
@@ -204,7 +205,12 @@ export default function PerformanceMultiHorizonPanel({
       actions={null}
     >
       {isLoading ? (
-        <p className="muted">{presentation.loadingBody}</p>
+        <WorkbenchLoadingState
+          className="performance-horizon-loading-state"
+          title="Loading horizon comparison"
+          message={presentation.loadingBody}
+          rows={4}
+        />
       ) : rows && rows.length > 0 ? (
         <>
           {normalizationNotice ? (

@@ -59,7 +59,8 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(screen.getByText("Loading horizon comparison.")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading horizon comparison");
+    expect(screen.getByRole("status")).toHaveTextContent("Loading horizon comparison.");
 
     await waitFor(() => {
       expect(screen.getByText("Horizon Comparison")).toBeInTheDocument();

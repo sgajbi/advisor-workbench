@@ -54,7 +54,7 @@ function remTokenToPx(token: string) {
   return Number.parseFloat(token);
 }
 
-function formatPeriodAxisLabel(value: string) {
+function formatPeriodAxisLabel(value: string, compact = false) {
   const monthMatch = /^(\d{4})-(\d{2})$/.exec(value);
   if (!monthMatch) {
     return value;
@@ -62,11 +62,16 @@ function formatPeriodAxisLabel(value: string) {
 
   const [, year, month] = monthMatch;
   const date = new Date(`${year}-${month}-01T00:00:00Z`);
-  return date.toLocaleString("en-US", {
+  const monthLabel = date.toLocaleString("en-US", {
     month: "short",
+    timeZone: "UTC",
+  });
+  const yearLabel = date.toLocaleString("en-US", {
     year: "2-digit",
     timeZone: "UTC",
   });
+
+  return compact ? `${monthLabel}\n'${yearLabel}` : `${monthLabel} '${yearLabel}`;
 }
 
 function formatAxisPct(value: number) {
@@ -356,6 +361,15 @@ export function buildReturnPathChartOption({
   const includeRelativeSeries = chartViewMode !== "absolute";
   const showBenchmarkSeries = includeAbsoluteSeries && hasBenchmarkSeries;
   const showActiveCumulativeSeries = includeRelativeSeries && hasActiveCumulativeSeries;
+  const defaultXAxisLabel = {
+    color: "#5a6779",
+    fontSize: SHARED_CHART_TEXT.axisSize,
+    fontWeight: SHARED_CHART_TEXT.axisWeight,
+    interval: 0,
+    hideOverlap: false,
+    margin: 12,
+    formatter: (value: string) => formatPeriodAxisLabel(value),
+  };
 
   const cumulativeBounds = buildPercentAxisBounds([
     ...(includeAbsoluteSeries ? portfolioCumulative : []),
@@ -435,15 +449,7 @@ export function buildReturnPathChartOption({
       axisLine: { lineStyle: { color: "rgba(22, 58, 92, 0.18)", width: 1 } },
       axisTick: { show: false },
       axisPointer: { label: { show: false } },
-      axisLabel: {
-        color: "#5a6779",
-        fontSize: SHARED_CHART_TEXT.axisSize,
-        fontWeight: SHARED_CHART_TEXT.axisWeight,
-        interval: 0,
-        hideOverlap: false,
-        margin: 12,
-        formatter: formatPeriodAxisLabel,
-      },
+      axisLabel: defaultXAxisLabel,
     },
     yAxis: {
       type: "value",
@@ -527,6 +533,38 @@ export function buildReturnPathChartOption({
             }),
           ]
         : []),
+    ],
+    media: [
+      {
+        query: {
+          maxWidth: 680,
+        },
+        option: {
+          grid: {
+            left: 58,
+            right: 92,
+            top: 24,
+            bottom: 72,
+            containLabel: true,
+          },
+          xAxis: {
+            axisLabel: {
+              ...defaultXAxisLabel,
+              fontSize: Math.max(SHARED_CHART_TEXT.axisSize - 1, 10),
+              hideOverlap: true,
+              margin: 10,
+              formatter: (value: string) => formatPeriodAxisLabel(value, true),
+            },
+          },
+          yAxis: {
+            axisLabel: {
+              color: "#637083",
+              formatter: formatAxisPct,
+              fontSize: Math.max(SHARED_CHART_TEXT.axisSize - 1, 10),
+            },
+          },
+        },
+      },
     ],
   } satisfies EChartsOption;
 }
