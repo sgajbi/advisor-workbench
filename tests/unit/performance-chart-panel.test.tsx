@@ -235,8 +235,6 @@ describe("PerformanceChartPanel", () => {
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-analysis-date-inputs")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
-    expect(document.querySelector(".workbench-chart-shell-context .performance-chart-context-strip")).toBeTruthy();
-    expect(document.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeFalsy();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
     expect(screen.getByRole("tablist", { name: "Horizon" })).toBeInTheDocument();
@@ -254,18 +252,6 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40 • USD")
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).not.toHaveTextContent(
-      "Available"
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Window 01 Jan 2026 - 28 Feb 2026")
-    );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40 • USD")
-    );
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Money-Weighted Return");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("5.12%");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening MV");
@@ -314,9 +300,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern("Active Return 0.80% Portfolio Return 3.30% Benchmark Return 2.50%")
     );
-    expect(screen.getByLabelText("Return series context")).toHaveTextContent(
-      compactPattern("Net basis Monthly cadence Calculated return series")
-    );
+    expect(screen.queryByLabelText("Return series context")).not.toBeInTheDocument();
     expect(lastChartOption?.tooltip).toMatchObject({
       trigger: "axis",
       triggerOn: "mousemove|click",
@@ -422,9 +406,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Benchmark")).toHaveDisplayValue(
       "Global Growth 80/20 • USD • Composite"
     );
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Benchmark Global Growth 80/20 • USD")
-    );
+    expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
   });
 
   it("renders a comparative single-observation stage when the resolved window has one published point", () => {

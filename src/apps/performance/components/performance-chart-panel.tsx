@@ -16,7 +16,6 @@ import type {
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
-import PerformanceChartContextStrip from "./performance-chart-context-strip";
 import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathChartStage from "./performance-return-path-chart-stage";
 import PerformanceReturnPathNotices from "./performance-return-path-notices";
@@ -346,16 +345,6 @@ export default function PerformanceChartPanel({
       title={title}
       className="performance-chart-stage workbench-summary-panel"
       bodyClassName="performance-return-path-body"
-      contextRow={
-        capabilities.returnPath.state === "supported" && points.length ? (
-          <PerformanceChartContextStrip
-            period={period}
-            benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
-            reportStartDate={resolvedReportDates.startDate}
-            reportEndDate={resolvedReportDates.endDate}
-          />
-        ) : undefined
-      }
       toolbar={
         <PerformanceAnalysisControlBar
           period={period}
@@ -455,19 +444,12 @@ export default function PerformanceChartPanel({
             }
             benchmarkStateBody={returnPathPresentation.benchmarkStateBody}
           />
+          <PerformanceReturnPathSummary
+            portfolioReturn={returnPathPresentation.portfolioReturnValue}
+            benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
+            activeReturn={returnPathPresentation.activeReturnValue}
+          />
           <div className="performance-chart-analysis-grid">
-            <PerformanceReturnPathSummary
-              portfolioReturn={returnPathPresentation.portfolioReturnValue}
-              benchmarkReturn={returnPathPresentation.benchmarkReturnValue}
-              activeReturn={returnPathPresentation.activeReturnValue}
-              basisLabel={resolvedBasisLabel}
-              comparisonBasis={
-                returnPathPresentation.benchmarkSourceLabel
-                  ? `${returnPathPresentation.benchmarkSourceLabel} return series`
-                  : "Benchmark-relative return series"
-              }
-              observationCadence={chartFrequency === "quarterly" ? "Quarterly" : "Monthly"}
-            />
             <PerformanceReturnPathChartStage
               title={title}
               option={chartOption}

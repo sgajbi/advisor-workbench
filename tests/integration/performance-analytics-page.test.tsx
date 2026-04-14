@@ -268,8 +268,6 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(screen.getByText("Detailed table"));
     expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
-    expect(mainShell?.querySelector(".workbench-chart-shell-context .performance-chart-context-strip")).toBeTruthy();
-    expect(mainShell?.querySelector(".workbench-chart-shell-body .performance-chart-context-strip")).toBeFalsy();
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
     expect(chartSummaryBand).toBeTruthy();
@@ -372,9 +370,7 @@ describe("PerformanceAnalyticsPage", () => {
     const executiveStrip = await screen.findByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Money-Weighted Return")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
-    );
+    expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
   });
 
   it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
@@ -1144,9 +1140,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("tab", { name: "Summary" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
-    expect(await screen.findByRole("group", { name: "Return path context" })).toHaveTextContent(
-      compactPattern("Window 01 Jan 2026 - 24 Feb 2026")
-    );
+    expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
     });
@@ -1224,7 +1218,6 @@ describe("PerformanceAnalyticsPage", () => {
         "Money-Weighted Return",
         "Flow-Adjusted MV",
       ],
-      contextExpectations: ["Benchmark Global Balanced 60/40"],
       horizonExpectations: [
         "Benchmark Global Balanced 60/40",
       ],
@@ -1249,7 +1242,6 @@ describe("PerformanceAnalyticsPage", () => {
         "Flow-Adjusted MV",
       ],
       deferredExpectations: ["Contributor ranking is partial"],
-      contextExpectations: [],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],
     },
@@ -1259,7 +1251,6 @@ describe("PerformanceAnalyticsPage", () => {
       scenario,
       executiveExpectations = [],
       deferredExpectations = [],
-      contextExpectations = [],
       horizonExpectations = [],
       absentTexts = [],
     }) => {
@@ -1286,12 +1277,7 @@ describe("PerformanceAnalyticsPage", () => {
         expect(await screen.findByText(text)).toBeInTheDocument();
       }
 
-      if (contextExpectations.length) {
-        const returnPathContext = await screen.findByRole("group", { name: "Return path context" });
-        for (const text of contextExpectations) {
-          expect(returnPathContext).toHaveTextContent(compactPattern(text));
-        }
-      }
+      expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
 
       if (horizonExpectations.length) {
         const horizonContext = await screen.findByRole("group", { name: "Horizon comparison context" });

@@ -167,9 +167,6 @@ test.describe('Performance workbench smoke', () => {
     await expectActiveTab(page, /^Summary$/i);
     await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
 
-    await expect(page.getByRole('group', { name: /^Return path context$/i })).toBeVisible({
-      timeout: 15000,
-    });
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
       timeout: 15000,
     });
