@@ -1,9 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import {
-  TextField,
-} from "@mui/material";
+import type { FormEvent, ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { TextField } from "@mui/material";
 
 import {
   ActionButton,
@@ -14,14 +13,36 @@ import {
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
 
-import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
-import { isCapabilityOptionSupported } from "./performance-capability-options";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
-import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
+import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import type {
   PerformanceChartViewMode,
   PerformanceControlPatch,
 } from "./performance-chart-panel-helpers";
+import { isCapabilityOptionSupported } from "./performance-capability-options";
+import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
+
+type PerformanceAnalysisControlBarProps = {
+  period: string;
+  detailBasis: string;
+  chartFrequency: string;
+  benchmark?: string;
+  resolvedBenchmarkOptions: PerformanceBenchmarkOptionView[];
+  fromDate: string;
+  toDate: string;
+  maxEndDate?: string;
+  minEndDate?: string;
+  chartViewMode: PerformanceChartViewMode;
+  hasBenchmarkSeries: boolean;
+  hasActiveSeries: boolean;
+  capabilities: PerformanceWorkspaceCapabilities;
+  isUpdating: boolean;
+  onRequestChange: (patch: PerformanceControlPatch) => void;
+  onApplyExplicitDates: (event: FormEvent<HTMLFormElement>) => void;
+  onFromDateChange: (value: string) => void;
+  onToDateChange: (value: string) => void;
+  onChartViewModeChange: (value: PerformanceChartViewMode) => void;
+};
 
 export default function PerformanceAnalysisControlBar({
   period,
@@ -43,86 +64,58 @@ export default function PerformanceAnalysisControlBar({
   onFromDateChange,
   onToDateChange,
   onChartViewModeChange,
-}: {
-  period: string;
-  detailBasis: string;
-  chartFrequency: string;
-  benchmark?: string;
-  resolvedBenchmarkOptions: PerformanceBenchmarkOptionView[];
-  fromDate: string;
-  toDate: string;
-  maxEndDate?: string;
-  minEndDate?: string;
-  chartViewMode: PerformanceChartViewMode;
-  hasBenchmarkSeries: boolean;
-  hasActiveSeries: boolean;
-  capabilities: PerformanceWorkspaceCapabilities;
-  isUpdating: boolean;
-  onRequestChange: (patch: PerformanceControlPatch) => void;
-  onApplyExplicitDates: (event: FormEvent<HTMLFormElement>) => void;
-  onFromDateChange: (value: string) => void;
-  onToDateChange: (value: string) => void;
-  onChartViewModeChange: (value: PerformanceChartViewMode) => void;
-}) {
+}: PerformanceAnalysisControlBarProps) {
   const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
   if (!isHydrated) {
     return (
-      <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar" aria-busy="true">
-      <div className="performance-analysis-control-cluster performance-analysis-control-cluster-selection">
-          <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
-            <FieldLabel>Horizon</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
-              {period}
-            </Text>
-          </div>
-          <div className="performance-analysis-control-slot performance-analysis-control-slot-basis">
-            <FieldLabel>Basis</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
-              {detailBasis}
-            </Text>
-          </div>
-          <div className="performance-analysis-control-slot performance-analysis-control-slot-view">
-            <FieldLabel>View</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
-              {chartViewMode}
-            </Text>
-          </div>
-        </div>
-        <div className="performance-analysis-control-cluster performance-analysis-control-cluster-window">
-          <div className="performance-analysis-control-slot performance-analysis-control-slot-dates">
-            <FieldLabel>Window</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+      <div
+        className="performance-analysis-control-bar"
+        role="group"
+        aria-label="Analysis control bar"
+        aria-busy="true"
+      >
+        <ControlCluster className="performance-analysis-control-cluster-selection">
+          <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
+            <StaticControlValue>{period}</StaticControlValue>
+          </ControlSlot>
+          <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
+            <StaticControlValue>{detailBasis}</StaticControlValue>
+          </ControlSlot>
+          <ControlSlot label="View" className="performance-analysis-control-slot-view">
+            <StaticControlValue>{chartViewMode}</StaticControlValue>
+          </ControlSlot>
+        </ControlCluster>
+        <ControlCluster className="performance-analysis-control-cluster-window">
+          <ControlSlot label="Window" className="performance-analysis-control-slot-dates">
+            <StaticControlValue>
               {fromDate} to {toDate}
-            </Text>
-          </div>
-        </div>
-        <div className="performance-analysis-control-cluster performance-analysis-control-cluster-comparison">
-          <div className="performance-analysis-control-slot">
-            <FieldLabel>Frequency</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
-              {chartFrequency}
-            </Text>
-          </div>
-          <div className="performance-analysis-control-slot">
-            <FieldLabel>Benchmark</FieldLabel>
-            <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
-              {benchmark ?? "Default benchmark"}
-            </Text>
-          </div>
-        </div>
+            </StaticControlValue>
+          </ControlSlot>
+        </ControlCluster>
+        <ControlCluster className="performance-analysis-control-cluster-comparison">
+          <ControlSlot label="Frequency" className="performance-analysis-control-slot-frequency">
+            <StaticControlValue>{chartFrequency}</StaticControlValue>
+          </ControlSlot>
+          <ControlSlot
+            label="Benchmark"
+            className="performance-analysis-control-slot-benchmark-select"
+          >
+            <StaticControlValue>{benchmark ?? "Default benchmark"}</StaticControlValue>
+          </ControlSlot>
+        </ControlCluster>
       </div>
     );
   }
 
   return (
     <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar">
-      <div className="performance-analysis-control-cluster performance-analysis-control-cluster-selection">
-        <div className="performance-analysis-control-slot performance-analysis-control-slot-horizon">
-          <FieldLabel>Horizon</FieldLabel>
+      <ControlCluster className="performance-analysis-control-cluster-selection">
+        <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
           <WorkbenchSegmentedControl
             value={period}
             onChange={(value) =>
@@ -140,10 +133,9 @@ export default function PerformanceAnalysisControlBar({
               disabled: isUpdating && option === period,
             }))}
           />
-        </div>
+        </ControlSlot>
 
-        <div className="performance-analysis-control-slot performance-analysis-control-slot-basis">
-          <FieldLabel>Basis</FieldLabel>
+        <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
           <WorkbenchSegmentedControl
             value={detailBasis}
             onChange={(value) =>
@@ -159,10 +151,9 @@ export default function PerformanceAnalysisControlBar({
               disabled: isUpdating && option === detailBasis,
             }))}
           />
-        </div>
+        </ControlSlot>
 
-        <div className="performance-analysis-control-slot performance-analysis-control-slot-view">
-          <FieldLabel>View</FieldLabel>
+        <ControlSlot label="View" className="performance-analysis-control-slot-view">
           <WorkbenchSegmentedControl
             ariaLabel="Return view"
             className="performance-analysis-view-control"
@@ -181,10 +172,10 @@ export default function PerformanceAnalysisControlBar({
               },
             ]}
           />
-        </div>
-      </div>
+        </ControlSlot>
+      </ControlCluster>
 
-      <div className="performance-analysis-control-cluster performance-analysis-control-cluster-window">
+      <ControlCluster className="performance-analysis-control-cluster-window">
         <form
           className="performance-analysis-control-slot performance-analysis-control-slot-dates"
           onSubmit={onApplyExplicitDates}
@@ -230,11 +221,10 @@ export default function PerformanceAnalysisControlBar({
             </ActionButton>
           </div>
         </form>
-      </div>
+      </ControlCluster>
 
-      <div className="performance-analysis-control-cluster performance-analysis-control-cluster-comparison">
-        <div className="performance-analysis-control-slot performance-analysis-control-slot-frequency">
-          <FieldLabel>Frequency</FieldLabel>
+      <ControlCluster className="performance-analysis-control-cluster-comparison">
+        <ControlSlot label="Frequency" className="performance-analysis-control-slot-frequency">
           <TextField
             select
             size="small"
@@ -258,16 +248,20 @@ export default function PerformanceAnalysisControlBar({
               <option
                 key={option.value}
                 value={option.value}
-                disabled={!isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)}
+                disabled={
+                  !isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)
+                }
               >
                 {option.label}
               </option>
             ))}
           </TextField>
-        </div>
+        </ControlSlot>
 
-        <div className="performance-analysis-control-slot performance-analysis-control-slot-benchmark-select">
-          <FieldLabel>Benchmark</FieldLabel>
+        <ControlSlot
+          label="Benchmark"
+          className="performance-analysis-control-slot-benchmark-select"
+        >
           <TextField
             select
             size="small"
@@ -293,9 +287,44 @@ export default function PerformanceAnalysisControlBar({
               </option>
             ))}
           </TextField>
-        </div>
-      </div>
+        </ControlSlot>
+      </ControlCluster>
     </div>
+  );
+}
+
+function ControlCluster({
+  className,
+  children,
+}: {
+  className: string;
+  children: ReactNode;
+}) {
+  return <div className={`performance-analysis-control-cluster ${className}`}>{children}</div>;
+}
+
+function ControlSlot({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={["performance-analysis-control-slot", className].filter(Boolean).join(" ")}>
+      <FieldLabel>{label}</FieldLabel>
+      {children}
+    </div>
+  );
+}
+
+function StaticControlValue({ children }: { children: ReactNode }) {
+  return (
+    <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+      {children}
+    </Text>
   );
 }
 
