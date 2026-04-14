@@ -1,3 +1,5 @@
+import { Text } from "@/design-system";
+
 type PerformanceSummaryMetricCardProps = {
   label: string;
   value: string | number;
@@ -30,10 +32,28 @@ export default function PerformanceSummaryMetricCard({
         .filter(Boolean)
         .join(" ")}
     >
-      <span className="performance-summary-kpi-label workbench-summary-metric-label">{label}</span>
-      <strong className="performance-summary-kpi-value workbench-summary-metric-value">{value}</strong>
+      <Text
+        as="span"
+        variant="dataLabel"
+        className="performance-summary-kpi-label workbench-summary-metric-label"
+      >
+        {label}
+      </Text>
+      <Text
+        as="strong"
+        variant={emphasize ? "metricValueXL" : priority === "comparison" ? "metricValueL" : "metricValueM"}
+        className="performance-summary-kpi-value workbench-summary-metric-value"
+      >
+        {value}
+      </Text>
       {support ? (
-        <span className="performance-summary-kpi-support workbench-summary-metric-support">{support}</span>
+        <Text
+          as="span"
+          variant={priority === "primary" ? "helperText" : "bodySmall"}
+          className="performance-summary-kpi-support workbench-summary-metric-support"
+        >
+          {support}
+        </Text>
       ) : null}
     </div>
   );

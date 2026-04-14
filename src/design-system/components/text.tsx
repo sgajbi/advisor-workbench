@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 
 import { cx } from "../utils/cx";
 
@@ -94,20 +94,27 @@ const CLASS_BY_VARIANT: Record<TextVariant, string> = {
   button: "ui-text-button-label ui-text-button",
 };
 
-export default function Text({
+type TextProps<T extends ElementType> = {
+  variant: TextVariant;
+  as?: T;
+  className?: string;
+  children: ReactNode;
+} & Omit<ComponentPropsWithoutRef<T>, "as" | "children" | "className">;
+
+export default function Text<T extends ElementType = "span">({
   variant,
   as,
   className,
   children,
-}: {
-  variant: TextVariant;
-  as?: ElementType;
-  className?: string;
-  children: ReactNode;
-}) {
-  const Component = as ?? DEFAULT_TAG_BY_VARIANT[variant];
+  ...props
+}: TextProps<T>) {
+  const Component = (as ?? DEFAULT_TAG_BY_VARIANT[variant]) as ElementType;
 
-  return <Component className={cx("ui-text", CLASS_BY_VARIANT[variant], className)}>{children}</Component>;
+  return (
+    <Component className={cx("ui-text", CLASS_BY_VARIANT[variant], className)} {...props}>
+      {children}
+    </Component>
+  );
 }
 
 export type { TextVariant };
