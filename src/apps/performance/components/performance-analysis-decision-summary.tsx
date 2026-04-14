@@ -46,14 +46,12 @@ export default function PerformanceAnalysisDecisionSummary({
   const contributionCoverage = workspace.contribution?.coverage_mv_pct;
   const headline =
     topDriverLabel && contributionCoverage != null
-      ? `Largest observed driver ${topDriverLabel}; contribution coverage ${formatPct(
-          contributionCoverage
-        )} of market value.`
+      ? `Top driver ${topDriverLabel}. Coverage ${formatPct(contributionCoverage)} of market value.`
       : topDriverLabel
-        ? `Largest observed driver ${topDriverLabel}.`
+        ? `Top driver ${topDriverLabel}.`
         : contributionCoverage != null
-          ? `Contribution coverage ${formatPct(contributionCoverage)} of market value.`
-          : "Benchmark-relative attribution and contribution remain in focus for the selected window.";
+          ? `Coverage ${formatPct(contributionCoverage)} of market value.`
+          : "Benchmark-relative attribution and contribution for the selected window.";
 
   const cards = [
     selectedPerformance.active_return_pct != null

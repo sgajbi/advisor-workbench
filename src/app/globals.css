@@ -6692,12 +6692,12 @@ a:hover {
 
 .performance-analysis-summary-band {
   display: grid;
-  grid-template-columns: minmax(15rem, 0.88fr) minmax(0, 1.12fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "copy metrics"
-    "status metrics";
+    "copy"
+    "metrics";
   gap: var(--space-3);
-  padding: 0.9rem 1rem;
+  padding: 0.8rem 0.9rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-panel);
   background: var(--surface-primary);
@@ -6706,7 +6706,7 @@ a:hover {
 .performance-analysis-summary-band-copy {
   grid-area: copy;
   display: grid;
-  gap: 0.12rem;
+  gap: 0.08rem;
   align-content: start;
 }
 
@@ -6750,22 +6750,22 @@ a:hover {
 }
 
 .performance-analysis-summary-band-lead {
-  max-width: 48ch;
+  max-width: 72ch;
 }
 
 .performance-analysis-summary-band-grid {
   grid-area: metrics;
   display: grid;
-  grid-template-columns: repeat(2, minmax(10.5rem, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: var(--space-2);
   align-content: start;
 }
 
 .performance-analysis-summary-card {
   display: grid;
-  gap: var(--space-2);
-  min-height: var(--metric-tile-height-compact);
-  padding: var(--space-4);
+  gap: var(--space-1);
+  min-height: 0;
+  padding: var(--space-3);
   border: 1px solid rgba(23, 32, 43, 0.08);
   border-radius: var(--radius-tile);
   background: var(--surface-secondary);
@@ -6781,7 +6781,7 @@ a:hover {
 }
 
 .performance-analysis-summary-card .workbench-summary-metric-support {
-  max-width: 24ch;
+  max-width: none;
 }
 
 .performance-analysis-summary-card-value {
