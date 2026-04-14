@@ -27,6 +27,7 @@ import {
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
 import {
+  buildPerformanceControlSelectionPatch,
   buildChartLegendItems,
   buildObservationCountLabel,
   buildResolvedBenchmarkOptions,
@@ -34,6 +35,7 @@ import {
   buildSingleObservationPresentation,
   hasActiveReturnSeries,
   hasBenchmarkReturnSeries,
+  resolveChartViewMode,
   resolveWindowAndBasisLabels,
   type ComparativeSummary,
   type PerformanceChartViewMode,
@@ -92,7 +94,10 @@ export default function PerformanceChartPanel({
   const hasBenchmarkSeries = hasBenchmarkReturnSeries(points);
   const hasActiveSeries = hasActiveReturnSeries(points);
   const [chartViewMode, setChartViewMode] = useState<PerformanceChartViewMode>(
-    hasBenchmarkSeries && hasActiveSeries ? "combined" : "absolute"
+    resolveChartViewMode({
+      hasBenchmarkSeries,
+      hasActiveSeries,
+    })
   );
 
   useEffect(() => {
@@ -101,12 +106,13 @@ export default function PerformanceChartPanel({
   }, [resolvedReportDates.endDate, resolvedReportDates.startDate]);
 
   useEffect(() => {
-    if (chartViewMode === "relative" && !hasActiveSeries) {
-      setChartViewMode(hasBenchmarkSeries ? "combined" : "absolute");
-      return;
-    }
-    if (chartViewMode === "combined" && !hasBenchmarkSeries) {
-      setChartViewMode("absolute");
+    const resolvedMode = resolveChartViewMode({
+      preferredMode: chartViewMode,
+      hasBenchmarkSeries,
+      hasActiveSeries,
+    });
+    if (resolvedMode !== chartViewMode) {
+      setChartViewMode(resolvedMode);
     }
   }, [chartViewMode, hasActiveSeries, hasBenchmarkSeries]);
   const resolvedBenchmarkOptions = useMemo(
@@ -165,7 +171,9 @@ export default function PerformanceChartPanel({
   }
 
   function updateSelection(patch: PerformanceControlPatch) {
-    onRequestChange({
+    onRequestChange(
+      buildPerformanceControlSelectionPatch({
+        patch,
       portfolioId,
       period,
       detailBasis,
@@ -175,8 +183,8 @@ export default function PerformanceChartPanel({
       benchmark,
       reportStartDate,
       reportEndDate,
-      ...patch,
-    });
+      })
+    );
   }
 
   const { summaryItems, outcomeItems } = buildReturnDecisionItems(

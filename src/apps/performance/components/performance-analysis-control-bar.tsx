@@ -18,20 +18,10 @@ import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navig
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
-
-type PerformanceControlPatch = {
-  portfolioId?: string;
-  period?: string;
-  detailBasis?: string;
-  contributionDimension?: string;
-  attributionDimension?: string;
-  chartFrequency?: string;
-  benchmark?: string;
-  reportStartDate?: string;
-  reportEndDate?: string;
-};
-
-type PerformanceChartViewMode = "combined" | "absolute" | "relative";
+import type {
+  PerformanceChartViewMode,
+  PerformanceControlPatch,
+} from "./performance-chart-panel-helpers";
 
 export default function PerformanceAnalysisControlBar({
   period,

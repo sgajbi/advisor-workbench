@@ -5,6 +5,7 @@ import type {
   PerformanceChartPoint,
 } from "../../src/features/workbench/types";
 import {
+  buildPerformanceControlSelectionPatch,
   buildChartLegendItems,
   buildObservationCountLabel,
   buildResolvedBenchmarkOptions,
@@ -12,6 +13,7 @@ import {
   buildSingleObservationPresentation,
   hasActiveReturnSeries,
   hasBenchmarkReturnSeries,
+  resolveChartViewMode,
   resolveWindowAndBasisLabels,
 } from "../../src/apps/performance/components/performance-chart-panel-helpers";
 import type { PerformanceReturnPathPresentation } from "../../src/apps/performance/components/performance-summary-context-helpers";
@@ -201,5 +203,69 @@ describe("performance-chart-panel-helpers", () => {
         hasActiveSeries: true,
       }).map((item) => item.label)
     ).toEqual(["Portfolio", "Benchmark", "Active"]);
+  });
+
+  it("normalizes chart view mode when benchmark or active series are unavailable", () => {
+    expect(
+      resolveChartViewMode({
+        preferredMode: "combined",
+        hasBenchmarkSeries: false,
+        hasActiveSeries: false,
+      })
+    ).toBe("absolute");
+
+    expect(
+      resolveChartViewMode({
+        preferredMode: "relative",
+        hasBenchmarkSeries: true,
+        hasActiveSeries: false,
+      })
+    ).toBe("combined");
+
+    expect(
+      resolveChartViewMode({
+        preferredMode: "relative",
+        hasBenchmarkSeries: false,
+        hasActiveSeries: false,
+      })
+    ).toBe("absolute");
+
+    expect(
+      resolveChartViewMode({
+        hasBenchmarkSeries: true,
+        hasActiveSeries: true,
+      })
+    ).toBe("combined");
+  });
+
+  it("builds a full control patch without losing the current review context", () => {
+    expect(
+      buildPerformanceControlSelectionPatch({
+        patch: {
+          period: "EXPLICIT",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-04-14",
+        },
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        period: "YTD",
+        detailBasis: "NET",
+        contributionDimension: "sector",
+        attributionDimension: "sector",
+        chartFrequency: "monthly",
+        benchmark: "BMK_60_40",
+        reportStartDate: "2026-01-01",
+        reportEndDate: "2026-03-31",
+      })
+    ).toEqual({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      period: "EXPLICIT",
+      detailBasis: "NET",
+      contributionDimension: "sector",
+      attributionDimension: "sector",
+      chartFrequency: "monthly",
+      benchmark: "BMK_60_40",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-04-14",
+    });
   });
 });

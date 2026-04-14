@@ -249,6 +249,68 @@ export function buildObservationCountLabel(observationCount: number) {
     : "No published return observations are exposed for this resolved window.";
 }
 
+export function resolveChartViewMode({
+  preferredMode,
+  hasBenchmarkSeries,
+  hasActiveSeries,
+}: {
+  preferredMode?: PerformanceChartViewMode;
+  hasBenchmarkSeries: boolean;
+  hasActiveSeries: boolean;
+}): PerformanceChartViewMode {
+  const requestedMode = preferredMode ?? (hasBenchmarkSeries && hasActiveSeries ? "combined" : "absolute");
+
+  if (requestedMode === "relative") {
+    if (hasActiveSeries) {
+      return "relative";
+    }
+    return hasBenchmarkSeries ? "combined" : "absolute";
+  }
+
+  if (requestedMode === "combined") {
+    return hasBenchmarkSeries ? "combined" : "absolute";
+  }
+
+  return "absolute";
+}
+
+export function buildPerformanceControlSelectionPatch({
+  patch,
+  portfolioId,
+  period,
+  detailBasis,
+  contributionDimension,
+  attributionDimension,
+  chartFrequency,
+  benchmark,
+  reportStartDate,
+  reportEndDate,
+}: {
+  patch: PerformanceControlPatch;
+  portfolioId: string;
+  period: string;
+  detailBasis: string;
+  contributionDimension: string;
+  attributionDimension: string;
+  chartFrequency: string;
+  benchmark?: string;
+  reportStartDate: string;
+  reportEndDate: string;
+}) {
+  return {
+    portfolioId,
+    period,
+    detailBasis,
+    contributionDimension,
+    attributionDimension,
+    chartFrequency,
+    benchmark,
+    reportStartDate,
+    reportEndDate,
+    ...patch,
+  } satisfies PerformanceControlPatch;
+}
+
 export function hasBenchmarkReturnSeries(points: PerformanceChartPoint[]) {
   return points.some(
     (point) =>
