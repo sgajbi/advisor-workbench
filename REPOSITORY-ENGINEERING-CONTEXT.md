@@ -113,6 +113,23 @@ Important validation expectations:
 3. Docker and build validation remain part of the merge gate,
 4. canonical live validation matters when a change affects integrated product flows.
 
+### Visual Review Gate
+
+When a slice materially changes governed Workbench layout, hierarchy, or interaction behavior,
+capture explicit browser evidence before moving on.
+
+Required posture:
+
+1. validate against the canonical seeded portfolio `PB_SG_GLOBAL_BAL_001` unless the slice
+   explicitly targets another governed dataset,
+2. capture Summary and Detailed screenshots when the affected control or panel exists in both
+   modes,
+3. include close-up screenshots for the changed panel or control group and add a viewport-level
+   screenshot when surrounding layout materially affects the review,
+4. record review notes for overlap, wrapping, spacing, alignment, duplicate copy, and
+   unsupported-looking actions or states,
+5. keep diagnostic screenshots separate from final slice evidence.
+
 ## Standards And RFCs That Govern This Repository
 
 Most relevant current governance:

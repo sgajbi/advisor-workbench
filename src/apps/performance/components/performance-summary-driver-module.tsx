@@ -13,7 +13,7 @@ export default function PerformanceSummaryDriverModule({
 }) {
   return (
     <WorkbenchChartShell
-      className="performance-summary-driver-module"
+      className="performance-summary-driver-module performance-workspace-panel"
       title={title}
       subtitle={subtitle}
       actions={actions}

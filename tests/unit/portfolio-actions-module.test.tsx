@@ -23,6 +23,8 @@ describe("PortfolioActionsModule", () => {
     );
 
     expect(screen.getByText("Review performance")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Next Actions workflow list" })).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
     expect(
       screen.getByText(
         "Review portfolio return, benchmark context, and contribution once the book is valued."

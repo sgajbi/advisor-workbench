@@ -34,8 +34,12 @@ export type PerformanceContributorsPresentation =
   | {
       mode: "supported";
       frame: PerformanceSummaryDriverModuleFrame;
-      positiveTableModel: PerformanceAnalyticsTableModel;
-      negativeTableModel: PerformanceAnalyticsTableModel;
+      detailDisclosureTitle: string;
+      positiveEmptyBody: string;
+      negativeEmptyBody: string;
+      rankedTableModel: PerformanceAnalyticsTableModel;
+      positiveRankedItems: PerformanceContributorRankedItem[];
+      negativeRankedItems: PerformanceContributorRankedItem[];
       tableModel: PerformanceAnalyticsTableModel;
     }
   | {
@@ -134,8 +138,15 @@ export function getPerformanceContributorsPresentation({
     return {
       mode: "supported",
       frame,
-      positiveTableModel: buildPerformanceSummaryContributorTableModel(positiveRows),
-      negativeTableModel: buildPerformanceSummaryContributorTableModel(negativeRows),
+      detailDisclosureTitle: "Instrument detail",
+      positiveEmptyBody: "No positive position contributors are exposed for the selected period.",
+      negativeEmptyBody: "No detracting positions are exposed for the selected period.",
+      rankedTableModel: buildPerformanceSummaryContributorTableModel({
+        positiveRows,
+        negativeRows,
+      }),
+      positiveRankedItems: buildPerformanceContributorRankedItems(positiveRows, "positive"),
+      negativeRankedItems: buildPerformanceContributorRankedItems(negativeRows, "negative"),
       tableModel,
     };
   }
@@ -150,13 +161,24 @@ export function getPerformanceContributorsPresentation({
 
   if (capabilities.contributionRanking.state === "partial" && aggregateRows.length > 0) {
     return {
-      mode: "partial",
+      mode: "supported",
       frame,
-      noticeTitle: "Contributor ranking is partial",
-      noticeBody:
-        capabilities.contributionRanking.reason ??
-        "Contribution exists, but only aggregate rows are available.",
-      hint: "Aggregate contribution remains available even when position-level ranking is absent.",
+      detailDisclosureTitle: "Segment detail",
+      positiveEmptyBody: "No positive segment contributors are exposed for the selected period.",
+      negativeEmptyBody: "No detracting segment contributors are exposed for the selected period.",
+      rankedTableModel: buildPerformanceContributionTableModel({
+        rows: aggregateRows,
+        contribution: workspace.contribution,
+        level: workspace.contribution?.levels?.[0] ?? null,
+      }),
+      positiveRankedItems: buildAggregateContributorRankedItems(
+        getAggregateContributorSideRows(aggregateRows, "positive"),
+        "positive"
+      ),
+      negativeRankedItems: buildAggregateContributorRankedItems(
+        getAggregateContributorSideRows(aggregateRows, "negative"),
+        "negative"
+      ),
       tableModel,
     };
   }
@@ -221,24 +243,50 @@ function getContributorSideRows(
   );
 }
 
-function buildPerformanceSummaryContributorTableModel(
-  rows: ContributionPositionView[]
-): PerformanceAnalyticsTableModel {
+function getAggregateContributorSideRows(
+  rows: ContributionRowView[],
+  direction: "positive" | "negative"
+): ContributionRowView[] {
+  const filteredRows = rows.filter((row) =>
+    direction === "positive" ? row.contribution_pct >= 0 : row.contribution_pct < 0
+  );
+
+  return [...filteredRows].sort((left, right) =>
+    direction === "positive"
+      ? right.contribution_pct - left.contribution_pct
+      : left.contribution_pct - right.contribution_pct
+  );
+}
+
+function buildPerformanceSummaryContributorTableModel({
+  positiveRows,
+  negativeRows,
+}: {
+  positiveRows: ContributionPositionView[];
+  negativeRows: ContributionPositionView[];
+}): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
+    { key: "direction", label: "Direction" },
     { key: "instrument", label: "Instrument" },
     { key: "contribution", label: "Contribution", align: "right" },
     { key: "weight", label: "Weight", align: "right" },
     { key: "return", label: "Return", align: "right" },
   ];
 
+  const rows = [
+    ...positiveRows.map((row) => ({ row, direction: "Contributor" })),
+    ...negativeRows.map((row) => ({ row, direction: "Detractor" })),
+  ];
+
   return {
     columns,
-    rows: rows.map((row) => {
+    rows: rows.map(({ row, direction }) => {
       const instrumentLabel = formatPerformancePositionLabel(row.position_id);
       return {
-        key: row.position_id,
-        ariaLabel: `${instrumentLabel} contributor row`,
+        key: `${direction}-${row.position_id}`,
+        ariaLabel: `${instrumentLabel} ${direction.toLowerCase()} row`,
         cells: [
+          direction,
           instrumentLabel,
           formatPct(row.contribution_pct),
           formatPct(row.weight_avg_pct),
@@ -247,6 +295,52 @@ function buildPerformanceSummaryContributorTableModel(
       };
     }),
   };
+}
+
+function buildPerformanceContributorRankedItems(
+  rows: ContributionPositionView[],
+  tone: "positive" | "negative"
+): PerformanceContributorRankedItem[] {
+  const scale = Math.max(0.01, ...rows.map((row) => Math.abs(row.contribution_pct)));
+
+  return rows.map((row) => {
+    const title = formatPerformancePositionLabel(row.position_id);
+    return {
+      key: row.position_id,
+      title,
+      subtitle: `Weight ${formatPct(row.weight_avg_pct)} • Return ${formatPct(row.total_return_pct)}`,
+      value: formatPct(row.contribution_pct),
+      magnitudePct: Math.min(100, Math.abs(row.contribution_pct) / scale * 100),
+      tone,
+    };
+  });
+}
+
+function buildAggregateContributorRankedItems(
+  rows: ContributionRowView[],
+  tone: "positive" | "negative"
+): PerformanceContributorRankedItem[] {
+  const scale = Math.max(0.01, ...rows.map((row) => Math.abs(row.contribution_pct)));
+
+  return rows.map((row) => {
+    const supportParts = [
+      row.weight_avg_pct !== null && row.weight_avg_pct !== undefined
+        ? `Weight ${formatPct(row.weight_avg_pct)}`
+        : null,
+      row.total_return_pct !== null && row.total_return_pct !== undefined
+        ? `Return ${formatPct(row.total_return_pct)}`
+        : null,
+    ].filter(Boolean);
+
+    return {
+      key: row.key_label,
+      title: row.key_label,
+      subtitle: supportParts.join(" • ") || "Aggregate contribution",
+      value: formatPct(row.contribution_pct),
+      magnitudePct: Math.min(100, (Math.abs(row.contribution_pct) / scale) * 100),
+      tone,
+    };
+  });
 }
 
 export function getPerformanceHorizonPresentation({

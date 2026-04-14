@@ -1,3 +1,5 @@
+import DetailCard from "./detail-card";
+
 type ActionItem = {
   key: string;
   sequence: number;
@@ -19,15 +21,12 @@ export default function ActionListCard({
   items: ActionItem[];
 }) {
   return (
-    <div className="action-list-card">
-      <div className="portfolio-card-header">
-        <h3 className="portfolio-side-card-title">{title}</h3>
-        <p className="portfolio-card-subtitle">{subtitle}</p>
-      </div>
-      <div className="portfolio-guidance-list portfolio-workflow-list">
+    <DetailCard title={title} subtitle={subtitle} className="action-list-card">
+      <div className="portfolio-guidance-list portfolio-workflow-list" role="list" aria-label={`${title} workflow list`}>
         {items.map((item) => (
           <div
             key={item.key}
+            role="listitem"
             className={
               item.recommended
                 ? "portfolio-guidance-item portfolio-workflow-item portfolio-workflow-item-recommended"
@@ -53,6 +52,6 @@ export default function ActionListCard({
           </div>
         ))}
       </div>
-    </div>
+    </DetailCard>
   );
 }

@@ -18,7 +18,7 @@ export default function PortfolioHealthStrip({
   tiles: HealthTile[];
 }) {
   return (
-    <div className="portfolio-summary-band">
+    <div className="portfolio-summary-band" role="group" aria-label="Portfolio key metrics">
       {tiles.map((tile) => (
         <div key={tile.key} className="portfolio-summary-band-item">
           <KpiStatTile

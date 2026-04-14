@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  AppPageShell,
   WorkbenchLoadingState,
   WorkbenchToolbarPlaceholder,
 } from "@/design-system";
 
 import {
+  getPortfolioWorkspaceShell,
   getPortfolioWorkspaceDetailedDetails,
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
@@ -27,6 +27,7 @@ import {
   type PortfolioWorkspaceControls,
 } from "../view-model";
 import PortfolioUnavailableWorkspace from "./portfolio-unavailable-workspace";
+import PortfolioPageLayout from "./portfolio-page-layout";
 import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
 
@@ -38,6 +39,10 @@ const summaryDetailsInflightRequests = new Map<
 const detailedDetailsInflightRequests = new Map<
   string,
   ReturnType<typeof getPortfolioWorkspaceDetailedDetails>
+>();
+const shellInflightRequests = new Map<
+  string,
+  ReturnType<typeof getPortfolioWorkspaceShell>
 >();
 
 export default function PortfolioWorkspaceClient({
@@ -53,7 +58,12 @@ export default function PortfolioWorkspaceClient({
     buildInitialPortfolioControls(initialWorkspace)
   );
   const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
-  const [summaryDetailsLoading, setSummaryDetailsLoading] = useState<boolean>(Boolean(selectedPortfolioId));
+  const [shellLoading, setShellLoading] = useState<boolean>(
+    Boolean(selectedPortfolioId && !initialWorkspace)
+  );
+  const [summaryDetailsLoading, setSummaryDetailsLoading] = useState<boolean>(
+    Boolean(selectedPortfolioId && initialWorkspace)
+  );
   const [detailedDetailsLoaded, setDetailedDetailsLoaded] = useState(false);
   const [interactiveReady, setInteractiveReady] = useState(false);
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
@@ -82,6 +92,7 @@ export default function PortfolioWorkspaceClient({
 
   useEffect(() => {
     setWorkspaceState(initialWorkspace);
+    setShellLoading(Boolean(selectedPortfolioId && !initialWorkspace));
     setSummaryDetailsLoading(Boolean(initialWorkspace && selectedPortfolioId));
     setDetailedDetailsLoaded(false);
     summaryRequestRef.current = null;
@@ -91,13 +102,50 @@ export default function PortfolioWorkspaceClient({
   useEffect(() => {
     let cancelled = false;
 
+    async function loadShellWorkspace() {
+      if (!selectedPortfolioId || workspaceState || initialWorkspace) {
+        setShellLoading(false);
+        return;
+      }
+
+      setShellLoading(true);
+      const shellWorkspace = await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
+      if (cancelled) {
+        return;
+      }
+
+      if (shellWorkspace) {
+        setControls((current) => {
+          const defaults = buildInitialPortfolioControls(shellWorkspace);
+          return {
+            ...defaults,
+            viewMode: current.viewMode,
+            columnMode:
+              current.viewMode === "detailed" ? "expanded" : defaults.columnMode,
+          };
+        });
+      }
+      setWorkspaceState(shellWorkspace);
+      setShellLoading(false);
+    }
+
+    void loadShellWorkspace();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialWorkspace, selectedPortfolioId, workspaceState]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function loadSummaryDetails() {
-      if (!selectedPortfolioId || !initialWorkspace) {
+      if (!selectedPortfolioId || !workspaceState) {
         setSummaryDetailsLoading(false);
         return;
       }
 
-      const requestKey = `${selectedPortfolioId}:${initialWorkspace.as_of_date}:${context.timeWindow}:${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}:${context.usesCustomDateRange}`;
+      const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}:${context.timeWindow}:${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}:${context.usesCustomDateRange}`;
       if (summaryRequestRef.current?.key === requestKey) {
         return;
       }
@@ -133,8 +181,8 @@ export default function PortfolioWorkspaceClient({
     context.effectivePeriodStartDate,
     context.timeWindow,
     context.usesCustomDateRange,
-    initialWorkspace,
     selectedPortfolioId,
+    workspaceState,
   ]);
 
   useEffect(() => {
@@ -252,7 +300,7 @@ export default function PortfolioWorkspaceClient({
   }
 
   return (
-    <AppPageShell pageKey="portfolio" className="portfolio-page">
+    <PortfolioPageLayout>
       {!portfolios.length ? (
         <PortfolioUnavailableWorkspace />
       ) : (
@@ -262,6 +310,7 @@ export default function PortfolioWorkspaceClient({
           workspace={workspace}
           context={context}
           detailsLoading={
+            shellLoading ||
             summaryDetailsLoading ||
             (controls.viewMode === "detailed" && !detailedDetailsLoaded)
           }
@@ -301,7 +350,7 @@ export default function PortfolioWorkspaceClient({
           }
         />
       )}
-    </AppPageShell>
+    </PortfolioPageLayout>
   );
 }
 
@@ -373,5 +422,18 @@ function getPortfolioWorkspaceDetailedDetailsOnce(
     detailedDetailsInflightRequests.delete(requestKey);
   });
   detailedDetailsInflightRequests.set(requestKey, request);
+  return request;
+}
+
+function getPortfolioWorkspaceShellOnce(portfolioId: string) {
+  const existingRequest = shellInflightRequests.get(portfolioId);
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const request = getPortfolioWorkspaceShell(portfolioId).finally(() => {
+    shellInflightRequests.delete(portfolioId);
+  });
+  shellInflightRequests.set(portfolioId, request);
   return request;
 }

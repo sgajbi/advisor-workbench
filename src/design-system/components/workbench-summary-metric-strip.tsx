@@ -40,14 +40,14 @@ export default function WorkbenchSummaryMetricStrip({
             )}
             title={typeof item.definition === "string" ? item.definition : undefined}
           >
-            <Text variant="label" className="workbench-summary-metric-label">
+            <Text variant="dataLabel" className="workbench-summary-metric-label">
               {item.label}
             </Text>
-            <Text variant="metricValueCompact" className="workbench-summary-metric-value">
+            <Text variant="metricValueM" className="workbench-summary-metric-value">
               {item.value}
             </Text>
             {item.support ? (
-              <Text variant="metadata" className="workbench-summary-metric-support">
+              <Text variant="bodySmall" className="workbench-summary-metric-support">
                 {item.support}
               </Text>
             ) : null}

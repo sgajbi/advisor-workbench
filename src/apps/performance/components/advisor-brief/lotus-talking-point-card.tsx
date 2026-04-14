@@ -1,6 +1,6 @@
-import { SemanticBadge } from "@/design-system";
+import { SemanticBadge, Text } from "@/design-system";
 import type { PerformanceAdvisorBriefItem } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
 
 import LotusEvidenceChip from "./lotus-evidence-chip";
 
@@ -33,8 +33,12 @@ export default function LotusTalkingPointCard({
     >
       <header className="lotus-talking-point-card-header performance-advisor-brief-item-header">
         <div className="lotus-talking-point-card-copy performance-advisor-brief-item-copy">
-          <h4>{item.headline}</h4>
-          <p>{item.detail}</p>
+          <Text as="h4" variant="subsectionTitle">
+            {item.headline}
+          </Text>
+          <Text as="p" variant="bodySmall">
+            {item.detail}
+          </Text>
         </div>
         <SemanticBadge
           tone={item.tone === "warning" ? "warn" : item.tone === "positive" ? "success" : "default"}
@@ -43,18 +47,20 @@ export default function LotusTalkingPointCard({
           {toToneLabel(item.tone)}
         </SemanticBadge>
       </header>
-      <div className="performance-advisor-brief-item-support">
-        <span className="performance-advisor-brief-item-support-label">Supporting metrics</span>
-      </div>
-      <div className="performance-advisor-brief-evidence-row" aria-label="Supporting metrics">
-        {item.evidenceRefs.map((evidenceRef) => (
-          <LotusEvidenceChip
-            key={`${item.headline}-${evidenceRef.metricLabel}-${evidenceRef.sourceSurface}`}
-            evidenceRef={evidenceRef}
-            onSelectMode={onSelectMode}
-          />
-        ))}
-      </div>
+      {item.evidenceRefs.length ? (
+        <div className="performance-advisor-brief-evidence-row" aria-label="Supporting metrics">
+          <Text as="span" variant="microLabel" className="performance-advisor-brief-item-support-label">
+            Supporting metrics
+          </Text>
+          {item.evidenceRefs.map((evidenceRef) => (
+            <LotusEvidenceChip
+              key={`${item.headline}-${evidenceRef.metricLabel}-${evidenceRef.sourceSurface}`}
+              evidenceRef={evidenceRef}
+              onSelectMode={onSelectMode}
+            />
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }

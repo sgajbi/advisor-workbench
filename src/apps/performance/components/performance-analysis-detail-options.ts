@@ -38,21 +38,25 @@ export function getContributionDetailOptions({
 
 export function getAttributionDetailOptions({
   hasSummaryOnlyBreakdown,
+  hasRelativeSegmentContext,
 }: {
   hasSummaryOnlyBreakdown: boolean;
+  hasRelativeSegmentContext: boolean;
 }): Array<WorkbenchSegmentedControlOption<AttributionDetailView>> {
-  return [
-    {
+  const options: Array<WorkbenchSegmentedControlOption<AttributionDetailView>> = [];
+  if (hasRelativeSegmentContext) {
+    options.push({
       key: "relative",
       label: "Relative Segment Context",
       title: "Relative segment context for the selected attribution dimension",
-    },
-    {
+    });
+  }
+  options.push({
       key: "breakdown",
       label: "Effect Breakdown",
       title: hasSummaryOnlyBreakdown
         ? "Only summary-level benchmark-relative effects are available"
         : "Detailed benchmark-relative effect breakdown",
-    },
-  ];
+    });
+  return options;
 }

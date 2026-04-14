@@ -6,30 +6,10 @@ import PerformanceWorkspaceView from "../../src/apps/performance/components/perf
 import {
   buildNormalizedControlsPerformanceScenario,
   buildSupportedPerformanceScenario,
+  buildUnavailableAttributionPerformanceScenario,
   buildUnavailableEvidencePerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
-import type { PerformanceWorkspaceMode } from "../../src/apps/performance/components/performance-workspace-mode-switch";
-
-vi.mock("next/dynamic", () => ({
-  default: (loader: () => Promise<unknown>) => {
-    const React = require("react");
-    return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState(
-        null as React.ComponentType<Record<string, unknown>> | null
-      );
-      React.useEffect(() => {
-        loader().then((mod: unknown) => {
-          const resolved =
-            typeof mod === "function"
-              ? (mod as React.ComponentType<Record<string, unknown>>)
-              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
-          setComponent(() => resolved ?? null);
-        });
-      }, []);
-      return Component ? React.createElement(Component, props) : null;
-    };
-  },
-}));
+import type { PerformanceWorkspaceMode } from "../../src/apps/performance/performance-workspace-modes";
 
 const summaryModeMock = vi.fn((_: unknown) => <div>Summary Mode Panel</div>);
 const analysisModeMock = vi.fn((_: unknown) => <div>Analysis Mode Panel</div>);
@@ -56,9 +36,11 @@ describe("PerformanceWorkspaceView", () => {
   function renderWorkspaceView({
     mode = "summary",
     workspace = buildSupportedPerformanceScenario().workspace,
+    isDetailsPending = false,
   }: {
     mode?: PerformanceWorkspaceMode;
     workspace?: ReturnType<typeof buildSupportedPerformanceScenario>["workspace"];
+    isDetailsPending?: boolean;
   }) {
     function Harness() {
       const [selectedMode, setSelectedMode] = React.useState<PerformanceWorkspaceMode>(mode);
@@ -73,6 +55,7 @@ describe("PerformanceWorkspaceView", () => {
           attributionDimension="asset_class"
           chartFrequency="monthly"
           onModeChange={setSelectedMode}
+          isDetailsPending={isDetailsPending}
         />
       );
     }
@@ -85,8 +68,9 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
-      "workbench-segmented-control-button-active"
+    expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
     );
 
     await waitFor(() => {
@@ -107,7 +91,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
 
@@ -116,8 +100,8 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
-    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Performance Overview" }));
+    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
   });
@@ -127,8 +111,24 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("tab", { name: "Analysis" })).not.toBeDisabled();
-    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
+    expect(screen.getByRole("button", { name: /^Performance Analysis/i })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
+    });
+  });
+
+  it("keeps analysis navigable while detail availability is still hydrating", async () => {
+    const scenario = buildUnavailableAttributionPerformanceScenario();
+
+    renderWorkspaceView({ workspace: scenario.workspace, isDetailsPending: true });
+
+    const analysisButton = screen.getByRole("button", { name: /^Performance Analysis/i });
+    expect(analysisButton).not.toBeDisabled();
+    expect(analysisButton).toHaveAttribute("title", "Analysis availability is loading.");
+    expect(screen.getByText("Loading")).toBeInTheDocument();
+
+    fireEvent.click(analysisButton);
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
@@ -157,21 +157,42 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-main-only")).toBeTruthy();
+    expect(document.querySelector(".main-with-side-rail-layout.workstation-shell-both")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-rail.performance-rail-shell")).toBeTruthy();
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
+    expect(document.querySelector(".workstation-shell-side.performance-side")).toBeTruthy();
     expect(document.querySelector(".workspace-layout")).toBeFalsy();
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(document.querySelector(".workbench-page-frame.performance-page-frame")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
+    expect(screen.getByText("Quick Views")).toBeInTheDocument();
+    expect(screen.getByText("Client Context")).toBeInTheDocument();
+    const railSections = Array.from(
+      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
+    ).map((node) => node.textContent?.trim());
+    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(
+      screen.queryByText(
+        "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
+      )
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Current review horizon")).not.toBeInTheDocument();
+    expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Move between summary, diagnostics, advisory narrative, and risk review without losing context."
+      )
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
+    expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
-      .toBeTruthy();
-    expect(screen.getByRole("tablist", { name: "Performance workspace mode" })).toBeInTheDocument();
+      .toBeFalsy();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
-      "workbench-segmented-control-button-active"
+    expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
     );
     await waitFor(() => {
       expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
@@ -185,13 +206,8 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Risk Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Analysis" }));
-    expect(screen.getByText("Loading analysis")).toBeInTheDocument();
-    expect(document.querySelector(".workbench-deferred-placeholder")).toBeTruthy();
-    expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+    expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     expect(analysisModeMock).toHaveBeenCalled();
     expect(analysisModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
       workspace: scenario.workspace,
@@ -201,10 +217,12 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Risk" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Risk Review/i }));
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
+    expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
+    expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(riskModeMock).toHaveBeenCalled();
     expect(riskModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
       workspace: scenario.workspace,
@@ -214,8 +232,8 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
-    expect(screen.getByRole("tab", { name: "Evidence" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /^Evidence/i }));
+    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
     expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();

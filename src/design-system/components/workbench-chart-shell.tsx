@@ -35,6 +35,7 @@ export default function WorkbenchChartShell({
     <AnalyticsModule
       id={id}
       compact
+      surface="primary"
       title={title}
       subtitle={subtitle}
       actions={actions}

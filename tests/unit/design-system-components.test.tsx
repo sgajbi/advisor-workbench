@@ -12,7 +12,9 @@ import {
   AnalyticsStat,
   AnalyticsTable,
   ContextCard,
+  DefinitionList,
   DeferredModulePlaceholder,
+  DetailCard,
   DisclosureToggleButton,
   DegradedStatePanel,
   EmptyStatePanel,
@@ -38,9 +40,11 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
+  WorkspaceTabNav,
   WorkbenchDeferredSection,
   WorkbenchInlineRefreshNote,
   WorkbenchSegmentedControl,
+  WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
   WorkbenchLoadingState,
@@ -49,6 +53,7 @@ import {
   WorkbenchSectionStack,
   WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
+  WorkbenchToolbarGroup,
   WorkbenchToolbarPlaceholder,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,
@@ -79,6 +84,24 @@ describe("design-system components", () => {
     expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge-success");
   });
 
+  it("renders shared workspace navigation tabs with active and disabled states", () => {
+    render(
+      <WorkspaceTabNav
+        ariaLabel="Workspace Navigation"
+        items={[
+          { key: "portfolio", label: "Portfolio", href: "/portfolio" },
+          { key: "performance", label: "Performance", href: "/performance", active: true },
+          { key: "proposal", label: "Proposal", disabled: true },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
+    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+  });
+
   it("renders core panel and row primitives with shared classes", () => {
     render(
       <Panel>
@@ -90,6 +113,21 @@ describe("design-system components", () => {
     expect(screen.getByText("Summary")).toHaveClass("pill");
     expect(screen.getByText("Positions")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("12").closest("article")).toHaveClass(
+      "section-card",
+      "panel-shell",
+      "panel-shell-surface-primary",
+      "panel-shell-density-default"
+    );
+  });
+
+  it("renders panel surface and density variants through the shared shell contract", () => {
+    render(<Panel surface="secondary" density="compact">Secondary panel</Panel>);
+
+    expect(screen.getByText("Secondary panel").closest("article")).toHaveClass(
+      "panel-shell-surface-secondary",
+      "panel-shell-density-compact"
+    );
   });
 
   it("renders shared workspace layout primitives with structural classes", () => {
@@ -163,18 +201,21 @@ describe("design-system components", () => {
   it("renders the shared workbench page frame with shared header and section stack", () => {
     render(
       <WorkstationPage>
-        <WorkbenchPageFrame
-          title="Portfolio"
-          subtitle="Front-office portfolio context"
-          actions={<SemanticBadge>Catalog live</SemanticBadge>}
-        >
-          <WorkbenchSectionStack>
-            <Panel>Summary Section</Panel>
-          </WorkbenchSectionStack>
-        </WorkbenchPageFrame>
+        <WorkbenchPageContainer className="portfolio-page-container">
+          <WorkbenchPageFrame
+            title="Portfolio"
+            subtitle="Front-office portfolio context"
+            actions={<SemanticBadge>Catalog live</SemanticBadge>}
+          >
+            <WorkbenchSectionStack>
+              <Panel>Summary Section</Panel>
+            </WorkbenchSectionStack>
+          </WorkbenchPageFrame>
+        </WorkbenchPageContainer>
       </WorkstationPage>
     );
 
+    expect(document.querySelector(".workbench-page-container.portfolio-page-container")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body")).toBeTruthy();
@@ -501,6 +542,12 @@ describe("design-system components", () => {
             },
           ]}
         />
+        <DetailCard title="Operational Detail" subtitle="Current source-backed fields.">
+          <DefinitionList
+            ariaLabel="Operational detail"
+            items={[{ label: "Latest transaction", value: "24 Feb 2026" }]}
+          />
+        </DetailCard>
         <ActionListCard
           title="Next Actions"
           subtitle="Recommended workflow sequence."
@@ -525,6 +572,9 @@ describe("design-system components", () => {
     expect(screen.getByText("Pricing not yet published")).toBeInTheDocument();
     expect(screen.getByText("Partial data")).toBeInTheDocument();
     expect(screen.getByText("Portfolio Context")).toBeInTheDocument();
+    expect(screen.getByText("Operational Detail")).toBeInTheDocument();
+    expect(screen.getByText("Latest transaction")).toHaveClass("workbench-definition-term");
+    expect(screen.getByText("24 Feb 2026")).toHaveClass("workbench-definition-value");
     expect(screen.getByText("Fund portfolio")).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: "Why this section is unavailable" }).length
@@ -553,6 +603,7 @@ describe("design-system components", () => {
     render(
       <AnalyticsModule
         compact
+        surface="secondary"
         title="Shared Summary"
         subtitle="Shared subtitle"
         actions={<button type="button">Module Action</button>}
@@ -561,7 +612,11 @@ describe("design-system components", () => {
       </AnalyticsModule>
     );
 
-    expect(document.querySelector(".workbench-summary-card.workbench-summary-card-compact")).toBeTruthy();
+    expect(
+      document.querySelector(
+        ".workbench-summary-card.workbench-summary-card-compact.panel-shell-surface-secondary.panel-shell-density-compact"
+      )
+    ).toBeTruthy();
     expect(screen.getByText("Shared Summary")).toHaveClass("workbench-summary-card-title");
     expect(screen.getByText("Shared subtitle")).toHaveClass("workbench-summary-card-subtitle");
     expect(screen.getByRole("button", { name: "Module Action" })).toBeInTheDocument();

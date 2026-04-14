@@ -1,5 +1,8 @@
+import { Text } from "@/design-system";
+
 import type { PerformanceAdvisorBriefMetric } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
+import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 export default function LotusMetricPanel({
   metrics,
@@ -9,13 +12,13 @@ export default function LotusMetricPanel({
   onSelectMode: (mode: PerformanceWorkspaceMode) => void;
 }) {
   return (
-    <section className="lotus-metric-panel performance-advisor-brief-section" aria-label="Source Metrics">
-      <div className="performance-advisor-brief-section-heading">
-        <h3>Source Metrics</h3>
-        <p className="performance-advisor-brief-section-note">
-          Current performance measures supporting the brief.
-        </p>
-      </div>
+    <PerformanceWorkspaceSection
+      ariaLabel="Source Metrics"
+      className="lotus-metric-panel performance-advisor-brief-section"
+      headingClassName="performance-advisor-brief-section-heading"
+      title="Key Source Metrics"
+      description="Current performance measures supporting the brief and drill-down decisions."
+    >
       <div className="performance-advisor-brief-metric-panel">
         {metrics.map((metric) => (
           <button
@@ -24,17 +27,23 @@ export default function LotusMetricPanel({
             className="lotus-metric-panel-item performance-advisor-brief-metric-card"
             onClick={() => onSelectMode(metric.targetMode)}
           >
-            <span className="performance-advisor-brief-metric-label">{metric.label}</span>
+            <Text as="span" variant="dataLabel" className="performance-advisor-brief-metric-label">
+              {metric.label}
+            </Text>
             <div className="performance-advisor-brief-metric-row">
-              <strong className="performance-advisor-brief-metric-value">{metric.value}</strong>
+              <Text as="strong" variant="metricValueL" className="performance-advisor-brief-metric-value">
+                {metric.value}
+              </Text>
               <span className="performance-advisor-brief-metric-arrow" aria-hidden="true">
                 →
               </span>
             </div>
-            <span className="performance-advisor-brief-metric-support">{metric.supportingText}</span>
+            <Text as="span" variant="bodySmall" className="performance-advisor-brief-metric-support">
+              {metric.supportingText}
+            </Text>
           </button>
         ))}
       </div>
-    </section>
+    </PerformanceWorkspaceSection>
   );
 }

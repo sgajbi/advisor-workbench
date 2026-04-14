@@ -1,6 +1,11 @@
 "use client";
 
-import { StateInfoHint, WorkbenchRailCard } from "@/design-system";
+import {
+  DefinitionList,
+  DetailCard,
+  StateInfoHint,
+  WorkbenchRailCard,
+} from "@/design-system";
 
 import { formatDate } from "../../formatters";
 import type { PortfolioExceptionSummary, PortfolioWorkspace } from "../../types";
@@ -35,53 +40,59 @@ export default function PortfolioReadinessModule({
 }) {
   return (
     <WorkbenchRailCard className="portfolio-side-card portfolio-readiness-card">
-      <div className="portfolio-card-header">
-        <div className="portfolio-empty-state-header">
-          <h3 className="portfolio-side-card-title">Readiness and Exceptions</h3>
-          {!exceptions.length && workspace.readiness.reporting.status.toUpperCase() !== "READY" ? (
+      <DetailCard
+        title="Readiness and Exceptions"
+        subtitle="Only unresolved gaps that still need attention."
+        actions={
+          !exceptions.length && workspace.readiness.reporting.status.toUpperCase() !== "READY" ? (
             <StateInfoHint
               body="Reporting needs the core book prerequisites to be in place: holdings coverage, pricing/valuation, transaction history, and a source-ready reporting state."
               label="Why reporting is unavailable"
             />
-          ) : null}
-        </div>
-        <p className="portfolio-card-subtitle">
-          Only unresolved gaps that still need attention.
-        </p>
-      </div>
-      {exceptions.length ? (
-        <div className="portfolio-readiness-exception-list">
-          {exceptions.map((exception) => (
-            <button
-              key={exception.key}
-              type="button"
-              className={`portfolio-readiness-exception portfolio-readiness-exception-${exception.tone}`}
-              onClick={() => onOpenException(exception)}
-            >
-              <strong>{exception.title}</strong>
-              <p>{exception.detail}</p>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="portfolio-readiness-clear-state">
-          <strong>No active readiness exceptions</strong>
-          <p className="muted">
-            Holdings, pricing, transactions, and reporting are currently in a usable state.
-          </p>
-        </div>
-      )}
-      {showDetailFootnote ? (
-        <div className="portfolio-readiness-footnote">
-          <span>
-            Latest transaction: {formatDate(workspace.operations?.latest_booked_transaction_date)}
-          </span>
-          <span>
-            Latest position snapshot:{" "}
-            {formatDate(workspace.operations?.latest_booked_position_snapshot_date)}
-          </span>
-        </div>
-      ) : null}
+          ) : undefined
+        }
+      >
+        {exceptions.length ? (
+          <div className="portfolio-readiness-exception-list" role="list" aria-label="Readiness exceptions">
+            {exceptions.map((exception) => (
+              <div key={exception.key} role="listitem">
+                <button
+                  type="button"
+                  className={`portfolio-readiness-exception portfolio-readiness-exception-${exception.tone}`}
+                  onClick={() => onOpenException(exception)}
+                >
+                  <strong>{exception.title}</strong>
+                  <p>{exception.detail}</p>
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="portfolio-readiness-clear-state">
+            <strong>No active readiness exceptions</strong>
+            <p className="muted">
+              Holdings, pricing, transactions, and reporting are currently in a usable state.
+            </p>
+          </div>
+        )}
+        {showDetailFootnote ? (
+          <DefinitionList
+            ariaLabel="Readiness operational dates"
+            className="portfolio-readiness-footnote"
+            rowClassName="portfolio-readiness-footnote-row"
+            items={[
+              {
+                label: "Latest transaction",
+                value: formatDate(workspace.operations?.latest_booked_transaction_date),
+              },
+              {
+                label: "Latest position snapshot",
+                value: formatDate(workspace.operations?.latest_booked_position_snapshot_date),
+              },
+            ]}
+          />
+        ) : null}
+      </DetailCard>
     </WorkbenchRailCard>
   );
 }

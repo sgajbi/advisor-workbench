@@ -1,34 +1,21 @@
 import { useState } from "react";
 
-import { FormControl, MenuItem, Select } from "@mui/material";
-
 import {
-  AnalyticsEffectStrip,
-  AnalyticsTable,
-  FieldLabel,
-  WorkbenchChartContextRow,
   WorkbenchChartShell,
-  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
-import { formatLabel, formatPct } from "../formatters";
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
+import PerformanceAnalysisAttributionBreakdown from "./performance-analysis-attribution-breakdown";
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import { getAttributionDetailOptions } from "./performance-analysis-detail-options";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
-import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
+import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
+import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
 import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
+import { getAttributionDetailClassificationGapBody } from "./performance-attribution-presentations";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
-import {
-  getAttributionTotals,
-  NOT_ADDITIVE_CELL,
-} from "./performance-workspace-view-helpers";
-import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
-import {
-  getAttributionDetailContextItems,
-  getAttributionDetailSummaryItems,
-} from "./performance-attribution-presentations";
+import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
 
 type AttributionDetailView = "relative" | "breakdown";
 
@@ -53,203 +40,83 @@ export default function PerformanceAnalysisAttributionSection({
     (capabilities.attributionDetail.state === "partial" &&
       hasAttributionSummaryLevels &&
       !hasDetailedAttributionRows);
-  const attributionContextItems = workspace.attribution
-    ? getAttributionDetailContextItems(workspace.attribution, workspace.benchmark_options ?? [])
-    : [];
-  const attributionSummaryItems = getAttributionDetailSummaryItems(
+  const attributionClassificationGapBody = getAttributionDetailClassificationGapBody({
+    partialFailures: workspace.partial_failures,
+    attributionDimension,
+  });
+  const effectiveAttributionCapability = attributionClassificationGapBody
+    ? {
+        ...capabilities.attributionDetail,
+        state: "partial" as const,
+        reason: attributionClassificationGapBody,
+      }
+    : capabilities.attributionDetail;
+  const attributionMethodologyRows = getAttributionMethodologyRows(
     workspace.attribution,
     workspace.benchmark_options ?? []
   );
-  const actions = (
-    <PerformanceAnalysisToolbar>
-      <FormControl size="small" sx={{ minWidth: 180 }}>
-        <FieldLabel>Segment</FieldLabel>
-        <Select
-          aria-label="Attribution Segment"
-          value={attributionDimension}
-          onChange={(event) =>
-            onRequestChange?.({
-              attributionDimension: event.target.value,
-            })
-          }
-          disabled={disableAttributionSegmentControl}
-        >
-          {ATTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-            <MenuItem
-              key={option}
-              value={option}
-              disabled={
-                !isCapabilityOptionSupported(capabilities.attributionDetail, "dimension", option)
-              }
-            >
-              {formatLabel(option)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </PerformanceAnalysisToolbar>
-  );
-
   return (
     <WorkbenchChartShell
       id="performance-attribution"
       title="Attribution Detail"
-      subtitle="Benchmark-relative allocation, selection, and interaction effects by segment."
-      actions={actions}
-      contextRow={
-        workspace.attribution ? (
-          <WorkbenchChartContextRow
-            label="Attribution detail context"
-            className="performance-analysis-context-row"
-            items={attributionContextItems}
+      actions={
+        <div className="performance-analysis-panel-actions performance-analysis-panel-actions-inline">
+          <PerformanceAnalysisSegmentToolbar
+            ariaLabel="Attribution Segment"
+            value={attributionDimension}
+            disabled={disableAttributionSegmentControl}
+            options={ATTRIBUTION_DIMENSION_OPTIONS}
+            isOptionSupported={(option) =>
+              isCapabilityOptionSupported(capabilities.attributionDetail, "dimension", option)
+            }
+            onChange={(nextValue) =>
+              onRequestChange?.({
+                attributionDimension: nextValue,
+              })
+            }
           />
-        ) : undefined
-      }
-      metricStrip={
-        attributionSummaryItems.length ? (
-          <WorkbenchSummaryMetricStrip
-            className="performance-analysis-metric-strip"
-            ariaLabel="Attribution summary strip"
-            items={attributionSummaryItems}
+          <PerformancePanelInfoDrawer
+            panelTitle="Attribution Detail"
+            rows={attributionMethodologyRows}
+            triggerVariant="inline"
           />
-        ) : undefined
+        </div>
       }
-      className="performance-detail-panel-compact performance-analysis-module"
+      className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
-        capability={capabilities.attributionDetail}
+        capability={effectiveAttributionCapability}
         isDetailsPending={isDetailsPending}
         loadingText="Loading attribution effects and benchmark-relative decomposition."
         partialTitle="Attribution detail is partial"
         unavailableTitle="Attribution detail unavailable"
         body={
-          capabilities.attributionDetail.reason ??
+          attributionClassificationGapBody ??
+          effectiveAttributionCapability.reason ??
           "Attribution detail is not available for the current selection."
         }
         hint={
-          hasAttributionSummaryLevels
+          attributionClassificationGapBody
+            ? "Select a supported segment or use a benchmark with complete classification coverage for this dimension."
+            : hasAttributionSummaryLevels
             ? "Summary-level attribution remains available even when segment rows are absent."
             : "Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
         }
-        allowPartialContent={hasAttributionSummaryLevels}
+        allowPartialContent={hasAttributionSummaryLevels && !attributionClassificationGapBody}
       >
         {workspace.attribution ? (
           <PerformanceAnalysisDetailPane
-            title="Segment Attribution"
-            subtitle="Benchmark-relative segment context and Brinson effect breakdown."
             value={detailView}
             onChange={setDetailView}
             options={getAttributionDetailOptions({
               hasSummaryOnlyBreakdown: hasAttributionSummaryLevels && !hasDetailedAttributionRows,
+              hasRelativeSegmentContext: hasRelativeSegmentRows,
             })}
           >
             {detailView === "relative" ? (
               <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
             ) : (
-              <div className="performance-analysis-detail-stack">
-                {hasDetailedAttributionRows ? <PerformanceAnalysisEffectLegend /> : null}
-                {workspace.attribution.levels.map((level) => {
-                  const totals = getAttributionTotals(level);
-                  const hasDetailRows = level.rows.length > 0;
-                  return hasDetailRows ? (
-                    <div
-                      key={`${level.dimension}-${level.total_effect_pct}`}
-                      className="performance-analysis-detail-stack"
-                    >
-                      <AnalyticsEffectStrip
-                        rows={level.rows.map((row) => ({
-                          key: `effect-${level.dimension}-${row.key_label}`,
-                          label: row.key_label,
-                          allocationPct: row.allocation_pct,
-                          selectionPct: row.selection_pct,
-                          interactionPct: row.interaction_pct,
-                          totalPct: formatPct(row.total_effect_pct),
-                        }))}
-                      />
-                      <AnalyticsTable
-                        className="performance-analysis-table"
-                        density="compact"
-                        variant="analysis"
-                        ariaLabel={`${formatLabel(level.dimension)} attribution table`}
-                        columns={[
-                          { key: "bucket", label: "Segment" },
-                          { key: "portWt", label: "Portfolio Weight", align: "right" },
-                          { key: "bmkWt", label: "Benchmark Weight", align: "right" },
-                          { key: "portRet", label: "Portfolio Return", align: "right" },
-                          { key: "bmkRet", label: "Benchmark Return", align: "right" },
-                          { key: "allocation", label: "Allocation", align: "right" },
-                          { key: "selection", label: "Selection", align: "right" },
-                          { key: "interaction", label: "Interaction", align: "right" },
-                          { key: "total", label: "Total Effect", align: "right" },
-                        ]}
-                        rows={level.rows.map((row) => ({
-                          key: `${level.dimension}-${row.key_label}`,
-                          cells: [
-                            row.key_label,
-                            formatPct(row.portfolio_weight_avg_pct),
-                            formatPct(row.benchmark_weight_avg_pct),
-                            formatPct(row.portfolio_return_pct),
-                            formatPct(row.benchmark_return_pct),
-                            formatPct(row.allocation_pct),
-                            formatPct(row.selection_pct),
-                            formatPct(row.interaction_pct),
-                            formatPct(row.total_effect_pct),
-                          ],
-                        }))}
-                        footer={[
-                          "Total",
-                          formatPct(totals.portfolioWeightAvgPct),
-                          formatPct(totals.benchmarkWeightAvgPct),
-                          NOT_ADDITIVE_CELL,
-                          NOT_ADDITIVE_CELL,
-                          formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-                          formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-                          formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-                          formatPct(totals.totalEffectPct ?? level.total_effect_pct),
-                        ]}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      key={`${level.dimension}-${level.total_effect_pct}`}
-                      className="performance-analysis-summary-fallback"
-                    >
-                      <div className="performance-analysis-summary-fallback-copy">
-                        <strong>Attribution Summary</strong>
-                        <span>
-                          Segment rows are unavailable for this selection. Total benchmark-relative
-                          effects remain available below.
-                        </span>
-                      </div>
-                      <AnalyticsTable
-                        className="performance-analysis-table"
-                        density="compact"
-                        variant="analysis"
-                        ariaLabel={`${formatLabel(level.dimension)} attribution totals`}
-                        columns={[
-                          { key: "view", label: "Metric" },
-                          { key: "allocation", label: "Allocation", align: "right" },
-                          { key: "selection", label: "Selection", align: "right" },
-                          { key: "interaction", label: "Interaction", align: "right" },
-                          { key: "total", label: "Total Effect", align: "right" },
-                        ]}
-                        rows={[
-                          {
-                            key: `${level.dimension}-summary`,
-                            cells: [
-                              "Summary Total",
-                              formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-                              formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-                              formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-                              formatPct(totals.totalEffectPct ?? level.total_effect_pct),
-                            ],
-                          },
-                        ]}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+              <PerformanceAnalysisAttributionBreakdown levels={workspace.attribution.levels} />
             )}
           </PerformanceAnalysisDetailPane>
         ) : null}

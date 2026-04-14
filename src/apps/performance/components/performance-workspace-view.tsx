@@ -1,8 +1,4 @@
-import dynamic from "next/dynamic";
-
 import {
-  DeferredWorkbenchMount,
-  DeferredModulePlaceholder,
   MainWithSideRailLayout,
   Panel,
   WorkbenchPageFrame,
@@ -11,13 +7,19 @@ import {
 
 import { getPerformanceWorkspaceCapabilities } from "../capabilities";
 import {
+  getPerformanceWorkspaceModeDefinition,
+} from "../performance-workspace-modes";
+import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
-import PerformanceWorkspaceModeSwitch, {
-} from "./performance-workspace-mode-switch";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
+import PerformanceAnalysisMode from "./performance-analysis-mode";
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
+import PerformanceEvidenceMode from "./performance-evidence-mode";
 import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
+import PerformanceWorkspaceRail from "./performance-workspace-rail";
+import PerformanceWorkspaceSidePanel from "./performance-workspace-side-panel";
 import type {
   PerformanceWorkspaceControls,
   PerformanceWorkspaceViewProps,
@@ -26,29 +28,6 @@ import {
   getBenchmarkLabel,
   getPerformanceControlNormalizationNotice,
 } from "./performance-workspace-view-helpers";
-
-// Workbench discipline:
-// - summary header and compact KPI/status content are first paint
-// - analysis and evidence content are deferred until the user selects those modes
-const DeferredPerformanceAnalysisMode = dynamic(() => import("./performance-analysis-mode"), {
-  ssr: false,
-  loading: () => (
-    <DeferredModulePlaceholder
-      title="Loading analysis"
-      message="Attribution and contribution detail are loading on demand."
-    />
-  ),
-});
-
-const DeferredPerformanceEvidenceMode = dynamic(() => import("./performance-evidence-mode"), {
-  ssr: false,
-  loading: () => (
-    <DeferredModulePlaceholder
-      title="Loading evidence"
-      message="Evidence context is loading on demand."
-    />
-  ),
-});
 
 export default function PerformanceWorkspaceView({
   workspace,
@@ -66,6 +45,8 @@ export default function PerformanceWorkspaceView({
 }: PerformanceWorkspaceViewProps) {
   const presentation = workspace ? getPerformanceWorkspacePresentation(workspace) : null;
   const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
+  const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
+  const workspaceTitle = modeDefinition.workspaceTitle;
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -105,23 +86,14 @@ export default function PerformanceWorkspaceView({
       bottomContributors={presentation?.bottomContributors ?? []}
     />
   ) : mode === "analysis" ? (
-    <DeferredWorkbenchMount
-      placeholder={
-        <DeferredModulePlaceholder
-          title="Loading analysis"
-          message="Attribution and contribution detail are loading on demand."
-        />
-      }
-    >
-      <DeferredPerformanceAnalysisMode
-        workspace={workspace}
-        {...controls}
-        capabilities={capabilities!}
-        relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
-        topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
-        attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
-      />
-    </DeferredWorkbenchMount>
+    <PerformanceAnalysisMode
+      workspace={workspace}
+      {...controls}
+      capabilities={capabilities!}
+      relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
+      topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
+      attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
+    />
   ) : mode === "advisor" ? (
     <PerformanceAdvisorBriefMode
       workspace={workspace}
@@ -136,43 +108,63 @@ export default function PerformanceWorkspaceView({
       capabilities={capabilities!}
     />
   ) : (
-    <DeferredWorkbenchMount
-      placeholder={
-        <DeferredModulePlaceholder
-          title="Loading evidence"
-          message="Evidence context is loading on demand."
-        />
-      }
-    >
-      <DeferredPerformanceEvidenceMode capability={capabilities!.evidence} />
-    </DeferredWorkbenchMount>
+    <PerformanceEvidenceMode capability={capabilities!.evidence} />
   );
 
   return (
     <MainWithSideRailLayout
       className="performance-layout"
+      railClassName="performance-rail-shell"
       mainClassName="performance-main"
+      sideClassName="performance-side performance-side-wide"
+      sideDensity="comfortable"
+      rail={
+        <PerformanceWorkspaceRail
+          workspace={workspace}
+          mode={mode}
+          period={period}
+          isDetailsPending={isDetailsPending}
+          capabilities={capabilities}
+          selectedBenchmarkLabel={selectedBenchmarkLabel}
+          onModeChange={onModeChange}
+          onRequestChange={onRequestChange}
+        />
+      }
       main={
         !workspace ? (
-          <Panel className="degraded-state-panel">
-            <h2>Performance data unavailable</h2>
-            <p className="error-text">
-              The selected portfolio could not be loaded from the performance workspace contract.
-            </p>
-          </Panel>
+            <WorkbenchPageFrame
+            className={`performance-page-frame performance-page-frame-${mode}`}
+            bodyClassName="performance-page-frame-body"
+            title={workspaceTitle}
+          >
+            <WorkbenchSectionStack className="performance-page-sections">
+              <Panel className="performance-page-unavailable-shell">
+                <PerformanceAnalyticalUnavailableState
+                  ariaLabel="Performance workspace unavailable"
+                  status="unavailable"
+                  title="Performance data unavailable"
+                  body="The selected portfolio could not be loaded from the performance workspace contract."
+                  hint="The performance workspace contract must resolve successfully before benchmark-aware return, contribution, and risk surfaces can render."
+                  contextItems={[
+                    { label: "Surface", value: workspaceTitle },
+                    { label: "Mode", value: modeDefinition.label },
+                  ]}
+                  availableItems={[
+                    {
+                      label: "Shell",
+                      value: "Workspace navigation and route context remain available.",
+                    },
+                  ]}
+                />
+              </Panel>
+            </WorkbenchSectionStack>
+          </WorkbenchPageFrame>
         ) : (
           <WorkbenchPageFrame
             className={`performance-page-frame performance-page-frame-${mode}`}
             bodyClassName="performance-page-frame-body"
-            title="Performance"
-            actions={
-              <PerformanceWorkspaceModeSwitch
-                value={mode}
-                onChange={onModeChange}
-                capabilities={capabilities}
-              />
-            }
-            >
+            title={workspaceTitle}
+          >
             <WorkbenchSectionStack className="performance-page-sections">
               {controlNormalizationNotice ? (
                 <div
@@ -192,6 +184,18 @@ export default function PerformanceWorkspaceView({
             </WorkbenchSectionStack>
           </WorkbenchPageFrame>
         )
+      }
+      side={
+        <PerformanceWorkspaceSidePanel
+          workspace={workspace}
+          mode={mode}
+          period={period}
+          detailBasis={detailBasis}
+          chartFrequency={chartFrequency}
+          capabilities={capabilities}
+          selectedBenchmarkLabel={selectedBenchmarkLabel}
+          onModeChange={onModeChange}
+        />
       }
     />
   );

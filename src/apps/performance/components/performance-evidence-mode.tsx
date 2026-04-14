@@ -17,14 +17,15 @@ export default function PerformanceEvidenceMode({
         id="performance-evidence"
         title={title}
         subtitle={subtitle}
-        className="performance-detail-panel-wide performance-analysis-module performance-evidence-module performance-lotus-stage performance-lotus-stage-evidence"
+        className="performance-detail-panel-wide performance-analysis-module performance-evidence-module performance-evidence-module-unavailable performance-lotus-stage performance-lotus-stage-evidence"
       >
         <ScreenStatePanel
           kind={capability.state === "partial" ? "partial" : "unavailable"}
           title={capability.state === "partial" ? "Evidence partially available" : "Evidence unavailable"}
           body="Execution status, lineage artifacts, and calculation evidence are not exposed by the current backend contract."
           hint={capability.reason}
-          surface="analysis"
+          className="performance-evidence-state-panel"
+          centered
         />
       </WorkbenchDataGridFrame>
     );

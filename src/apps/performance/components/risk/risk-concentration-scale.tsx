@@ -3,6 +3,8 @@ import { Text } from "@/design-system";
 import type { PerformanceRiskConcentrationScale } from "../../risk-workspace-view-model";
 import RiskTermLabel from "./risk-term-label";
 
+const CONCENTRATION_SCALE_LEGEND = ["Diversified", "Moderate", "Elevated", "High"] as const;
+
 export default function RiskConcentrationScale({
   scales,
 }: {
@@ -29,13 +31,14 @@ export default function RiskConcentrationScale({
                 style={{ left: `${scale.markerPct}%` }}
               />
             </div>
-            <div className="performance-risk-concentration-scale-legend">
-              <Text variant="metadata">Diversified</Text>
-              <Text variant="metadata">Moderate</Text>
-              <Text variant="metadata">Elevated</Text>
-              <Text variant="metadata">High</Text>
-            </div>
           </div>
+        ))}
+      </div>
+      <div className="performance-risk-concentration-scale-legend" aria-hidden="true">
+        {CONCENTRATION_SCALE_LEGEND.map((label) => (
+          <Text key={label} variant="metadata">
+            {label}
+          </Text>
         ))}
       </div>
     </div>

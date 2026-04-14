@@ -20,17 +20,21 @@ export default function PortfolioUnavailableWorkspace() {
       mainClassName="portfolio-main"
       sideClassName="portfolio-side"
       rail={
-        <Panel className="portfolio-rail">
-          <div className="portfolio-rail-header">
-            <SectionLabel>Book</SectionLabel>
-            <h2>Portfolios</h2>
-          </div>
-          <div className="portfolio-rail-list portfolio-rail-list-empty">
-            <div className="portfolio-rail-empty">
-              <strong>Catalog unavailable</strong>
-              <span>Upstream portfolio data is not responding.</span>
+        <Panel className="portfolio-rail portfolio-selector-rail">
+          <nav aria-label="Portfolio selector">
+            <div className="portfolio-rail-header portfolio-selector-header">
+              <SectionLabel>Book</SectionLabel>
+              <h2>Portfolios</h2>
             </div>
-          </div>
+            <div className="portfolio-rail-list portfolio-rail-list-empty portfolio-selector-list">
+              <div className="portfolio-rail-empty portfolio-selector-empty" role="status">
+                <strong>Portfolio catalog unavailable</strong>
+                <span>
+                  Client portfolio selection will return when the gateway catalog is available.
+                </span>
+              </div>
+            </div>
+          </nav>
         </Panel>
       }
       main={

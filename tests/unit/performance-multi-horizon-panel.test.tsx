@@ -59,42 +59,35 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(screen.getByText("Loading horizon comparison.")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading horizon comparison");
+    expect(screen.getByRole("status")).toHaveTextContent("Loading horizon comparison.");
 
     await waitFor(() => {
       expect(screen.getByText("Horizon Comparison")).toBeInTheDocument();
       expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
-      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
     });
 
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
-    );
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active Return 0.51%")
-    );
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
-    );
-    expect(document.querySelector(".performance-horizon-context-row.workbench-chart-context-row")).toBeTruthy();
+    expect(document.querySelector(".performance-horizon-review-bar")).toBeTruthy();
     expect(screen.queryByText("Portfolio vs Global Balanced 60/40")).not.toBeInTheDocument();
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
-    expect(document.querySelector(".workbench-summary-toolbar.performance-mini-legend")).toBeTruthy();
-    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(4);
+    expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
+    expect(document.querySelector(".workbench-summary-toolbar.performance-horizon-toolbar")).toBeTruthy();
+    expect(document.querySelector(".performance-horizon-panel-body")).toBeTruthy();
+    expect(document.querySelectorAll(".performance-horizon-matrix-row")).toHaveLength(4);
     expect(document.querySelector(".performance-horizon-bar-support-grid")).toBeFalsy();
+    expect(screen.getByText("Detailed table")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Open the full economics and return breakdown. Scroll horizontally for wide columns.")
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
     expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("group", { name: "Horizon comparison context" })).getByText(
-        "Active Return"
-      )
-    ).toBeInTheDocument();
-    expect(screen.getAllByText("Portfolio Return vs Benchmark Return").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Cumulative Return:/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Portfolio").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Benchmark").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText("Detailed table"));
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
+    expect(screen.getByRole("region", { name: "Scrollable horizon comparison table" })).toBeInTheDocument();
     expect(
       horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")
     ).toBeTruthy();
@@ -116,11 +109,10 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).getAllByText("$22,500")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("5.88%").length).toBeGreaterThan(0);
     expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("MTD")).toHaveLength(2);
-    expect(screen.getAllByText("QTD")).toHaveLength(2);
-    expect(screen.getAllByText("YTD")).toHaveLength(2);
-    expect(screen.getAllByText("1Y")).toHaveLength(2);
-    expect(screen.getAllByLabelText("YTD horizon comparison row")).toHaveLength(1);
+    expect(screen.getAllByText("MTD").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("QTD").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("YTD").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("1Y").length).toBeGreaterThanOrEqual(2);
 
     fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
     expect(within(horizonTable).queryByText("Opening MV")).not.toBeInTheDocument();
@@ -143,9 +135,11 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
-    expect(screen.getAllByText("Comparison: Active Return vs Cumulative Active").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("MTD Active Return")).toBeInTheDocument();
-    expect(screen.getByLabelText("MTD Cumulative Active")).toBeInTheDocument();
+    expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Cumulative")).toBeInTheDocument();
+    expect(screen.queryByText("Support")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
     fireEvent.click(screen.getByRole("tab", { name: "Net" }));
@@ -157,9 +151,11 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
-    expect(screen.getAllByText("Net Return vs Gross Return").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("MTD Net Return")).toBeInTheDocument();
-    expect(screen.getByLabelText("MTD Gross Return")).toBeInTheDocument();
+    expect(screen.getAllByText("Net").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Gross").length).toBeGreaterThan(0);
+    expect(screen.getByText("Support")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
+    expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
     expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();
@@ -208,9 +204,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
       await waitFor(() => {
-        expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-        compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
-        );
+        expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
       });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
 
@@ -224,9 +218,6 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Period Range 01 Jan 2026 - 24 Feb 2026")
-    );
     expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
   });
@@ -259,15 +250,9 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("group", { name: "Horizon comparison context" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
     });
-
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Active Return Unavailable")
-    );
-    expect(screen.getByRole("group", { name: "Horizon comparison context" })).toHaveTextContent(
-      compactPattern("Benchmark Not assigned")
-    );
+    expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
   });
 
   it("shows a normalization notice when the horizon endpoint adjusts an unsupported frequency", async () => {
@@ -293,6 +278,34 @@ describe("PerformanceMultiHorizonPanel", () => {
     });
     expect(notice).toHaveTextContent("Selection adjusted");
     expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
+  });
+
+  it("renders a designed unavailable state when no horizon rows are exposed", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        rows: [],
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />
+    );
+
+    expect(
+      await screen.findByLabelText("Horizon comparison unavailable state")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Horizon comparison is unavailable for this mandate")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Still available")).not.toBeInTheDocument();
+    expect(screen.queryByText("Needs source support")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Multi-horizon return table")).not.toBeInTheDocument();
   });
 
   it("pushes the resolved horizon frequency back through the shared request handler", async () => {

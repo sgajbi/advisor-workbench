@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 
 import {
   ScreenStatePanel,
-  SectionBlock,
-  Text,
   WorkbenchStatusRow,
 } from "@/design-system";
 
+import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import { buildPerformanceRiskViewModel } from "../risk-workspace-view-model";
 import { usePerformanceRiskContract } from "../use-performance-risk-contract";
+import PerformanceWorkspaceStageSurface, {
+  buildPerformanceWorkspaceContextItems,
+} from "./performance-workspace-stage-surface";
 import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
@@ -21,6 +23,7 @@ import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSecondaryPanelGroup from "./risk/risk-secondary-panel-group";
 import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
+import RiskSupportabilityPanel from "./risk/risk-supportability-panel";
 
 export default function PerformanceRiskMode({
   workspace,
@@ -28,6 +31,13 @@ export default function PerformanceRiskMode({
   detailBasis,
   isDetailsPending,
 }: PerformanceRiskModeProps) {
+  const modeIntro = getPerformanceWorkspaceModeDefinition("risk").intro!;
+  const contextItems = buildPerformanceWorkspaceContextItems({
+    workspace,
+    period,
+    detailBasis,
+    benchmark: workspace.benchmark_code ?? undefined,
+  });
   const [underwaterDrawerOpen, setUnderwaterDrawerOpen] = useState(false);
   const [rollingDrawerOpen, setRollingDrawerOpen] = useState(false);
   const [selectedRollingWindowKey, setSelectedRollingWindowKey] = useState("");
@@ -101,71 +111,64 @@ export default function PerformanceRiskMode({
     null;
 
   return (
-    <section className="performance-risk-stage" aria-label="Risk">
-      <SectionBlock
-        title="Risk"
-        className="performance-risk-shell performance-lotus-stage"
-        actions={<RiskStatusBar state={viewModel.state} />}
-      >
-        <div className="performance-risk-context-grid" aria-label="Risk context">
-          {viewModel.contextItems.map((item) => (
-            <div key={item.label} className="performance-risk-context-item">
-              <Text variant="label">{item.label}</Text>
-              <Text variant="cardTitle">{item.value}</Text>
-            </div>
-          ))}
-        </div>
-        {viewModel.partialFailures.length ? (
-          <WorkbenchStatusRow
-            label="Risk partial failures"
-            className="performance-risk-partial-failure-row"
-            items={viewModel.partialFailures.map((failure) => ({
-              value: failure,
-              tone: "warn" as const,
-            }))}
+    <PerformanceWorkspaceStageSurface
+      intro={modeIntro}
+      contextAriaLabel="Risk context"
+      contextItems={contextItems}
+      shellClassName="performance-risk-shell performance-lotus-stage"
+      shellHeader={<RiskStatusBar state={viewModel.state} />}
+      shellAriaLabel="Risk"
+      shellRole="region"
+    >
+      {viewModel.partialFailures.length ? (
+        <WorkbenchStatusRow
+          label="Risk partial failures"
+          className="performance-risk-partial-failure-row"
+          items={viewModel.partialFailures.map((failure) => ({
+            value: failure,
+            tone: "warn" as const,
+          }))}
+        />
+      ) : null}
+      {statePanel ?? (
+        <div className="performance-risk-main-column">
+          <RiskExecutiveOverview overview={viewModel.workspaceOverview} />
+          <RiskPrimaryPanelGroup
+            snapshot={<RiskSnapshotPanel viewModel={viewModel} />}
+            drawdown={
+              <RiskDrawdownPanel
+                viewModel={viewModel}
+                onViewUnderwater={() => {
+                  setUnderwaterDrawerOpen(true);
+                  requestDrawdownDetail();
+                }}
+              />
+            }
+            concentration={<RiskConcentrationPanel viewModel={viewModel} />}
           />
-        ) : null}
-        {statePanel ?? (
-          <div className="performance-risk-main-column">
-            <RiskExecutiveOverview
-              overview={viewModel.workspaceOverview}
-            />
-            <RiskPrimaryPanelGroup
-              snapshot={<RiskSnapshotPanel viewModel={viewModel} />}
-              drawdown={
-                <RiskDrawdownPanel
-                  viewModel={viewModel}
-                  onViewUnderwater={() => {
-                    setUnderwaterDrawerOpen(true);
-                    requestDrawdownDetail();
-                  }}
-                />
-              }
-              concentration={<RiskConcentrationPanel viewModel={viewModel} />}
-            />
-            <RiskSecondaryPanelGroup
-              rolling={
-                <RiskRollingPanel
-                  viewModel={viewModel}
-                  selectedWindowKey={resolvedSelectedRollingWindowKey}
-                  onWindowChange={setSelectedRollingWindowKey}
-                  onViewSeries={(windowKey) => {
-                    setSelectedRollingWindowKey(windowKey);
-                    setRollingDrawerOpen(true);
-                    requestRollingDetail();
-                  }}
-                />
-              }
-              attribution={
-                <RiskAttributionPanel
-                  viewModel={viewModel}
-                  onSelectAttribution={requestAttribution}
-                />
-              }
-            />
-          </div>
-        )}
-      </SectionBlock>
+          <RiskSecondaryPanelGroup
+            rolling={
+              <RiskRollingPanel
+                viewModel={viewModel}
+                selectedWindowKey={resolvedSelectedRollingWindowKey}
+                onWindowChange={setSelectedRollingWindowKey}
+                onViewSeries={(windowKey) => {
+                  setSelectedRollingWindowKey(windowKey);
+                  setRollingDrawerOpen(true);
+                  requestRollingDetail();
+                }}
+              />
+            }
+            attribution={
+              <RiskAttributionPanel
+                viewModel={viewModel}
+                onSelectAttribution={requestAttribution}
+              />
+            }
+          />
+          <RiskSupportabilityPanel viewModel={viewModel} />
+        </div>
+      )}
       <RiskDrawdownDetailDrawer
         open={underwaterDrawerOpen}
         viewModel={viewModel}
@@ -177,6 +180,6 @@ export default function PerformanceRiskMode({
         selectedWindow={selectedRollingWindow}
         onClose={() => setRollingDrawerOpen(false)}
       />
-    </section>
+    </PerformanceWorkspaceStageSurface>
   );
 }

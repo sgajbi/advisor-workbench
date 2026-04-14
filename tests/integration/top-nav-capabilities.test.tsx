@@ -1,27 +1,43 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import TopNav from "../../src/app/top-nav";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/performance",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
+  usePlatformCapabilities: () => ({
+    loading: false,
+    partialFailure: false,
+    errors: [],
+    shellBootstrapSource: "contract",
+    normalized: {
+      shellBootstrap: {
+        workspaces: [
+          { id: "portfolio", label: "Portfolio", href: "/portfolio", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "performance", label: "Performance", href: "/performance", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "risk", label: "Risk", href: "/performance?mode=risk", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "proposal", label: "Proposal", href: "/proposals", enabled: false, supportability: { state: "unavailable", reasons: ["proposal_disabled"] } },
+          { id: "advisory", label: "Advisory", href: "/recommendations", enabled: false, supportability: { state: "unavailable", reasons: ["advisory_disabled"] } },
+        ],
+      },
+    },
+  }),
+}));
 
 describe("TopNav", () => {
   it("disables routes based on normalized navigation capabilities", () => {
     render(<TopNav />);
 
-    expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Overview" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
-    expect(screen.queryByText("Recommendations")).not.toBeInTheDocument();
-
-    const clientsDisabled = screen.getByText("Relationship Book");
-    const analyticsDisabled = screen.getByText("Performance");
-    const reportingDisabled = screen.getByText("Reporting");
-
-    expect(clientsDisabled.tagName).toBe("SPAN");
-    expect(clientsDisabled).toHaveAttribute("aria-disabled", "true");
-    expect(analyticsDisabled.tagName).toBe("A");
-    expect(analyticsDisabled).toHaveAttribute("href", "/performance");
-    expect(screen.queryByText("Suitability")).not.toBeInTheDocument();
-    expect(reportingDisabled.tagName).toBe("SPAN");
-    expect(reportingDisabled).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
+    expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute("href", "/performance?mode=risk");
+    expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText("Advisory")).toHaveAttribute("aria-disabled", "true");
   });
 });

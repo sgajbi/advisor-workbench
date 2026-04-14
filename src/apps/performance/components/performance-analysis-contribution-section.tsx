@@ -1,22 +1,21 @@
 import { useState } from "react";
 
-import { FormControl, MenuItem, Select } from "@mui/material";
-
-import { AnalyticsTable, FieldLabel, WorkbenchDataGridFrame } from "@/design-system";
+import { AnalyticsTable, WorkbenchDataGridFrame } from "@/design-system";
 
 import {
   buildPerformancePositionContributionTableModel,
 } from "./performance-analytics-table-models";
 import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
 import { getContributionDetailOptions } from "./performance-analysis-detail-options";
+import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
-import PerformanceContributionContextNote from "./performance-contribution-context-note";
 import { formatLabel } from "../formatters";
 import { CONTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
-import PerformanceAnalysisToolbar from "./performance-analysis-toolbar";
+import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
+import { getContributionMethodologyRows } from "./performance-analysis-methodology-rows";
 
 type ContributionDetailView = "positions" | "segments";
 
@@ -49,42 +48,13 @@ export default function PerformanceAnalysisContributionSection({
       })
     : null;
   const segmentLevel = workspace.contribution?.levels?.[0] ?? null;
-  const actions = (
-    <PerformanceAnalysisToolbar>
-      <FormControl size="small" sx={{ minWidth: 180 }}>
-        <FieldLabel>Segment</FieldLabel>
-        <Select
-          aria-label="Contribution Segment"
-          value={contributionDimension}
-          onChange={(event) =>
-            onRequestChange?.({
-              contributionDimension: event.target.value,
-            })
-          }
-          disabled={isUpdating}
-        >
-          {CONTRIBUTION_DIMENSION_OPTIONS.map((option) => (
-            <MenuItem
-              key={option}
-              value={option}
-              disabled={
-                !isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
-              }
-            >
-              {formatLabel(option)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </PerformanceAnalysisToolbar>
-  );
+  const contributionMethodologyRows = getContributionMethodologyRows(workspace.contribution);
 
   return (
     <WorkbenchDataGridFrame
       id="performance-drivers"
       title="Performance Drivers"
-      actions={actions}
-      className="performance-detail-panel-wide performance-analysis-module"
+      className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
         capability={capabilities.contributionDetail}
@@ -105,7 +75,6 @@ export default function PerformanceAnalysisContributionSection({
       >
         {workspace.contribution ? (
           <PerformanceAnalysisDetailPane
-            title="Contribution Breakdown"
             value={detailView}
             onChange={setDetailView}
             options={getContributionDetailOptions({
@@ -113,14 +82,31 @@ export default function PerformanceAnalysisContributionSection({
               segmentCount: segmentLevel?.rows.length ?? 0,
               hasSegmentBreakdown: hasAggregateContributionLevels,
             })}
+            actions={
+              <div className="performance-analysis-panel-actions performance-analysis-panel-actions-inline">
+                <PerformanceAnalysisSegmentToolbar
+                  ariaLabel="Contribution Segment"
+                  value={contributionDimension}
+                  disabled={isUpdating}
+                  options={CONTRIBUTION_DIMENSION_OPTIONS}
+                  isOptionSupported={(option) =>
+                    isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
+                  }
+                  onChange={(nextValue) =>
+                    onRequestChange?.({
+                      contributionDimension: nextValue,
+                    })
+                  }
+                />
+                <PerformancePanelInfoDrawer
+                  panelTitle="Performance Drivers"
+                  rows={contributionMethodologyRows}
+                  triggerVariant="inline"
+                />
+              </div>
+            }
             className="performance-analysis-contribution-detail-pane"
           >
-            {hasAggregateContributionLevels ? (
-              <PerformanceContributionContextNote
-                contribution={workspace.contribution}
-                showReconciliation={false}
-              />
-            ) : null}
             {detailView === "positions" ? (
               positionTableModel ? (
                 <AnalyticsTable

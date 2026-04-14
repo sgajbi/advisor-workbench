@@ -1,6 +1,6 @@
 "use client";
 
-import { ScreenStatePanel, WorkbenchChartShell } from "@/design-system";
+import { ScreenStatePanel } from "@/design-system";
 import type { AttributionRowView } from "@/features/workbench/types";
 
 import { formatCompactPct, formatLabel, formatPct } from "../formatters";
@@ -17,10 +17,9 @@ export default function PerformanceRelativeSegmentPanel({
 }) {
   if (!rows.length) {
     return (
-      <WorkbenchChartShell
-        title="Relative Segment Context"
-        subtitle="Portfolio and benchmark weights and returns by selected segment."
-        className="performance-analysis-mini-module performance-relative-segment-module"
+      <section
+        className="performance-relative-context-surface performance-relative-context-surface-empty"
+        aria-label="Relative Segment Context"
       >
         <ScreenStatePanel
           kind="unavailable"
@@ -28,7 +27,7 @@ export default function PerformanceRelativeSegmentPanel({
           body="Segment-level relative weight and return context is not available for this selection."
           surface="analysis"
         />
-      </WorkbenchChartShell>
+      </section>
     );
   }
 
@@ -36,11 +35,7 @@ export default function PerformanceRelativeSegmentPanel({
   const returnScale = Math.max(0.01, ...rows.map((row) => Math.abs(row.active_return_pct)));
 
   return (
-    <WorkbenchChartShell
-      title="Relative Segment Context"
-      subtitle="Portfolio and benchmark weights and returns by selected segment."
-      className="performance-analysis-mini-module performance-relative-segment-module"
-    >
+    <section className="performance-relative-context-surface" aria-label="Relative Segment Context">
       <div className="performance-relative-matrix">
         {rows.map((row) => (
           <div key={`relative-segment-${row.key_label}`} className="performance-relative-row">
@@ -111,6 +106,6 @@ export default function PerformanceRelativeSegmentPanel({
           </div>
         ))}
       </div>
-    </WorkbenchChartShell>
+    </section>
   );
 }

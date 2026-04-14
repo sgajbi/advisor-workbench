@@ -46,18 +46,18 @@ export default function AnalyticsStat({
         outline: "none",
       }}
     >
-      <Text variant="label" as="span">
+      <Text variant="dataLabel" as="span">
         {label}
       </Text>
       <Text
-        variant={emphasize ? "metricValue" : "metricValueCompact"}
+        variant={emphasize ? "metricValueL" : "metricValueM"}
         as="div"
         className={cx("analytics-stat-value", getAnalyticsStatToneClassName(valueTone))}
       >
         {value}
       </Text>
       {support ? (
-        <Text variant="metadata" as="div">
+        <Text variant="bodySmall" as="div">
           {support}
         </Text>
       ) : null}

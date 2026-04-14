@@ -54,12 +54,9 @@ describe("performance analysis detail options", () => {
     expect(
       getAttributionDetailOptions({
         hasSummaryOnlyBreakdown: true,
+        hasRelativeSegmentContext: false,
       })
     ).toEqual([
-      expect.objectContaining({
-        key: "relative",
-        label: "Relative Segment Context",
-      }),
       expect.objectContaining({
         key: "breakdown",
         label: "Effect Breakdown",

@@ -6,6 +6,7 @@ import { isSupportedCapability } from "@/shell/workspace-capabilities";
 
 import { formatCurrency, formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
+import PortfolioMetricSummaryStrip from "./portfolio-metric-summary-strip";
 import PortfolioModuleState from "./portfolio-module-state";
 
 export default function PortfolioLiquiditySummaryModule({
@@ -31,17 +32,17 @@ export default function PortfolioLiquiditySummaryModule({
     >
       {isSupportedCapability(capability) && cashflowOutlook ? (
         <div className="portfolio-summary-pair-panel portfolio-liquidity-summary-panel">
-          <div className="portfolio-summary-pair-strip">
-            <SummaryPairStat
-              label="Available Cash"
-              value={formatCurrency(totalCashBase, baseCurrency)}
-            />
-            <SummaryPairStat label="Cash Allocation" value={formatPct(cashWeightPct)} />
-            <SummaryPairStat
-              label="Projected Net Flow"
-              value={formatCurrency(cashflowOutlook.total_net_cashflow_base, baseCurrency)}
-            />
-          </div>
+          <PortfolioMetricSummaryStrip
+            ariaLabel="Liquidity and projected cash metrics"
+            items={[
+              { label: "Available Cash", value: formatCurrency(totalCashBase, baseCurrency) },
+              { label: "Cash Allocation", value: formatPct(cashWeightPct) },
+              {
+                label: "Projected Net Flow",
+                value: formatCurrency(cashflowOutlook.total_net_cashflow_base, baseCurrency),
+              },
+            ]}
+          />
           <div className="portfolio-summary-pair-footer">
             <div className="portfolio-summary-pair-region-heading">
               <span>Liquidity Outlook</span>
@@ -79,20 +80,5 @@ export default function PortfolioLiquiditySummaryModule({
         />
       )}
     </AnalyticsModule>
-  );
-}
-
-function SummaryPairStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="portfolio-summary-pair-stat">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }

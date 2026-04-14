@@ -39,15 +39,38 @@ describe("portfolio chart panels", () => {
     expect(onSelectionChange).toHaveBeenCalledWith("EQ_1");
     expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
     expect(screen.queryByLabelText("Top holdings table")).not.toBeInTheDocument();
-    expect(document.querySelector(".portfolio-chart-module-toolbar.workbench-summary-toolbar")).toBeTruthy();
-    expect(document.querySelector(".portfolio-top-holdings-list-card.workbench-summary-visual-card")).toBeTruthy();
-    expect(document.querySelector(".portfolio-horizontal-bar-label.workbench-summary-visual-label")).toBeTruthy();
-    expect(document.querySelector(".portfolio-horizontal-bar-value.workbench-summary-visual-value")).toBeTruthy();
+    expect(screen.getByText("Ranked Holdings")).toBeInTheDocument();
+    expect(screen.getByText("Market Value focus")).toBeInTheDocument();
+    expect(screen.getByText("Equities")).toBeInTheDocument();
+    expect(screen.getByText("120")).toBeInTheDocument();
     expect(
       screen.getByRole("listitem", {
         name: /Apple Inc: 250,000 USD. Select to filter holdings./i,
       })
     ).toBeInTheDocument();
+  });
+
+  it("renders a truthful empty state when no top positions match the current view", () => {
+    const onSelectionChange = vi.fn();
+
+    render(
+      <PortfolioTopHoldingsPanel
+        positions={[]}
+        baseCurrency="USD"
+        selectedSecurityId={null}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("No top positions available for this view");
+    expect(
+      screen.getByText(
+        "Ranked positions require booked holdings with current market values. Adjust the allocation filter or publish valuations to populate this view."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+    expect(onSelectionChange).not.toHaveBeenCalled();
   });
 
   it("renders activity, income, and projected cashflow charts with business labels", () => {
@@ -188,10 +211,6 @@ describe("portfolio chart panels", () => {
       </>
     );
 
-    expect(document.querySelectorAll(".workbench-summary-visual-card")).toHaveLength(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-label").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-value").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelectorAll(".workbench-summary-visual-meta").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("YTD 2,500 USD")).toBeInTheDocument();
     expect(screen.queryByText("Window inflow")).not.toBeInTheDocument();
     expect(screen.getByText("Gross 2,500 USD")).toBeInTheDocument();

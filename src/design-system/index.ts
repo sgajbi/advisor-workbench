@@ -15,6 +15,9 @@ export type {
 export { default as DegradedStatePanel } from "./components/degraded-state-panel";
 export { default as DeferredModulePlaceholder } from "./components/deferred-module-placeholder";
 export { default as DeferredWorkbenchMount } from "./components/deferred-workbench-mount";
+export { default as DefinitionList } from "./components/definition-list";
+export type { DefinitionListItem } from "./components/definition-list";
+export { default as DetailCard } from "./components/detail-card";
 export { default as DisclosureToggleButton } from "./components/disclosure-toggle-button";
 export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
 export { default as WorkbenchSegmentedControl } from "./components/workbench-segmented-control";
@@ -65,6 +68,7 @@ export {
 export { default as WorkspaceRailLink } from "./components/workspace-rail-link";
 export { default as WorkspaceHeader } from "./components/workspace-header";
 export { default as WorkbenchPageHeader } from "./components/workbench-page-header";
+export { default as WorkbenchPageContainer } from "./components/workbench-page-container";
 export {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
@@ -80,10 +84,13 @@ export { default as WorkbenchSummaryMetricStrip } from "./components/workbench-s
 export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-summary-metric-strip";
 export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
 export { default as WorkbenchInlineRefreshNote } from "./components/workbench-inline-refresh-note";
+export { default as WorkbenchToolbarGroup } from "./components/workbench-toolbar-group";
 export { default as WorkbenchToolbarPlaceholder } from "./components/workbench-toolbar-placeholder";
 export type { WorkbenchToolbarPlaceholderField } from "./components/workbench-toolbar-placeholder";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";
 export { default as WorkspaceStatusPanel } from "./components/workspace-status-panel";
+export { default as WorkspaceTabNav } from "./components/workspace-tab-nav";
+export type { WorkspaceTabNavItem } from "./components/workspace-tab-nav";
 export {
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,

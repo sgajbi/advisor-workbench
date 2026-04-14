@@ -9,7 +9,12 @@ vi.mock("ag-grid-react", () => ({
       <div data-testid="mock-grid">
         <div>
           {visibleColumns.map((column: any) => (
-            <span key={column.field}>{column.headerName}</span>
+            <React.Fragment key={column.field}>
+              <span>{column.headerName}</span>
+              <span data-testid={`${column.field}-header-class`}>
+                {column.headerClass ?? ""}
+              </span>
+            </React.Fragment>
           ))}
         </div>
         {rowData.map((row: any) => (
@@ -90,6 +95,12 @@ describe("portfolio data grids", () => {
     expect(screen.getByText("Market Value")).toBeInTheDocument();
     expect(screen.getByText("Weight")).toBeInTheDocument();
     expect(screen.getByText("Unrealized P&L")).toBeInTheDocument();
+    expect(screen.getByTestId("marketValue-header-class")).toHaveTextContent(
+      "portfolio-data-grid-header-cell-numeric"
+    );
+    expect(screen.getByTestId("weight-header-class")).toHaveTextContent(
+      "portfolio-data-grid-header-cell-numeric"
+    );
     fireEvent.click(screen.getByRole("button", { name: /Clear filter/i }));
     expect(onClearFilter).toHaveBeenCalled();
 
@@ -168,6 +179,9 @@ describe("portfolio data grids", () => {
     expect(screen.getByText("Amount")).toBeInTheDocument();
     expect(screen.getByText("Currency")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
+    expect(screen.getByTestId("amount-header-class")).toHaveTextContent(
+      "portfolio-data-grid-header-cell-numeric"
+    );
     expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
     expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
     expect(

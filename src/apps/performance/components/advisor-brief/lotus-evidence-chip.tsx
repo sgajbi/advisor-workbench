@@ -1,5 +1,7 @@
+import { Text } from "@/design-system";
+
 import type { PerformanceAdvisorBriefEvidenceRef } from "../../advisor-brief-view-model";
-import type { PerformanceWorkspaceMode } from "../performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
 
 export default function LotusEvidenceChip({
   evidenceRef,
@@ -15,12 +17,16 @@ export default function LotusEvidenceChip({
       onClick={() => onSelectMode(evidenceRef.targetMode)}
       title={evidenceRef.sourceSurface}
     >
-      <span className="lotus-evidence-chip-label performance-advisor-brief-evidence-chip-label">
+      <Text as="span" variant="microLabel" className="lotus-evidence-chip-label performance-advisor-brief-evidence-chip-label">
         {evidenceRef.metricLabel}
-      </span>
-      <strong className="lotus-evidence-chip-value performance-advisor-brief-evidence-chip-value">
+      </Text>
+      <Text
+        as="strong"
+        variant="tableCell"
+        className="lotus-evidence-chip-value performance-advisor-brief-evidence-chip-value"
+      >
         {evidenceRef.metricValue}
-      </strong>
+      </Text>
     </button>
   );
 }

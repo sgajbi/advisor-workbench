@@ -80,17 +80,18 @@ describe("performance summary driver helpers", () => {
       title: "Performance Drivers",
       subtitle: "YTD Contribution Ranking",
     });
-    expect(presentation.positiveTableModel.columns.map((column) => column.label)).toEqual([
+    expect(presentation.rankedTableModel.columns.map((column) => column.label)).toEqual([
+      "Direction",
       "Instrument",
       "Contribution",
       "Weight",
       "Return",
     ]);
-    expect(presentation.positiveTableModel.rows[0]).toMatchObject({
-      cells: ["AAPL", "1.50%", "24.00%", "8.00%"],
+    expect(presentation.rankedTableModel.rows[0]).toMatchObject({
+      cells: ["Contributor", "AAPL", "1.50%", "24.00%", "8.00%"],
     });
-    expect(presentation.negativeTableModel.rows[0]).toMatchObject({
-      cells: ["TLT", "-0.20%", "8.00%", "-2.00%"],
+    expect(presentation.rankedTableModel.rows[1]).toMatchObject({
+      cells: ["Detractor", "TLT", "-0.20%", "8.00%", "-2.00%"],
     });
     expect(presentation.tableModel.columns[0]?.label).toBe("Position");
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("AAPL");
@@ -108,8 +109,9 @@ describe("performance summary driver helpers", () => {
     if (presentation.mode !== "supported") {
       throw new Error("expected supported presentation");
     }
-    expect(presentation.positiveTableModel.rows[0]?.cells[0]).toBe("AAPL");
-    expect(presentation.negativeTableModel.columns.map((column) => column.label)).toEqual([
+    expect(presentation.rankedTableModel.rows[0]?.cells[1]).toBe("AAPL");
+    expect(presentation.rankedTableModel.columns.map((column) => column.label)).toEqual([
+      "Direction",
       "Instrument",
       "Contribution",
       "Weight",
@@ -166,8 +168,16 @@ describe("performance summary driver helpers", () => {
       throw new Error("expected supported presentation");
     }
 
-    expect(presentation.positiveTableModel.rows.map((row) => row.cells[0])).toEqual(["CASH"]);
-    expect(presentation.negativeTableModel.rows.map((row) => row.cells[0])).toEqual(["REAL NEG"]);
+    expect(
+      presentation.rankedTableModel.rows
+        .filter((row) => row.cells[0] === "Contributor")
+        .map((row) => row.cells[1])
+    ).toEqual(["CASH"]);
+    expect(
+      presentation.rankedTableModel.rows
+        .filter((row) => row.cells[0] === "Detractor")
+        .map((row) => row.cells[1])
+    ).toEqual(["REAL NEG"]);
   });
 
   it("builds a loading contributor presentation while detailed support is pending", () => {
@@ -189,7 +199,7 @@ describe("performance summary driver helpers", () => {
     });
   });
 
-  it("builds a partial contributor presentation with aggregate rows when position ranking is unavailable", () => {
+  it("builds an aggregate contributor presentation when position ranking is unavailable", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 
     const presentation = getPerformanceContributorsPresentation(
@@ -203,15 +213,15 @@ describe("performance summary driver helpers", () => {
       })
     );
 
-    expect(presentation).toMatchObject({
-      mode: "partial",
-      noticeTitle: "Contributor ranking is partial",
-      noticeBody: "Contribution exists, but only aggregate rows are available.",
-      hint: "Aggregate contribution remains available even when position-level ranking is absent.",
-    });
-    if (presentation.mode !== "partial") {
-      throw new Error("expected partial contributor presentation");
+    expect(presentation.mode).toBe("supported");
+    if (presentation.mode !== "supported") {
+      throw new Error("expected supported contributor presentation");
     }
+    expect(presentation.detailDisclosureTitle).toBe("Segment detail");
+    expect(presentation.positiveRankedItems[0]).toMatchObject({
+      title: "Equity",
+      value: "3.80%",
+    });
     expect(presentation.tableModel.rows[0]?.cells[0]).toBe("Equity");
   });
 

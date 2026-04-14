@@ -3,7 +3,6 @@
 import {
   ActionLink,
   AnalyticsModule,
-  DisclosureToggleButton,
   MetricRow,
 } from "@/design-system";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
@@ -12,6 +11,7 @@ import { buildPerformanceHref } from "@/apps/performance/navigation";
 import { formatDate, formatPct } from "../formatters";
 import type { PortfolioWorkspaceContext, PortfolioTimeWindow } from "../view-model";
 import type { PortfolioWorkspace } from "../types";
+import PortfolioMetricSummaryStrip from "./portfolio-metric-summary-strip";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioPerformanceSparkline from "./portfolio-performance-sparkline";
 
@@ -52,6 +52,11 @@ export default function PortfolioPerformanceSnapshotModule({
       ? `${performance.sparkline_points.length} source-backed observations`
       : "Open Performance workspace for source-backed return path detail.";
   const operationalSupport = getOperationalSupportLine(reportingRowCount, rebalance?.status ?? null);
+  const compactContextLine = buildCompactContextLine({
+    benchmarkLabel,
+    moneyWeightedMethod: performance?.money_weighted_method ?? null,
+    resolvedWindow,
+  });
   const performanceWorkspaceHref = buildPerformanceWorkspaceHref({
     portfolioId,
     selectedPeriod,
@@ -70,47 +75,91 @@ export default function PortfolioPerformanceSnapshotModule({
       actions={
         <>
           <ActionLink href={performanceWorkspaceHref}>Open Performance</ActionLink>
-          <DisclosureToggleButton expanded={expanded} onToggle={onToggle} />
+          <button
+            type="button"
+            className="disclosure-toggle-button"
+            aria-expanded={expanded}
+            aria-label={
+              expanded
+                ? "Hide performance snapshot details"
+                : "Show performance snapshot details"
+            }
+            onClick={onToggle}
+          >
+            <span className="disclosure-toggle-button-label">Details</span>
+            <span className="disclosure-toggle-button-chevron" aria-hidden="true">
+              ▾
+            </span>
+          </button>
         </>
       }
     >
-      {expanded ? (
-        hasPerformance ? (
-          <div className="portfolio-summary-pair-panel portfolio-performance-snapshot-panel">
-            <div className="portfolio-summary-pair-strip">
-              <SummaryPairStat label="Portfolio Return" value={formatPct(performance?.return_pct)} />
-              <SummaryPairStat
-                label="Benchmark Return"
-                value={formatPct(performance?.benchmark_return_pct)}
-              />
-              <SummaryPairStat label="Active Return" value={formatPct(performance?.excess_return_pct)} />
-              <SummaryPairStat
-                label="Money-Weighted Return"
-                value={formatPct(performance?.money_weighted_return_pct)}
-              />
-            </div>
-            <div className="portfolio-summary-pair-body">
-              <div className="portfolio-performance-snapshot-trend">
-                <div className="portfolio-summary-pair-region-heading">
-                  <span>Trend</span>
-                  <strong>{trendValue}</strong>
-                </div>
-                {performance?.sparkline_points?.length ? (
-                  <PortfolioPerformanceSparkline
-                    points={performance.sparkline_points}
-                    benchmarkLabel={benchmarkLabel}
-                  />
-                ) : (
-                  <p className="portfolio-performance-snapshot-copy">
-                    Open Performance workspace for source-backed return path detail.
-                  </p>
-                )}
+      {hasPerformance ? (
+        <div className="portfolio-summary-pair-panel portfolio-performance-snapshot-panel">
+          <PortfolioMetricSummaryStrip
+            ariaLabel="Performance snapshot metrics"
+            items={[
+              { label: "Portfolio Return", value: formatPct(performance?.return_pct) },
+              { label: "Benchmark Return", value: formatPct(performance?.benchmark_return_pct) },
+              { label: "Active Return", value: formatPct(performance?.excess_return_pct) },
+              {
+                label: "Money-Weighted Return",
+                value: formatPct(performance?.money_weighted_return_pct),
+              },
+            ]}
+          />
+          {compactContextLine ? (
+            <p className="portfolio-performance-snapshot-inline-context">
+              {compactContextLine}
+            </p>
+          ) : null}
+          <div className="portfolio-performance-snapshot-overview">
+            <div className="portfolio-performance-snapshot-overview-chart">
+              <div className="portfolio-summary-pair-region-heading">
+                <span>Trend</span>
+                <strong>{trendValue}</strong>
               </div>
+              {performance?.sparkline_points?.length ? (
+                <PortfolioPerformanceSparkline
+                  points={performance.sparkline_points}
+                  benchmarkLabel={benchmarkLabel}
+                />
+              ) : (
+                <p className="portfolio-performance-snapshot-copy">
+                  Open Performance workspace for source-backed return path detail.
+                </p>
+              )}
+            </div>
+            <div className="portfolio-performance-snapshot-overview-summary">
+              <div className="portfolio-summary-pair-region-heading">
+                <span>Comparison Context</span>
+                <strong>{performance?.period ?? selectedPeriod}</strong>
+              </div>
+              <div className="portfolio-performance-snapshot-overview-grid">
+                <MetricRow
+                  label="Benchmark"
+                  value={
+                    <span title={benchmarkLabel ?? "Unassigned"}>
+                      {benchmarkLabel ?? "Unassigned"}
+                    </span>
+                  }
+                />
+                <MetricRow
+                  label="Method"
+                  value={
+                    performance?.money_weighted_method
+                      ? `MWR ${performance.money_weighted_method}`
+                      : "Unavailable"
+                  }
+                />
+                <MetricRow label="Window" value={resolvedWindow} />
+                <MetricRow label="Active Return" value={formatPct(performance?.excess_return_pct)} />
+              </div>
+            </div>
+          </div>
+          {expanded ? (
+            <div className="portfolio-performance-snapshot-details">
               <div className="portfolio-performance-snapshot-context">
-                <div className="portfolio-summary-pair-region-heading">
-                  <span>Context</span>
-                  <strong>{performance?.period ?? selectedPeriod}</strong>
-                </div>
                 <div className="portfolio-summary-pair-context-grid">
                   <MetricRow label="Resolved Window" value={resolvedWindow} />
                   <MetricRow label="Benchmark" value={benchmarkLabel ?? "Unassigned"} />
@@ -127,55 +176,40 @@ export default function PortfolioPerformanceSnapshotModule({
                 <p className="portfolio-summary-pair-support">{operationalSupport}</p>
               </div>
             </div>
-          </div>
-        ) : (
-          <PortfolioModuleState
-            variant="capability"
-            capability={capability}
-            partialTitle="Performance not available yet"
-            unavailableTitle="Performance not available yet"
-            body={
-              capability.reason ??
-              "Performance analytics are not available for this portfolio context."
-            }
-            partialHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
-            unavailableHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
-            why={{
-              body:
-                "Performance requires valuation history, cashflow history, and a selected reporting period so returns can be calculated on a time-aware basis.",
-              label: "Why performance is unavailable",
-            }}
-          />
-        )
+          ) : null}
+        </div>
+      ) : expanded ? (
+        <PortfolioModuleState
+          variant="capability"
+          capability={capability}
+          partialTitle="Performance not available yet"
+          unavailableTitle="Performance not available yet"
+          body={
+            capability.reason ??
+            "Performance analytics are not available for this portfolio context."
+          }
+          partialHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
+          unavailableHint="Enable valuation history, cashflow history, and a selected reporting period to activate this view."
+          why={{
+            body:
+              "Performance requires valuation history, cashflow history, and a selected reporting period so returns can be calculated on a time-aware basis.",
+            label: "Why performance is unavailable",
+          }}
+        />
       ) : (
         <div className="portfolio-performance-snapshot-collapsed">
-          {hasPerformance ? (
-            <>
-              <span className="portfolio-performance-snapshot-kpi">
-                {formatPct(performance?.return_pct)}
-              </span>
-              <span className="portfolio-performance-snapshot-copy">
-                {buildCollapsedSnapshotCopy({
-                  performance,
-                  selectedPeriod,
-                  benchmarkLabel,
-                })}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="portfolio-performance-snapshot-kpi">Unavailable</span>
-              <span className="portfolio-performance-snapshot-copy">
-                {buildCollapsedUnavailableCopy(capability.reason)}
-              </span>
-              <span className="portfolio-performance-snapshot-support">
-                {buildCollapsedUnavailableSupport({
-                  selectedPeriod,
-                  context,
-                })}
-              </span>
-            </>
-          )}
+          <>
+            <span className="portfolio-performance-snapshot-kpi">Unavailable</span>
+            <span className="portfolio-performance-snapshot-copy">
+              {buildCollapsedUnavailableCopy(capability.reason)}
+            </span>
+            <span className="portfolio-performance-snapshot-support">
+              {buildCollapsedUnavailableSupport({
+                selectedPeriod,
+                context,
+              })}
+            </span>
+          </>
         </div>
       )}
     </AnalyticsModule>
@@ -238,21 +272,6 @@ function buildPerformanceWorkspaceHref({
   });
 }
 
-function SummaryPairStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="portfolio-summary-pair-stat">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
 function getOperationalSupportLine(
   reportingRowCount: number,
   rebalanceStatus: string | null
@@ -266,25 +285,21 @@ function getOperationalSupportLine(
   return parts.join(" • ");
 }
 
-function buildCollapsedSnapshotCopy({
-  performance,
-  selectedPeriod,
+function buildCompactContextLine({
   benchmarkLabel,
+  moneyWeightedMethod,
+  resolvedWindow,
 }: {
-  performance: PortfolioWorkspace["performance"];
-  selectedPeriod: PortfolioTimeWindow;
   benchmarkLabel: string | null;
+  moneyWeightedMethod: string | null;
+  resolvedWindow: string | null;
 }) {
-  const periodLabel = performance?.period ?? selectedPeriod;
-  const portfolioReturn = formatPct(performance?.return_pct);
-
-  if (performance?.benchmark_return_pct != null && performance?.excess_return_pct != null) {
-    return `${portfolioReturn} total return • active ${formatPct(
-      performance.excess_return_pct
-    )} vs ${benchmarkLabel ?? "assigned benchmark"} • ${periodLabel}`;
-  }
-
-  return `${portfolioReturn} total return • ${periodLabel}`;
+  const segments = [
+    benchmarkLabel ? `Benchmark: ${benchmarkLabel}` : null,
+    moneyWeightedMethod ? `Method: MWR ${moneyWeightedMethod}` : null,
+    resolvedWindow ? `Window: ${resolvedWindow}` : null,
+  ].filter(Boolean);
+  return segments.join(" • ");
 }
 
 function buildCollapsedUnavailableCopy(reason?: string | null) {

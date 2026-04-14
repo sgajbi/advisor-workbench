@@ -5,7 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 import RiskRollingPanel from "../../src/apps/performance/components/risk/risk-rolling-panel";
 import {
   buildFixtureRiskRolling,
+  buildFixtureRiskSummary,
   buildPerformanceRiskViewModel,
+  buildUnavailableRiskRolling,
 } from "../../src/apps/performance/risk-workspace-view-model";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
@@ -167,5 +169,32 @@ describe("RiskRollingPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
 
     expect(onViewSeries).toHaveBeenCalledWith("63");
+  });
+
+  it("renders an explicit partial-state note when rolling windows are not returned", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskRolling: buildUnavailableRiskRolling({
+        workspace: scenario.workspace,
+        period: "YTD",
+        detailBasis: "NET",
+        detail: "Risk rolling fetch failed.",
+        includeTimeSeries: false,
+      }),
+    });
+
+    renderRollingPanel(viewModel);
+
+    expect(screen.getByText("Rolling stability review is partially available")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Historical attribution remains available, but rolling-window review is incomplete for this selection\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("No rolling risk metrics")).toBeInTheDocument();
   });
 });

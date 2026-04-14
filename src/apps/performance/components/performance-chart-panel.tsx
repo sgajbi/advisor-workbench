@@ -1,125 +1,44 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import ReactECharts from "echarts-for-react";
-import type { EChartsOption } from "echarts";
-import { Box } from "@mui/material";
 
 import {
-  AnalyticsTable,
-  CapabilityStatePanel,
-  Text,
   WorkbenchChartShell,
+  WorkbenchLoadingState,
 } from "@/design-system";
-import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
-  PerformanceChartPoint,
   MoneyWeightedReturnSummary,
+  PerformanceChartPoint,
 } from "@/features/workbench/types";
 
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
 import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
-import PerformanceChartContextStrip from "./performance-chart-context-strip";
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
+import PerformanceObservationTrail from "./performance-observation-trail";
+import PerformanceReturnPathChartStage from "./performance-return-path-chart-stage";
+import PerformanceReturnPathNotices from "./performance-return-path-notices";
+import PerformanceReturnPathSummary from "./performance-return-path-summary";
+import {
+  buildReturnPathChartOption,
+  resolveReportDates,
+} from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
-
-type PerformanceControlPatch = {
-  portfolioId?: string;
-  period?: string;
-  detailBasis?: string;
-  contributionDimension?: string;
-  attributionDimension?: string;
-  chartFrequency?: string;
-  benchmark?: string;
-  reportStartDate?: string;
-  reportEndDate?: string;
-};
-
-type ComparativeSummary = {
-  portfolio_return_pct: number | null;
-  benchmark_return_pct: number | null;
-  active_return_pct: number | null;
-  annualized_return_pct?: number | null;
-  end_market_value?: number | null;
-  beginning_cash_flow?: number | null;
-  ending_cash_flow?: number | null;
-  flow_adjusted_end_market_value?: number | null;
-  net_cash_flow?: number | null;
-  fees?: number | null;
-  benchmark_return_source?: string | null;
-  benchmark_input_mode?: string | null;
-};
-
-type PerformanceChartViewMode = "combined" | "absolute" | "relative";
-
-const CHART_COLORS = {
-  portfolio: "#da1e28",
-  benchmark: "#1f2e45",
-  active: "#2f5f97",
-  portfolioBar: "rgba(218, 30, 40, 0.28)",
-  benchmarkBar: "rgba(31, 46, 69, 0.24)",
-  activeBar: "rgba(47, 95, 151, 0.24)",
-};
-
-const SHARED_CHART_TEXT = {
-  legendSize: Number.parseFloat(lotusThemeTokens.typography.size.textSm),
-  axisSize: Number.parseFloat(lotusThemeTokens.typography.size.textXs),
-  legendWeight: lotusThemeTokens.typography.variant.cardTitle.weight,
-  axisWeight: lotusThemeTokens.typography.variant.label.weight,
-  tooltipWeight: 600,
-  tooltipPadding: [
-    Number.parseInt(lotusThemeTokens.spacing.step3, 10),
-    Number.parseInt(lotusThemeTokens.spacing.step4, 10),
-  ] as [number, number],
-  barRadius: [lotusThemeTokens.radius.sm, lotusThemeTokens.radius.sm, 0, 0] as [number, number, number, number],
-  refreshRadius: lotusThemeTokens.radius.control,
-};
-
-function toNumeric(value: number | null | undefined): number | null {
-  return value === null || value === undefined || Number.isNaN(value) ? null : value;
-}
-
-function buildPercentAxisBounds(values: Array<number | null | undefined>) {
-  const numericValues = values
-    .map((value) => toNumeric(value))
-    .filter((value): value is number => value !== null);
-
-  if (!numericValues.length) {
-    return { min: -1, max: 1 };
-  }
-
-  const rawMin = Math.min(...numericValues, 0);
-  const rawMax = Math.max(...numericValues, 0);
-  const spread = rawMax - rawMin || 1;
-  const padding = Math.max(spread * 0.12, 1);
-
-  return {
-    min: Math.floor((rawMin - padding) * 10) / 10,
-    max: Math.ceil((rawMax + padding) * 10) / 10,
-  };
-}
-
-function resolveReportDates(
-  points: PerformanceChartPoint[],
-  reportStartDate?: string,
-  reportEndDate?: string
-) {
-  const fallbackStartDate =
-    points.find((point) => point.period_start)?.period_start ??
-    points.find((point) => point.period_end)?.period_end ??
-    "";
-  const fallbackEndDate =
-    [...points].reverse().find((point) => point.period_end)?.period_end ??
-    [...points].reverse().find((point) => point.period_start)?.period_start ??
-    fallbackStartDate;
-
-  return {
-    startDate: reportStartDate || fallbackStartDate,
-    endDate: reportEndDate || fallbackEndDate,
-  };
-}
+import {
+  buildPerformanceControlSelectionPatch,
+  buildChartLegendItems,
+  buildResolvedBenchmarkOptions,
+  buildReturnDecisionItems,
+  buildSingleObservationPresentation,
+  hasActiveReturnSeries,
+  hasBenchmarkReturnSeries,
+  resolveChartViewMode,
+  type ComparativeSummary,
+  type PerformanceChartViewMode,
+  type PerformanceControlPatch,
+} from "./performance-chart-panel-helpers";
 
 export default function PerformanceChartPanel({
   title,
@@ -170,15 +89,13 @@ export default function PerformanceChartPanel({
   );
   const [fromDate, setFromDate] = useState(resolvedReportDates.startDate);
   const [toDate, setToDate] = useState(resolvedReportDates.endDate);
-  const hasBenchmarkSeries = points.some(
-    (point) =>
-      point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
-  );
-  const hasActiveSeries = points.some(
-    (point) => point.active_return_pct !== null || point.cumulative_active_return_pct !== null
-  );
+  const hasBenchmarkSeries = hasBenchmarkReturnSeries(points);
+  const hasActiveSeries = hasActiveReturnSeries(points);
   const [chartViewMode, setChartViewMode] = useState<PerformanceChartViewMode>(
-    hasBenchmarkSeries && hasActiveSeries ? "combined" : "absolute"
+    resolveChartViewMode({
+      hasBenchmarkSeries,
+      hasActiveSeries,
+    })
   );
 
   useEffect(() => {
@@ -187,33 +104,22 @@ export default function PerformanceChartPanel({
   }, [resolvedReportDates.endDate, resolvedReportDates.startDate]);
 
   useEffect(() => {
-    if (chartViewMode === "relative" && !hasActiveSeries) {
-      setChartViewMode(hasBenchmarkSeries ? "combined" : "absolute");
-      return;
-    }
-    if (chartViewMode === "combined" && !hasBenchmarkSeries) {
-      setChartViewMode("absolute");
+    const resolvedMode = resolveChartViewMode({
+      preferredMode: chartViewMode,
+      hasBenchmarkSeries,
+      hasActiveSeries,
+    });
+    if (resolvedMode !== chartViewMode) {
+      setChartViewMode(resolvedMode);
     }
   }, [chartViewMode, hasActiveSeries, hasBenchmarkSeries]);
-  const resolvedBenchmarkOptions = useMemo(() => {
-    if (benchmarkOptions.length > 0) {
-      return benchmarkOptions;
-    }
-    if (!benchmark) {
-      return [];
-    }
-    return [
-      {
-        benchmark_code: benchmark,
-        benchmark_name: benchmark,
-        is_assigned: true,
-      } satisfies PerformanceBenchmarkOptionView,
-    ];
-  }, [benchmark, benchmarkOptions]);
+  const resolvedBenchmarkOptions = useMemo(
+    () => buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions }),
+    [benchmark, benchmarkOptions]
+  );
   const returnPathPresentation = getPerformanceReturnPathPresentation({
     summary,
     moneyWeightedReturn,
-    points,
     benchmark,
     benchmarkOptions: resolvedBenchmarkOptions,
     capabilities,
@@ -229,267 +135,25 @@ export default function PerformanceChartPanel({
       }),
     [chartViewMode, hasActiveSeries, hasBenchmarkSeries, points]
   );
+  const hasRenderableReturnPath =
+    points.length > 0 && capabilities.returnPath.state !== "unavailable";
 
   const chartOption = useMemo(() => {
-    const categories = points.map((point) => point.label);
-    const portfolioCumulative = points.map((point) =>
-      toNumeric(point.cumulative_portfolio_return_pct)
-    );
-    const benchmarkCumulative = points.map((point) =>
-      toNumeric(point.cumulative_benchmark_return_pct)
-    );
-    const activeCumulative = points.map((point) =>
-      toNumeric(point.cumulative_active_return_pct)
-    );
-    const portfolioPeriodic = points.map((point) => toNumeric(point.portfolio_return_pct));
-    const benchmarkPeriodic = points.map((point) => toNumeric(point.benchmark_return_pct));
-    const activePeriodic = points.map((point) => toNumeric(point.active_return_pct));
-    const hasActiveCumulativeSeries = hasBenchmarkSeries && activeCumulative.some((value) => value !== null);
-    const hasActivePeriodicSeries = hasBenchmarkSeries && activePeriodic.some((value) => value !== null);
-    const includeAbsoluteSeries = chartViewMode !== "relative";
-    const includeRelativeSeries = chartViewMode !== "absolute";
-    const showBenchmarkSeries = includeAbsoluteSeries && hasBenchmarkSeries;
-    const showActiveCumulativeSeries = includeRelativeSeries && hasActiveCumulativeSeries;
-    const showActivePeriodicSeries = includeRelativeSeries && hasActivePeriodicSeries;
-
-    const cumulativeBounds = buildPercentAxisBounds([
-      ...(includeAbsoluteSeries ? portfolioCumulative : []),
-      ...(showBenchmarkSeries ? benchmarkCumulative : []),
-      ...(showActiveCumulativeSeries ? activeCumulative : []),
-    ]);
-    const barBounds = buildPercentAxisBounds([
-      ...(includeAbsoluteSeries ? portfolioPeriodic : []),
-      ...(showBenchmarkSeries ? benchmarkPeriodic : []),
-      ...(showActivePeriodicSeries ? activePeriodic : []),
-    ]);
-
-    return {
-      animation: false,
-      backgroundColor: "transparent",
-      color: [
-        CHART_COLORS.portfolio,
-        CHART_COLORS.benchmark,
-        CHART_COLORS.active,
-        CHART_COLORS.portfolioBar,
-        CHART_COLORS.benchmarkBar,
-        CHART_COLORS.activeBar,
-      ],
-      grid: {
-        left: 66,
-        right: 28,
-        top: 24,
-        bottom: 58,
-        containLabel: true,
-      },
-      legend: {
-        bottom: 8,
-        left: "center",
-        itemWidth: 18,
-        itemHeight: 10,
-        itemGap: 18,
-        icon: "roundRect",
-        textStyle: {
-          color: "#435164",
-          fontSize: SHARED_CHART_TEXT.legendSize,
-          fontWeight: SHARED_CHART_TEXT.legendWeight,
-        },
-        data: [
-          ...(includeAbsoluteSeries ? ["Portfolio Return"] : []),
-          ...(showBenchmarkSeries ? [returnPathPresentation.benchmarkLabel] : []),
-          ...(showActiveCumulativeSeries ? ["Active Cumulative"] : []),
-          ...(includeAbsoluteSeries ? ["Portfolio Period"] : []),
-          ...(showBenchmarkSeries ? ["Benchmark Period"] : []),
-          ...(showActivePeriodicSeries ? ["Active Period"] : []),
-        ],
-      },
-      tooltip: {
-        trigger: "axis",
-        axisPointer: { type: "cross" },
-        backgroundColor: "rgba(19, 30, 43, 0.96)",
-        borderColor: "rgba(117, 143, 173, 0.48)",
-        borderWidth: 1,
-        textStyle: {
-          color: "#f8fafc",
-          fontSize: SHARED_CHART_TEXT.legendSize,
-          fontWeight: SHARED_CHART_TEXT.tooltipWeight,
-        },
-        extraCssText:
-          "box-shadow: 0 18px 32px rgba(15, 23, 42, 0.24); border-radius: 10px;",
-        padding: SHARED_CHART_TEXT.tooltipPadding,
-        valueFormatter: (value: unknown) => {
-          if (typeof value === "number") {
-            return `${value.toFixed(2)}%`;
-          }
-          if (typeof value === "string") {
-            return value;
-          }
-          return "";
-        },
-      },
-      xAxis: {
-        type: "category" as const,
-        data: categories,
-        axisLine: { lineStyle: { color: "rgba(52, 70, 95, 0.28)", width: 1 } },
-        axisTick: { show: false },
-        axisLabel: {
-          color: "#5a6779",
-          fontSize: SHARED_CHART_TEXT.axisSize,
-          fontWeight: SHARED_CHART_TEXT.axisWeight,
-        },
-      },
-      yAxis: [
-        {
-          type: "value" as const,
-          min: cumulativeBounds.min,
-          max: cumulativeBounds.max,
-          splitNumber: 5,
-          axisLabel: {
-            color: "#637083",
-            formatter: (value: number) => `${value}%`,
-          },
-          axisLine: { show: false },
-          axisTick: { show: false },
-          splitLine: {
-            lineStyle: {
-              color: "rgba(52, 70, 95, 0.14)",
-              width: 1,
-            },
-          },
-        },
-        {
-          type: "value" as const,
-          min: barBounds.min,
-          max: barBounds.max,
-          show: false,
-        },
-      ],
-      series: [
-        ...(includeAbsoluteSeries
-          ? [
-              {
-                name: "Portfolio Period",
-                type: "bar" as const,
-                yAxisIndex: 1,
-                data: portfolioPeriodic,
-                barWidth: 14,
-                barGap: "18%",
-                barCategoryGap: "34%",
-                z: 1,
-                itemStyle: {
-                  color: "rgba(218, 30, 40, 0.38)",
-                  borderRadius: SHARED_CHART_TEXT.barRadius,
-                  borderColor: "rgba(218, 30, 40, 0.66)",
-                  borderWidth: 1,
-                },
-              },
-            ]
-          : []),
-        ...(showBenchmarkSeries
-          ? [
-              {
-                name: "Benchmark Period",
-                type: "bar" as const,
-                yAxisIndex: 1,
-                data: benchmarkPeriodic,
-                barWidth: 14,
-                z: 1,
-                itemStyle: {
-                  color: "rgba(31, 46, 69, 0.36)",
-                  borderRadius: SHARED_CHART_TEXT.barRadius,
-                  borderColor: "rgba(31, 46, 69, 0.6)",
-                  borderWidth: 1,
-                },
-              },
-            ]
-          : []),
-        ...(showActivePeriodicSeries
-          ? [
-              {
-                name: "Active Period",
-                type: "bar" as const,
-                yAxisIndex: 1,
-                data: activePeriodic,
-                barWidth: 14,
-                z: 1,
-                itemStyle: {
-                  color: "rgba(47, 95, 151, 0.34)",
-                  borderRadius: SHARED_CHART_TEXT.barRadius,
-                  borderColor: "rgba(47, 95, 151, 0.58)",
-                  borderWidth: 1,
-                },
-              },
-            ]
-          : []),
-        ...(includeAbsoluteSeries
-          ? [
-              {
-                name: "Portfolio Return",
-                type: "line" as const,
-                data: portfolioCumulative,
-                smooth: false,
-                symbol: "circle",
-                symbolSize: 6,
-                showSymbol: true,
-                connectNulls: true,
-                z: 4,
-                lineStyle: {
-                  width: 3.5,
-                  color: CHART_COLORS.portfolio,
-                  cap: "round" as const,
-                  join: "round" as const,
-                },
-                areaStyle: {
-                  color: "rgba(218, 30, 40, 0.045)",
-                },
-              },
-            ]
-          : []),
-        ...(showBenchmarkSeries
-          ? [
-              {
-                name: returnPathPresentation.benchmarkLabel,
-                type: "line" as const,
-                data: benchmarkCumulative,
-                smooth: false,
-                symbol: "circle",
-                symbolSize: 6,
-                showSymbol: true,
-                connectNulls: true,
-                z: 4,
-                lineStyle: {
-                  width: 3.25,
-                  color: CHART_COLORS.benchmark,
-                  cap: "round" as const,
-                  join: "round" as const,
-                },
-              },
-            ]
-          : []),
-        ...(showActiveCumulativeSeries
-          ? [
-              {
-                name: "Active Cumulative",
-                type: "line" as const,
-                data: activeCumulative,
-                smooth: false,
-                symbol: "circle",
-                symbolSize: 6,
-                showSymbol: true,
-                connectNulls: true,
-                z: 4,
-                lineStyle: {
-                  width: 2.5,
-                  type: "dashed" as const,
-                  color: CHART_COLORS.active,
-                  cap: "round" as const,
-                  join: "round" as const,
-                },
-              },
-            ]
-          : []),
-      ],
-    } satisfies EChartsOption;
-  }, [chartViewMode, hasBenchmarkSeries, points, returnPathPresentation.benchmarkLabel]);
+    return buildReturnPathChartOption({
+      points,
+      chartViewMode,
+      hasBenchmarkSeries,
+    });
+  }, [chartViewMode, hasBenchmarkSeries, points]);
+  const singleObservation = useMemo(
+    () =>
+      buildSingleObservationPresentation({
+        points,
+        chartViewMode,
+        hasBenchmarkSeries,
+      }),
+    [chartViewMode, hasBenchmarkSeries, points]
+  );
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -504,7 +168,9 @@ export default function PerformanceChartPanel({
   }
 
   function updateSelection(patch: PerformanceControlPatch) {
-    onRequestChange({
+    onRequestChange(
+      buildPerformanceControlSelectionPatch({
+        patch,
       portfolioId,
       period,
       detailBasis,
@@ -514,17 +180,44 @@ export default function PerformanceChartPanel({
       benchmark,
       reportStartDate,
       reportEndDate,
-      ...patch,
-    });
+      })
+    );
   }
 
-  const outcomeItems = returnPathPresentation.metrics;
+  const { summaryItems, outcomeItems } = buildReturnDecisionItems(
+    returnPathPresentation,
+    hasRenderableReturnPath
+  );
+  const outcomeStripItems = outcomeItems.map((metric) => ({
+    key: metric.key,
+    label: metric.label,
+    value: metric.value,
+    support: metric.support,
+    definition: metric.definition,
+    unavailable: metric.unavailable,
+  }));
+  const outcomeStrip =
+    capabilities.summaryKpis.state !== "unavailable" ? (
+      <PerformanceOutcomeStrip
+        className="performance-return-path-outcome-strip"
+        items={outcomeStripItems}
+      />
+    ) : null;
+  const topContext = hasRenderableReturnPath
+    ? <PerformanceReturnPathSummary items={summaryItems} />
+    : outcomeStrip;
+  const chartLegendItems = buildChartLegendItems({
+    hasBenchmarkSeries,
+    hasActiveSeries,
+  });
 
   return (
     <WorkbenchChartShell
       id={id}
       title={title}
       className="performance-chart-stage workbench-summary-panel"
+      bodyClassName="performance-return-path-body"
+      contextRow={topContext}
       toolbar={
         <PerformanceAnalysisControlBar
           period={period}
@@ -548,103 +241,64 @@ export default function PerformanceChartPanel({
           onChartViewModeChange={setChartViewMode}
         />
       }
-      metricStrip={
-        capabilities.summaryKpis.state !== "unavailable" ? (
-          <PerformanceOutcomeStrip
-            items={outcomeItems.map((metric) => ({
-              key: metric.key,
-              label: metric.label,
-              value: metric.value,
-              support: metric.support,
-              unavailable: metric.unavailable,
-            }))}
-          />
-        ) : undefined
-      }
       loadingState={
         isDetailsPending ? (
-          <div className="performance-chart-loading-state">
-            <p className="muted">Loading analytical time series and benchmark comparison.</p>
-          </div>
+          <WorkbenchLoadingState
+            className="performance-chart-loading-state"
+            title="Resolving return path and benchmark comparison"
+            message="Loading published observations, benchmark context, and active comparison for the selected reporting window."
+            rows={2}
+            chart
+          />
         ) : undefined
       }
       fallbackState={
         !isDetailsPending ? (
-          <div className="performance-chart-unavailable" aria-label={`${title} unavailable`}>
-            <CapabilityStatePanel
-              capability={capabilities.returnPath}
-              partialTitle="Return History Is Partial"
-              unavailableTitle="Return History Unavailable"
-              body={
-                capabilities.returnPath.reason ??
-                "The resolved window does not currently have published performance observations for this mandate."
-              }
-              partialHint="Adjust the period or explicit dates once performance history is available for this resolved window."
-              unavailableHint="Adjust the period or explicit dates once performance history is available for this resolved window."
-              surface="analysis"
-            />
-          </div>
+          <PerformanceAnalyticalUnavailableState
+            ariaLabel={`${title} unavailable`}
+            status={capabilities.returnPath.state === "partial" ? "partial" : "unavailable"}
+            compact
+            title={
+              capabilities.returnPath.state === "partial"
+                ? "Return history is partially available"
+                : "Return history is unavailable for the selected window"
+            }
+            body={
+              capabilities.returnPath.reason ??
+              "The resolved window does not currently expose published performance observations for this mandate."
+            }
+            contextItems={[]}
+          />
         ) : undefined
       }
     >
-      {capabilities.returnPath.state === "supported" && points.length ? (
+      {hasRenderableReturnPath ? (
         <>
-          <PerformanceChartContextStrip
-            portfolioId={portfolioId}
-            period={period}
-            detailBasis={detailBasis}
-            benchmarkContextValue={returnPathPresentation.benchmarkContextValue}
-            activeReturn={returnPathPresentation.activeReturnValue}
-            reportStartDate={resolvedReportDates.startDate}
-            reportEndDate={resolvedReportDates.endDate}
+          <PerformanceReturnPathNotices
+            partialReason={
+              capabilities.returnPath.state === "partial"
+                ? capabilities.returnPath.reason ??
+                  "Return observations are partially published for the selected horizon."
+                : null
+            }
+            benchmarkStateBody={returnPathPresentation.benchmarkStateBody}
           />
-          {returnPathPresentation.benchmarkStateBody ? (
-            <div className="performance-chart-benchmark-state">
-              <strong>Benchmark unassigned</strong>
-              <span>{returnPathPresentation.benchmarkStateBody}</span>
-            </div>
-          ) : null}
-          <div
-            className="performance-chart-library-frame workbench-summary-visual"
-            role="img"
-            aria-label={`${title} chart`}
-            style={{ position: "relative" }}
-          >
-            <ReactECharts
+          <div className="performance-chart-analysis-grid">
+            <PerformanceReturnPathChartStage
+              title={title}
               option={chartOption}
-              style={{ width: "100%", height: "360px" }}
-              opts={{ renderer: "svg" }}
-              notMerge
-              lazyUpdate
+              legendItems={chartLegendItems}
+              isDetailsPending={isDetailsPending}
+              singleObservation={singleObservation}
             />
-            {isDetailsPending ? (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: lotusThemeTokens.spacing.step3,
-                  right: lotusThemeTokens.spacing.step3,
-                  px: lotusThemeTokens.spacing.step3,
-                  py: lotusThemeTokens.spacing.step1,
-                  borderRadius: SHARED_CHART_TEXT.refreshRadius,
-                  bgcolor: "rgba(255,255,255,0.92)",
-                  border: "1px solid rgba(31,39,51,0.08)",
-                  boxShadow: "0 8px 18px rgba(16, 40, 51, 0.08)",
-                }}
-              >
-                <Text variant="metadata" as="span">
-                  Refreshing analytical series
-                </Text>
-              </Box>
-            ) : null}
           </div>
-          <AnalyticsTable
-            ariaLabel="Return path observation table"
-            columns={chartTableModel.columns}
-            rows={chartTableModel.rows}
-            density="compact"
-            variant="observation"
-            className="performance-chart-observation-table"
-          />
+          {outcomeStrip ? (
+            <PerformanceOutcomeStrip
+              className="performance-return-path-outcome-strip performance-return-path-outcome-strip-secondary"
+              items={outcomeStripItems}
+            />
+          ) : null}
+          <PerformanceObservationTrail tableModel={chartTableModel} />
         </>
       ) : null}
     </WorkbenchChartShell>

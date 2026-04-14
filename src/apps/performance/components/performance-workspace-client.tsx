@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -14,9 +14,10 @@ import type {
 } from "@/features/workbench/types";
 
 import { buildPerformanceHref } from "../navigation";
+import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
+import { getNormalizedInitialPerformanceDetailControls } from "../performance-detail-control-resolution";
 import PerformanceWorkspaceView from "./performance-workspace-view";
-import type { PerformanceWorkspaceMode } from "./performance-workspace-mode-switch";
 
 type PerformanceWorkspaceClientProps = {
   initialSummary: WorkbenchPerformanceWorkspaceSummary | null;
@@ -190,18 +191,6 @@ export default function PerformanceWorkspaceClient({
     router,
   ]);
 
-  useEffect(() => {
-    if (!controls || !summary || details || initialDetailsRequestedRef.current) {
-      return;
-    }
-
-    initialDetailsRequestedRef.current = true;
-    setDetailsStatus("loading");
-    void fetchDetailsForControls(controls, {
-      requestId: requestSequenceRef.current,
-    });
-  }, [controls, details, summary]);
-
   async function handleRequestChange(patch: Partial<PerformanceControlState>) {
     if (!controls) {
       return;
@@ -326,10 +315,10 @@ export default function PerformanceWorkspaceClient({
     }
   }
 
-  async function fetchDetailsForControls(
+  const fetchDetailsForControls = useCallback(async (
     nextControls: PerformanceControlState,
-    options: { requestId: number }
-  ) {
+    options: { requestId: number; allowInitialFallback?: boolean }
+  ) => {
     const detailsKey = buildDetailsCacheKey(nextControls);
     const cachedDetails = detailsCacheRef.current.get(detailsKey);
     if (cachedDetails !== undefined) {
@@ -346,7 +335,7 @@ export default function PerformanceWorkspaceClient({
     }
 
     try {
-      const resolvedDetails = await getWorkbenchPerformanceWorkspaceDetailsClient(
+      let resolvedDetails = await getWorkbenchPerformanceWorkspaceDetailsClient(
         nextControls.portfolioId,
         {
           period: nextControls.period,
@@ -359,25 +348,86 @@ export default function PerformanceWorkspaceClient({
           reportEndDate: nextControls.reportEndDate,
         }
       );
+      let resolvedControls: PerformanceControlState = {
+        ...nextControls,
+        contributionDimension: resolvedDetails.contribution_dimension,
+        attributionDimension: resolvedDetails.attribution_dimension,
+        detailBasis: resolvedDetails.detail_basis,
+        chartFrequency: resolvedDetails.chart_frequency,
+        benchmark: resolvedDetails.benchmark_code ?? nextControls.benchmark,
+        reportStartDate: resolvedDetails.report_start_date,
+        reportEndDate: resolvedDetails.report_end_date,
+      };
 
-      detailsCacheRef.current.set(detailsKey, resolvedDetails);
+      if (options.allowInitialFallback) {
+        const normalizedInitialControls = getNormalizedInitialPerformanceDetailControls(
+          resolvedDetails,
+          {
+            contributionDimension: nextControls.contributionDimension,
+            attributionDimension: nextControls.attributionDimension,
+          }
+        );
+        const requiresInitialFallback =
+          normalizedInitialControls.contributionDimension !==
+            resolvedDetails.contribution_dimension ||
+          normalizedInitialControls.attributionDimension !==
+            resolvedDetails.attribution_dimension;
+
+        if (requiresInitialFallback) {
+          resolvedControls = {
+            ...resolvedControls,
+            contributionDimension: normalizedInitialControls.contributionDimension,
+            attributionDimension: normalizedInitialControls.attributionDimension,
+          };
+          const normalizedDetailsKey = buildDetailsCacheKey(resolvedControls);
+          const cachedNormalizedDetails = detailsCacheRef.current.get(normalizedDetailsKey);
+          if (cachedNormalizedDetails) {
+            resolvedDetails = cachedNormalizedDetails;
+          } else {
+            resolvedDetails = await getWorkbenchPerformanceWorkspaceDetailsClient(
+              resolvedControls.portfolioId,
+              {
+                period: resolvedControls.period,
+                chartFrequency: resolvedControls.chartFrequency,
+                contributionDimension: resolvedControls.contributionDimension,
+                attributionDimension: resolvedControls.attributionDimension,
+                detailBasis: resolvedControls.detailBasis,
+                benchmark: resolvedControls.benchmark,
+                reportStartDate: resolvedControls.reportStartDate,
+                reportEndDate: resolvedControls.reportEndDate,
+              }
+            );
+            detailsCacheRef.current.set(normalizedDetailsKey, resolvedDetails);
+          }
+          if (requestSequenceRef.current === options.requestId) {
+            startTransition(() => {
+              router.replace(buildPerformanceHref({ ...resolvedControls, mode }), {
+                scroll: false,
+              });
+            });
+          }
+        }
+      }
+
+      const resolvedDetailsKey = buildDetailsCacheKey(resolvedControls);
+      detailsCacheRef.current.set(resolvedDetailsKey, resolvedDetails);
       if (requestSequenceRef.current !== options.requestId) {
         return;
       }
       setDetails(resolvedDetails);
-      setDetailsKey(detailsKey);
+      setDetailsKey(resolvedDetailsKey);
       setDetailsStatus("ready");
       setControls((current) =>
         current
           ? {
               ...current,
-              contributionDimension: resolvedDetails.contribution_dimension,
-              attributionDimension: resolvedDetails.attribution_dimension,
-              detailBasis: resolvedDetails.detail_basis,
-              chartFrequency: resolvedDetails.chart_frequency,
-              benchmark: resolvedDetails.benchmark_code ?? current.benchmark,
-              reportStartDate: resolvedDetails.report_start_date,
-              reportEndDate: resolvedDetails.report_end_date,
+              contributionDimension: resolvedControls.contributionDimension,
+              attributionDimension: resolvedControls.attributionDimension,
+              detailBasis: resolvedControls.detailBasis,
+              chartFrequency: resolvedControls.chartFrequency,
+              benchmark: resolvedControls.benchmark ?? current.benchmark,
+              reportStartDate: resolvedControls.reportStartDate,
+              reportEndDate: resolvedControls.reportEndDate,
             }
           : current
       );
@@ -387,7 +437,20 @@ export default function PerformanceWorkspaceClient({
       }
     } finally {
     }
-  }
+  }, [mode, router]);
+
+  useEffect(() => {
+    if (!controls || !summary || details || initialDetailsRequestedRef.current) {
+      return;
+    }
+
+    initialDetailsRequestedRef.current = true;
+    setDetailsStatus("loading");
+    void fetchDetailsForControls(controls, {
+      requestId: requestSequenceRef.current,
+      allowInitialFallback: true,
+    });
+  }, [controls, details, fetchDetailsForControls, summary]);
 
   return (
     <PerformanceWorkspaceView

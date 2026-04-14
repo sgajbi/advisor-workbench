@@ -29,7 +29,7 @@ describe("PerformanceEvidenceMode", () => {
       screen.getByText("Evidence and lineage surfaces are not exposed by the current gateway contract.")
     ).toBeInTheDocument();
     expect(
-      document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
+      document.querySelector(".performance-evidence-state-panel .portfolio-empty-state")
     ).toBeTruthy();
     expect(screen.getByText("Evidence and Calculation Context")).toBeInTheDocument();
   });
@@ -45,7 +45,7 @@ describe("PerformanceEvidenceMode", () => {
       screen.getByText("Lineage artifacts are available, but execution evidence is incomplete.")
     ).toBeInTheDocument();
     expect(
-      document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
+      document.querySelector(".performance-evidence-state-panel .module-state-panel")
     ).toBeTruthy();
   });
 

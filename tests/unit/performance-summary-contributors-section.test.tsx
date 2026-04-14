@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import PerformanceSummaryContributorsSection from "../../src/apps/performance/components/performance-summary-contributors-section";
@@ -73,37 +73,61 @@ describe("PerformanceSummaryContributorsSection", () => {
 
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
     expect(screen.getByText("YTD Contribution Ranking")).toBeInTheDocument();
-    expect(screen.getByText("Top Contributors")).toBeInTheDocument();
-    expect(screen.getByText("Top Detractors")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("AAPL");
+    expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent("TLT");
+    expect(screen.queryAllByText("Contribution to active return")).toHaveLength(0);
+    expect(screen.getByText("Instrument detail")).toBeInTheDocument();
+    expect(screen.queryByText(/positions/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Open the full instrument-level contribution breakdown in one ranked table.")
+    ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
 
-    const contributorsTable = screen.getByLabelText("Top Contributors table");
+    fireEvent.click(screen.getByText("Instrument detail"));
+
+    const contributorsTable = screen.getByLabelText("Contributor instrument detail table");
     expect(contributorsTable).toBeInTheDocument();
     expect(
       contributorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
     ).toBeTruthy();
+    expect(within(contributorsTable).getByText("Direction")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Instrument")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Contribution")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Weight")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Return")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Contributor")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("Detractor")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("AAPL")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("TLT")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("1.50%")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("24.00%")).toBeInTheDocument();
-    expect(within(contributorsTable).getByText("8.00%")).toBeInTheDocument();
+    expect(within(contributorsTable).getAllByText("8.00%")).toHaveLength(2);
+    expect(within(contributorsTable).getByText("-0.20%")).toBeInTheDocument();
+    expect(within(contributorsTable).getByText("-2.00%")).toBeInTheDocument();
+  });
 
-    const detractorsTable = screen.getByLabelText("Top Detractors table");
-    expect(detractorsTable).toBeInTheDocument();
-    expect(
-      detractorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
-    ).toBeTruthy();
-    expect(within(detractorsTable).getByText("TLT")).toBeInTheDocument();
-    expect(within(detractorsTable).getByText("-0.20%")).toBeInTheDocument();
-    expect(within(detractorsTable).getByText("-2.00%")).toBeInTheDocument();
+  it("rebalances the ranked contributor grid when only contributors are populated", () => {
+    render(
+      <PerformanceSummaryContributorsSection
+        {...buildProps({
+          negativePositionContributors: [],
+        })}
+      />
+    );
+
+    expect(document.querySelector(".performance-contributors-panel-asymmetric")).toBeTruthy();
+    expect(document.querySelector(".performance-contributors-asymmetric-side")).toBeTruthy();
+
+    const cards = Array.from(document.querySelectorAll(".performance-contributors-ranked-card"));
+    expect(cards[0]).toHaveClass("performance-contributors-ranked-card-populated");
+    expect(cards[1]).toHaveClass("performance-contributors-ranked-card-empty");
+    expect(screen.getByText("No detracting positions are exposed for the selected period.")).toBeInTheDocument();
+    expect(document.querySelector(".performance-contributors-panel-asymmetric > .performance-contributors-table-disclosure")).toBeTruthy();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {
@@ -125,10 +149,13 @@ describe("PerformanceSummaryContributorsSection", () => {
 
     expect(screen.getByText("Contributor ranking unavailable")).toBeInTheDocument();
     expect(screen.getByText("Contributor ranking is not available for the current selection.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contributor ranking unavailable state")).toBeInTheDocument();
+    expect(screen.queryByText("Still available")).not.toBeInTheDocument();
+    expect(screen.queryByText("Needs source support")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Aggregate contributor summary")).not.toBeInTheDocument();
   });
 
-  it("renders a partial-state panel with an aggregate table when only aggregate contributor support exists", () => {
+  it("renders contributor and detractor cards from aggregate rows when only aggregate contributor support exists", () => {
     const scenario = buildAggregateContributionPerformanceScenario();
 
     render(
@@ -143,23 +170,41 @@ describe("PerformanceSummaryContributorsSection", () => {
       />
     );
 
-    expect(screen.getByText("Contributor ranking is partial")).toBeInTheDocument();
-    expect(screen.getByText("Contribution exists, but only aggregate rows are available.")).toBeInTheDocument();
-    expect(
-      screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
-    ).toBeInTheDocument();
-    const note = screen.getByRole("note");
-    expect(note).toHaveTextContent("High coverage");
-    expect(note).toHaveTextContent("Reconciles to return");
-    expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
-    const aggregateTable = screen.getByLabelText("Aggregate contributor summary");
+    expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("Equity");
+    expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent(
+      "No detracting segment contributors are exposed for the selected period."
+    );
+    expect(screen.getByText("Segment detail")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Segment detail"));
+    const aggregateTable = screen.getByLabelText("Contributor instrument detail table");
     expect(aggregateTable).toBeInTheDocument();
-    expect(
-      aggregateTable.closest(".performance-contributors-table.performance-chart-observation-table")
-    ).toBeTruthy();
     expect(within(aggregateTable).getByText("Equity")).toBeInTheDocument();
-    expect(within(aggregateTable).getByText("Total")).toBeInTheDocument();
-    expect(within(aggregateTable).getAllByText("5.42%")).toHaveLength(2);
+    expect(within(aggregateTable).getByText("Contribution")).toBeInTheDocument();
     expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
+  });
+
+  it("renders a structured loading state while contributor details are still resolving", () => {
+    render(
+      <PerformanceSummaryContributorsSection
+        {...buildProps({
+          isDetailsPending: true,
+          capabilities: {
+            ...supportedCapabilities,
+            contributionRanking: {
+              state: "unavailable",
+              reason: "Contribution ranking is still loading.",
+            },
+          },
+          positivePositionContributors: [],
+          negativePositionContributors: [],
+          topContributors: [],
+          bottomContributors: [],
+        })}
+      />
+    );
+
+    const loadingState = screen.getByRole("status");
+    expect(loadingState).toHaveTextContent("Loading performance drivers");
+    expect(loadingState).toHaveTextContent("Loading contribution ranking.");
   });
 });

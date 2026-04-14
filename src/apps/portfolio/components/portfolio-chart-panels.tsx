@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import {
   WorkbenchSummaryToolbar,
-  WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualLabel,
   WorkbenchSummaryVisualMeta,
   WorkbenchSummaryVisualValue,
@@ -96,59 +95,78 @@ export function PortfolioTopHoldingsPanel({
         </div>
       </WorkbenchSummaryToolbar>
       <div className="portfolio-chart-module-body portfolio-top-holdings-body">
-        <WorkbenchSummaryVisualCard className="portfolio-chart-card portfolio-top-holdings-list-card">
-          <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
-            {sortedPositions.map((position) => {
-              const metricValue =
-                metric === "market_value" ? position.market_value_base ?? 0 : position.weight_pct ?? 0;
-              const width = maxMetric > 0 ? `${(metricValue / maxMetric) * 100}%` : "0%";
-              const selected = selectedSecurityId === position.security_id;
-              const hovered = hoveredSecurityId === position.security_id;
-              return (
-                <button
-                  key={position.security_id}
-                  type="button"
-                  role="listitem"
-                  className={
-                    selected
-                      ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-selected"
-                      : hovered
-                        ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-hovered"
-                        : "portfolio-horizontal-bar-row"
-                  }
-                  onMouseEnter={() => setHoveredSecurityId(position.security_id)}
-                  onMouseLeave={() => setHoveredSecurityId(null)}
-                  onClick={() =>
-                    onSelectionChange(
-                      selectedSecurityId === position.security_id ? null : position.security_id
-                    )
-                  }
-                  aria-label={`${position.instrument_name}: ${
-                    metric === "market_value"
-                      ? formatCurrency(position.market_value_base, baseCurrency)
-                      : formatPct(position.weight_pct)
-                  }. Select to filter holdings.`}
-                  title={buildTopHoldingTooltip(position, metric, baseCurrency)}
-                >
-                  <WorkbenchSummaryVisualLabel className="portfolio-horizontal-bar-label">
-                    {position.instrument_name}
-                  </WorkbenchSummaryVisualLabel>
-                  <span className="portfolio-horizontal-bar-track">
-                    <span
-                      className="portfolio-horizontal-bar-fill"
-                      style={{ width, backgroundColor: CHART_COLORS.accent }}
-                    />
-                  </span>
-                  <WorkbenchSummaryVisualValue className="portfolio-horizontal-bar-value">
-                    {metric === "market_value"
-                      ? formatCurrency(position.market_value_base, baseCurrency)
-                      : formatPct(position.weight_pct)}
-                  </WorkbenchSummaryVisualValue>
-                </button>
-              );
-            })}
+        <div className="portfolio-analytics-canvas portfolio-chart-card portfolio-top-holdings-list-card">
+          <div className="portfolio-analytical-utility-header">
+            <span>Ranked Holdings</span>
+            <strong>{metric === "market_value" ? "Market Value focus" : "Weight focus"}</strong>
           </div>
-        </WorkbenchSummaryVisualCard>
+          {sortedPositions.length ? (
+            <div className="portfolio-horizontal-bar-chart" aria-label="Top holdings chart" role="list">
+              {sortedPositions.map((position) => {
+                const metricValue =
+                  metric === "market_value" ? position.market_value_base ?? 0 : position.weight_pct ?? 0;
+                const width = maxMetric > 0 ? `${(metricValue / maxMetric) * 100}%` : "0%";
+                const selected = selectedSecurityId === position.security_id;
+                const hovered = hoveredSecurityId === position.security_id;
+                return (
+                  <button
+                    key={position.security_id}
+                    type="button"
+                    role="listitem"
+                    className={
+                      selected
+                        ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-selected"
+                        : hovered
+                          ? "portfolio-horizontal-bar-row portfolio-horizontal-bar-row-hovered"
+                          : "portfolio-horizontal-bar-row"
+                    }
+                    onMouseEnter={() => setHoveredSecurityId(position.security_id)}
+                    onMouseLeave={() => setHoveredSecurityId(null)}
+                    onClick={() =>
+                      onSelectionChange(
+                        selectedSecurityId === position.security_id ? null : position.security_id
+                      )
+                    }
+                    aria-label={`${position.instrument_name}: ${
+                      metric === "market_value"
+                        ? formatCurrency(position.market_value_base, baseCurrency)
+                        : formatPct(position.weight_pct)
+                    }. Select to filter holdings.`}
+                    title={buildTopHoldingTooltip(position, metric, baseCurrency)}
+                  >
+                    <div className="portfolio-horizontal-bar-copy">
+                      <WorkbenchSummaryVisualLabel className="portfolio-horizontal-bar-label">
+                        {position.instrument_name}
+                      </WorkbenchSummaryVisualLabel>
+                      <WorkbenchSummaryVisualMeta className="portfolio-horizontal-bar-meta">
+                        <span>{position.asset_class}</span>
+                        <span>{formatQuantity(position.quantity)}</span>
+                      </WorkbenchSummaryVisualMeta>
+                    </div>
+                    <span className="portfolio-horizontal-bar-track">
+                      <span
+                        className="portfolio-horizontal-bar-fill"
+                        style={{ width, backgroundColor: CHART_COLORS.accent }}
+                      />
+                    </span>
+                    <WorkbenchSummaryVisualValue className="portfolio-horizontal-bar-value">
+                      {metric === "market_value"
+                        ? formatCurrency(position.market_value_base, baseCurrency)
+                        : formatPct(position.weight_pct)}
+                    </WorkbenchSummaryVisualValue>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="portfolio-top-holdings-empty" role="status">
+              <strong>No top positions available for this view</strong>
+              <p className="muted">
+                Ranked positions require booked holdings with current market values. Adjust the allocation filter or publish valuations to populate this view.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -296,13 +314,17 @@ export function PortfolioActivityPanel({
   );
 
   return (
-    <WorkbenchSummaryVisualCard
+    <div
       className={
         compact
-          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
-          : "portfolio-chart-card portfolio-chart-card-analytic"
+          ? "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
+          : "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic"
       }
     >
+      <div className="portfolio-analytical-utility-header">
+        <span>Requested Window</span>
+        <strong>{`${formatDate(summary.window_start_date)} - ${formatDate(summary.window_end_date)}`}</strong>
+      </div>
       <div
         className={compact ? "portfolio-flow-chart portfolio-flow-chart-compact" : "portfolio-flow-chart"}
         aria-label="Activity chart"
@@ -376,7 +398,7 @@ export function PortfolioActivityPanel({
           );
         })}
       </div>
-    </WorkbenchSummaryVisualCard>
+    </div>
   );
 }
 
@@ -398,13 +420,17 @@ export function PortfolioIncomePanel({
   );
 
   return (
-    <WorkbenchSummaryVisualCard
+    <div
       className={
         compact
-          ? "portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
-          : "portfolio-chart-card portfolio-chart-card-analytic"
+          ? "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic portfolio-chart-card-compact"
+          : "portfolio-analytics-canvas portfolio-chart-card portfolio-chart-card-analytic"
       }
     >
+      <div className="portfolio-analytical-utility-header">
+        <span>Requested Window</span>
+        <strong>{`${formatDate(summary.window_start_date)} - ${formatDate(summary.window_end_date)}`}</strong>
+      </div>
       <div
         className={compact ? "portfolio-income-chart portfolio-income-chart-compact" : "portfolio-income-chart"}
         aria-label="Income chart"
@@ -473,7 +499,7 @@ export function PortfolioIncomePanel({
           );
         })}
       </div>
-    </WorkbenchSummaryVisualCard>
+    </div>
   );
 }
 

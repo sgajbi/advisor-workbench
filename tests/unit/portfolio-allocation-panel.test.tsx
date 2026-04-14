@@ -40,9 +40,13 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tab", { name: "Sector" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
     expect(document.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
+    expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
+    expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
+    expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
 
     fireEvent.click(screen.getByRole("tab", { name: "Currency" }));
+    expect(screen.getByRole("tabpanel", { name: "Currency allocation view" })).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Donut" }));
@@ -80,19 +84,25 @@ describe("PortfolioAllocationPanel", () => {
     });
   });
 
-  it("renders a structured empty state while keeping the module controls", () => {
+  it("renders a professional empty state while keeping the module controls", () => {
     render(
       <PortfolioAllocationPanel
-        allocationViews={[]}
+        allocationViews={[{ dimension: "asset_class", buckets: [] }]}
         baseCurrency="USD"
         selectedAllocation={null}
         onSelectionChange={() => {}}
       />
     );
 
-    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getAllByText("No allocation data yet")).toHaveLength(2);
+    expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
+    expect(
+      screen.getAllByText(
+        "This dimension requires funded holdings with current valuations before a reliable composition view can be shown."
+      )
+    ).toHaveLength(1);
+    expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
   });
 
   it("uses a visual-only compact summary layout when requested", () => {
@@ -109,9 +119,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-toolbar.workbench-summary-toolbar")).toBeTruthy();
     expect(container.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
-    expect(
-      container.querySelector(".portfolio-allocation-chart-card.workbench-summary-visual-card")
-    ).toBeTruthy();
+    expect(container.querySelector(".portfolio-analytics-canvas.portfolio-allocation-card")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
     expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();
   });

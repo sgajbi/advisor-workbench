@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getAttributionDetailClassificationGapBody,
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
-  getAttributionDetailSummaryItems,
-  getAttributionTrendContextItems,
+  getAttributionTrendUnavailableBody,
   getAttributionTrendSummaryItems,
 } from "../../src/apps/performance/components/performance-attribution-presentations";
 import {
@@ -14,63 +14,28 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 
 describe("performance attribution presentations", () => {
-  it("builds detail context and summary items from the attribution contract", () => {
+  it("builds detail context from the attribution contract", () => {
     const scenario = buildSupportedPerformanceScenario();
     const contextItems = getAttributionDetailContextItems(
-      scenario.workspace.attribution,
-      scenario.workspace.benchmark_options ?? []
-    );
-    const summaryItems = getAttributionDetailSummaryItems(
       scenario.workspace.attribution,
       scenario.workspace.benchmark_options ?? []
     );
 
     expect(contextItems).toEqual([
       { label: "Benchmark", value: "Global Balanced 60/40 • USD" },
-      { label: "Benchmark Source", value: "Calculated" },
-      { label: "Attribution Model", value: "Brinson-Fachler" },
-      { label: "Linking Method", value: "Carino" },
-    ]);
-    expect(summaryItems.map((item) => item.label)).toEqual([
-      "Active Return",
-      "Effects Sum",
-      "Residual",
-    ]);
-    expect(summaryItems).toEqual([
-      { label: "Active Return", value: "0.52%" },
-      { label: "Effects Sum", value: "0.50%" },
-      { label: "Residual", value: "0.02%" },
     ]);
   });
 
-  it("builds trend context and latest-row summary from the trend contract", () => {
+  it("builds latest-row summary from the trend contract", () => {
     const trend = buildPerformanceAttributionTrend();
-    const contextItems = getAttributionTrendContextItems({
-      trend,
-      detailBasis: "NET",
-      attributionDimension: "asset_class",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      period: "YTD",
-    });
     const summaryItems = getAttributionTrendSummaryItems(trend);
 
-    expect(contextItems).toEqual([
-      { label: "Period Range", value: "01 Jan 2026 - 24 Feb 2026" },
-      { label: "Basis", value: "NET" },
-      { label: "Benchmark", value: "BMK GLOBAL BALANCED 60 40" },
-      { label: "Segment", value: "Asset Class" },
-    ]);
     expect(summaryItems.map((item) => item.label)).toEqual([
       "Total Effect",
-      "Active Return",
       "Cumulative Total",
-      "Residual",
     ]);
     expect(summaryItems.find((item) => item.label === "Total Effect")?.support).toBe(
-      "Residual de minimis • Active 0.22%"
-    );
-    expect(summaryItems.find((item) => item.label === "Active Return")?.support).toBe(
-      "Effects 0.22% + Residual 0.00%"
+      "Active 0.22%"
     );
   });
 
@@ -80,44 +45,10 @@ describe("performance attribution presentations", () => {
       scenario.workspace.attribution,
       scenario.workspace.benchmark_options ?? []
     );
-    const summaryItems = getAttributionDetailSummaryItems(
-      scenario.workspace.attribution,
-      scenario.workspace.benchmark_options ?? []
-    );
 
     expect(contextItems[0]).toEqual({
       label: "Benchmark",
       value: "Global Balanced 60/40 • USD",
-    });
-    expect(summaryItems).toHaveLength(3);
-    expect(summaryItems.find((item) => item.label === "Residual")?.value).toBe("0.02%");
-    expect(summaryItems).toEqual([
-      { label: "Active Return", value: "0.52%" },
-      { label: "Effects Sum", value: "0.50%" },
-      { label: "Residual", value: "0.02%" },
-    ]);
-  });
-
-  it("uses benchmark option labels when trend context receives them", () => {
-    const trend = buildPerformanceAttributionTrend();
-    const contextItems = getAttributionTrendContextItems({
-      trend,
-      detailBasis: "NET",
-      attributionDimension: "asset_class",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      benchmarkOptions: [
-        {
-          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-          benchmark_name: "Global Balanced 60/40",
-          is_assigned: true,
-        },
-      ],
-      period: "YTD",
-    });
-
-    expect(contextItems[2]).toEqual({
-      label: "Benchmark",
-      value: "Global Balanced 60/40",
     });
   });
 
@@ -130,27 +61,48 @@ describe("performance attribution presentations", () => {
     });
   });
 
-  it("includes benchmark provider provenance in trend context when option metadata is available", () => {
-    const trend = buildPerformanceAttributionTrend();
-    const contextItems = getAttributionTrendContextItems({
-      trend,
-      detailBasis: "NET",
-      attributionDimension: "asset_class",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      benchmarkOptions: [
+  it("explains missing benchmark classification when attribution trend is unavailable", () => {
+    const trend = buildPerformanceAttributionTrend({
+      attribution_dimension: "sector",
+      rows: [],
+      partial_failures: [
         {
-          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-          benchmark_name: "Global Balanced 60/40",
-          benchmark_provider: "LOTUS_DEMO",
-          is_assigned: true,
+          source_service: "lotus-performance",
+          error_code: "HTTP_422",
+          detail:
+            "Benchmark component IDX_GLOBAL_BOND_TR missing classification label for sector.",
         },
       ],
-      period: "YTD",
     });
 
-    expect(contextItems[2]).toEqual({
-      label: "Benchmark",
-      value: "Global Balanced 60/40",
-    });
+    expect(getAttributionTrendUnavailableBody(trend)).toBe(
+      "Sector attribution trend is unavailable because the selected benchmark does not expose complete sector classification for every component."
+    );
+  });
+
+  it("falls back to the generic attribution trend unavailable copy", () => {
+    const trend = buildPerformanceAttributionTrend({ rows: [] });
+
+    expect(getAttributionTrendUnavailableBody(trend)).toBe(
+      "Attribution trend is not available for the current selection."
+    );
+  });
+
+  it("explains missing benchmark classification when attribution detail is unavailable", () => {
+    expect(
+      getAttributionDetailClassificationGapBody({
+        attributionDimension: "sector",
+        partialFailures: [
+          {
+            source_service: "lotus-performance",
+            error_code: "HTTP_422",
+            detail:
+              "Benchmark component IDX_GLOBAL_BOND_TR missing classification label for sector.",
+          },
+        ],
+      })
+    ).toBe(
+      "Sector attribution detail is unavailable because the selected benchmark does not expose complete sector classification for every component."
+    );
   });
 });

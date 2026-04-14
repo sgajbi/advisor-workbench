@@ -59,7 +59,7 @@ async function openPerformanceWorkbench(
 
   await expect(workbenchHeading).toBeVisible({ timeout: 30000 });
   await expect(
-    page.getByRole('tablist', { name: /^Performance workspace mode$/i })
+    page.locator('.performance-workspace-rail').getByRole('button', { name: /^Performance Overview$/i })
   ).toBeVisible({ timeout: 30000 });
   return { portfolioId, available: true };
 }
@@ -148,31 +148,28 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const executiveStrip = page.getByLabel('Executive return strip');
-    await expect(executiveStrip.getByText('Portfolio Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Benchmark Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Active Return')).toBeVisible();
-    await expect(executiveStrip.getByText('Money-Weighted Return')).toBeVisible();
     await expect(executiveStrip.getByText('Opening MV')).toBeVisible();
-    await expect(executiveStrip.getByText('Opening Cash Flow')).toBeVisible();
-    await expect(executiveStrip.getByText('Closing Cash Flow')).toBeVisible();
     await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
-    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
+    await expect(executiveStrip.getByText('Opening Cash')).toBeVisible();
+    await expect(executiveStrip.getByText('Closing Cash')).toBeVisible();
     await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
-    await expect(
-      executiveStrip.getByText('Period Range / Basis', { exact: true })
-    ).toHaveCount(0);
+    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
+    await expect(page.getByLabel('Return decision readout')).toContainText('Portfolio Return');
+    await expect(page.getByLabel('Return decision readout')).toContainText('Benchmark Return');
+    await expect(page.getByLabel('Return decision readout')).toContainText('Active Return');
+    await expect(page.getByLabel('Return decision readout')).toContainText('Money-Weighted Return');
 
-    await expect(page.locator('.performance-summary-stage')).toBeVisible();
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
 
-    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
-    const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
-    await expectActiveTab(page, /^Summary$/i);
+    const workspaceRail = page.locator('.performance-workspace-rail');
+    const analysisTab = workspaceRail.getByRole('button', { name: /^Performance Analysis/i });
+    const evidenceTab = workspaceRail.getByRole('button', { name: /^Evidence/i });
+    await expect(
+      workspaceRail.getByRole('button', { name: /^Performance Overview$/i })
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
 
-    await expect(page.getByRole('group', { name: /^Return vs Benchmark$/i })).toBeVisible({
-      timeout: 15000,
-    });
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
       timeout: 15000,
     });
@@ -205,10 +202,10 @@ test.describe('Performance workbench smoke', () => {
     const topDetractorsHeading = page.getByText('Top Detractors', { exact: true });
     const topContributorsCard = page
       .getByText('Top Contributors', { exact: true })
-      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
+      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]');
     const topDetractorsCard = page
       .getByText('Top Detractors', { exact: true })
-      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-table-card")][1]');
+      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]');
     const [contributorsHeadingBox, detractorsHeadingBox, contributorsBox, detractorsBox] = await Promise.all([
       topContributorsHeading.boundingBox(),
       topDetractorsHeading.boundingBox(),
@@ -229,7 +226,7 @@ test.describe('Performance workbench smoke', () => {
     expect(chartMetrics.width).toBeGreaterThan(900);
 
     await analysisTab.click();
-    await expectActiveTab(page, /^Analysis$/i);
+    await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.performance-analysis-stage')).toBeVisible({ timeout: 15000 });
     await expect(
       page.getByRole('heading', { name: /^Attribution Detail$/i })
@@ -257,9 +254,11 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    const analysisTab = page
+      .locator('.performance-workspace-rail')
+      .getByRole('button', { name: /^Performance Analysis/i });
     await analysisTab.click();
-    await expectActiveTab(page, /^Analysis$/i);
+    await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
 
     const analysisStage = page.locator('.performance-analysis-stage');
     await expect(analysisStage).toBeVisible({ timeout: 15000 });
@@ -340,10 +339,12 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const analysisTab = page.getByRole('tab', { name: /^Analysis$/i });
+    const analysisTab = page
+      .locator('.performance-workspace-rail')
+      .getByRole('button', { name: /^Performance Analysis/i });
     await expect(analysisTab).toBeVisible();
     await analysisTab.click();
-    await expectActiveTab(page, /^Analysis$/i);
+    await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
 
     const contributionModule = page.locator('#performance-drivers');
     await expect(contributionModule).toBeVisible({ timeout: 15000 });
@@ -415,7 +416,9 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const evidenceTab = page.getByRole('tab', { name: /^Evidence$/i });
+    const evidenceTab = page
+      .locator('.performance-workspace-rail')
+      .getByRole('button', { name: /^Evidence/i });
     await expect(evidenceTab).toBeDisabled();
     await expect(evidenceTab).toHaveAttribute(
       'title',

@@ -1,20 +1,24 @@
+import type { ReactNode } from "react";
+
 import { cx } from "../utils/cx";
+
+import WorkbenchPageHeader from "./workbench-page-header";
 
 export default function WorkspaceHeader({
   title,
   meta,
   className,
 }: {
-  title: React.ReactNode;
-  meta?: React.ReactNode;
+  title: ReactNode;
+  meta?: ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cx("page-header", "page-header-compact", className)}>
-      <div>
-        <h1 className="page-title">{title}</h1>
-      </div>
-      {meta ? <div className="page-meta-strip">{meta}</div> : null}
-    </section>
+    <WorkbenchPageHeader
+      title={title}
+      titleVariant="workspaceTitle"
+      actions={meta ? <div className="workspace-header-meta">{meta}</div> : undefined}
+      className={cx("workspace-header", className)}
+    />
   );
 }

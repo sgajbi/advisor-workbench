@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   getPerformanceBenchmarkOptionLabel,
-  getPerformanceMoneyWeightedEconomicsSupport,
-  getPerformanceMoneyWeightedAuditSupport,
   getPerformanceReturnPathPresentation,
 } from "../../src/apps/performance/components/performance-summary-context-helpers";
 import {
@@ -32,7 +30,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       moneyWeightedReturn: scenario.workspace.money_weighted_return,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
@@ -43,10 +40,8 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
-      benchmarkSourceLabel: "Calculated",
       benchmarkContextValue: "Global Balanced 60/40 • USD",
       activeReturnValue: "0.52%",
-      relativeContextStatus: "available",
       benchmarkStateBody: null,
     });
     expect(presentation.metrics).toMatchObject([
@@ -60,27 +55,9 @@ describe("performance summary context helpers", () => {
         unavailable: false,
       },
       {
-        key: "opening-mv",
-        label: "Opening MV",
-        value: "$1,200,000",
-        unavailable: false,
-      },
-      {
-        key: "opening-cash-flow",
-        label: "Opening Cash Flow",
-        value: "$50,000",
-        unavailable: false,
-      },
-      {
-        key: "closing-cash-flow",
-        label: "Closing Cash Flow",
-        value: "-$8,000",
-        unavailable: false,
-      },
-      {
-        key: "net-flow",
-        label: "Net Flow",
-        value: "$42,000",
+        key: "flow-adjusted-mv",
+        label: "Flow-Adjusted MV",
+        value: "$1,208,000",
         unavailable: false,
       },
       {
@@ -90,9 +67,27 @@ describe("performance summary context helpers", () => {
         unavailable: false,
       },
       {
-        key: "flow-adjusted-mv",
-        label: "Flow-Adjusted MV",
-        value: "$1,208,000",
+        key: "opening-mv",
+        label: "Opening MV",
+        value: "$1,200,000",
+        unavailable: false,
+      },
+      {
+        key: "net-flow",
+        label: "Net Flow",
+        value: "$42,000",
+        unavailable: false,
+      },
+      {
+        key: "opening-cash",
+        label: "Opening Cash",
+        value: "$50,000",
+        unavailable: false,
+      },
+      {
+        key: "closing-cash",
+        label: "Closing Cash",
+        value: "-$8,000",
         unavailable: false,
       },
     ]);
@@ -117,7 +112,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
@@ -127,10 +121,8 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
-      benchmarkSourceLabel: "Calculated",
       benchmarkContextValue: "Global Balanced 60/40 • USD",
       activeReturnValue: "Unavailable",
-      relativeContextStatus: "partial",
       benchmarkStateBody: null,
     });
     expect(presentation.metrics[1]).toMatchObject({
@@ -161,20 +153,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: null,
         benchmark_input_mode: null,
       },
-      points: [
-        {
-          label: "2026-03",
-          frequency: "monthly",
-          period_start: "2026-03-01",
-          period_end: "2026-03-27",
-          portfolio_return_pct: 1.4,
-          benchmark_return_pct: null,
-          active_return_pct: null,
-          cumulative_portfolio_return_pct: 6.2,
-          cumulative_benchmark_return_pct: null,
-          cumulative_active_return_pct: null,
-        },
-      ],
       capabilities: {
         ...scenario.capabilities,
         returnPath: { state: "supported" },
@@ -185,9 +163,7 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: false,
       benchmarkLabel: "Benchmark",
-      benchmarkSourceLabel: null,
       activeReturnValue: "Unavailable",
-      relativeContextStatus: "unavailable",
       benchmarkStateBody: "No benchmark is assigned to this mandate.",
     });
     expect(presentation.metrics[1]).toMatchObject({
@@ -224,7 +200,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       moneyWeightedReturn,
@@ -258,7 +233,6 @@ describe("performance summary context helpers", () => {
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
       moneyWeightedReturn: scenario.workspace.money_weighted_return,
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,
@@ -270,11 +244,6 @@ describe("performance summary context helpers", () => {
       value: "$42,000",
       unavailable: false,
     });
-    expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
-      label: "Ending MV",
-      value: "$1,250,000",
-      unavailable: false,
-    });
     expect(
       presentation.metrics.find((metric) => metric.key === "flow-adjusted-mv")
     ).toMatchObject({
@@ -282,53 +251,11 @@ describe("performance summary context helpers", () => {
       value: "$1,208,000",
       unavailable: false,
     });
-  });
-
-  it("builds money-weighted audit support from method, window, and notes", () => {
-    const scenario = buildSupportedPerformanceScenario();
-
-    expect(scenario.workspace.money_weighted_return).toMatchObject({
-      input_mode: "stateful",
-      begin_market_value: 1200000,
-      end_market_value: 1250000,
-      beginning_cash_flow: 50000,
-      ending_cash_flow: -8000,
-      flow_adjusted_end_market_value: 1208000,
-      net_cash_flow: 42000,
-      fees: 0,
+    expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
+      label: "Ending MV",
+      value: "$1,250,000",
+      unavailable: false,
     });
-
-    expect(
-      getPerformanceMoneyWeightedAuditSupport({
-        explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
-        moneyWeightedReturn: scenario.workspace.money_weighted_return,
-        reportingCurrency: "USD",
-      })
-    ).toBe("01 Jan 2026 - 24 Feb 2026");
-  });
-
-  it("falls back to the plain resolved window when money-weighted audit metadata is absent", () => {
-    expect(
-      getPerformanceMoneyWeightedAuditSupport({
-        explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
-        moneyWeightedReturn: null,
-        reportingCurrency: "USD",
-      })
-    ).toBe("01 Jan 2026 - 24 Feb 2026");
-  });
-
-  it("falls back to net flow when flow-adjusted market value is unavailable", () => {
-    const scenario = buildSupportedPerformanceScenario();
-    const moneyWeightedReturn = scenario.workspace.money_weighted_return
-      ? {
-          ...scenario.workspace.money_weighted_return,
-          flow_adjusted_end_market_value: null,
-        }
-      : null;
-
-    expect(getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, "USD")).toBe(
-      "Net Flow $42,000"
-    );
   });
 
   it("builds a benchmark option label from contract metadata when available", () => {
@@ -364,7 +291,6 @@ describe("performance summary context helpers", () => {
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
       },
-      points: scenario.workspace.net_chart,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
       benchmarkOptions: scenario.workspace.benchmark_options ?? [],
       capabilities: scenario.capabilities,

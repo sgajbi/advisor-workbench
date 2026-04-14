@@ -75,6 +75,9 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
     });
+    expect(screen.getByLabelText("Risk coverage and review notes")).toHaveTextContent(
+      "Coverage and review notes"
+    );
     expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Risk posture");
     expect(screen.getByLabelText("Risk executive overview")).not.toHaveTextContent("What matters now");

@@ -43,13 +43,13 @@ export default function KpiStatTile({
         appearance: "none",
       }}
     >
-      <Text variant="label" className="kpi-stat-label">
+      <Text variant="dataLabel" className="kpi-stat-label">
         {label}
       </Text>
-      <Text variant="metricValue" className="kpi-stat-value">
+      <Text variant="metricValueL" className="kpi-stat-value">
         {value}
       </Text>
-      <Text variant="metadata" className="kpi-stat-support">
+      <Text variant="bodySmall" className="kpi-stat-support">
         {support ?? "\u00A0"}
       </Text>
     </Box>

@@ -73,13 +73,35 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(screen.getByText(/As of 29 Mar 2026\./i)).toBeInTheDocument();
     expect(screen.getByText(/Reporting currency restatement is pending source support\./i)).toBeInTheDocument();
     expect(screen.getByText(/Period 30D: 01 Mar 2026 to 29 Mar 2026\./i)).toBeInTheDocument();
+    const contextControls = screen.getByRole("group", { name: "Context controls" });
+    const viewControls = screen.getByRole("group", { name: "View controls" });
+    const periodControls = screen.getByRole("group", { name: "Period controls" });
+    expect(contextControls).toBeInTheDocument();
+    expect(viewControls).toBeInTheDocument();
+    expect(periodControls).toBeInTheDocument();
+    expect(within(contextControls).getByText("Context")).toHaveClass("workbench-toolbar-group-title");
+    expect(within(viewControls).getAllByText("View")[0]).toHaveClass("workbench-toolbar-group-title");
+    expect(within(periodControls).getAllByText("Period")[0]).toHaveClass("workbench-toolbar-group-title");
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
-    expect(screen.getByRole("tablist", { name: "Portfolio page view mode" })).toHaveClass(
+    expect(
+      document.querySelector(
+        ".workbench-segmented-control.portfolio-workspace-toolbar-period-control[aria-label='Portfolio period presets']"
+      )
+    ).toBeTruthy();
+    const viewNavigation = screen.getByRole("tablist", { name: "Portfolio view navigation" });
+    expect(viewNavigation).toHaveClass(
       "mode-tabs",
-      "portfolio-workspace-view-mode-tabs"
+      "portfolio-primary-view-tabs"
     );
-    expect(screen.getByRole("tab", { name: "Detailed" })).toHaveAttribute("aria-selected", "true");
+    expect(within(viewNavigation).getByRole("tab", { name: "Detailed" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(within(viewNavigation).getByRole("tab", { name: "Summary" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
 
     fireEvent.click(screen.getByRole("tab", { name: "YTD" }));
     expect(onControlsChange).toHaveBeenCalledWith({ timeWindow: "YTD" });

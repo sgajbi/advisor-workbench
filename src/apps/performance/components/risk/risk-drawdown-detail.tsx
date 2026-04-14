@@ -9,11 +9,15 @@ export default function RiskDrawdownDetail({
 }: {
   viewModel: PerformanceRiskViewModel;
 }) {
+  const hasStructuredDetail =
+    Boolean(viewModel.drawdownEpisodeInterpretation) || viewModel.drawdownEpisodes.length > 0;
+  const fallbackDetail = resolveDrawdownFallbackDetail(viewModel);
+
   return (
     <div className="performance-risk-drawdown-detail-stack">
       <RiskDetailSection ariaLabel="Risk drawdown detail" density="compact">
         {viewModel.drawdownEpisodeInterpretation ? (
-          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card">
+          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card performance-risk-drawdown-empty-note">
             <div className="performance-risk-note-copy">
               <Text variant="cardTitle">{viewModel.drawdownEpisodeInterpretation.title}</Text>
               <Text variant="secondary">{viewModel.drawdownEpisodeInterpretation.body}</Text>
@@ -51,8 +55,32 @@ export default function RiskDrawdownDetail({
               body: "No retained drawdown episodes are available for the selected review window.",
             }}
           />
+        ) : !hasStructuredDetail ? (
+          <div className="performance-risk-note-card performance-risk-note-card-compact performance-risk-drawdown-interpretation-card performance-risk-drawdown-empty-note">
+            <div className="performance-risk-note-copy">
+              <Text variant="cardTitle">{fallbackDetail.title}</Text>
+              <Text variant="secondary">{fallbackDetail.body}</Text>
+            </div>
+          </div>
         ) : null}
       </RiskDetailSection>
     </div>
   );
+}
+
+function resolveDrawdownFallbackDetail(viewModel: PerformanceRiskViewModel) {
+  const failureDetail = viewModel.partialFailures[0];
+
+  if (failureDetail) {
+    return {
+      title: "Drawdown review is partially available",
+      body: `${failureDetail} Headline measures remain available, but episode review should be treated as incomplete.`,
+    };
+  }
+
+  return {
+    title: "Drawdown review is unavailable",
+    body:
+      "Drawdown episodes were not returned for the selected review window. Headline measures remain available, but episode review is not currently supported.",
+  };
 }

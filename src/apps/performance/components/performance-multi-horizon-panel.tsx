@@ -1,23 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
-  AnalyticsTable,
-  WorkbenchChartContextRow,
-  WorkbenchSegmentedControl,
-  WorkbenchSummaryToolbar,
-  WorkbenchSummaryVisualCard,
-  WorkbenchSummaryVisualMeta,
-  WorkbenchSummaryVisualValue,
+  WorkbenchLoadingState,
 } from "@/design-system";
-import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type {
   PerformanceBenchmarkOptionView,
-  WorkbenchPerformanceHorizonComparison,
 } from "@/features/workbench/types";
 
-import { formatDate, formatLabel } from "../formatters";
+import { formatLabel } from "../formatters";
 import {
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
@@ -26,6 +18,11 @@ import {
   type PerformanceHorizonVisualMode,
 } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
+import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
+import PerformanceHorizonComparisonDisclosure from "./performance-horizon-comparison-disclosure";
+import { usePerformanceHorizonComparison } from "./performance-horizon-comparison-state";
+import PerformanceHorizonComparisonMatrix from "./performance-horizon-comparison-matrix";
+import PerformanceHorizonComparisonToolbar from "./performance-horizon-comparison-toolbar";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
@@ -50,88 +47,19 @@ export default function PerformanceMultiHorizonPanel({
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 }) {
-  const [comparison, setComparison] = useState<WorkbenchPerformanceHorizonComparison | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
   const [basisView, setBasisView] = useState<PerformanceHorizonBasisView>("both");
   const [visualMode, setVisualMode] = useState<PerformanceHorizonVisualMode>("absolute");
-  const requestIdRef = useRef(0);
-  const cacheRef = useRef<Map<string, WorkbenchPerformanceHorizonComparison>>(new Map());
-
-  useEffect(() => {
-    const cacheKey = JSON.stringify({
-      portfolioId,
-      period,
-      detailBasis,
-      benchmark: benchmark ?? null,
-      chartFrequency,
-      reportStartDate: reportStartDate ?? null,
-      reportEndDate: reportEndDate ?? null,
-    });
-    const cached = cacheRef.current.get(cacheKey);
-    if (cached) {
-      setComparison(cached);
-      setIsLoading(false);
-      return;
-    }
-
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setIsLoading(true);
-
-    void getWorkbenchPerformanceHorizonComparisonClient(portfolioId, {
-      period,
-      detailBasis,
-      benchmark,
-      chartFrequency,
-      reportStartDate,
-      reportEndDate,
-    })
-      .then((result) => {
-        if (requestIdRef.current !== requestId) {
-          return;
-        }
-        cacheRef.current.set(cacheKey, result);
-        setComparison(result);
-      })
-      .catch(() => {
-        if (requestIdRef.current !== requestId) {
-          return;
-        }
-        setComparison({
-          correlation_id: "",
-          contract_version: "v1",
-          portfolio_id: portfolioId,
-          as_of_date: "",
-          period,
-          report_start_date: reportStartDate ?? "",
-          report_end_date: reportEndDate ?? "",
-          reporting_currency: null,
-          detail_basis: detailBasis,
-          chart_frequency: chartFrequency,
-          requested_chart_frequency_supported: true,
-          benchmark_code: benchmark ?? null,
-          benchmark_options: benchmarkOptions,
-          rows: [],
-          warnings: [],
-          partial_failures: [],
-        });
-      })
-      .finally(() => {
-        if (requestIdRef.current === requestId) {
-          setIsLoading(false);
-        }
-      });
-  }, [
-    benchmark,
-    benchmarkOptions,
-    chartFrequency,
-    detailBasis,
+  const { comparison, isLoading } = usePerformanceHorizonComparison({
     portfolioId,
     period,
-    reportEndDate,
+    detailBasis,
+    benchmark,
+    chartFrequency,
     reportStartDate,
-  ]);
+    reportEndDate,
+    benchmarkOptions,
+  });
   const rows = comparison?.rows ?? null;
   const reportingCurrency = comparison?.reporting_currency ?? "USD";
   const normalizationNotice =
@@ -167,10 +95,6 @@ export default function PerformanceMultiHorizonPanel({
     period,
     selectedPeriodRow,
   });
-  const resolvedWindowLabel =
-    comparison?.report_start_date && comparison?.report_end_date
-      ? `${formatDate(comparison.report_start_date)} - ${formatDate(comparison.report_end_date)}`
-      : presentation.selectedPeriodLabel;
   const tableModel = useMemo(() => {
     return buildPerformanceHorizonTableModel({
       rows: rows ?? [],
@@ -206,7 +130,12 @@ export default function PerformanceMultiHorizonPanel({
       actions={null}
     >
       {isLoading ? (
-        <p className="muted">{presentation.loadingBody}</p>
+        <WorkbenchLoadingState
+          className="performance-horizon-loading-state"
+          title="Loading horizon comparison"
+          message={presentation.loadingBody}
+          rows={4}
+        />
       ) : rows && rows.length > 0 ? (
         <>
           {normalizationNotice ? (
@@ -223,129 +152,32 @@ export default function PerformanceMultiHorizonPanel({
               </p>
             </div>
           ) : null}
-          <WorkbenchChartContextRow
-            className="performance-horizon-context-row"
-            itemClassName="performance-mini-legend-item"
-            label="Horizon comparison context"
-            items={[
-                {
-                  key: "resolved-window",
-                  label: "Period Range",
-                  value: resolvedWindowLabel,
-                },
-              {
-                key: "active-return",
-                label: "Active Return",
-                value: presentation.activeReturnLabel,
-              },
-              {
-                key: "benchmark",
-                label: "Benchmark",
-                value: presentation.benchmarkLabel,
-              },
-            ]}
-          />
-          <WorkbenchSummaryToolbar className="performance-mini-legend">
-            <span className="performance-mini-legend-item performance-mini-legend-portfolio">
-              Portfolio
-            </span>
-            <span className="performance-mini-legend-item performance-mini-legend-benchmark">
-              {presentation.benchmarkLegendLabel}
-            </span>
-            <WorkbenchSegmentedControl
-              ariaLabel="Horizon table view"
-              className="performance-horizon-table-view"
-              value={tableView}
-              onChange={setTableView}
-              options={[
-                { key: "combined", label: "Combined" },
-                { key: "returns", label: "Returns" },
-                { key: "economics", label: "Economics" },
-              ]}
+          <div className="performance-horizon-review-bar">
+            <PerformanceHorizonComparisonToolbar
+              tableView={tableView}
+              basisView={basisView}
+              visualMode={visualMode}
+              hasRelativeVisual={hasRelativeVisual}
+              onTableViewChange={setTableView}
+              onBasisViewChange={setBasisView}
+              onVisualModeChange={setVisualMode}
             />
-            <WorkbenchSegmentedControl
-              ariaLabel="Horizon basis view"
-              className="performance-horizon-basis-view"
-              value={basisView}
-              onChange={setBasisView}
-              options={[
-                { key: "both", label: "Both" },
-                { key: "net", label: "Net" },
-                { key: "gross", label: "Gross" },
-              ]}
-            />
-            <WorkbenchSegmentedControl
-              ariaLabel="Horizon visual mode"
-              className="performance-horizon-visual-mode"
-              value={visualMode}
-              onChange={setVisualMode}
-              options={[
-                { key: "absolute", label: "Absolute" },
-                {
-                  key: "relative",
-                  label: "Relative",
-                  disabled: !hasRelativeVisual,
-                  title: hasRelativeVisual
-                    ? undefined
-                    : "Relative view requires active return observations.",
-                },
-                { key: "basis", label: "Basis" },
-              ]}
-            />
-          </WorkbenchSummaryToolbar>
-          <div
-            className="performance-horizon-bars workbench-summary-visual-grid"
-            aria-label="Multi-horizon returns"
-          >
-            {visualCards.map((card) => (
-              <WorkbenchSummaryVisualCard
-                key={card.key}
-                className="performance-horizon-bar-group workbench-summary-visual-card"
-              >
-                <div className="performance-horizon-bar-values">
-                  <span className="performance-horizon-bar-period">{card.label}</span>
-                  <WorkbenchSummaryVisualValue className="performance-horizon-bar-primary">
-                    {card.primaryValue}
-                  </WorkbenchSummaryVisualValue>
-                </div>
-                <div className="performance-horizon-bar-track">
-                  <div
-                    className={card.leftBarClassName}
-                    style={{
-                      height: `${Math.max(card.leftBarHeightPct * 1.2, 2)}px`,
-                    }}
-                    aria-label={`${card.label} ${card.leftBarLabel}`}
-                  />
-                  <div
-                    className={card.rightBarClassName}
-                    style={{
-                      height: `${Math.max(card.rightBarHeightPct * 1.2, 2)}px`,
-                    }}
-                    aria-label={`${card.label} ${card.rightBarLabel}`}
-                  />
-                </div>
-                <div className="performance-horizon-bar-footer">
-                  <WorkbenchSummaryVisualMeta>
-                    {card.leftBarLabel} vs {card.rightBarLabel}
-                  </WorkbenchSummaryVisualMeta>
-                  <WorkbenchSummaryVisualMeta>
-                    {card.footerLabel}: {card.footerValue}
-                  </WorkbenchSummaryVisualMeta>
-                </div>
-              </WorkbenchSummaryVisualCard>
-            ))}
           </div>
-          <AnalyticsTable
-            ariaLabel="Multi-horizon return table"
-            columns={tableModel.columns}
-            rows={tableModel.rows}
-            density="compact"
-            variant="observation"
-            className="performance-horizon-table performance-chart-observation-table"
-          />
+          <div className="performance-horizon-panel-body">
+            <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={visualMode} />
+            <PerformanceHorizonComparisonDisclosure tableModel={tableModel} />
+          </div>
         </>
       ) : (
-        <p className="muted">{presentation.emptyBody}</p>
+        <PerformanceAnalyticalUnavailableState
+          ariaLabel="Horizon comparison unavailable state"
+          status="unavailable"
+          kicker={null}
+          compact
+          title="Horizon comparison is unavailable for this mandate"
+          body={presentation.emptyBody}
+          contextItems={[]}
+        />
       )}
     </PerformanceSummaryDriverModule>
   );

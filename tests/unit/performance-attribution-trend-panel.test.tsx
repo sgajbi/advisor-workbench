@@ -75,14 +75,6 @@ describe("PerformanceAttributionTrendPanel", () => {
         attributionDimension="asset_class"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
-        benchmarkOptions={[
-          {
-            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-            benchmark_name: "Global Balanced 60/40",
-            benchmark_provider: "LOTUS_DEMO",
-            is_assigned: true,
-          },
-        ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
       />
@@ -98,26 +90,13 @@ describe("PerformanceAttributionTrendPanel", () => {
     });
 
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
-    expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Period Range 01 Jan 2026 - 27 Mar 2026")
-    );
-    expect(screen.getByLabelText("Attribution trend context")).toHaveTextContent(
-      compactPattern("Benchmark Global Balanced 60/40")
-    );
-    expect(
-      document.querySelectorAll(
-        ".performance-analysis-context-row .workbench-chart-context-row-item"
-      )
-    ).toHaveLength(4);
+    expect(screen.queryByLabelText("Attribution trend context")).not.toBeInTheDocument();
     const trendSummaryStrip = screen.getByLabelText("Attribution trend summary strip");
     expect(trendSummaryStrip).toBeInTheDocument();
     expect(screen.getByText("Total Effect")).toBeInTheDocument();
-    expect(within(trendSummaryStrip).getByText("Active Return")).toBeInTheDocument();
     expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
-    expect(
-      within(trendSummaryStrip).getByText("Residual")
-    ).toBeInTheDocument();
+    expect(within(trendSummaryStrip).queryByText("Active Return")).not.toBeInTheDocument();
+    expect(within(trendSummaryStrip).queryByText("Residual")).not.toBeInTheDocument();
     expect(screen.getByTestId("performance-attribution-trend-chart")).toBeInTheDocument();
     const chartOption = JSON.parse(
       screen.getByTestId("performance-attribution-trend-chart").getAttribute("data-option") ?? "{}"
@@ -247,13 +226,6 @@ describe("PerformanceAttributionTrendPanel", () => {
         attributionDimension="issuer"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
-        benchmarkOptions={[
-          {
-            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-            benchmark_name: "Global Balanced 60/40",
-            is_assigned: true,
-          },
-        ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
       />
@@ -310,13 +282,6 @@ describe("PerformanceAttributionTrendPanel", () => {
         attributionDimension="issuer"
         detailBasis="NET"
         benchmark="BMK_GLOBAL_BALANCED_60_40"
-        benchmarkOptions={[
-          {
-            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-            benchmark_name: "Global Balanced 60/40",
-            is_assigned: true,
-          },
-        ]}
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
         onRequestChange={onRequestChange}

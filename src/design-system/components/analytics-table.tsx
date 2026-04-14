@@ -40,18 +40,18 @@ const densityPaddingY = {
 } as const;
 
 const densityFontSize = {
-  compact: lotusThemeTokens.typography.size.textSm,
-  comfortable: "0.9375rem",
+  compact: lotusThemeTokens.typography.variant.tableCell.size,
+  comfortable: lotusThemeTokens.typography.variant.tableCell.size,
 } as const;
 
 const headerFontSize = {
-  compact: lotusThemeTokens.typography.size.text2xs,
-  comfortable: lotusThemeTokens.typography.size.textXs,
+  compact: lotusThemeTokens.typography.variant.tableHeader.size,
+  comfortable: lotusThemeTokens.typography.variant.tableHeader.size,
 } as const;
 
 const footerFontSize = {
-  compact: "0.8125rem",
-  comfortable: lotusThemeTokens.typography.size.textSm,
+  compact: lotusThemeTokens.typography.variant.tableCell.size,
+  comfortable: lotusThemeTokens.typography.variant.tableCell.size,
 } as const;
 
 export default function AnalyticsTable({
@@ -107,7 +107,8 @@ export default function AnalyticsTable({
         aria-label={ariaLabel}
         sx={{
           "& td, & th": {
-            fontVariantNumeric: "tabular-nums",
+            fontVariantNumeric: "tabular-nums slashed-zero",
+            fontFeatureSettings: '"tnum" 1, "zero" 1',
           },
           "& tbody tr:last-of-type td": {
             borderBottom: "none",
@@ -233,8 +234,8 @@ function getHeaderCellSx(density: AnalyticsTableDensity) {
     py: densityPaddingY[density],
     px: lotusThemeTokens.table.cellPadding.x,
     fontSize: headerFontSize[density],
-    fontWeight: 800,
-    letterSpacing: lotusThemeTokens.typography.tracking.label,
+    fontWeight: lotusThemeTokens.typography.variant.tableHeader.weight,
+    letterSpacing: lotusThemeTokens.typography.variant.tableHeader.tracking,
     textTransform: "uppercase",
     color: lotusThemeTokens.color.text.muted,
     bgcolor: "rgba(247, 249, 251, 0.98)",
@@ -246,6 +247,8 @@ function getHeaderCellSx(density: AnalyticsTableDensity) {
 function getBodyCellSx(density: AnalyticsTableDensity) {
   return {
     fontSize: densityFontSize[density],
+    lineHeight: lotusThemeTokens.typography.variant.tableCell.lineHeight,
+    fontWeight: lotusThemeTokens.typography.variant.tableCell.weight,
     py: densityPaddingY[density],
     px: lotusThemeTokens.table.cellPadding.x,
     color: lotusThemeTokens.color.text.primary,
@@ -257,7 +260,8 @@ function getBodyCellSx(density: AnalyticsTableDensity) {
 function getFooterCellSx(density: AnalyticsTableDensity) {
   return {
     fontSize: footerFontSize[density],
-    fontWeight: 800,
+    fontWeight: 600,
+    lineHeight: lotusThemeTokens.typography.variant.tableCell.lineHeight,
     py: densityPaddingY[density],
     px: lotusThemeTokens.table.cellPadding.x,
     color: lotusThemeTokens.color.text.primary,

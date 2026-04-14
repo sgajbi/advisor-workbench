@@ -38,6 +38,36 @@ describe("platform capabilities api", () => {
                     strictMode: false,
                   },
                 },
+                shellBootstrap: {
+                  contractVersion: "shell-bootstrap.v1",
+                  supportability: { state: "ready", reasons: [] },
+                  freshness: {
+                    state: "current",
+                    freshnessClass: "shell_navigation",
+                    evaluatedAt: "2026-04-12T00:00:00Z",
+                    maxAgeSeconds: 60,
+                  },
+                  evidence: {
+                    state: "source_backed",
+                    lineageSources: ["lotus_core"],
+                    partialFailure: false,
+                    sourceErrorServices: [],
+                  },
+                  versioning: {
+                    shellContractVersion: "shell-bootstrap.v1",
+                    capabilityContractVersion: "v1",
+                    sourcePolicyVersions: {},
+                  },
+                  caching: {
+                    cacheMode: "request_scoped_composition",
+                    invalidationOwner: "upstream_service",
+                    staleReadTolerance: "bounded_navigation_refresh",
+                    revalidateOnNavigation: true,
+                    ttlSeconds: 60,
+                    correctnessCritical: false,
+                  },
+                  workspaces: [],
+                },
               },
             },
           }),
@@ -79,5 +109,8 @@ describe("platform capabilities api", () => {
       lotus_manage: "unknown",
     });
     expect(a.lotusCorePolicyDiagnostics.available).toBe(false);
+    expect(a.shellBootstrap.contractVersion).toBe("shell-bootstrap.v1");
+    expect(a.shellBootstrap.workspaces).toHaveLength(5);
+    expect(a.shellBootstrap.workspaces.find((workspace) => workspace.id === "proposal")?.enabled).toBe(false);
   });
 });

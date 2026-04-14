@@ -37,7 +37,14 @@ export default function RiskModuleShell({
     >
       {headlineMetrics}
       {detail || context ? (
-        <div className="performance-risk-module-body">
+        <div
+          className={[
+            "performance-risk-module-body",
+            context ? "" : "performance-risk-module-body-detail-only",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {detail ? <div className="performance-risk-module-main">{detail}</div> : null}
           {context ? <div className="performance-risk-module-side">{context}</div> : null}
         </div>

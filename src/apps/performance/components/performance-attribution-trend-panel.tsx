@@ -7,14 +7,12 @@ import ReactECharts from "echarts-for-react";
 import {
   AnalyticsTable,
   ScreenStatePanel,
-  WorkbenchChartContextRow,
   WorkbenchChartShell,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type {
-  PerformanceBenchmarkOptionView,
   WorkbenchPerformanceAttributionTrend,
 } from "@/features/workbench/types";
 
@@ -22,7 +20,7 @@ import { formatLabel } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import {
-  getAttributionTrendContextItems,
+  getAttributionTrendUnavailableBody,
   getAttributionTrendSummaryItems,
 } from "./performance-attribution-presentations";
 
@@ -33,7 +31,6 @@ type Props = {
   attributionDimension: string;
   detailBasis: string;
   benchmark?: string;
-  benchmarkOptions?: PerformanceBenchmarkOptionView[];
   reportStartDate?: string;
   reportEndDate?: string;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
@@ -64,7 +61,6 @@ export default function PerformanceAttributionTrendPanel({
   attributionDimension,
   detailBasis,
   benchmark,
-  benchmarkOptions = [],
   reportStartDate,
   reportEndDate,
   onRequestChange,
@@ -279,18 +275,6 @@ export default function PerformanceAttributionTrendPanel({
     () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
     [rows]
   );
-  const contextItems = useMemo(
-    () =>
-      getAttributionTrendContextItems({
-        trend,
-        detailBasis,
-        attributionDimension,
-        benchmark,
-        benchmarkOptions,
-        period,
-      }),
-    [attributionDimension, benchmark, benchmarkOptions, detailBasis, period, trend]
-  );
   const metricItems = useMemo(
     () => getAttributionTrendSummaryItems(trend),
     [trend]
@@ -334,19 +318,11 @@ export default function PerformanceAttributionTrendPanel({
   return (
     <WorkbenchChartShell
       title="Attribution Over Time"
-      subtitle="Benchmark-relative active-effect path across the selected period."
-      className="performance-analysis-module performance-analysis-trend-shell"
+      className="performance-analysis-module performance-analysis-trend-shell performance-workspace-panel"
       actions={
         <span className="performance-analysis-shell-action">
           {trend?.chart_frequency ?? chartFrequency}
         </span>
-      }
-      contextRow={
-        <WorkbenchChartContextRow
-          label="Attribution trend context"
-          className="performance-analysis-context-row"
-          items={contextItems}
-        />
       }
       metricStrip={
         metricItems.length ? (
@@ -386,7 +362,7 @@ export default function PerformanceAttributionTrendPanel({
           >
             <ReactECharts
               option={chartOption}
-              style={{ width: "100%", height: "320px" }}
+              style={{ width: "100%", height: "344px" }}
               opts={{ renderer: "svg" }}
               notMerge
               lazyUpdate
@@ -405,7 +381,7 @@ export default function PerformanceAttributionTrendPanel({
         <ScreenStatePanel
           kind="unavailable"
           title="Attribution trend unavailable"
-          body="Attribution trend is not available for the current selection."
+          body={getAttributionTrendUnavailableBody(trend)}
           surface="analysis"
         />
       )}

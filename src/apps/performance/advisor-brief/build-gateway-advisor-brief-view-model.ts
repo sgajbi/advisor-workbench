@@ -1,0 +1,259 @@
+import type {
+  WorkbenchPerformanceAdvisorBrief,
+  WorkbenchPerformanceWorkspace,
+} from "@/features/workbench/types";
+
+import { formatCurrency, formatDate } from "../formatters";
+import { buildPerformanceHref } from "../navigation";
+import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
+import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
+import type {
+  PerformanceAdvisorBriefAction,
+  PerformanceAdvisorBriefItem,
+  PerformanceAdvisorBriefMetric,
+  PerformanceAdvisorBriefViewModel,
+} from "./advisor-brief-view-model-types";
+
+export function buildGatewayAdvisorBriefViewModel(
+  advisorBrief: WorkbenchPerformanceAdvisorBrief,
+  workspace: WorkbenchPerformanceWorkspace
+): PerformanceAdvisorBriefViewModel {
+  const selectedPerformance =
+    advisorBrief.detail_basis === "GROSS"
+      ? workspace.gross_performance
+      : workspace.net_performance;
+  const benchmarkLabel = getPerformanceBenchmarkLabel(
+    advisorBrief.benchmark_code ?? workspace.benchmark_code ?? undefined,
+    workspace.benchmark_options ?? []
+  );
+  const hasBackedRiskEvidence = hasReadyRiskEvidence(advisorBrief.source_metrics);
+  return {
+    status: advisorBrief.status,
+    title: `Advisor Brief • ${advisorBrief.portfolio_id}`,
+    summary: advisorBrief.summary,
+    talkingPoints: normalizeGatewayNarrativeItems(advisorBrief.talking_points, hasBackedRiskEvidence),
+    recommendedActions: normalizeGatewayActions(
+      advisorBrief.recommended_actions,
+      hasBackedRiskEvidence
+    ),
+    risksAndExceptions: normalizeGatewayNarrativeItems(
+      advisorBrief.risks_and_exceptions,
+      hasBackedRiskEvidence
+    ),
+    sourceMetrics: normalizeGatewaySourceMetrics({
+      advisorBrief,
+      workspace,
+      benchmarkLabel,
+      endingMarketValue: formatCurrency(
+        selectedPerformance.end_market_value,
+        workspace.portfolio.base_currency
+      ),
+      hasBackedRiskEvidence,
+    }),
+    supportability: normalizeGatewaySupportability(advisorBrief),
+    reviewNotes: Array.from(
+      new Set([
+        ...advisorBrief.partial_failures.map((failure) => failure.detail),
+        ...advisorBrief.warnings,
+      ])
+    ),
+    audit: {
+      taskId: advisorBrief.ai_audit.task_id ?? "explain.v1",
+      outputLabel: advisorBrief.ai_audit.output_label ?? "EXPLANATION_ONLY",
+      promptVersion: advisorBrief.ai_audit.prompt_version ?? "foundation.explain.v1",
+      providerMode: advisorBrief.ai_audit.provider_mode ?? "unknown",
+      providerId: advisorBrief.ai_audit.provider_id ?? null,
+      adapterKind: advisorBrief.ai_audit.adapter_kind ?? null,
+      modelId: advisorBrief.ai_audit.model_id ?? null,
+      generatedAt:
+        advisorBrief.ai_audit.generated_at ??
+        advisorBrief.as_of_date ??
+        workspace.as_of_date,
+      stubbed: advisorBrief.ai_audit.stubbed ?? true,
+      sourceRefs: resolveAdvisorBriefSourceRefs(advisorBrief),
+    },
+  };
+}
+
+function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
+  const aiEvidenceRefs = advisorBrief.ai_evidence.source_refs ?? [];
+  if (aiEvidenceRefs.length > 0) {
+    return aiEvidenceRefs;
+  }
+
+  const aiAuditRefs = advisorBrief.ai_audit.source_refs ?? [];
+  if (aiAuditRefs.length > 0) {
+    return aiAuditRefs;
+  }
+
+  return [
+    `lotus-gateway:workbench:${advisorBrief.portfolio_id}:performance-advisor-brief:${advisorBrief.period}`,
+  ];
+}
+
+function normalizeGatewaySupportability(
+  advisorBrief: WorkbenchPerformanceAdvisorBrief
+): PerformanceAdvisorBriefViewModel["supportability"] {
+  return advisorBrief.supportability.map((item) => {
+    if (item.label.trim().toLowerCase() === "advisor brief") {
+      const normalizedValue =
+        advisorBrief.status === "ready"
+          ? "Ready"
+          : advisorBrief.status === "partial"
+            ? "Partial"
+            : "Unavailable";
+
+      return {
+        label: item.label,
+        value: normalizedValue,
+        tone: normalizeSupportabilityTone(item.tone, normalizedValue),
+      };
+    }
+
+    return {
+      label: item.label,
+      value: item.value,
+      tone: normalizeSupportabilityTone(item.tone, item.value),
+    };
+  });
+}
+
+function normalizeGatewaySourceMetrics({
+  advisorBrief,
+  workspace,
+  benchmarkLabel,
+  endingMarketValue,
+  hasBackedRiskEvidence,
+}: {
+  advisorBrief: WorkbenchPerformanceAdvisorBrief;
+  workspace: WorkbenchPerformanceWorkspace;
+  benchmarkLabel: string;
+  endingMarketValue: string;
+  hasBackedRiskEvidence: boolean;
+}): PerformanceAdvisorBriefMetric[] {
+  const route = buildPerformanceHref({
+    portfolioId: workspace.portfolio.portfolio_id,
+    period: advisorBrief.period,
+    detailBasis: advisorBrief.detail_basis,
+    contributionDimension: advisorBrief.contribution_dimension,
+    attributionDimension: advisorBrief.attribution_dimension,
+    chartFrequency: advisorBrief.chart_frequency,
+    benchmark: advisorBrief.benchmark_code ?? workspace.benchmark_code ?? undefined,
+    reportStartDate: advisorBrief.report_start_date,
+    reportEndDate: advisorBrief.report_end_date,
+  });
+
+  const normalizedMetrics = advisorBrief.source_metrics
+    .filter((metric) => shouldIncludeAdvisorRiskTarget(metric.target_mode, hasBackedRiskEvidence))
+    .map((metric) => {
+      const isBenchmarkMetric = metric.label.toLowerCase() === "benchmark return";
+      return {
+        label: metric.label,
+        value: metric.value,
+        supportingText: isBenchmarkMetric ? benchmarkLabel : metric.support_label,
+        route: metric.route,
+        targetMode: normalizeAdvisorTargetMode(metric.target_mode),
+      } satisfies PerformanceAdvisorBriefMetric;
+    });
+
+  if (normalizedMetrics.some((metric) => metric.label === "Ending MV")) {
+    return normalizedMetrics;
+  }
+
+  return [
+    ...normalizedMetrics,
+    {
+      label: "Ending MV",
+      value: endingMarketValue,
+      supportingText: formatDate(advisorBrief.as_of_date ?? workspace.as_of_date),
+      route,
+      targetMode: "summary",
+    },
+  ];
+}
+
+function normalizeGatewayNarrativeItems(
+  items: WorkbenchPerformanceAdvisorBrief["talking_points"],
+  hasBackedRiskEvidence: boolean
+): PerformanceAdvisorBriefItem[] {
+  return items.flatMap((item) => {
+    const evidenceRefs = item.evidence_refs
+      .filter((evidenceRef) =>
+        shouldIncludeAdvisorRiskTarget(evidenceRef.target_mode, hasBackedRiskEvidence)
+      )
+      .map((evidenceRef) => ({
+        metricLabel: evidenceRef.metric_label,
+        metricValue: evidenceRef.metric_value,
+        sourceSurface: evidenceRef.source_surface,
+        route: evidenceRef.route,
+        targetMode: normalizeAdvisorTargetMode(evidenceRef.target_mode),
+      }));
+
+    if (item.evidence_refs.length > 0 && evidenceRefs.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        headline: item.headline,
+        detail: item.detail,
+        tone: item.tone,
+        evidenceRefs,
+      },
+    ];
+  });
+}
+
+function normalizeGatewayActions(
+  actions: WorkbenchPerformanceAdvisorBrief["recommended_actions"],
+  hasBackedRiskEvidence: boolean
+): PerformanceAdvisorBriefAction[] {
+  return actions
+    .filter((action) => shouldIncludeAdvisorRiskTarget(action.target_mode, hasBackedRiskEvidence))
+    .map((action) => ({
+      label: action.label,
+      route: action.route,
+      targetMode: normalizeAdvisorTargetMode(action.target_mode),
+    }));
+}
+
+function hasReadyRiskEvidence(
+  sourceMetrics: WorkbenchPerformanceAdvisorBrief["source_metrics"]
+): boolean {
+  return sourceMetrics.some(
+    (metric) =>
+      normalizeAdvisorTargetMode(metric.target_mode) === "risk" &&
+      (metric.state?.toLowerCase() ?? "") === "ready"
+  );
+}
+
+function shouldIncludeAdvisorRiskTarget(
+  targetMode: string,
+  hasBackedRiskEvidence: boolean
+): boolean {
+  return normalizeAdvisorTargetMode(targetMode) !== "risk" || hasBackedRiskEvidence;
+}
+
+function normalizeSupportabilityTone(
+  tone: string | null | undefined,
+  value: string
+): "success" | "warn" | "danger" {
+  if (tone === "success" || tone === "warn" || tone === "danger") {
+    return tone;
+  }
+  const loweredValue = value.trim().toLowerCase();
+  if (loweredValue.includes("ready") || loweredValue.includes("live")) {
+    return "success";
+  }
+  if (loweredValue.includes("partial") || loweredValue.includes("review")) {
+    return "warn";
+  }
+  return "danger";
+}
+
+function normalizeAdvisorTargetMode(targetMode: string): PerformanceWorkspaceMode {
+  if (targetMode === "summary" || targetMode === "analysis" || targetMode === "advisor" || targetMode === "risk" || targetMode === "evidence") {
+    return targetMode;
+  }
+  return "summary";
+}

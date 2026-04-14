@@ -6,20 +6,24 @@ export default function WorkbenchPageHeader({
   subtitle,
   actions,
   className,
+  titleVariant = "pageTitle",
+  subtitleVariant = "body",
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
+  titleVariant?: "workspaceTitle" | "pageTitle";
+  subtitleVariant?: "body" | "bodySmall" | "helperText";
 }) {
   return (
     <section className={cx("workbench-page-header", className)}>
       <div className="workbench-page-header-copy">
-        <Text variant="pageTitle" className="workbench-page-header-title">
+        <Text variant={titleVariant} className="workbench-page-header-title">
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="secondary" className="workbench-page-header-subtitle">
+          <Text variant={subtitleVariant} className="workbench-page-header-subtitle">
             {subtitle}
           </Text>
         ) : null}

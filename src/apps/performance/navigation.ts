@@ -1,5 +1,5 @@
 import { CANONICAL_PERFORMANCE_PERIOD_OPTIONS } from "./periods";
-import type { PerformanceWorkspaceMode } from "./components/performance-workspace-mode-switch";
+import type { PerformanceWorkspaceMode } from "./performance-workspace-modes";
 
 export const PERIOD_OPTIONS = CANONICAL_PERFORMANCE_PERIOD_OPTIONS;
 export const BASIS_OPTIONS = ["NET", "GROSS"] as const;

@@ -2,9 +2,10 @@ import type {
   AttributionSummaryView,
   PerformanceBenchmarkOptionView,
   WorkbenchPerformanceAttributionTrend,
+  WorkbenchOverview,
 } from "@/features/workbench/types";
 
-import { formatDate, formatLabel, formatPct } from "../formatters";
+import { formatLabel, formatPct } from "../formatters";
 import {
   getPerformanceBenchmarkContextValue,
 } from "./performance-summary-context-helpers";
@@ -19,24 +20,6 @@ function getAttributionResidualAssessment(
     return "Residual de minimis";
   }
   return "Residual remains after effects";
-}
-
-function formatAttributionModelLabel(model?: string | null) {
-  switch (model?.trim().toUpperCase()) {
-    case "BF":
-      return "Brinson-Fachler";
-    default:
-      return model ? formatLabel(model) : "Unavailable";
-  }
-}
-
-function formatAttributionLinkingLabel(linking?: string | null) {
-  switch (linking?.trim().toUpperCase()) {
-    case "CARINO":
-      return "Carino";
-    default:
-      return linking ? formatLabel(linking) : "Unavailable";
-  }
 }
 
 export function getAttributionReconciliationText(
@@ -70,45 +53,6 @@ export function getAttributionReconciliationText(
   };
 }
 
-function getAttributionReconciliationSupport({
-  activeReturnPct,
-  effectsSumPct,
-  residualPct,
-}: {
-  activeReturnPct: number | null | undefined;
-  effectsSumPct: number | null | undefined;
-  residualPct: number | null | undefined;
-}): {
-  activeReturnSupport: string | null;
-  effectsSumSupport: string | null;
-  residualSupport: string | null;
-} {
-  return {
-    activeReturnSupport:
-      effectsSumPct != null || residualPct != null
-        ? [effectsSumPct != null ? `Effects ${formatPct(effectsSumPct)}` : null, residualPct != null ? `Residual ${formatPct(residualPct)}` : null]
-            .filter(Boolean)
-            .join(" + ")
-        : null,
-    effectsSumSupport:
-      activeReturnPct != null
-        ? [getAttributionResidualAssessment(residualPct), `Active ${formatPct(activeReturnPct)}`]
-            .filter(Boolean)
-            .join(" • ")
-        : getAttributionResidualAssessment(residualPct),
-    residualSupport:
-      activeReturnPct != null || effectsSumPct != null
-        ? [
-            getAttributionResidualAssessment(residualPct),
-            activeReturnPct != null ? `Active ${formatPct(activeReturnPct)}` : null,
-            effectsSumPct != null ? `Effects ${formatPct(effectsSumPct)}` : null,
-          ]
-            .filter(Boolean)
-            .join(" • ")
-        : getAttributionResidualAssessment(residualPct),
-  };
-}
-
 export function getAttributionDetailContextItems(
   attribution: AttributionSummaryView | null | undefined,
   benchmarkOptions: PerformanceBenchmarkOptionView[] = []
@@ -120,99 +64,8 @@ export function getAttributionDetailContextItems(
         ? getPerformanceBenchmarkContextValue({
             benchmark: attribution.benchmark_id,
             benchmarkOptions,
-            benchmarkReturnSource: attribution.benchmark_return_source,
           })
         : "Unassigned",
-    },
-    {
-      label: "Benchmark Source",
-      value: attribution?.benchmark_return_source
-        ? formatLabel(attribution.benchmark_return_source)
-        : "Unavailable",
-    },
-    {
-      label: "Attribution Model",
-      value: formatAttributionModelLabel(attribution?.model),
-    },
-    {
-      label: "Linking Method",
-      value: formatAttributionLinkingLabel(attribution?.linking),
-    },
-  ];
-}
-
-export function getAttributionDetailSummaryItems(
-  attribution: AttributionSummaryView | null | undefined,
-  _benchmarkOptions: PerformanceBenchmarkOptionView[] = []
-) {
-  void _benchmarkOptions;
-
-  if (!attribution?.benchmark_id) {
-    return [];
-  }
-
-  return [
-    {
-      label: "Active Return",
-      value: formatPct(attribution.active_return_pct),
-    },
-    {
-      label: "Effects Sum",
-      value: formatPct(attribution.sum_of_effects_pct),
-    },
-    {
-      label: "Residual",
-      value: formatPct(attribution.residual_pct),
-    },
-  ];
-}
-
-export function getAttributionTrendContextItems({
-  trend,
-  detailBasis,
-  attributionDimension,
-  benchmark,
-  benchmarkOptions = [],
-  period,
-}: {
-  trend: WorkbenchPerformanceAttributionTrend | null;
-  detailBasis: string;
-  attributionDimension: string;
-  benchmark?: string;
-  benchmarkOptions?: PerformanceBenchmarkOptionView[];
-  period: string;
-}) {
-  const resolvedWindowLabel =
-    trend?.report_start_date && trend?.report_end_date
-      ? `${formatDate(trend.report_start_date)} - ${formatDate(trend.report_end_date)}`
-      : period;
-
-  return [
-    {
-      label: "Period Range",
-      value: resolvedWindowLabel,
-    },
-    {
-      label: "Basis",
-      value: detailBasis,
-    },
-    {
-      label: "Benchmark",
-      value: trend?.benchmark_code
-        ? getPerformanceBenchmarkContextValue({
-            benchmark: trend.benchmark_code,
-            benchmarkOptions,
-          })
-        : benchmark
-          ? getPerformanceBenchmarkContextValue({
-              benchmark,
-              benchmarkOptions,
-            })
-          : "Unassigned",
-    },
-    {
-      label: "Segment",
-      value: formatLabel(trend?.attribution_dimension ?? attributionDimension),
     },
   ];
 }
@@ -225,31 +78,78 @@ export function getAttributionTrendSummaryItems(
     return [];
   }
 
-  const reconciliationSupport = getAttributionReconciliationSupport({
-    activeReturnPct: latestRow.active_return_pct,
-    effectsSumPct: latestRow.total_effect_pct,
-    residualPct: latestRow.residual_pct,
-  });
-
   return [
     {
       label: "Total Effect",
       value: formatPct(latestRow.total_effect_pct),
-      support: reconciliationSupport.effectsSumSupport,
-    },
-    {
-      label: "Active Return",
-      value: formatPct(latestRow.active_return_pct),
-      support: reconciliationSupport.activeReturnSupport,
+      support:
+        latestRow.active_return_pct != null
+          ? `Active ${formatPct(latestRow.active_return_pct)}`
+          : null,
     },
     {
       label: "Cumulative Total",
       value: formatPct(latestRow.cumulative_total_effect_pct),
     },
-    {
-      label: "Residual",
-      value: formatPct(latestRow.residual_pct),
-      support: reconciliationSupport.residualSupport,
-    },
   ];
+}
+
+export function getAttributionTrendUnavailableBody(
+  trend: WorkbenchPerformanceAttributionTrend | null
+): string {
+  const upstreamFailure = getMissingClassificationFailure(
+    trend?.partial_failures,
+    trend?.attribution_dimension
+  );
+
+  if (upstreamFailure?.detail) {
+    const requestedDimension = formatLabel(trend?.attribution_dimension ?? "selection");
+    return `${requestedDimension} attribution trend is unavailable because the selected benchmark does not expose complete ${requestedDimension.toLowerCase()} classification for every component.`;
+  }
+
+  return "Attribution trend is not available for the current selection.";
+}
+
+export function getAttributionDetailClassificationGapBody(args: {
+  partialFailures?: WorkbenchOverview["partial_failures"] | null;
+  attributionDimension?: string | null;
+}): string | null {
+  const upstreamFailure = getMissingClassificationFailure(
+    args.partialFailures,
+    args.attributionDimension
+  );
+
+  if (!upstreamFailure?.detail) {
+    return null;
+  }
+
+  const requestedDimension = formatLabel(args.attributionDimension ?? "selection");
+  return `${requestedDimension} attribution detail is unavailable because the selected benchmark does not expose complete ${requestedDimension.toLowerCase()} classification for every component.`;
+}
+
+function getMissingClassificationFailure(
+  partialFailures: WorkbenchOverview["partial_failures"] | null | undefined,
+  requestedDimension?: string | null
+) {
+  const normalizedDimension = requestedDimension?.toLowerCase();
+  return partialFailures?.find((failure) => {
+    if (
+      failure.source_service !== "lotus-performance" ||
+      failure.error_code !== "HTTP_422" ||
+      typeof failure.detail !== "string"
+    ) {
+      return false;
+    }
+
+    const detail = failure.detail.toLowerCase();
+    if (!detail.includes("missing classification label")) {
+      return false;
+    }
+
+    if (!normalizedDimension) {
+      return true;
+    }
+
+    return detail.includes(`for ${normalizedDimension}`);
+  });
 }

@@ -421,8 +421,15 @@ const DEFAULT_GRID_COLUMN_DEF: ColDef = {
 };
 
 function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<TransactionRow> {
+  const isNumericColumn = config.type === "numericColumn";
   return {
     ...config,
+    cellClass: isNumericColumn
+      ? "portfolio-data-grid-cell portfolio-data-grid-cell-numeric"
+      : "portfolio-data-grid-cell",
+    headerClass: isNumericColumn
+      ? "portfolio-data-grid-header-cell portfolio-data-grid-header-cell-numeric"
+      : "portfolio-data-grid-header-cell",
     tooltipValueGetter: (params) => String(params.value ?? ""),
   };
 }

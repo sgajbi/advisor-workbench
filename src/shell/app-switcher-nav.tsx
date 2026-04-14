@@ -1,57 +1,56 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
+import { WorkspaceTabNav } from "@/design-system";
 import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities/api";
+import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
+import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
 
-import { SHELL_APPS, type ShellApp } from "./app-registry";
-
-function isAppEnabled(app: ShellApp, navigation: Record<string, boolean | undefined>): boolean {
-  if (!app.available) {
-    return false;
-  }
-  if (!app.capabilityKey) {
-    return true;
-  }
-  return navigation[app.capabilityKey] !== false;
-}
+import { resolveShellApp } from "./app-registry";
+import { getWorkspaceDisabledTitle } from "./workspace-supportability-copy";
 
 export default function AppSwitcherNav() {
-  const navigation = fallbackNormalizedCapabilities().navigation;
-  const visibleApps = SHELL_APPS.filter((app) => app.visible !== false);
+  const { loading, normalized, shellBootstrapSource } = usePlatformCapabilities();
+  const fallback = fallbackNormalizedCapabilities();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeApp = resolveShellApp(pathname, searchParams);
+  const workspaceDescriptors =
+    shellBootstrapSource === "contract"
+      ? normalized.shellBootstrap.workspaces
+      : shellBootstrapSource === "fallback"
+        ? fallback.shellBootstrap.workspaces
+        : [];
+
+  if (loading && shellBootstrapSource === "loading") {
+    return <div className="shell-workspace-tabs-skeleton" aria-hidden="true" />;
+  }
+
+  const items = workspaceDescriptors.map((workspace) => {
+    return {
+      key: workspace.id,
+      label: workspace.label,
+      href: workspace.enabled ? workspace.href : undefined,
+      disabled: !workspace.enabled,
+      active: activeApp.id === workspace.id,
+      title: buildWorkspaceTitle(workspace),
+    };
+  });
 
   return (
-    <nav className="shell-nav" aria-label="Application Switcher">
-      {visibleApps.map((app) => {
-        const enabled = isAppEnabled(app, navigation);
-        const isActive = pathname === app.href || pathname?.startsWith(`${app.href}/`);
-        if (!enabled) {
-          return (
-            <span
-              key={app.id}
-              className="shell-nav-link shell-nav-link-disabled"
-              aria-disabled="true"
-              title={app.description}
-            >
-              {app.label}
-            </span>
-          );
-        }
-
-        return (
-          <Link
-            key={app.id}
-            href={app.href}
-            className={`shell-nav-link${isActive ? " shell-nav-link-active" : ""}`}
-            title={app.description}
-            aria-current={isActive ? "page" : undefined}
-          >
-            {app.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <WorkspaceTabNav
+      items={items}
+      ariaLabel="Workspace Navigation"
+      className="shell-workspace-tabs"
+    />
   );
+}
+
+function buildWorkspaceTitle(workspace: PlatformShellWorkspaceDescriptor): string {
+  if (workspace.enabled) {
+    return workspace.label;
+  }
+
+  return getWorkspaceDisabledTitle(workspace);
 }

@@ -15,16 +15,25 @@ vi.mock("next/link", () => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/portfolio",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
-vi.mock("@/features/platform-capabilities/api", () => ({
-  fallbackNormalizedCapabilities: () => ({
-    navigation: {
-      command_center: true,
-      analytics_studio: true,
-      advisory_pipeline: true,
-      reporting_hub: false,
-      decision_console: true,
+vi.mock("@/features/platform-capabilities/use-platform-capabilities", () => ({
+  usePlatformCapabilities: () => ({
+    loading: false,
+    partialFailure: false,
+    errors: [],
+    shellBootstrapSource: "contract",
+    normalized: {
+      shellBootstrap: {
+        workspaces: [
+          { id: "portfolio", label: "Portfolio", href: "/portfolio", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "performance", label: "Performance", href: "/performance", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "risk", label: "Risk", href: "/performance?mode=risk", enabled: true, supportability: { state: "ready", reasons: [] } },
+          { id: "proposal", label: "Proposal", href: "/proposals", enabled: false, supportability: { state: "unavailable", reasons: ["proposal_disabled"] } },
+          { id: "advisory", label: "Advisory", href: "/recommendations", enabled: false, supportability: { state: "unavailable", reasons: ["advisory_disabled"] } },
+        ],
+      },
     },
   }),
 }));
@@ -38,11 +47,21 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByRole("link", { name: /Lotus/i })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("navigation", { name: "Application Switcher" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
-    expect(screen.queryByText("Recommendations")).not.toBeInTheDocument();
-    expect(screen.getByText("Relationship Book")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute("href", "/performance?mode=risk");
+    expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText("Advisory")).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByRole("searchbox", { name: "Search clients, accounts, proposals" })
+    ).toHaveAttribute("placeholder", "Search clients, accounts, proposals...");
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Jordan Davis, Private Banker" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Jordan Davis")).toBeInTheDocument();
+    expect(screen.getByText("Private Banker")).toBeInTheDocument();
     expect(screen.getByText("Portfolio workspace body")).toBeInTheDocument();
   });
 });

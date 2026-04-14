@@ -13,6 +13,10 @@ import {
   formatPct,
   formatPerformancePositionLabel,
 } from "../formatters";
+import {
+  resolveActiveCumulativeReturn,
+  resolveActivePeriodReturn,
+} from "./performance-return-path-chart-model";
 
 export type PerformanceAnalyticsTableColumn = {
   key: string;
@@ -38,13 +42,32 @@ export type PerformanceHorizonTableView = "combined" | "returns" | "economics";
 export type PerformanceHorizonBasisView = "both" | "net" | "gross";
 export type PerformanceHorizonVisualMode = "absolute" | "relative" | "basis";
 
+function formatObservationWindow(start?: string | null, end?: string | null) {
+  if (!start || !end) {
+    return "N/A";
+  }
+
+  const [startDay, startMonth, startYear] = formatDate(start).split(" ");
+  const [endDay, endMonth, endYear] = formatDate(end).split(" ");
+
+  if (!startDay || !startMonth || !startYear || !endDay || !endMonth || !endYear) {
+    return `${formatDate(start)} - ${formatDate(end)}`;
+  }
+
+  if (startYear === endYear) {
+    return startMonth === endMonth
+      ? `${startDay}-${endDay} ${endMonth} ${endYear}`
+      : `${startDay} ${startMonth} - ${endDay} ${endMonth} ${endYear}`;
+  }
+
+  return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`;
+}
+
 export type PerformanceHorizonVisualCard = {
   key: string;
   label: string;
   primaryValue: string;
-  secondaryLabel: string;
   secondaryValue: string;
-  tertiaryLabel?: string;
   tertiaryValue?: string;
   leftBarLabel: string;
   leftBarHeightPct: number;
@@ -52,7 +75,6 @@ export type PerformanceHorizonVisualCard = {
   rightBarLabel: string;
   rightBarHeightPct: number;
   rightBarClassName: string;
-  footerLabel: string;
   footerValue: string;
 };
 
@@ -273,7 +295,7 @@ export function buildPerformanceAttributionTrendTableModel({
 
 const LEADING_COLUMNS: PerformanceAnalyticsTableColumn[] = [
   { key: "period", label: "Period" },
-  { key: "window", label: "Period Range" },
+  { key: "window", label: "Window" },
 ];
 
 export function buildPerformanceReturnPathTableModel({
@@ -288,19 +310,19 @@ export function buildPerformanceReturnPathTableModel({
   includeActiveSeries: boolean;
 }): PerformanceAnalyticsTableModel {
   const absoluteColumns: PerformanceAnalyticsTableColumn[] = [
-    { key: "portfolioPeriod", label: "Portfolio Return", align: "right" },
+    { key: "portfolioPeriod", label: "Portfolio", align: "right" },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkPeriod", label: "Benchmark Return", align: "right" as const }]
+      ? [{ key: "benchmarkPeriod", label: "Benchmark", align: "right" as const }]
       : []),
-    { key: "portfolioCumulative", label: "Cumulative Portfolio", align: "right" },
+    { key: "portfolioCumulative", label: "Cum. Portfolio", align: "right" },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkCumulative", label: "Cumulative Benchmark", align: "right" as const }]
+      ? [{ key: "benchmarkCumulative", label: "Cum. Benchmark", align: "right" as const }]
       : []),
   ];
   const relativeColumns: PerformanceAnalyticsTableColumn[] = includeActiveSeries
     ? [
-        { key: "activePeriod", label: "Active Return", align: "right" },
-        { key: "activeCumulative", label: "Cumulative Active", align: "right" },
+        { key: "activePeriod", label: "Active", align: "right" },
+        { key: "activeCumulative", label: "Cum. Active", align: "right" },
       ]
     : [];
   const columns =
@@ -315,16 +337,13 @@ export function buildPerformanceReturnPathTableModel({
     rows: points.map((point) => {
       const cellMap: Record<string, string> = {
         period: point.label,
-        window:
-          point.period_start && point.period_end
-            ? `${formatDate(point.period_start)} - ${formatDate(point.period_end)}`
-            : "N/A",
+        window: formatObservationWindow(point.period_start, point.period_end),
         portfolioPeriod: formatPct(point.portfolio_return_pct),
         benchmarkPeriod: formatPct(point.benchmark_return_pct),
-        activePeriod: formatPct(point.active_return_pct),
+        activePeriod: formatPct(resolveActivePeriodReturn(point)),
         portfolioCumulative: formatPct(point.cumulative_portfolio_return_pct),
         benchmarkCumulative: formatPct(point.cumulative_benchmark_return_pct),
-        activeCumulative: formatPct(point.cumulative_active_return_pct),
+        activeCumulative: formatPct(resolveActiveCumulativeReturn(point)),
       };
 
       return {
@@ -478,18 +497,15 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(row.active_return_pct),
-        secondaryLabel: "Benchmark Return",
         secondaryValue: formatPct(row.benchmark_return_pct),
-        tertiaryLabel: "Cumulative Active",
         tertiaryValue: formatPct(row.cumulative_active_return_pct),
-        leftBarLabel: "Active Return",
+        leftBarLabel: "Active",
         leftBarHeightPct: Math.abs((row.active_return_pct ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-active",
-        rightBarLabel: "Cumulative Active",
+        rightBarLabel: "Cumulative",
         rightBarHeightPct: Math.abs((row.cumulative_active_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-active-soft",
-        footerLabel: "Comparison",
-        footerValue: "Active Return vs Cumulative Active",
+        footerValue: formatPct(row.cumulative_active_return_pct),
       };
     }
 
@@ -498,18 +514,15 @@ export function buildPerformanceHorizonVisualModel({
         key: row.period,
         label: row.period,
         primaryValue: formatPct(netReturn),
-        secondaryLabel: "Gross Return",
         secondaryValue: formatPct(grossReturn),
-        tertiaryLabel: "Fee Drag",
         tertiaryValue:
           grossReturn != null && netReturn != null ? formatPct(grossReturn - netReturn) : "N/A",
-        leftBarLabel: "Net Return",
+        leftBarLabel: "Net",
         leftBarHeightPct: Math.abs((netReturn ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
-        rightBarLabel: "Gross Return",
+        rightBarLabel: "Gross",
         rightBarHeightPct: Math.abs((grossReturn ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-gross",
-        footerLabel: "Cumulative Return",
         footerValue: formatPct(
           basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
         ),
@@ -520,17 +533,14 @@ export function buildPerformanceHorizonVisualModel({
       key: row.period,
         label: row.period,
         primaryValue: formatPct(basisReturn),
-        secondaryLabel: "Benchmark Return",
         secondaryValue: formatPct(row.benchmark_return_pct),
-        tertiaryLabel: "Active Return",
         tertiaryValue: formatPct(row.active_return_pct),
-        leftBarLabel: basisView === "gross" ? "Gross Return" : "Portfolio Return",
+        leftBarLabel: basisView === "gross" ? "Gross" : "Portfolio",
         leftBarHeightPct: Math.abs((basisReturn ?? 0) / scale) * 100,
         leftBarClassName: "performance-horizon-bar performance-horizon-bar-portfolio",
-        rightBarLabel: "Benchmark Return",
+        rightBarLabel: "Benchmark",
         rightBarHeightPct: Math.abs((row.benchmark_return_pct ?? 0) / scale) * 100,
         rightBarClassName: "performance-horizon-bar performance-horizon-bar-benchmark",
-        footerLabel: "Cumulative Return",
         footerValue: formatPct(
           basisView === "gross" ? row.cumulative_gross_return_pct : row.cumulative_net_return_pct
         ),

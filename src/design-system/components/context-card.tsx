@@ -1,7 +1,12 @@
+import type { ReactNode } from "react";
+
+import DefinitionList from "./definition-list";
+import DetailCard from "./detail-card";
+
 type ContextFact = {
   label: string;
-  value: React.ReactNode;
-  action?: React.ReactNode;
+  value: ReactNode;
+  action?: ReactNode;
 };
 
 type ContextGroup = {
@@ -20,29 +25,19 @@ export default function ContextCard({
   groups: ContextGroup[];
 }) {
   return (
-    <div className="context-card">
-      <div className="portfolio-card-header">
-        <h3 className="portfolio-side-card-title">{title}</h3>
-        <p className="portfolio-card-subtitle">{subtitle}</p>
-      </div>
+    <DetailCard title={title} subtitle={subtitle} className="context-card">
       <div className="portfolio-context-panel">
         {groups.map((group) => (
           <section key={group.key} className="portfolio-context-group" aria-label={group.title}>
             <span className="portfolio-context-group-title">{group.title}</span>
-            <dl className="portfolio-context-facts">
-              {group.facts.map((fact) => (
-                <div key={fact.label} className="portfolio-context-row">
-                  <dt>{fact.label}</dt>
-                  <dd>
-                    <span>{fact.value}</span>
-                    {fact.action ?? null}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <DefinitionList
+              className="portfolio-context-facts"
+              rowClassName="portfolio-context-row"
+              items={group.facts}
+            />
           </section>
         ))}
       </div>
-    </div>
+    </DetailCard>
   );
 }

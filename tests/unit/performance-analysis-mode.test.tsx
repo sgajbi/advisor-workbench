@@ -43,7 +43,7 @@ describe("PerformanceAnalysisMode", () => {
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
-    expect(screen.getByText("Contribution Breakdown")).toBeInTheDocument();
+    expect(screen.queryByText("Contribution Breakdown")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-stage")).toBeTruthy();
     expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
     expect(
@@ -120,8 +120,8 @@ describe("PerformanceAnalysisMode", () => {
 
     expect(screen.getByText("Contribution detail unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText("Contribution detail is not available for the current selection.")
-    ).toBeInTheDocument();
+      screen.getAllByText("Contribution detail is not available for the current selection.").length
+    ).toBeGreaterThanOrEqual(1);
     expect(
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel")
     ).toBeTruthy();
@@ -150,8 +150,8 @@ describe("PerformanceAnalysisMode", () => {
 
     expect(screen.getByText("Contribution detail is partial")).toBeInTheDocument();
     expect(
-      screen.getByText("Contribution exists, but only aggregate rows are available.")
-    ).toBeInTheDocument();
+      screen.getAllByText("Contribution exists, but only aggregate rows are available.").length
+    ).toBeGreaterThanOrEqual(1);
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe("PerformanceAnalysisMode", () => {
       "aria-selected",
       "true"
     );
-    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getAllByText("Equity").length).toBeGreaterThanOrEqual(1);
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();

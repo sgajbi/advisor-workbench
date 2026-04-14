@@ -4,35 +4,54 @@ import { cx } from "@/design-system/utils/cx";
 export default function PerformanceAnalysisDetailPane<T extends string>({
   title,
   subtitle,
+  summary,
+  actions,
   value,
   onChange,
   options,
   children,
   className,
 }: {
-  title: string;
+  title?: string;
   subtitle?: string;
+  summary?: React.ReactNode;
+  actions?: React.ReactNode;
   value: T;
   onChange: (value: T) => void;
   options: Array<WorkbenchSegmentedControlOption<T>>;
   children: React.ReactNode;
   className?: string;
 }) {
+  const showTabs = options.length > 1;
+
   return (
     <div className={cx("performance-analysis-detail-pane", className)}>
-      <div className="performance-analysis-detail-pane-header">
-        <div className="performance-analysis-detail-pane-copy">
-          <strong>{title}</strong>
-          {subtitle ? <span>{subtitle}</span> : null}
+      <div
+        className={cx(
+          "performance-analysis-detail-pane-header",
+          !(title || subtitle) && "performance-analysis-detail-pane-header-tabs-only"
+        )}
+      >
+        {title || subtitle ? (
+          <div className="performance-analysis-detail-pane-copy">
+            {title ? <strong>{title}</strong> : null}
+            {subtitle ? <span>{subtitle}</span> : null}
+          </div>
+        ) : null}
+        <div className="performance-analysis-detail-pane-controls">
+          {actions ? <div className="performance-analysis-detail-pane-actions">{actions}</div> : null}
+          {showTabs ? (
+            <ModeTabs
+              value={value}
+              onChange={onChange}
+              options={options}
+              ariaLabel={title ? `${title} view` : "Detail view"}
+              className="performance-analysis-detail-pane-tabs"
+            />
+          ) : null}
         </div>
-        <ModeTabs
-          value={value}
-          onChange={onChange}
-          options={options}
-          ariaLabel={`${title} view`}
-          className="performance-analysis-detail-pane-tabs"
-        />
       </div>
+      {summary ? <div className="performance-analysis-detail-pane-summary">{summary}</div> : null}
       <div className="performance-analysis-detail-pane-body">{children}</div>
     </div>
   );

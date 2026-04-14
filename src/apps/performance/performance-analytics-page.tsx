@@ -3,7 +3,9 @@ import {
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { AppPageShell } from "@/design-system";
-import type { PerformanceWorkspaceMode } from "./components/performance-workspace-mode-switch";
+import {
+  normalizePerformanceWorkspaceMode,
+} from "./performance-workspace-modes";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 
 type LookupEnvelope = {
@@ -15,14 +17,6 @@ const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
   DEMO_ADV_USD_001: "BMK_GLOBAL_BALANCED_60_40",
 };
-const PERFORMANCE_WORKSPACE_MODES = new Set<PerformanceWorkspaceMode>([
-  "summary",
-  "analysis",
-  "advisor",
-  "risk",
-  "evidence",
-]);
-
 async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
   try {
     const response = await fetch(`${resolveGatewayBaseUrl()}/api/v1/lookups/portfolios?limit=${limit}`, {
@@ -73,11 +67,8 @@ export default async function PerformanceAnalyticsPage({
   const attributionDimension =
     resolvedSearch.attributionDimension?.trim() || legacyDetailDimension || "asset_class";
   const chartFrequency = resolvedSearch.chartFrequency?.trim() || "monthly";
-  const initialMode = PERFORMANCE_WORKSPACE_MODES.has(
-    (resolvedSearch.mode?.trim() ?? "summary") as PerformanceWorkspaceMode
-  )
-    ? ((resolvedSearch.mode?.trim() ?? "summary") as PerformanceWorkspaceMode)
-    : "summary";
+  const requestedMode = resolvedSearch.mode?.trim();
+  const initialMode = normalizePerformanceWorkspaceMode(requestedMode) ?? "summary";
   const benchmark =
     resolvedSearch.benchmark?.trim() ||
     (selectedPortfolioId ? DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId] : undefined);
@@ -98,7 +89,6 @@ export default async function PerformanceAnalyticsPage({
   let workspaceDetails = null;
   if (selectedPortfolioId) {
     try {
-      // First paint is summary-first by design. Deep analytics hydrate after mount.
       workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(
         selectedPortfolioId,
         workspaceRequest

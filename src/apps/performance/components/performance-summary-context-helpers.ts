@@ -1,6 +1,5 @@
 import type {
   PerformanceBenchmarkOptionView,
-  PerformanceChartPoint,
   MoneyWeightedReturnSummary,
 } from "@/features/workbench/types";
 
@@ -8,25 +7,34 @@ import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 
 import { formatCurrency, formatLabel, formatPct } from "../formatters";
 
-type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
-
 export type PerformanceReturnPathMetric = {
   key: string;
   label: string;
   value: string | number;
   support?: string;
+  definition?: string;
   unavailable?: boolean;
 };
 
 export type PerformanceReturnPathPresentation = {
   benchmarkAssigned: boolean;
   benchmarkLabel: string;
-  benchmarkSourceLabel: string | null;
   benchmarkContextValue: string;
+  portfolioReturnValue: string;
+  benchmarkReturnValue: string;
   activeReturnValue: string;
-  relativeContextStatus: PerformanceChartContextStatus;
   benchmarkStateBody: string | null;
   metrics: PerformanceReturnPathMetric[];
+};
+
+type PerformanceEconomicsResolution = {
+  netCashFlow: number | null;
+  beginMarketValue: number | null;
+  endMarketValue: number | null;
+  flowAdjustedEndMarketValue: number | null;
+  beginningCashFlow: number | null;
+  endingCashFlow: number | null;
+  moneyWeightedReturnValue: string;
 };
 
 export function getPerformanceReturnPathPresentation({
@@ -53,7 +61,6 @@ export function getPerformanceReturnPathPresentation({
     benchmark_input_mode?: string | null;
   };
   moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
-  points: PerformanceChartPoint[];
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   capabilities: PerformanceWorkspaceCapabilities;
@@ -66,181 +73,39 @@ export function getPerformanceReturnPathPresentation({
     !benchmarkAssigned || summary.active_return_pct == null
       ? "Unavailable"
       : formatPct(summary.active_return_pct);
-  const relativeContextStatus: PerformanceChartContextStatus = !benchmarkAssigned
-    ? "unavailable"
-    : capabilities.benchmarkComparison.state === "supported"
-      ? "available"
-      : capabilities.benchmarkComparison.state === "partial"
-        ? "partial"
-        : "unavailable";
-  const resolvedNetCashFlow =
-    summary.net_cash_flow ?? moneyWeightedReturn?.net_cash_flow ?? null;
-  const resolvedBeginMarketValue =
-    summary.begin_market_value ?? moneyWeightedReturn?.begin_market_value ?? null;
-  const resolvedEndMarketValue =
-    summary.end_market_value ?? moneyWeightedReturn?.end_market_value ?? null;
-  const resolvedOpeningCashFlow =
-    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
-  const resolvedClosingCashFlow =
-    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
-  const resolvedFlowAdjustedEndMarketValue =
-    summary.flow_adjusted_end_market_value ??
-    moneyWeightedReturn?.flow_adjusted_end_market_value ??
-    null;
+  const resolvedEconomics = resolvePerformanceEconomics(summary, moneyWeightedReturn);
+  const portfolioReturnValue =
+    summary.portfolio_return_pct != null ? formatPct(summary.portfolio_return_pct) : "Unavailable";
+  const benchmarkReturnValue =
+    benchmarkAssigned && summary.benchmark_return_pct != null
+      ? formatPct(summary.benchmark_return_pct)
+      : "Unavailable";
 
   return {
     benchmarkAssigned,
     benchmarkLabel,
-    benchmarkSourceLabel: formatBenchmarkSourceLabel(summary.benchmark_return_source),
     benchmarkContextValue: getPerformanceBenchmarkContextValue({
       benchmark,
       benchmarkOptions,
-      benchmarkReturnSource: summary.benchmark_return_source,
-      benchmarkInputMode: summary.benchmark_input_mode,
     }),
+    portfolioReturnValue,
+    benchmarkReturnValue,
     activeReturnValue,
-    relativeContextStatus,
     benchmarkStateBody: benchmarkAssigned
       ? null
       : capabilities.benchmarkComparison.reason ??
         "Assign a benchmark to enable relative comparison and active return context.",
-    metrics: [
-      {
-        key: "portfolio-return",
-        label: "Portfolio Return",
-        value:
-          summary.portfolio_return_pct != null
-            ? formatPct(summary.portfolio_return_pct)
-            : "Unavailable",
-        unavailable: summary.portfolio_return_pct == null,
-      },
-      {
-        key: "benchmark-return",
-        label: "Benchmark Return",
-        value:
-          benchmarkAssigned && summary.benchmark_return_pct != null
-            ? formatPct(summary.benchmark_return_pct)
-            : "Unavailable",
-        unavailable: !benchmarkAssigned || summary.benchmark_return_pct == null,
-      },
-      {
-        key: "active-return",
-        label: "Active Return",
-        value: activeReturnValue,
-        unavailable: activeReturnValue === "Unavailable",
-      },
-      {
-        key: "mwrr",
-        label: "Money-Weighted Return",
-        value:
-          moneyWeightedReturn?.money_weighted_return_pct != null
-            ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
-            : "Unavailable",
-        unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
-      },
-      {
-        key: "opening-mv",
-        label: "Opening MV",
-        value: formatCurrency(resolvedBeginMarketValue, reportingCurrency),
-        unavailable: resolvedBeginMarketValue == null,
-      },
-      {
-        key: "opening-cash-flow",
-        label: "Opening Cash Flow",
-        value: formatCurrency(resolvedOpeningCashFlow, reportingCurrency),
-        unavailable: resolvedOpeningCashFlow == null,
-      },
-      {
-        key: "closing-cash-flow",
-        label: "Closing Cash Flow",
-        value: formatCurrency(resolvedClosingCashFlow, reportingCurrency),
-        unavailable: resolvedClosingCashFlow == null,
-      },
-      {
-        key: "net-flow",
-        label: "Net Flow",
-        value: formatCurrency(resolvedNetCashFlow, reportingCurrency),
-        unavailable: resolvedNetCashFlow == null,
-      },
-      {
-        key: "ending-mv",
-        label: "Ending MV",
-        value: formatCurrency(resolvedEndMarketValue, reportingCurrency),
-        unavailable: resolvedEndMarketValue == null,
-      },
-      {
-        key: "flow-adjusted-mv",
-        label: "Flow-Adjusted MV",
-        value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
-        unavailable: resolvedFlowAdjustedEndMarketValue == null,
-      },
-    ],
+    metrics: buildPerformanceReturnPathMetrics({
+      summary,
+      benchmarkAssigned,
+      portfolioReturnValue,
+      benchmarkReturnValue,
+      activeReturnValue,
+      moneyWeightedReturn,
+      resolvedEconomics,
+      reportingCurrency,
+    }),
   };
-}
-
-export function getPerformanceNetFlowSupport(
-  summary: {
-    beginning_cash_flow?: number | null;
-    ending_cash_flow?: number | null;
-    fees?: number | null;
-  },
-  reportingCurrency: string,
-  moneyWeightedReturn?: MoneyWeightedReturnSummary | null
-) {
-  const beginningCashFlow =
-    summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null;
-  const endingCashFlow =
-    summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null;
-  const fees = summary.fees ?? moneyWeightedReturn?.fees ?? null;
-
-  if (beginningCashFlow != null || endingCashFlow != null) {
-    const supportSegments = [
-      beginningCashFlow != null
-        ? `Opening Cash ${formatCurrency(beginningCashFlow, reportingCurrency)}`
-        : null,
-      endingCashFlow != null
-        ? `Closing Cash ${formatCurrency(endingCashFlow, reportingCurrency)}`
-        : null,
-    ].filter(Boolean);
-
-    if (supportSegments.length > 0) {
-      return supportSegments.join(" • ");
-    }
-  }
-
-  if (fees != null) {
-    return `Fees ${formatCurrency(fees, reportingCurrency)}`;
-  }
-
-  return undefined;
-}
-
-export function getPerformanceMoneyWeightedAuditSupport({
-  explicitDateRange,
-}: {
-  explicitDateRange: string;
-  moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
-  reportingCurrency?: string;
-}) {
-  return explicitDateRange;
-}
-
-export function getPerformanceMoneyWeightedEconomicsSupport(
-  moneyWeightedReturn: MoneyWeightedReturnSummary | null | undefined,
-  reportingCurrency: string
-) {
-  if (moneyWeightedReturn?.flow_adjusted_end_market_value != null) {
-    return `Flow-Adjusted MV ${formatCurrency(
-      moneyWeightedReturn.flow_adjusted_end_market_value,
-      reportingCurrency
-    )}`;
-  }
-
-  if (moneyWeightedReturn?.net_cash_flow != null) {
-    return `Net Flow ${formatCurrency(moneyWeightedReturn.net_cash_flow, reportingCurrency)}`;
-  }
-
-  return null;
 }
 
 export function getPerformanceBenchmarkLabel(
@@ -262,8 +127,6 @@ export function getPerformanceBenchmarkContextValue({
 }: {
   benchmark?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
-  benchmarkReturnSource?: string | null;
-  benchmarkInputMode?: string | null;
 }) {
   if (!benchmark) {
     return "Unassigned";
@@ -284,6 +147,148 @@ export function getPerformanceBenchmarkContextValue({
   return `${benchmarkLabel} • ${supportSegments.join(" • ")}`;
 }
 
+function resolvePerformanceEconomics(
+  summary: {
+    begin_market_value?: number | null;
+    end_market_value?: number | null;
+    beginning_cash_flow?: number | null;
+    ending_cash_flow?: number | null;
+    flow_adjusted_end_market_value?: number | null;
+    net_cash_flow?: number | null;
+  },
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null
+): PerformanceEconomicsResolution {
+  return {
+    netCashFlow: summary.net_cash_flow ?? moneyWeightedReturn?.net_cash_flow ?? null,
+    beginMarketValue:
+      summary.begin_market_value ?? moneyWeightedReturn?.begin_market_value ?? null,
+    endMarketValue: summary.end_market_value ?? moneyWeightedReturn?.end_market_value ?? null,
+    flowAdjustedEndMarketValue:
+      summary.flow_adjusted_end_market_value ??
+      moneyWeightedReturn?.flow_adjusted_end_market_value ??
+      null,
+    beginningCashFlow:
+      summary.beginning_cash_flow ?? moneyWeightedReturn?.beginning_cash_flow ?? null,
+    endingCashFlow: summary.ending_cash_flow ?? moneyWeightedReturn?.ending_cash_flow ?? null,
+    moneyWeightedReturnValue:
+      moneyWeightedReturn?.money_weighted_return_pct != null
+        ? formatPct(moneyWeightedReturn.money_weighted_return_pct)
+        : "Unavailable",
+  };
+}
+
+function buildPerformanceReturnPathMetrics({
+  summary,
+  benchmarkAssigned,
+  portfolioReturnValue,
+  benchmarkReturnValue,
+  activeReturnValue,
+  moneyWeightedReturn,
+  resolvedEconomics,
+  reportingCurrency,
+}: {
+  summary: {
+    portfolio_return_pct: number | null;
+    benchmark_return_pct: number | null;
+  };
+  benchmarkAssigned: boolean;
+  portfolioReturnValue: string;
+  benchmarkReturnValue: string;
+  activeReturnValue: string;
+  moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
+  resolvedEconomics: PerformanceEconomicsResolution;
+  reportingCurrency: string;
+}): PerformanceReturnPathMetric[] {
+  return [
+    {
+      key: "portfolio-return",
+      label: "Portfolio Return",
+      value: portfolioReturnValue,
+      unavailable: summary.portfolio_return_pct == null,
+    },
+    {
+      key: "benchmark-return",
+      label: "Benchmark Return",
+      value: benchmarkReturnValue,
+      unavailable: !benchmarkAssigned || summary.benchmark_return_pct == null,
+    },
+    {
+      key: "active-return",
+      label: "Active Return",
+      value: activeReturnValue,
+      unavailable: activeReturnValue === "Unavailable",
+    },
+    {
+      key: "mwrr",
+      label: "Money-Weighted Return",
+      value: resolvedEconomics.moneyWeightedReturnValue,
+      definition:
+        "Annualized money-weighted return for the selected window, reflecting the timing and size of external cash flows.",
+      unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
+    },
+    {
+      key: "flow-adjusted-mv",
+      label: "Flow-Adjusted MV",
+      value: formatCurrency(resolvedEconomics.flowAdjustedEndMarketValue, reportingCurrency),
+      definition:
+        "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
+      unavailable: resolvedEconomics.flowAdjustedEndMarketValue == null,
+    },
+    ...(resolvedEconomics.endMarketValue != null
+      ? [
+          {
+            key: "ending-mv",
+            label: "Ending MV",
+            value: formatCurrency(resolvedEconomics.endMarketValue, reportingCurrency),
+            definition:
+              "Ending market value at the close of the reporting window after market movement and cash activity are recognized.",
+            unavailable: false,
+          } satisfies PerformanceReturnPathMetric,
+        ]
+      : []),
+    {
+      key: "opening-mv",
+      label: "Opening MV",
+      value: formatCurrency(resolvedEconomics.beginMarketValue, reportingCurrency),
+      definition:
+        "Opening market value at the start of the reporting window before current-period returns and flows.",
+      unavailable: resolvedEconomics.beginMarketValue == null,
+    },
+    {
+      key: "net-flow",
+      label: "Net Flow",
+      value: formatCurrency(resolvedEconomics.netCashFlow, reportingCurrency),
+      definition:
+        "Net external cash movement during the reporting window after subscriptions, withdrawals, and other funded activity.",
+      unavailable: resolvedEconomics.netCashFlow == null,
+    },
+    ...(resolvedEconomics.beginningCashFlow != null
+      ? [
+          {
+            key: "opening-cash",
+            label: "Opening Cash",
+            value: formatCurrency(resolvedEconomics.beginningCashFlow, reportingCurrency),
+            definition:
+              "Opening external cash position resolved for the reporting window before current-period activity is applied.",
+            unavailable: false,
+          } satisfies PerformanceReturnPathMetric,
+        ]
+      : []),
+    ...(resolvedEconomics.endingCashFlow != null
+      ? [
+          {
+            key: "closing-cash",
+            label: "Closing Cash",
+            value: formatCurrency(resolvedEconomics.endingCashFlow, reportingCurrency),
+            definition:
+              "Closing external cash position after subscriptions, withdrawals, and other funded activity in the selected window.",
+            unavailable: false,
+          } satisfies PerformanceReturnPathMetric,
+        ]
+      : []),
+  ];
+}
+
 export function getPerformanceBenchmarkOptionLabel(
   option: PerformanceBenchmarkOptionView
 ) {
@@ -297,25 +302,4 @@ export function getPerformanceBenchmarkOptionLabel(
   }
 
   return `${option.benchmark_name} • ${supportSegments.join(" • ")}`;
-}
-
-function formatBenchmarkSourceLabel(source?: string | null) {
-  if (!source) {
-    return null;
-  }
-
-  switch (source.trim().toLowerCase()) {
-    case "calculated":
-      return "Calculated";
-    case "published":
-      return "Published";
-    case "vendor":
-      return "Vendor";
-    default:
-      return source
-        .split(/[_\s-]+/)
-        .filter(Boolean)
-        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
-        .join(" ");
-  }
 }

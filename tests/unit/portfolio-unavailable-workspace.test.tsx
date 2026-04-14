@@ -9,8 +9,14 @@ describe("PortfolioUnavailableWorkspace", () => {
   it("renders the degraded portfolio shell with fallback work areas", () => {
     render(<PortfolioUnavailableWorkspace />);
 
+    const selector = screen.getByRole("navigation", { name: "Portfolio selector" });
     expect(screen.getByRole("heading", { name: "Portfolios" })).toBeInTheDocument();
-    expect(screen.getByText("Catalog unavailable")).toBeInTheDocument();
+    expect(selector.closest(".portfolio-selector-rail")).toBeTruthy();
+    expect(screen.getByText("Portfolio catalog unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Client portfolio selection will return when the gateway catalog is available.")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveClass("portfolio-selector-empty");
     expect(screen.getByText("Portfolio unavailable")).toBeInTheDocument();
     expect(screen.getByText("Core feed unavailable")).toBeInTheDocument();
 

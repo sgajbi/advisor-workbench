@@ -45,6 +45,13 @@ describe("RiskConcentrationPanel", () => {
     expect(
       container.querySelectorAll(".performance-risk-concentration-scale-card")
     ).toHaveLength(2);
+    expect(container.querySelectorAll(".performance-risk-concentration-scale-legend")).toHaveLength(1);
+    expect(
+      container.querySelectorAll(".performance-risk-concentration-scale-card .performance-risk-concentration-scale-legend")
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".performance-risk-concentration-scale-legend .ui-text-metadata")
+    ).toHaveLength(4);
     expect(screen.queryByText(/Position-level concentration is/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Issuer-level concentration remains/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Driver analysis" })).not.toBeInTheDocument();
