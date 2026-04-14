@@ -6600,7 +6600,10 @@ a:hover {
 
 .performance-analysis-summary-band {
   display: grid;
-  grid-template-columns: minmax(15rem, 0.92fr) minmax(0, 1.35fr) minmax(16rem, 0.88fr);
+  grid-template-columns: minmax(15rem, 0.92fr) minmax(0, 1.45fr);
+  grid-template-areas:
+    "copy metrics"
+    "status metrics";
   gap: var(--space-4);
   padding: var(--panel-padding-compact);
   border: 1px solid var(--border);
@@ -6609,6 +6612,7 @@ a:hover {
 }
 
 .performance-analysis-summary-band-copy {
+  grid-area: copy;
   display: grid;
   gap: 0.22rem;
   align-content: start;
@@ -6654,6 +6658,7 @@ a:hover {
 }
 
 .performance-analysis-summary-band-grid {
+  grid-area: metrics;
   display: grid;
   grid-template-columns: repeat(2, minmax(10.5rem, 1fr));
   gap: var(--space-3);
@@ -6692,9 +6697,15 @@ a:hover {
 }
 
 .performance-analysis-summary-band-status {
+  grid-area: status;
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-3);
   align-content: start;
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: var(--radius-tile);
+  background: var(--surface-secondary);
 }
 
 .performance-analysis-summary-band-status-heading span {
@@ -6706,7 +6717,8 @@ a:hover {
 
 .performance-analysis-summary-band-status-items {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .performance-analysis-summary-band-status-item {
@@ -10450,15 +10462,18 @@ a:hover {
 
 .performance-analysis-control-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(21rem, 0.88fr) minmax(24rem, 1.12fr);
-  gap: var(--space-2) var(--space-3);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "selection selection"
+    "window comparison";
+  gap: var(--space-3);
   align-items: end;
 }
 
 .performance-analysis-control-cluster {
   display: grid;
-  gap: 0.18rem;
-  padding: 0.2rem 0.24rem;
+  gap: var(--space-2);
+  padding: var(--space-2);
   border: 1px solid rgba(32, 44, 61, 0.04);
   border-radius: 10px;
   background: rgba(250, 251, 253, 0.34);
@@ -10466,7 +10481,9 @@ a:hover {
 }
 
 .performance-analysis-control-cluster-selection {
-  grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.66fr) minmax(0, 0.9fr);
+  grid-area: selection;
+  grid-template-columns: minmax(15rem, 1.25fr) minmax(9rem, 0.72fr) minmax(12rem, 1fr);
+  gap: var(--space-2);
   align-content: start;
 }
 
@@ -10475,11 +10492,14 @@ a:hover {
 }
 
 .performance-analysis-control-cluster-comparison {
+  grid-area: comparison;
   grid-template-columns: minmax(8rem, 0.56fr) minmax(14rem, 1fr);
+  gap: var(--space-2);
   align-content: start;
 }
 
 .performance-analysis-control-cluster-window {
+  grid-area: window;
   align-content: start;
 }
 
@@ -10489,7 +10509,7 @@ a:hover {
 
 .performance-analysis-control-slot {
   display: grid;
-  gap: 0.1rem;
+  gap: 0.2rem;
   min-width: 0;
 }
 
