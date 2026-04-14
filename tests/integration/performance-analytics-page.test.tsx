@@ -277,7 +277,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Current spread 0.52% Portfolio 5.42% vs Benchmark 4.91%")
+      compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
     );
     expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
     expect(within(chartSummaryBand as HTMLElement).getByText("Flow-Adjusted MV")).toBeInTheDocument();
@@ -313,7 +313,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Current spread 0.52% Portfolio 5.42% vs Benchmark 4.91%")
+      compactPattern("Active Return 0.52% Portfolio Return 5.42% Benchmark Return 4.91%")
     );
     expect(screen.getAllByLabelText("Status Ready").length).toBeGreaterThanOrEqual(2);
     expect((await screen.findAllByText("Horizon Comparison")).length).toBe(1);

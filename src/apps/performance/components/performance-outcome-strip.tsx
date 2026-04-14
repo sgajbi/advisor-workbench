@@ -5,6 +5,7 @@ export type PerformanceOutcomeStripItem = {
   label: string;
   value: string | number;
   support?: string;
+  definition?: string;
   unavailable?: boolean;
 };
 

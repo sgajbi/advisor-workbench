@@ -294,6 +294,7 @@ export default function PerformanceChartPanel({
               label: metric.label,
               value: metric.value,
               support: metric.support,
+              definition: metric.definition,
               unavailable: metric.unavailable,
             }))}
           />

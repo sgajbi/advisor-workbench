@@ -312,7 +312,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Current spread 0.80% Portfolio 3.30% vs Benchmark 2.50%")
+      compactPattern("Active Return 0.80% Portfolio Return 3.30% Benchmark Return 2.50%")
     );
     expect(screen.getByLabelText("Return series context")).toHaveTextContent(
       compactPattern("Net basis Monthly cadence Calculated return series")
@@ -592,7 +592,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Portfolio 6.20% vs Benchmark Unavailable")
+      compactPattern("Portfolio Return 6.20% Benchmark Return Unavailable")
     );
   });
 
@@ -705,6 +705,18 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("3.30%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("2.50%");
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
+  });
+
+  it("exposes metric definitions through executive strip tooltips instead of inline copy", async () => {
+    render(<PerformanceChartPanel {...buildChartProps()} />);
+
+    fireEvent.mouseOver(within(screen.getByLabelText("Executive return strip")).getByText("Money-Weighted Return"));
+
+    expect(
+      await screen.findByText(
+        "Annualized money-weighted return for the selected window, reflecting the timing and size of external cash flows."
+      )
+    ).toBeInTheDocument();
   });
 
   it("disables frequency options that are outside the backend capability contract", () => {

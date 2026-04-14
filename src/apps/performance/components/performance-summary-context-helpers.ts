@@ -15,6 +15,7 @@ export type PerformanceReturnPathMetric = {
   label: string;
   value: string | number;
   support?: string;
+  definition?: string;
   unavailable?: boolean;
 };
 
@@ -148,12 +149,16 @@ export function getPerformanceReturnPathPresentation({
         key: "mwrr",
         label: "Money-Weighted Return",
         value: resolvedMoneyWeightedReturn,
+        definition:
+          "Annualized money-weighted return for the selected window, reflecting the timing and size of external cash flows.",
         unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
       },
       {
         key: "opening-mv",
         label: "Opening MV",
         value: formatCurrency(resolvedBeginMarketValue, reportingCurrency),
+        definition:
+          "Opening market value at the start of the reporting window before current-period returns and flows.",
         unavailable: resolvedBeginMarketValue == null,
       },
       {
@@ -161,6 +166,8 @@ export function getPerformanceReturnPathPresentation({
         label: "Net Flow",
         value: formatCurrency(resolvedNetCashFlow, reportingCurrency),
         support: netFlowSupport,
+        definition:
+          "Net external cash movement during the reporting window after subscriptions, withdrawals, and other funded activity.",
         unavailable: resolvedNetCashFlow == null,
       },
       {
@@ -168,6 +175,8 @@ export function getPerformanceReturnPathPresentation({
         label: "Flow-Adjusted MV",
         value: formatCurrency(resolvedFlowAdjustedEndMarketValue, reportingCurrency),
         support: flowAdjustedSupport ?? undefined,
+        definition:
+          "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
         unavailable: resolvedFlowAdjustedEndMarketValue == null,
       },
     ],
