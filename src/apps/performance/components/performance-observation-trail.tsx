@@ -1,6 +1,7 @@
 import { AnalyticsTable } from "@/design-system";
 
 import type { PerformanceAnalyticsTableModel } from "./performance-analytics-table-models";
+import PerformanceModuleDisclosure from "./performance-module-disclosure";
 
 export default function PerformanceObservationTrail({
   tableModel,
@@ -12,16 +13,15 @@ export default function PerformanceObservationTrail({
   }`;
 
   return (
-    <details className="performance-chart-observation-coupling">
-      <summary className="performance-chart-observation-header">
-        <div className="performance-chart-observation-header-copy">
-          <span>Observation trail</span>
-          <strong>{periodLabel}</strong>
-        </div>
-        <div className="performance-chart-observation-header-action" aria-hidden="true">
-          <span>Open evidence</span>
-        </div>
-      </summary>
+    <PerformanceModuleDisclosure
+      className="performance-chart-observation-coupling"
+      summaryClassName="performance-chart-observation-header"
+      copyClassName="performance-chart-observation-header-copy"
+      titleClassName="performance-chart-observation-header-title"
+      title="Observation trail"
+      meta={periodLabel}
+      metaClassName="performance-chart-observation-header-meta"
+    >
       <AnalyticsTable
         ariaLabel="Return path observation table"
         columns={tableModel.columns}
@@ -30,6 +30,6 @@ export default function PerformanceObservationTrail({
         variant="observation"
         className="performance-chart-observation-table"
       />
-    </details>
+    </PerformanceModuleDisclosure>
   );
 }

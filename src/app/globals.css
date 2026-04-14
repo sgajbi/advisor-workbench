@@ -11101,7 +11101,7 @@ a:hover {
   min-width: 0;
 }
 
-.performance-chart-observation-header-copy span {
+.performance-chart-observation-header-title {
   color: var(--text-muted);
   font-size: var(--type-micro-label-size);
   font-weight: var(--type-micro-label-weight);
@@ -11110,17 +11110,16 @@ a:hover {
   text-transform: uppercase;
 }
 
-.performance-chart-observation-header-copy strong {
+.performance-chart-observation-header-meta {
   color: #17263a;
   font-size: var(--type-subsection-title-size);
   font-weight: 600;
   line-height: var(--type-subsection-title-line-height);
+  font-variant-numeric: var(--type-financial-numeric);
 }
 
-.performance-chart-observation-header-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
+.performance-chart-observation-header::after {
+  content: "Expand";
   color: #41536a;
   font-size: var(--type-metadata-size);
   font-weight: 700;
@@ -11130,18 +11129,8 @@ a:hover {
   white-space: nowrap;
 }
 
-.performance-chart-observation-header-action::after {
-  content: "";
-  width: 0.42rem;
-  height: 0.42rem;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 140ms ease;
-}
-
-.performance-chart-observation-coupling[open] .performance-chart-observation-header-action::after {
-  transform: rotate(225deg);
+.performance-chart-observation-coupling[open] .performance-chart-observation-header::after {
+  content: "Collapse";
 }
 
 .analytics-table-variant-observation.analytics-table-frame .MuiTableHead-root .MuiTableCell-root,

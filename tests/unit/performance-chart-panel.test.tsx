@@ -760,6 +760,7 @@ describe("PerformanceChartPanel", () => {
     const disclosure = screen.getByText("Observation trail").closest("summary");
     expect(disclosure).not.toBeNull();
     expect(disclosure).toHaveTextContent("1 period");
+    expect(disclosure).not.toHaveTextContent("Open evidence");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("5.42%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("4.91%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent("0.52%");
