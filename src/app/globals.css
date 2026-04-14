@@ -10682,7 +10682,7 @@ a:hover {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.982) 0%, rgba(249, 251, 253, 0.965) 100%);
   box-shadow: none;
-  padding: 0.42rem 0.46rem 0.24rem;
+  padding: 0.34rem 0.4rem 0.18rem;
 }
 
 .performance-return-path-body {
@@ -10801,15 +10801,15 @@ a:hover {
 .performance-chart-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.18rem 0.42rem;
+  gap: 0.12rem 0.34rem;
   align-items: center;
-  padding: 0 0.02rem 0.18rem;
+  padding: 0 0.01rem 0.12rem;
 }
 
 .performance-chart-legend .performance-chart-legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.34rem;
+  gap: 0.28rem;
   min-width: 0;
   padding: 0.02rem 0;
   border: 0;
@@ -10839,9 +10839,9 @@ a:hover {
 
 .performance-chart-legend-label {
   color: #546275;
-  font-size: var(--type-helper-text-size);
+  font-size: var(--type-metadata-size);
   font-weight: 500;
-  line-height: var(--type-body-small-line-height);
+  line-height: var(--type-metadata-line-height);
 }
 
 .performance-return-path-chart-stage {
@@ -10850,8 +10850,8 @@ a:hover {
 
 .performance-return-path-chart-shell {
   display: grid;
-  grid-template-columns: 1.35rem minmax(0, 1fr);
-  gap: 0.3rem;
+  grid-template-columns: 1.22rem minmax(0, 1fr);
+  gap: 0.22rem;
   align-items: stretch;
   min-width: 0;
 }
@@ -10859,7 +10859,7 @@ a:hover {
 .performance-return-path-chart-main {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 0.28rem;
+  gap: 0.18rem;
   min-width: 0;
 }
 
@@ -10877,13 +10877,13 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-block: 2.25rem 1.95rem;
+  padding-block: 2rem 1.72rem;
 }
 
 .performance-return-path-chart-x-axis-title {
   display: flex;
   justify-content: center;
-  padding-bottom: 0.15rem;
+  padding-bottom: 0.08rem;
 }
 
 .performance-return-path-single-observation {

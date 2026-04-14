@@ -64,7 +64,7 @@ export default function PerformanceReturnPathChartStage({
             <PerformanceReturnPathLegend items={legendItems} />
             <ReactECharts
               option={option}
-              style={{ width: "100%", height: "404px" }}
+              style={{ width: "100%", height: "416px" }}
               opts={{ renderer: "svg" }}
               notMerge
               lazyUpdate
