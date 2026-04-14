@@ -6519,118 +6519,6 @@ a:hover {
   background: linear-gradient(180deg, rgba(247, 250, 252, 0.96) 0%, #ffffff 24%);
 }
 
-.performance-analysis-summary-band-copy {
-  display: grid;
-  gap: 0.22rem;
-  align-content: start;
-}
-
-.performance-analysis-summary-band-kicker,
-.performance-analysis-summary-band-status-label,
-.performance-risk-supportability-label {
-  margin: 0;
-  font-size: 0.64rem;
-  font-weight: 760;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.performance-analysis-summary-band-copy h3,
-.performance-risk-supportability-panel-heading h3 {
-  margin: 0;
-  font-family: var(--font-ui);
-  font-size: 1.05rem;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0;
-  color: var(--brand-strong);
-}
-
-.performance-analysis-summary-band-lead,
-.performance-analysis-summary-band-copy p,
-.performance-risk-supportability-panel-heading p,
-.performance-risk-supportability-detail,
-.performance-risk-supportability-note {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.77rem;
-  line-height: 1.42;
-}
-
-.performance-analysis-summary-band-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.performance-analysis-summary-card {
-  display: grid;
-  gap: 0.16rem;
-  padding: 0.72rem 0.78rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 10px;
-  background: #ffffff;
-}
-
-.performance-analysis-summary-card .kpi-stat-tile {
-  gap: 0.22rem;
-}
-
-.performance-analysis-summary-card .kpi-stat-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.performance-analysis-summary-card .kpi-stat-value {
-  font-size: 1.25rem;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  color: var(--brand-strong);
-}
-
-.performance-analysis-summary-card .kpi-stat-support {
-  min-height: 0;
-  font-size: 0.72rem;
-  line-height: 1.45;
-}
-
-.performance-analysis-summary-band-status {
-  display: grid;
-  gap: 0.45rem;
-  align-content: start;
-}
-
-.performance-analysis-summary-band-status-heading span {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--brand-strong);
-}
-
-.performance-analysis-summary-band-status-items {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.performance-analysis-summary-band-status-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.performance-analysis-summary-band-gap {
-  padding: 0.54rem 0.62rem;
-  border-left: 3px solid rgba(142, 98, 50, 0.28);
-  border-radius: 0 10px 10px 0;
-  background: rgba(255, 246, 232, 0.56);
-  color: #6a522a;
-  font-size: 0.75rem;
-  line-height: 1.4;
-}
-
 .performance-analysis-summary-band {
   display: grid;
   grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.45fr) minmax(16rem, 0.9fr);
@@ -6657,9 +6545,10 @@ a:hover {
 .performance-analysis-summary-band-status-label,
 .performance-risk-supportability-label {
   margin: 0;
-  font-size: 0.64rem;
-  font-weight: 760;
-  letter-spacing: 0.12em;
+  font-size: var(--type-micro-label-size);
+  font-weight: var(--type-micro-label-weight);
+  line-height: var(--type-micro-label-line-height);
+  letter-spacing: var(--tracking-micro);
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -6667,10 +6556,10 @@ a:hover {
 .performance-analysis-summary-band-copy h3,
 .performance-risk-supportability-panel-heading h3 {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 680;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-size: var(--type-panel-title-size);
+  font-weight: var(--type-panel-title-weight);
+  line-height: var(--type-panel-title-line-height);
+  letter-spacing: 0;
   color: var(--brand-strong);
 }
 
@@ -6681,8 +6570,8 @@ a:hover {
 .performance-risk-supportability-note {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.77rem;
-  line-height: 1.42;
+  font-size: var(--type-body-small-size);
+  line-height: var(--type-body-small-line-height);
 }
 
 .performance-analysis-summary-band-grid {
@@ -6701,11 +6590,11 @@ a:hover {
 }
 
 .performance-analysis-summary-card-value {
-  font-size: 1.08rem;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-size: var(--type-metric-m-size);
+  line-height: var(--type-metric-m-line-height);
+  letter-spacing: 0;
   color: var(--brand-strong);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: var(--type-financial-numeric);
 }
 
 .performance-analysis-summary-band-status {
@@ -6715,8 +6604,9 @@ a:hover {
 }
 
 .performance-analysis-summary-band-status-heading span {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--type-body-small-size);
+  font-weight: 600;
+  line-height: var(--type-body-small-line-height);
   color: var(--brand-strong);
 }
 
@@ -6738,8 +6628,8 @@ a:hover {
   border-radius: 0 10px 10px 0;
   background: rgba(255, 246, 232, 0.56);
   color: #6a522a;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  font-size: var(--type-body-small-size);
+  line-height: var(--type-body-small-line-height);
 }
 
 .performance-mode-intro {

@@ -1,3 +1,5 @@
+import { Text } from "@/design-system";
+
 export default function PerformanceSupportabilitySummary({
   items,
   className,
@@ -13,8 +15,12 @@ export default function PerformanceSupportabilitySummary({
     <div className={rootClassName}>
       {items.map((item) => (
         <div key={item.label} className="performance-supportability-summary-card">
-          <span className="performance-supportability-summary-label">{item.label}</span>
-          <strong>{item.value}</strong>
+          <Text as="span" variant="bodySmall" className="performance-supportability-summary-label">
+            {item.label}
+          </Text>
+          <Text as="strong" variant="metricValueM">
+            {item.value}
+          </Text>
         </div>
       ))}
     </div>
