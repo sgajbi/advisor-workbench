@@ -9,8 +9,8 @@ import {
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type {
   PerformanceBenchmarkOptionView,
-  PerformanceChartPoint,
   MoneyWeightedReturnSummary,
+  PerformanceChartPoint,
 } from "@/features/workbench/types";
 
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
@@ -22,126 +22,23 @@ import PerformanceReturnPathNotices from "./performance-return-path-notices";
 import PerformanceReturnPathSummary from "./performance-return-path-summary";
 import {
   buildReturnPathChartOption,
-  buildPercentAxisBounds,
   resolveReportDates,
-  resolveActiveCumulativeReturn,
-  resolveActivePeriodReturn,
-  toNumeric,
 } from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
-import { formatDate } from "../formatters";
-import type { PerformanceReturnPathSingleObservationPresentation } from "./performance-return-path-single-observation-stage";
-
-type PerformanceControlPatch = {
-  portfolioId?: string;
-  period?: string;
-  detailBasis?: string;
-  contributionDimension?: string;
-  attributionDimension?: string;
-  chartFrequency?: string;
-  benchmark?: string;
-  reportStartDate?: string;
-  reportEndDate?: string;
-};
-
-type ComparativeSummary = {
-  portfolio_return_pct: number | null;
-  benchmark_return_pct: number | null;
-  active_return_pct: number | null;
-  annualized_return_pct?: number | null;
-  end_market_value?: number | null;
-  beginning_cash_flow?: number | null;
-  ending_cash_flow?: number | null;
-  flow_adjusted_end_market_value?: number | null;
-  net_cash_flow?: number | null;
-  fees?: number | null;
-  benchmark_return_source?: string | null;
-  benchmark_input_mode?: string | null;
-};
-
-type PerformanceChartViewMode = "combined" | "absolute" | "relative";
-
-function clampPercent(value: number) {
-  return Math.min(100, Math.max(0, value));
-}
-
-function buildSingleObservationPresentation({
-  points,
-  chartViewMode,
-  hasBenchmarkSeries,
-}: {
-  points: PerformanceChartPoint[];
-  chartViewMode: PerformanceChartViewMode;
-  hasBenchmarkSeries: boolean;
-}): PerformanceReturnPathSingleObservationPresentation | null {
-  if (points.length !== 1) {
-    return null;
-  }
-
-  const point = points[0];
-  const rows = [
-    ...(chartViewMode !== "relative"
-      ? [
-          {
-            key: "portfolio",
-            label: "Portfolio",
-            value: toNumeric(point.cumulative_portfolio_return_pct),
-            toneClassName: "performance-return-path-single-observation-tone-portfolio",
-          },
-          ...(hasBenchmarkSeries
-            ? [
-                {
-                  key: "benchmark",
-                  label: "Benchmark",
-                  value: toNumeric(point.cumulative_benchmark_return_pct),
-                  toneClassName: "performance-return-path-single-observation-tone-benchmark",
-                },
-              ]
-            : []),
-        ]
-      : []),
-    ...(chartViewMode !== "absolute"
-      ? [
-          {
-            key: "active",
-            label: "Active",
-            value: resolveActiveCumulativeReturn(point),
-            toneClassName: "performance-return-path-single-observation-tone-active",
-          },
-        ]
-      : []),
-  ].filter((row): row is { key: string; label: string; value: number; toneClassName: string } => row.value !== null);
-
-  if (!rows.length) {
-    return null;
-  }
-
-  const bounds = buildPercentAxisBounds(rows.map((row) => row.value));
-  const span = Math.max(bounds.max - bounds.min, 0.1);
-  const baselinePct = clampPercent(((0 - bounds.min) / span) * 100);
-
-  return {
-    observationLabel: point.label,
-    axisMinLabel: `${bounds.min}%`,
-    axisMaxLabel: `${bounds.max > 0 ? "+" : ""}${bounds.max}%`,
-    baselinePct,
-    rows: rows.map((row) => {
-      const markerPct = clampPercent(((row.value - bounds.min) / span) * 100);
-      const startPct = Math.min(markerPct, baselinePct);
-      const widthPct = Math.max(Math.abs(markerPct - baselinePct), 1.2);
-      return {
-        key: row.key,
-        label: row.label,
-        valueLabel: `${row.value > 0 ? "+" : ""}${row.value}%`,
-        startPct,
-        widthPct,
-        markerPct,
-        toneClassName: row.toneClassName,
-      };
-    }),
-  };
-}
+import {
+  buildChartLegendItems,
+  buildObservationCountLabel,
+  buildResolvedBenchmarkOptions,
+  buildReturnDecisionItems,
+  buildSingleObservationPresentation,
+  hasActiveReturnSeries,
+  hasBenchmarkReturnSeries,
+  resolveWindowAndBasisLabels,
+  type ComparativeSummary,
+  type PerformanceChartViewMode,
+  type PerformanceControlPatch,
+} from "./performance-chart-panel-helpers";
 
 export default function PerformanceChartPanel({
   title,
@@ -192,15 +89,8 @@ export default function PerformanceChartPanel({
   );
   const [fromDate, setFromDate] = useState(resolvedReportDates.startDate);
   const [toDate, setToDate] = useState(resolvedReportDates.endDate);
-  const hasBenchmarkSeries = points.some(
-    (point) =>
-      point.benchmark_return_pct !== null || point.cumulative_benchmark_return_pct !== null
-  );
-  const hasActiveSeries = points.some(
-    (point) =>
-      resolveActivePeriodReturn(point) !== null ||
-      resolveActiveCumulativeReturn(point) !== null
-  );
+  const hasBenchmarkSeries = hasBenchmarkReturnSeries(points);
+  const hasActiveSeries = hasActiveReturnSeries(points);
   const [chartViewMode, setChartViewMode] = useState<PerformanceChartViewMode>(
     hasBenchmarkSeries && hasActiveSeries ? "combined" : "absolute"
   );
@@ -219,21 +109,10 @@ export default function PerformanceChartPanel({
       setChartViewMode("absolute");
     }
   }, [chartViewMode, hasActiveSeries, hasBenchmarkSeries]);
-  const resolvedBenchmarkOptions = useMemo(() => {
-    if (benchmarkOptions.length > 0) {
-      return benchmarkOptions;
-    }
-    if (!benchmark) {
-      return [];
-    }
-    return [
-      {
-        benchmark_code: benchmark,
-        benchmark_name: benchmark,
-        is_assigned: true,
-      } satisfies PerformanceBenchmarkOptionView,
-    ];
-  }, [benchmark, benchmarkOptions]);
+  const resolvedBenchmarkOptions = useMemo(
+    () => buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions }),
+    [benchmark, benchmarkOptions]
+  );
   const returnPathPresentation = getPerformanceReturnPathPresentation({
     summary,
     moneyWeightedReturn,
@@ -255,10 +134,7 @@ export default function PerformanceChartPanel({
   );
   const hasRenderableReturnPath =
     points.length > 0 && capabilities.returnPath.state !== "unavailable";
-  const observationCountLabel =
-    chartTableModel.rows.length > 0
-      ? `${chartTableModel.rows.length} published observations remain visible.`
-      : "No published return observations are exposed for this resolved window.";
+  const observationCountLabel = buildObservationCountLabel(chartTableModel.rows.length);
 
   const chartOption = useMemo(() => {
     return buildReturnPathChartOption({
@@ -304,34 +180,9 @@ export default function PerformanceChartPanel({
     });
   }
 
-  const moneyWeightedMetric = returnPathPresentation.metrics.find((metric) => metric.key === "mwrr");
-  const summaryItems = [
-    {
-      key: "active-return",
-      label: "Active Return",
-      value: returnPathPresentation.activeReturnValue,
-    },
-    {
-      key: "money-weighted-return",
-      label: "Money-Weighted Return",
-      value: moneyWeightedMetric?.value?.toString() ?? "Unavailable",
-      definition: moneyWeightedMetric?.definition,
-    },
-    {
-      key: "portfolio-return",
-      label: "Portfolio Return",
-      value: returnPathPresentation.portfolioReturnValue,
-    },
-    {
-      key: "benchmark-return",
-      label: "Benchmark Return",
-      value: returnPathPresentation.benchmarkReturnValue,
-    },
-  ];
-  const outcomeItems = returnPathPresentation.metrics.filter((metric) =>
+  const { summaryItems, outcomeItems } = buildReturnDecisionItems(
+    returnPathPresentation,
     hasRenderableReturnPath
-      ? !["portfolio-return", "benchmark-return", "active-return", "mwrr"].includes(metric.key)
-      : !["portfolio-return", "benchmark-return", "active-return"].includes(metric.key)
   );
   const outcomeStrip =
     capabilities.summaryKpis.state !== "unavailable" ? (
@@ -355,36 +206,16 @@ export default function PerformanceChartPanel({
       <div className="performance-return-path-supporting-strip">{outcomeStrip}</div>
     </div>
   ) : undefined;
-  const resolvedWindowLabel =
-    resolvedReportDates.startDate && resolvedReportDates.endDate
-      ? `${formatDate(resolvedReportDates.startDate)} - ${formatDate(resolvedReportDates.endDate)}`
-      : period;
-  const resolvedBasisLabel = detailBasis === "GROSS" ? "Gross" : "Net";
-  const chartLegendItems = [
-    {
-      key: "portfolio",
-      label: "Portfolio",
-      className: "performance-chart-legend-item-portfolio",
-    },
-    ...(hasBenchmarkSeries
-      ? [
-          {
-            key: "benchmark",
-            label: "Benchmark",
-            className: "performance-chart-legend-item-benchmark",
-          },
-        ]
-      : []),
-    ...(hasActiveSeries
-      ? [
-          {
-            key: "active",
-            label: "Active",
-            className: "performance-chart-legend-item-active",
-          },
-        ]
-      : []),
-  ];
+  const { resolvedWindowLabel, resolvedBasisLabel } = resolveWindowAndBasisLabels({
+    period,
+    detailBasis,
+    startDate: resolvedReportDates.startDate,
+    endDate: resolvedReportDates.endDate,
+  });
+  const chartLegendItems = buildChartLegendItems({
+    hasBenchmarkSeries,
+    hasActiveSeries,
+  });
 
   return (
     <WorkbenchChartShell
