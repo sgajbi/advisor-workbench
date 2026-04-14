@@ -10449,7 +10449,7 @@ a:hover {
 
 .performance-analysis-control-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   grid-template-areas:
     "selection selection"
     "window comparison";
@@ -10479,7 +10479,7 @@ a:hover {
 
 .performance-analysis-control-cluster-comparison {
   grid-area: comparison;
-  grid-template-columns: minmax(10.5rem, 11.5rem) minmax(0, 1fr);
+  grid-template-columns: minmax(9rem, 10.5rem) minmax(16rem, 1fr);
   gap: var(--space-2);
   align-content: start;
 }
@@ -10564,7 +10564,11 @@ a:hover {
 }
 
 .performance-analysis-control-slot-frequency {
-  min-width: 10.5rem;
+  min-width: 9rem;
+}
+
+.performance-analysis-control-slot-benchmark-select {
+  min-width: 16rem;
 }
 
 .performance-analysis-apply-button.action-button {
@@ -12353,6 +12357,18 @@ a:hover {
     --workstation-shell-gap: 18px;
     --workstation-rail-width: 240px;
     --workstation-side-width: 280px;
+  }
+
+  .performance-analysis-control-bar {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "selection"
+      "window"
+      "comparison";
+  }
+
+  .performance-analysis-control-cluster-comparison {
+    grid-template-columns: minmax(9rem, 10rem) minmax(0, 1fr);
   }
 }
 
