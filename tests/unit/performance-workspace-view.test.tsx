@@ -228,7 +228,10 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
-    expect(screen.getByText("Loading analysis")).toBeInTheDocument();
+    expect(screen.getByText("Loading analysis summary")).toBeInTheDocument();
+    expect(screen.getByText("Loading attribution trend")).toBeInTheDocument();
+    expect(screen.getByText("Loading attribution detail")).toBeInTheDocument();
+    expect(screen.getByText("Loading contribution detail")).toBeInTheDocument();
     expect(document.querySelector(".workbench-deferred-placeholder")).toBeTruthy();
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     await waitFor(() => {

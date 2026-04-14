@@ -18,6 +18,7 @@ import {
 } from "../view-model";
 import PerformanceAdvisorBriefMode from "./performance-advisor-brief-mode";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
+import PerformanceAnalysisModePlaceholder from "./performance-analysis-mode-placeholder";
 import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import PerformanceWorkspaceRail from "./performance-workspace-rail";
@@ -36,12 +37,7 @@ import {
 // - analysis and evidence content are deferred until the user selects those modes
 const DeferredPerformanceAnalysisMode = dynamic(() => import("./performance-analysis-mode"), {
   ssr: false,
-  loading: () => (
-    <DeferredModulePlaceholder
-      title="Loading analysis"
-      message="Attribution and contribution detail are loading on demand."
-    />
-  ),
+  loading: () => <PerformanceAnalysisModePlaceholder />,
 });
 
 const DeferredPerformanceEvidenceMode = dynamic(() => import("./performance-evidence-mode"), {
@@ -112,12 +108,7 @@ export default function PerformanceWorkspaceView({
     />
   ) : mode === "analysis" ? (
     <DeferredWorkbenchMount
-      placeholder={
-        <DeferredModulePlaceholder
-          title="Loading analysis"
-          message="Attribution and contribution detail are loading on demand."
-        />
-      }
+      placeholder={<PerformanceAnalysisModePlaceholder />}
     >
       <DeferredPerformanceAnalysisMode
         workspace={workspace}
