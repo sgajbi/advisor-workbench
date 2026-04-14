@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   getPerformanceBenchmarkOptionLabel,
-  getPerformanceMoneyWeightedEconomicsSupport,
-  getPerformanceMoneyWeightedAuditSupport,
   getPerformanceReturnPathPresentation,
 } from "../../src/apps/performance/components/performance-summary-context-helpers";
 import {
@@ -42,10 +40,8 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
-      benchmarkSourceLabel: "Calculated",
       benchmarkContextValue: "Global Balanced 60/40 • USD",
       activeReturnValue: "0.52%",
-      relativeContextStatus: "available",
       benchmarkStateBody: null,
     });
     expect(presentation.metrics).toMatchObject([
@@ -125,10 +121,8 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: true,
       benchmarkLabel: "Global Balanced 60/40",
-      benchmarkSourceLabel: "Calculated",
       benchmarkContextValue: "Global Balanced 60/40 • USD",
       activeReturnValue: "Unavailable",
-      relativeContextStatus: "partial",
       benchmarkStateBody: null,
     });
     expect(presentation.metrics[1]).toMatchObject({
@@ -169,9 +163,7 @@ describe("performance summary context helpers", () => {
     expect(presentation).toMatchObject({
       benchmarkAssigned: false,
       benchmarkLabel: "Benchmark",
-      benchmarkSourceLabel: null,
       activeReturnValue: "Unavailable",
-      relativeContextStatus: "unavailable",
       benchmarkStateBody: "No benchmark is assigned to this mandate.",
     });
     expect(presentation.metrics[1]).toMatchObject({
@@ -264,49 +256,6 @@ describe("performance summary context helpers", () => {
       value: "$1,250,000",
       unavailable: false,
     });
-  });
-
-  it("builds money-weighted audit support from method, window, and notes", () => {
-    const scenario = buildSupportedPerformanceScenario();
-
-    expect(scenario.workspace.money_weighted_return).toMatchObject({
-      input_mode: "stateful",
-      begin_market_value: 1200000,
-      end_market_value: 1250000,
-      beginning_cash_flow: 50000,
-      ending_cash_flow: -8000,
-      flow_adjusted_end_market_value: 1208000,
-      net_cash_flow: 42000,
-      fees: 0,
-    });
-
-    expect(
-      getPerformanceMoneyWeightedAuditSupport({
-        explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
-      })
-    ).toBe("01 Jan 2026 - 24 Feb 2026");
-  });
-
-  it("falls back to the plain resolved window when money-weighted audit metadata is absent", () => {
-    expect(
-      getPerformanceMoneyWeightedAuditSupport({
-        explicitDateRange: "01 Jan 2026 - 24 Feb 2026",
-      })
-    ).toBe("01 Jan 2026 - 24 Feb 2026");
-  });
-
-  it("falls back to net flow when flow-adjusted market value is unavailable", () => {
-    const scenario = buildSupportedPerformanceScenario();
-    const moneyWeightedReturn = scenario.workspace.money_weighted_return
-      ? {
-          ...scenario.workspace.money_weighted_return,
-          flow_adjusted_end_market_value: null,
-        }
-      : null;
-
-    expect(getPerformanceMoneyWeightedEconomicsSupport(moneyWeightedReturn, "USD")).toBe(
-      "Net Flow $42,000"
-    );
   });
 
   it("builds a benchmark option label from contract metadata when available", () => {

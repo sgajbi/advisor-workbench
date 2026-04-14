@@ -7,8 +7,6 @@ import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 
 import { formatCurrency, formatLabel, formatPct } from "../formatters";
 
-type PerformanceChartContextStatus = "available" | "partial" | "unavailable";
-
 export type PerformanceReturnPathMetric = {
   key: string;
   label: string;
@@ -21,12 +19,10 @@ export type PerformanceReturnPathMetric = {
 export type PerformanceReturnPathPresentation = {
   benchmarkAssigned: boolean;
   benchmarkLabel: string;
-  benchmarkSourceLabel: string | null;
   benchmarkContextValue: string;
   portfolioReturnValue: string;
   benchmarkReturnValue: string;
   activeReturnValue: string;
-  relativeContextStatus: PerformanceChartContextStatus;
   benchmarkStateBody: string | null;
   metrics: PerformanceReturnPathMetric[];
 };
@@ -77,13 +73,6 @@ export function getPerformanceReturnPathPresentation({
     !benchmarkAssigned || summary.active_return_pct == null
       ? "Unavailable"
       : formatPct(summary.active_return_pct);
-  const relativeContextStatus: PerformanceChartContextStatus = !benchmarkAssigned
-    ? "unavailable"
-    : capabilities.benchmarkComparison.state === "supported"
-      ? "available"
-      : capabilities.benchmarkComparison.state === "partial"
-        ? "partial"
-        : "unavailable";
   const resolvedEconomics = resolvePerformanceEconomics(summary, moneyWeightedReturn);
   const portfolioReturnValue =
     summary.portfolio_return_pct != null ? formatPct(summary.portfolio_return_pct) : "Unavailable";
@@ -95,7 +84,6 @@ export function getPerformanceReturnPathPresentation({
   return {
     benchmarkAssigned,
     benchmarkLabel,
-    benchmarkSourceLabel: formatBenchmarkSourceLabel(summary.benchmark_return_source),
     benchmarkContextValue: getPerformanceBenchmarkContextValue({
       benchmark,
       benchmarkOptions,
@@ -103,7 +91,6 @@ export function getPerformanceReturnPathPresentation({
     portfolioReturnValue,
     benchmarkReturnValue,
     activeReturnValue,
-    relativeContextStatus,
     benchmarkStateBody: benchmarkAssigned
       ? null
       : capabilities.benchmarkComparison.reason ??
@@ -119,32 +106,6 @@ export function getPerformanceReturnPathPresentation({
       reportingCurrency,
     }),
   };
-}
-
-export function getPerformanceMoneyWeightedAuditSupport({
-  explicitDateRange,
-}: {
-  explicitDateRange: string;
-}) {
-  return explicitDateRange;
-}
-
-export function getPerformanceMoneyWeightedEconomicsSupport(
-  moneyWeightedReturn: MoneyWeightedReturnSummary | null | undefined,
-  reportingCurrency: string
-) {
-  if (moneyWeightedReturn?.flow_adjusted_end_market_value != null) {
-    return `Flow-Adjusted MV ${formatCurrency(
-      moneyWeightedReturn.flow_adjusted_end_market_value,
-      reportingCurrency
-    )}`;
-  }
-
-  if (moneyWeightedReturn?.net_cash_flow != null) {
-    return `Net Flow ${formatCurrency(moneyWeightedReturn.net_cash_flow, reportingCurrency)}`;
-  }
-
-  return null;
 }
 
 export function getPerformanceBenchmarkLabel(
@@ -341,25 +302,4 @@ export function getPerformanceBenchmarkOptionLabel(
   }
 
   return `${option.benchmark_name} • ${supportSegments.join(" • ")}`;
-}
-
-function formatBenchmarkSourceLabel(source?: string | null) {
-  if (!source) {
-    return null;
-  }
-
-  switch (source.trim().toLowerCase()) {
-    case "calculated":
-      return "Calculated";
-    case "published":
-      return "Published";
-    case "vendor":
-      return "Vendor";
-    default:
-      return source
-        .split(/[_\s-]+/)
-        .filter(Boolean)
-        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
-        .join(" ");
-  }
 }

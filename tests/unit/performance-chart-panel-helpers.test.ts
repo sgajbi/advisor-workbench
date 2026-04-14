@@ -22,12 +22,10 @@ function buildPresentation(
   return {
     benchmarkAssigned: true,
     benchmarkLabel: "Private Banking Global Balanced 60/40",
-    benchmarkSourceLabel: "Calculated",
     benchmarkContextValue: "Private Banking Global Balanced 60/40 • USD",
     portfolioReturnValue: "16.19%",
     benchmarkReturnValue: "5.53%",
     activeReturnValue: "10.66%",
-    relativeContextStatus: "available",
     benchmarkStateBody: null,
     metrics: [
       { key: "portfolio-return", label: "Portfolio Return", value: "16.19%" },
