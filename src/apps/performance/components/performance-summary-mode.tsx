@@ -99,7 +99,12 @@ export default function PerformanceSummaryMode({
           loadingMessage="Horizon comparisons are loading after first paint."
           deferHeader
           hideHeader
-          placeholder={null}
+          placeholder={
+            <DeferredModulePlaceholder
+              title="Loading horizons"
+              message="Horizon comparisons are loading after first paint."
+            />
+          }
         >
           <DeferredPerformanceMultiHorizonPanel
             portfolioId={workspace.portfolio.portfolio_id}
@@ -119,7 +124,12 @@ export default function PerformanceSummaryMode({
           loadingMessage="Contributor ranking is loading after first paint."
           deferHeader
           hideHeader
-          placeholder={null}
+          placeholder={
+            <DeferredModulePlaceholder
+              title="Loading contributors"
+              message="Contributor ranking is loading after first paint."
+            />
+          }
         >
           <DeferredPerformanceSummaryContributorsSection
             workspace={workspace}

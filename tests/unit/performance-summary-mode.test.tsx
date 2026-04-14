@@ -151,6 +151,10 @@ describe("PerformanceSummaryMode", () => {
     expect(screen.queryByTestId("contributors-section")).not.toBeInTheDocument();
     expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
     expect(screen.queryByText("Performance Drivers")).not.toBeInTheDocument();
+    expect(screen.getByText("Loading horizons")).toBeInTheDocument();
+    expect(screen.getByText("Horizon comparisons are loading after first paint.")).toBeInTheDocument();
+    expect(screen.getByText("Loading contributors")).toBeInTheDocument();
+    expect(screen.getByText("Contributor ranking is loading after first paint.")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
@@ -159,6 +163,8 @@ describe("PerformanceSummaryMode", () => {
       expect(screen.getByTestId("contributors-section")).toHaveTextContent("AAPL|TLT");
     });
 
+    expect(screen.queryByText("Loading horizons")).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading contributors")).not.toBeInTheDocument();
     expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
     expect(screen.queryByText("Performance Drivers")).not.toBeInTheDocument();
     expect(chartPanelMock).toHaveBeenCalledTimes(1);
