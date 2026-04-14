@@ -41,6 +41,11 @@ export const SHARED_CHART_TEXT = {
   refreshRadius: lotusThemeTokens.radius.control,
 };
 
+const RETURN_PATH_TOOLTIP_EDGE_PADDING = 12;
+const RETURN_PATH_TOOLTIP_CURSOR_GAP_X = 18;
+const RETURN_PATH_TOOLTIP_CURSOR_GAP_Y = 16;
+const RETURN_PATH_TOOLTIP_RIGHT_BADGE_RESERVE = 118;
+
 function formatAxisPct(value: number) {
   if (value > 0) {
     return `+${value}%`;
@@ -144,6 +149,44 @@ export function formatTerminalValueLabel(
 ) {
   const value = typeof params.value === "number" ? params.value : null;
   return params.dataIndex === lastIndex && value !== null ? formatPct(value) : "";
+}
+
+export function resolveReturnPathTooltipPosition(
+  point: [number, number],
+  size: {
+    contentSize: [number, number];
+    viewSize: [number, number];
+  }
+) {
+  const [cursorX, cursorY] = point;
+  const [contentWidth, contentHeight] = size.contentSize;
+  const [viewWidth, viewHeight] = size.viewSize;
+  const prefersLeftPlacement = cursorX > viewWidth * 0.56;
+  const rightLimit =
+    viewWidth -
+    contentWidth -
+    RETURN_PATH_TOOLTIP_EDGE_PADDING -
+    (cursorX > viewWidth * 0.72 ? RETURN_PATH_TOOLTIP_RIGHT_BADGE_RESERVE : 0);
+
+  const rawLeft = prefersLeftPlacement
+    ? cursorX - contentWidth - RETURN_PATH_TOOLTIP_CURSOR_GAP_X
+    : cursorX + RETURN_PATH_TOOLTIP_CURSOR_GAP_X;
+  const rawTop = cursorY - contentHeight - RETURN_PATH_TOOLTIP_CURSOR_GAP_Y;
+  const fallbackTop = cursorY + RETURN_PATH_TOOLTIP_CURSOR_GAP_Y;
+
+  const left = Math.max(
+    RETURN_PATH_TOOLTIP_EDGE_PADDING,
+    Math.min(rawLeft, Math.max(RETURN_PATH_TOOLTIP_EDGE_PADDING, rightLimit))
+  );
+  const top = Math.max(
+    RETURN_PATH_TOOLTIP_EDGE_PADDING,
+    Math.min(
+      rawTop >= RETURN_PATH_TOOLTIP_EDGE_PADDING ? rawTop : fallbackTop,
+      viewHeight - contentHeight - RETURN_PATH_TOOLTIP_EDGE_PADDING
+    )
+  );
+
+  return [left, top];
 }
 
 export function buildTerminalValueLabelStyle({
@@ -350,6 +393,11 @@ export function buildReturnPathChartOption({
       extraCssText:
         "pointer-events:none; box-shadow: 0 18px 32px rgba(15, 23, 42, 0.14); border-radius: 10px;",
       padding: SHARED_CHART_TEXT.tooltipPadding,
+      position: (point, _params, _dom, _rect, size) =>
+        resolveReturnPathTooltipPosition(point as [number, number], {
+          contentSize: size.contentSize as [number, number],
+          viewSize: size.viewSize as [number, number],
+        }),
       formatter: buildReturnPathTooltipFormatter({
         points,
         showAbsoluteSeries: includeAbsoluteSeries,
