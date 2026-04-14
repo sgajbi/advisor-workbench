@@ -14,6 +14,7 @@ export default function PerformanceAnalyticalUnavailableState({
   contextItems,
   availableItems = [],
   kicker = "Performance contract",
+  compact = false,
 }: {
   ariaLabel: string;
   status: "partial" | "unavailable";
@@ -23,7 +24,11 @@ export default function PerformanceAnalyticalUnavailableState({
   contextItems: PerformanceAnalyticalStateItem[];
   availableItems?: PerformanceAnalyticalStateItem[];
   kicker?: string | null;
+  compact?: boolean;
 }) {
+  const showFacts = !compact && contextItems.length > 0;
+  const showResolution = !compact && (availableItems.length > 0 || Boolean(hint));
+
   return (
     <section
       className={`performance-analytical-state performance-analytical-state-${status}`}
@@ -45,16 +50,18 @@ export default function PerformanceAnalyticalUnavailableState({
 
       <p className="performance-analytical-state-body">{body}</p>
 
-      <dl className="performance-analytical-state-facts">
-        {contextItems.map((item) => (
-          <div key={item.label}>
-            <dt>{item.label}</dt>
-            <dd>{item.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {showFacts ? (
+        <dl className="performance-analytical-state-facts">
+          {contextItems.map((item) => (
+            <div key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
-      {availableItems.length || hint ? (
+      {showResolution ? (
         <div className="performance-analytical-state-resolution">
           {availableItems.length ? (
             <section className="performance-analytical-state-support">

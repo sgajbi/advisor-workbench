@@ -162,23 +162,10 @@ export default function PerformanceSummaryContributorsSection({
         ariaLabel="Contributor ranking unavailable state"
         status={capabilities.contributionRanking.state === "partial" ? "partial" : "unavailable"}
         kicker={null}
+        compact
         title={presentation.noticeTitle}
         body={presentation.noticeBody}
-        hint={presentation.hint}
-        contextItems={[
-          { label: "Period", value: workspace.period },
-          {
-            label: "Benchmark",
-            value: workspace.benchmark_code ?? "Not assigned",
-          },
-          { label: "Scope", value: "Position-level contribution" },
-        ]}
-        availableItems={[
-          {
-            label: "Available now",
-            value: "Return-path context remains available above this module.",
-          },
-        ]}
+        contextItems={[]}
       />
     );
   }

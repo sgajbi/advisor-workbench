@@ -150,8 +150,8 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("Contributor ranking unavailable")).toBeInTheDocument();
     expect(screen.getByText("Contributor ranking is not available for the current selection.")).toBeInTheDocument();
     expect(screen.getByLabelText("Contributor ranking unavailable state")).toBeInTheDocument();
-    expect(screen.getAllByText("Still available").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Needs source support")).toBeInTheDocument();
+    expect(screen.queryByText("Still available")).not.toBeInTheDocument();
+    expect(screen.queryByText("Needs source support")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Aggregate contributor summary")).not.toBeInTheDocument();
   });
 

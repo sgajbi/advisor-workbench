@@ -9,7 +9,7 @@ import type {
   PerformanceBenchmarkOptionView,
 } from "@/features/workbench/types";
 
-import { formatDate, formatLabel } from "../formatters";
+import { formatLabel } from "../formatters";
 import {
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
@@ -173,28 +173,10 @@ export default function PerformanceMultiHorizonPanel({
           ariaLabel="Horizon comparison unavailable state"
           status="unavailable"
           kicker={null}
+          compact
           title="Horizon comparison is unavailable for this mandate"
           body={presentation.emptyBody}
-          hint="Source-backed multi-horizon observations must be exposed before cross-window comparison can render."
-          contextItems={[
-            {
-              label: "Window",
-              value:
-                comparison?.report_start_date && comparison?.report_end_date
-                  ? `${formatDate(comparison.report_start_date)} - ${formatDate(comparison.report_end_date)}`
-                  : presentation.selectedPeriodLabel,
-            },
-            { label: "Benchmark", value: presentation.benchmarkLabel },
-            { label: "Basis", value: formatLabel(detailBasis) },
-          ]}
-          availableItems={[
-            {
-              label: "Controls",
-              value: normalizationNotice
-                ? normalizationNotice.message
-                : "Benchmark and comparison controls remain available.",
-            },
-          ]}
+          contextItems={[]}
         />
       )}
     </PerformanceSummaryDriverModule>

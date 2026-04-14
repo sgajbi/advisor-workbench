@@ -29,14 +29,12 @@ import PerformanceOutcomeStrip from "./performance-outcome-strip";
 import {
   buildPerformanceControlSelectionPatch,
   buildChartLegendItems,
-  buildObservationCountLabel,
   buildResolvedBenchmarkOptions,
   buildReturnDecisionItems,
   buildSingleObservationPresentation,
   hasActiveReturnSeries,
   hasBenchmarkReturnSeries,
   resolveChartViewMode,
-  resolveWindowAndBasisLabels,
   type ComparativeSummary,
   type PerformanceChartViewMode,
   type PerformanceControlPatch,
@@ -139,7 +137,6 @@ export default function PerformanceChartPanel({
   );
   const hasRenderableReturnPath =
     points.length > 0 && capabilities.returnPath.state !== "unavailable";
-  const observationCountLabel = buildObservationCountLabel(chartTableModel.rows.length);
 
   const chartOption = useMemo(() => {
     return buildReturnPathChartOption({
@@ -209,12 +206,6 @@ export default function PerformanceChartPanel({
   const topContext = hasRenderableReturnPath
     ? <PerformanceReturnPathSummary items={summaryItems} />
     : outcomeStrip;
-  const { resolvedWindowLabel, resolvedBasisLabel } = resolveWindowAndBasisLabels({
-    period,
-    detailBasis,
-    startDate: resolvedReportDates.startDate,
-    endDate: resolvedReportDates.endDate,
-  });
   const chartLegendItems = buildChartLegendItems({
     hasBenchmarkSeries,
     hasActiveSeries,
@@ -266,6 +257,7 @@ export default function PerformanceChartPanel({
           <PerformanceAnalyticalUnavailableState
             ariaLabel={`${title} unavailable`}
             status={capabilities.returnPath.state === "partial" ? "partial" : "unavailable"}
+            compact
             title={
               capabilities.returnPath.state === "partial"
                 ? "Return history is partially available"
@@ -275,28 +267,7 @@ export default function PerformanceChartPanel({
               capabilities.returnPath.reason ??
               "The resolved window does not currently expose published performance observations for this mandate."
             }
-            hint="Published return observations and benchmark-relative series must be exposed by the underlying performance contract before the cumulative path can render."
-            contextItems={[
-              { label: "Window", value: resolvedWindowLabel },
-              {
-                label: "Benchmark",
-                value: returnPathPresentation.benchmarkContextValue,
-              },
-              { label: "Basis", value: resolvedBasisLabel },
-            ]}
-            availableItems={[
-              {
-                label: "Summary metrics",
-                value:
-                  capabilities.summaryKpis.state === "unavailable"
-                    ? "Unavailable"
-                    : "Headline return and cash-flow metrics remain available.",
-              },
-              {
-                label: "Evidence",
-                value: observationCountLabel,
-              },
-            ]}
+            contextItems={[]}
           />
         ) : undefined
       }
