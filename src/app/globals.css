@@ -9889,6 +9889,21 @@ a:hover {
   gap: 0.56rem;
 }
 
+.performance-attribution-breakdown-stack {
+  gap: 0.48rem;
+}
+
+.performance-attribution-breakdown {
+  gap: 0.48rem;
+}
+
+.performance-attribution-breakdown-overview {
+  padding: 0.6rem 0.72rem;
+  border: 1px solid rgba(23, 32, 43, 0.07);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
 .performance-analysis-detail-empty {
   display: grid;
   gap: 0.24rem;
@@ -12006,6 +12021,22 @@ a:hover {
   line-height: var(--type-metric-value-m-line-height);
   font-weight: 700;
   color: var(--brand-strong);
+}
+
+.analytics-effect-strip-label {
+  color: var(--brand-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.analytics-effect-strip-total {
+  justify-self: end;
+  color: var(--brand-strong);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .performance-analysis-summary-fallback-copy {

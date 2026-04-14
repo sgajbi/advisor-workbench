@@ -97,18 +97,20 @@ function PerformanceAttributionLevelTable({
   return (
     <div
       key={`${level.dimension}-${level.total_effect_pct}`}
-      className="performance-analysis-detail-stack"
+      className="performance-analysis-detail-stack performance-attribution-breakdown"
     >
-      <AnalyticsEffectStrip
-        rows={level.rows.map((row) => ({
-          key: `effect-${level.dimension}-${row.key_label}`,
-          label: row.key_label,
-          allocationPct: row.allocation_pct,
-          selectionPct: row.selection_pct,
-          interactionPct: row.interaction_pct,
-          totalPct: formatPct(row.total_effect_pct),
-        }))}
-      />
+      <div className="performance-attribution-breakdown-overview">
+        <AnalyticsEffectStrip
+          rows={level.rows.map((row) => ({
+            key: `effect-${level.dimension}-${row.key_label}`,
+            label: formatLabel(row.key_label),
+            allocationPct: row.allocation_pct,
+            selectionPct: row.selection_pct,
+            interactionPct: row.interaction_pct,
+            totalPct: formatPct(row.total_effect_pct),
+          }))}
+        />
+      </div>
       <AnalyticsTable
         className="performance-analysis-table"
         density="compact"
@@ -128,7 +130,7 @@ function PerformanceAttributionLevelTable({
         rows={level.rows.map((row) => ({
           key: `${level.dimension}-${row.key_label}`,
           cells: [
-            row.key_label,
+            formatLabel(row.key_label),
             formatPct(row.portfolio_weight_avg_pct),
             formatPct(row.benchmark_weight_avg_pct),
             formatPct(row.portfolio_return_pct),
@@ -161,7 +163,7 @@ export default function PerformanceAnalysisAttributionBreakdown({
   const hasDetailedRows = levels.some((level) => level.rows.length > 0);
 
   return (
-    <div className="performance-analysis-detail-stack">
+    <div className="performance-analysis-detail-stack performance-attribution-breakdown-stack">
       {hasDetailedRows ? <PerformanceAnalysisEffectLegend /> : null}
       {levels.map((level) =>
         level.rows.length > 0 ? (

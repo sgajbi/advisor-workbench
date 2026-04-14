@@ -60,7 +60,7 @@ export default function PerformanceAnalysisAttributionSection({
       id="performance-attribution"
       title="Attribution Detail"
       actions={
-        <div className="performance-analysis-panel-actions">
+        <div className="performance-analysis-panel-actions performance-analysis-panel-actions-inline">
           <PerformanceAnalysisSegmentToolbar
             ariaLabel="Attribution Segment"
             value={attributionDimension}
