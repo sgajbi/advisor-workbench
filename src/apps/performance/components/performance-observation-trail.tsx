@@ -18,6 +18,9 @@ export default function PerformanceObservationTrail({
           <span>Observation trail</span>
           <strong>{periodLabel}</strong>
         </div>
+        <div className="performance-chart-observation-header-action" aria-hidden="true">
+          <span>Open evidence</span>
+        </div>
       </summary>
       <AnalyticsTable
         ariaLabel="Return path observation table"
