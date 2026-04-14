@@ -23,13 +23,16 @@ import PerformanceReturnPathNotices from "./performance-return-path-notices";
 import PerformanceReturnPathSummary from "./performance-return-path-summary";
 import {
   buildReturnPathChartOption,
+  buildPercentAxisBounds,
   resolveReportDates,
   resolveActiveCumulativeReturn,
   resolveActivePeriodReturn,
+  toNumeric,
 } from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
 import { formatDate } from "../formatters";
+import type { PerformanceReturnPathSingleObservationPresentation } from "./performance-return-path-single-observation-stage";
 
 type PerformanceControlPatch = {
   portfolioId?: string;
@@ -59,6 +62,87 @@ type ComparativeSummary = {
 };
 
 type PerformanceChartViewMode = "combined" | "absolute" | "relative";
+
+function clampPercent(value: number) {
+  return Math.min(100, Math.max(0, value));
+}
+
+function buildSingleObservationPresentation({
+  points,
+  chartViewMode,
+  hasBenchmarkSeries,
+}: {
+  points: PerformanceChartPoint[];
+  chartViewMode: PerformanceChartViewMode;
+  hasBenchmarkSeries: boolean;
+}): PerformanceReturnPathSingleObservationPresentation | null {
+  if (points.length !== 1) {
+    return null;
+  }
+
+  const point = points[0];
+  const rows = [
+    ...(chartViewMode !== "relative"
+      ? [
+          {
+            key: "portfolio",
+            label: "Portfolio",
+            value: toNumeric(point.cumulative_portfolio_return_pct),
+            toneClassName: "performance-return-path-single-observation-tone-portfolio",
+          },
+          ...(hasBenchmarkSeries
+            ? [
+                {
+                  key: "benchmark",
+                  label: "Benchmark",
+                  value: toNumeric(point.cumulative_benchmark_return_pct),
+                  toneClassName: "performance-return-path-single-observation-tone-benchmark",
+                },
+              ]
+            : []),
+        ]
+      : []),
+    ...(chartViewMode !== "absolute"
+      ? [
+          {
+            key: "active",
+            label: "Active",
+            value: resolveActiveCumulativeReturn(point),
+            toneClassName: "performance-return-path-single-observation-tone-active",
+          },
+        ]
+      : []),
+  ].filter((row): row is { key: string; label: string; value: number; toneClassName: string } => row.value !== null);
+
+  if (!rows.length) {
+    return null;
+  }
+
+  const bounds = buildPercentAxisBounds(rows.map((row) => row.value));
+  const span = Math.max(bounds.max - bounds.min, 0.1);
+  const baselinePct = clampPercent(((0 - bounds.min) / span) * 100);
+
+  return {
+    observationLabel: point.label,
+    axisMinLabel: `${bounds.min}%`,
+    axisMaxLabel: `${bounds.max > 0 ? "+" : ""}${bounds.max}%`,
+    baselinePct,
+    rows: rows.map((row) => {
+      const markerPct = clampPercent(((row.value - bounds.min) / span) * 100);
+      const startPct = Math.min(markerPct, baselinePct);
+      const widthPct = Math.max(Math.abs(markerPct - baselinePct), 1.2);
+      return {
+        key: row.key,
+        label: row.label,
+        valueLabel: `${row.value > 0 ? "+" : ""}${row.value}%`,
+        startPct,
+        widthPct,
+        markerPct,
+        toneClassName: row.toneClassName,
+      };
+    }),
+  };
+}
 
 export default function PerformanceChartPanel({
   title,
@@ -184,6 +268,15 @@ export default function PerformanceChartPanel({
       hasBenchmarkSeries,
     });
   }, [chartViewMode, hasBenchmarkSeries, points]);
+  const singleObservation = useMemo(
+    () =>
+      buildSingleObservationPresentation({
+        points,
+        chartViewMode,
+        hasBenchmarkSeries,
+      }),
+    [chartViewMode, hasBenchmarkSeries, points]
+  );
 
   function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -380,6 +473,7 @@ export default function PerformanceChartPanel({
               option={chartOption}
               legendItems={chartLegendItems}
               isDetailsPending={isDetailsPending}
+              singleObservation={singleObservation}
             />
           </div>
           <PerformanceObservationTrail tableModel={chartTableModel} />

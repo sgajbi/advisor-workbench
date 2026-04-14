@@ -9,6 +9,9 @@ import type { EChartsOption } from "echarts";
 
 import type { PerformanceReturnPathLegendItem } from "./performance-return-path-legend";
 import PerformanceReturnPathLegend from "./performance-return-path-legend";
+import PerformanceReturnPathSingleObservationStage, {
+  type PerformanceReturnPathSingleObservationPresentation,
+} from "./performance-return-path-single-observation-stage";
 import { SHARED_CHART_TEXT } from "./performance-return-path-chart-model";
 
 type PerformanceReturnPathChartStageProps = {
@@ -16,6 +19,7 @@ type PerformanceReturnPathChartStageProps = {
   option: EChartsOption;
   legendItems: PerformanceReturnPathLegendItem[];
   isDetailsPending: boolean;
+  singleObservation?: PerformanceReturnPathSingleObservationPresentation | null;
 };
 
 export default function PerformanceReturnPathChartStage({
@@ -23,6 +27,7 @@ export default function PerformanceReturnPathChartStage({
   option,
   legendItems,
   isDetailsPending,
+  singleObservation,
 }: PerformanceReturnPathChartStageProps) {
   return (
     <div
@@ -31,14 +36,37 @@ export default function PerformanceReturnPathChartStage({
       aria-label={`${title} chart`}
       style={{ position: "relative" }}
     >
-      <PerformanceReturnPathLegend items={legendItems} />
-      <ReactECharts
-        option={option}
-        style={{ width: "100%", height: "388px" }}
-        opts={{ renderer: "svg" }}
-        notMerge
-        lazyUpdate
-      />
+      {singleObservation ? (
+        <>
+          <PerformanceReturnPathSingleObservationStage
+            observation={singleObservation}
+            legendItems={legendItems}
+          />
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+          >
+            <ReactECharts
+              option={option}
+              style={{ width: "1px", height: "1px" }}
+              opts={{ renderer: "svg" }}
+              notMerge
+              lazyUpdate
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <PerformanceReturnPathLegend items={legendItems} />
+          <ReactECharts
+            option={option}
+            style={{ width: "100%", height: "388px" }}
+            opts={{ renderer: "svg" }}
+            notMerge
+            lazyUpdate
+          />
+        </>
+      )}
       {isDetailsPending ? (
         <Box
           sx={{

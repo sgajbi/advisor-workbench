@@ -427,6 +427,46 @@ describe("PerformanceChartPanel", () => {
     );
   });
 
+  it("renders a comparative single-observation stage when the resolved window has one published point", () => {
+    render(
+      <PerformanceChartPanel
+        {...buildChartProps({
+          points: [
+            {
+              label: "14 Apr 2026",
+              frequency: "monthly",
+              period_start: "2026-04-01",
+              period_end: "2026-04-14",
+              portfolio_return_pct: 0.11,
+              benchmark_return_pct: 1.61,
+              active_return_pct: -1.5,
+              cumulative_portfolio_return_pct: 0.11,
+              cumulative_benchmark_return_pct: 1.61,
+              cumulative_active_return_pct: -1.5,
+            },
+          ],
+          summary: {
+            portfolio_return_pct: 0.11,
+            benchmark_return_pct: 1.61,
+            active_return_pct: -1.5,
+            benchmark_return_source: "calculated",
+            benchmark_input_mode: "stateful",
+          },
+          reportStartDate: "2026-04-01",
+          reportEndDate: "2026-04-14",
+        })}
+      />
+    );
+
+    const singleObservation = screen.getByLabelText("Single observation comparison");
+    expect(singleObservation).toBeInTheDocument();
+    expect(within(singleObservation).getByText("Single published observation")).toBeInTheDocument();
+    expect(within(singleObservation).getByText("14 Apr 2026")).toBeInTheDocument();
+    expect(within(singleObservation).getByText("+0.11%")).toBeInTheDocument();
+    expect(within(singleObservation).getByText("+1.61%")).toBeInTheDocument();
+    expect(within(singleObservation).getByText("-1.5%")).toBeInTheDocument();
+  });
+
   it("falls back to plain resolved dates when money-weighted audit metadata is absent", () => {
     render(
       <PerformanceChartPanel
