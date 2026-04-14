@@ -42,6 +42,27 @@ export type PerformanceHorizonTableView = "combined" | "returns" | "economics";
 export type PerformanceHorizonBasisView = "both" | "net" | "gross";
 export type PerformanceHorizonVisualMode = "absolute" | "relative" | "basis";
 
+function formatObservationWindow(start?: string | null, end?: string | null) {
+  if (!start || !end) {
+    return "N/A";
+  }
+
+  const [startDay, startMonth, startYear] = formatDate(start).split(" ");
+  const [endDay, endMonth, endYear] = formatDate(end).split(" ");
+
+  if (!startDay || !startMonth || !startYear || !endDay || !endMonth || !endYear) {
+    return `${formatDate(start)} - ${formatDate(end)}`;
+  }
+
+  if (startYear === endYear) {
+    return startMonth === endMonth
+      ? `${startDay}-${endDay} ${endMonth} ${endYear}`
+      : `${startDay} ${startMonth} - ${endDay} ${endMonth} ${endYear}`;
+  }
+
+  return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`;
+}
+
 export type PerformanceHorizonVisualCard = {
   key: string;
   label: string;
@@ -274,7 +295,7 @@ export function buildPerformanceAttributionTrendTableModel({
 
 const LEADING_COLUMNS: PerformanceAnalyticsTableColumn[] = [
   { key: "period", label: "Period" },
-  { key: "window", label: "Period Range" },
+  { key: "window", label: "Window" },
 ];
 
 export function buildPerformanceReturnPathTableModel({
@@ -289,19 +310,19 @@ export function buildPerformanceReturnPathTableModel({
   includeActiveSeries: boolean;
 }): PerformanceAnalyticsTableModel {
   const absoluteColumns: PerformanceAnalyticsTableColumn[] = [
-    { key: "portfolioPeriod", label: "Portfolio Return", align: "right" },
+    { key: "portfolioPeriod", label: "Portfolio", align: "right" },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkPeriod", label: "Benchmark Return", align: "right" as const }]
+      ? [{ key: "benchmarkPeriod", label: "Benchmark", align: "right" as const }]
       : []),
-    { key: "portfolioCumulative", label: "Cumulative Portfolio", align: "right" },
+    { key: "portfolioCumulative", label: "Cum. Portfolio", align: "right" },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkCumulative", label: "Cumulative Benchmark", align: "right" as const }]
+      ? [{ key: "benchmarkCumulative", label: "Cum. Benchmark", align: "right" as const }]
       : []),
   ];
   const relativeColumns: PerformanceAnalyticsTableColumn[] = includeActiveSeries
     ? [
-        { key: "activePeriod", label: "Active Return", align: "right" },
-        { key: "activeCumulative", label: "Cumulative Active", align: "right" },
+        { key: "activePeriod", label: "Active", align: "right" },
+        { key: "activeCumulative", label: "Cum. Active", align: "right" },
       ]
     : [];
   const columns =
@@ -316,10 +337,7 @@ export function buildPerformanceReturnPathTableModel({
     rows: points.map((point) => {
       const cellMap: Record<string, string> = {
         period: point.label,
-        window:
-          point.period_start && point.period_end
-            ? `${formatDate(point.period_start)} - ${formatDate(point.period_end)}`
-            : "N/A",
+        window: formatObservationWindow(point.period_start, point.period_end),
         portfolioPeriod: formatPct(point.portfolio_return_pct),
         benchmarkPeriod: formatPct(point.benchmark_return_pct),
         activePeriod: formatPct(resolveActivePeriodReturn(point)),
