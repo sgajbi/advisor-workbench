@@ -10,7 +10,10 @@ import PerformanceContributorBarList from "./performance-contributor-bar-list";
 import PerformanceModuleDisclosure from "./performance-module-disclosure";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import type { PerformanceSummaryContributorsSectionProps } from "./performance-workspace-types";
-import { getPerformanceContributorsPresentation } from "./performance-summary-driver-helpers";
+import {
+  getPerformanceContributorsPresentation,
+  type PerformanceContributorRankedItem,
+} from "./performance-summary-driver-helpers";
 
 export default function PerformanceSummaryContributorsSection({
   workspace,
@@ -37,6 +40,7 @@ export default function PerformanceSummaryContributorsSection({
   if (presentation.mode === "supported") {
     const hasPositiveRankedItems = presentation.positiveRankedItems.length > 0;
     const hasNegativeRankedItems = presentation.negativeRankedItems.length > 0;
+    const hasAsymmetricRanking = hasPositiveRankedItems !== hasNegativeRankedItems;
     const rankedContributorGroups = [
       {
         key: "contributors",
@@ -55,58 +59,41 @@ export default function PerformanceSummaryContributorsSection({
         hasItems: hasNegativeRankedItems,
       },
     ] as const;
+    const primaryGroup = rankedContributorGroups.find((group) => group.hasItems) ?? rankedContributorGroups[0];
+    const secondaryGroup =
+      rankedContributorGroups.find((group) => group.key !== primaryGroup.key) ?? rankedContributorGroups[1];
+    const instrumentDetailDisclosure = (
+      <PerformanceModuleDisclosure
+        className="performance-contributors-table-disclosure"
+        summaryClassName="performance-contributors-table-disclosure-summary"
+        titleClassName="performance-contributors-table-disclosure-title"
+        title="Instrument detail"
+      >
+        <AnalyticsTable
+          ariaLabel="Contributor instrument detail table"
+          className="performance-contributors-table performance-chart-observation-table"
+          density="compact"
+          variant="observation"
+          columns={presentation.rankedTableModel.columns}
+          rows={presentation.rankedTableModel.rows}
+        />
+      </PerformanceModuleDisclosure>
+    );
 
-    content = (
-      <div className="performance-contributors-panel">
-        <div
-          className={[
-            "performance-contributors-compare-grid",
-            hasPositiveRankedItems && !hasNegativeRankedItems
-              ? "performance-contributors-compare-grid-right-empty"
-              : "",
-            hasNegativeRankedItems && !hasPositiveRankedItems
-              ? "performance-contributors-compare-grid-left-empty"
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {rankedContributorGroups.map((group) => (
-            <section
-              key={group.key}
-              className={[
-                "performance-contributors-ranked-card",
-                group.hasItems
-                  ? "performance-contributors-ranked-card-populated"
-                  : "performance-contributors-ranked-card-empty",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <PerformanceContributorBarList
-                title={group.title}
-                ariaLabel={group.ariaLabel}
-                items={group.items}
-                emptyBody={group.emptyBody}
-              />
-            </section>
-          ))}
+    content = hasAsymmetricRanking ? (
+      <div className="performance-contributors-panel performance-contributors-panel-asymmetric">
+        {renderRankedContributorCard(primaryGroup)}
+        <div className="performance-contributors-asymmetric-side">
+          {renderRankedContributorCard(secondaryGroup)}
         </div>
-        <PerformanceModuleDisclosure
-          className="performance-contributors-table-disclosure"
-          summaryClassName="performance-contributors-table-disclosure-summary"
-          titleClassName="performance-contributors-table-disclosure-title"
-          title="Instrument detail"
-        >
-          <AnalyticsTable
-            ariaLabel="Contributor instrument detail table"
-            className="performance-contributors-table performance-chart-observation-table"
-            density="compact"
-            variant="observation"
-            columns={presentation.rankedTableModel.columns}
-            rows={presentation.rankedTableModel.rows}
-          />
-        </PerformanceModuleDisclosure>
+        {instrumentDetailDisclosure}
+      </div>
+    ) : (
+      <div className="performance-contributors-panel">
+        <div className="performance-contributors-compare-grid">
+          {rankedContributorGroups.map((group) => renderRankedContributorCard(group))}
+        </div>
+        {instrumentDetailDisclosure}
       </div>
     );
   } else if (presentation.mode === "partial") {
@@ -203,5 +190,35 @@ export default function PerformanceSummaryContributorsSection({
     >
       {content}
     </PerformanceSummaryDriverModule>
+  );
+}
+
+function renderRankedContributorCard(group: {
+  key: string;
+  title: string;
+  ariaLabel: string;
+  items: PerformanceContributorRankedItem[];
+  emptyBody: string;
+  hasItems: boolean;
+}) {
+  return (
+    <section
+      key={group.key}
+      className={[
+        "performance-contributors-ranked-card",
+        group.hasItems
+          ? "performance-contributors-ranked-card-populated"
+          : "performance-contributors-ranked-card-empty",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <PerformanceContributorBarList
+        title={group.title}
+        ariaLabel={group.ariaLabel}
+        items={group.items}
+        emptyBody={group.emptyBody}
+      />
+    </section>
   );
 }

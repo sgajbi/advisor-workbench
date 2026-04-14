@@ -120,13 +120,14 @@ describe("PerformanceSummaryContributorsSection", () => {
       />
     );
 
-    const compareGrid = document.querySelector(".performance-contributors-compare-grid");
-    expect(compareGrid).toHaveClass("performance-contributors-compare-grid-right-empty");
+    expect(document.querySelector(".performance-contributors-panel-asymmetric")).toBeTruthy();
+    expect(document.querySelector(".performance-contributors-asymmetric-side")).toBeTruthy();
 
     const cards = Array.from(document.querySelectorAll(".performance-contributors-ranked-card"));
     expect(cards[0]).toHaveClass("performance-contributors-ranked-card-populated");
     expect(cards[1]).toHaveClass("performance-contributors-ranked-card-empty");
     expect(screen.getByText("No detracting positions are exposed for the selected period.")).toBeInTheDocument();
+    expect(document.querySelector(".performance-contributors-panel-asymmetric > .performance-contributors-table-disclosure")).toBeTruthy();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {

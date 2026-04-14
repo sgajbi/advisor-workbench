@@ -344,7 +344,11 @@ describe("PerformanceAnalyticsPage", () => {
         .map((node) => node.closest(".workbench-chart-shell"))
         .find(Boolean) ?? null;
     expect(contributorsModule).toBeTruthy();
-    expect(contributorsModule?.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(
+      contributorsModule?.querySelector(
+        ".performance-contributors-compare-grid, .performance-contributors-panel-asymmetric"
+      )
+    ).toBeTruthy();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByText("Instrument detail")).toBeInTheDocument();

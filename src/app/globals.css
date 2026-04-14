@@ -9853,6 +9853,31 @@ a:hover {
   background: #ffffff;
 }
 
+.performance-contributors-panel-asymmetric {
+  grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.82fr);
+  grid-template-areas:
+    "primary side"
+    "disclosure disclosure";
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.performance-contributors-panel-asymmetric > .performance-contributors-ranked-card:first-child {
+  grid-area: primary;
+}
+
+.performance-contributors-asymmetric-side {
+  grid-area: side;
+  display: grid;
+  gap: 0.65rem;
+  align-content: start;
+}
+
+.performance-contributors-panel-asymmetric > .performance-contributors-table-disclosure {
+  grid-area: disclosure;
+  margin-top: 0;
+}
+
 .performance-contributors-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -9882,14 +9907,6 @@ a:hover {
 
 .performance-contributors-ranked-card-empty {
   align-content: stretch;
-}
-
-.performance-contributors-compare-grid-right-empty {
-  grid-template-columns: minmax(0, 1.3fr) minmax(15rem, 0.7fr);
-}
-
-.performance-contributors-compare-grid-left-empty {
-  grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
 }
 
 .performance-contributor-bar-list {
@@ -11174,6 +11191,7 @@ a:hover {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 251, 253, 0.96));
   overflow: hidden;
 }
+
 
 .performance-chart-observation-header {
   display: flex;
@@ -12511,6 +12529,10 @@ a:hover {
   }
 
   .performance-contributors-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-contributors-panel-asymmetric {
     grid-template-columns: 1fr;
   }
 
