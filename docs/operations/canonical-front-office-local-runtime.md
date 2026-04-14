@@ -77,7 +77,7 @@ Workbench local environment:
 BFF_BASE_URL=http://gateway.dev.lotus
 ```
 
-## One-command bring-up
+## Canonical bring-up
 
 From `lotus-workbench`:
 
@@ -95,7 +95,22 @@ That script performs:
 6. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
 7. canonical host-process startup for `lotus-manage` on `8001`
 8. canonical `lotus-workbench` startup on port `3000`
-9. end-to-end validation of canonical routes and populated UI panels
+
+The command exits after the stack is usable. It does not block on browser validation.
+
+Use this path when you want to bring the product up quickly, inspect it manually, or restart the
+runtime without waiting for the full validation lane to finish.
+
+## Canonical bring-up with validation
+
+From `lotus-workbench`:
+
+```powershell
+npm run live:stack:up:validate
+```
+
+This runs the same bring-up flow and then executes the end-to-end validation lane once the stack
+is live.
 
 ## One-command teardown
 
@@ -111,13 +126,16 @@ That script:
 2. removes direct ingress if it is present
 3. runs `docker compose down` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, and `lotus-report`
 
-## One-command validation
+## Canonical validation
 
-To validate an already-running stack:
+To validate an already-running canonical stack:
 
 ```powershell
 npm run live:validate
 ```
+
+This is the preferred operator path after `npm run live:stack:up` because it keeps service startup
+separate from readiness, browser, and screenshot evidence gathering.
 
 To write demo screenshots to a caller-provided directory:
 

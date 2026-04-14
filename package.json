@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "live:stack:down": "powershell -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1",
     "live:stack:up": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1",
+    "live:stack:up:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -RunValidation",
     "live:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1",
     "live:validate:ui": "node scripts/live/validate-canonical-workbench-live.mjs",
     "auto:pulse": "powershell -ExecutionPolicy Bypass -File scripts/automation/Platform-Pulse.ps1",
