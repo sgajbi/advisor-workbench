@@ -334,7 +334,6 @@ export default function PerformanceAttributionTrendPanel({
   return (
     <WorkbenchChartShell
       title="Attribution Over Time"
-      subtitle="Benchmark-relative active-effect path across the selected period."
       className="performance-analysis-module performance-analysis-trend-shell"
       actions={
         <span className="performance-analysis-shell-action">
