@@ -949,10 +949,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /^Effect Breakdown/ })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
+    expect(screen.queryByRole("tab", { name: /^Effect Breakdown/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /^Relative Segment Context/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(await screen.findByText("Summary Total")).toBeInTheDocument();

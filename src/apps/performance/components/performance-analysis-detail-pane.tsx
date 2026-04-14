@@ -22,6 +22,8 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
   children: React.ReactNode;
   className?: string;
 }) {
+  const showTabs = options.length > 1;
+
   return (
     <div className={cx("performance-analysis-detail-pane", className)}>
       <div
@@ -38,13 +40,15 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
         ) : null}
         <div className="performance-analysis-detail-pane-controls">
           {actions ? <div className="performance-analysis-detail-pane-actions">{actions}</div> : null}
-          <ModeTabs
-            value={value}
-            onChange={onChange}
-            options={options}
-            ariaLabel={title ? `${title} view` : "Detail view"}
-            className="performance-analysis-detail-pane-tabs"
-          />
+          {showTabs ? (
+            <ModeTabs
+              value={value}
+              onChange={onChange}
+              options={options}
+              ariaLabel={title ? `${title} view` : "Detail view"}
+              className="performance-analysis-detail-pane-tabs"
+            />
+          ) : null}
         </div>
       </div>
       {summary ? <div className="performance-analysis-detail-pane-summary">{summary}</div> : null}

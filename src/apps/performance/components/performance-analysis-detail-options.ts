@@ -43,21 +43,20 @@ export function getAttributionDetailOptions({
   hasSummaryOnlyBreakdown: boolean;
   hasRelativeSegmentContext: boolean;
 }): Array<WorkbenchSegmentedControlOption<AttributionDetailView>> {
-  return [
-    {
+  const options: Array<WorkbenchSegmentedControlOption<AttributionDetailView>> = [];
+  if (hasRelativeSegmentContext) {
+    options.push({
       key: "relative",
       label: "Relative Segment Context",
-      disabled: !hasRelativeSegmentContext,
-      title: hasRelativeSegmentContext
-        ? "Relative segment context for the selected attribution dimension"
-        : "Relative segment context is unavailable for this selection",
-    },
-    {
+      title: "Relative segment context for the selected attribution dimension",
+    });
+  }
+  options.push({
       key: "breakdown",
       label: "Effect Breakdown",
       title: hasSummaryOnlyBreakdown
         ? "Only summary-level benchmark-relative effects are available"
         : "Detailed benchmark-relative effect breakdown",
-    },
-  ];
+    });
+  return options;
 }

@@ -163,10 +163,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
+    expect(screen.queryByRole("tab", { name: "Effect Breakdown" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Relative Segment Context" })).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -208,16 +206,10 @@ describe("PerformanceAnalysisAttributionSection", () => {
   it("opens on effect breakdown when relative segment context rows are unavailable", () => {
     render(<PerformanceAnalysisAttributionSection {...buildProps({ relativeSegmentRows: [] })} />);
 
-    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
-      "aria-disabled",
-      "true"
-    );
-    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Relative Segment Context" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Effect Breakdown" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
   });
 
@@ -226,14 +218,8 @@ describe("PerformanceAnalysisAttributionSection", () => {
 
     render(<PerformanceAnalysisAttributionSection {...props} />);
 
-    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
-      "aria-disabled",
-      "true"
-    );
+    expect(screen.queryByRole("tab", { name: "Effect Breakdown" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Relative Segment Context" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Relative segment context unavailable")).not.toBeInTheDocument();
