@@ -444,20 +444,13 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
     expect(await screen.findByLabelText("Analysis decision summary")).toBeInTheDocument();
-    expect(screen.getByText("Benchmark-relative evidence posture")).toBeInTheDocument();
-    expect(screen.getByLabelText("Analysis evidence gaps")).toHaveTextContent(
-      "Attribution detail"
+    expect(screen.getByLabelText("Analysis decision summary")).toHaveTextContent(
+      "Analysis Snapshot"
     );
+    expect(screen.getByLabelText("Analysis evidence gaps")).toHaveTextContent("Attribution detail");
     expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
-    expect(screen.getByLabelText("Performance analysis mode intro")).toHaveTextContent(
-      "Attribution, contribution, and benchmark-relative diagnostics"
-    );
-    expect(screen.getByLabelText("Performance analysis mode intro")).not.toHaveTextContent(
-      "Analytical follow-through"
-    );
-    expect(screen.getByLabelText("Performance analysis mode intro")).not.toHaveTextContent(
-      "Use the detailed modules to separate return path, allocation effects, and contribution concentration without leaving the governed performance workspace."
-    );
+    expect(screen.queryByLabelText("Performance analysis mode intro")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Performance analysis context")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.getByLabelText("Attribution trend context")).toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();

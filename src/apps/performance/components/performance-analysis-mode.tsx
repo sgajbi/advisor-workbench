@@ -1,13 +1,10 @@
 import { WorkspaceGrid } from "@/design-system";
 
-import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import PerformanceAnalysisDecisionSummary from "./performance-analysis-decision-summary";
 import PerformanceAnalysisAttributionSection from "./performance-analysis-attribution-section";
 import PerformanceAnalysisContributionSection from "./performance-analysis-contribution-section";
 import PerformanceAttributionTrendPanel from "./performance-attribution-trend-panel";
-import PerformanceWorkspaceStageSurface, {
-  buildPerformanceWorkspaceContextItems,
-} from "./performance-workspace-stage-surface";
+import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 
 export default function PerformanceAnalysisMode({
@@ -26,19 +23,9 @@ export default function PerformanceAnalysisMode({
   topAttributionEffectRows,
   attributionEffectScale,
 }: PerformanceAnalysisModeProps) {
-  const modeIntro = getPerformanceWorkspaceModeDefinition("analysis").intro!;
-  const contextItems = buildPerformanceWorkspaceContextItems({
-    workspace,
-    period,
-    detailBasis,
-    benchmark,
-  });
-
   return (
     <PerformanceWorkspaceStageSurface
-      intro={modeIntro}
-      contextAriaLabel="Performance analysis context"
-      contextItems={contextItems}
+      intro={null}
       shellClassName="performance-analysis-shell"
     >
       <PerformanceAnalysisDecisionSummary

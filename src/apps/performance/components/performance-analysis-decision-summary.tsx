@@ -2,6 +2,7 @@ import {
   Panel,
   SemanticBadge,
   Text,
+  type WorkbenchSummaryMetricStripItem,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 
@@ -82,59 +83,77 @@ export default function PerformanceAnalysisDecisionSummary({
           : "Benchmark-relative attribution and contribution remain in focus for the selected window.";
 
   const cards = [
-    {
-      label: "Active Return",
-      value: formatPct(selectedPerformance.active_return_pct),
-      support: selectedPerformance.benchmark_id ? "Benchmark-relative outcome" : "Portfolio-only outcome",
-      definition:
-        "Portfolio return less benchmark return for the selected reporting basis and horizon.",
-    },
-    {
-      label: "Effects Sum",
-      value: formatPct(workspace.attribution?.sum_of_effects_pct),
-      support: workspace.attribution?.model ? `${workspace.attribution.model} model` : "Attribution decomposition",
-      definition:
-        "Combined allocation, selection, and interaction effects before residual reconciliation.",
-    },
-    {
-      label: "Residual",
-      value: formatPct(workspace.attribution?.residual_pct),
-      support: workspace.attribution?.linking ? `${workspace.attribution.linking} linking` : "Attribution reconciliation",
-      definition:
-        "Difference between attributed effects and total active return after applying the selected linking method.",
-    },
-    {
+    selectedPerformance.active_return_pct != null
+      ? {
+          label: "Active Return",
+          value: formatPct(selectedPerformance.active_return_pct),
+          support: selectedPerformance.benchmark_id
+            ? "Benchmark-relative outcome"
+            : "Portfolio-only outcome",
+          definition:
+            "Portfolio return less benchmark return for the selected reporting basis and horizon.",
+        }
+      : null,
+    workspace.attribution?.sum_of_effects_pct != null
+      ? {
+          label: "Effects Sum",
+          value: formatPct(workspace.attribution?.sum_of_effects_pct),
+          support: workspace.attribution?.model
+            ? `${workspace.attribution.model} model`
+            : "Attribution decomposition",
+          definition:
+            "Combined allocation, selection, and interaction effects before residual reconciliation.",
+        }
+      : null,
+    workspace.attribution?.residual_pct != null
+      ? {
+          label: "Residual",
+          value: formatPct(workspace.attribution?.residual_pct),
+          support: workspace.attribution?.linking
+            ? `${workspace.attribution.linking} linking`
+            : "Attribution reconciliation",
+          definition:
+            "Difference between attributed effects and total active return after applying the selected linking method.",
+        }
+      : null,
+    contributionCoverage != null
+      ? {
       label: "Contribution Coverage",
       value: formatPct(contributionCoverage),
       support: topDriverLabel ? `Top driver ${topDriverLabel}` : "Contribution coverage",
       definition:
         "Share of portfolio market value covered by the published contribution dataset for the current selection.",
-    },
-  ];
+        }
+      : null,
+    topDriverLabel
+      ? {
+          label: "Top Driver",
+          value: topDriverLabel,
+          support: "Largest observed contribution source",
+          definition:
+            "Largest published positive driver in the current contribution dataset for the selected period.",
+        }
+      : null,
+  ].filter(Boolean) as WorkbenchSummaryMetricStripItem[];
 
   return (
     <section aria-label="Analysis decision summary">
       <Panel className="performance-analysis-summary-band performance-analysis-summary-band-compact">
         <div className="performance-analysis-summary-band-copy">
           <span className="performance-analysis-summary-band-kicker">Analysis Snapshot</span>
-          <h3>Benchmark-relative evidence posture</h3>
           <Text variant="secondary" className="performance-analysis-summary-band-lead">
             {headline}
           </Text>
         </div>
 
-        <WorkbenchSummaryMetricStrip
-          ariaLabel="Analysis snapshot metrics"
-          className="performance-analysis-summary-band-grid"
-          itemClassName="performance-analysis-summary-card"
-          items={cards.map((card) => ({
-            key: card.label,
-            label: card.label,
-            value: card.value,
-            support: card.support,
-            definition: card.definition,
-          }))}
-        />
+        {cards.length ? (
+          <WorkbenchSummaryMetricStrip
+            ariaLabel="Analysis snapshot metrics"
+            className="performance-analysis-summary-band-grid"
+            itemClassName="performance-analysis-summary-card"
+            items={cards}
+          />
+        ) : null}
 
         <div className="performance-analysis-summary-band-status" aria-label="Analysis evidence gaps">
           <div className="performance-analysis-summary-band-status-heading">

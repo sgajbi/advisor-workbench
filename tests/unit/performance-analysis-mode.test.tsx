@@ -165,7 +165,7 @@ describe("PerformanceAnalysisMode", () => {
       "aria-selected",
       "true"
     );
-    expect(screen.getByText("Equity")).toBeInTheDocument();
+    expect(screen.getAllByText("Equity").length).toBeGreaterThanOrEqual(1);
     expect(
       document.querySelector(".performance-analysis-state-panel-partial .module-state-panel")
     ).toBeTruthy();

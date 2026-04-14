@@ -6692,12 +6692,12 @@ a:hover {
 
 .performance-analysis-summary-band {
   display: grid;
-  grid-template-columns: minmax(15rem, 0.92fr) minmax(0, 1.45fr);
+  grid-template-columns: minmax(15rem, 0.88fr) minmax(0, 1.12fr);
   grid-template-areas:
     "copy metrics"
     "status metrics";
-  gap: var(--space-4);
-  padding: var(--panel-padding-compact);
+  gap: var(--space-3);
+  padding: 0.9rem 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-panel);
   background: var(--surface-primary);
@@ -6706,7 +6706,7 @@ a:hover {
 .performance-analysis-summary-band-copy {
   grid-area: copy;
   display: grid;
-  gap: 0.22rem;
+  gap: 0.12rem;
   align-content: start;
 }
 
@@ -6747,6 +6747,10 @@ a:hover {
   color: var(--text-muted);
   font-size: var(--type-body-small-size);
   line-height: var(--type-body-small-line-height);
+}
+
+.performance-analysis-summary-band-lead {
+  max-width: 48ch;
 }
 
 .performance-analysis-summary-band-grid {
@@ -9484,8 +9488,8 @@ a:hover {
 .performance-analysis-toolbar {
   display: inline-flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
+  align-items: flex-end;
+  justify-content: flex-start;
   gap: 0.5rem;
   row-gap: 0.4rem;
   min-width: 0;
