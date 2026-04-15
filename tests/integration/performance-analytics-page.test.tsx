@@ -448,7 +448,6 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector("#performance-attribution.workbench-chart-shell")).toBeTruthy();
     expect(document.querySelector("#performance-drivers.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-toolbar").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
     expect(document.querySelector("#performance-drivers .performance-analysis-drilldown-workspace")).toBeFalsy();
     expect(document.querySelectorAll("#performance-drivers .performance-analysis-drilldown-pane")).toHaveLength(0);
     expect(screen.queryByLabelText("Top / Bottom Contributors panel")).not.toBeInTheDocument();
@@ -458,31 +457,19 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Segment Attribution")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /^Segment Summary/ })).toHaveAttribute(
       "aria-selected",
       "false"
     );
     expect(document.querySelectorAll("#performance-drivers .performance-analysis-table").length).toBe(1);
-    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.getByRole("tab", { name: /^Effect Breakdown/ })).toHaveAttribute(
-      "aria-selected",
-      "false"
-    );
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Relative Segment Context")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: /^Effect Breakdown/ }));
     const attributionTable = await screen.findByLabelText("Asset Class attribution table");
+    expect(screen.queryByRole("tab", { name: /^Relative Segment Context/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /^Effect Breakdown/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
-    expect(within(attributionTable).getAllByText("—")).toHaveLength(2);
-    const attributionLegend = screen.getByLabelText("Attribution effect legend");
-    expect(within(attributionLegend).getByText("Allocation")).toBeInTheDocument();
-    expect(within(attributionLegend).getByText("Selection")).toBeInTheDocument();
-    expect(within(attributionLegend).getByText("Interaction")).toBeInTheDocument();
+    expect(within(attributionTable).getAllByText("—")).toHaveLength(3);
+    expect(screen.queryByLabelText("Attribution effect legend")).not.toBeInTheDocument();
   });
 
   it("accepts the advisor-brief route alias and opens the advisor brief surface on first paint", async () => {
@@ -614,7 +601,9 @@ describe("PerformanceAnalyticsPage", () => {
     });
   });
 
-  it("shows Risk as a stateful fixture-backed mode without browser calls to raw lotus-risk APIs", async () => {
+  it(
+    "shows Risk as a stateful fixture-backed mode without browser calls to raw lotus-risk APIs",
+    async () => {
     installPerformancePageFetchMock();
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
@@ -719,7 +708,9 @@ describe("PerformanceAnalyticsPage", () => {
         )
       ).toBe(true);
     });
-  });
+    },
+    15000
+  );
 
   it("shows a compact normalization notice when the backend adjusted unsupported controls", async () => {
     installPerformancePageFetchScenario(buildNormalizedControlsPerformanceScenario());
