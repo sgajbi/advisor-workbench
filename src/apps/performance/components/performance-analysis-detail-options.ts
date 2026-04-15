@@ -1,7 +1,6 @@
 import type { WorkbenchSegmentedControlOption } from "@/design-system";
 
 type ContributionDetailView = "positions" | "segments";
-type AttributionDetailView = "relative" | "breakdown";
 
 function formatCountLabel(baseLabel: string, count: number | null | undefined) {
   return count && count > 0 ? `${baseLabel} (${count})` : baseLabel;
@@ -27,36 +26,11 @@ export function getContributionDetailOptions({
     },
     {
       key: "segments",
-      label: formatCountLabel("Segment Contribution", segmentCount),
+      label: formatCountLabel("Segment Summary", segmentCount),
       disabled: !hasSegmentBreakdown,
       title: hasSegmentBreakdown
-        ? `${segmentCount} grouped segment rows available`
+        ? `${segmentCount} grouped segment contribution rows available`
         : "Grouped segment contribution is unavailable for this selection",
     },
   ];
-}
-
-export function getAttributionDetailOptions({
-  hasSummaryOnlyBreakdown,
-  hasRelativeSegmentContext,
-}: {
-  hasSummaryOnlyBreakdown: boolean;
-  hasRelativeSegmentContext: boolean;
-}): Array<WorkbenchSegmentedControlOption<AttributionDetailView>> {
-  const options: Array<WorkbenchSegmentedControlOption<AttributionDetailView>> = [];
-  if (hasRelativeSegmentContext) {
-    options.push({
-      key: "relative",
-      label: "Relative Segment Context",
-      title: "Relative segment context for the selected attribution dimension",
-    });
-  }
-  options.push({
-      key: "breakdown",
-      label: "Effect Breakdown",
-      title: hasSummaryOnlyBreakdown
-        ? "Only summary-level benchmark-relative effects are available"
-        : "Detailed benchmark-relative effect breakdown",
-    });
-  return options;
 }

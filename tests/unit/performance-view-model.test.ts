@@ -11,7 +11,6 @@ import {
   getPerformanceWorkspacePresentation,
   getPrimaryContributionRow,
   getPositivePositionContributionRows,
-  getRelativeSegmentRows,
   getTopAttributionEffectRows,
   getTopContributionRows,
   getTopPositionContributionRows,
@@ -310,11 +309,6 @@ describe("performance view model", () => {
       key_label: "Equity",
       active_weight_pct: 7,
     });
-    expect(getRelativeSegmentRows(workspace)[0]).toMatchObject({
-      key_label: "Equity",
-      active_weight_pct: 7,
-      active_return_pct: 0.9,
-    });
     expect(getTopAttributionEffectRows(workspace)[0]?.key_label).toBe("Equity");
   });
 
@@ -331,7 +325,6 @@ describe("performance view model", () => {
       hasMoneyWeightedReturn: true,
       suspiciousMoneyWeightedReturn: false,
       contributorScale: 1.5,
-      attributionEffectScale: 0.4,
     });
     expect(presentation.primaryDriver?.key_label).toBe(getPrimaryContributionRow(workspace)?.key_label);
     expect(presentation.positivePositionContributors).toEqual(
@@ -342,8 +335,6 @@ describe("performance view model", () => {
     );
     expect(presentation.topContributors).toEqual(getTopContributionRows(workspace));
     expect(presentation.bottomContributors).toEqual(getBottomContributionRows(workspace));
-    expect(presentation.relativeSegmentRows).toEqual(getRelativeSegmentRows(workspace));
-    expect(presentation.topAttributionEffectRows).toEqual(getTopAttributionEffectRows(workspace));
   });
 
   it("falls back to contribution-row ranking scale when no position ranking exists", () => {

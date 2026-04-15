@@ -90,9 +90,6 @@ export default function PerformanceWorkspaceView({
       workspace={workspace}
       {...controls}
       capabilities={capabilities!}
-      relativeSegmentRows={presentation?.relativeSegmentRows ?? []}
-      topAttributionEffectRows={presentation?.topAttributionEffectRows ?? []}
-      attributionEffectScale={presentation?.attributionEffectScale ?? 0.01}
     />
   ) : mode === "advisor" ? (
     <PerformanceAdvisorBriefMode

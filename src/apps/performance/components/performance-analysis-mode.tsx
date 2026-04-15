@@ -17,9 +17,6 @@ export default function PerformanceAnalysisMode({
   isUpdating,
   isDetailsPending,
   capabilities,
-  relativeSegmentRows,
-  topAttributionEffectRows,
-  attributionEffectScale,
 }: PerformanceAnalysisModeProps) {
   return (
     <PerformanceWorkspaceStageSurface
@@ -50,9 +47,6 @@ export default function PerformanceAnalysisMode({
           isUpdating={isUpdating}
           isDetailsPending={isDetailsPending}
           capabilities={capabilities}
-          relativeSegmentRows={relativeSegmentRows}
-          topAttributionEffectRows={topAttributionEffectRows}
-          attributionEffectScale={attributionEffectScale}
         />
         <PerformanceAnalysisContributionSection
           workspace={workspace}

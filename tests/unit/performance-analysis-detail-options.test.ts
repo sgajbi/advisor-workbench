@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  getAttributionDetailOptions,
-  getContributionDetailOptions,
-} from "../../src/apps/performance/components/performance-analysis-detail-options";
+import { getContributionDetailOptions } from "../../src/apps/performance/components/performance-analysis-detail-options";
 
 describe("performance analysis detail options", () => {
   it("adds live row counts to contribution drilldown labels", () => {
@@ -21,9 +18,9 @@ describe("performance analysis detail options", () => {
       }),
       expect.objectContaining({
         key: "segments",
-        label: "Segment Contribution (4)",
+        label: "Segment Summary (4)",
         disabled: false,
-        title: "4 grouped segment rows available",
+        title: "4 grouped segment contribution rows available",
       }),
     ]);
   });
@@ -43,24 +40,9 @@ describe("performance analysis detail options", () => {
       }),
       expect.objectContaining({
         key: "segments",
-        label: "Segment Contribution",
+        label: "Segment Summary",
         disabled: true,
         title: "Grouped segment contribution is unavailable for this selection",
-      }),
-    ]);
-  });
-
-  it("labels attribution effect breakdown as summary-only when the backend has no segment rows", () => {
-    expect(
-      getAttributionDetailOptions({
-        hasSummaryOnlyBreakdown: true,
-        hasRelativeSegmentContext: false,
-      })
-    ).toEqual([
-      expect.objectContaining({
-        key: "breakdown",
-        label: "Effect Breakdown",
-        title: "Only summary-level benchmark-relative effects are available",
       }),
     ]);
   });

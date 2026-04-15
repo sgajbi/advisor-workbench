@@ -1,23 +1,16 @@
-import { useState } from "react";
-
 import {
   WorkbenchChartShell,
 } from "@/design-system";
 
 import { ATTRIBUTION_DIMENSION_OPTIONS } from "../navigation";
 import PerformanceAnalysisAttributionBreakdown from "./performance-analysis-attribution-breakdown";
-import PerformanceAnalysisDetailPane from "./performance-analysis-detail-pane";
-import { getAttributionDetailOptions } from "./performance-analysis-detail-options";
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
 import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
-import PerformanceRelativeSegmentPanel from "./performance-relative-segment-panel";
 import { getAttributionDetailClassificationGapBody } from "./performance-attribution-presentations";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
-
-type AttributionDetailView = "relative" | "breakdown";
 
 export default function PerformanceAnalysisAttributionSection({
   workspace,
@@ -26,15 +19,10 @@ export default function PerformanceAnalysisAttributionSection({
   isUpdating,
   isDetailsPending,
   capabilities,
-  relativeSegmentRows,
 }: PerformanceAnalysisAttributionSectionProps) {
   const hasAttributionSummaryLevels = (workspace.attribution?.levels?.length ?? 0) > 0;
   const hasDetailedAttributionRows =
     workspace.attribution?.levels?.some((level) => level.rows.length > 0) ?? false;
-  const hasRelativeSegmentRows = relativeSegmentRows.length > 0;
-  const [detailView, setDetailView] = useState<AttributionDetailView>(
-    hasRelativeSegmentRows ? "relative" : "breakdown"
-  );
   const disableAttributionSegmentControl =
     isUpdating ||
     (capabilities.attributionDetail.state === "partial" &&
@@ -105,20 +93,7 @@ export default function PerformanceAnalysisAttributionSection({
         allowPartialContent={hasAttributionSummaryLevels && !attributionClassificationGapBody}
       >
         {workspace.attribution ? (
-          <PerformanceAnalysisDetailPane
-            value={detailView}
-            onChange={setDetailView}
-            options={getAttributionDetailOptions({
-              hasSummaryOnlyBreakdown: hasAttributionSummaryLevels && !hasDetailedAttributionRows,
-              hasRelativeSegmentContext: hasRelativeSegmentRows,
-            })}
-          >
-            {detailView === "relative" ? (
-              <PerformanceRelativeSegmentPanel rows={relativeSegmentRows} />
-            ) : (
-              <PerformanceAnalysisAttributionBreakdown levels={workspace.attribution.levels} />
-            )}
-          </PerformanceAnalysisDetailPane>
+          <PerformanceAnalysisAttributionBreakdown levels={workspace.attribution.levels} />
         ) : null}
       </PerformanceAnalysisModuleState>
     </WorkbenchChartShell>
