@@ -19,8 +19,12 @@ export function createBrowserValidationHelpers({
     summary.uiChecks.push({ description, kind: "list", itemCount: count });
   }
 
-  async function assertTableHasRows(locator, minimumRows, description) {
-    await expect(locator).toBeVisible({ timeout: timeoutMs });
+  async function assertTableHasRows(locator, minimumRows, description, options = {}) {
+    if (options.requireVisible !== false) {
+      await expect(locator).toBeVisible({ timeout: timeoutMs });
+    } else {
+      await expect(locator).toHaveCount(1, { timeout: timeoutMs });
+    }
     const count = await locator.locator("tbody tr").count();
     if (count < minimumRows) {
       throw new Error(`${description} expected at least ${minimumRows} body rows but found ${count}.`);
@@ -70,6 +74,17 @@ export function createBrowserValidationHelpers({
     screenshotRegisteredPanel,
     resolveRegistryRoute,
   };
+}
+
+async function assertRailModeActive(page, labelPattern, timeoutMs) {
+  const railButton = page.getByRole("button", { name: labelPattern }).first();
+  await expect(railButton).toBeVisible({ timeout: timeoutMs });
+  await expect(railButton).toHaveAttribute("aria-pressed", "true", { timeout: timeoutMs });
+  await expect(railButton).toHaveAttribute("aria-current", "page", { timeout: timeoutMs });
+}
+
+function tableByExactLabel(page, label) {
+  return page.locator(`table[aria-label="${label}"]`);
 }
 
 export async function validatePortfolioPanels(
@@ -135,19 +150,20 @@ export async function validatePerformanceSummaryPanel(
   await expect(page.getByRole("heading", { name: "Performance", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("tab", { name: "Summary", exact: true, selected: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await assertRailModeActive(page, /^Performance Overview/, timeoutMs);
   await expect(page.getByRole("heading", { name: "Net Return Path" })).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(page.getByRole("heading", { name: "Performance Drivers" })).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(page.getByText("Observation Trail")).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("4 Periods")).toBeVisible({ timeout: timeoutMs });
   await assertTableHasRows(
-    page.getByRole("table", { name: "Return path observation table" }),
+    tableByExactLabel(page, "Return path observation table"),
     4,
-    "Return path observation table"
+    "Return path observation table",
+    { requireVisible: false }
   );
   await screenshotRegisteredPanel(page, "performance.summary");
 }
@@ -167,9 +183,7 @@ export async function validatePerformanceAnalysisPanel(
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
-  await expect(page.getByRole("tab", { name: "Analysis", exact: true, selected: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
   await expect(page.getByRole("heading", { name: "Attribution Over Time" })).toBeVisible({
     timeout: timeoutMs,
   });
@@ -180,12 +194,12 @@ export async function validatePerformanceAnalysisPanel(
     timeout: timeoutMs,
   });
   await assertTableHasRows(
-    page.getByRole("table", { name: /attribution/i }).first(),
+    tableByExactLabel(page, "Asset Class attribution table"),
     1,
     "Attribution detail table"
   );
   await assertTableHasRows(
-    page.getByRole("table", { name: /contribution/i }).first(),
+    tableByExactLabel(page, "Asset Class contribution table"),
     1,
     "Contribution detail table"
   );
@@ -207,9 +221,7 @@ export async function validateAdvisorBriefPanel(
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
-  await expect(page.getByRole("tab", { name: "Advisor Brief", exact: true, selected: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
   await expect(page.getByRole("heading", { name: "Performance Advisor Brief" })).toBeVisible({
     timeout: timeoutMs,
   });
@@ -251,9 +263,7 @@ export async function validateRiskPanel(
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
-  await expect(page.getByRole("tab", { name: "Risk", exact: true, selected: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await assertRailModeActive(page, /^Risk Review/, timeoutMs);
   await expect(page.getByRole("heading", { name: "Risk Snapshot", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
@@ -270,7 +280,7 @@ export async function validateRiskPanel(
     timeout: timeoutMs,
   });
   await assertTableHasRows(
-    page.getByRole("table", { name: "Historical risk attribution table" }),
+    tableByExactLabel(page, "Historical risk attribution table"),
     5,
     "Historical risk attribution table"
   );
@@ -292,9 +302,7 @@ export async function validateEvidencePanel(
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
-  await expect(page.getByRole("tab", { name: "Evidence", exact: true, selected: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await assertRailModeActive(page, /^Evidence/, timeoutMs);
   await expect(page.getByRole("heading", { name: "Evidence and Calculation Context" })).toBeVisible({
     timeout: timeoutMs,
   });
