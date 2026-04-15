@@ -1,13 +1,21 @@
-import { AnalyticsEffectStrip, AnalyticsTable } from "@/design-system";
+import { AnalyticsTable } from "@/design-system";
 import type { AttributionSummaryView } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
 import { getAttributionTotals, NOT_ADDITIVE_CELL } from "./performance-workspace-view-helpers";
-import PerformanceAnalysisEffectLegend from "./performance-analysis-effect-legend";
 
 type PerformanceAnalysisAttributionBreakdownProps = {
   levels: AttributionSummaryView["levels"];
 };
+
+function getDifference(
+  left: number | null | undefined,
+  right: number | null | undefined
+): number | null {
+  return left !== null && left !== undefined && right !== null && right !== undefined
+    ? left - right
+    : null;
+}
 
 function PerformanceAttributionSummaryFallback({
   level,
@@ -15,49 +23,12 @@ function PerformanceAttributionSummaryFallback({
   level: AttributionSummaryView["levels"][number];
 }) {
   const totals = getAttributionTotals(level);
-  const summaryMetrics = [
-    {
-      key: "allocation",
-      label: "Allocation",
-      value: formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-      tone: "allocation",
-    },
-    {
-      key: "selection",
-      label: "Selection",
-      value: formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-      tone: "selection",
-    },
-    {
-      key: "interaction",
-      label: "Interaction",
-      value: formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-      tone: "interaction",
-    },
-    {
-      key: "total",
-      label: "Total Effect",
-      value: formatPct(totals.totalEffectPct ?? level.total_effect_pct),
-      tone: "total",
-    },
-  ];
 
   return (
     <div
       key={`${level.dimension}-${level.total_effect_pct}`}
       className="performance-analysis-summary-fallback"
     >
-      <div className="performance-attribution-summary-band" aria-label="Attribution summary metrics">
-        {summaryMetrics.map((metric) => (
-          <div
-            key={metric.key}
-            className={`performance-attribution-summary-card performance-attribution-summary-card-${metric.tone}`}
-          >
-            <span className="performance-attribution-summary-card-label">{metric.label}</span>
-            <strong className="performance-attribution-summary-card-value">{metric.value}</strong>
-          </div>
-        ))}
-      </div>
       <AnalyticsTable
         className="performance-analysis-table"
         density="compact"
@@ -93,24 +64,16 @@ function PerformanceAttributionLevelTable({
   level: AttributionSummaryView["levels"][number];
 }) {
   const totals = getAttributionTotals(level);
+  const activeWeightTotal =
+    totals.portfolioWeightAvgPct !== null && totals.benchmarkWeightAvgPct !== null
+      ? totals.portfolioWeightAvgPct - totals.benchmarkWeightAvgPct
+      : null;
 
   return (
     <div
       key={`${level.dimension}-${level.total_effect_pct}`}
       className="performance-analysis-detail-stack performance-attribution-breakdown"
     >
-      <div className="performance-attribution-breakdown-overview">
-        <AnalyticsEffectStrip
-          rows={level.rows.map((row) => ({
-            key: `effect-${level.dimension}-${row.key_label}`,
-            label: formatLabel(row.key_label),
-            allocationPct: row.allocation_pct,
-            selectionPct: row.selection_pct,
-            interactionPct: row.interaction_pct,
-            totalPct: formatPct(row.total_effect_pct),
-          }))}
-        />
-      </div>
       <AnalyticsTable
         className="performance-analysis-table"
         density="compact"
@@ -120,8 +83,10 @@ function PerformanceAttributionLevelTable({
           { key: "bucket", label: "Segment" },
           { key: "portWt", label: "Portfolio Weight", align: "right" },
           { key: "bmkWt", label: "Benchmark Weight", align: "right" },
+          { key: "activeWt", label: "Active Weight", align: "right" },
           { key: "portRet", label: "Portfolio Return", align: "right" },
           { key: "bmkRet", label: "Benchmark Return", align: "right" },
+          { key: "activeRet", label: "Active Return", align: "right" },
           { key: "allocation", label: "Allocation", align: "right" },
           { key: "selection", label: "Selection", align: "right" },
           { key: "interaction", label: "Interaction", align: "right" },
@@ -133,8 +98,10 @@ function PerformanceAttributionLevelTable({
             formatLabel(row.key_label),
             formatPct(row.portfolio_weight_avg_pct),
             formatPct(row.benchmark_weight_avg_pct),
+            formatPct(getDifference(row.portfolio_weight_avg_pct, row.benchmark_weight_avg_pct)),
             formatPct(row.portfolio_return_pct),
             formatPct(row.benchmark_return_pct),
+            formatPct(getDifference(row.portfolio_return_pct, row.benchmark_return_pct)),
             formatPct(row.allocation_pct),
             formatPct(row.selection_pct),
             formatPct(row.interaction_pct),
@@ -145,6 +112,8 @@ function PerformanceAttributionLevelTable({
           "Total",
           formatPct(totals.portfolioWeightAvgPct),
           formatPct(totals.benchmarkWeightAvgPct),
+          formatPct(activeWeightTotal),
+          NOT_ADDITIVE_CELL,
           NOT_ADDITIVE_CELL,
           NOT_ADDITIVE_CELL,
           formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
@@ -160,11 +129,8 @@ function PerformanceAttributionLevelTable({
 export default function PerformanceAnalysisAttributionBreakdown({
   levels,
 }: PerformanceAnalysisAttributionBreakdownProps) {
-  const hasDetailedRows = levels.some((level) => level.rows.length > 0);
-
   return (
     <div className="performance-analysis-detail-stack performance-attribution-breakdown-stack">
-      {hasDetailedRows ? <PerformanceAnalysisEffectLegend /> : null}
       {levels.map((level) =>
         level.rows.length > 0 ? (
           <PerformanceAttributionLevelTable key={level.dimension} level={level} />

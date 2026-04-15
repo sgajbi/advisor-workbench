@@ -50,7 +50,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.queryByText("Reconciles to return")).not.toBeInTheDocument();
     expect(screen.getByText("View Details")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /^Positions/ })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /^Segment Summary/ })).toHaveAttribute(
       "aria-selected",
       "false"
     );
@@ -185,7 +185,7 @@ describe("PerformanceAnalysisContributionSection", () => {
       "aria-selected",
       "false"
     );
-    expect(screen.getByRole("tab", { name: "Segment Contribution (1)" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Segment Summary (1)" })).toHaveAttribute(
       "aria-selected",
       "true"
     );
@@ -212,9 +212,9 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: /^Segment Contribution/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /^Segment Summary/ }));
 
-    expect(screen.getByRole("tab", { name: /^Segment Contribution/ })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /^Segment Summary/ })).toHaveAttribute(
       "aria-selected",
       "true"
     );

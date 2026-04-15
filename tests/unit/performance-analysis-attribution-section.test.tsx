@@ -11,10 +11,6 @@ import {
   buildUnavailableAttributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
-vi.mock("../../src/apps/performance/components/performance-relative-segment-panel", () => ({
-  default: () => <div>Relative Segment Panel</div>,
-}));
-
 const supportedCapabilities = buildPerformanceCapabilities();
 
 function buildProps(
@@ -28,35 +24,6 @@ function buildProps(
     isUpdating: false,
     isDetailsPending: false,
     capabilities: supportedCapabilities,
-    relativeSegmentRows: [
-      {
-        key_label: "Equity",
-        portfolio_weight_avg_pct: 61,
-        benchmark_weight_avg_pct: 58,
-        portfolio_return_pct: 7.4,
-        benchmark_return_pct: 6.8,
-        allocation_pct: 0.18,
-        selection_pct: 0.24,
-        interaction_pct: 0.03,
-        total_effect_pct: 0.45,
-        active_weight_pct: 3,
-        active_return_pct: 0.6,
-      },
-    ],
-    topAttributionEffectRows: [
-      {
-        key_label: "Equity",
-        portfolio_weight_avg_pct: 61,
-        benchmark_weight_avg_pct: 58,
-        portfolio_return_pct: 7.4,
-        benchmark_return_pct: 6.8,
-        allocation_pct: 0.18,
-        selection_pct: 0.24,
-        interaction_pct: 0.03,
-        total_effect_pct: 0.45,
-      },
-    ],
-    attributionEffectScale: 0.45,
     ...overrides,
   };
 }
@@ -81,30 +48,17 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByLabelText("Attribution Detail panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Effects")).not.toBeInTheDocument();
     expect(screen.queryByText("Segment Attribution")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("Use relative context for weight and return gaps, then move to effect decomposition.")
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
     expect(screen.queryByText("Top Active Effects")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-ranked-bar-list")).toBeFalsy();
-    expect(screen.getByRole("tab", { name: "Relative Segment Context" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
-      "aria-selected",
-      "false"
-    );
-    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution effect legend")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("tab", { name: "Effect Breakdown" }));
-
-    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
+    expect(screen.getByText("Active Weight")).toBeInTheDocument();
+    expect(screen.getByText("Active Return")).toBeInTheDocument();
+    expect(screen.getByText("Allocation")).toBeInTheDocument();
+    expect(screen.getByText("Selection")).toBeInTheDocument();
+    expect(screen.getByText("Interaction")).toBeInTheDocument();
+    expect(screen.getByText("Total Effect")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Attribution Detail methodology and coverage" }));
 
@@ -122,8 +76,6 @@ describe("PerformanceAnalysisAttributionSection", () => {
         {...buildProps({
           workspace: scenario.workspace,
           capabilities: scenario.capabilities,
-          relativeSegmentRows: [],
-          topAttributionEffectRows: [],
         })}
       />
     );
@@ -145,8 +97,6 @@ describe("PerformanceAnalysisAttributionSection", () => {
         {...buildProps({
           workspace: scenario.workspace,
           capabilities: scenario.capabilities,
-          relativeSegmentRows: [],
-          topAttributionEffectRows: [],
         })}
       />
     );
@@ -163,23 +113,22 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Effect Breakdown" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Relative Segment Context" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         "Segment rows are unavailable for this selection. Total benchmark-relative effects remain available below."
       )
     ).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Allocation");
-    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Selection");
-    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Interaction");
-    expect(screen.getByLabelText("Attribution summary metrics")).toHaveTextContent("Total Effect");
+    expect(screen.queryByLabelText("Attribution summary metrics")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
     expect(screen.getByText("Summary Total")).toBeInTheDocument();
+    expect(screen.getByText("Allocation")).toBeInTheDocument();
+    expect(screen.getByText("Selection")).toBeInTheDocument();
+    expect(screen.getByText("Interaction")).toBeInTheDocument();
+    expect(screen.getByText("Total Effect")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
-    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Active Effects")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
     expect(
@@ -204,8 +153,6 @@ describe("PerformanceAnalysisAttributionSection", () => {
           workspace: scenario.workspace,
           attributionDimension: "sector",
           capabilities: scenario.capabilities,
-          relativeSegmentRows: [],
-          topAttributionEffectRows: [],
         })}
       />
     );
@@ -216,47 +163,25 @@ describe("PerformanceAnalysisAttributionSection", () => {
         "Sector attribution detail is unavailable because the selected benchmark does not expose complete sector classification for every component."
       )
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Attribution summary metrics")).not.toBeInTheDocument();
     expect(screen.queryByText("Summary Total")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Sector attribution totals")).not.toBeInTheDocument();
   });
 
-  it("shows only one attribution detail surface at a time and switches to the effect breakdown grid", () => {
+  it("renders one combined attribution table with comparison and decomposition columns", () => {
     render(<PerformanceAnalysisAttributionSection {...buildProps()} />);
 
-    expect(screen.getByText("Relative Segment Panel")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("tab", { name: "Effect Breakdown" }));
-
-    expect(screen.getByRole("tab", { name: "Effect Breakdown" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
-  });
-
-  it("opens on effect breakdown when relative segment context rows are unavailable", () => {
-    render(<PerformanceAnalysisAttributionSection {...buildProps({ relativeSegmentRows: [] })} />);
-
-    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Relative Segment Context" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Effect Breakdown" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Attribution effect legend")).toBeInTheDocument();
-  });
-
-  it("keeps effect breakdown as the default detail surface when relative segment rows are absent", () => {
-    const props = buildProps({ relativeSegmentRows: [] });
-
-    render(<PerformanceAnalysisAttributionSection {...props} />);
-
-    expect(screen.queryByRole("tab", { name: "Effect Breakdown" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Relative Segment Context" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
-    expect(screen.queryByText("Relative Segment Panel")).not.toBeInTheDocument();
-    expect(screen.queryByText("Relative segment context unavailable")).not.toBeInTheDocument();
+    const table = screen.getByLabelText("Asset Class attribution table");
+    expect(table).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio Weight")).toBeInTheDocument();
+    expect(within(table).getByText("Benchmark Weight")).toBeInTheDocument();
+    expect(within(table).getByText("Active Weight")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio Return")).toBeInTheDocument();
+    expect(within(table).getByText("Benchmark Return")).toBeInTheDocument();
+    expect(within(table).getByText("Active Return")).toBeInTheDocument();
+    expect(within(table).getByText("Allocation")).toBeInTheDocument();
+    expect(within(table).getByText("Selection")).toBeInTheDocument();
+    expect(within(table).getByText("Interaction")).toBeInTheDocument();
+    expect(within(table).getByText("Total Effect")).toBeInTheDocument();
   });
 
   it("disables attribution segment options that are outside the backend capability contract", () => {

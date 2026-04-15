@@ -31,9 +31,6 @@ describe("PerformanceAnalysisMode", () => {
         chartFrequency="monthly"
         benchmark="BMK_1"
         capabilities={scenario.capabilities}
-        relativeSegmentRows={[]}
-        topAttributionEffectRows={[]}
-        attributionEffectScale={0.01}
         isUpdating={false}
         isDetailsPending={false}
       />
@@ -76,9 +73,6 @@ describe("PerformanceAnalysisMode", () => {
             reason: "Attribution detail is not available for the current selection.",
           },
         }}
-        relativeSegmentRows={[]}
-        topAttributionEffectRows={[]}
-        attributionEffectScale={0.01}
         isUpdating={false}
         isDetailsPending
       />
@@ -110,9 +104,6 @@ describe("PerformanceAnalysisMode", () => {
             state: "supported",
           },
         }}
-        relativeSegmentRows={[]}
-        topAttributionEffectRows={[]}
-        attributionEffectScale={0.01}
         isUpdating={false}
         isDetailsPending={false}
       />
@@ -140,9 +131,6 @@ describe("PerformanceAnalysisMode", () => {
         chartFrequency="monthly"
         benchmark="BMK_1"
         capabilities={scenario.capabilities}
-        relativeSegmentRows={[]}
-        topAttributionEffectRows={[]}
-        attributionEffectScale={0.01}
         isUpdating={false}
         isDetailsPending={false}
       />
@@ -161,7 +149,7 @@ describe("PerformanceAnalysisMode", () => {
         "Open Segment Contribution to inspect grouped contribution for the selected segment."
       )
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Segment Contribution (1)" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Segment Summary (1)" })).toHaveAttribute(
       "aria-selected",
       "true"
     );

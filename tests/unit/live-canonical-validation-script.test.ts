@@ -199,6 +199,14 @@ describe("canonical live validation script", () => {
     expect(script).toContain("createBrowserValidationHelpers");
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
     expect(browserWorkflowModule).toContain("resolveRegistryRoute");
+    expect(browserWorkflowModule).toContain("assertRailModeActive");
+    expect(browserWorkflowModule).toContain("tableByExactLabel");
+    expect(browserWorkflowModule).toContain("requireVisible");
+    expect(browserWorkflowModule).toContain("Observation Trail");
+    expect(browserWorkflowModule).toContain("/^Performance Overview/");
+    expect(browserWorkflowModule).toContain("/^Performance Analysis/");
+    expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
+    expect(browserWorkflowModule).not.toContain('getByRole("tab", { name: "Summary"');
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
     expect(browserWorkflowModule).toContain("panel: panelId");

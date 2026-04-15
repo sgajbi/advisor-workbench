@@ -6,7 +6,6 @@ import type {
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
-import type { PerformanceWorkspacePresentation } from "../view-model";
 
 export type PerformanceWorkspaceRequestPatch = {
   portfolioId?: string;
@@ -85,9 +84,6 @@ export type PerformanceSummaryContributorsSectionProps = Pick<
 export type PerformanceAnalysisModeProps = PerformanceWorkspaceControls & {
   workspace: WorkbenchPerformanceWorkspace;
   capabilities: PerformanceWorkspaceCapabilities;
-  relativeSegmentRows: PerformanceWorkspacePresentation["relativeSegmentRows"];
-  topAttributionEffectRows: PerformanceWorkspacePresentation["topAttributionEffectRows"];
-  attributionEffectScale: number;
 };
 
 export type PerformanceAnalysisAttributionSectionProps = Pick<
@@ -98,9 +94,6 @@ export type PerformanceAnalysisAttributionSectionProps = Pick<
   | "isUpdating"
   | "isDetailsPending"
   | "capabilities"
-  | "relativeSegmentRows"
-  | "topAttributionEffectRows"
-  | "attributionEffectScale"
 >;
 
 export type PerformanceAdvisorBriefModeProps = PerformanceWorkspaceControls & {
