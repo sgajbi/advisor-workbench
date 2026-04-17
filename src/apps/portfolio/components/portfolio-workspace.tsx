@@ -587,7 +587,19 @@ export default function PortfolioWorkspaceView({
                               buildTransactionDrawer(
                                 row,
                                 workspace.portfolio.portfolio_id,
-                                workspace.portfolio.base_currency
+                                workspace.portfolio.base_currency,
+                                {
+                                  onOpenLinkedTransactionGroup: row.raw
+                                    .linked_transaction_group_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "linked_group",
+                                          linked_transaction_group_id:
+                                            row.raw.linked_transaction_group_id!,
+                                          label: `Filtered by transaction group: ${row.raw.linked_transaction_group_id}`,
+                                        })
+                                    : null,
+                                }
                               )
                             )
                           }

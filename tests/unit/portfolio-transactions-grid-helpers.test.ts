@@ -56,4 +56,23 @@ describe("portfolio transactions grid helpers", () => {
       })
     ).toBe(false);
   });
+
+  it("stops reusing initial transactions when any external transaction drill-down is active", () => {
+    expect(
+      shouldReuseInitialTransactions({
+        externalFilter: {
+          kind: "linked_group",
+          linked_transaction_group_id: "LTG-FX-2026-0001",
+          label: "Filtered by transaction group: LTG-FX-2026-0001",
+        },
+        transactionType: "ALL",
+        componentType: "ALL",
+        startDate: "2026-03-01",
+        endDate: "2026-03-28",
+        defaultStartDate: "2026-03-01",
+        defaultEndDate: "2026-03-28",
+        initialTransactionCount: 1,
+      })
+    ).toBe(false);
+  });
 });

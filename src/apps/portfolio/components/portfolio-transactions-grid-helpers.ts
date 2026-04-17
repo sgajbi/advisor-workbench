@@ -18,7 +18,7 @@ export function shouldReuseInitialTransactions(params: {
   initialTransactionCount: number;
 }): boolean {
   return (
-    params.externalFilter?.kind !== "security" &&
+    !params.externalFilter &&
     params.transactionType === "ALL" &&
     params.componentType === "ALL" &&
     params.startDate === params.defaultStartDate &&

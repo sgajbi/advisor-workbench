@@ -129,6 +129,10 @@ export default function PortfolioTransactionsGrid({
         transactionType,
         componentType,
         securityId: externalFilter?.kind === "security" ? externalFilter.security_id : undefined,
+        linkedTransactionGroupId:
+          externalFilter?.kind === "linked_group"
+            ? externalFilter.linked_transaction_group_id
+            : undefined,
         limit: 200,
       });
 

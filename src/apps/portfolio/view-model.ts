@@ -679,7 +679,14 @@ export function filterTransactionsByDrilldown(
     return filterTransactionsByActivityBucket(transactions, filter.bucket);
   }
 
-  return transactions.filter((transaction) => transaction.security_id === filter.security_id);
+  if (filter.kind === "security") {
+    return transactions.filter((transaction) => transaction.security_id === filter.security_id);
+  }
+
+  return transactions.filter(
+    (transaction) =>
+      transaction.linked_transaction_group_id === filter.linked_transaction_group_id
+  );
 }
 
 export function filterPositionsByDrilldown(

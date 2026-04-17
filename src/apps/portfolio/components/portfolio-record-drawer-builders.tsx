@@ -1,5 +1,7 @@
 "use client";
 
+import Button from "@mui/material/Button";
+
 import {
   formatCurrency,
   formatDate,
@@ -128,8 +130,14 @@ export function buildTransactionDrilldownDrawer(
 export function buildTransactionDrawer(
   row: TransactionRow,
   portfolioId: string,
-  baseCurrency: string
+  baseCurrency: string,
+  actions?: {
+    onOpenLinkedTransactionGroup?: (() => void) | null;
+  }
 ): PortfolioDetailDrawerState {
+  const hasLinkedGroupAction =
+    Boolean(row.raw.linked_transaction_group_id) && Boolean(actions?.onOpenLinkedTransactionGroup);
+
   return {
     kicker: "Transaction Detail",
     title: row.type,
@@ -169,6 +177,23 @@ export function buildTransactionDrawer(
           ["Near-Leg Group", row.raw.near_leg_group_id ?? "N/A"],
           ["Far-Leg Group", row.raw.far_leg_group_id ?? "N/A"],
           ["Base Amount", formatCurrency(row.amount, baseCurrency)],
+        ]),
+      },
+      {
+        key: "related-activity",
+        label: "Related Activity",
+        content: hasLinkedGroupAction ? (
+          <div className="portfolio-detail-drawer-action-group">
+            <p>
+              Review the related transaction group when this booked event spans multiple
+              ledger rows.
+            </p>
+            <Button variant="outlined" size="small" onClick={actions?.onOpenLinkedTransactionGroup ?? undefined}>
+              Open Related Group Transactions
+            </Button>
+          </div>
+        ) : renderDrawerParagraphs([
+          "No related transaction-group drill-down is available for this booked event.",
         ]),
       },
     ],

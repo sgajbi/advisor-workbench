@@ -618,6 +618,7 @@ describe("portfolio api", () => {
       transactionType: "BUY",
       componentType: "FX_CONTRACT_OPEN",
       securityId: "EQ_US_AAPL_MANUAL_001",
+      linkedTransactionGroupId: "LTG-FX-2026-0001",
       limit: 200,
     });
 
@@ -630,6 +631,7 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("transaction_type=BUY");
     expect(requestUrl).toContain("component_type=FX_CONTRACT_OPEN");
     expect(requestUrl).toContain("security_id=EQ_US_AAPL_MANUAL_001");
+    expect(requestUrl).toContain("linked_transaction_group_id=LTG-FX-2026-0001");
   });
 
   it("reuses cached BFF responses for identical requests", async () => {

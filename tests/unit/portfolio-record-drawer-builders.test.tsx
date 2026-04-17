@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -86,6 +86,7 @@ describe("portfolio record drawer builders", () => {
   });
 
   it("preserves linked-event and fx identifiers in the transaction drawer", () => {
+    const onOpenLinkedTransactionGroup = vi.fn();
     const transactionRow: TransactionRow = {
       transactionId: "TX_1",
       tradeDate: "2026-03-20T00:00:00Z",
@@ -117,12 +118,15 @@ describe("portfolio record drawer builders", () => {
       },
     };
 
-    const drawer = buildTransactionDrawer(transactionRow, "PORT_UI_1001", "USD");
+    const drawer = buildTransactionDrawer(transactionRow, "PORT_UI_1001", "USD", {
+      onOpenLinkedTransactionGroup,
+    });
 
     render(
       <div>
         {drawer.tabs.find((tab) => tab.key === "overview")?.content}
         {drawer.tabs.find((tab) => tab.key === "lifecycle")?.content}
+        {drawer.tabs.find((tab) => tab.key === "related-activity")?.content}
       </div>
     );
 
@@ -132,5 +136,7 @@ describe("portfolio record drawer builders", () => {
     expect(screen.getByText("FXSWAP-2026-0001")).toBeInTheDocument();
     expect(screen.getByText("FXSWAP-2026-0001-NEAR")).toBeInTheDocument();
     expect(screen.getByText("FXSWAP-2026-0001-FAR")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open Related Group Transactions" }));
+    expect(onOpenLinkedTransactionGroup).toHaveBeenCalledTimes(1);
   });
 });

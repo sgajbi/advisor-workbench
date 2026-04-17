@@ -391,6 +391,7 @@ describe("portfolio view model", () => {
         transaction_date: "2026-02-20T08:30:00Z",
         transaction_type: "BUY",
         component_type: "TRADE",
+        linked_transaction_group_id: "LTG-FX-2026-0001",
         security_id: "EQ_1",
         instrument_id: "AAPL",
         quantity: 10,
@@ -424,6 +425,13 @@ describe("portfolio view model", () => {
         kind: "security",
         security_id: "EQ_1",
         label: "Filtered by security: Apple Inc",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "linked_group",
+        linked_transaction_group_id: "LTG-FX-2026-0001",
+        label: "Filtered by transaction group: LTG-FX-2026-0001",
       })[0].transaction_id
     ).toBe("TX_BUY");
     expect(getPositionsNeedingPricing(workspace)[0].security_id).toBe("FI_1");

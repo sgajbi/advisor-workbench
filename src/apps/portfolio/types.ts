@@ -44,6 +44,11 @@ export type PortfolioTransactionDrilldownFilter =
       kind: "security";
       security_id: string;
       label: string;
+    }
+  | {
+      kind: "linked_group";
+      linked_transaction_group_id: string;
+      label: string;
     };
 
 export type PortfolioHoldingsDrilldownFilter =
