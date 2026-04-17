@@ -635,4 +635,39 @@ describe("portfolio view model", () => {
     expect(summaryCapabilities.transactionsDrilldown.state).toBe("hidden");
     expect(summaryCapabilities.performanceSnapshot.state).toBe("unavailable");
   });
+
+  it("uses gateway performance unavailable detail when the snapshot endpoint returns a degraded contract", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.performance = {
+      period: "EXPLICIT",
+      report_start_date: null,
+      report_end_date: "2026-02-24",
+      return_pct: null,
+      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_label: null,
+      benchmark_return_pct: null,
+      excess_return_pct: null,
+      sparkline_points: [],
+      unavailable: {
+        title: "Performance history incomplete",
+        detail: "Gateway could not compute a snapshot because valuation history is incomplete.",
+        requirements: [
+          "daily valuations through the selected end date",
+          "cashflow history for the selected period",
+        ],
+      },
+      warnings: ["Performance data is delayed pending backfill."],
+      partial_failures: [],
+    };
+
+    const summaryCapabilities = getPortfolioWorkspaceCapabilities(workspace, {
+      viewMode: "summary",
+      hideEmptyModules: false,
+    });
+
+    expect(summaryCapabilities.performanceSnapshot.state).toBe("unavailable");
+    expect(summaryCapabilities.performanceSnapshot.reason).toBe(
+      "Gateway could not compute a snapshot because valuation history is incomplete."
+    );
+  });
 });

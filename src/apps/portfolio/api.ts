@@ -101,36 +101,26 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "workflow_actions"
 >;
 
-type PortfolioPerformanceSummaryResponse = {
+type PortfolioPerformanceSnapshotResponse = {
   period: string;
-  report_start_date: string;
-  report_end_date: string;
+  as_of_date: string;
   benchmark_code: string | null;
-  benchmark_options?: Array<{
-    benchmark_code: string;
-    benchmark_name: string;
-    is_assigned: boolean;
-  }>;
-  net_performance: {
+  portfolio_return_pct: number | null;
+  benchmark_return_pct: number | null;
+  excess_return_pct: number | null;
+  sparkline: Array<{
+    as_of_date: string;
     portfolio_return_pct: number | null;
-    benchmark_return_pct: number | null;
-    active_return_pct: number | null;
-    benchmark_return_source?: string | null;
-    benchmark_input_mode?: string | null;
-  };
-  money_weighted_return: {
-    money_weighted_return_pct: number | null;
-    method?: string | null;
-  } | null;
-};
-
-type PortfolioPerformanceDetailsResponse = {
-  net_chart: Array<{
-    label: string;
-    cumulative_portfolio_return_pct?: number | null;
-    cumulative_benchmark_return_pct?: number | null;
-    cumulative_active_return_pct?: number | null;
+    benchmark_return_pct?: number | null;
+    excess_return_pct?: number | null;
   }>;
+  unavailable?: {
+    title: string;
+    detail: string;
+    requirements: string[];
+  } | null;
+  warnings?: string[];
+  partial_failures?: PortfolioWorkspace["partial_failures"];
 };
 
 type PortfolioWorkspaceDetailedDetails = Pick<
@@ -221,14 +211,13 @@ export async function getPortfolioWorkspaceSummaryDetails(
   }
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
-    const performanceQuery = buildPortfolioPerformanceSummaryQuery(params);
+    const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
     const [
       allocationsPayload,
       positionsPayload,
       incomePayload,
       activityPayload,
       performancePayload,
-      performanceDetailsPayload,
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioAllocationResponse>(
         resolvePortfolioRequestTarget(),
@@ -246,15 +235,10 @@ export async function getPortfolioWorkspaceSummaryDetails(
         resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
       ),
-      fetchPortfolioJson<PortfolioPerformanceSummaryResponse>(
+      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
         resolvePortfolioRequestTarget(),
-        `/workbench/${encodeURIComponent(portfolioId)}/performance/summary`,
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/performance-snapshot`,
         { query: performanceQuery }
-      ),
-      fetchPortfolioJson<PortfolioPerformanceDetailsResponse>(
-        resolvePortfolioRequestTarget(),
-        `/workbench/${encodeURIComponent(portfolioId)}/performance/details`,
-        { query: buildPortfolioPerformanceDetailsQuery(params) }
       ),
     ]);
 
@@ -277,7 +261,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       positions: positionsPayload.positions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
-      performance: mapPortfolioPerformanceSummary(performancePayload, performanceDetailsPayload),
+      performance: mapPortfolioPerformanceSnapshot(performancePayload),
     };
   } catch {
     return null;
@@ -441,7 +425,7 @@ export function mergePortfolioWorkspace(
   };
 }
 
-function buildPortfolioPerformanceSummaryQuery(params: {
+function buildPortfolioPerformanceSnapshotQuery(params: {
   timeWindow: PortfolioTimeWindow;
   reportStartDate: string;
   reportEndDate: string;
@@ -452,8 +436,6 @@ function buildPortfolioPerformanceSummaryQuery(params: {
     params.usesCustomDateRange || params.timeWindow === "7D" || params.timeWindow === "30D";
 
   query.set("period", useExplicitWindow ? "EXPLICIT" : params.timeWindow);
-  query.set("detail_basis", "NET");
-  query.set("chart_frequency", "monthly");
   query.set("report_end_date", params.reportEndDate);
 
   if (useExplicitWindow) {
@@ -463,51 +445,37 @@ function buildPortfolioPerformanceSummaryQuery(params: {
   return query;
 }
 
-function buildPortfolioPerformanceDetailsQuery(params: {
-  timeWindow: PortfolioTimeWindow;
-  reportStartDate: string;
-  reportEndDate: string;
-  usesCustomDateRange?: boolean;
-}) {
-  const query = buildPortfolioPerformanceSummaryQuery(params);
-  query.set("contribution_dimension", "asset_class");
-  query.set("attribution_dimension", "asset_class");
-  return query;
-}
-
-function mapPortfolioPerformanceSummary(
-  payload: PortfolioPerformanceSummaryResponse | null,
-  detailsPayload?: PortfolioPerformanceDetailsResponse | null
+function mapPortfolioPerformanceSnapshot(
+  payload: PortfolioPerformanceSnapshotResponse | null
 ): PortfolioWorkspace["performance"] {
   if (!payload) {
     return null;
   }
 
-  const selectedBenchmark =
-    payload.benchmark_options?.find((option) => option.benchmark_code === payload.benchmark_code) ??
-    payload.benchmark_options?.find((option) => option.is_assigned) ??
-    null;
+  const reportStartDate = payload.sparkline[0]?.as_of_date ?? null;
 
   return {
     period: payload.period,
-    report_start_date: payload.report_start_date,
-    report_end_date: payload.report_end_date,
-    return_pct: payload.net_performance.portfolio_return_pct,
-    money_weighted_return_pct: payload.money_weighted_return?.money_weighted_return_pct ?? null,
-    money_weighted_method: payload.money_weighted_return?.method ?? null,
+    report_start_date: reportStartDate,
+    report_end_date: payload.as_of_date,
+    return_pct: payload.portfolio_return_pct,
+    money_weighted_return_pct: null,
+    money_weighted_method: null,
     benchmark_code: payload.benchmark_code,
-    benchmark_label: selectedBenchmark?.benchmark_name ?? null,
-    benchmark_return_pct: payload.net_performance.benchmark_return_pct,
-    benchmark_return_source: payload.net_performance.benchmark_return_source ?? null,
-    benchmark_input_mode: payload.net_performance.benchmark_input_mode ?? null,
-    excess_return_pct: payload.net_performance.active_return_pct,
-    sparkline_points:
-      detailsPayload?.net_chart?.map((point) => ({
-        label: point.label,
-        portfolio_return_pct: point.cumulative_portfolio_return_pct ?? null,
-        benchmark_return_pct: point.cumulative_benchmark_return_pct ?? null,
-        active_return_pct: point.cumulative_active_return_pct ?? null,
-      })) ?? null,
+    benchmark_label: null,
+    benchmark_return_pct: payload.benchmark_return_pct,
+    benchmark_return_source: null,
+    benchmark_input_mode: null,
+    excess_return_pct: payload.excess_return_pct,
+    sparkline_points: payload.sparkline.map((point) => ({
+      label: point.as_of_date,
+      portfolio_return_pct: point.portfolio_return_pct,
+      benchmark_return_pct: point.benchmark_return_pct ?? null,
+      active_return_pct: point.excess_return_pct ?? null,
+    })),
+    unavailable: payload.unavailable ?? null,
+    warnings: payload.warnings ?? [],
+    partial_failures: payload.partial_failures ?? [],
   };
 }
 

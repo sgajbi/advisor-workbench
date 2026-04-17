@@ -286,6 +286,17 @@ export type PortfolioWorkspace = {
       benchmark_return_pct?: number | null;
       active_return_pct?: number | null;
     }> | null;
+    unavailable?: {
+      title: string;
+      detail: string;
+      requirements: string[];
+    } | null;
+    warnings?: string[];
+    partial_failures?: Array<{
+      source_service: string;
+      error_code: string;
+      detail: string;
+    }>;
   } | null;
   rebalance: {
     status: string;

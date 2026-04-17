@@ -223,53 +223,40 @@ describe("portfolio api", () => {
         });
       }
 
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+      if (url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?")) {
         return jsonResponse({
           period: "EXPLICIT",
-          report_start_date: "2026-03-01",
-          report_end_date: "2026-03-28",
+          as_of_date: "2026-03-28",
           benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-          benchmark_options: [
+          portfolio_return_pct: 5.12,
+          benchmark_return_pct: 4.91,
+          excess_return_pct: 0.21,
+          warnings: ["Benchmark history contains one delayed market close."],
+          partial_failures: [
             {
-              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-              benchmark_name: "Global Balanced 60/40",
-              is_assigned: true,
+              source_service: "lotus-performance",
+              error_code: "MARKET_DATA_DELAY",
+              detail: "One benchmark data point was delayed and backfilled.",
             },
           ],
-          net_performance: {
-            portfolio_return_pct: 5.12,
-            benchmark_return_pct: 4.91,
-            active_return_pct: 0.21,
-            benchmark_return_source: "calculated",
-            benchmark_input_mode: "stateful",
-          },
-          money_weighted_return: {
-            money_weighted_return_pct: 4.88,
-            method: "XIRR",
-          },
-        });
-      }
-
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
-        return jsonResponse({
-          net_chart: [
+          sparkline: [
             {
-              label: "2026-01",
-              cumulative_portfolio_return_pct: 1.1,
-              cumulative_benchmark_return_pct: 0.9,
-              cumulative_active_return_pct: 0.2,
+              as_of_date: "2026-03-01",
+              portfolio_return_pct: 1.1,
+              benchmark_return_pct: 0.9,
+              excess_return_pct: 0.2,
             },
             {
-              label: "2026-02",
-              cumulative_portfolio_return_pct: 2.9,
-              cumulative_benchmark_return_pct: 2.5,
-              cumulative_active_return_pct: 0.4,
+              as_of_date: "2026-03-14",
+              portfolio_return_pct: 2.9,
+              benchmark_return_pct: 2.5,
+              excess_return_pct: 0.4,
             },
             {
-              label: "2026-03",
-              cumulative_portfolio_return_pct: 5.12,
-              cumulative_benchmark_return_pct: 4.91,
-              cumulative_active_return_pct: 0.21,
+              as_of_date: "2026-03-28",
+              portfolio_return_pct: 5.12,
+              benchmark_return_pct: 4.91,
+              excess_return_pct: 0.21,
             },
           ],
         });
@@ -296,27 +283,35 @@ describe("portfolio api", () => {
       return_pct: 5.12,
       benchmark_return_pct: 4.91,
       excess_return_pct: 0.21,
-      money_weighted_return_pct: 4.88,
-      money_weighted_method: "XIRR",
+      money_weighted_return_pct: null,
+      money_weighted_method: null,
       benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_label: "Global Balanced 60/40",
-      benchmark_return_source: "calculated",
-      benchmark_input_mode: "stateful",
+      benchmark_label: null,
+      benchmark_return_source: null,
+      benchmark_input_mode: null,
+      warnings: ["Benchmark history contains one delayed market close."],
+      partial_failures: [
+        {
+          source_service: "lotus-performance",
+          error_code: "MARKET_DATA_DELAY",
+          detail: "One benchmark data point was delayed and backfilled.",
+        },
+      ],
       sparkline_points: [
         {
-          label: "2026-01",
+          label: "2026-03-01",
           portfolio_return_pct: 1.1,
           benchmark_return_pct: 0.9,
           active_return_pct: 0.2,
         },
         {
-          label: "2026-02",
+          label: "2026-03-14",
           portfolio_return_pct: 2.9,
           benchmark_return_pct: 2.5,
           active_return_pct: 0.4,
         },
         {
-          label: "2026-03",
+          label: "2026-03-28",
           portfolio_return_pct: 5.12,
           benchmark_return_pct: 4.91,
           active_return_pct: 0.21,
@@ -337,20 +332,94 @@ describe("portfolio api", () => {
     expect(
       requestedUrls.some(
         (url) =>
-          url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?") &&
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?") &&
           url.includes("period=EXPLICIT") &&
           url.includes("report_start_date=2026-03-01") &&
           url.includes("report_end_date=2026-03-28")
       )
     ).toBe(true);
-    expect(
-      requestedUrls.some(
-        (url) =>
-          url.includes("/workbench/MANUAL_PB_USD_001/performance/details?") &&
-          url.includes("contribution_dimension=asset_class") &&
-          url.includes("attribution_dimension=asset_class")
-      )
-    ).toBe(true);
+    expect(requestedUrls.some((url) => url.includes("/performance/details"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/performance/summary"))).toBe(false);
+  });
+
+  it("preserves gateway unavailable metadata for the performance snapshot module", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/allocations")) {
+          return jsonResponse({
+            views: [{ dimension: "asset_class", buckets: [] }],
+          });
+        }
+
+        if (url.includes("/positions")) {
+          return jsonResponse({
+            top_positions: [],
+            positions: [],
+          });
+        }
+
+        if (url.includes("/income-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (url.includes("/activity-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?")) {
+          return jsonResponse({
+            period: "EXPLICIT",
+            as_of_date: "2026-03-28",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            portfolio_return_pct: null,
+            benchmark_return_pct: null,
+            excess_return_pct: null,
+            unavailable: {
+              title: "Performance history incomplete",
+              detail: "Gateway could not compute a snapshot because valuation history is incomplete.",
+              requirements: [
+                "daily valuations through the selected end date",
+                "cashflow history for the selected period",
+              ],
+            },
+            warnings: ["Performance data is delayed pending backfill."],
+            partial_failures: [],
+            sparkline: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+
+    expect(details?.performance).toMatchObject({
+      period: "EXPLICIT",
+      report_start_date: null,
+      report_end_date: "2026-03-28",
+      return_pct: null,
+      benchmark_return_pct: null,
+      excess_return_pct: null,
+      unavailable: {
+        title: "Performance history incomplete",
+        detail: "Gateway could not compute a snapshot because valuation history is incomplete.",
+        requirements: [
+          "daily valuations through the selected end date",
+          "cashflow history for the selected period",
+        ],
+      },
+      warnings: ["Performance data is delayed pending backfill."],
+      partial_failures: [],
+      sparkline_points: [],
+    });
   });
 
   it("loads detailed ledger and liquidity slices only when detailed modules need them", async () => {
@@ -578,42 +647,32 @@ describe("portfolio api", () => {
         return jsonResponse(null);
       }
 
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+      if (url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?")) {
         return jsonResponse({
           period: "EXPLICIT",
-          report_start_date: "2026-03-01",
-          report_end_date: "2026-03-28",
+          as_of_date: "2026-03-28",
           benchmark_code: null,
-          benchmark_options: [],
-          net_performance: {
-            portfolio_return_pct: 2.1,
-            benchmark_return_pct: null,
-            active_return_pct: null,
-          },
-          money_weighted_return: null,
-        });
-      }
-
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
-        return jsonResponse({
-          net_chart: [
+          portfolio_return_pct: 2.1,
+          benchmark_return_pct: null,
+          excess_return_pct: null,
+          sparkline: [
             {
-              label: "2026-01",
-              cumulative_portfolio_return_pct: 0.8,
-              cumulative_benchmark_return_pct: 0.6,
-              cumulative_active_return_pct: 0.2,
+              as_of_date: "2026-03-01",
+              portfolio_return_pct: 0.8,
+              benchmark_return_pct: 0.6,
+              excess_return_pct: 0.2,
             },
             {
-              label: "2026-02",
-              cumulative_portfolio_return_pct: 1.6,
-              cumulative_benchmark_return_pct: 1.2,
-              cumulative_active_return_pct: 0.4,
+              as_of_date: "2026-03-14",
+              portfolio_return_pct: 1.6,
+              benchmark_return_pct: 1.2,
+              excess_return_pct: 0.4,
             },
             {
-              label: "2026-03",
-              cumulative_portfolio_return_pct: 2.1,
-              cumulative_benchmark_return_pct: 1.7,
-              cumulative_active_return_pct: 0.4,
+              as_of_date: "2026-03-28",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: 1.7,
+              excess_return_pct: 0.4,
             },
           ],
         });
@@ -653,8 +712,9 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance-snapshot")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(0);
+    expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
   });
 
   it("coalesces identical in-flight ledger requests into a single fetch", async () => {
