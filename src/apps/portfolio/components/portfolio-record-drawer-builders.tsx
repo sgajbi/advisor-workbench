@@ -136,6 +136,7 @@ export function buildTransactionDrawer(
     onOpenFxContract?: (() => void) | null;
     onOpenSwapEvent?: (() => void) | null;
     onOpenNearLegGroup?: (() => void) | null;
+    onOpenFarLegGroup?: (() => void) | null;
   }
 ): PortfolioDetailDrawerState {
   const hasLinkedGroupAction =
@@ -146,6 +147,8 @@ export function buildTransactionDrawer(
     Boolean(row.raw.swap_event_id) && Boolean(actions?.onOpenSwapEvent);
   const hasNearLegGroupAction =
     Boolean(row.raw.near_leg_group_id) && Boolean(actions?.onOpenNearLegGroup);
+  const hasFarLegGroupAction =
+    Boolean(row.raw.far_leg_group_id) && Boolean(actions?.onOpenFarLegGroup);
 
   return {
     kicker: "Transaction Detail",
@@ -254,6 +257,23 @@ export function buildTransactionDrawer(
           </div>
         ) : renderDrawerParagraphs([
           "No near-leg drill-down is available for this booked event.",
+        ]),
+      },
+      {
+        key: "far-leg-group",
+        label: "Far-Leg Group",
+        content: hasFarLegGroupAction ? (
+          <div className="portfolio-detail-drawer-action-group">
+            <p>
+              Review all transactions tied to this far-leg group when the booked event is
+              one side of a multi-leg swap lifecycle.
+            </p>
+            <Button variant="outlined" size="small" onClick={actions?.onOpenFarLegGroup ?? undefined}>
+              Open Far-Leg Transactions
+            </Button>
+          </div>
+        ) : renderDrawerParagraphs([
+          "No far-leg drill-down is available for this booked event.",
         ]),
       },
     ],

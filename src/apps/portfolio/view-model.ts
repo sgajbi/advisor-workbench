@@ -702,8 +702,14 @@ export function filterTransactionsByDrilldown(
     );
   }
 
+  if (filter.kind === "near_leg_group") {
+    return transactions.filter(
+      (transaction) => transaction.near_leg_group_id === filter.near_leg_group_id
+    );
+  }
+
   return transactions.filter(
-    (transaction) => transaction.near_leg_group_id === filter.near_leg_group_id
+    (transaction) => transaction.far_leg_group_id === filter.far_leg_group_id
   );
 }
 

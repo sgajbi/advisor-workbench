@@ -64,6 +64,11 @@ export type PortfolioTransactionDrilldownFilter =
       kind: "near_leg_group";
       near_leg_group_id: string;
       label: string;
+    }
+  | {
+      kind: "far_leg_group";
+      far_leg_group_id: string;
+      label: string;
     };
 
 export type PortfolioHoldingsDrilldownFilter =

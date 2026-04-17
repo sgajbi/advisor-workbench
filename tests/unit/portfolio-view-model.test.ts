@@ -395,6 +395,7 @@ describe("portfolio view model", () => {
         fx_contract_id: "FXC-2026-0001",
         swap_event_id: "FXSWAP-2026-0001",
         near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+        far_leg_group_id: "FXSWAP-2026-0001-FAR",
         security_id: "EQ_1",
         instrument_id: "AAPL",
         quantity: 10,
@@ -456,6 +457,13 @@ describe("portfolio view model", () => {
         kind: "near_leg_group",
         near_leg_group_id: "FXSWAP-2026-0001-NEAR",
         label: "Filtered by near-leg group: FXSWAP-2026-0001-NEAR",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "far_leg_group",
+        far_leg_group_id: "FXSWAP-2026-0001-FAR",
+        label: "Filtered by far-leg group: FXSWAP-2026-0001-FAR",
       })[0].transaction_id
     ).toBe("TX_BUY");
     expect(getPositionsNeedingPricing(workspace)[0].security_id).toBe("FI_1");

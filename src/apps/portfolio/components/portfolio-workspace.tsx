@@ -623,6 +623,14 @@ export default function PortfolioWorkspaceView({
                                           label: `Filtered by near-leg group: ${row.raw.near_leg_group_id}`,
                                         })
                                     : null,
+                                  onOpenFarLegGroup: row.raw.far_leg_group_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "far_leg_group",
+                                          far_leg_group_id: row.raw.far_leg_group_id!,
+                                          label: `Filtered by far-leg group: ${row.raw.far_leg_group_id}`,
+                                        })
+                                    : null,
                                 }
                               )
                             )
