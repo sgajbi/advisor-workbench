@@ -81,6 +81,11 @@ describe("PortfolioWorkspaceToolbar", () => {
         /Book-style holdings honor reporting currency, but performance snapshot does not\./i
       )
     ).toBeInTheDocument();
+    expect(
+      screen
+        .getByLabelText("Reporting Currency")
+        .closest("div[title='Book-style holdings honor reporting currency, but performance snapshot does not.']")
+    ).not.toBeNull();
     expect(screen.getByText(/Period 30D: 01 Mar 2026 to 29 Mar 2026\./i)).toBeInTheDocument();
     const contextControls = screen.getByRole("group", { name: "Context controls" });
     const viewControls = screen.getByRole("group", { name: "View controls" });
@@ -213,9 +218,23 @@ describe("PortfolioWorkspaceToolbar", () => {
       )
     ).toBeInTheDocument();
     expect(
+      screen
+        .getByLabelText("As of")
+        .closest(
+          "div[title='Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics.']"
+        )
+    ).not.toBeNull();
+    expect(
       screen.getByText(
         /Workflow, readiness, and performance snapshot do not yet share reporting currency\./i
       )
     ).toBeInTheDocument();
+    expect(
+      screen
+        .getByLabelText("Reporting Currency")
+        .closest(
+          "div[title='Workflow, readiness, and performance snapshot do not yet share reporting currency.']"
+        )
+    ).not.toBeNull();
   });
 });

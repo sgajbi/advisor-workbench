@@ -81,6 +81,12 @@ export default function PortfolioWorkspaceToolbar({
   ]);
   const activeFilterCount = getActivePortfolioFilterCount(controls);
   const supportsCustomRange = controls.viewMode === "detailed";
+  const historicalControlTitle = !context.supportsHistoricalSnapshots
+    ? context.historicalSnapshotReason
+    : undefined;
+  const reportingCurrencyControlTitle = !context.supportsReportingCurrencyRestatement
+    ? context.reportingCurrencyRestatementReason
+    : undefined;
   const contextSegments = useMemo(() => {
     const segments = [historicalContextCopy];
 
@@ -127,6 +133,7 @@ export default function PortfolioWorkspaceToolbar({
                   value={controls.asOfDate}
                   onChange={(event) => onControlsChange({ asOfDate: event.target.value })}
                   inputProps={{ max: context.selectedAsOfDate }}
+                  title={historicalControlTitle}
                   disabled={!context.supportsHistoricalSnapshots}
                 />
               </div>
@@ -142,6 +149,7 @@ export default function PortfolioWorkspaceToolbar({
                     onControlsChange({ reportingCurrency: event.target.value })
                   }
                   SelectProps={{ native: true }}
+                  title={reportingCurrencyControlTitle}
                   disabled={!context.supportsReportingCurrencyRestatement}
                 >
                   {context.currencyOptions.map((option) => (
