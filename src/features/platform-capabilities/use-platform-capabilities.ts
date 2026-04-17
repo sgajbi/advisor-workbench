@@ -13,53 +13,130 @@ type UsePlatformCapabilitiesResult = {
   shellBootstrapSource: "loading" | "contract" | "fallback";
 };
 
-export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
-  const [loading, setLoading] = useState(true);
-  const [normalized, setNormalized] = useState<PlatformNormalizedCapabilities>(
-    fallbackNormalizedCapabilities()
-  );
-  const [partialFailure, setPartialFailure] = useState(false);
-  const [errors, setErrors] = useState<PlatformCapabilitiesError[]>([]);
-  const [shellBootstrapSource, setShellBootstrapSource] = useState<
-    UsePlatformCapabilitiesResult["shellBootstrapSource"]
-  >("loading");
+type PlatformCapabilitiesSnapshot = Omit<UsePlatformCapabilitiesResult, "loading">;
 
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const data = await getPlatformCapabilities("UI", "default");
-        if (!active) return;
-        const nextNormalized = data.normalized ?? fallbackNormalizedCapabilities();
-        setNormalized(nextNormalized);
-        setPartialFailure(Boolean(data.partialFailure));
-        setErrors(data.errors ?? []);
-        setShellBootstrapSource(
-          data.normalized?.shellBootstrap?.workspaces?.length ? "contract" : "fallback"
-        );
-      } catch {
-        if (!active) return;
-        setNormalized(fallbackNormalizedCapabilities());
-        setPartialFailure(true);
-        setErrors([
+const PLATFORM_CAPABILITIES_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let cachedSnapshot: PlatformCapabilitiesSnapshot | null = null;
+let cachedAtMs = 0;
+let inflightSnapshotRequest: Promise<PlatformCapabilitiesSnapshot> | null = null;
+
+function getCachedSnapshot(): PlatformCapabilitiesSnapshot | null {
+  if (!cachedSnapshot) {
+    return null;
+  }
+  if (Date.now() - cachedAtMs > PLATFORM_CAPABILITIES_CACHE_TTL_MS) {
+    cachedSnapshot = null;
+    cachedAtMs = 0;
+    return null;
+  }
+  return cachedSnapshot;
+}
+
+function cacheSnapshot(snapshot: PlatformCapabilitiesSnapshot): PlatformCapabilitiesSnapshot {
+  cachedSnapshot = snapshot;
+  cachedAtMs = Date.now();
+  return snapshot;
+}
+
+async function loadPlatformCapabilitiesSnapshot(): Promise<PlatformCapabilitiesSnapshot> {
+  const cached = getCachedSnapshot();
+  if (cached) {
+    return cached;
+  }
+
+  if (inflightSnapshotRequest) {
+    return await inflightSnapshotRequest;
+  }
+
+  inflightSnapshotRequest = (async () => {
+    try {
+      const data = await getPlatformCapabilities("UI", "default");
+      const nextNormalized = data.normalized ?? fallbackNormalizedCapabilities();
+      return cacheSnapshot({
+        normalized: nextNormalized,
+        partialFailure: Boolean(data.partialFailure),
+        errors: data.errors ?? [],
+        shellBootstrapSource: data.normalized?.shellBootstrap?.workspaces?.length
+          ? "contract"
+          : "fallback",
+      });
+    } catch {
+      return cacheSnapshot({
+        normalized: fallbackNormalizedCapabilities(),
+        partialFailure: true,
+        errors: [
           {
             service: "bff",
             status_code: 0,
             detail: "capability_bootstrap_fallback",
           },
-        ]);
-        setShellBootstrapSource("fallback");
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
+        ],
+        shellBootstrapSource: "fallback",
+      });
+    } finally {
+      inflightSnapshotRequest = null;
     }
-    void load();
+  })();
+
+  return await inflightSnapshotRequest;
+}
+
+function getInitialResult(): UsePlatformCapabilitiesResult {
+  const cached = getCachedSnapshot();
+  if (cached) {
+    return {
+      loading: false,
+      ...cached,
+    };
+  }
+
+  return {
+    loading: true,
+    normalized: fallbackNormalizedCapabilities(),
+    partialFailure: false,
+    errors: [],
+    shellBootstrapSource: "loading",
+  };
+}
+
+export function resetPlatformCapabilitiesHookCache() {
+  cachedSnapshot = null;
+  cachedAtMs = 0;
+  inflightSnapshotRequest = null;
+}
+
+export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
+  const [state, setState] = useState<UsePlatformCapabilitiesResult>(() => getInitialResult());
+
+  useEffect(() => {
+    let active = true;
+
+    const cached = getCachedSnapshot();
+    if (cached) {
+      setState({
+        loading: false,
+        ...cached,
+      });
+      return () => {
+        active = false;
+      };
+    }
+
+    void loadPlatformCapabilitiesSnapshot().then((snapshot) => {
+      if (!active) {
+        return;
+      }
+      setState({
+        loading: false,
+        ...snapshot,
+      });
+    });
+
     return () => {
       active = false;
     };
   }, []);
 
-  return { loading, normalized, partialFailure, errors, shellBootstrapSource };
+  return state;
 }
