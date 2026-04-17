@@ -594,10 +594,12 @@ describe("portfolio api", () => {
     const requestedUrls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
       String(call[0])
     );
+    const liquidityRequestUrl = requestedUrls.find((url) => url.includes("/liquidity?")) ?? "";
     const transactionRequestUrl = requestedUrls.find((url) => url.includes("/transactions?")) ?? "";
     const readinessRequestUrl = requestedUrls.find((url) => url.includes("/readiness?")) ?? "";
     const insightsRequestUrl = requestedUrls.find((url) => url.includes("/insights?")) ?? "";
     const workflowRequestUrl = requestedUrls.find((url) => url.includes("/workflow?")) ?? "";
+    expect(liquidityRequestUrl).toContain("as_of_date=2026-03-28");
     expect(transactionRequestUrl).toContain("limit=200");
     expect(transactionRequestUrl).toContain("as_of_date=2026-03-28");
     expect(transactionRequestUrl).toContain("start_date=2026-03-01");
@@ -888,6 +890,51 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("as_of_date=2026-03-28");
     expect(requestUrl).toContain("horizon_days=30");
     expect(requestUrl).toContain("include_projected=true");
+  });
+
+  it("passes reporting currency through to detailed liquidity requests", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes("/liquidity")) {
+          return jsonResponse({
+            cash_balances: [],
+            cashflow_outlook: null,
+          });
+        }
+        if (url.includes("/transactions")) {
+          return jsonResponse({
+            transactions: [],
+          });
+        }
+        if (url.includes("/readiness")) {
+          return jsonResponse({ indicators: [] });
+        }
+        if (url.includes("/insights")) {
+          return jsonResponse({ insights: [], exception_summaries: [] });
+        }
+        if (url.includes("/workflow")) {
+          return jsonResponse({ actions: [] });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "SGD",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+    });
+
+    const requestedUrls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
+      String(call[0])
+    );
+    const liquidityRequestUrl = requestedUrls.find((url) => url.includes("/liquidity?")) ?? "";
+    expect(liquidityRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(liquidityRequestUrl).toContain("reporting_currency=SGD");
   });
 
   it("uses the proxied portfolio API base in the browser", async () => {

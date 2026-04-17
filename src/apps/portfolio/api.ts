@@ -281,6 +281,7 @@ export async function getPortfolioWorkspaceDetailedDetails(
   portfolioId: string,
   params: {
     asOfDate?: string;
+    reportingCurrency?: string;
     startDate?: string;
     endDate?: string;
   } = {}
@@ -289,9 +290,14 @@ export async function getPortfolioWorkspaceDetailedDetails(
     const transactionSearchParams = new URLSearchParams();
     transactionSearchParams.set("limit", "200");
     const sharedSearchParams = new URLSearchParams();
+    const liquiditySearchParams = new URLSearchParams();
     if (params.asOfDate) {
       transactionSearchParams.set("as_of_date", params.asOfDate);
       sharedSearchParams.set("as_of_date", params.asOfDate);
+      liquiditySearchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.reportingCurrency) {
+      liquiditySearchParams.set("reporting_currency", params.reportingCurrency);
     }
     if (params.startDate) {
       transactionSearchParams.set("start_date", params.startDate);
@@ -308,7 +314,8 @@ export async function getPortfolioWorkspaceDetailedDetails(
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioLiquidityResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
+        { query: liquiditySearchParams }
       ),
       fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
         resolvePortfolioRequestTarget(),
