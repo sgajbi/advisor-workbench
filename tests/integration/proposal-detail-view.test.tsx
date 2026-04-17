@@ -113,6 +113,15 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(submitProposalMock).toHaveBeenCalled();
     });
+    expect(submitProposalMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "advisor_1",
+        expected_state: "DRAFT",
+        review_type: "RISK",
+      }),
+      expect.stringMatching(/^ui-submit-risk-pp-1-\d+$/)
+    );
   });
 
   it("approves risk when in risk review", async () => {
@@ -136,6 +145,14 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(approveRiskMock).toHaveBeenCalled();
     });
+    expect(approveRiskMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "risk_officer_1",
+        expected_state: "RISK_REVIEW",
+      }),
+      expect.stringMatching(/^ui-approve-risk-pp-1-\d+$/)
+    );
   });
 
   it("records client consent when awaiting client consent", async () => {
@@ -161,5 +178,13 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(recordClientConsentMock).toHaveBeenCalled();
     });
+    expect(recordClientConsentMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "advisor_1",
+        expected_state: "AWAITING_CLIENT_CONSENT",
+      }),
+      expect.stringMatching(/^ui-record-client-consent-pp-1-\d+$/)
+    );
   });
 });
