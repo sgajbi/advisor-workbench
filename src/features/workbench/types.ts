@@ -265,6 +265,46 @@ export type WorkbenchPerformanceCapabilities = {
   evidence: PerformanceModuleCapability;
 };
 
+export type PerformanceEvidenceArtifactView = {
+  artifact_name: string;
+  url: string;
+  content_type?: string | null;
+};
+
+export type PerformanceEvidenceStageView = {
+  stage_name: string;
+  state: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  detail?: string | null;
+};
+
+export type PerformanceEvidenceUpstreamSnapshotView = {
+  source_service: string;
+  snapshot_id?: string | null;
+  as_of_date?: string | null;
+  freshness_state?: string | null;
+  detail?: string | null;
+};
+
+export type PerformanceCalculationEvidenceView = {
+  calculation_role: string;
+  calculation_id: string;
+  analytics_type: string;
+  execution_status: string;
+  execution_mode?: string | null;
+  lineage_status: string;
+  stage_statuses: PerformanceEvidenceStageView[];
+  upstream_snapshots: PerformanceEvidenceUpstreamSnapshotView[];
+  artifacts: PerformanceEvidenceArtifactView[];
+};
+
+export type PerformanceEvidenceView = {
+  state: string;
+  reason?: string | null;
+  calculations: PerformanceCalculationEvidenceView[];
+};
+
 export type PerformanceHorizonComparisonRow = {
   period: string;
   period_start?: string | null;
@@ -373,6 +413,7 @@ export type WorkbenchPerformanceWorkspace = {
   benchmark_code: string | null;
   benchmark_options?: PerformanceBenchmarkOptionView[];
   capabilities?: WorkbenchPerformanceCapabilities;
+  evidence_view?: PerformanceEvidenceView | null;
   portfolio: WorkbenchOverview["portfolio"];
   overview: WorkbenchOverview["overview"];
   net_performance: PerformanceComparativeSummary;
@@ -403,6 +444,7 @@ export type WorkbenchPerformanceWorkspaceSummary = Pick<
   | "benchmark_code"
   | "benchmark_options"
   | "capabilities"
+  | "evidence_view"
   | "portfolio"
   | "overview"
   | "net_performance"
@@ -431,6 +473,7 @@ export type WorkbenchPerformanceWorkspaceDetails = Pick<
   | "segment"
   | "benchmark_code"
   | "capabilities"
+  | "evidence_view"
   | "net_chart"
   | "gross_chart"
   | "contribution"
