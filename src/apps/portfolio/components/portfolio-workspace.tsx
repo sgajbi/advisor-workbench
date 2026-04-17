@@ -40,8 +40,6 @@ import {
 } from "../workspace-config";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import {
-  buildPortfolioExceptionSummaries,
-  buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
   buildActivityDrilldownLabel,
   buildAllocationDrilldownLabel,
@@ -185,10 +183,8 @@ export default function PortfolioWorkspaceView({
   const readinessIndicators = workspace
     ? workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace, context.viewMode)
     : [];
-  const exceptionSummaries = workspace
-    ? workspace.exception_summaries ?? buildPortfolioExceptionSummaries(workspace)
-    : [];
-  const insights = workspace ? workspace.insights ?? buildPortfolioInsights(workspace) : [];
+  const exceptionSummaries = workspace?.exception_summaries ?? [];
+  const insights = workspace?.insights ?? [];
   const [dismissedInsightKeys, setDismissedInsightKeys] = useState<string[]>([]);
   const [sectionPreferences, setSectionPreferences] = useState<Record<string, boolean>>({});
   const isSummaryView = context.viewMode === "summary";

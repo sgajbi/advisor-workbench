@@ -1,14 +1,9 @@
-import {
-  mapWorkflowHref,
-  WORKFLOW_DISPLAY_ORDER,
-} from "./workspace-config";
+import { WORKFLOW_DISPLAY_ORDER } from "./workspace-config";
 import { formatDate } from "./formatters";
 import type {
   PortfolioActivitySummaryView,
-  PortfolioExceptionSummary,
   PortfolioHoldingsDrilldownFilter,
   PortfolioIncomeSummaryView,
-  PortfolioInsight,
   PortfolioReadinessIndicator,
   PortfolioReadinessStatus,
   PortfolioTransactionDrilldownFilter,
@@ -611,180 +606,6 @@ export function getReadinessTone(status: PortfolioReadinessStatus): PortfolioUiT
   }
 }
 
-export function buildPortfolioExceptionSummaries(
-  workspace: PortfolioWorkspace
-): PortfolioExceptionSummary[] {
-  const exceptions: PortfolioExceptionSummary[] = [];
-  const holdingsStatus = getHoldingsReadinessStatus(workspace);
-  const pricingStatus = getPricingReadinessStatus(workspace);
-  const transactionStatus = getTransactionsReadinessStatus(workspace);
-  const reportingStatus = getReportingReadinessStatus(workspace);
-
-  if (holdingsStatus !== "Ready") {
-    exceptions.push({
-      key: "holdings",
-      title: holdingsStatus === "Partial" ? "Holdings coverage incomplete" : "Missing holdings",
-      detail:
-        holdingsStatus === "Partial"
-          ? "The holdings inventory is only partially available for this book."
-          : "No positions are currently booked for this portfolio.",
-      tone: holdingsStatus === "Partial" ? "warn" : "danger",
-      href: "#portfolio-drilldown",
-    });
-  }
-
-  if (pricingStatus !== "Ready") {
-    exceptions.push({
-      key: "pricing",
-      title: pricingStatus === "Partial" ? "Pricing coverage incomplete" : "No priced positions",
-      detail:
-        pricingStatus === "Partial"
-          ? "Some holdings lack complete valuation coverage."
-          : "Valuation cannot run until priced positions are available.",
-      tone: pricingStatus === "Partial" ? "warn" : "danger",
-      href: "#portfolio-attention",
-    });
-  }
-
-  if (transactionStatus !== "Ready") {
-    exceptions.push({
-      key: "transactions",
-      title:
-        transactionStatus === "Partial" ? "Transaction history incomplete" : "Empty transaction history",
-      detail:
-        transactionStatus === "Partial"
-          ? "Booked transaction history is present but not fully available in the current view."
-          : "No funding, trading, or cash activity has been recorded yet.",
-      tone: transactionStatus === "Partial" ? "warn" : "danger",
-      href: "#portfolio-drilldown",
-    });
-  }
-
-  if (reportingStatus !== "Ready") {
-    exceptions.push({
-      key: "reporting",
-      title:
-        reportingStatus === "Partial"
-          ? "Reporting output incomplete"
-          : reportingStatus === "Empty"
-            ? "Reporting output unavailable"
-            : "Reporting output missing",
-      detail:
-        reportingStatus === "Partial"
-          ? "Reporting output exists, but the current book is not fully reportable."
-          : reportingStatus === "Empty"
-            ? "Reporting has not produced any rows for this portfolio yet."
-            : "Reporting coverage is not yet available for this portfolio.",
-      tone: reportingStatus === "Partial" || reportingStatus === "Empty" ? "warn" : "danger",
-      href: "#portfolio-health",
-    });
-  }
-
-  if (workspace.operations?.controls_blocking) {
-    exceptions.push({
-      key: "controls_blocking",
-      title: "Blocking controls active",
-      detail: "Operational controls are currently preventing publication or downstream processing.",
-      tone: "danger",
-      href: "#portfolio-attention",
-    });
-  }
-
-  workspace.partial_failures.forEach((failure) => {
-    exceptions.push({
-      key: `partial_failure_${failure.error_code}`,
-      title: failure.error_code.replaceAll("_", " "),
-      detail: failure.detail,
-      tone: "warn",
-      href: "#portfolio-attention",
-    });
-  });
-
-  return exceptions;
-}
-
-export function buildPortfolioInsights(workspace: PortfolioWorkspace): PortfolioInsight[] {
-  const insights: PortfolioInsight[] = [];
-  const requestedWindowActivity = getRequestedWindowActivityAmount(workspace);
-  const maxPositionWeight = Math.max(
-    ...workspace.top_positions.map((position) => position.weight_pct ?? 0),
-    0
-  );
-
-  if (!workspace.positions.length) {
-    insights.push({
-      key: "no-holdings-booked",
-      title: "No holdings booked",
-      detail: "Book the first position to activate holdings, allocation, and valuation views.",
-      severity: "critical",
-      href: "#portfolio-drilldown",
-    });
-  }
-
-  if (!hasCashFundingEvidence(workspace)) {
-    insights.push({
-      key: "no-cash-funding",
-      title: "No cash funding recorded",
-      detail: "Add opening cash or a subscription so the portfolio can be funded and invested.",
-      severity: "critical",
-      href: "#portfolio-insights",
-    });
-  }
-
-  if (getPricingReadinessStatus(workspace) !== "Ready") {
-    insights.push({
-      key: "pricing-not-published",
-      title: "Pricing not yet published",
-      detail: "Publish prices to complete valuation and unlock reliable reporting.",
-      severity: "warning",
-      href: "#portfolio-attention",
-    });
-  }
-
-  if (getReportingReadinessStatus(workspace) !== "Ready") {
-    insights.push({
-      key: "reporting-unavailable",
-      title: "Reporting cannot be generated yet",
-      detail: "Reporting remains blocked until book coverage and valuation are complete.",
-      severity: "warning",
-      href: "#portfolio-health",
-    });
-  }
-
-  if (maxPositionWeight >= 20) {
-    insights.push({
-      key: "equity-concentration-high",
-      title: "Large position dominates portfolio risk",
-      detail:
-        "One holding has become large enough to dominate current portfolio concentration. Open Risk to review concentration pressure.",
-      severity: "warning",
-      href: mapWorkflowHref("risk", workspace.portfolio.portfolio_id),
-    });
-  }
-
-  if ((workspace.summary.cash_weight_pct ?? 0) >= 15) {
-    insights.push({
-      key: "cash-above-target",
-      title: "Cash exceeds target allocation",
-      detail: "Available cash is elevated relative to invested assets.",
-      severity: "info",
-      href: "#portfolio-insights",
-    });
-  }
-
-  if (requestedWindowActivity < 0) {
-    insights.push({
-      key: "net-outflows-window",
-      title: "Net outflows in last 30 days",
-      detail: "Recent activity is net negative over the selected reporting window.",
-      severity: "warning",
-      href: "#portfolio-changes",
-    });
-  }
-
-  return insights;
-}
-
 export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): PortfolioWorkflowCue[] {
   const supportedWorkflowKeys = new Set<string>(WORKFLOW_DISPLAY_ORDER);
 
@@ -1045,29 +866,6 @@ function getReportingReadinessStatus(workspace: PortfolioWorkspace): PortfolioRe
   }
 
   return "Missing";
-}
-
-function hasCashFundingEvidence(workspace: PortfolioWorkspace): boolean {
-  if ((workspace.cash_balances?.length ?? 0) > 0) {
-    return true;
-  }
-
-  if ((workspace.summary.cash_balance_count ?? 0) > 0) {
-    return true;
-  }
-
-  if ((workspace.summary.total_cash_base ?? 0) > 0) {
-    return true;
-  }
-
-  const inflowBucket = workspace.activity_summary?.buckets.find(
-    (bucket) => bucket.bucket.toUpperCase() === "INFLOWS"
-  );
-  if ((inflowBucket?.requested_window.transaction_count ?? 0) > 0) {
-    return true;
-  }
-
-  return (inflowBucket?.requested_window.reporting_currency_amount ?? 0) > 0;
 }
 
 function isReportingReady(status: string): boolean {

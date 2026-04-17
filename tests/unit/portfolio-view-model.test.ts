@@ -4,9 +4,7 @@ import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import { getPortfolioWorkspaceCapabilities } from "../../src/apps/portfolio/capabilities";
 import {
   buildPortfolioActiveFilterChips,
-  buildPortfolioExceptionSummaries,
   buildPortfolioFilterOptions,
-  buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
   filterPositionsByDrilldown,
   filterTransactionsByDrilldown,
@@ -460,33 +458,6 @@ describe("portfolio view model", () => {
         href: "/risk",
       },
     ]);
-
-    expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
-    expect(buildPortfolioInsights(workspace)).toEqual([]);
-  });
-
-  it("routes concentration insights into Performance Risk mode", () => {
-    const workspace = buildOperationalWorkspace();
-    workspace.top_positions = [
-      {
-        security_id: "EQ_1",
-        instrument_name: "Apple Inc",
-        asset_class: "Equities",
-        quantity: 10,
-        market_value_base: 250000,
-        weight_pct: 22,
-      },
-    ];
-
-    expect(buildPortfolioInsights(workspace)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          key: "equity-concentration-high",
-          href: "/performance?portfolioId=PORT_UI_1001&mode=risk",
-          detail: expect.stringContaining("Open Risk"),
-        }),
-      ])
-    );
   });
 
   it("does not raise false funding or transaction exceptions when summary evidence exists", () => {
@@ -500,9 +471,6 @@ describe("portfolio view model", () => {
       { key: "transactions", label: "Transactions", status: "Ready", href: "#portfolio-insights" },
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
     ]);
-
-    expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
-    expect(buildPortfolioInsights(workspace)).toEqual([]);
   });
 
   it("derives the empty-portfolio onboarding sequence", () => {
@@ -523,18 +491,6 @@ describe("portfolio view model", () => {
       "Missing",
       "Missing",
       "Empty",
-    ]);
-    expect(buildPortfolioExceptionSummaries(workspace).map((exception) => exception.title)).toEqual([
-      "Missing holdings",
-      "No priced positions",
-      "Empty transaction history",
-      "Reporting output unavailable",
-    ]);
-    expect(buildPortfolioInsights(workspace).map((insight) => insight.title)).toEqual([
-      "No holdings booked",
-      "No cash funding recorded",
-      "Pricing not yet published",
-      "Reporting cannot be generated yet",
     ]);
     expect(getReadinessTone("Missing")).toBe("danger");
     expect(getReadinessTone("Empty")).toBe("warn");
