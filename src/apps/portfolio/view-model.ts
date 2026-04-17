@@ -628,15 +628,6 @@ export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): Portfolio
     });
 }
 
-export function getRelatedTransactionsForSecurity(
-  workspace: PortfolioWorkspace,
-  securityId: string
-): PortfolioWorkspace["recent_transactions"] {
-  return [...workspace.recent_transactions]
-    .filter((transaction) => transaction.security_id === securityId)
-    .sort((left, right) => right.transaction_date.localeCompare(left.transaction_date));
-}
-
 export function getPositionsNeedingPricing(
   workspace: PortfolioWorkspace
 ): PortfolioWorkspace["positions"] {

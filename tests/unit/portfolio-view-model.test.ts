@@ -10,7 +10,6 @@ import {
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
   getOrderedWorkflowCues,
-  getRelatedTransactionsForSecurity,
   buildInitialPortfolioControls,
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
@@ -427,7 +426,6 @@ describe("portfolio view model", () => {
         label: "Filtered by security: Apple Inc",
       })[0].transaction_id
     ).toBe("TX_BUY");
-    expect(getRelatedTransactionsForSecurity(workspace, "EQ_1")).toHaveLength(1);
     expect(getPositionsNeedingPricing(workspace)[0].security_id).toBe("FI_1");
   });
 

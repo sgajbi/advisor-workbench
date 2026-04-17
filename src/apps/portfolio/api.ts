@@ -346,6 +346,7 @@ export async function getPortfolioTransactionLedger(
     startDate?: string;
     endDate?: string;
     transactionType?: string;
+    securityId?: string;
     limit?: number;
     skip?: number;
   } = {}
@@ -366,6 +367,9 @@ export async function getPortfolioTransactionLedger(
     }
     if (params.transactionType && params.transactionType !== "ALL") {
       searchParams.set("transaction_type", params.transactionType);
+    }
+    if (params.securityId) {
+      searchParams.set("security_id", params.securityId);
     }
 
     return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(

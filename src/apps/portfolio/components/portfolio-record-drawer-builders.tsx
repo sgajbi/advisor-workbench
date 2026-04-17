@@ -21,8 +21,19 @@ export function buildHoldingDrawer(
   row: HoldingsRow,
   portfolioId: string,
   baseCurrency: string,
-  relatedTransactions: PortfolioWorkspace["recent_transactions"]
+  relatedTransactionsState:
+    | { state: "loading" }
+    | { state: "error" }
+    | {
+        state: "ready";
+        transactions: PortfolioWorkspace["recent_transactions"];
+      }
 ): PortfolioDetailDrawerState {
+  const relatedTransactionsTab = buildHoldingRelatedTransactionsTab(
+    relatedTransactionsState,
+    baseCurrency
+  );
+
   return {
     kicker: "Holding Detail",
     title: row.instrument,
@@ -60,21 +71,7 @@ export function buildHoldingDrawer(
       {
         key: "related-transactions",
         label: "Related Transactions",
-        content: relatedTransactions.length
-          ? renderDrawerDefinitionList(
-              relatedTransactions.slice(0, 6).map((transaction) => [
-                `${formatDate(transaction.transaction_date)} ${formatStatus(
-                  transaction.transaction_type
-                )}`,
-                formatCurrency(
-                  transaction.net_cost_base ?? transaction.gross_amount,
-                  transaction.currency ?? baseCurrency
-                ),
-              ])
-            )
-          : renderDrawerParagraphs([
-              "No related transactions are available in the current ledger window for this holding.",
-            ]),
+        content: relatedTransactionsTab,
       },
     ],
     fullPageHref: `/portfolio?portfolioId=${encodeURIComponent(
@@ -178,4 +175,44 @@ export function buildTransactionDrawer(
 
 function formatActivityBucketLabel(value: string): string {
   return formatDrawerLabel(value.toLowerCase());
+}
+
+function buildHoldingRelatedTransactionsTab(
+  relatedTransactionsState:
+    | { state: "loading" }
+    | { state: "error" }
+    | {
+        state: "ready";
+        transactions: PortfolioWorkspace["recent_transactions"];
+      },
+  baseCurrency: string
+) {
+  if (relatedTransactionsState.state === "loading") {
+    return renderDrawerParagraphs([
+      "Loading the latest related transactions for this holding.",
+    ]);
+  }
+
+  if (relatedTransactionsState.state === "error") {
+    return renderDrawerParagraphs([
+      "We could not load related transactions for this holding.",
+      "Retry from the holdings grid or open the transactions workspace for broader ledger review.",
+    ]);
+  }
+
+  return relatedTransactionsState.transactions.length
+    ? renderDrawerDefinitionList(
+        relatedTransactionsState.transactions.slice(0, 6).map((transaction) => [
+          `${formatDate(transaction.transaction_date)} ${formatStatus(
+            transaction.transaction_type
+          )}`,
+          `${transaction.instrument_id} · ${formatCurrency(
+            transaction.net_cost_base ?? transaction.gross_amount,
+            transaction.currency ?? baseCurrency
+          )}`,
+        ])
+      )
+    : renderDrawerParagraphs([
+        "No related transactions were returned for this holding.",
+      ]);
 }
