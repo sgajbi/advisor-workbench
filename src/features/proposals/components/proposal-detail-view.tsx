@@ -268,7 +268,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
         },
         idempotencyKey
       );
-      const currentVersionNo = (response.data.current_version_no as number | undefined) ?? undefined;
+      const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
+      const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
       setCreatedVersionNo(currentVersionNo ?? null);
       setRevision((value) => value + 1);
     } catch (err) {
