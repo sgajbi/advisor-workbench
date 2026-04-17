@@ -162,6 +162,10 @@ export type PortfolioTransactionView = {
   cash_entry_mode?: string | null;
   economic_event_id?: string | null;
   linked_transaction_group_id?: string | null;
+  fx_contract_id?: string | null;
+  swap_event_id?: string | null;
+  near_leg_group_id?: string | null;
+  far_leg_group_id?: string | null;
 };
 
 export type PortfolioIncomePeriodSummary = {

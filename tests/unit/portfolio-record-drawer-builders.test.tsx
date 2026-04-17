@@ -1,8 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { buildHoldingDrawer } from "../../src/apps/portfolio/components/portfolio-record-drawer-builders";
+import {
+  buildHoldingDrawer,
+  buildTransactionDrawer,
+} from "../../src/apps/portfolio/components/portfolio-record-drawer-builders";
 import type { HoldingsRow } from "../../src/apps/portfolio/components/portfolio-holdings-grid";
+import type { TransactionRow } from "../../src/apps/portfolio/components/portfolio-transactions-grid";
 
 const holdingRow: HoldingsRow = {
   securityId: "EQ_1",
@@ -79,5 +83,54 @@ describe("portfolio record drawer builders", () => {
         "Retry from the holdings grid or open the transactions workspace for broader ledger review."
       )
     ).toBeInTheDocument();
+  });
+
+  it("preserves linked-event and fx identifiers in the transaction drawer", () => {
+    const transactionRow: TransactionRow = {
+      transactionId: "TX_1",
+      tradeDate: "2026-03-20T00:00:00Z",
+      settleDate: "2026-03-24",
+      type: "Buy",
+      instrument: "AAPL",
+      quantity: 50,
+      amount: 9000,
+      currency: "USD",
+      status: "Settled",
+      componentType: "Trade",
+      raw: {
+        transaction_id: "TX_1",
+        transaction_date: "2026-03-20T00:00:00Z",
+        settlement_date: "2026-03-24",
+        transaction_type: "BUY",
+        component_type: "TRADE",
+        security_id: "EQ_1",
+        instrument_id: "AAPL",
+        quantity: 50,
+        gross_amount: 9000,
+        currency: "USD",
+        economic_event_id: "ECON-2026-0001",
+        linked_transaction_group_id: "LTG-FX-2026-0001",
+        fx_contract_id: "FXC-2026-0001",
+        swap_event_id: "FXSWAP-2026-0001",
+        near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+        far_leg_group_id: "FXSWAP-2026-0001-FAR",
+      },
+    };
+
+    const drawer = buildTransactionDrawer(transactionRow, "PORT_UI_1001", "USD");
+
+    render(
+      <div>
+        {drawer.tabs.find((tab) => tab.key === "overview")?.content}
+        {drawer.tabs.find((tab) => tab.key === "lifecycle")?.content}
+      </div>
+    );
+
+    expect(screen.getByText("ECON-2026-0001")).toBeInTheDocument();
+    expect(screen.getByText("LTG-FX-2026-0001")).toBeInTheDocument();
+    expect(screen.getByText("FXC-2026-0001")).toBeInTheDocument();
+    expect(screen.getByText("FXSWAP-2026-0001")).toBeInTheDocument();
+    expect(screen.getByText("FXSWAP-2026-0001-NEAR")).toBeInTheDocument();
+    expect(screen.getByText("FXSWAP-2026-0001-FAR")).toBeInTheDocument();
   });
 });
