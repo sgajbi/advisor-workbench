@@ -392,6 +392,7 @@ describe("portfolio view model", () => {
         transaction_type: "BUY",
         component_type: "TRADE",
         linked_transaction_group_id: "LTG-FX-2026-0001",
+        fx_contract_id: "FXC-2026-0001",
         security_id: "EQ_1",
         instrument_id: "AAPL",
         quantity: 10,
@@ -432,6 +433,13 @@ describe("portfolio view model", () => {
         kind: "linked_group",
         linked_transaction_group_id: "LTG-FX-2026-0001",
         label: "Filtered by transaction group: LTG-FX-2026-0001",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "fx_contract",
+        fx_contract_id: "FXC-2026-0001",
+        label: "Filtered by FX contract: FXC-2026-0001",
       })[0].transaction_id
     ).toBe("TX_BUY");
     expect(getPositionsNeedingPricing(workspace)[0].security_id).toBe("FI_1");

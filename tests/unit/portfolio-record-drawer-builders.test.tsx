@@ -87,6 +87,7 @@ describe("portfolio record drawer builders", () => {
 
   it("preserves linked-event and fx identifiers in the transaction drawer", () => {
     const onOpenLinkedTransactionGroup = vi.fn();
+    const onOpenFxContract = vi.fn();
     const transactionRow: TransactionRow = {
       transactionId: "TX_1",
       tradeDate: "2026-03-20T00:00:00Z",
@@ -120,6 +121,7 @@ describe("portfolio record drawer builders", () => {
 
     const drawer = buildTransactionDrawer(transactionRow, "PORT_UI_1001", "USD", {
       onOpenLinkedTransactionGroup,
+      onOpenFxContract,
     });
 
     render(
@@ -127,6 +129,7 @@ describe("portfolio record drawer builders", () => {
         {drawer.tabs.find((tab) => tab.key === "overview")?.content}
         {drawer.tabs.find((tab) => tab.key === "lifecycle")?.content}
         {drawer.tabs.find((tab) => tab.key === "related-activity")?.content}
+        {drawer.tabs.find((tab) => tab.key === "fx-contract")?.content}
       </div>
     );
 
@@ -138,5 +141,7 @@ describe("portfolio record drawer builders", () => {
     expect(screen.getByText("FXSWAP-2026-0001-FAR")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Open Related Group Transactions" }));
     expect(onOpenLinkedTransactionGroup).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Open FX Contract Transactions" }));
+    expect(onOpenFxContract).toHaveBeenCalledTimes(1);
   });
 });

@@ -683,9 +683,15 @@ export function filterTransactionsByDrilldown(
     return transactions.filter((transaction) => transaction.security_id === filter.security_id);
   }
 
+  if (filter.kind === "linked_group") {
+    return transactions.filter(
+      (transaction) =>
+        transaction.linked_transaction_group_id === filter.linked_transaction_group_id
+    );
+  }
+
   return transactions.filter(
-    (transaction) =>
-      transaction.linked_transaction_group_id === filter.linked_transaction_group_id
+    (transaction) => transaction.fx_contract_id === filter.fx_contract_id
   );
 }
 

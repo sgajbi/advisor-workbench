@@ -133,6 +133,10 @@ export default function PortfolioTransactionsGrid({
           externalFilter?.kind === "linked_group"
             ? externalFilter.linked_transaction_group_id
             : undefined,
+        fxContractId:
+          externalFilter?.kind === "fx_contract"
+            ? externalFilter.fx_contract_id
+            : undefined,
         limit: 200,
       });
 

@@ -133,10 +133,13 @@ export function buildTransactionDrawer(
   baseCurrency: string,
   actions?: {
     onOpenLinkedTransactionGroup?: (() => void) | null;
+    onOpenFxContract?: (() => void) | null;
   }
 ): PortfolioDetailDrawerState {
   const hasLinkedGroupAction =
     Boolean(row.raw.linked_transaction_group_id) && Boolean(actions?.onOpenLinkedTransactionGroup);
+  const hasFxContractAction =
+    Boolean(row.raw.fx_contract_id) && Boolean(actions?.onOpenFxContract);
 
   return {
     kicker: "Transaction Detail",
@@ -194,6 +197,23 @@ export function buildTransactionDrawer(
           </div>
         ) : renderDrawerParagraphs([
           "No related transaction-group drill-down is available for this booked event.",
+        ]),
+      },
+      {
+        key: "fx-contract",
+        label: "FX Contract",
+        content: hasFxContractAction ? (
+          <div className="portfolio-detail-drawer-action-group">
+            <p>
+              Review all transactions linked to this FX contract when the booked event
+              belongs to a contract lifecycle.
+            </p>
+            <Button variant="outlined" size="small" onClick={actions?.onOpenFxContract ?? undefined}>
+              Open FX Contract Transactions
+            </Button>
+          </div>
+        ) : renderDrawerParagraphs([
+          "No FX contract drill-down is available for this booked event.",
         ]),
       },
     ],

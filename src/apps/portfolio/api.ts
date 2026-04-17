@@ -349,6 +349,7 @@ export async function getPortfolioTransactionLedger(
     componentType?: string;
     securityId?: string;
     linkedTransactionGroupId?: string;
+    fxContractId?: string;
     limit?: number;
     skip?: number;
   } = {}
@@ -378,6 +379,9 @@ export async function getPortfolioTransactionLedger(
     }
     if (params.linkedTransactionGroupId) {
       searchParams.set("linked_transaction_group_id", params.linkedTransactionGroupId);
+    }
+    if (params.fxContractId) {
+      searchParams.set("fx_contract_id", params.fxContractId);
     }
 
     return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(

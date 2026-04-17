@@ -599,6 +599,14 @@ export default function PortfolioWorkspaceView({
                                           label: `Filtered by transaction group: ${row.raw.linked_transaction_group_id}`,
                                         })
                                     : null,
+                                  onOpenFxContract: row.raw.fx_contract_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "fx_contract",
+                                          fx_contract_id: row.raw.fx_contract_id!,
+                                          label: `Filtered by FX contract: ${row.raw.fx_contract_id}`,
+                                        })
+                                    : null,
                                 }
                               )
                             )

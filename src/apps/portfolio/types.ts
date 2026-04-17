@@ -49,6 +49,11 @@ export type PortfolioTransactionDrilldownFilter =
       kind: "linked_group";
       linked_transaction_group_id: string;
       label: string;
+    }
+  | {
+      kind: "fx_contract";
+      fx_contract_id: string;
+      label: string;
     };
 
 export type PortfolioHoldingsDrilldownFilter =
