@@ -54,6 +54,11 @@ export type PortfolioTransactionDrilldownFilter =
       kind: "fx_contract";
       fx_contract_id: string;
       label: string;
+    }
+  | {
+      kind: "swap_event";
+      swap_event_id: string;
+      label: string;
     };
 
 export type PortfolioHoldingsDrilldownFilter =

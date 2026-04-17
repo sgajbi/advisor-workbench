@@ -134,12 +134,15 @@ export function buildTransactionDrawer(
   actions?: {
     onOpenLinkedTransactionGroup?: (() => void) | null;
     onOpenFxContract?: (() => void) | null;
+    onOpenSwapEvent?: (() => void) | null;
   }
 ): PortfolioDetailDrawerState {
   const hasLinkedGroupAction =
     Boolean(row.raw.linked_transaction_group_id) && Boolean(actions?.onOpenLinkedTransactionGroup);
   const hasFxContractAction =
     Boolean(row.raw.fx_contract_id) && Boolean(actions?.onOpenFxContract);
+  const hasSwapEventAction =
+    Boolean(row.raw.swap_event_id) && Boolean(actions?.onOpenSwapEvent);
 
   return {
     kicker: "Transaction Detail",
@@ -214,6 +217,23 @@ export function buildTransactionDrawer(
           </div>
         ) : renderDrawerParagraphs([
           "No FX contract drill-down is available for this booked event.",
+        ]),
+      },
+      {
+        key: "swap-event",
+        label: "Swap Event",
+        content: hasSwapEventAction ? (
+          <div className="portfolio-detail-drawer-action-group">
+            <p>
+              Review all transactions tied to this swap event when the booked event belongs
+              to a multi-leg swap lifecycle.
+            </p>
+            <Button variant="outlined" size="small" onClick={actions?.onOpenSwapEvent ?? undefined}>
+              Open Swap Event Transactions
+            </Button>
+          </div>
+        ) : renderDrawerParagraphs([
+          "No swap-event drill-down is available for this booked event.",
         ]),
       },
     ],

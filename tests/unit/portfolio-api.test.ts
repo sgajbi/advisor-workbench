@@ -620,6 +620,7 @@ describe("portfolio api", () => {
       securityId: "EQ_US_AAPL_MANUAL_001",
       linkedTransactionGroupId: "LTG-FX-2026-0001",
       fxContractId: "FXC-2026-0001",
+      swapEventId: "FXSWAP-2026-0001",
       limit: 200,
     });
 
@@ -634,6 +635,7 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("security_id=EQ_US_AAPL_MANUAL_001");
     expect(requestUrl).toContain("linked_transaction_group_id=LTG-FX-2026-0001");
     expect(requestUrl).toContain("fx_contract_id=FXC-2026-0001");
+    expect(requestUrl).toContain("swap_event_id=FXSWAP-2026-0001");
   });
 
   it("reuses cached BFF responses for identical requests", async () => {

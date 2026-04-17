@@ -607,6 +607,14 @@ export default function PortfolioWorkspaceView({
                                           label: `Filtered by FX contract: ${row.raw.fx_contract_id}`,
                                         })
                                     : null,
+                                  onOpenSwapEvent: row.raw.swap_event_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "swap_event",
+                                          swap_event_id: row.raw.swap_event_id!,
+                                          label: `Filtered by swap event: ${row.raw.swap_event_id}`,
+                                        })
+                                    : null,
                                 }
                               )
                             )

@@ -690,8 +690,14 @@ export function filterTransactionsByDrilldown(
     );
   }
 
+  if (filter.kind === "fx_contract") {
+    return transactions.filter(
+      (transaction) => transaction.fx_contract_id === filter.fx_contract_id
+    );
+  }
+
   return transactions.filter(
-    (transaction) => transaction.fx_contract_id === filter.fx_contract_id
+    (transaction) => transaction.swap_event_id === filter.swap_event_id
   );
 }
 

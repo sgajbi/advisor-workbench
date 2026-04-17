@@ -137,6 +137,10 @@ export default function PortfolioTransactionsGrid({
           externalFilter?.kind === "fx_contract"
             ? externalFilter.fx_contract_id
             : undefined,
+        swapEventId:
+          externalFilter?.kind === "swap_event"
+            ? externalFilter.swap_event_id
+            : undefined,
         limit: 200,
       });
 
