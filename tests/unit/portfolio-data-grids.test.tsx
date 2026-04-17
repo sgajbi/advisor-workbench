@@ -173,6 +173,7 @@ describe("portfolio data grids", () => {
     expect(screen.getByRole("button", { name: "Export transactions" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show expanded transaction columns" })).toBeInTheDocument();
     expect(screen.getByLabelText("Transaction type filter")).toBeInTheDocument();
+    expect(screen.getByLabelText("Transaction component type filter")).toBeInTheDocument();
     expect(screen.getByLabelText("Transaction start date")).toHaveValue("2026-03-01");
     expect(screen.getByLabelText("Transaction end date")).toHaveValue("2026-03-28");
 
@@ -203,6 +204,38 @@ describe("portfolio data grids", () => {
         }),
       ])
     );
+  });
+
+  it("renders the component filter alongside the strategic ledger controls", async () => {
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByLabelText("Transaction component type filter")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ledger view filtered by transaction type, component type, and trade date window")
+    ).toBeInTheDocument();
   });
 
   it("applies an external transaction drill-down filter and allows clearing it", async () => {

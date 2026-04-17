@@ -26,6 +26,10 @@ import {
   PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
+import {
+  buildTransactionFilterOptions,
+  shouldReuseInitialTransactions,
+} from "./portfolio-transactions-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -73,6 +77,7 @@ export default function PortfolioTransactionsGrid({
   onRowSelect,
 }: PortfolioTransactionsGridProps) {
   const [transactionType, setTransactionType] = useState("ALL");
+  const [componentType, setComponentType] = useState("ALL");
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [transactions, setTransactions] = useState<PortfolioTransactionView[]>(initialTransactions);
@@ -97,12 +102,16 @@ export default function PortfolioTransactionsGrid({
         return;
       }
 
-      const shouldUseInitialTransactions =
-        externalFilter?.kind !== "security" &&
-        transactionType === "ALL" &&
-        startDate === defaultStartDate &&
-        endDate === defaultEndDate &&
-        initialTransactions.length > 0;
+      const shouldUseInitialTransactions = shouldReuseInitialTransactions({
+        externalFilter,
+        transactionType,
+        componentType,
+        startDate,
+        endDate,
+        defaultStartDate,
+        defaultEndDate,
+        initialTransactionCount: initialTransactions.length,
+      });
 
       if (shouldUseInitialTransactions) {
         setTransactions(initialTransactions);
@@ -118,6 +127,7 @@ export default function PortfolioTransactionsGrid({
         startDate,
         endDate,
         transactionType,
+        componentType,
         securityId: externalFilter?.kind === "security" ? externalFilter.security_id : undefined,
         limit: 200,
       });
@@ -148,19 +158,17 @@ export default function PortfolioTransactionsGrid({
     portfolioId,
     startDate,
     suspendInitialFetch,
+    componentType,
     transactionType,
   ]);
 
   const transactionTypeOptions = useMemo(
-    () =>
-      [
-        "ALL",
-        ...new Set(
-          [...initialTransactions, ...transactions]
-            .map((transaction) => transaction.transaction_type)
-            .filter(Boolean)
-        ),
-      ],
+    () => buildTransactionFilterOptions([...initialTransactions, ...transactions], (transaction) => transaction.transaction_type),
+    [initialTransactions, transactions]
+  );
+
+  const componentTypeOptions = useMemo(
+    () => buildTransactionFilterOptions([...initialTransactions, ...transactions], (transaction) => transaction.component_type),
     [initialTransactions, transactions]
   );
 
@@ -286,7 +294,7 @@ export default function PortfolioTransactionsGrid({
       {showFilters ? (
         <div className="portfolio-grid-toolbar portfolio-grid-toolbar-stacked">
           <div className="portfolio-grid-toolbar-copy">
-            <span>Ledger view filtered by transaction type and trade date window</span>
+            <span>Ledger view filtered by transaction type, component type, and trade date window</span>
           </div>
           <div className="portfolio-grid-filter-row">
             <FormControl size="small" className="portfolio-grid-filter-control">
@@ -301,6 +309,22 @@ export default function PortfolioTransactionsGrid({
                 {transactionTypeOptions.map((option) => (
                   <MenuItem key={option} value={option}>
                     {option === "ALL" ? "All Types" : formatStatus(option)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" className="portfolio-grid-filter-control">
+              <InputLabel id="transaction-component-type-label">Component</InputLabel>
+              <Select
+                labelId="transaction-component-type-label"
+                label="Component"
+                value={componentType}
+                inputProps={{ "aria-label": "Transaction component type filter" }}
+                onChange={(event) => setComponentType(event.target.value)}
+              >
+                {componentTypeOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option === "ALL" ? "All Components" : formatStatus(option)}
                   </MenuItem>
                 ))}
               </Select>

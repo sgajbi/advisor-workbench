@@ -346,6 +346,7 @@ export async function getPortfolioTransactionLedger(
     startDate?: string;
     endDate?: string;
     transactionType?: string;
+    componentType?: string;
     securityId?: string;
     limit?: number;
     skip?: number;
@@ -367,6 +368,9 @@ export async function getPortfolioTransactionLedger(
     }
     if (params.transactionType && params.transactionType !== "ALL") {
       searchParams.set("transaction_type", params.transactionType);
+    }
+    if (params.componentType && params.componentType !== "ALL") {
+      searchParams.set("component_type", params.componentType);
     }
     if (params.securityId) {
       searchParams.set("security_id", params.securityId);

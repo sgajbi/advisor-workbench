@@ -616,6 +616,7 @@ describe("portfolio api", () => {
       startDate: "2026-03-01",
       endDate: "2026-03-28",
       transactionType: "BUY",
+      componentType: "FX_CONTRACT_OPEN",
       securityId: "EQ_US_AAPL_MANUAL_001",
       limit: 200,
     });
@@ -627,6 +628,7 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("start_date=2026-03-01");
     expect(requestUrl).toContain("end_date=2026-03-28");
     expect(requestUrl).toContain("transaction_type=BUY");
+    expect(requestUrl).toContain("component_type=FX_CONTRACT_OPEN");
     expect(requestUrl).toContain("security_id=EQ_US_AAPL_MANUAL_001");
   });
 
