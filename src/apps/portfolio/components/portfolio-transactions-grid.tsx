@@ -98,6 +98,7 @@ export default function PortfolioTransactionsGrid({
       }
 
       const shouldUseInitialTransactions =
+        externalFilter?.kind !== "security" &&
         transactionType === "ALL" &&
         startDate === defaultStartDate &&
         endDate === defaultEndDate &&
@@ -117,6 +118,7 @@ export default function PortfolioTransactionsGrid({
         startDate,
         endDate,
         transactionType,
+        securityId: externalFilter?.kind === "security" ? externalFilter.security_id : undefined,
         limit: 200,
       });
 
@@ -141,6 +143,7 @@ export default function PortfolioTransactionsGrid({
     defaultEndDate,
     defaultStartDate,
     endDate,
+    externalFilter,
     initialTransactions,
     portfolioId,
     startDate,

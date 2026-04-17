@@ -207,6 +207,31 @@ describe("portfolio data grids", () => {
 
   it("applies an external transaction drill-down filter and allows clearing it", async () => {
     const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_3",
+              transaction_date: "2026-03-12T00:00:00Z",
+              settlement_date: "2026-03-14",
+              transaction_type: "DIVIDEND",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 0,
+              gross_amount: 1250,
+              currency: "USD",
+              settlement_status: "SETTLED",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
 
     render(
       <PortfolioTransactionsGrid
@@ -251,7 +276,13 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("Filtered by security: Apple Inc.")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("security_id=EQ_1");
     expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /12 Mar 2026 \| Dividend \| 14 Mar 2026 \| AAPL/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /18 Mar 2026 \| Buy \| MSFT/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
@@ -358,6 +389,21 @@ describe("portfolio data grids", () => {
   });
 
   it("shows an empty drill-down state without mounting the transactions grid", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            total: 0,
+            skip: 0,
+            limit: 200,
+            transactions: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
     const { container } = render(
       <PortfolioTransactionsGrid
         portfolioId="MANUAL_PB_USD_001"
@@ -387,7 +433,9 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    });
     expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
