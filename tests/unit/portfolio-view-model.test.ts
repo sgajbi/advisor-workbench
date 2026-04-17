@@ -217,6 +217,27 @@ describe("portfolio view model", () => {
     expect(resolveTimeWindowStartDate("2026-02-24", "SI", "2024-01-01")).toBe("2024-01-01");
   });
 
+  it("enables reporting-currency restatement when the workspace exposes an alternate reporting currency", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.income_summary = {
+      ...workspace.income_summary!,
+      reporting_currency: "SGD",
+    };
+    workspace.activity_summary = {
+      ...workspace.activity_summary!,
+      reporting_currency: "SGD",
+    };
+
+    const context = buildPortfolioWorkspaceContext(workspace, {
+      ...buildInitialPortfolioControls(workspace),
+      reportingCurrency: "SGD",
+    });
+
+    expect(context.currencyOptions).toEqual(["USD", "SGD"]);
+    expect(context.selectedReportingCurrency).toBe("SGD");
+    expect(context.supportsReportingCurrencyRestatement).toBe(true);
+  });
+
   it("derives an effective custom period in detailed mode", () => {
     expect(
       resolveEffectivePeriod("2026-02-24", "30D", "2024-01-01", "2026-02-01", "2026-02-20")

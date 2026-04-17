@@ -140,9 +140,10 @@ export function buildPortfolioWorkspaceContext(
   workspace: PortfolioWorkspace | null,
   controls: PortfolioWorkspaceControls
 ): PortfolioWorkspaceContext {
+  const currencyOptions = getPortfolioCurrencyOptions(workspace);
   const selectedAsOfDate = clampAsOfDate(workspace, controls.asOfDate);
   const selectedReportingCurrency =
-    getPortfolioCurrencyOptions(workspace).find((option) => option === controls.reportingCurrency) ??
+    currencyOptions.find((option) => option === controls.reportingCurrency) ??
     workspace?.portfolio.base_currency ??
     controls.reportingCurrency;
 
@@ -167,9 +168,9 @@ export function buildPortfolioWorkspaceContext(
     effectivePeriodEndDate: effectivePeriod.endDate,
     usesCustomDateRange: effectivePeriod.isCustomRange,
     hasHistoricalGap: Boolean(workspace && selectedAsOfDate !== workspace.as_of_date),
-    currencyOptions: getPortfolioCurrencyOptions(workspace),
+    currencyOptions,
     supportsHistoricalSnapshots: false,
-    supportsReportingCurrencyRestatement: false,
+    supportsReportingCurrencyRestatement: currencyOptions.length > 1,
   };
 }
 

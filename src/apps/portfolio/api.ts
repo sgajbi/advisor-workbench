@@ -204,6 +204,9 @@ export async function getPortfolioWorkspaceShell(
 export async function getPortfolioWorkspaceSummaryDetails(
   portfolioId: string,
   params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+    includeProjected?: boolean;
     timeWindow: PortfolioTimeWindow;
     reportStartDate: string;
     reportEndDate: string;
@@ -225,7 +228,8 @@ export async function getPortfolioWorkspaceSummaryDetails(
       ),
       fetchPortfolioJson<PortfolioPositionsResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
+        { query: buildPortfolioPositionsQuery(params) }
       ),
       fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
         resolvePortfolioRequestTarget(),
@@ -441,6 +445,24 @@ function buildPortfolioPerformanceSnapshotQuery(params: {
   if (useExplicitWindow) {
     query.set("report_start_date", params.reportStartDate);
   }
+
+  return query;
+}
+
+function buildPortfolioPositionsQuery(params: {
+  asOfDate?: string;
+  reportingCurrency?: string;
+  includeProjected?: boolean;
+}) {
+  const query = new URLSearchParams();
+
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
+  }
+  query.set("include_projected", String(params.includeProjected ?? false));
 
   return query;
 }

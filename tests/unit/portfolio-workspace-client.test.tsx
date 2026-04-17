@@ -187,6 +187,9 @@ describe("PortfolioWorkspaceClient", () => {
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
     expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-02-26",
       reportEndDate: "2026-03-28",
@@ -258,6 +261,9 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getShellWorkspaceMock).toHaveBeenCalledWith("MANUAL_PB_USD_001");
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
     expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-02-26",
       reportEndDate: "2026-03-28",

@@ -267,6 +267,9 @@ describe("portfolio api", () => {
     vi.stubGlobal("fetch", fetchSpy);
 
     const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
@@ -329,6 +332,15 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/positions?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("reporting_currency=USD") &&
+          url.includes("include_projected=false")
+      )
+    ).toBe(true);
     expect(
       requestedUrls.some(
         (url) =>
@@ -396,6 +408,9 @@ describe("portfolio api", () => {
     );
 
     const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
@@ -696,11 +711,17 @@ describe("portfolio api", () => {
     });
 
     await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
     });
     await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
