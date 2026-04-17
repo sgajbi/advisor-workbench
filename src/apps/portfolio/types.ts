@@ -146,6 +146,7 @@ export type PortfolioCashBalance = {
 export type PortfolioTransactionView = {
   transaction_id: string;
   transaction_date: string;
+  settlement_date?: string | null;
   transaction_type: string;
   component_type?: string | null;
   security_id: string;

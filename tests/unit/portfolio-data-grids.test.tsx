@@ -46,6 +46,7 @@ vi.mock("xlsx", () => ({
 
 import PortfolioHoldingsGrid from "../../src/apps/portfolio/components/portfolio-holdings-grid";
 import PortfolioTransactionsGrid from "../../src/apps/portfolio/components/portfolio-transactions-grid";
+import * as XLSX from "xlsx";
 
 describe("portfolio data grids", () => {
   afterEach(() => {
@@ -122,6 +123,7 @@ describe("portfolio data grids", () => {
               {
                 transaction_id: "TX_1",
                 transaction_date: "2026-03-20T00:00:00Z",
+                settlement_date: "2026-03-24",
                 transaction_type: "BUY",
                 component_type: "TRADE",
                 security_id: "EQ_1",
@@ -151,6 +153,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_1",
             transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
             transaction_type: "BUY",
             security_id: "EQ_1",
             instrument_id: "AAPL",
@@ -177,20 +180,29 @@ describe("portfolio data grids", () => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
     expect(screen.getByText("Amount")).toBeInTheDocument();
+    expect(screen.getByText("Settle Date")).toBeInTheDocument();
     expect(screen.getByText("Currency")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByTestId("amount-header-class")).toHaveTextContent(
       "portfolio-data-grid-header-cell-numeric"
     );
-    expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
-    expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
-    expect(
-      screen.getByText(/does not expose settlement dates/i)
-    ).toBeInTheDocument();
+    expect(screen.queryByText("Transaction lifecycle detail is limited")).not.toBeInTheDocument();
+    expect(screen.queryByText(/does not expose settlement dates/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /20 Mar 2026/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
     expect(onRowSelect.mock.calls[0][0].transactionId).toBe("TX_1");
+    expect(onRowSelect.mock.calls[0][0].settleDate).toBe("2026-03-24");
+
+    fireEvent.click(screen.getByRole("button", { name: "Export transactions" }));
+    expect(XLSX.utils.json_to_sheet).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          "Trade Date": "20 Mar 2026",
+          "Settle Date": "24 Mar 2026",
+        }),
+      ])
+    );
   });
 
   it("applies an external transaction drill-down filter and allows clearing it", async () => {
@@ -213,6 +225,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_1",
             transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
             transaction_type: "BUY",
             security_id: "EQ_1",
             instrument_id: "AAPL",
@@ -224,6 +237,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_2",
             transaction_date: "2026-03-18T00:00:00Z",
+            settlement_date: "2026-03-21",
             transaction_type: "BUY",
             security_id: "EQ_2",
             instrument_id: "MSFT",
@@ -360,6 +374,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_1",
             transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
             transaction_type: "BUY",
             security_id: "EQ_1",
             instrument_id: "AAPL",
@@ -425,6 +440,7 @@ describe("portfolio data grids", () => {
               {
                 transaction_id: "TX_1",
                 transaction_date: "2026-03-20T00:00:00Z",
+                settlement_date: "2026-03-24",
                 transaction_type: "BUY",
                 component_type: "TRADE",
                 security_id: "EQ_1",
@@ -469,12 +485,13 @@ describe("portfolio data grids", () => {
           defaultStartDate="2026-03-01"
           defaultEndDate="2026-03-28"
           initialTransactions={[
-            {
-              transaction_id: "TX_1",
-              transaction_date: "2026-03-20T00:00:00Z",
-              transaction_type: "BUY",
-              security_id: "EQ_1",
-              instrument_id: "AAPL",
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
               quantity: 50,
               net_cost_base: 9000,
               currency: "USD",

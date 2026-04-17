@@ -49,6 +49,7 @@ type PortfolioTransactionsGridProps = {
 export type TransactionRow = {
   transactionId: string;
   tradeDate: string;
+  settleDate: string | null;
   type: string;
   instrument: string;
   quantity: number;
@@ -170,6 +171,7 @@ export default function PortfolioTransactionsGrid({
       filteredTransactions.map((transaction) => ({
         transactionId: transaction.transaction_id,
         tradeDate: transaction.transaction_date,
+        settleDate: transaction.settlement_date ?? null,
         type: formatStatus(transaction.transaction_type),
         instrument: transaction.instrument_id,
         quantity: transaction.quantity,
@@ -195,6 +197,12 @@ export default function PortfolioTransactionsGrid({
         field: "type",
         headerName: "Type",
         minWidth: 104,
+      }),
+      buildTransactionColumn({
+        field: "settleDate",
+        headerName: "Settle Date",
+        minWidth: 118,
+        valueFormatter: ({ value }) => formatDate(value),
       }),
       buildTransactionColumn({
         field: "instrument",
@@ -338,14 +346,6 @@ export default function PortfolioTransactionsGrid({
           rows={5}
         />
       ) : rowData.length ? (
-        <>
-          <PortfolioModuleState
-            variant="status"
-            state="partial"
-            title="Transaction lifecycle detail is limited"
-            body="Trade activity is available, but the current contract does not expose settlement dates."
-            hint="Use trade date, status, and amount for current operational review until settlement fields are added upstream."
-          />
         <div
           className={`ag-theme-quartz portfolio-data-grid ${showExpandedColumns ? "portfolio-data-grid-dense" : ""}`}
           aria-label="Portfolio transactions grid"
@@ -369,7 +369,6 @@ export default function PortfolioTransactionsGrid({
             }}
           />
         </div>
-        </>
       ) : loadError ? (
         <PortfolioModuleState
           variant="status"
@@ -437,6 +436,7 @@ function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<Transact
 function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
   const exportRows = rows.map((row) => ({
     "Trade Date": formatDate(row.tradeDate),
+    "Settle Date": formatDate(row.settleDate),
     Type: row.type,
     Instrument: row.instrument,
     Quantity: row.quantity,
