@@ -1100,6 +1100,41 @@ describe("portfolio api", () => {
       }
     }
   });
+
+  it("preserves gateway portfolio catalog picker metadata", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          items: [
+            {
+              portfolio_id: "PF_1001",
+              display_name: "Alpha Growth",
+              base_currency: "USD",
+              client_id: "CIF_1001",
+              booking_center_code: "SGPB",
+              portfolio_type: "ADVISORY",
+              status: "ACTIVE",
+            },
+          ],
+        })
+      )
+    );
+
+    const items = await getPortfolioCatalog();
+
+    expect(items).toEqual([
+      {
+        portfolio_id: "PF_1001",
+        display_name: "Alpha Growth",
+        base_currency: "USD",
+        client_id: "CIF_1001",
+        booking_center_code: "SGPB",
+        portfolio_type: "ADVISORY",
+        status: "ACTIVE",
+      },
+    ]);
+  });
 });
 
 function jsonResponse(payload: unknown): Response {
