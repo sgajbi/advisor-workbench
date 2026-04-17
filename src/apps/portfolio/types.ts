@@ -59,6 +59,11 @@ export type PortfolioTransactionDrilldownFilter =
       kind: "swap_event";
       swap_event_id: string;
       label: string;
+    }
+  | {
+      kind: "near_leg_group";
+      near_leg_group_id: string;
+      label: string;
     };
 
 export type PortfolioHoldingsDrilldownFilter =

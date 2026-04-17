@@ -696,8 +696,14 @@ export function filterTransactionsByDrilldown(
     );
   }
 
+  if (filter.kind === "swap_event") {
+    return transactions.filter(
+      (transaction) => transaction.swap_event_id === filter.swap_event_id
+    );
+  }
+
   return transactions.filter(
-    (transaction) => transaction.swap_event_id === filter.swap_event_id
+    (transaction) => transaction.near_leg_group_id === filter.near_leg_group_id
   );
 }
 

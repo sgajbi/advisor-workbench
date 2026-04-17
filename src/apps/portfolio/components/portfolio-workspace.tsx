@@ -615,6 +615,14 @@ export default function PortfolioWorkspaceView({
                                           label: `Filtered by swap event: ${row.raw.swap_event_id}`,
                                         })
                                     : null,
+                                  onOpenNearLegGroup: row.raw.near_leg_group_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "near_leg_group",
+                                          near_leg_group_id: row.raw.near_leg_group_id!,
+                                          label: `Filtered by near-leg group: ${row.raw.near_leg_group_id}`,
+                                        })
+                                    : null,
                                 }
                               )
                             )

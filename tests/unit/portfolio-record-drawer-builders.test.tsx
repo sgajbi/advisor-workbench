@@ -89,6 +89,7 @@ describe("portfolio record drawer builders", () => {
     const onOpenLinkedTransactionGroup = vi.fn();
     const onOpenFxContract = vi.fn();
     const onOpenSwapEvent = vi.fn();
+    const onOpenNearLegGroup = vi.fn();
     const transactionRow: TransactionRow = {
       transactionId: "TX_1",
       tradeDate: "2026-03-20T00:00:00Z",
@@ -124,6 +125,7 @@ describe("portfolio record drawer builders", () => {
       onOpenLinkedTransactionGroup,
       onOpenFxContract,
       onOpenSwapEvent,
+      onOpenNearLegGroup,
     });
 
     render(
@@ -133,6 +135,7 @@ describe("portfolio record drawer builders", () => {
         {drawer.tabs.find((tab) => tab.key === "related-activity")?.content}
         {drawer.tabs.find((tab) => tab.key === "fx-contract")?.content}
         {drawer.tabs.find((tab) => tab.key === "swap-event")?.content}
+        {drawer.tabs.find((tab) => tab.key === "near-leg-group")?.content}
       </div>
     );
 
@@ -148,5 +151,7 @@ describe("portfolio record drawer builders", () => {
     expect(onOpenFxContract).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: "Open Swap Event Transactions" }));
     expect(onOpenSwapEvent).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Open Near-Leg Transactions" }));
+    expect(onOpenNearLegGroup).toHaveBeenCalledTimes(1);
   });
 });

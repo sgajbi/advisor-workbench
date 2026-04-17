@@ -351,6 +351,7 @@ export async function getPortfolioTransactionLedger(
     linkedTransactionGroupId?: string;
     fxContractId?: string;
     swapEventId?: string;
+    nearLegGroupId?: string;
     limit?: number;
     skip?: number;
   } = {}
@@ -386,6 +387,9 @@ export async function getPortfolioTransactionLedger(
     }
     if (params.swapEventId) {
       searchParams.set("swap_event_id", params.swapEventId);
+    }
+    if (params.nearLegGroupId) {
+      searchParams.set("near_leg_group_id", params.nearLegGroupId);
     }
 
     return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(

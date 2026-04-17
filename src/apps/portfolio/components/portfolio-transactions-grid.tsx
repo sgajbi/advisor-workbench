@@ -141,6 +141,10 @@ export default function PortfolioTransactionsGrid({
           externalFilter?.kind === "swap_event"
             ? externalFilter.swap_event_id
             : undefined,
+        nearLegGroupId:
+          externalFilter?.kind === "near_leg_group"
+            ? externalFilter.near_leg_group_id
+            : undefined,
         limit: 200,
       });
 

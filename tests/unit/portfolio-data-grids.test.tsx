@@ -538,6 +538,78 @@ describe("portfolio data grids", () => {
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
 
+  it("requests the strategic ledger for near-leg group drill-downs", async () => {
+    const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_10",
+              transaction_date: "2026-03-18T00:00:00Z",
+              settlement_date: "2026-03-21",
+              transaction_type: "BUY",
+              component_type: "FX_SWAP_NEAR_LEG",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 25,
+              net_cost_base: 5000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "near_leg_group",
+          near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+          label: "Filtered by near-leg group: FXSWAP-2026-0001-NEAR",
+        }}
+        onClearExternalFilter={onClearExternalFilter}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Filtered by near-leg group: FXSWAP-2026-0001-NEAR")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("near_leg_group_id=FXSWAP-2026-0001-NEAR");
+    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
+    expect(onClearExternalFilter).toHaveBeenCalled();
+  });
+
   it("shows an empty-state CTA for holdings with no rows", () => {
     const { container } = render(
       <PortfolioHoldingsGrid
