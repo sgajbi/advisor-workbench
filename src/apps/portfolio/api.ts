@@ -33,6 +33,7 @@ type PortfolioWorkspaceSummaryResponse = {
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
   performance: PortfolioWorkspace["performance"];
   rebalance: PortfolioWorkspace["rebalance"];
+  control_capabilities?: PortfolioWorkspace["control_capabilities"];
   reporting: PortfolioWorkspace["readiness"]["reporting"];
   operations?: Record<string, unknown> | null;
   workflow_cues: PortfolioWorkspace["workflow_cues"];
@@ -186,6 +187,7 @@ export async function getPortfolioWorkspaceShell(
       cashflow_outlook: summaryPayload.cashflow_outlook,
       performance: summaryPayload.performance,
       rebalance: summaryPayload.rebalance,
+      control_capabilities: summaryPayload.control_capabilities ?? null,
       readiness: {
         has_positions: summaryPayload.summary.position_count > 0,
         reporting: summaryPayload.reporting,

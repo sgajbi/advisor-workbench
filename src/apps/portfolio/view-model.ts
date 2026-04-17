@@ -118,6 +118,13 @@ export function getPortfolioCurrencyOptions(workspace: PortfolioWorkspace | null
   }
 
   const options = new Set<string>();
+  workspace.control_capabilities?.reporting_currency_restatement.supported_currencies.forEach(
+    (currency) => {
+      if (currency) {
+        options.add(currency);
+      }
+    }
+  );
   if (workspace.portfolio.base_currency) {
     options.add(workspace.portfolio.base_currency);
   }
@@ -144,8 +151,13 @@ export function buildPortfolioWorkspaceContext(
   const selectedAsOfDate = clampAsOfDate(workspace, controls.asOfDate);
   const selectedReportingCurrency =
     currencyOptions.find((option) => option === controls.reportingCurrency) ??
+    workspace?.control_capabilities?.reporting_currency_restatement.effective_reporting_currency ??
     workspace?.portfolio.base_currency ??
     controls.reportingCurrency;
+  const historicalSnapshotState =
+    workspace?.control_capabilities?.historical_snapshots.state ?? "unsupported";
+  const reportingCurrencyState =
+    workspace?.control_capabilities?.reporting_currency_restatement.state ?? "unsupported";
 
   const effectivePeriod = resolveEffectivePeriod(
     selectedAsOfDate,
@@ -169,8 +181,8 @@ export function buildPortfolioWorkspaceContext(
     usesCustomDateRange: effectivePeriod.isCustomRange,
     hasHistoricalGap: Boolean(workspace && selectedAsOfDate !== workspace.as_of_date),
     currencyOptions,
-    supportsHistoricalSnapshots: false,
-    supportsReportingCurrencyRestatement: currencyOptions.length > 1,
+    supportsHistoricalSnapshots: historicalSnapshotState === "supported",
+    supportsReportingCurrencyRestatement: reportingCurrencyState === "supported",
   };
 }
 
@@ -786,8 +798,13 @@ function clampAsOfDate(workspace: PortfolioWorkspace | null, requested: string):
     return requested;
   }
 
-  const lowerBound = workspace.profile.open_date ?? requested;
-  const upperBound = workspace.as_of_date;
+  const lowerBound =
+    workspace.control_capabilities?.historical_snapshots.earliest_available_as_of_date ??
+    workspace.profile.open_date ??
+    requested;
+  const upperBound =
+    workspace.control_capabilities?.historical_snapshots.latest_available_as_of_date ??
+    workspace.as_of_date;
 
   if (requested < lowerBound) {
     return lowerBound;

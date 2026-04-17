@@ -339,6 +339,33 @@ export type PortfolioWorkspace = {
     last_run_at_utc: string | null;
     last_rebalance_run_id: string | null;
   } | null;
+  control_capabilities?: {
+    historical_snapshots: {
+      state: "supported" | "partial" | "unsupported";
+      reason: string;
+      requested_as_of_date: string;
+      effective_as_of_date: string;
+      earliest_available_as_of_date?: string | null;
+      latest_available_as_of_date?: string | null;
+      module_capabilities: Array<{
+        module: string;
+        state: "supported" | "partial" | "unsupported";
+        reason: string;
+      }>;
+    };
+    reporting_currency_restatement: {
+      state: "supported" | "partial" | "unsupported";
+      reason: string;
+      requested_reporting_currency?: string | null;
+      effective_reporting_currency: string;
+      supported_currencies: string[];
+      module_capabilities: Array<{
+        module: string;
+        state: "supported" | "partial" | "unsupported";
+        reason: string;
+      }>;
+    };
+  } | null;
   readiness: {
     has_positions: boolean;
     reporting: {

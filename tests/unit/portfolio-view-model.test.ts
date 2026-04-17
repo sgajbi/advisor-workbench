@@ -100,6 +100,25 @@ function buildWorkspace(): PortfolioWorkspace {
     },
     performance: null,
     rebalance: null,
+    control_capabilities: {
+      historical_snapshots: {
+        state: "unsupported",
+        reason: "Historical snapshots are not yet source-backed.",
+        requested_as_of_date: "2026-02-24",
+        effective_as_of_date: "2026-02-24",
+        earliest_available_as_of_date: "2024-01-01",
+        latest_available_as_of_date: "2026-02-24",
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "unsupported",
+        reason: "Reporting currency restatement is not yet source-backed.",
+        requested_reporting_currency: null,
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD"],
+        module_capabilities: [],
+      },
+    },
     readiness: {
       has_positions: false,
       reporting: {
@@ -216,15 +235,18 @@ describe("portfolio view model", () => {
     expect(resolveTimeWindowStartDate("2026-02-24", "SI", "2024-01-01")).toBe("2024-01-01");
   });
 
-  it("enables reporting-currency restatement when the workspace exposes an alternate reporting currency", () => {
+  it("uses gateway reporting-currency capability metadata instead of local heuristics", () => {
     const workspace = buildOperationalWorkspace();
-    workspace.income_summary = {
-      ...workspace.income_summary!,
-      reporting_currency: "SGD",
-    };
-    workspace.activity_summary = {
-      ...workspace.activity_summary!,
-      reporting_currency: "SGD",
+    workspace.control_capabilities = {
+      ...workspace.control_capabilities!,
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "Gateway confirms reporting-currency restatement across the workspace.",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "SGD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
     };
 
     const context = buildPortfolioWorkspaceContext(workspace, {
@@ -484,6 +506,30 @@ describe("portfolio view model", () => {
     expect(context.effectivePeriodEndDate).toBe("2026-02-24");
     expect(context.supportsHistoricalSnapshots).toBe(false);
     expect(context.supportsReportingCurrencyRestatement).toBe(false);
+  });
+
+  it("enables historical snapshots only when gateway marks the control as supported", () => {
+    const workspace = buildWorkspace();
+    workspace.control_capabilities = {
+      ...workspace.control_capabilities!,
+      historical_snapshots: {
+        state: "supported",
+        reason: "Gateway confirms historical snapshot support across the workspace.",
+        requested_as_of_date: "2025-06-01",
+        effective_as_of_date: "2025-06-01",
+        earliest_available_as_of_date: "2025-01-01",
+        latest_available_as_of_date: "2026-02-24",
+        module_capabilities: [],
+      },
+    };
+
+    const context = buildPortfolioWorkspaceContext(workspace, {
+      ...buildInitialPortfolioControls(workspace),
+      asOfDate: "2025-06-01",
+    });
+
+    expect(context.supportsHistoricalSnapshots).toBe(true);
+    expect(context.selectedAsOfDate).toBe("2025-06-01");
   });
 
   it("derives portfolio readiness, activity, and workflow models", () => {

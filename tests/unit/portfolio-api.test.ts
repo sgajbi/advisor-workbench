@@ -60,6 +60,37 @@ describe("portfolio api", () => {
               last_run_at_utc: "2026-03-27T12:00:00Z",
               last_rebalance_run_id: "rr_100",
             },
+            control_capabilities: {
+              historical_snapshots: {
+                state: "partial",
+                reason: "Most modules honor as_of_date.",
+                requested_as_of_date: "2026-03-28",
+                effective_as_of_date: "2026-03-28",
+                earliest_available_as_of_date: "2024-01-15",
+                latest_available_as_of_date: "2026-03-28",
+                module_capabilities: [
+                  {
+                    module: "book",
+                    state: "supported",
+                    reason: "Book accepts and honors as_of_date directly.",
+                  },
+                ],
+              },
+              reporting_currency_restatement: {
+                state: "partial",
+                reason: "Only some modules honor reporting currency.",
+                requested_reporting_currency: null,
+                effective_reporting_currency: "USD",
+                supported_currencies: ["USD", "SGD"],
+                module_capabilities: [
+                  {
+                    module: "positions",
+                    state: "supported",
+                    reason: "Positions accept and honor reporting_currency directly.",
+                  },
+                ],
+              },
+            },
             reporting: {
               status: "READY",
               generated_at_utc: "2026-03-28T08:00:00Z",
@@ -90,6 +121,11 @@ describe("portfolio api", () => {
       last_run_at_utc: "2026-03-27T12:00:00Z",
       last_rebalance_run_id: "rr_100",
     });
+    expect(shell?.control_capabilities?.historical_snapshots.state).toBe("partial");
+    expect(shell?.control_capabilities?.reporting_currency_restatement.supported_currencies).toEqual([
+      "USD",
+      "SGD",
+    ]);
     expect(shell?.readiness_indicators).toBeUndefined();
     expect(shell?.workflow_actions).toBeUndefined();
   });
@@ -125,6 +161,7 @@ describe("portfolio api", () => {
             cashflow_outlook: null,
             performance: null,
             rebalance: null,
+            control_capabilities: null,
             reporting: {
               status: "READY",
               generated_at_utc: "2026-03-28T08:00:00Z",
@@ -144,6 +181,7 @@ describe("portfolio api", () => {
 
     expect(shell?.performance).toBeNull();
     expect(shell?.rebalance).toBeNull();
+    expect(shell?.control_capabilities).toBeNull();
   });
 
   it("loads summary detail modules without fetching detailed ledger and liquidity slices", async () => {
