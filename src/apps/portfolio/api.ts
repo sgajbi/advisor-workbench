@@ -215,6 +215,9 @@ export async function getPortfolioWorkspaceSummaryDetails(
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
     const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
+    // Keep the modular book-family reads here for now. Gateway `/book` aligns as-of date and
+    // projected positions, but it does not yet support `reporting_currency`, and this workspace
+    // now relies on source-backed position restatement instead of rebuilding that in the client.
     const [
       allocationsPayload,
       positionsPayload,

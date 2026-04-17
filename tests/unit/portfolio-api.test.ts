@@ -332,6 +332,7 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/book"))).toBe(false);
     expect(
       requestedUrls.some(
         (url) =>
