@@ -145,7 +145,7 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}:${context.timeWindow}:${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}:${context.usesCustomDateRange}`;
+      const requestKey = `${selectedPortfolioId}:${context.selectedAsOfDate}:${context.selectedReportingCurrency}:${context.timeWindow}:${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}:${context.usesCustomDateRange}`;
       if (summaryRequestRef.current?.key === requestKey) {
         return;
       }
@@ -153,6 +153,9 @@ export default function PortfolioWorkspaceClient({
       summaryRequestRef.current = { key: requestKey, status: "loading" };
       setSummaryDetailsLoading(true);
       const details = await getPortfolioWorkspaceSummaryDetailsOnce(requestKey, selectedPortfolioId, {
+        asOfDate: context.selectedAsOfDate,
+        reportingCurrency: context.selectedReportingCurrency,
+        includeProjected: false,
         timeWindow: context.timeWindow,
         reportStartDate: context.effectivePeriodStartDate,
         reportEndDate: context.effectivePeriodEndDate,
@@ -179,6 +182,8 @@ export default function PortfolioWorkspaceClient({
   }, [
     context.effectivePeriodEndDate,
     context.effectivePeriodStartDate,
+    context.selectedAsOfDate,
+    context.selectedReportingCurrency,
     context.timeWindow,
     context.usesCustomDateRange,
     selectedPortfolioId,
@@ -193,7 +198,7 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}`;
+      const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}:${context.selectedReportingCurrency}`;
       const transactionWindowKey = `${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}`;
       const scopedRequestKey = `${requestKey}:${transactionWindowKey}`;
       if (
@@ -207,6 +212,7 @@ export default function PortfolioWorkspaceClient({
       setDetailedDetailsLoaded(false);
       const details = await getPortfolioWorkspaceDetailedDetailsOnce(scopedRequestKey, selectedPortfolioId, {
         asOfDate: context.selectedAsOfDate,
+        reportingCurrency: context.selectedReportingCurrency,
         startDate: context.effectivePeriodStartDate,
         endDate: context.effectivePeriodEndDate,
       });
@@ -230,6 +236,7 @@ export default function PortfolioWorkspaceClient({
     context.effectivePeriodEndDate,
     context.effectivePeriodStartDate,
     context.selectedAsOfDate,
+    context.selectedReportingCurrency,
     controls.viewMode,
     detailedDetailsLoaded,
     selectedPortfolioId,
@@ -386,6 +393,9 @@ function getPortfolioWorkspaceSummaryDetailsOnce(
   requestKey: string,
   portfolioId: string,
   params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+    includeProjected?: boolean;
     timeWindow: PortfolioTimeWindow;
     reportStartDate: string;
     reportEndDate: string;
@@ -409,6 +419,7 @@ function getPortfolioWorkspaceDetailedDetailsOnce(
   portfolioId: string,
   params: {
     asOfDate?: string;
+    reportingCurrency?: string;
     startDate?: string;
     endDate?: string;
   }

@@ -37,6 +37,14 @@ describe("SandboxControls", () => {
         status: "PASS",
         detail: "Policy checks passed.",
       },
+      warnings: ["MANAGE_POLICY_SIMULATION_UNAVAILABLE"],
+      partial_failures: [
+        {
+          source_service: "lotus-manage",
+          error_code: "HTTP_503",
+          detail: "paused",
+        },
+      ],
     });
 
     render(<SandboxControls portfolioId="PF_1001" sessionId={null} warnings={[]} />);
@@ -52,9 +60,12 @@ describe("SandboxControls", () => {
 
     expect(pushMock).toHaveBeenCalledWith("/workbench/PF_1001?sessionId=sess_001");
     expect(refreshMock).toHaveBeenCalled();
-    expect(screen.getByText("PASS")).toBeInTheDocument();
-    expect(screen.getByText("Policy checks passed.")).toBeInTheDocument();
-    expect(screen.getByText("READY")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("PASS")).toBeInTheDocument();
+      expect(screen.getByText("Policy checks passed.")).toBeInTheDocument();
+      expect(screen.getAllByText("WARNINGS_PRESENT").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("lotus-manage: paused")).toBeInTheDocument();
+    });
   });
 
   it("validates required sandbox inputs before applying a change", async () => {
@@ -77,6 +88,14 @@ describe("SandboxControls", () => {
         status: "FAIL",
         detail: "Policy threshold breached.",
       },
+      warnings: ["MANAGE_POLICY_SIMULATION_UNAVAILABLE"],
+      partial_failures: [
+        {
+          source_service: "lotus-manage",
+          error_code: "HTTP_503",
+          detail: "paused",
+        },
+      ],
     });
 
     render(<SandboxControls portfolioId="PF_1001" sessionId="sess_123" warnings={[]} />);
@@ -99,7 +118,11 @@ describe("SandboxControls", () => {
     });
 
     expect(refreshMock).toHaveBeenCalled();
-    expect(screen.getByText("FAIL")).toBeInTheDocument();
-    expect(screen.getByText("Policy threshold breached.")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("FAIL")).toBeInTheDocument();
+      expect(screen.getByText("Policy threshold breached.")).toBeInTheDocument();
+      expect(screen.getAllByText("WARNINGS_PRESENT").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("lotus-manage: paused")).toBeInTheDocument();
+    });
   });
 });

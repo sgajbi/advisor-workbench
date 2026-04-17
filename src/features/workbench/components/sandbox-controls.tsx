@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, Box, MenuItem, Stack, TextField } from "@mui/material";
 
@@ -27,6 +27,14 @@ export default function SandboxControls({
   const [evaluatePolicy, setEvaluatePolicy] = useState(true);
   const [sessionVersion, setSessionVersion] = useState<number | null>(null);
   const [policyFeedback, setPolicyFeedback] = useState<WorkbenchPolicyFeedback | null>(null);
+  const [runtimeWarnings, setRuntimeWarnings] = useState<string[]>(warnings);
+  const [runtimePartialFailures, setRuntimePartialFailures] = useState<
+    Array<{ source_service: string; error_code: string; detail: string }>
+  >([]);
+
+  useEffect(() => {
+    setRuntimeWarnings(warnings);
+  }, [warnings]);
 
   async function onCreateSession() {
     setError(null);
@@ -38,6 +46,8 @@ export default function SandboxControls({
       });
       setSessionVersion(response.session_version);
       setPolicyFeedback(response.policy_feedback ?? null);
+      setRuntimeWarnings(response.warnings);
+      setRuntimePartialFailures(response.partial_failures);
       router.push(`/workbench/${encodeURIComponent(portfolioId)}?sessionId=${encodeURIComponent(response.session_id)}`);
       router.refresh();
     } catch (err) {
@@ -71,6 +81,8 @@ export default function SandboxControls({
       });
       setSessionVersion(response.session_version);
       setPolicyFeedback(response.policy_feedback);
+      setRuntimeWarnings(response.warnings);
+      setRuntimePartialFailures(response.partial_failures);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to apply changes");
@@ -137,6 +149,15 @@ export default function SandboxControls({
           {error}
         </Alert>
       ) : null}
+      {runtimePartialFailures.length ? (
+        <Alert severity="warning" sx={{ mt: 1 }}>
+          {runtimePartialFailures.map((failure) => (
+            <div key={`${failure.source_service}-${failure.error_code}`}>
+              {failure.source_service}: {failure.detail}
+            </div>
+          ))}
+        </Alert>
+      ) : null}
 
       <div className="constraint-rail" style={{ marginTop: 14 }}>
         <MetricRow
@@ -160,8 +181,8 @@ export default function SandboxControls({
         <MetricRow
           label="Workflow Readiness"
           value={
-            <SemanticBadge tone={warnings.length ? "warn" : "success"}>
-              {warnings.length ? "WARNINGS_PRESENT" : "READY"}
+            <SemanticBadge tone={runtimeWarnings.length ? "warn" : "success"}>
+              {runtimeWarnings.length ? "WARNINGS_PRESENT" : "READY"}
             </SemanticBadge>
           }
         />

@@ -1,20 +1,12 @@
-import {
-  getWorkflowActionLabel,
-  getWorkflowTaskLabel,
-  mapWorkflowHref,
-  WORKFLOW_DISPLAY_ORDER,
-} from "./workspace-config";
+import { WORKFLOW_DISPLAY_ORDER } from "./workspace-config";
 import { formatDate } from "./formatters";
 import type {
   PortfolioActivitySummaryView,
-  PortfolioExceptionSummary,
   PortfolioHoldingsDrilldownFilter,
   PortfolioIncomeSummaryView,
-  PortfolioInsight,
   PortfolioReadinessIndicator,
   PortfolioReadinessStatus,
   PortfolioTransactionDrilldownFilter,
-  PortfolioWorkflowAction,
   PortfolioWorkflowCue,
   PortfolioWorkspace,
 } from "./types";
@@ -61,7 +53,11 @@ export type PortfolioWorkspaceContext = {
   usesCustomDateRange: boolean;
   hasHistoricalGap: boolean;
   currencyOptions: string[];
+  historicalSnapshotState: "supported" | "partial" | "unsupported";
+  historicalSnapshotReason: string;
   supportsHistoricalSnapshots: boolean;
+  reportingCurrencyRestatementState: "supported" | "partial" | "unsupported";
+  reportingCurrencyRestatementReason: string;
   supportsReportingCurrencyRestatement: boolean;
 };
 
@@ -126,6 +122,13 @@ export function getPortfolioCurrencyOptions(workspace: PortfolioWorkspace | null
   }
 
   const options = new Set<string>();
+  workspace.control_capabilities?.reporting_currency_restatement.supported_currencies.forEach(
+    (currency) => {
+      if (currency) {
+        options.add(currency);
+      }
+    }
+  );
   if (workspace.portfolio.base_currency) {
     options.add(workspace.portfolio.base_currency);
   }
@@ -148,11 +151,23 @@ export function buildPortfolioWorkspaceContext(
   workspace: PortfolioWorkspace | null,
   controls: PortfolioWorkspaceControls
 ): PortfolioWorkspaceContext {
+  const currencyOptions = getPortfolioCurrencyOptions(workspace);
   const selectedAsOfDate = clampAsOfDate(workspace, controls.asOfDate);
   const selectedReportingCurrency =
-    getPortfolioCurrencyOptions(workspace).find((option) => option === controls.reportingCurrency) ??
+    currencyOptions.find((option) => option === controls.reportingCurrency) ??
+    workspace?.control_capabilities?.reporting_currency_restatement.effective_reporting_currency ??
     workspace?.portfolio.base_currency ??
     controls.reportingCurrency;
+  const historicalSnapshotState =
+    workspace?.control_capabilities?.historical_snapshots.state ?? "unsupported";
+  const historicalSnapshotReason =
+    workspace?.control_capabilities?.historical_snapshots.reason ??
+    "Historical snapshots are not yet source-backed.";
+  const reportingCurrencyState =
+    workspace?.control_capabilities?.reporting_currency_restatement.state ?? "unsupported";
+  const reportingCurrencyReason =
+    workspace?.control_capabilities?.reporting_currency_restatement.reason ??
+    "Reporting currency restatement is not yet source-backed.";
 
   const effectivePeriod = resolveEffectivePeriod(
     selectedAsOfDate,
@@ -175,9 +190,13 @@ export function buildPortfolioWorkspaceContext(
     effectivePeriodEndDate: effectivePeriod.endDate,
     usesCustomDateRange: effectivePeriod.isCustomRange,
     hasHistoricalGap: Boolean(workspace && selectedAsOfDate !== workspace.as_of_date),
-    currencyOptions: getPortfolioCurrencyOptions(workspace),
-    supportsHistoricalSnapshots: false,
-    supportsReportingCurrencyRestatement: false,
+    currencyOptions,
+    historicalSnapshotState,
+    historicalSnapshotReason,
+    supportsHistoricalSnapshots: historicalSnapshotState === "supported",
+    reportingCurrencyRestatementState: reportingCurrencyState,
+    reportingCurrencyRestatementReason: reportingCurrencyReason,
+    supportsReportingCurrencyRestatement: reportingCurrencyState === "supported",
   };
 }
 
@@ -614,183 +633,8 @@ export function getReadinessTone(status: PortfolioReadinessStatus): PortfolioUiT
   }
 }
 
-export function buildPortfolioExceptionSummaries(
-  workspace: PortfolioWorkspace
-): PortfolioExceptionSummary[] {
-  const exceptions: PortfolioExceptionSummary[] = [];
-  const holdingsStatus = getHoldingsReadinessStatus(workspace);
-  const pricingStatus = getPricingReadinessStatus(workspace);
-  const transactionStatus = getTransactionsReadinessStatus(workspace);
-  const reportingStatus = getReportingReadinessStatus(workspace);
-
-  if (holdingsStatus !== "Ready") {
-    exceptions.push({
-      key: "holdings",
-      title: holdingsStatus === "Partial" ? "Holdings coverage incomplete" : "Missing holdings",
-      detail:
-        holdingsStatus === "Partial"
-          ? "The holdings inventory is only partially available for this book."
-          : "No positions are currently booked for this portfolio.",
-      tone: holdingsStatus === "Partial" ? "warn" : "danger",
-      href: "#portfolio-drilldown",
-    });
-  }
-
-  if (pricingStatus !== "Ready") {
-    exceptions.push({
-      key: "pricing",
-      title: pricingStatus === "Partial" ? "Pricing coverage incomplete" : "No priced positions",
-      detail:
-        pricingStatus === "Partial"
-          ? "Some holdings lack complete valuation coverage."
-          : "Valuation cannot run until priced positions are available.",
-      tone: pricingStatus === "Partial" ? "warn" : "danger",
-      href: "#portfolio-attention",
-    });
-  }
-
-  if (transactionStatus !== "Ready") {
-    exceptions.push({
-      key: "transactions",
-      title:
-        transactionStatus === "Partial" ? "Transaction history incomplete" : "Empty transaction history",
-      detail:
-        transactionStatus === "Partial"
-          ? "Booked transaction history is present but not fully available in the current view."
-          : "No funding, trading, or cash activity has been recorded yet.",
-      tone: transactionStatus === "Partial" ? "warn" : "danger",
-      href: "#portfolio-drilldown",
-    });
-  }
-
-  if (reportingStatus !== "Ready") {
-    exceptions.push({
-      key: "reporting",
-      title:
-        reportingStatus === "Partial"
-          ? "Reporting output incomplete"
-          : reportingStatus === "Empty"
-            ? "Reporting output unavailable"
-            : "Reporting output missing",
-      detail:
-        reportingStatus === "Partial"
-          ? "Reporting output exists, but the current book is not fully reportable."
-          : reportingStatus === "Empty"
-            ? "Reporting has not produced any rows for this portfolio yet."
-            : "Reporting coverage is not yet available for this portfolio.",
-      tone: reportingStatus === "Partial" || reportingStatus === "Empty" ? "warn" : "danger",
-      href: "#portfolio-health",
-    });
-  }
-
-  if (workspace.operations?.controls_blocking) {
-    exceptions.push({
-      key: "controls_blocking",
-      title: "Blocking controls active",
-      detail: "Operational controls are currently preventing publication or downstream processing.",
-      tone: "danger",
-      href: "#portfolio-attention",
-    });
-  }
-
-  workspace.partial_failures.forEach((failure) => {
-    exceptions.push({
-      key: `partial_failure_${failure.error_code}`,
-      title: failure.error_code.replaceAll("_", " "),
-      detail: failure.detail,
-      tone: "warn",
-      href: "#portfolio-attention",
-    });
-  });
-
-  return exceptions;
-}
-
-export function buildPortfolioInsights(workspace: PortfolioWorkspace): PortfolioInsight[] {
-  const insights: PortfolioInsight[] = [];
-  const requestedWindowActivity = getRequestedWindowActivityAmount(workspace);
-  const maxPositionWeight = Math.max(
-    ...workspace.top_positions.map((position) => position.weight_pct ?? 0),
-    0
-  );
-
-  if (!workspace.positions.length) {
-    insights.push({
-      key: "no-holdings-booked",
-      title: "No holdings booked",
-      detail: "Book the first position to activate holdings, allocation, and valuation views.",
-      severity: "critical",
-      href: "#portfolio-drilldown",
-    });
-  }
-
-  if (!hasCashFundingEvidence(workspace)) {
-    insights.push({
-      key: "no-cash-funding",
-      title: "No cash funding recorded",
-      detail: "Add opening cash or a subscription so the portfolio can be funded and invested.",
-      severity: "critical",
-      href: "#portfolio-insights",
-    });
-  }
-
-  if (getPricingReadinessStatus(workspace) !== "Ready") {
-    insights.push({
-      key: "pricing-not-published",
-      title: "Pricing not yet published",
-      detail: "Publish prices to complete valuation and unlock reliable reporting.",
-      severity: "warning",
-      href: "#portfolio-attention",
-    });
-  }
-
-  if (getReportingReadinessStatus(workspace) !== "Ready") {
-    insights.push({
-      key: "reporting-unavailable",
-      title: "Reporting cannot be generated yet",
-      detail: "Reporting remains blocked until book coverage and valuation are complete.",
-      severity: "warning",
-      href: "#portfolio-health",
-    });
-  }
-
-  if (maxPositionWeight >= 20) {
-    insights.push({
-      key: "equity-concentration-high",
-      title: "Large position dominates portfolio risk",
-      detail:
-        "One holding has become large enough to dominate current portfolio concentration. Open Risk to review concentration pressure.",
-      severity: "warning",
-      href: mapWorkflowHref("risk", workspace.portfolio.portfolio_id),
-    });
-  }
-
-  if ((workspace.summary.cash_weight_pct ?? 0) >= 15) {
-    insights.push({
-      key: "cash-above-target",
-      title: "Cash exceeds target allocation",
-      detail: "Available cash is elevated relative to invested assets.",
-      severity: "info",
-      href: "#portfolio-insights",
-    });
-  }
-
-  if (requestedWindowActivity < 0) {
-    insights.push({
-      key: "net-outflows-window",
-      title: "Net outflows in last 30 days",
-      detail: "Recent activity is net negative over the selected reporting window.",
-      severity: "warning",
-      href: "#portfolio-changes",
-    });
-  }
-
-  return insights;
-}
-
 export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): PortfolioWorkflowCue[] {
   const supportedWorkflowKeys = new Set<string>(WORKFLOW_DISPLAY_ORDER);
-  const portfolioId = workspace.portfolio.portfolio_id;
 
   return [...workspace.workflow_cues]
     .filter((cue) => supportedWorkflowKeys.has(cue.key))
@@ -807,93 +651,7 @@ export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): Portfolio
 
       return (leftOrder === -1 ? Number.MAX_SAFE_INTEGER : leftOrder) -
         (rightOrder === -1 ? Number.MAX_SAFE_INTEGER : rightOrder);
-    })
-    .map((cue) => ({
-      ...cue,
-      href: mapWorkflowHref(cue.key, portfolioId),
-    }));
-}
-
-export function buildPortfolioWorkflowActions(
-  workspace: PortfolioWorkspace
-): PortfolioWorkflowAction[] {
-  const portfolioOperationsHref = `/workbench?portfolioId=${encodeURIComponent(
-    workspace.portfolio.portfolio_id
-  )}`;
-  const isEmptyPortfolio =
-    !workspace.positions.length &&
-    !workspace.recent_transactions.length &&
-    !workspace.cash_balances?.length;
-
-  if (isEmptyPortfolio) {
-    return [
-      {
-        sequence: 1,
-        title: "Fund portfolio",
-        impact:
-          "Create opening liquidity so balances, allocation, and readiness checks become meaningful.",
-        target: "Target: cash funding and opening balance setup",
-        href: portfolioOperationsHref,
-        cta_label: "Fund now",
-        recommended: true,
-      },
-      {
-        sequence: 2,
-        title: "Book first trade",
-        impact: "Activate the holdings book and create the first investable position.",
-        target: "Target: transaction entry and execution workflow",
-        href: portfolioOperationsHref,
-        cta_label: "Book trade",
-        recommended: false,
-      },
-      {
-        sequence: 3,
-        title: "Publish pricing",
-        impact: "Enable valuation, allocation, and downstream reporting coverage.",
-        target: "Target: pricing publication and valuation refresh",
-        href: portfolioOperationsHref,
-        cta_label: "Publish prices",
-        recommended: false,
-      },
-      {
-        sequence: 4,
-        title: "Review holdings",
-        impact: "Confirm the funded book, position weights, and coverage after valuation.",
-        target: "Target: holdings and allocation review",
-        href: "#portfolio-insights",
-        cta_label: "Open holdings",
-        recommended: false,
-      },
-      {
-        sequence: 5,
-        title: "Open performance",
-        impact: "Review return analytics once holdings are funded and valued.",
-        target: "Target: performance workspace after valuation is available",
-        href: "/performance",
-        cta_label: "Open performance",
-        recommended: false,
-      },
-    ];
-  }
-
-  return getOrderedWorkflowCues(workspace).map((cue, index) => ({
-    sequence: index + 1,
-    title: getWorkflowTaskLabel(cue.key),
-    impact: getWorkflowImpactLabel(cue.key),
-    target: `Target: ${cue.label} workflow for this portfolio`,
-    href: mapWorkflowHref(cue.key, workspace.portfolio.portfolio_id),
-    cta_label: getWorkflowActionLabel(cue.key),
-    recommended: index === 0,
-  }));
-}
-
-export function getRelatedTransactionsForSecurity(
-  workspace: PortfolioWorkspace,
-  securityId: string
-): PortfolioWorkspace["recent_transactions"] {
-  return [...workspace.recent_transactions]
-    .filter((transaction) => transaction.security_id === securityId)
-    .sort((left, right) => right.transaction_date.localeCompare(left.transaction_date));
+    });
 }
 
 export function getPositionsNeedingPricing(
@@ -947,7 +705,38 @@ export function filterTransactionsByDrilldown(
     return filterTransactionsByActivityBucket(transactions, filter.bucket);
   }
 
-  return transactions.filter((transaction) => transaction.security_id === filter.security_id);
+  if (filter.kind === "security") {
+    return transactions.filter((transaction) => transaction.security_id === filter.security_id);
+  }
+
+  if (filter.kind === "linked_group") {
+    return transactions.filter(
+      (transaction) =>
+        transaction.linked_transaction_group_id === filter.linked_transaction_group_id
+    );
+  }
+
+  if (filter.kind === "fx_contract") {
+    return transactions.filter(
+      (transaction) => transaction.fx_contract_id === filter.fx_contract_id
+    );
+  }
+
+  if (filter.kind === "swap_event") {
+    return transactions.filter(
+      (transaction) => transaction.swap_event_id === filter.swap_event_id
+    );
+  }
+
+  if (filter.kind === "near_leg_group") {
+    return transactions.filter(
+      (transaction) => transaction.near_leg_group_id === filter.near_leg_group_id
+    );
+  }
+
+  return transactions.filter(
+    (transaction) => transaction.far_leg_group_id === filter.far_leg_group_id
+  );
 }
 
 export function filterPositionsByDrilldown(
@@ -1023,8 +812,13 @@ function clampAsOfDate(workspace: PortfolioWorkspace | null, requested: string):
     return requested;
   }
 
-  const lowerBound = workspace.profile.open_date ?? requested;
-  const upperBound = workspace.as_of_date;
+  const lowerBound =
+    workspace.control_capabilities?.historical_snapshots.earliest_available_as_of_date ??
+    workspace.profile.open_date ??
+    requested;
+  const upperBound =
+    workspace.control_capabilities?.historical_snapshots.latest_available_as_of_date ??
+    workspace.as_of_date;
 
   if (requested < lowerBound) {
     return lowerBound;
@@ -1128,43 +922,9 @@ function getReportingReadinessStatus(workspace: PortfolioWorkspace): PortfolioRe
   return "Missing";
 }
 
-function hasCashFundingEvidence(workspace: PortfolioWorkspace): boolean {
-  if ((workspace.cash_balances?.length ?? 0) > 0) {
-    return true;
-  }
-
-  if ((workspace.summary.cash_balance_count ?? 0) > 0) {
-    return true;
-  }
-
-  if ((workspace.summary.total_cash_base ?? 0) > 0) {
-    return true;
-  }
-
-  const inflowBucket = workspace.activity_summary?.buckets.find(
-    (bucket) => bucket.bucket.toUpperCase() === "INFLOWS"
-  );
-  if ((inflowBucket?.requested_window.transaction_count ?? 0) > 0) {
-    return true;
-  }
-
-  return (inflowBucket?.requested_window.reporting_currency_amount ?? 0) > 0;
-}
-
 function isReportingReady(status: string): boolean {
   const normalized = status.toUpperCase();
   return normalized === "READY" || normalized === "COMPLETE";
-}
-
-function getWorkflowImpactLabel(key: string): string {
-  switch (key) {
-    case "performance":
-      return "Review portfolio return, benchmark context, and contribution once the book is valued.";
-    case "risk":
-      return "Validate suitability, exposure, and mandate fit before the next client action.";
-    default:
-      return "Open the next available workflow for this portfolio.";
-  }
 }
 
 function includePosition(

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ActionLink,
@@ -29,6 +29,7 @@ import {
   formatPct,
   formatStatus,
 } from "../formatters";
+import { getPortfolioTransactionLedger } from "../api";
 import type {
   PortfolioHoldingsDrilldownFilter,
   PortfolioTransactionDrilldownFilter,
@@ -40,10 +41,7 @@ import {
 } from "../workspace-config";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import {
-  buildPortfolioExceptionSummaries,
-  buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
-  buildPortfolioWorkflowActions,
   buildActivityDrilldownLabel,
   buildAllocationDrilldownLabel,
   buildHoldingsStatusDrilldownLabel,
@@ -51,7 +49,6 @@ import {
   filterPositionsByDrilldown,
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
-  getRelatedTransactionsForSecurity,
   getActivityDisplayCurrency,
   getBookReadinessSupport,
   getIncomeDisplayCurrency,
@@ -79,6 +76,7 @@ import {
   type PortfolioMetricDrawerKey,
 } from "./portfolio-detail-drawer-builders";
 import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
+import type { HoldingsRow } from "./portfolio-holdings-grid";
 import PortfolioRail from "./portfolio-rail";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
 import PortfolioContextModule from "../modules/portfolio-context/portfolio-context-module";
@@ -180,16 +178,15 @@ export default function PortfolioWorkspaceView({
     useState<PortfolioTransactionDrilldownFilter | null>(null);
   const [copiedContextField, setCopiedContextField] = useState<string | null>(null);
   const [detailDrawer, setDetailDrawer] = useState<PortfolioDetailDrawerState | null>(null);
+  const holdingDrawerRequestIdRef = useRef(0);
   const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
-  const setupActions = workspace?.workflow_actions ?? (workspace ? buildPortfolioWorkflowActions(workspace) : []);
+  const setupActions = workspace?.workflow_actions ?? [];
   const primaryWorkflowCue = orderedWorkflowCues.find((cue) => cue.key === "performance") ?? orderedWorkflowCues[0];
   const readinessIndicators = workspace
     ? workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace, context.viewMode)
     : [];
-  const exceptionSummaries = workspace
-    ? workspace.exception_summaries ?? buildPortfolioExceptionSummaries(workspace)
-    : [];
-  const insights = workspace ? workspace.insights ?? buildPortfolioInsights(workspace) : [];
+  const exceptionSummaries = workspace?.exception_summaries ?? [];
+  const insights = workspace?.insights ?? [];
   const [dismissedInsightKeys, setDismissedInsightKeys] = useState<string[]>([]);
   const [sectionPreferences, setSectionPreferences] = useState<Record<string, boolean>>({});
   const isSummaryView = context.viewMode === "summary";
@@ -269,6 +266,47 @@ export default function PortfolioWorkspaceView({
     } catch {
       setCopiedContextField(null);
     }
+  };
+
+  const openHoldingDrawer = async (row: HoldingsRow) => {
+    if (!workspace) {
+      return;
+    }
+
+    holdingDrawerRequestIdRef.current += 1;
+    const requestId = holdingDrawerRequestIdRef.current;
+
+    setDetailDrawer(
+      buildHoldingDrawer(row, workspace.portfolio.portfolio_id, workspace.portfolio.base_currency, {
+        state: "loading",
+      })
+    );
+
+    const payload = await getPortfolioTransactionLedger(workspace.portfolio.portfolio_id, {
+      asOfDate: context.selectedAsOfDate,
+      securityId: row.securityId,
+      limit: 20,
+    });
+
+    if (holdingDrawerRequestIdRef.current !== requestId) {
+      return;
+    }
+
+    if (payload) {
+      setDetailDrawer(
+        buildHoldingDrawer(row, workspace.portfolio.portfolio_id, workspace.portfolio.base_currency, {
+          state: "ready",
+          transactions: payload.transactions ?? [],
+        })
+      );
+      return;
+    }
+
+    setDetailDrawer(
+      buildHoldingDrawer(row, workspace.portfolio.portfolio_id, workspace.portfolio.base_currency, {
+        state: "error",
+      })
+    );
   };
 
   const getSectionExpanded = (sectionKey: PortfolioCollapsibleSectionKey) =>
@@ -541,22 +579,59 @@ export default function PortfolioWorkspaceView({
                           transactionDrilldown={transactionDrilldown}
                           onClearHoldingsDrilldown={clearHoldingsDrilldown}
                           onClearTransactionDrilldown={clearTransactionDrilldown}
-                          onSelectHoldingRow={(row) =>
-                            setDetailDrawer(
-                              buildHoldingDrawer(
-                                row,
-                                workspace.portfolio.portfolio_id,
-                                workspace.portfolio.base_currency,
-                                getRelatedTransactionsForSecurity(workspace, row.securityId)
-                              )
-                            )
-                          }
+                          onSelectHoldingRow={(row) => {
+                            void openHoldingDrawer(row);
+                          }}
                           onSelectTransactionRow={(row) =>
                             setDetailDrawer(
                               buildTransactionDrawer(
                                 row,
                                 workspace.portfolio.portfolio_id,
-                                workspace.portfolio.base_currency
+                                workspace.portfolio.base_currency,
+                                {
+                                  onOpenLinkedTransactionGroup: row.raw
+                                    .linked_transaction_group_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "linked_group",
+                                          linked_transaction_group_id:
+                                            row.raw.linked_transaction_group_id!,
+                                          label: `Filtered by transaction group: ${row.raw.linked_transaction_group_id}`,
+                                        })
+                                    : null,
+                                  onOpenFxContract: row.raw.fx_contract_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "fx_contract",
+                                          fx_contract_id: row.raw.fx_contract_id!,
+                                          label: `Filtered by FX contract: ${row.raw.fx_contract_id}`,
+                                        })
+                                    : null,
+                                  onOpenSwapEvent: row.raw.swap_event_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "swap_event",
+                                          swap_event_id: row.raw.swap_event_id!,
+                                          label: `Filtered by swap event: ${row.raw.swap_event_id}`,
+                                        })
+                                    : null,
+                                  onOpenNearLegGroup: row.raw.near_leg_group_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "near_leg_group",
+                                          near_leg_group_id: row.raw.near_leg_group_id!,
+                                          label: `Filtered by near-leg group: ${row.raw.near_leg_group_id}`,
+                                        })
+                                    : null,
+                                  onOpenFarLegGroup: row.raw.far_leg_group_id
+                                    ? () =>
+                                        openTransactionDrilldown({
+                                          kind: "far_leg_group",
+                                          far_leg_group_id: row.raw.far_leg_group_id!,
+                                          label: `Filtered by far-leg group: ${row.raw.far_leg_group_id}`,
+                                        })
+                                    : null,
+                                }
                               )
                             )
                           }
@@ -614,7 +689,10 @@ export default function PortfolioWorkspaceView({
 
       <PortfolioDetailDrawerController
         detailDrawer={detailDrawer}
-        onClose={() => setDetailDrawer(null)}
+        onClose={() => {
+          holdingDrawerRequestIdRef.current += 1;
+          setDetailDrawer(null);
+        }}
       />
     </>
   );

@@ -40,6 +40,10 @@ type Props = {
   proposalId: string;
 };
 
+function buildProposalActionIdempotencyKey(proposalId: string, action: string): string {
+  return `ui-${action}-${proposalId}-${Date.now()}`;
+}
+
 function stageOrder(state: string): number {
   if (state === "DRAFT") {
     return 1;
@@ -134,12 +138,13 @@ export default function ProposalDetailView({ proposalId }: Props) {
     setActing(true);
     setError(null);
     try {
+      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, `submit-${reviewType.toLowerCase()}`);
       await submitProposal(proposalId, {
         actor_id: "advisor_1",
         expected_state: detailQuery.data.proposal.current_state,
         review_type: reviewType,
         reason: { source: "ui" },
-      });
+      }, idempotencyKey);
       setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -156,11 +161,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
     setActing(true);
     setError(null);
     try {
+      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-risk");
       await approveRisk(proposalId, {
         actor_id: "risk_officer_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
-      });
+      }, idempotencyKey);
       setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -177,11 +183,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
     setActing(true);
     setError(null);
     try {
+      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-compliance");
       await approveCompliance(proposalId, {
         actor_id: "compliance_officer_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
-      });
+      }, idempotencyKey);
       setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -198,11 +205,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
     setActing(true);
     setError(null);
     try {
+      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "record-client-consent");
       await recordClientConsent(proposalId, {
         actor_id: "advisor_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { channel: "IN_PERSON", source: "ui" },
-      });
+      }, idempotencyKey);
       setRevision((value) => value + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -260,7 +268,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
         },
         idempotencyKey
       );
-      const currentVersionNo = (response.data.current_version_no as number | undefined) ?? undefined;
+      const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
+      const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
       setCreatedVersionNo(currentVersionNo ?? null);
       setRevision((value) => value + 1);
     } catch (err) {

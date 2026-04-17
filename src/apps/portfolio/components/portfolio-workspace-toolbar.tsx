@@ -60,8 +60,12 @@ export default function PortfolioWorkspaceToolbar({
   const [actionsAnchor, setActionsAnchor] = useState<HTMLElement | null>(null);
 
   const historicalContextCopy = useMemo(() => {
-    if (!context.supportsHistoricalSnapshots) {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Historical snapshots are not source-backed, so snapshot modules stay on the latest published state.`;
+    if (context.historicalSnapshotState === "unsupported") {
+      return `As of ${formatDate(context.selectedAsOfDate)}. ${context.historicalSnapshotReason}`;
+    }
+
+    if (context.historicalSnapshotState === "partial") {
+      return `As of ${formatDate(context.selectedAsOfDate)}. ${context.historicalSnapshotReason}`;
     }
 
     if (!context.hasHistoricalGap) {
@@ -69,14 +73,25 @@ export default function PortfolioWorkspaceToolbar({
     }
 
     return `As of ${formatDate(context.selectedAsOfDate)}. Date-aware modules use the selected context; snapshot-backed modules continue to use the latest available state.`;
-  }, [context.hasHistoricalGap, context.selectedAsOfDate, context.supportsHistoricalSnapshots]);
+  }, [
+    context.hasHistoricalGap,
+    context.historicalSnapshotReason,
+    context.historicalSnapshotState,
+    context.selectedAsOfDate,
+  ]);
   const activeFilterCount = getActivePortfolioFilterCount(controls);
   const supportsCustomRange = controls.viewMode === "detailed";
+  const historicalControlTitle = !context.supportsHistoricalSnapshots
+    ? context.historicalSnapshotReason
+    : undefined;
+  const reportingCurrencyControlTitle = !context.supportsReportingCurrencyRestatement
+    ? context.reportingCurrencyRestatementReason
+    : undefined;
   const contextSegments = useMemo(() => {
     const segments = [historicalContextCopy];
 
-    if (!context.supportsReportingCurrencyRestatement) {
-      segments.push("Reporting currency restatement is pending source support.");
+    if (context.reportingCurrencyRestatementState !== "supported") {
+      segments.push(context.reportingCurrencyRestatementReason);
     }
 
     if (supportsCustomRange) {
@@ -94,7 +109,8 @@ export default function PortfolioWorkspaceToolbar({
     context.effectivePeriodEndDate,
     context.effectivePeriodStartDate,
     context.periodLabel,
-    context.supportsReportingCurrencyRestatement,
+    context.reportingCurrencyRestatementReason,
+    context.reportingCurrencyRestatementState,
     historicalContextCopy,
     supportsCustomRange,
   ]);
@@ -117,6 +133,7 @@ export default function PortfolioWorkspaceToolbar({
                   value={controls.asOfDate}
                   onChange={(event) => onControlsChange({ asOfDate: event.target.value })}
                   inputProps={{ max: context.selectedAsOfDate }}
+                  title={historicalControlTitle}
                   disabled={!context.supportsHistoricalSnapshots}
                 />
               </div>
@@ -132,6 +149,7 @@ export default function PortfolioWorkspaceToolbar({
                     onControlsChange({ reportingCurrency: event.target.value })
                   }
                   SelectProps={{ native: true }}
+                  title={reportingCurrencyControlTitle}
                   disabled={!context.supportsReportingCurrencyRestatement}
                 >
                   {context.currencyOptions.map((option) => (

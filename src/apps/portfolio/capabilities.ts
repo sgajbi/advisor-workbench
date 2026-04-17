@@ -29,6 +29,7 @@ export function getPortfolioWorkspaceCapabilities(
     hideEmptyModules: boolean;
   }
 ): PortfolioWorkspaceCapabilities {
+  const performanceUnavailableDetail = workspace.performance?.unavailable?.detail ?? null;
   const hideEmptyUnavailable = (capability: WorkspaceCapability): WorkspaceCapability =>
     options.hideEmptyModules && capability.state === "unavailable"
       ? hidden("Hidden because empty portfolio modules are suppressed.")
@@ -105,8 +106,11 @@ export function getPortfolioWorkspaceCapabilities(
     projectedCashflow,
     holdingsDrilldown,
     transactionsDrilldown,
-    performanceSnapshot: workspace.performance
+    performanceSnapshot: workspace.performance && !workspace.performance.unavailable
       ? supported("Performance snapshot is available in the portfolio workspace payload.")
-      : unavailable("Performance snapshot data is not available in the current portfolio contract."),
+      : unavailable(
+          performanceUnavailableDetail ??
+            "Performance snapshot data is not available in the current portfolio contract."
+        ),
   };
 }

@@ -7,8 +7,10 @@ import {
   WorkbenchSummaryToolbar,
 } from "@/design-system";
 
+import { getPortfolioAllocationViews } from "../api";
 import { formatCurrency, formatPct } from "../formatters";
 import type {
+  PortfolioAllocationLookThrough,
   PortfolioAllocationSelection,
   PortfolioAllocationView,
 } from "../types";
@@ -37,6 +39,7 @@ const ALLOCATION_COLORS = [
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
 type AllocationDimension = (typeof DIMENSIONS)[number]["key"];
+type LookThroughMode = "direct_only" | "full";
 
 function handleInteractiveKeyPress(
   event: KeyboardEvent<Element>,
@@ -49,21 +52,41 @@ function handleInteractiveKeyPress(
 }
 
 export default function PortfolioAllocationPanel({
+  portfolioId,
   allocationViews,
   baseCurrency,
+  asOfDate,
+  reportingCurrency,
   compact = false,
   selectedAllocation,
   onSelectionChange,
 }: {
+  portfolioId: string;
   allocationViews: PortfolioAllocationView[];
   baseCurrency: string;
+  asOfDate: string;
+  reportingCurrency: string;
   compact?: boolean;
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
 }) {
+  const [resolvedAllocationViews, setResolvedAllocationViews] =
+    useState<PortfolioAllocationView[]>(allocationViews);
+  const [lookThroughRequestedMode, setLookThroughRequestedMode] =
+    useState<LookThroughMode>("direct_only");
+  const [lookThroughEffectiveMode, setLookThroughEffectiveMode] =
+    useState<LookThroughMode>("direct_only");
+  const [lookThroughSupported, setLookThroughSupported] = useState(false);
+  const [lookThroughBusy, setLookThroughBusy] = useState(false);
+  const [lookThroughProbeComplete, setLookThroughProbeComplete] = useState(false);
+  const [cachedFullResponse, setCachedFullResponse] = useState<{
+    views: PortfolioAllocationView[];
+    lookThrough: PortfolioAllocationLookThrough | null;
+  } | null>(null);
+
   const viewsByDimension = useMemo(() => {
-    return new Map(allocationViews.map((view) => [view.dimension, view]));
-  }, [allocationViews]);
+    return new Map(resolvedAllocationViews.map((view) => [view.dimension, view]));
+  }, [resolvedAllocationViews]);
 
   const firstAvailableDimension =
     DIMENSIONS.find((dimension) => viewsByDimension.has(dimension.key))?.key ?? "asset_class";
@@ -72,6 +95,61 @@ export default function PortfolioAllocationPanel({
     useState<AllocationDimension>(firstAvailableDimension);
   const [chartType, setChartType] = useState<ChartType>("donut");
   const [hoveredBucket, setHoveredBucket] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setResolvedAllocationViews(allocationViews);
+    setLookThroughRequestedMode("direct_only");
+    setLookThroughEffectiveMode("direct_only");
+    setLookThroughSupported(false);
+    setLookThroughBusy(true);
+    setLookThroughProbeComplete(false);
+    setCachedFullResponse(null);
+
+    void Promise.all([
+      getPortfolioAllocationViews(portfolioId, {
+        asOfDate,
+        reportingCurrency,
+        lookThroughMode: "direct_only",
+      }),
+      getPortfolioAllocationViews(portfolioId, {
+        asOfDate,
+        reportingCurrency,
+        lookThroughMode: "full",
+      }),
+    ]).then(([directResponse, fullResponse]) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (directResponse?.views?.length) {
+        setResolvedAllocationViews(directResponse.views);
+      }
+      setLookThroughEffectiveMode(
+        normalizeLookThroughMode(directResponse?.look_through?.effective_mode)
+      );
+
+      const supportsExpandedLookThrough = isExpandedLookThroughSupported(
+        fullResponse?.look_through ?? null
+      );
+      setLookThroughSupported(supportsExpandedLookThrough);
+      if (supportsExpandedLookThrough && fullResponse?.views?.length) {
+        setCachedFullResponse({
+          views: fullResponse.views,
+          lookThrough: fullResponse.look_through ?? null,
+        });
+      }
+      setLookThroughProbeComplete(true);
+    }).finally(() => {
+      if (!cancelled) {
+        setLookThroughBusy(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [allocationViews, asOfDate, portfolioId, reportingCurrency]);
 
   useEffect(() => {
     if (viewsByDimension.has(activeDimension)) {
@@ -88,6 +166,62 @@ export default function PortfolioAllocationPanel({
 
   const selectedBucket =
     selectedAllocation?.dimension === activeDimension ? selectedAllocation.bucket : null;
+
+  const lookThroughLabel =
+    lookThroughRequestedMode === "full" && lookThroughEffectiveMode === "full"
+      ? "Expanded exposure"
+      : "Direct holdings";
+
+  const syncAllocationViewState = (
+    nextViews: PortfolioAllocationView[],
+    nextRequestedMode: LookThroughMode,
+    nextLookThrough: PortfolioAllocationLookThrough | null | undefined
+  ) => {
+    setResolvedAllocationViews(nextViews);
+    setLookThroughRequestedMode(nextRequestedMode);
+    setLookThroughEffectiveMode(
+      normalizeLookThroughMode(nextLookThrough?.effective_mode, nextRequestedMode)
+    );
+    setHoveredBucket(null);
+
+    if (!selectedAllocation) {
+      return;
+    }
+
+    const matchingView = nextViews.find((view) => view.dimension === selectedAllocation.dimension);
+    const bucketStillAvailable = matchingView?.buckets.some(
+      (bucket) => bucket.bucket === selectedAllocation.bucket
+    );
+    if (!bucketStillAvailable) {
+      onSelectionChange(null);
+    }
+  };
+
+  const toggleLookThrough = async () => {
+    const nextMode: LookThroughMode =
+      lookThroughRequestedMode === "full" ? "direct_only" : "full";
+    setLookThroughBusy(true);
+
+    try {
+      const response =
+        nextMode === "full" && cachedFullResponse
+          ? {
+              views: cachedFullResponse.views,
+              look_through: cachedFullResponse.lookThrough,
+            }
+          : await getPortfolioAllocationViews(portfolioId, {
+              asOfDate,
+              reportingCurrency,
+              lookThroughMode: nextMode,
+            });
+
+      if (response?.views?.length) {
+        syncAllocationViewState(response.views, nextMode, response.look_through);
+      }
+    } finally {
+      setLookThroughBusy(false);
+    }
+  };
 
   return (
     <div
@@ -133,12 +267,28 @@ export default function PortfolioAllocationPanel({
           <button
             type="button"
             className="portfolio-allocation-toggle"
-            disabled
-            aria-disabled="true"
-            aria-label="Look-through pending source support"
-            title="Look-through pending source support"
+            disabled={!lookThroughSupported || lookThroughBusy}
+            aria-disabled={!lookThroughSupported || lookThroughBusy}
+            aria-pressed={lookThroughRequestedMode === "full"}
+            aria-label={
+              lookThroughSupported
+                ? `Look-through ${lookThroughRequestedMode === "full" ? "on" : "off"}`
+                : lookThroughProbeComplete
+                  ? "Look-through unavailable for current portfolio snapshot"
+                  : "Checking look-through support"
+            }
+            title={
+              lookThroughSupported
+                ? `Current allocation mode: ${lookThroughLabel}`
+                : lookThroughProbeComplete
+                  ? "Look-through is not available for the current portfolio snapshot"
+                  : "Checking look-through support"
+            }
+            onClick={() => {
+              void toggleLookThrough();
+            }}
           >
-            Look-through
+            {lookThroughRequestedMode === "full" ? "Look-through on" : "Look-through off"}
           </button>
         </div>
       </WorkbenchSummaryToolbar>
@@ -150,7 +300,7 @@ export default function PortfolioAllocationPanel({
       >
         <div className="portfolio-analytical-utility-header">
           <span>Current View</span>
-          <strong>{`${activeDimensionLabel} • ${buckets.length} buckets`}</strong>
+          <strong>{`${activeDimensionLabel} • ${buckets.length} buckets • ${lookThroughLabel}`}</strong>
         </div>
         {buckets.length ? (
           <div className="portfolio-allocation-body">
@@ -466,6 +616,22 @@ function formatDimensionLabel(value: string): string {
     .split("_")
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
+}
+
+function normalizeLookThroughMode(
+  value: string | null | undefined,
+  fallback: LookThroughMode = "direct_only"
+): LookThroughMode {
+  return value === "full" ? "full" : fallback;
+}
+
+function isExpandedLookThroughSupported(
+  lookThrough: PortfolioAllocationLookThrough | null
+): boolean {
+  if (!lookThrough) {
+    return false;
+  }
+  return lookThrough.applied || lookThrough.effective_mode === "full";
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {

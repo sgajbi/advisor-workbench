@@ -29,6 +29,12 @@ export type PortfolioAllocationView = {
   }>;
 };
 
+export type PortfolioAllocationLookThrough = {
+  requested_mode: string;
+  effective_mode: string;
+  applied: boolean;
+};
+
 export type PortfolioAllocationSelection = {
   dimension: string;
   bucket: string;
@@ -43,6 +49,31 @@ export type PortfolioTransactionDrilldownFilter =
   | {
       kind: "security";
       security_id: string;
+      label: string;
+    }
+  | {
+      kind: "linked_group";
+      linked_transaction_group_id: string;
+      label: string;
+    }
+  | {
+      kind: "fx_contract";
+      fx_contract_id: string;
+      label: string;
+    }
+  | {
+      kind: "swap_event";
+      swap_event_id: string;
+      label: string;
+    }
+  | {
+      kind: "near_leg_group";
+      near_leg_group_id: string;
+      label: string;
+    }
+  | {
+      kind: "far_leg_group";
+      far_leg_group_id: string;
       label: string;
     };
 
@@ -146,6 +177,7 @@ export type PortfolioCashBalance = {
 export type PortfolioTransactionView = {
   transaction_id: string;
   transaction_date: string;
+  settlement_date?: string | null;
   transaction_type: string;
   component_type?: string | null;
   security_id: string;
@@ -161,6 +193,10 @@ export type PortfolioTransactionView = {
   cash_entry_mode?: string | null;
   economic_event_id?: string | null;
   linked_transaction_group_id?: string | null;
+  fx_contract_id?: string | null;
+  swap_event_id?: string | null;
+  near_leg_group_id?: string | null;
+  far_leg_group_id?: string | null;
 };
 
 export type PortfolioIncomePeriodSummary = {
@@ -286,11 +322,49 @@ export type PortfolioWorkspace = {
       benchmark_return_pct?: number | null;
       active_return_pct?: number | null;
     }> | null;
+    unavailable?: {
+      title: string;
+      detail: string;
+      requirements: string[];
+    } | null;
+    warnings?: string[];
+    partial_failures?: Array<{
+      source_service: string;
+      error_code: string;
+      detail: string;
+    }>;
   } | null;
   rebalance: {
     status: string;
     last_run_at_utc: string | null;
     last_rebalance_run_id: string | null;
+  } | null;
+  control_capabilities?: {
+    historical_snapshots: {
+      state: "supported" | "partial" | "unsupported";
+      reason: string;
+      requested_as_of_date: string;
+      effective_as_of_date: string;
+      earliest_available_as_of_date?: string | null;
+      latest_available_as_of_date?: string | null;
+      module_capabilities: Array<{
+        module: string;
+        state: "supported" | "partial" | "unsupported";
+        reason: string;
+      }>;
+    };
+    reporting_currency_restatement: {
+      state: "supported" | "partial" | "unsupported";
+      reason: string;
+      requested_reporting_currency?: string | null;
+      effective_reporting_currency: string;
+      supported_currencies: string[];
+      module_capabilities: Array<{
+        module: string;
+        state: "supported" | "partial" | "unsupported";
+        reason: string;
+      }>;
+    };
   } | null;
   readiness: {
     has_positions: boolean;

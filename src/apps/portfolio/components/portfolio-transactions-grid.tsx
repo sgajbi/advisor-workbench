@@ -26,6 +26,10 @@ import {
   PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
+import {
+  buildTransactionFilterOptions,
+  shouldReuseInitialTransactions,
+} from "./portfolio-transactions-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -49,6 +53,7 @@ type PortfolioTransactionsGridProps = {
 export type TransactionRow = {
   transactionId: string;
   tradeDate: string;
+  settleDate: string | null;
   type: string;
   instrument: string;
   quantity: number;
@@ -72,6 +77,7 @@ export default function PortfolioTransactionsGrid({
   onRowSelect,
 }: PortfolioTransactionsGridProps) {
   const [transactionType, setTransactionType] = useState("ALL");
+  const [componentType, setComponentType] = useState("ALL");
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [transactions, setTransactions] = useState<PortfolioTransactionView[]>(initialTransactions);
@@ -96,11 +102,16 @@ export default function PortfolioTransactionsGrid({
         return;
       }
 
-      const shouldUseInitialTransactions =
-        transactionType === "ALL" &&
-        startDate === defaultStartDate &&
-        endDate === defaultEndDate &&
-        initialTransactions.length > 0;
+      const shouldUseInitialTransactions = shouldReuseInitialTransactions({
+        externalFilter,
+        transactionType,
+        componentType,
+        startDate,
+        endDate,
+        defaultStartDate,
+        defaultEndDate,
+        initialTransactionCount: initialTransactions.length,
+      });
 
       if (shouldUseInitialTransactions) {
         setTransactions(initialTransactions);
@@ -116,6 +127,28 @@ export default function PortfolioTransactionsGrid({
         startDate,
         endDate,
         transactionType,
+        componentType,
+        securityId: externalFilter?.kind === "security" ? externalFilter.security_id : undefined,
+        linkedTransactionGroupId:
+          externalFilter?.kind === "linked_group"
+            ? externalFilter.linked_transaction_group_id
+            : undefined,
+        fxContractId:
+          externalFilter?.kind === "fx_contract"
+            ? externalFilter.fx_contract_id
+            : undefined,
+        swapEventId:
+          externalFilter?.kind === "swap_event"
+            ? externalFilter.swap_event_id
+            : undefined,
+        nearLegGroupId:
+          externalFilter?.kind === "near_leg_group"
+            ? externalFilter.near_leg_group_id
+            : undefined,
+        farLegGroupId:
+          externalFilter?.kind === "far_leg_group"
+            ? externalFilter.far_leg_group_id
+            : undefined,
         limit: 200,
       });
 
@@ -140,23 +173,22 @@ export default function PortfolioTransactionsGrid({
     defaultEndDate,
     defaultStartDate,
     endDate,
+    externalFilter,
     initialTransactions,
     portfolioId,
     startDate,
     suspendInitialFetch,
+    componentType,
     transactionType,
   ]);
 
   const transactionTypeOptions = useMemo(
-    () =>
-      [
-        "ALL",
-        ...new Set(
-          [...initialTransactions, ...transactions]
-            .map((transaction) => transaction.transaction_type)
-            .filter(Boolean)
-        ),
-      ],
+    () => buildTransactionFilterOptions([...initialTransactions, ...transactions], (transaction) => transaction.transaction_type),
+    [initialTransactions, transactions]
+  );
+
+  const componentTypeOptions = useMemo(
+    () => buildTransactionFilterOptions([...initialTransactions, ...transactions], (transaction) => transaction.component_type),
     [initialTransactions, transactions]
   );
 
@@ -170,6 +202,7 @@ export default function PortfolioTransactionsGrid({
       filteredTransactions.map((transaction) => ({
         transactionId: transaction.transaction_id,
         tradeDate: transaction.transaction_date,
+        settleDate: transaction.settlement_date ?? null,
         type: formatStatus(transaction.transaction_type),
         instrument: transaction.instrument_id,
         quantity: transaction.quantity,
@@ -195,6 +228,12 @@ export default function PortfolioTransactionsGrid({
         field: "type",
         headerName: "Type",
         minWidth: 104,
+      }),
+      buildTransactionColumn({
+        field: "settleDate",
+        headerName: "Settle Date",
+        minWidth: 118,
+        valueFormatter: ({ value }) => formatDate(value),
       }),
       buildTransactionColumn({
         field: "instrument",
@@ -275,7 +314,7 @@ export default function PortfolioTransactionsGrid({
       {showFilters ? (
         <div className="portfolio-grid-toolbar portfolio-grid-toolbar-stacked">
           <div className="portfolio-grid-toolbar-copy">
-            <span>Ledger view filtered by transaction type and trade date window</span>
+            <span>Ledger view filtered by transaction type, component type, and trade date window</span>
           </div>
           <div className="portfolio-grid-filter-row">
             <FormControl size="small" className="portfolio-grid-filter-control">
@@ -290,6 +329,22 @@ export default function PortfolioTransactionsGrid({
                 {transactionTypeOptions.map((option) => (
                   <MenuItem key={option} value={option}>
                     {option === "ALL" ? "All Types" : formatStatus(option)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" className="portfolio-grid-filter-control">
+              <InputLabel id="transaction-component-type-label">Component</InputLabel>
+              <Select
+                labelId="transaction-component-type-label"
+                label="Component"
+                value={componentType}
+                inputProps={{ "aria-label": "Transaction component type filter" }}
+                onChange={(event) => setComponentType(event.target.value)}
+              >
+                {componentTypeOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option === "ALL" ? "All Components" : formatStatus(option)}
                   </MenuItem>
                 ))}
               </Select>
@@ -338,14 +393,6 @@ export default function PortfolioTransactionsGrid({
           rows={5}
         />
       ) : rowData.length ? (
-        <>
-          <PortfolioModuleState
-            variant="status"
-            state="partial"
-            title="Transaction lifecycle detail is limited"
-            body="Trade activity is available, but the current contract does not expose settlement dates."
-            hint="Use trade date, status, and amount for current operational review until settlement fields are added upstream."
-          />
         <div
           className={`ag-theme-quartz portfolio-data-grid ${showExpandedColumns ? "portfolio-data-grid-dense" : ""}`}
           aria-label="Portfolio transactions grid"
@@ -369,7 +416,6 @@ export default function PortfolioTransactionsGrid({
             }}
           />
         </div>
-        </>
       ) : loadError ? (
         <PortfolioModuleState
           variant="status"
@@ -437,6 +483,7 @@ function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<Transact
 function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
   const exportRows = rows.map((row) => ({
     "Trade Date": formatDate(row.tradeDate),
+    "Settle Date": formatDate(row.settleDate),
     Type: row.type,
     Instrument: row.instrument,
     Quantity: row.quantity,

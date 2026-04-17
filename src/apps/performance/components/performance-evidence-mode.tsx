@@ -1,17 +1,19 @@
+import type { PerformanceEvidenceView } from "@/features/workbench/types";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
-import { isSupportedCapability } from "@/shell/workspace-capabilities";
 import { ScreenStatePanel, WorkbenchDataGridFrame, WorkbenchStatusStrip } from "@/design-system";
 
 export default function PerformanceEvidenceMode({
   capability,
+  evidenceView,
 }: {
   capability: WorkspaceCapability;
+  evidenceView?: PerformanceEvidenceView | null;
 }) {
   const title = "Evidence and Calculation Context";
   const subtitle =
     "Execution status, lineage artifacts, and calculation evidence for the selected performance view.";
 
-  if (!isSupportedCapability(capability)) {
+  if (capability.state === "unavailable" || !evidenceView) {
     return (
       <WorkbenchDataGridFrame
         id="performance-evidence"
@@ -31,6 +33,22 @@ export default function PerformanceEvidenceMode({
     );
   }
 
+  const calculations = evidenceView.calculations;
+  const artifactCount = calculations.reduce(
+    (total, calculation) => total + calculation.artifacts.length,
+    0
+  );
+  const completedCalculationCount = calculations.filter(
+    (calculation) =>
+      calculation.execution_status === "complete" && calculation.lineage_status === "complete"
+  ).length;
+  const postureLabel =
+    capability.state === "supported"
+      ? "Supported"
+      : capability.state === "partial"
+        ? "Partial"
+        : "Unavailable";
+
   return (
     <WorkbenchDataGridFrame
       id="performance-evidence"
@@ -49,27 +67,88 @@ export default function PerformanceEvidenceMode({
         itemSupportClassName="performance-evidence-status-support"
         items={[
           {
-            label: "Execution status",
-            value: "Exposed",
-            support: "Execution evidence is available through the current contract.",
+            label: "Evidence posture",
+            value: postureLabel,
+            support:
+              evidenceView.reason ??
+              capability.reason ??
+              "Execution and lineage evidence can be reviewed for this portfolio.",
+          },
+          {
+            label: "Calculations",
+            value: String(calculations.length),
+            support: `${completedCalculationCount} calculation(s) have complete execution and lineage evidence.`,
           },
           {
             label: "Lineage artifacts",
-            value: "Exposed",
-            support: "Lineage context is available through the current contract.",
-          },
-          {
-            label: "Calculation evidence",
-            value: "Exposed",
-            support: "Calculation evidence is available through the current contract.",
+            value: String(artifactCount),
+            support: "Gateway-owned artifact links are preserved from the certified evidence contract.",
           },
         ]}
       />
       <p className="muted performance-evidence-copy">
-        Evidence review is contract-backed for this portfolio and can be extended on this shared shell
-        without changing the workspace mode structure.
+        Evidence review is contract-backed for this portfolio and retains execution, lineage, and
+        artifact context without bypassing the gateway boundary.
       </p>
       {capability.reason ? <p className="muted performance-evidence-copy">{capability.reason}</p> : null}
+      {calculations.length === 0 ? (
+        <p className="muted performance-evidence-copy">
+          No calculation evidence was returned for the current selection.
+        </p>
+      ) : (
+        <div className="performance-evidence-calculation-list">
+          {calculations.map((calculation) => (
+            <section
+              key={calculation.calculation_id}
+              className="performance-evidence-calculation"
+              aria-label={`Evidence for ${calculation.calculation_role}`}
+            >
+              <h3 className="ui-text-label">{calculation.calculation_role}</h3>
+              <p className="muted performance-evidence-copy">
+                Calculation ID: {calculation.calculation_id}
+              </p>
+              <p className="muted performance-evidence-copy">
+                Execution {calculation.execution_status}, lineage {calculation.lineage_status}.
+              </p>
+              {calculation.stage_statuses.length > 0 ? (
+                <ul className="performance-evidence-detail-list" aria-label="Evidence stages">
+                  {calculation.stage_statuses.map((stage) => (
+                    <li key={`${calculation.calculation_id}-${stage.stage_name}`}>
+                      {stage.stage_name}: {stage.status}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {calculation.upstream_snapshots.length > 0 ? (
+                <ul className="performance-evidence-detail-list" aria-label="Evidence sources">
+                  {calculation.upstream_snapshots.map((snapshot) => (
+                    <li
+                      key={`${calculation.calculation_id}-${snapshot.upstream_endpoint}-${snapshot.source_identifier}`}
+                    >
+                      {snapshot.upstream_endpoint}: {snapshot.source_identifier} (
+                      {snapshot.retrieval_status})
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {calculation.artifacts.length > 0 ? (
+                <ul className="performance-evidence-detail-list" aria-label="Evidence artifacts">
+                  {calculation.artifacts.map((artifact) => (
+                    <li key={`${calculation.calculation_id}-${artifact.artifact_name}`}>
+                      <a href={artifact.url}>{artifact.artifact_name}</a>
+                      {artifact.content_type ? ` (${artifact.content_type})` : ""}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted performance-evidence-copy">
+                  No lineage artifacts are currently published for this calculation.
+                </p>
+              )}
+            </section>
+          ))}
+        </div>
+      )}
     </WorkbenchDataGridFrame>
   );
 }

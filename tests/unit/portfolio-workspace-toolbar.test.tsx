@@ -46,7 +46,12 @@ describe("PortfolioWorkspaceToolbar", () => {
           usesCustomDateRange: false,
           hasHistoricalGap: false,
           currencyOptions: ["USD", "EUR"],
+          historicalSnapshotState: "supported",
+          historicalSnapshotReason: "Historical snapshots are fully source-backed.",
           supportsHistoricalSnapshots: true,
+          reportingCurrencyRestatementState: "partial",
+          reportingCurrencyRestatementReason:
+            "Book-style holdings honor reporting currency, but performance snapshot does not.",
           supportsReportingCurrencyRestatement: false,
         }}
         filterOptions={{
@@ -71,7 +76,16 @@ describe("PortfolioWorkspaceToolbar", () => {
     );
 
     expect(screen.getByText(/As of 29 Mar 2026\./i)).toBeInTheDocument();
-    expect(screen.getByText(/Reporting currency restatement is pending source support\./i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Book-style holdings honor reporting currency, but performance snapshot does not\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getByLabelText("Reporting Currency")
+        .closest("div[title='Book-style holdings honor reporting currency, but performance snapshot does not.']")
+    ).not.toBeNull();
     expect(screen.getByText(/Period 30D: 01 Mar 2026 to 29 Mar 2026\./i)).toBeInTheDocument();
     const contextControls = screen.getByRole("group", { name: "Context controls" });
     const viewControls = screen.getByRole("group", { name: "View controls" });
@@ -135,5 +149,92 @@ describe("PortfolioWorkspaceToolbar", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.getByText("Rows: Non-zero only")).toBeInTheDocument();
     expect(screen.getByText("Period: 30D")).toBeInTheDocument();
+  });
+
+  it("renders gateway historical and reporting capability reasons when controls are not fully supported", () => {
+    render(
+      <PortfolioWorkspaceToolbar
+        controls={{
+          asOfDate: "2026-03-29",
+          reportingCurrency: "USD",
+          viewMode: "summary",
+          timeWindow: "30D",
+          customStartDate: "",
+          customEndDate: "",
+          columnMode: "essential",
+          includeCash: true,
+          assetClass: "ALL",
+          sector: "ALL",
+          region: "ALL",
+          positionStatus: "ALL",
+          transactionType: "ALL",
+          showOnlyNonZeroRows: false,
+          showOnlyExceptions: false,
+          hideEmptyModules: false,
+          focusExceptions: false,
+        }}
+        context={{
+          selectedAsOfDate: "2026-03-29",
+          selectedReportingCurrency: "USD",
+          timeWindow: "30D",
+          periodLabel: "30D",
+          viewMode: "summary",
+          columnMode: "essential",
+          hideEmptyModules: false,
+          focusExceptions: false,
+          effectivePeriodStartDate: "2026-03-01",
+          effectivePeriodEndDate: "2026-03-29",
+          usesCustomDateRange: false,
+          hasHistoricalGap: false,
+          currencyOptions: ["USD"],
+          historicalSnapshotState: "partial",
+          historicalSnapshotReason:
+            "Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics.",
+          supportsHistoricalSnapshots: false,
+          reportingCurrencyRestatementState: "unsupported",
+          reportingCurrencyRestatementReason:
+            "Workflow, readiness, and performance snapshot do not yet share reporting currency.",
+          supportsReportingCurrencyRestatement: false,
+        }}
+        filterOptions={{
+          assetClasses: [],
+          sectors: [],
+          regions: [],
+          positionStatuses: [],
+          transactionTypes: [],
+        }}
+        activeFilterChips={[]}
+        onControlsChange={vi.fn()}
+        onFilterReset={vi.fn()}
+        onFilterChipRemove={vi.fn()}
+        onExport={vi.fn()}
+        quickActions={[]}
+      />
+    );
+
+    expect(
+      screen.getByText(
+        /Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getByLabelText("As of")
+        .closest(
+          "div[title='Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics.']"
+        )
+    ).not.toBeNull();
+    expect(
+      screen.getByText(
+        /Workflow, readiness, and performance snapshot do not yet share reporting currency\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getByLabelText("Reporting Currency")
+        .closest(
+          "div[title='Workflow, readiness, and performance snapshot do not yet share reporting currency.']"
+        )
+    ).not.toBeNull();
   });
 });

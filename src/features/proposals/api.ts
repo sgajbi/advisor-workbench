@@ -137,30 +137,34 @@ export async function getProposalLineage(
 
 export async function submitProposal(
   proposalId: string,
-  payload: ProposalSubmitRequest
+  payload: ProposalSubmitRequest,
+  idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/submit`, payload);
+  return await postJson(`/proposals/${proposalId}/submit`, payload, idempotencyKey);
 }
 
 export async function approveRisk(
   proposalId: string,
-  payload: ProposalApprovalActionRequest
+  payload: ProposalApprovalActionRequest,
+  idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/approve-risk`, payload);
+  return await postJson(`/proposals/${proposalId}/approve-risk`, payload, idempotencyKey);
 }
 
 export async function approveCompliance(
   proposalId: string,
-  payload: ProposalApprovalActionRequest
+  payload: ProposalApprovalActionRequest,
+  idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/approve-compliance`, payload);
+  return await postJson(`/proposals/${proposalId}/approve-compliance`, payload, idempotencyKey);
 }
 
 export async function recordClientConsent(
   proposalId: string,
-  payload: ProposalApprovalActionRequest
+  payload: ProposalApprovalActionRequest,
+  idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/record-client-consent`, payload);
+  return await postJson(`/proposals/${proposalId}/record-client-consent`, payload, idempotencyKey);
 }
 
 export async function getProposalWorkflowEvents(

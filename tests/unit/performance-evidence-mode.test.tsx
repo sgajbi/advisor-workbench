@@ -14,7 +14,10 @@ describe("PerformanceEvidenceMode", () => {
     const scenario = buildUnavailableEvidencePerformanceScenario();
 
     render(
-      <PerformanceEvidenceMode capability={scenario.capabilities.evidence} />
+      <PerformanceEvidenceMode
+        capability={scenario.capabilities.evidence}
+        evidenceView={scenario.workspace.evidence_view}
+      />
     );
 
     expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
@@ -37,31 +40,56 @@ describe("PerformanceEvidenceMode", () => {
   it("renders a partial capability state when the contract is incomplete", () => {
     const scenario = buildPartialEvidencePerformanceScenario();
 
-    render(<PerformanceEvidenceMode capability={scenario.capabilities.evidence} />);
+    render(
+      <PerformanceEvidenceMode
+        capability={scenario.capabilities.evidence}
+        evidenceView={scenario.workspace.evidence_view}
+      />
+    );
 
     expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
-    expect(screen.getByText("Evidence partially available")).toBeInTheDocument();
+    expect(screen.getByText("Evidence and Calculation Context")).toBeInTheDocument();
     expect(
       screen.getByText("Lineage artifacts are available, but execution evidence is incomplete.")
     ).toBeInTheDocument();
+    expect(screen.getByText("workspace_summary")).toBeInTheDocument();
     expect(
-      document.querySelector(".performance-evidence-state-panel .module-state-panel")
-    ).toBeTruthy();
+      screen.getByText("No lineage artifacts are currently published for this calculation.")
+    ).toBeInTheDocument();
   });
 
   it("renders the evidence workspace when the backend contract supports it", () => {
     const scenario = buildSupportedEvidencePerformanceScenario();
+    if (scenario.workspace.evidence_view) {
+      scenario.workspace.evidence_view.calculations[0].artifacts = [
+        {
+          artifact_name: "request.json",
+          url: "/api/v1/workbench/PF_1001/performance/evidence/artifacts/calc-workspace-summary/request.json",
+          content_type: "application/json",
+        },
+      ];
+    }
 
-    render(<PerformanceEvidenceMode capability={scenario.capabilities.evidence} />);
+    render(
+      <PerformanceEvidenceMode
+        capability={scenario.capabilities.evidence}
+        evidenceView={scenario.workspace.evidence_view}
+      />
+    );
 
     expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeTruthy();
     expect(document.querySelector(".performance-evidence-status-strip")).toBeTruthy();
     expect(screen.getByText("Evidence and Calculation Context")).toBeInTheDocument();
     expect(screen.getByLabelText("Evidence support status")).toBeInTheDocument();
-    expect(screen.getAllByText("Exposed")).toHaveLength(3);
-    expect(screen.getByText("Execution status")).toBeInTheDocument();
+    expect(screen.getByText("Supported")).toBeInTheDocument();
+    expect(screen.getByText("Evidence posture")).toBeInTheDocument();
+    expect(screen.getByText("Calculations")).toBeInTheDocument();
     expect(screen.getByText("Lineage artifacts")).toBeInTheDocument();
-    expect(screen.getByText("Calculation evidence")).toBeInTheDocument();
+    expect(screen.getByText("workspace_summary")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "request.json" })).toHaveAttribute(
+      "href",
+      "/api/v1/workbench/PF_1001/performance/evidence/artifacts/calc-workspace-summary/request.json"
+    );
     expect(
       screen.getByText("Execution and lineage evidence can be reviewed for this portfolio.")
     ).toBeInTheDocument();
@@ -78,7 +106,7 @@ describe("PerformanceEvidenceMode", () => {
     {
       name: "partial evidence",
       scenario: buildPartialEvidencePerformanceScenario(),
-      expectedHeading: "Evidence partially available",
+      expectedHeading: "Evidence and Calculation Context",
       expectedReason: "Lineage artifacts are available, but execution evidence is incomplete.",
       supportsWorkspace: true,
     },
@@ -90,7 +118,12 @@ describe("PerformanceEvidenceMode", () => {
       supportsWorkspace: true,
     },
   ])("renders a contract-backed evidence state for $name", ({ scenario, expectedHeading, expectedReason, supportsWorkspace }) => {
-    render(<PerformanceEvidenceMode capability={scenario.capabilities.evidence} />);
+    render(
+      <PerformanceEvidenceMode
+        capability={scenario.capabilities.evidence}
+        evidenceView={scenario.workspace.evidence_view}
+      />
+    );
 
     expect(screen.getByText(expectedHeading)).toBeInTheDocument();
     expect(screen.getByText(expectedReason)).toBeInTheDocument();

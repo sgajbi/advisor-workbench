@@ -25,8 +25,11 @@ export type PortfolioCollapsibleSectionKey =
   | "projected-cashflow";
 
 export type AllocationPanelComponentProps = {
+  portfolioId: string;
   allocationViews: NonNullable<PortfolioWorkspace["allocation_views"]>;
   baseCurrency: string;
+  asOfDate: string;
+  reportingCurrency: string;
   compact?: boolean;
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;

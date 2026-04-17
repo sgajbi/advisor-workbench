@@ -4,15 +4,12 @@ import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import { getPortfolioWorkspaceCapabilities } from "../../src/apps/portfolio/capabilities";
 import {
   buildPortfolioActiveFilterChips,
-  buildPortfolioExceptionSummaries,
   buildPortfolioFilterOptions,
-  buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
-  buildPortfolioWorkflowActions,
   filterPositionsByDrilldown,
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
-  getRelatedTransactionsForSecurity,
+  getOrderedWorkflowCues,
   buildInitialPortfolioControls,
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
@@ -103,6 +100,25 @@ function buildWorkspace(): PortfolioWorkspace {
     },
     performance: null,
     rebalance: null,
+    control_capabilities: {
+      historical_snapshots: {
+        state: "unsupported",
+        reason: "Historical snapshots are not yet source-backed.",
+        requested_as_of_date: "2026-02-24",
+        effective_as_of_date: "2026-02-24",
+        earliest_available_as_of_date: "2024-01-01",
+        latest_available_as_of_date: "2026-02-24",
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "unsupported",
+        reason: "Reporting currency restatement is not yet source-backed.",
+        requested_reporting_currency: null,
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD"],
+        module_capabilities: [],
+      },
+    },
     readiness: {
       has_positions: false,
       reporting: {
@@ -217,6 +233,34 @@ describe("portfolio view model", () => {
     expect(resolveTimeWindowStartDate("2026-02-24", "YTD", "2024-01-01")).toBe("2026-01-01");
     expect(resolveTimeWindowStartDate("2026-02-24", "1Y", "2024-01-01")).toBe("2025-02-25");
     expect(resolveTimeWindowStartDate("2026-02-24", "SI", "2024-01-01")).toBe("2024-01-01");
+  });
+
+  it("uses gateway reporting-currency capability metadata instead of local heuristics", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.control_capabilities = {
+      ...workspace.control_capabilities!,
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "Gateway confirms reporting-currency restatement across the workspace.",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "SGD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
+    };
+
+    const context = buildPortfolioWorkspaceContext(workspace, {
+      ...buildInitialPortfolioControls(workspace),
+      reportingCurrency: "SGD",
+    });
+
+    expect(context.currencyOptions).toEqual(["USD", "SGD"]);
+    expect(context.selectedReportingCurrency).toBe("SGD");
+    expect(context.reportingCurrencyRestatementState).toBe("supported");
+    expect(context.reportingCurrencyRestatementReason).toBe(
+      "Gateway confirms reporting-currency restatement across the workspace."
+    );
+    expect(context.supportsReportingCurrencyRestatement).toBe(true);
   });
 
   it("derives an effective custom period in detailed mode", () => {
@@ -373,6 +417,11 @@ describe("portfolio view model", () => {
         transaction_date: "2026-02-20T08:30:00Z",
         transaction_type: "BUY",
         component_type: "TRADE",
+        linked_transaction_group_id: "LTG-FX-2026-0001",
+        fx_contract_id: "FXC-2026-0001",
+        swap_event_id: "FXSWAP-2026-0001",
+        near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+        far_leg_group_id: "FXSWAP-2026-0001-FAR",
         security_id: "EQ_1",
         instrument_id: "AAPL",
         quantity: 10,
@@ -408,7 +457,41 @@ describe("portfolio view model", () => {
         label: "Filtered by security: Apple Inc",
       })[0].transaction_id
     ).toBe("TX_BUY");
-    expect(getRelatedTransactionsForSecurity(workspace, "EQ_1")).toHaveLength(1);
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "linked_group",
+        linked_transaction_group_id: "LTG-FX-2026-0001",
+        label: "Filtered by transaction group: LTG-FX-2026-0001",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "fx_contract",
+        fx_contract_id: "FXC-2026-0001",
+        label: "Filtered by FX contract: FXC-2026-0001",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "swap_event",
+        swap_event_id: "FXSWAP-2026-0001",
+        label: "Filtered by swap event: FXSWAP-2026-0001",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "near_leg_group",
+        near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+        label: "Filtered by near-leg group: FXSWAP-2026-0001-NEAR",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
+    expect(
+      filterTransactionsByDrilldown(workspace.recent_transactions, {
+        kind: "far_leg_group",
+        far_leg_group_id: "FXSWAP-2026-0001-FAR",
+        label: "Filtered by far-leg group: FXSWAP-2026-0001-FAR",
+      })[0].transaction_id
+    ).toBe("TX_BUY");
     expect(getPositionsNeedingPricing(workspace)[0].security_id).toBe("FI_1");
   });
 
@@ -425,8 +508,41 @@ describe("portfolio view model", () => {
     expect(context.periodLabel).toBe("30D");
     expect(context.effectivePeriodStartDate).toBe("2026-01-25");
     expect(context.effectivePeriodEndDate).toBe("2026-02-24");
+    expect(context.historicalSnapshotState).toBe("unsupported");
+    expect(context.historicalSnapshotReason).toBe(
+      "Historical snapshots are not yet source-backed."
+    );
     expect(context.supportsHistoricalSnapshots).toBe(false);
+    expect(context.reportingCurrencyRestatementState).toBe("unsupported");
     expect(context.supportsReportingCurrencyRestatement).toBe(false);
+  });
+
+  it("enables historical snapshots only when gateway marks the control as supported", () => {
+    const workspace = buildWorkspace();
+    workspace.control_capabilities = {
+      ...workspace.control_capabilities!,
+      historical_snapshots: {
+        state: "supported",
+        reason: "Gateway confirms historical snapshot support across the workspace.",
+        requested_as_of_date: "2025-06-01",
+        effective_as_of_date: "2025-06-01",
+        earliest_available_as_of_date: "2025-01-01",
+        latest_available_as_of_date: "2026-02-24",
+        module_capabilities: [],
+      },
+    };
+
+    const context = buildPortfolioWorkspaceContext(workspace, {
+      ...buildInitialPortfolioControls(workspace),
+      asOfDate: "2025-06-01",
+    });
+
+    expect(context.historicalSnapshotState).toBe("supported");
+    expect(context.historicalSnapshotReason).toBe(
+      "Gateway confirms historical snapshot support across the workspace."
+    );
+    expect(context.supportsHistoricalSnapshots).toBe(true);
+    expect(context.selectedAsOfDate).toBe("2025-06-01");
   });
 
   it("derives portfolio readiness, activity, and workflow models", () => {
@@ -448,55 +564,18 @@ describe("portfolio view model", () => {
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
     ]);
 
-    expect(buildPortfolioWorkflowActions(workspace)).toEqual([
+    expect(getOrderedWorkflowCues(workspace)).toEqual([
       {
-        sequence: 1,
-        title: "Review performance",
-        impact:
-          "Review portfolio return, benchmark context, and contribution once the book is valued.",
-        target: "Target: Performance workflow for this portfolio",
-        href: "/performance?portfolioId=PORT_UI_1001",
-        cta_label: "Performance",
-        recommended: true,
+        key: "performance",
+        label: "Performance",
+        href: "/performance",
       },
       {
-        sequence: 2,
-        title: "Review risk",
-        impact:
-          "Validate suitability, exposure, and mandate fit before the next client action.",
-        target: "Target: Risk workflow for this portfolio",
-        href: "/performance?portfolioId=PORT_UI_1001&mode=risk",
-        cta_label: "Open Risk",
-        recommended: false,
+        key: "risk",
+        label: "Risk",
+        href: "/risk",
       },
     ]);
-
-    expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
-    expect(buildPortfolioInsights(workspace)).toEqual([]);
-  });
-
-  it("routes concentration insights into Performance Risk mode", () => {
-    const workspace = buildOperationalWorkspace();
-    workspace.top_positions = [
-      {
-        security_id: "EQ_1",
-        instrument_name: "Apple Inc",
-        asset_class: "Equities",
-        quantity: 10,
-        market_value_base: 250000,
-        weight_pct: 22,
-      },
-    ];
-
-    expect(buildPortfolioInsights(workspace)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          key: "equity-concentration-high",
-          href: "/performance?portfolioId=PORT_UI_1001&mode=risk",
-          detail: expect.stringContaining("Open Risk"),
-        }),
-      ])
-    );
   });
 
   it("does not raise false funding or transaction exceptions when summary evidence exists", () => {
@@ -510,9 +589,6 @@ describe("portfolio view model", () => {
       { key: "transactions", label: "Transactions", status: "Ready", href: "#portfolio-insights" },
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
     ]);
-
-    expect(buildPortfolioExceptionSummaries(workspace)).toEqual([]);
-    expect(buildPortfolioInsights(workspace)).toEqual([]);
   });
 
   it("derives the empty-portfolio onboarding sequence", () => {
@@ -527,30 +603,12 @@ describe("portfolio view model", () => {
     workspace.readiness.reporting.status = "EMPTY";
     workspace.readiness.reporting.row_count = 0;
 
-    expect(buildPortfolioWorkflowActions(workspace).map((action) => action.title)).toEqual([
-      "Fund portfolio",
-      "Book first trade",
-      "Publish pricing",
-      "Review holdings",
-      "Open performance",
-    ]);
+    expect(getOrderedWorkflowCues(workspace)).toEqual([]);
     expect(buildPortfolioReadinessIndicators(workspace, "summary").map((indicator) => indicator.status)).toEqual([
       "Missing",
       "Missing",
       "Missing",
       "Empty",
-    ]);
-    expect(buildPortfolioExceptionSummaries(workspace).map((exception) => exception.title)).toEqual([
-      "Missing holdings",
-      "No priced positions",
-      "Empty transaction history",
-      "Reporting output unavailable",
-    ]);
-    expect(buildPortfolioInsights(workspace).map((insight) => insight.title)).toEqual([
-      "No holdings booked",
-      "No cash funding recorded",
-      "Pricing not yet published",
-      "Reporting cannot be generated yet",
     ]);
     expect(getReadinessTone("Missing")).toBe("danger");
     expect(getReadinessTone("Empty")).toBe("warn");
@@ -634,5 +692,40 @@ describe("portfolio view model", () => {
     expect(summaryCapabilities.holdingsDrilldown.state).toBe("hidden");
     expect(summaryCapabilities.transactionsDrilldown.state).toBe("hidden");
     expect(summaryCapabilities.performanceSnapshot.state).toBe("unavailable");
+  });
+
+  it("uses gateway performance unavailable detail when the snapshot endpoint returns a degraded contract", () => {
+    const workspace = buildOperationalWorkspace();
+    workspace.performance = {
+      period: "EXPLICIT",
+      report_start_date: null,
+      report_end_date: "2026-02-24",
+      return_pct: null,
+      benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+      benchmark_label: null,
+      benchmark_return_pct: null,
+      excess_return_pct: null,
+      sparkline_points: [],
+      unavailable: {
+        title: "Performance history incomplete",
+        detail: "Gateway could not compute a snapshot because valuation history is incomplete.",
+        requirements: [
+          "daily valuations through the selected end date",
+          "cashflow history for the selected period",
+        ],
+      },
+      warnings: ["Performance data is delayed pending backfill."],
+      partial_failures: [],
+    };
+
+    const summaryCapabilities = getPortfolioWorkspaceCapabilities(workspace, {
+      viewMode: "summary",
+      hideEmptyModules: false,
+    });
+
+    expect(summaryCapabilities.performanceSnapshot.state).toBe("unavailable");
+    expect(summaryCapabilities.performanceSnapshot.reason).toBe(
+      "Gateway could not compute a snapshot because valuation history is incomplete."
+    );
   });
 });

@@ -123,8 +123,11 @@ export function PortfolioInsightsSection({
                     />
                   ) : workspace.allocation_views?.length ? (
                     <DeferredPortfolioAllocationPanel
+                      portfolioId={workspace.portfolio.portfolio_id}
                       allocationViews={workspace.allocation_views}
                       baseCurrency={workspace.portfolio.base_currency}
+                      asOfDate={context.selectedAsOfDate}
+                      reportingCurrency={context.selectedReportingCurrency}
                       compact={isSummaryView}
                       selectedAllocation={
                         holdingsDrilldown?.kind === "allocation"

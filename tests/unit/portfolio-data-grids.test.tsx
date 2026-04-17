@@ -46,6 +46,7 @@ vi.mock("xlsx", () => ({
 
 import PortfolioHoldingsGrid from "../../src/apps/portfolio/components/portfolio-holdings-grid";
 import PortfolioTransactionsGrid from "../../src/apps/portfolio/components/portfolio-transactions-grid";
+import * as XLSX from "xlsx";
 
 describe("portfolio data grids", () => {
   afterEach(() => {
@@ -122,6 +123,7 @@ describe("portfolio data grids", () => {
               {
                 transaction_id: "TX_1",
                 transaction_date: "2026-03-20T00:00:00Z",
+                settlement_date: "2026-03-24",
                 transaction_type: "BUY",
                 component_type: "TRADE",
                 security_id: "EQ_1",
@@ -151,6 +153,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_1",
             transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
             transaction_type: "BUY",
             security_id: "EQ_1",
             instrument_id: "AAPL",
@@ -170,6 +173,7 @@ describe("portfolio data grids", () => {
     expect(screen.getByRole("button", { name: "Export transactions" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show expanded transaction columns" })).toBeInTheDocument();
     expect(screen.getByLabelText("Transaction type filter")).toBeInTheDocument();
+    expect(screen.getByLabelText("Transaction component type filter")).toBeInTheDocument();
     expect(screen.getByLabelText("Transaction start date")).toHaveValue("2026-03-01");
     expect(screen.getByLabelText("Transaction end date")).toHaveValue("2026-03-28");
 
@@ -177,24 +181,90 @@ describe("portfolio data grids", () => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
     expect(screen.getByText("Amount")).toBeInTheDocument();
+    expect(screen.getByText("Settle Date")).toBeInTheDocument();
     expect(screen.getByText("Currency")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByTestId("amount-header-class")).toHaveTextContent(
       "portfolio-data-grid-header-cell-numeric"
     );
-    expect(screen.queryByText("Settle Date")).not.toBeInTheDocument();
-    expect(screen.getByText("Transaction lifecycle detail is limited")).toBeInTheDocument();
-    expect(
-      screen.getByText(/does not expose settlement dates/i)
-    ).toBeInTheDocument();
+    expect(screen.queryByText("Transaction lifecycle detail is limited")).not.toBeInTheDocument();
+    expect(screen.queryByText(/does not expose settlement dates/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /20 Mar 2026/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
     expect(onRowSelect.mock.calls[0][0].transactionId).toBe("TX_1");
+    expect(onRowSelect.mock.calls[0][0].settleDate).toBe("2026-03-24");
+
+    fireEvent.click(screen.getByRole("button", { name: "Export transactions" }));
+    expect(XLSX.utils.json_to_sheet).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          "Trade Date": "20 Mar 2026",
+          "Settle Date": "24 Mar 2026",
+        }),
+      ])
+    );
+  });
+
+  it("renders the component filter alongside the strategic ledger controls", async () => {
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByLabelText("Transaction component type filter")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ledger view filtered by transaction type, component type, and trade date window")
+    ).toBeInTheDocument();
   });
 
   it("applies an external transaction drill-down filter and allows clearing it", async () => {
     const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_3",
+              transaction_date: "2026-03-12T00:00:00Z",
+              settlement_date: "2026-03-14",
+              transaction_type: "DIVIDEND",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 0,
+              gross_amount: 1250,
+              currency: "USD",
+              settlement_status: "SETTLED",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
 
     render(
       <PortfolioTransactionsGrid
@@ -213,6 +283,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_1",
             transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
             transaction_type: "BUY",
             security_id: "EQ_1",
             instrument_id: "AAPL",
@@ -224,6 +295,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_2",
             transaction_date: "2026-03-18T00:00:00Z",
+            settlement_date: "2026-03-21",
             transaction_type: "BUY",
             security_id: "EQ_2",
             instrument_id: "MSFT",
@@ -237,9 +309,375 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("Filtered by security: Apple Inc.")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("security_id=EQ_1");
     expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /12 Mar 2026 \| Dividend \| 14 Mar 2026 \| AAPL/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /18 Mar 2026 \| Buy \| MSFT/i })).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
+    expect(onClearExternalFilter).toHaveBeenCalled();
+  });
+
+  it("requests the strategic ledger for linked transaction-group drill-downs", async () => {
+    const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_7",
+              transaction_date: "2026-03-18T00:00:00Z",
+              settlement_date: "2026-03-21",
+              transaction_type: "BUY",
+              component_type: "FX_CONTRACT_OPEN",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 25,
+              net_cost_base: 5000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              linked_transaction_group_id: "LTG-FX-2026-0001",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "linked_group",
+          linked_transaction_group_id: "LTG-FX-2026-0001",
+          label: "Filtered by transaction group: LTG-FX-2026-0001",
+        }}
+        onClearExternalFilter={onClearExternalFilter}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Filtered by transaction group: LTG-FX-2026-0001")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("linked_transaction_group_id=LTG-FX-2026-0001");
+    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
+    expect(onClearExternalFilter).toHaveBeenCalled();
+  });
+
+  it("requests the strategic ledger for FX contract drill-downs", async () => {
+    const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_8",
+              transaction_date: "2026-03-18T00:00:00Z",
+              settlement_date: "2026-03-21",
+              transaction_type: "BUY",
+              component_type: "FX_CONTRACT_OPEN",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 25,
+              net_cost_base: 5000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              fx_contract_id: "FXC-2026-0001",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "fx_contract",
+          fx_contract_id: "FXC-2026-0001",
+          label: "Filtered by FX contract: FXC-2026-0001",
+        }}
+        onClearExternalFilter={onClearExternalFilter}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Filtered by FX contract: FXC-2026-0001")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("fx_contract_id=FXC-2026-0001");
+    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
+    expect(onClearExternalFilter).toHaveBeenCalled();
+  });
+
+  it("requests the strategic ledger for swap event drill-downs", async () => {
+    const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_9",
+              transaction_date: "2026-03-18T00:00:00Z",
+              settlement_date: "2026-03-21",
+              transaction_type: "BUY",
+              component_type: "FX_SWAP_NEAR_LEG",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 25,
+              net_cost_base: 5000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              swap_event_id: "FXSWAP-2026-0001",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "swap_event",
+          swap_event_id: "FXSWAP-2026-0001",
+          label: "Filtered by swap event: FXSWAP-2026-0001",
+        }}
+        onClearExternalFilter={onClearExternalFilter}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Filtered by swap event: FXSWAP-2026-0001")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("swap_event_id=FXSWAP-2026-0001");
+    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
+    expect(onClearExternalFilter).toHaveBeenCalled();
+  });
+
+  it("requests the strategic ledger for near-leg group drill-downs", async () => {
+    const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_10",
+              transaction_date: "2026-03-18T00:00:00Z",
+              settlement_date: "2026-03-21",
+              transaction_type: "BUY",
+              component_type: "FX_SWAP_NEAR_LEG",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 25,
+              net_cost_base: 5000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "near_leg_group",
+          near_leg_group_id: "FXSWAP-2026-0001-NEAR",
+          label: "Filtered by near-leg group: FXSWAP-2026-0001-NEAR",
+        }}
+        onClearExternalFilter={onClearExternalFilter}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Filtered by near-leg group: FXSWAP-2026-0001-NEAR")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("near_leg_group_id=FXSWAP-2026-0001-NEAR");
+    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
+    expect(onClearExternalFilter).toHaveBeenCalled();
+  });
+
+  it("requests the strategic ledger for far-leg group drill-downs", async () => {
+    const onClearExternalFilter = vi.fn();
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 1,
+          skip: 0,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_11",
+              transaction_date: "2026-03-18T00:00:00Z",
+              settlement_date: "2026-03-21",
+              transaction_type: "SELL",
+              component_type: "FX_SWAP_FAR_LEG",
+              security_id: "EQ_1",
+              instrument_id: "AAPL",
+              quantity: 25,
+              net_cost_base: 5000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              far_leg_group_id: "FXSWAP-2026-0001-FAR",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        externalFilter={{
+          kind: "far_leg_group",
+          far_leg_group_id: "FXSWAP-2026-0001-FAR",
+          label: "Filtered by far-leg group: FXSWAP-2026-0001-FAR",
+        }}
+        onClearExternalFilter={onClearExternalFilter}
+        initialTransactions={[
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            component_type: "TRADE",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
+            quantity: 50,
+            net_cost_base: 9000,
+            currency: "USD",
+            settlement_status: "SETTLED",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Filtered by far-leg group: FXSWAP-2026-0001-FAR")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
+    expect(requestUrl).toContain("far_leg_group_id=FXSWAP-2026-0001-FAR");
+    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
@@ -344,6 +782,21 @@ describe("portfolio data grids", () => {
   });
 
   it("shows an empty drill-down state without mounting the transactions grid", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            total: 0,
+            skip: 0,
+            limit: 200,
+            transactions: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
     const { container } = render(
       <PortfolioTransactionsGrid
         portfolioId="MANUAL_PB_USD_001"
@@ -360,6 +813,7 @@ describe("portfolio data grids", () => {
           {
             transaction_id: "TX_1",
             transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
             transaction_type: "BUY",
             security_id: "EQ_1",
             instrument_id: "AAPL",
@@ -372,7 +826,9 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("No matching transactions in view")).toBeInTheDocument();
+    });
     expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();
@@ -425,6 +881,7 @@ describe("portfolio data grids", () => {
               {
                 transaction_id: "TX_1",
                 transaction_date: "2026-03-20T00:00:00Z",
+                settlement_date: "2026-03-24",
                 transaction_type: "BUY",
                 component_type: "TRADE",
                 security_id: "EQ_1",
@@ -469,12 +926,13 @@ describe("portfolio data grids", () => {
           defaultStartDate="2026-03-01"
           defaultEndDate="2026-03-28"
           initialTransactions={[
-            {
-              transaction_id: "TX_1",
-              transaction_date: "2026-03-20T00:00:00Z",
-              transaction_type: "BUY",
-              security_id: "EQ_1",
-              instrument_id: "AAPL",
+          {
+            transaction_id: "TX_1",
+            transaction_date: "2026-03-20T00:00:00Z",
+            settlement_date: "2026-03-24",
+            transaction_type: "BUY",
+            security_id: "EQ_1",
+            instrument_id: "AAPL",
               quantity: 50,
               net_cost_base: 9000,
               currency: "USD",

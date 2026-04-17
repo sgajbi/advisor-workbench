@@ -265,6 +265,43 @@ export type WorkbenchPerformanceCapabilities = {
   evidence: PerformanceModuleCapability;
 };
 
+export type PerformanceEvidenceArtifactView = {
+  artifact_name: string;
+  url: string;
+  content_type?: string | null;
+};
+
+export type PerformanceEvidenceStageView = {
+  stage_name: string;
+  status: string;
+  completed_at_utc?: string | null;
+};
+
+export type PerformanceEvidenceUpstreamSnapshotView = {
+  upstream_endpoint: string;
+  source_identifier: string;
+  as_of_date: string;
+  retrieval_status: string;
+};
+
+export type PerformanceCalculationEvidenceView = {
+  calculation_role: string;
+  calculation_id: string;
+  analytics_type: string;
+  execution_status: string;
+  execution_mode?: string | null;
+  lineage_status: string;
+  stage_statuses: PerformanceEvidenceStageView[];
+  upstream_snapshots: PerformanceEvidenceUpstreamSnapshotView[];
+  artifacts: PerformanceEvidenceArtifactView[];
+};
+
+export type PerformanceEvidenceView = {
+  state: string;
+  reason?: string | null;
+  calculations: PerformanceCalculationEvidenceView[];
+};
+
 export type PerformanceHorizonComparisonRow = {
   period: string;
   period_start?: string | null;
@@ -373,6 +410,7 @@ export type WorkbenchPerformanceWorkspace = {
   benchmark_code: string | null;
   benchmark_options?: PerformanceBenchmarkOptionView[];
   capabilities?: WorkbenchPerformanceCapabilities;
+  evidence_view?: PerformanceEvidenceView | null;
   portfolio: WorkbenchOverview["portfolio"];
   overview: WorkbenchOverview["overview"];
   net_performance: PerformanceComparativeSummary;
@@ -403,6 +441,7 @@ export type WorkbenchPerformanceWorkspaceSummary = Pick<
   | "benchmark_code"
   | "benchmark_options"
   | "capabilities"
+  | "evidence_view"
   | "portfolio"
   | "overview"
   | "net_performance"
@@ -431,6 +470,7 @@ export type WorkbenchPerformanceWorkspaceDetails = Pick<
   | "segment"
   | "benchmark_code"
   | "capabilities"
+  | "evidence_view"
   | "net_chart"
   | "gross_chart"
   | "contribution"

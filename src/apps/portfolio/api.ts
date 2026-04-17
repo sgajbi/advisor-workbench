@@ -1,4 +1,8 @@
-import type { PortfolioCatalogResponse, PortfolioWorkspace } from "./types";
+import type {
+  PortfolioAllocationLookThrough,
+  PortfolioCatalogResponse,
+  PortfolioWorkspace,
+} from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
 import {
   resolveGatewayBaseUrl,
@@ -27,6 +31,9 @@ type PortfolioWorkspaceSummaryResponse = {
     cash_balance_count: number;
   };
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
+  performance: PortfolioWorkspace["performance"];
+  rebalance: PortfolioWorkspace["rebalance"];
+  control_capabilities?: PortfolioWorkspace["control_capabilities"];
   reporting: PortfolioWorkspace["readiness"]["reporting"];
   operations?: Record<string, unknown> | null;
   workflow_cues: PortfolioWorkspace["workflow_cues"];
@@ -34,26 +41,21 @@ type PortfolioWorkspaceSummaryResponse = {
   partial_failures: PortfolioWorkspace["partial_failures"];
 };
 
-type PortfolioPositionsResponse = {
+type PortfolioBookResponse = {
+  allocation_views: NonNullable<PortfolioWorkspace["allocation_views"]>;
   top_positions: PortfolioWorkspace["top_positions"];
   positions: PortfolioWorkspace["positions"];
+};
+
+type PortfolioAllocationResponse = {
+  reporting_currency?: string | null;
+  views: NonNullable<PortfolioWorkspace["allocation_views"]>;
+  look_through?: PortfolioAllocationLookThrough | null;
 };
 
 type PortfolioLiquidityResponse = {
   cash_balances: NonNullable<PortfolioWorkspace["cash_balances"]>;
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
-};
-
-type PortfolioAllocationResponse = {
-  views: Array<{
-    dimension: string;
-    buckets: Array<{
-      bucket: string;
-      position_count: number;
-      market_value_base: number | null;
-      weight_pct: number | null;
-    }>;
-  }>;
 };
 
 type PortfolioTransactionLedgerResponse = {
@@ -99,36 +101,28 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "workflow_actions"
 >;
 
-type PortfolioPerformanceSummaryResponse = {
+type PortfolioPerformanceSnapshotResponse = {
   period: string;
-  report_start_date: string;
-  report_end_date: string;
+  as_of_date: string;
+  report_start_date?: string | null;
+  report_end_date?: string | null;
   benchmark_code: string | null;
-  benchmark_options?: Array<{
-    benchmark_code: string;
-    benchmark_name: string;
-    is_assigned: boolean;
-  }>;
-  net_performance: {
+  portfolio_return_pct: number | null;
+  benchmark_return_pct: number | null;
+  excess_return_pct: number | null;
+  sparkline: Array<{
+    as_of_date: string;
     portfolio_return_pct: number | null;
-    benchmark_return_pct: number | null;
-    active_return_pct: number | null;
-    benchmark_return_source?: string | null;
-    benchmark_input_mode?: string | null;
-  };
-  money_weighted_return: {
-    money_weighted_return_pct: number | null;
-    method?: string | null;
-  } | null;
-};
-
-type PortfolioPerformanceDetailsResponse = {
-  net_chart: Array<{
-    label: string;
-    cumulative_portfolio_return_pct?: number | null;
-    cumulative_benchmark_return_pct?: number | null;
-    cumulative_active_return_pct?: number | null;
+    benchmark_return_pct?: number | null;
+    excess_return_pct?: number | null;
   }>;
+  unavailable?: {
+    title: string;
+    detail: string;
+    requirements: string[];
+  } | null;
+  warnings?: string[];
+  partial_failures?: PortfolioWorkspace["partial_failures"];
 };
 
 type PortfolioWorkspaceDetailedDetails = Pick<
@@ -191,8 +185,9 @@ export async function getPortfolioWorkspaceShell(
       income_summary: null,
       activity_summary: null,
       cashflow_outlook: summaryPayload.cashflow_outlook,
-      performance: null,
-      rebalance: null,
+      performance: summaryPayload.performance,
+      rebalance: summaryPayload.rebalance,
+      control_capabilities: summaryPayload.control_capabilities ?? null,
       readiness: {
         has_positions: summaryPayload.summary.position_count > 0,
         reporting: summaryPayload.reporting,
@@ -212,6 +207,9 @@ export async function getPortfolioWorkspaceShell(
 export async function getPortfolioWorkspaceSummaryDetails(
   portfolioId: string,
   params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+    includeProjected?: boolean;
     timeWindow: PortfolioTimeWindow;
     reportStartDate: string;
     reportEndDate: string;
@@ -219,49 +217,43 @@ export async function getPortfolioWorkspaceSummaryDetails(
   }
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
-    const performanceQuery = buildPortfolioPerformanceSummaryQuery(params);
+    const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
+    const bookQuery = buildPortfolioBookQuery(params);
+    const summaryQuery = buildPortfolioSummaryWindowQuery(params);
     const [
-      allocationsPayload,
-      positionsPayload,
+      bookPayload,
       incomePayload,
       activityPayload,
       performancePayload,
-      performanceDetailsPayload,
     ] = await Promise.all([
-      fetchPortfolioJson<PortfolioAllocationResponse>(
+      fetchPortfolioJson<PortfolioBookResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
-      ),
-      fetchPortfolioJson<PortfolioPositionsResponse>(
-        resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
+        { query: bookQuery }
       ),
       fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
+        { query: summaryQuery }
       ),
       fetchPortfolioJson<PortfolioActivitySummaryResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
+        { query: summaryQuery }
       ),
-      fetchPortfolioJson<PortfolioPerformanceSummaryResponse>(
+      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
         resolvePortfolioRequestTarget(),
-        `/workbench/${encodeURIComponent(portfolioId)}/performance/summary`,
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/performance-snapshot`,
         { query: performanceQuery }
-      ),
-      fetchPortfolioJson<PortfolioPerformanceDetailsResponse>(
-        resolvePortfolioRequestTarget(),
-        `/workbench/${encodeURIComponent(portfolioId)}/performance/details`,
-        { query: buildPortfolioPerformanceDetailsQuery(params) }
       ),
     ]);
 
-    if (!allocationsPayload || !positionsPayload) {
+    if (!bookPayload) {
       return null;
     }
     const allocationView =
-      allocationsPayload.views.find((view) => view.dimension === "asset_class") ??
-      allocationsPayload.views[0];
+      bookPayload.allocation_views.find((view) => view.dimension === "asset_class") ??
+      bookPayload.allocation_views[0];
 
     return {
       allocations: (allocationView?.buckets ?? []).map((bucket) => ({
@@ -270,12 +262,12 @@ export async function getPortfolioWorkspaceSummaryDetails(
         market_value_base: bucket.market_value_base,
         weight_pct: bucket.weight_pct,
       })),
-      allocation_views: allocationsPayload.views,
-      top_positions: positionsPayload.top_positions,
-      positions: positionsPayload.positions,
+      allocation_views: bookPayload.allocation_views,
+      top_positions: bookPayload.top_positions,
+      positions: bookPayload.positions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
-      performance: mapPortfolioPerformanceSummary(performancePayload, performanceDetailsPayload),
+      performance: mapPortfolioPerformanceSnapshot(performancePayload),
     };
   } catch {
     return null;
@@ -286,6 +278,7 @@ export async function getPortfolioWorkspaceDetailedDetails(
   portfolioId: string,
   params: {
     asOfDate?: string;
+    reportingCurrency?: string;
     startDate?: string;
     endDate?: string;
   } = {}
@@ -293,8 +286,16 @@ export async function getPortfolioWorkspaceDetailedDetails(
   try {
     const transactionSearchParams = new URLSearchParams();
     transactionSearchParams.set("limit", "200");
+    const sharedSearchParams = new URLSearchParams();
+    const liquiditySearchParams = new URLSearchParams();
     if (params.asOfDate) {
       transactionSearchParams.set("as_of_date", params.asOfDate);
+      sharedSearchParams.set("as_of_date", params.asOfDate);
+      liquiditySearchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.reportingCurrency) {
+      liquiditySearchParams.set("reporting_currency", params.reportingCurrency);
+      transactionSearchParams.set("reporting_currency", params.reportingCurrency);
     }
     if (params.startDate) {
       transactionSearchParams.set("start_date", params.startDate);
@@ -311,7 +312,8 @@ export async function getPortfolioWorkspaceDetailedDetails(
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioLiquidityResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
+        { query: liquiditySearchParams }
       ),
       fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
         resolvePortfolioRequestTarget(),
@@ -320,15 +322,18 @@ export async function getPortfolioWorkspaceDetailedDetails(
       ),
       fetchPortfolioJson<PortfolioReadinessResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
+        { query: sharedSearchParams }
       ),
       fetchPortfolioJson<PortfolioInsightsResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`,
+        { query: sharedSearchParams }
       ),
       fetchPortfolioJson<PortfolioWorkflowResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
+        { query: sharedSearchParams }
       ),
     ]);
 
@@ -357,6 +362,13 @@ export async function getPortfolioTransactionLedger(
     startDate?: string;
     endDate?: string;
     transactionType?: string;
+    componentType?: string;
+    securityId?: string;
+    linkedTransactionGroupId?: string;
+    fxContractId?: string;
+    swapEventId?: string;
+    nearLegGroupId?: string;
+    farLegGroupId?: string;
     limit?: number;
     skip?: number;
   } = {}
@@ -378,10 +390,59 @@ export async function getPortfolioTransactionLedger(
     if (params.transactionType && params.transactionType !== "ALL") {
       searchParams.set("transaction_type", params.transactionType);
     }
+    if (params.componentType && params.componentType !== "ALL") {
+      searchParams.set("component_type", params.componentType);
+    }
+    if (params.securityId) {
+      searchParams.set("security_id", params.securityId);
+    }
+    if (params.linkedTransactionGroupId) {
+      searchParams.set("linked_transaction_group_id", params.linkedTransactionGroupId);
+    }
+    if (params.fxContractId) {
+      searchParams.set("fx_contract_id", params.fxContractId);
+    }
+    if (params.swapEventId) {
+      searchParams.set("swap_event_id", params.swapEventId);
+    }
+    if (params.nearLegGroupId) {
+      searchParams.set("near_leg_group_id", params.nearLegGroupId);
+    }
+    if (params.farLegGroupId) {
+      searchParams.set("far_leg_group_id", params.farLegGroupId);
+    }
 
     return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
+      { query: searchParams }
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function getPortfolioAllocationViews(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+    lookThroughMode?: "direct_only" | "full";
+  } = {}
+): Promise<PortfolioAllocationResponse | null> {
+  try {
+    const searchParams = new URLSearchParams();
+    if (params.asOfDate) {
+      searchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.reportingCurrency) {
+      searchParams.set("reporting_currency", params.reportingCurrency);
+    }
+    searchParams.set("look_through_mode", params.lookThroughMode ?? "direct_only");
+
+    return await fetchPortfolioJson<PortfolioAllocationResponse>(
+      resolvePortfolioRequestTarget(),
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
       { query: searchParams }
     );
   } catch {
@@ -439,7 +500,7 @@ export function mergePortfolioWorkspace(
   };
 }
 
-function buildPortfolioPerformanceSummaryQuery(params: {
+function buildPortfolioPerformanceSnapshotQuery(params: {
   timeWindow: PortfolioTimeWindow;
   reportStartDate: string;
   reportEndDate: string;
@@ -450,8 +511,6 @@ function buildPortfolioPerformanceSummaryQuery(params: {
     params.usesCustomDateRange || params.timeWindow === "7D" || params.timeWindow === "30D";
 
   query.set("period", useExplicitWindow ? "EXPLICIT" : params.timeWindow);
-  query.set("detail_basis", "NET");
-  query.set("chart_frequency", "monthly");
   query.set("report_end_date", params.reportEndDate);
 
   if (useExplicitWindow) {
@@ -461,51 +520,74 @@ function buildPortfolioPerformanceSummaryQuery(params: {
   return query;
 }
 
-function buildPortfolioPerformanceDetailsQuery(params: {
-  timeWindow: PortfolioTimeWindow;
-  reportStartDate: string;
-  reportEndDate: string;
-  usesCustomDateRange?: boolean;
+function buildPortfolioBookQuery(params: {
+  asOfDate?: string;
+  reportingCurrency?: string;
+  includeProjected?: boolean;
 }) {
-  const query = buildPortfolioPerformanceSummaryQuery(params);
-  query.set("contribution_dimension", "asset_class");
-  query.set("attribution_dimension", "asset_class");
+  const query = new URLSearchParams();
+
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
+  }
+  query.set("include_projected", String(params.includeProjected ?? false));
+
   return query;
 }
 
-function mapPortfolioPerformanceSummary(
-  payload: PortfolioPerformanceSummaryResponse | null,
-  detailsPayload?: PortfolioPerformanceDetailsResponse | null
+function buildPortfolioSummaryWindowQuery(params: {
+  asOfDate?: string;
+  reportingCurrency?: string;
+  reportStartDate: string;
+  reportEndDate: string;
+}): URLSearchParams {
+  const query = new URLSearchParams();
+
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
+  }
+  query.set("start_date", params.reportStartDate);
+  query.set("end_date", params.reportEndDate);
+
+  return query;
+}
+
+function mapPortfolioPerformanceSnapshot(
+  payload: PortfolioPerformanceSnapshotResponse | null
 ): PortfolioWorkspace["performance"] {
   if (!payload) {
     return null;
   }
 
-  const selectedBenchmark =
-    payload.benchmark_options?.find((option) => option.benchmark_code === payload.benchmark_code) ??
-    payload.benchmark_options?.find((option) => option.is_assigned) ??
-    null;
-
+  const reportStartDate = payload.sparkline[0]?.as_of_date ?? null;
   return {
     period: payload.period,
-    report_start_date: payload.report_start_date,
-    report_end_date: payload.report_end_date,
-    return_pct: payload.net_performance.portfolio_return_pct,
-    money_weighted_return_pct: payload.money_weighted_return?.money_weighted_return_pct ?? null,
-    money_weighted_method: payload.money_weighted_return?.method ?? null,
+    report_start_date: payload.report_start_date ?? reportStartDate,
+    report_end_date: payload.report_end_date ?? payload.as_of_date,
+    return_pct: payload.portfolio_return_pct,
+    money_weighted_return_pct: null,
+    money_weighted_method: null,
     benchmark_code: payload.benchmark_code,
-    benchmark_label: selectedBenchmark?.benchmark_name ?? null,
-    benchmark_return_pct: payload.net_performance.benchmark_return_pct,
-    benchmark_return_source: payload.net_performance.benchmark_return_source ?? null,
-    benchmark_input_mode: payload.net_performance.benchmark_input_mode ?? null,
-    excess_return_pct: payload.net_performance.active_return_pct,
-    sparkline_points:
-      detailsPayload?.net_chart?.map((point) => ({
-        label: point.label,
-        portfolio_return_pct: point.cumulative_portfolio_return_pct ?? null,
-        benchmark_return_pct: point.cumulative_benchmark_return_pct ?? null,
-        active_return_pct: point.cumulative_active_return_pct ?? null,
-      })) ?? null,
+    benchmark_label: null,
+    benchmark_return_pct: payload.benchmark_return_pct,
+    benchmark_return_source: null,
+    benchmark_input_mode: null,
+    excess_return_pct: payload.excess_return_pct,
+    sparkline_points: payload.sparkline.map((point) => ({
+      label: point.as_of_date,
+      portfolio_return_pct: point.portfolio_return_pct,
+      benchmark_return_pct: point.benchmark_return_pct ?? null,
+      active_return_pct: point.excess_return_pct ?? null,
+    })),
+    unavailable: payload.unavailable ?? null,
+    warnings: payload.warnings ?? [],
+    partial_failures: payload.partial_failures ?? [],
   };
 }
 

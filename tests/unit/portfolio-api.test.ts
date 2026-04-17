@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getPortfolioCatalog,
+  getPortfolioAllocationViews,
   getPortfolioProjectedCashflow,
   getPortfolioTransactionLedger,
   getPortfolioWorkspaceDetailedDetails,
@@ -40,6 +41,9 @@ describe("portfolio api", () => {
               investment_time_horizon: "Long Term",
               objective: "Long-term capital appreciation.",
               is_leverage_allowed: false,
+              advisor_id: "ADV_1001",
+              open_date: "2024-01-15",
+              close_date: null,
             },
             summary: {
               assets_under_management_base: 1001550.05,
@@ -50,10 +54,61 @@ describe("portfolio api", () => {
               cash_balance_count: 2,
             },
             cashflow_outlook: null,
+            performance: {
+              period: "YTD",
+              return_pct: 2.5,
+            },
+            rebalance: {
+              status: "PENDING_REVIEW",
+              last_run_at_utc: "2026-03-27T12:00:00Z",
+              last_rebalance_run_id: "rr_100",
+            },
+            control_capabilities: {
+              historical_snapshots: {
+                state: "partial",
+                reason: "Most modules honor as_of_date.",
+                requested_as_of_date: "2026-03-28",
+                effective_as_of_date: "2026-03-28",
+                earliest_available_as_of_date: "2024-01-15",
+                latest_available_as_of_date: "2026-03-28",
+                module_capabilities: [
+                  {
+                    module: "book",
+                    state: "supported",
+                    reason: "Book accepts and honors as_of_date directly.",
+                  },
+                ],
+              },
+              reporting_currency_restatement: {
+                state: "partial",
+                reason: "Only some modules honor reporting currency.",
+                requested_reporting_currency: null,
+                effective_reporting_currency: "USD",
+                supported_currencies: ["USD", "SGD"],
+                module_capabilities: [
+                  {
+                    module: "positions",
+                    state: "supported",
+                    reason: "Positions accept and honor reporting_currency directly.",
+                  },
+                ],
+              },
+            },
             reporting: {
               status: "READY",
-              generated_at_utc: "2026-03-28T08:00:00Z",
+              generated_at_utc: null,
               row_count: 4,
+            },
+            operations: {
+              business_date: "2026-03-28",
+              latest_booked_transaction_date: null,
+              latest_booked_position_snapshot_date: null,
+              publish_allowed: true,
+              controls_blocking: null,
+              active_reprocessing_keys: null,
+              stale_reprocessing_keys: null,
+              failed_valuation_jobs_within_window: null,
+              failed_aggregation_jobs_within_window: null,
             },
             workflow_cues: [{ key: "performance", label: "Performance", href: "/performance" }],
             warnings: [],
@@ -68,20 +123,115 @@ describe("portfolio api", () => {
     const shell = await getPortfolioWorkspaceShell("MANUAL_PB_USD_001");
 
     expect(shell?.portfolio.portfolio_id).toBe("MANUAL_PB_USD_001");
+    expect(shell?.profile).toEqual({
+      status: "ACTIVE",
+      portfolio_type: "Advisory",
+      risk_exposure: "Moderate Growth",
+      investment_time_horizon: "Long Term",
+      objective: "Long-term capital appreciation.",
+      is_leverage_allowed: false,
+      advisor_id: "ADV_1001",
+      open_date: "2024-01-15",
+      close_date: null,
+    });
     expect(shell?.allocations).toEqual([]);
     expect(shell?.positions).toEqual([]);
     expect(shell?.recent_transactions).toEqual([]);
+    expect(shell?.performance).toEqual({
+      period: "YTD",
+      return_pct: 2.5,
+    });
+    expect(shell?.rebalance).toEqual({
+      status: "PENDING_REVIEW",
+      last_run_at_utc: "2026-03-27T12:00:00Z",
+      last_rebalance_run_id: "rr_100",
+    });
+    expect(shell?.control_capabilities?.historical_snapshots.state).toBe("partial");
+    expect(shell?.control_capabilities?.reporting_currency_restatement.supported_currencies).toEqual([
+      "USD",
+      "SGD",
+    ]);
+    expect(shell?.readiness.reporting).toEqual({
+      status: "READY",
+      generated_at_utc: null,
+      row_count: 4,
+    });
+    expect(shell?.operations).toEqual({
+      business_date: "2026-03-28",
+      latest_booked_transaction_date: null,
+      latest_booked_position_snapshot_date: null,
+      publish_allowed: true,
+      controls_blocking: null,
+      active_reprocessing_keys: null,
+      stale_reprocessing_keys: null,
+      failed_valuation_jobs_within_window: null,
+      failed_aggregation_jobs_within_window: null,
+    });
     expect(shell?.readiness_indicators).toBeUndefined();
     expect(shell?.workflow_actions).toBeUndefined();
+  });
+
+  it("keeps shell workspace compatible when gateway omits optional performance fields", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/workspace")) {
+          return jsonResponse({
+            as_of_date: "2026-03-28",
+            portfolio: {
+              portfolio_id: "MANUAL_PB_USD_001",
+              display_name: "MANUAL_PB_USD_001",
+              client_id: "MANUAL_CIF_001",
+              base_currency: "USD",
+              booking_center_code: "Singapore",
+            },
+            profile: {
+              status: "ACTIVE",
+              portfolio_type: "Advisory",
+            },
+            summary: {
+              assets_under_management_base: 1001550.05,
+              invested_market_value_base: 917032.95,
+              cash_market_value_base: 84517.1,
+              cash_weight_pct: 8.43863,
+              position_count: 9,
+              cash_balance_count: 2,
+            },
+            cashflow_outlook: null,
+            performance: null,
+            rebalance: null,
+            control_capabilities: null,
+            reporting: {
+              status: "READY",
+              generated_at_utc: "2026-03-28T08:00:00Z",
+              row_count: 4,
+            },
+            workflow_cues: [],
+            warnings: [],
+            partial_failures: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const shell = await getPortfolioWorkspaceShell("MANUAL_PB_USD_001");
+
+    expect(shell?.performance).toBeNull();
+    expect(shell?.rebalance).toBeNull();
+    expect(shell?.control_capabilities).toBeNull();
   });
 
   it("loads summary detail modules without fetching detailed ledger and liquidity slices", async () => {
     const fetchSpy = vi.fn(async (input: string | URL) => {
       const url = input.toString();
 
-      if (url.includes("/allocations")) {
+      if (url.includes("/book")) {
         return jsonResponse({
-          views: [
+          allocation_views: [
             {
               dimension: "asset_class",
               buckets: [
@@ -94,11 +244,6 @@ describe("portfolio api", () => {
               ],
             },
           ],
-        });
-      }
-
-      if (url.includes("/positions")) {
-        return jsonResponse({
           top_positions: [
             {
               security_id: "EQ_US_AAPL_MANUAL_001",
@@ -153,53 +298,40 @@ describe("portfolio api", () => {
         });
       }
 
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+      if (url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?")) {
         return jsonResponse({
           period: "EXPLICIT",
-          report_start_date: "2026-03-01",
-          report_end_date: "2026-03-28",
+          as_of_date: "2026-03-28",
           benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-          benchmark_options: [
+          portfolio_return_pct: 5.12,
+          benchmark_return_pct: 4.91,
+          excess_return_pct: 0.21,
+          warnings: ["Benchmark history contains one delayed market close."],
+          partial_failures: [
             {
-              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-              benchmark_name: "Global Balanced 60/40",
-              is_assigned: true,
+              source_service: "lotus-performance",
+              error_code: "MARKET_DATA_DELAY",
+              detail: "One benchmark data point was delayed and backfilled.",
             },
           ],
-          net_performance: {
-            portfolio_return_pct: 5.12,
-            benchmark_return_pct: 4.91,
-            active_return_pct: 0.21,
-            benchmark_return_source: "calculated",
-            benchmark_input_mode: "stateful",
-          },
-          money_weighted_return: {
-            money_weighted_return_pct: 4.88,
-            method: "XIRR",
-          },
-        });
-      }
-
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
-        return jsonResponse({
-          net_chart: [
+          sparkline: [
             {
-              label: "2026-01",
-              cumulative_portfolio_return_pct: 1.1,
-              cumulative_benchmark_return_pct: 0.9,
-              cumulative_active_return_pct: 0.2,
+              as_of_date: "2026-03-01",
+              portfolio_return_pct: 1.1,
+              benchmark_return_pct: 0.9,
+              excess_return_pct: 0.2,
             },
             {
-              label: "2026-02",
-              cumulative_portfolio_return_pct: 2.9,
-              cumulative_benchmark_return_pct: 2.5,
-              cumulative_active_return_pct: 0.4,
+              as_of_date: "2026-03-14",
+              portfolio_return_pct: 2.9,
+              benchmark_return_pct: 2.5,
+              excess_return_pct: 0.4,
             },
             {
-              label: "2026-03",
-              cumulative_portfolio_return_pct: 5.12,
-              cumulative_benchmark_return_pct: 4.91,
-              cumulative_active_return_pct: 0.21,
+              as_of_date: "2026-03-28",
+              portfolio_return_pct: 5.12,
+              benchmark_return_pct: 4.91,
+              excess_return_pct: 0.21,
             },
           ],
         });
@@ -210,6 +342,9 @@ describe("portfolio api", () => {
     vi.stubGlobal("fetch", fetchSpy);
 
     const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
@@ -226,27 +361,35 @@ describe("portfolio api", () => {
       return_pct: 5.12,
       benchmark_return_pct: 4.91,
       excess_return_pct: 0.21,
-      money_weighted_return_pct: 4.88,
-      money_weighted_method: "XIRR",
+      money_weighted_return_pct: null,
+      money_weighted_method: null,
       benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-      benchmark_label: "Global Balanced 60/40",
-      benchmark_return_source: "calculated",
-      benchmark_input_mode: "stateful",
+      benchmark_label: null,
+      benchmark_return_source: null,
+      benchmark_input_mode: null,
+      warnings: ["Benchmark history contains one delayed market close."],
+      partial_failures: [
+        {
+          source_service: "lotus-performance",
+          error_code: "MARKET_DATA_DELAY",
+          detail: "One benchmark data point was delayed and backfilled.",
+        },
+      ],
       sparkline_points: [
         {
-          label: "2026-01",
+          label: "2026-03-01",
           portfolio_return_pct: 1.1,
           benchmark_return_pct: 0.9,
           active_return_pct: 0.2,
         },
         {
-          label: "2026-02",
+          label: "2026-03-14",
           portfolio_return_pct: 2.9,
           benchmark_return_pct: 2.5,
           active_return_pct: 0.4,
         },
         {
-          label: "2026-03",
+          label: "2026-03-28",
           portfolio_return_pct: 5.12,
           benchmark_return_pct: 4.91,
           active_return_pct: 0.21,
@@ -267,20 +410,123 @@ describe("portfolio api", () => {
     expect(
       requestedUrls.some(
         (url) =>
-          url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?") &&
-          url.includes("period=EXPLICIT") &&
-          url.includes("report_start_date=2026-03-01") &&
-          url.includes("report_end_date=2026-03-28")
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/income-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
       )
     ).toBe(true);
     expect(
       requestedUrls.some(
         (url) =>
-          url.includes("/workbench/MANUAL_PB_USD_001/performance/details?") &&
-          url.includes("contribution_dimension=asset_class") &&
-          url.includes("attribution_dimension=asset_class")
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/activity-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
       )
     ).toBe(true);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/book?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("reporting_currency=USD") &&
+          url.includes("include_projected=false")
+      )
+    ).toBe(true);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?") &&
+          url.includes("period=EXPLICIT") &&
+          url.includes("report_start_date=2026-03-01") &&
+          url.includes("report_end_date=2026-03-28")
+      )
+    ).toBe(true);
+    expect(requestedUrls.some((url) => url.includes("/allocations"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/positions"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/performance/details"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/performance/summary"))).toBe(false);
+  });
+
+  it("preserves gateway unavailable metadata for the performance snapshot module", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/book")) {
+          return jsonResponse({
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
+            top_positions: [],
+            positions: [],
+          });
+        }
+
+        if (url.includes("/income-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (url.includes("/activity-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?")) {
+          return jsonResponse({
+            period: "EXPLICIT",
+            as_of_date: "2026-03-28",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            portfolio_return_pct: null,
+            benchmark_return_pct: null,
+            excess_return_pct: null,
+            unavailable: {
+              title: "Performance history incomplete",
+              detail: "Gateway could not compute a snapshot because valuation history is incomplete.",
+              requirements: [
+                "daily valuations through the selected end date",
+                "cashflow history for the selected period",
+              ],
+            },
+            warnings: ["Performance data is delayed pending backfill."],
+            partial_failures: [],
+            sparkline: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+
+    expect(details?.performance).toMatchObject({
+      period: "EXPLICIT",
+      report_start_date: null,
+      report_end_date: "2026-03-28",
+      return_pct: null,
+      benchmark_return_pct: null,
+      excess_return_pct: null,
+      unavailable: {
+        title: "Performance history incomplete",
+        detail: "Gateway could not compute a snapshot because valuation history is incomplete.",
+        requirements: [
+          "daily valuations through the selected end date",
+          "cashflow history for the selected period",
+        ],
+      },
+      warnings: ["Performance data is delayed pending backfill."],
+      partial_failures: [],
+      sparkline_points: [],
+    });
   });
 
   it("loads detailed ledger and liquidity slices only when detailed modules need them", async () => {
@@ -439,11 +685,19 @@ describe("portfolio api", () => {
     const requestedUrls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
       String(call[0])
     );
+    const liquidityRequestUrl = requestedUrls.find((url) => url.includes("/liquidity?")) ?? "";
     const transactionRequestUrl = requestedUrls.find((url) => url.includes("/transactions?")) ?? "";
+    const readinessRequestUrl = requestedUrls.find((url) => url.includes("/readiness?")) ?? "";
+    const insightsRequestUrl = requestedUrls.find((url) => url.includes("/insights?")) ?? "";
+    const workflowRequestUrl = requestedUrls.find((url) => url.includes("/workflow?")) ?? "";
+    expect(liquidityRequestUrl).toContain("as_of_date=2026-03-28");
     expect(transactionRequestUrl).toContain("limit=200");
     expect(transactionRequestUrl).toContain("as_of_date=2026-03-28");
     expect(transactionRequestUrl).toContain("start_date=2026-03-01");
     expect(transactionRequestUrl).toContain("end_date=2026-03-28");
+    expect(readinessRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(insightsRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(workflowRequestUrl).toContain("as_of_date=2026-03-28");
   });
 
   it("requests the transaction ledger with scoped filter parameters", async () => {
@@ -462,6 +716,13 @@ describe("portfolio api", () => {
       startDate: "2026-03-01",
       endDate: "2026-03-28",
       transactionType: "BUY",
+      componentType: "FX_CONTRACT_OPEN",
+      securityId: "EQ_US_AAPL_MANUAL_001",
+      linkedTransactionGroupId: "LTG-FX-2026-0001",
+      fxContractId: "FXC-2026-0001",
+      swapEventId: "FXSWAP-2026-0001",
+      nearLegGroupId: "FXSWAP-2026-0001-NEAR",
+      farLegGroupId: "FXSWAP-2026-0001-FAR",
       limit: 200,
     });
 
@@ -472,6 +733,41 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("start_date=2026-03-01");
     expect(requestUrl).toContain("end_date=2026-03-28");
     expect(requestUrl).toContain("transaction_type=BUY");
+    expect(requestUrl).toContain("component_type=FX_CONTRACT_OPEN");
+    expect(requestUrl).toContain("security_id=EQ_US_AAPL_MANUAL_001");
+    expect(requestUrl).toContain("linked_transaction_group_id=LTG-FX-2026-0001");
+    expect(requestUrl).toContain("fx_contract_id=FXC-2026-0001");
+    expect(requestUrl).toContain("swap_event_id=FXSWAP-2026-0001");
+    expect(requestUrl).toContain("near_leg_group_id=FXSWAP-2026-0001-NEAR");
+    expect(requestUrl).toContain("far_leg_group_id=FXSWAP-2026-0001-FAR");
+  });
+
+  it("requests strategic allocation views with explicit look-through and reporting currency", async () => {
+    const fetchSpy = vi.fn(async () =>
+      jsonResponse({
+        reporting_currency: "USD",
+        look_through: {
+          requested_mode: "full",
+          effective_mode: "full",
+          applied: true,
+        },
+        views: [{ dimension: "region", buckets: [] }],
+      })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const payload = await getPortfolioAllocationViews("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      lookThroughMode: "full",
+    });
+
+    expect(payload?.look_through?.effective_mode).toBe("full");
+    const requestUrl = String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "");
+    expect(requestUrl).toContain("/allocations?");
+    expect(requestUrl).toContain("as_of_date=2026-03-28");
+    expect(requestUrl).toContain("reporting_currency=USD");
+    expect(requestUrl).toContain("look_through_mode=full");
   });
 
   it("reuses cached BFF responses for identical requests", async () => {
@@ -487,14 +783,9 @@ describe("portfolio api", () => {
         });
       }
 
-      if (url.includes("/allocations")) {
+      if (url.includes("/book")) {
         return jsonResponse({
-          views: [{ dimension: "asset_class", buckets: [] }],
-        });
-      }
-
-      if (url.includes("/positions")) {
-        return jsonResponse({
+          allocation_views: [{ dimension: "asset_class", buckets: [] }],
           top_positions: [],
           positions: [],
         });
@@ -508,42 +799,34 @@ describe("portfolio api", () => {
         return jsonResponse(null);
       }
 
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/summary?")) {
+      if (url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/performance-snapshot?")) {
         return jsonResponse({
           period: "EXPLICIT",
+          as_of_date: "2026-03-28",
           report_start_date: "2026-03-01",
           report_end_date: "2026-03-28",
           benchmark_code: null,
-          benchmark_options: [],
-          net_performance: {
-            portfolio_return_pct: 2.1,
-            benchmark_return_pct: null,
-            active_return_pct: null,
-          },
-          money_weighted_return: null,
-        });
-      }
-
-      if (url.includes("/workbench/MANUAL_PB_USD_001/performance/details?")) {
-        return jsonResponse({
-          net_chart: [
+          portfolio_return_pct: 2.1,
+          benchmark_return_pct: null,
+          excess_return_pct: null,
+          sparkline: [
             {
-              label: "2026-01",
-              cumulative_portfolio_return_pct: 0.8,
-              cumulative_benchmark_return_pct: 0.6,
-              cumulative_active_return_pct: 0.2,
+              as_of_date: "2026-03-01",
+              portfolio_return_pct: 0.8,
+              benchmark_return_pct: 0.6,
+              excess_return_pct: 0.2,
             },
             {
-              label: "2026-02",
-              cumulative_portfolio_return_pct: 1.6,
-              cumulative_benchmark_return_pct: 1.2,
-              cumulative_active_return_pct: 0.4,
+              as_of_date: "2026-03-14",
+              portfolio_return_pct: 1.6,
+              benchmark_return_pct: 1.2,
+              excess_return_pct: 0.4,
             },
             {
-              label: "2026-03",
-              cumulative_portfolio_return_pct: 2.1,
-              cumulative_benchmark_return_pct: 1.7,
-              cumulative_active_return_pct: 0.4,
+              as_of_date: "2026-03-28",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: 1.7,
+              excess_return_pct: 0.4,
             },
           ],
         });
@@ -567,11 +850,17 @@ describe("portfolio api", () => {
     });
 
     await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
     });
     await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
       timeWindow: "30D",
       reportStartDate: "2026-03-01",
       reportEndDate: "2026-03-28",
@@ -579,12 +868,116 @@ describe("portfolio api", () => {
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/book?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("reporting_currency=USD") &&
+          url.includes("include_projected=false")
+      ).length
+    ).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(0);
+    expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(0);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/income-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
+      ).length
+    ).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/activity-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
+      ).length
+    ).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/performance-snapshot?") &&
+          url.includes("period=EXPLICIT") &&
+          url.includes("report_start_date=2026-03-01") &&
+          url.includes("report_end_date=2026-03-28")
+      ).length
+    ).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(0);
+    expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
+  });
+
+  it("preserves source-authored performance snapshot report windows", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes("/book")) {
+          return jsonResponse({
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
+            top_positions: [],
+            positions: [],
+          });
+        }
+
+        if (url.includes("/income-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (url.includes("/activity-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (!url.includes("/performance-snapshot")) {
+          throw new Error(`Unexpected fetch: ${url}`);
+        }
+
+        return jsonResponse({
+          period: "EXPLICIT",
+          as_of_date: "2026-03-28",
+          report_start_date: "2026-02-15",
+          report_end_date: "2026-03-28",
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          portfolio_return_pct: 2.1,
+          benchmark_return_pct: 1.7,
+          excess_return_pct: 0.4,
+          sparkline: [
+            {
+              as_of_date: "2026-03-01",
+              portfolio_return_pct: 0.8,
+              benchmark_return_pct: 0.6,
+              excess_return_pct: 0.2,
+            },
+            {
+              as_of_date: "2026-03-28",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: 1.7,
+              excess_return_pct: 0.4,
+            },
+          ],
+          warnings: [],
+          partial_failures: [],
+        });
+      })
+    );
+
+    const workspace = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+
+    expect(workspace?.performance?.report_start_date).toBe("2026-02-15");
+    expect(workspace?.performance?.report_end_date).toBe("2026-03-28");
+    expect(workspace?.performance?.sparkline_points?.[0]?.label).toBe("2026-03-01");
   });
 
   it("coalesces identical in-flight ledger requests into a single fetch", async () => {
@@ -657,6 +1050,54 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("include_projected=true");
   });
 
+  it("passes reporting currency through to detailed liquidity requests", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes("/liquidity")) {
+          return jsonResponse({
+            cash_balances: [],
+            cashflow_outlook: null,
+          });
+        }
+        if (url.includes("/transactions")) {
+          return jsonResponse({
+            transactions: [],
+          });
+        }
+        if (url.includes("/readiness")) {
+          return jsonResponse({ indicators: [] });
+        }
+        if (url.includes("/insights")) {
+          return jsonResponse({ insights: [], exception_summaries: [] });
+        }
+        if (url.includes("/workflow")) {
+          return jsonResponse({ actions: [] });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "SGD",
+      startDate: "2026-03-01",
+      endDate: "2026-03-28",
+    });
+
+    const requestedUrls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
+      String(call[0])
+    );
+    const liquidityRequestUrl = requestedUrls.find((url) => url.includes("/liquidity?")) ?? "";
+    const transactionRequestUrl = requestedUrls.find((url) => url.includes("/transactions?")) ?? "";
+    expect(liquidityRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(liquidityRequestUrl).toContain("reporting_currency=SGD");
+    expect(transactionRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(transactionRequestUrl).toContain("reporting_currency=SGD");
+  });
+
   it("uses the proxied portfolio API base in the browser", async () => {
     const originalWindow = global.window;
     vi.stubGlobal("window", {
@@ -699,6 +1140,41 @@ describe("portfolio api", () => {
         vi.unstubAllGlobals();
       }
     }
+  });
+
+  it("preserves gateway portfolio catalog picker metadata", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          items: [
+            {
+              portfolio_id: "PF_1001",
+              display_name: "Alpha Growth",
+              base_currency: "USD",
+              client_id: "CIF_1001",
+              booking_center_code: "SGPB",
+              portfolio_type: "ADVISORY",
+              status: "ACTIVE",
+            },
+          ],
+        })
+      )
+    );
+
+    const items = await getPortfolioCatalog();
+
+    expect(items).toEqual([
+      {
+        portfolio_id: "PF_1001",
+        display_name: "Alpha Growth",
+        base_currency: "USD",
+        client_id: "CIF_1001",
+        booking_center_code: "SGPB",
+        portfolio_type: "ADVISORY",
+        status: "ACTIVE",
+      },
+    ]);
   });
 });
 

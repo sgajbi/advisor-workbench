@@ -35,6 +35,8 @@ export function assemblePerformanceWorkspace(
     segment: details?.segment,
     benchmark_code: details?.benchmark_code ?? summary.benchmark_code,
     benchmark_options: summary.benchmark_options,
+    capabilities: details?.capabilities ?? summary.capabilities,
+    evidence_view: details?.evidence_view ?? summary.evidence_view ?? null,
     portfolio: summary.portfolio,
     overview: summary.overview,
     net_performance: summary.net_performance,

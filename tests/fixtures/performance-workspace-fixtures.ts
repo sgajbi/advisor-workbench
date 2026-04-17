@@ -214,6 +214,29 @@ export function buildPerformanceWorkspaceSummary(
         },
         ],
     capabilities: toContractCapabilities(capabilities),
+    evidence_view: {
+      state: capabilities.evidence.state,
+      reason: capabilities.evidence.reason ?? null,
+      calculations: [
+        {
+          calculation_role: "workspace_summary",
+          calculation_id: "calc-workspace-summary",
+          analytics_type: "WORKSPACE_SUMMARY",
+          execution_status: "complete",
+          execution_mode: "sync",
+          lineage_status: capabilities.evidence.state === "supported" ? "complete" : "pending",
+          stage_statuses: [],
+          upstream_snapshots: [],
+          artifacts: [
+            {
+              artifact_name: "request.json",
+              url: `/api/v1/workbench/${portfolioId}/performance/evidence/artifacts/calc-workspace-summary/request.json`,
+              content_type: "application/json",
+            },
+          ],
+        },
+      ],
+    },
     portfolio: {
       portfolio_id: portfolioId,
       client_id: "CIF_1001",
@@ -320,6 +343,23 @@ export function buildPerformanceWorkspaceDetails(
     segment: "asset_class",
     benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
     capabilities: toContractCapabilities(capabilities),
+    evidence_view: {
+      state: capabilities.evidence.state,
+      reason: capabilities.evidence.reason ?? null,
+      calculations: [
+        {
+          calculation_role: "workspace_summary",
+          calculation_id: "calc-workspace-summary",
+          analytics_type: "WORKSPACE_SUMMARY",
+          execution_status: "complete",
+          execution_mode: "sync",
+          lineage_status: capabilities.evidence.state === "supported" ? "complete" : "pending",
+          stage_statuses: [],
+          upstream_snapshots: [],
+          artifacts: [],
+        },
+      ],
+    },
     net_chart: options?.unavailableSummarySeries
       ? []
       : [

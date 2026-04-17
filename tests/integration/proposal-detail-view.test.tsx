@@ -6,6 +6,7 @@ import { vi } from "vitest";
 import ProposalDetailView from "../../src/features/proposals/components/proposal-detail-view";
 
 const {
+  createProposalVersionMock,
   getProposalMock,
   submitProposalMock,
   approveRiskMock,
@@ -15,12 +16,38 @@ const {
   getApprovalsMock,
   getLineageMock,
 } = vi.hoisted(() => ({
+  createProposalVersionMock: vi.fn(async () => ({
+    data: {
+      proposal: {
+        proposal_id: "pp-1",
+        current_state: "DRAFT",
+        current_version_no: 2,
+      },
+      version: {
+        proposal_version_id: "ppv-2",
+        proposal_id: "pp-1",
+        version_no: 2,
+      },
+      latest_workflow_event: {
+        event_id: "pwe_2",
+        event_type: "NEW_VERSION_CREATED",
+        to_state: "DRAFT",
+        actor_id: "advisor_1",
+        occurred_at: "2026-02-22T00:01:00Z",
+      },
+    },
+  })),
   getProposalMock: vi.fn(async () => ({
     proposal: {
       proposal_id: "pp-1",
       current_state: "DRAFT",
       portfolio_id: "pf_1",
       current_version_no: 1,
+    },
+    current_version: {
+      simulate_request: {
+        options: { enable_proposal_simulation: true },
+      },
     },
   })),
   submitProposalMock: vi.fn(async () => ({ data: { current_state: "RISK_REVIEW" } })),
@@ -68,6 +95,7 @@ const {
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
+  createProposalVersion: createProposalVersionMock,
   getProposal: getProposalMock,
   submitProposal: submitProposalMock,
   approveRisk: approveRiskMock,
@@ -113,6 +141,15 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(submitProposalMock).toHaveBeenCalled();
     });
+    expect(submitProposalMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "advisor_1",
+        expected_state: "DRAFT",
+        review_type: "RISK",
+      }),
+      expect.stringMatching(/^ui-submit-risk-pp-1-\d+$/)
+    );
   });
 
   it("approves risk when in risk review", async () => {
@@ -122,6 +159,11 @@ describe("ProposalDetailView", () => {
         current_state: "RISK_REVIEW",
         portfolio_id: "pf_1",
         current_version_no: 1,
+      },
+      current_version: {
+        simulate_request: {
+          options: { enable_proposal_simulation: true },
+        },
       },
     });
 
@@ -136,6 +178,14 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(approveRiskMock).toHaveBeenCalled();
     });
+    expect(approveRiskMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "risk_officer_1",
+        expected_state: "RISK_REVIEW",
+      }),
+      expect.stringMatching(/^ui-approve-risk-pp-1-\d+$/)
+    );
   });
 
   it("records client consent when awaiting client consent", async () => {
@@ -145,6 +195,11 @@ describe("ProposalDetailView", () => {
         current_state: "AWAITING_CLIENT_CONSENT",
         portfolio_id: "pf_1",
         current_version_no: 1,
+      },
+      current_version: {
+        simulate_request: {
+          options: { enable_proposal_simulation: true },
+        },
       },
     });
 
@@ -160,6 +215,31 @@ describe("ProposalDetailView", () => {
 
     await waitFor(() => {
       expect(recordClientConsentMock).toHaveBeenCalled();
+    });
+    expect(recordClientConsentMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "advisor_1",
+        expected_state: "AWAITING_CLIENT_CONSENT",
+      }),
+      expect.stringMatching(/^ui-record-client-consent-pp-1-\d+$/)
+    );
+  });
+
+  it("reads current_version_no from the proposal envelope after creating a new version", async () => {
+    renderWithQueryClient();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Create Next Version" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Next Version" }));
+
+    await waitFor(() => {
+      expect(createProposalVersionMock).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(screen.getByText("Version created successfully: 2")).toBeInTheDocument();
     });
   });
 });

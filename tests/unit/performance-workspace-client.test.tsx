@@ -67,6 +67,18 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
         {workspace?.net_performance.portfolio_return_pct ?? "none"}
       </div>
       <div data-testid="chart-points">{workspace?.net_chart.length ?? 0}</div>
+      <div data-testid="evidence-state">{workspace?.evidence_view?.state ?? "none"}</div>
+      <div data-testid="capability-evidence">{workspace?.capabilities?.evidence.state ?? "none"}</div>
+      <div data-testid="evidence-artifact">
+        {workspace?.evidence_view?.calculations[0]?.artifacts[0]?.artifact_name ?? "none"}
+      </div>
+      <div data-testid="evidence-stage">
+        {workspace?.evidence_view?.calculations[0]?.stage_statuses[0]?.status ?? "none"}
+      </div>
+      <div data-testid="evidence-upstream">
+        {workspace?.evidence_view?.calculations[0]?.upstream_snapshots[0]?.source_identifier ??
+          "none"}
+      </div>
       <div data-testid="updating">{String(Boolean(isUpdating))}</div>
       <div data-testid="details-pending">{String(Boolean(isDetailsPending))}</div>
       <button type="button" onClick={() => onRequestChange?.({ period: "3Y" })}>
@@ -217,6 +229,112 @@ describe("PerformanceWorkspaceClient", () => {
 
     expect(getDetailsClientMock).not.toHaveBeenCalled();
     expect(getSummaryClientMock).not.toHaveBeenCalled();
+  });
+
+  it("preserves backend-owned capabilities and evidence when assembling summary and details", async () => {
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary({
+          capabilities: {
+            ...buildSummary().capabilities!,
+            evidence: { state: "partial", reason: "Lineage artifacts are available." },
+          },
+          evidence_view: {
+            state: "partial",
+            reason: "Lineage artifacts are available.",
+            calculations: [
+              {
+                calculation_role: "workspace_summary",
+                calculation_id: "calc-workspace-summary",
+                analytics_type: "WORKSPACE_SUMMARY",
+                execution_status: "complete",
+                execution_mode: "sync",
+                lineage_status: "pending",
+                stage_statuses: [
+                  {
+                    stage_name: "lineage_materialization",
+                    status: "pending",
+                    completed_at_utc: null,
+                  },
+                ],
+                upstream_snapshots: [
+                  {
+                    upstream_endpoint: "portfolio_timeseries",
+                    source_identifier: "PF_1001",
+                    as_of_date: "2026-02-24",
+                    retrieval_status: "200",
+                  },
+                ],
+                artifacts: [
+                  {
+                    artifact_name: "request.json",
+                    url: "/api/v1/workbench/PF_1001/performance/evidence/artifacts/calc-workspace-summary/request.json",
+                    content_type: "application/json",
+                  },
+                ],
+              },
+            ],
+          },
+        })}
+        initialDetails={buildDetails({
+          capabilities: {
+            ...buildDetails().capabilities!,
+            evidence: { state: "supported", reason: "Evidence contract available." },
+          },
+          evidence_view: {
+            state: "supported",
+            reason: "Evidence contract available.",
+            calculations: [
+              {
+                calculation_role: "workspace_summary",
+                calculation_id: "calc-workspace-summary",
+                analytics_type: "WORKSPACE_SUMMARY",
+                execution_status: "complete",
+                execution_mode: "sync",
+                lineage_status: "complete",
+                stage_statuses: [
+                  {
+                    stage_name: "lineage_materialization",
+                    status: "complete",
+                    completed_at_utc: "2026-02-24T08:15:00Z",
+                  },
+                ],
+                upstream_snapshots: [
+                  {
+                    upstream_endpoint: "portfolio_timeseries",
+                    source_identifier: "PF_1001",
+                    as_of_date: "2026-02-24",
+                    retrieval_status: "200",
+                  },
+                ],
+                artifacts: [
+                  {
+                    artifact_name: "request.json",
+                    url: "/api/v1/workbench/PF_1001/performance/evidence/artifacts/calc-workspace-summary/request.json",
+                    content_type: "application/json",
+                  },
+                ],
+              },
+            ],
+          },
+        })}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("evidence-state")).toHaveTextContent("supported");
+      expect(screen.getByTestId("capability-evidence")).toHaveTextContent("supported");
+      expect(screen.getByTestId("evidence-artifact")).toHaveTextContent("request.json");
+      expect(screen.getByTestId("evidence-stage")).toHaveTextContent("complete");
+      expect(screen.getByTestId("evidence-upstream")).toHaveTextContent("PF_1001");
+    });
   });
 
   it("treats summary-only first paint as detail-pending and hydrates details after mount", async () => {
