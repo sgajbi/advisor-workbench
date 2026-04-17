@@ -286,8 +286,10 @@ export async function getPortfolioWorkspaceDetailedDetails(
   try {
     const transactionSearchParams = new URLSearchParams();
     transactionSearchParams.set("limit", "200");
+    const sharedSearchParams = new URLSearchParams();
     if (params.asOfDate) {
       transactionSearchParams.set("as_of_date", params.asOfDate);
+      sharedSearchParams.set("as_of_date", params.asOfDate);
     }
     if (params.startDate) {
       transactionSearchParams.set("start_date", params.startDate);
@@ -313,15 +315,18 @@ export async function getPortfolioWorkspaceDetailedDetails(
       ),
       fetchPortfolioJson<PortfolioReadinessResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/readiness`,
+        { query: sharedSearchParams }
       ),
       fetchPortfolioJson<PortfolioInsightsResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/insights`,
+        { query: sharedSearchParams }
       ),
       fetchPortfolioJson<PortfolioWorkflowResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workflow`,
+        { query: sharedSearchParams }
       ),
     ]);
 

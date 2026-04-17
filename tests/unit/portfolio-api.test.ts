@@ -595,10 +595,16 @@ describe("portfolio api", () => {
       String(call[0])
     );
     const transactionRequestUrl = requestedUrls.find((url) => url.includes("/transactions?")) ?? "";
+    const readinessRequestUrl = requestedUrls.find((url) => url.includes("/readiness?")) ?? "";
+    const insightsRequestUrl = requestedUrls.find((url) => url.includes("/insights?")) ?? "";
+    const workflowRequestUrl = requestedUrls.find((url) => url.includes("/workflow?")) ?? "";
     expect(transactionRequestUrl).toContain("limit=200");
     expect(transactionRequestUrl).toContain("as_of_date=2026-03-28");
     expect(transactionRequestUrl).toContain("start_date=2026-03-01");
     expect(transactionRequestUrl).toContain("end_date=2026-03-28");
+    expect(readinessRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(insightsRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(workflowRequestUrl).toContain("as_of_date=2026-03-28");
   });
 
   it("requests the transaction ledger with scoped filter parameters", async () => {
