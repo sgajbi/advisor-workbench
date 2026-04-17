@@ -105,6 +105,13 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingContextRows[0]).toMatchObject({
       label: "Window set",
     });
+    expect(
+      viewModel.supportability.find((item) => item.key === "rolling:risk_free_series")
+    ).toMatchObject({
+      state: "partial",
+      reason:
+        "Rolling Sharpe is omitted or marked unavailable when the risk-free curve cannot be sourced.",
+    });
     expect(viewModel.rollingContextRows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

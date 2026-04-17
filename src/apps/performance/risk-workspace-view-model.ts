@@ -430,7 +430,8 @@ export function buildFixtureRiskSummary(
         key: "risk_free_series",
         label: "Risk-free series",
         state: "partial",
-        reason: "Sharpe uses the configured zero risk-free fallback until a curve is published.",
+        reason:
+          "Rolling Sharpe is omitted or marked unavailable when the risk-free curve cannot be sourced.",
         source_service: "lotus-risk",
       },
     ],
@@ -751,7 +752,7 @@ export function buildFixtureRiskRolling(
         label: "Risk-free series",
         state: "partial",
         reason:
-          "Rolling Sharpe uses the configured risk-free source and may degrade when the upstream curve is unavailable.",
+          "Rolling Sharpe is omitted or marked unavailable when the risk-free curve cannot be sourced.",
         source_service: "lotus-risk",
       },
       {
