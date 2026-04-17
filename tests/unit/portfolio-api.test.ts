@@ -41,6 +41,9 @@ describe("portfolio api", () => {
               investment_time_horizon: "Long Term",
               objective: "Long-term capital appreciation.",
               is_leverage_allowed: false,
+              advisor_id: "ADV_1001",
+              open_date: "2024-01-15",
+              close_date: null,
             },
             summary: {
               assets_under_management_base: 1001550.05,
@@ -93,8 +96,19 @@ describe("portfolio api", () => {
             },
             reporting: {
               status: "READY",
-              generated_at_utc: "2026-03-28T08:00:00Z",
+              generated_at_utc: null,
               row_count: 4,
+            },
+            operations: {
+              business_date: "2026-03-28",
+              latest_booked_transaction_date: null,
+              latest_booked_position_snapshot_date: null,
+              publish_allowed: true,
+              controls_blocking: null,
+              active_reprocessing_keys: null,
+              stale_reprocessing_keys: null,
+              failed_valuation_jobs_within_window: null,
+              failed_aggregation_jobs_within_window: null,
             },
             workflow_cues: [{ key: "performance", label: "Performance", href: "/performance" }],
             warnings: [],
@@ -109,6 +123,17 @@ describe("portfolio api", () => {
     const shell = await getPortfolioWorkspaceShell("MANUAL_PB_USD_001");
 
     expect(shell?.portfolio.portfolio_id).toBe("MANUAL_PB_USD_001");
+    expect(shell?.profile).toEqual({
+      status: "ACTIVE",
+      portfolio_type: "Advisory",
+      risk_exposure: "Moderate Growth",
+      investment_time_horizon: "Long Term",
+      objective: "Long-term capital appreciation.",
+      is_leverage_allowed: false,
+      advisor_id: "ADV_1001",
+      open_date: "2024-01-15",
+      close_date: null,
+    });
     expect(shell?.allocations).toEqual([]);
     expect(shell?.positions).toEqual([]);
     expect(shell?.recent_transactions).toEqual([]);
@@ -126,6 +151,22 @@ describe("portfolio api", () => {
       "USD",
       "SGD",
     ]);
+    expect(shell?.readiness.reporting).toEqual({
+      status: "READY",
+      generated_at_utc: null,
+      row_count: 4,
+    });
+    expect(shell?.operations).toEqual({
+      business_date: "2026-03-28",
+      latest_booked_transaction_date: null,
+      latest_booked_position_snapshot_date: null,
+      publish_allowed: true,
+      controls_blocking: null,
+      active_reprocessing_keys: null,
+      stale_reprocessing_keys: null,
+      failed_valuation_jobs_within_window: null,
+      failed_aggregation_jobs_within_window: null,
+    });
     expect(shell?.readiness_indicators).toBeUndefined();
     expect(shell?.workflow_actions).toBeUndefined();
   });
