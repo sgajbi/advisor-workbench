@@ -214,6 +214,7 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getDetailedDetailsMock).toHaveBeenCalledTimes(1);
     expect(getDetailedDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
       startDate: "2026-02-26",
       endDate: "2026-03-28",
     });
