@@ -25,15 +25,14 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
-    const React = require("react");
     return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState(
-        null as React.ComponentType<Record<string, unknown>> | null
-      );
+      const [Component, setComponent] = React.useState<
+        React.ComponentType<Record<string, unknown>> | null
+      >(null);
       React.useEffect(() => {
         loader().then((mod: unknown) => {
           const resolved = (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
-          setComponent(() => resolved ?? null);
+          setComponent(resolved ?? null);
         });
       }, []);
       return Component ? React.createElement(Component, props) : null;
@@ -62,7 +61,10 @@ describe("app route entrypoints", () => {
             json: async () => ({ items: [{ id: "PORT_1001", label: "PORT_1001" }] }),
           } as Response;
         }
-        if (url.includes("/api/v1/workbench/PORT_1001/performance")) {
+        if (url.includes("/api/v1/workbench/PORT_1001/performance?")) {
+          throw new Error(`Deprecated aggregate performance route used: ${url}`);
+        }
+        if (url.includes("/api/v1/workbench/PORT_1001/performance/summary?")) {
           return {
             ok: true,
             json: async () => ({
