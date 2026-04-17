@@ -149,9 +149,9 @@ describe("portfolio api", () => {
     const fetchSpy = vi.fn(async (input: string | URL) => {
       const url = input.toString();
 
-      if (url.includes("/allocations")) {
+      if (url.includes("/book")) {
         return jsonResponse({
-          views: [
+          allocation_views: [
             {
               dimension: "asset_class",
               buckets: [
@@ -164,11 +164,6 @@ describe("portfolio api", () => {
               ],
             },
           ],
-        });
-      }
-
-      if (url.includes("/positions")) {
-        return jsonResponse({
           top_positions: [
             {
               security_id: "EQ_US_AAPL_MANUAL_001",
@@ -332,11 +327,10 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
-    expect(requestedUrls.some((url) => url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/book"))).toBe(false);
     expect(
       requestedUrls.some(
         (url) =>
-          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/positions?") &&
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/book?") &&
           url.includes("as_of_date=2026-03-28") &&
           url.includes("reporting_currency=USD") &&
           url.includes("include_projected=false")
@@ -351,6 +345,8 @@ describe("portfolio api", () => {
           url.includes("report_end_date=2026-03-28")
       )
     ).toBe(true);
+    expect(requestedUrls.some((url) => url.includes("/allocations"))).toBe(false);
+    expect(requestedUrls.some((url) => url.includes("/positions"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/performance/details"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/performance/summary"))).toBe(false);
   });
@@ -361,14 +357,9 @@ describe("portfolio api", () => {
       vi.fn(async (input: string | URL) => {
         const url = input.toString();
 
-        if (url.includes("/allocations")) {
+        if (url.includes("/book")) {
           return jsonResponse({
-            views: [{ dimension: "asset_class", buckets: [] }],
-          });
-        }
-
-        if (url.includes("/positions")) {
-          return jsonResponse({
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
             top_positions: [],
             positions: [],
           });
@@ -650,14 +641,9 @@ describe("portfolio api", () => {
         });
       }
 
-      if (url.includes("/allocations")) {
+      if (url.includes("/book")) {
         return jsonResponse({
-          views: [{ dimension: "asset_class", buckets: [] }],
-        });
-      }
-
-      if (url.includes("/positions")) {
-        return jsonResponse({
+          allocation_views: [{ dimension: "asset_class", buckets: [] }],
           top_positions: [],
           positions: [],
         });
@@ -740,8 +726,9 @@ describe("portfolio api", () => {
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/book")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(0);
+    expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(0);
     expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/performance-snapshot")).length).toBe(1);
@@ -754,14 +741,9 @@ describe("portfolio api", () => {
       "fetch",
       vi.fn(async (input) => {
         const url = String(input);
-        if (url.includes("/allocations")) {
+        if (url.includes("/book")) {
           return jsonResponse({
-            views: [{ dimension: "asset_class", buckets: [] }],
-          });
-        }
-
-        if (url.includes("/positions")) {
-          return jsonResponse({
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
             top_positions: [],
             positions: [],
           });

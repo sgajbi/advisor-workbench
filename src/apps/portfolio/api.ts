@@ -36,7 +36,8 @@ type PortfolioWorkspaceSummaryResponse = {
   partial_failures: PortfolioWorkspace["partial_failures"];
 };
 
-type PortfolioPositionsResponse = {
+type PortfolioBookResponse = {
+  allocation_views: NonNullable<PortfolioWorkspace["allocation_views"]>;
   top_positions: PortfolioWorkspace["top_positions"];
   positions: PortfolioWorkspace["positions"];
 };
@@ -44,18 +45,6 @@ type PortfolioPositionsResponse = {
 type PortfolioLiquidityResponse = {
   cash_balances: NonNullable<PortfolioWorkspace["cash_balances"]>;
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
-};
-
-type PortfolioAllocationResponse = {
-  views: Array<{
-    dimension: string;
-    buckets: Array<{
-      bucket: string;
-      position_count: number;
-      market_value_base: number | null;
-      weight_pct: number | null;
-    }>;
-  }>;
 };
 
 type PortfolioTransactionLedgerResponse = {
@@ -217,24 +206,17 @@ export async function getPortfolioWorkspaceSummaryDetails(
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
     const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
-    // Keep the modular book-family reads here for now. Gateway `/book` aligns as-of date and
-    // projected positions, but it does not yet support `reporting_currency`, and this workspace
-    // now relies on source-backed position restatement instead of rebuilding that in the client.
+    const bookQuery = buildPortfolioBookQuery(params);
     const [
-      allocationsPayload,
-      positionsPayload,
+      bookPayload,
       incomePayload,
       activityPayload,
       performancePayload,
     ] = await Promise.all([
-      fetchPortfolioJson<PortfolioAllocationResponse>(
+      fetchPortfolioJson<PortfolioBookResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`
-      ),
-      fetchPortfolioJson<PortfolioPositionsResponse>(
-        resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/positions`,
-        { query: buildPortfolioPositionsQuery(params) }
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
+        { query: bookQuery }
       ),
       fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
         resolvePortfolioRequestTarget(),
@@ -251,12 +233,12 @@ export async function getPortfolioWorkspaceSummaryDetails(
       ),
     ]);
 
-    if (!allocationsPayload || !positionsPayload) {
+    if (!bookPayload) {
       return null;
     }
     const allocationView =
-      allocationsPayload.views.find((view) => view.dimension === "asset_class") ??
-      allocationsPayload.views[0];
+      bookPayload.allocation_views.find((view) => view.dimension === "asset_class") ??
+      bookPayload.allocation_views[0];
 
     return {
       allocations: (allocationView?.buckets ?? []).map((bucket) => ({
@@ -265,9 +247,9 @@ export async function getPortfolioWorkspaceSummaryDetails(
         market_value_base: bucket.market_value_base,
         weight_pct: bucket.weight_pct,
       })),
-      allocation_views: allocationsPayload.views,
-      top_positions: positionsPayload.top_positions,
-      positions: positionsPayload.positions,
+      allocation_views: bookPayload.allocation_views,
+      top_positions: bookPayload.top_positions,
+      positions: bookPayload.positions,
       income_summary: incomePayload,
       activity_summary: activityPayload,
       performance: mapPortfolioPerformanceSnapshot(performancePayload),
@@ -466,7 +448,7 @@ function buildPortfolioPerformanceSnapshotQuery(params: {
   return query;
 }
 
-function buildPortfolioPositionsQuery(params: {
+function buildPortfolioBookQuery(params: {
   asOfDate?: string;
   reportingCurrency?: string;
   includeProjected?: boolean;
