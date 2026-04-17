@@ -50,6 +50,15 @@ describe("portfolio api", () => {
               cash_balance_count: 2,
             },
             cashflow_outlook: null,
+            performance: {
+              period: "YTD",
+              return_pct: 2.5,
+            },
+            rebalance: {
+              status: "PENDING_REVIEW",
+              last_run_at_utc: "2026-03-27T12:00:00Z",
+              last_rebalance_run_id: "rr_100",
+            },
             reporting: {
               status: "READY",
               generated_at_utc: "2026-03-28T08:00:00Z",
@@ -71,8 +80,69 @@ describe("portfolio api", () => {
     expect(shell?.allocations).toEqual([]);
     expect(shell?.positions).toEqual([]);
     expect(shell?.recent_transactions).toEqual([]);
+    expect(shell?.performance).toEqual({
+      period: "YTD",
+      return_pct: 2.5,
+    });
+    expect(shell?.rebalance).toEqual({
+      status: "PENDING_REVIEW",
+      last_run_at_utc: "2026-03-27T12:00:00Z",
+      last_rebalance_run_id: "rr_100",
+    });
     expect(shell?.readiness_indicators).toBeUndefined();
     expect(shell?.workflow_actions).toBeUndefined();
+  });
+
+  it("keeps shell workspace compatible when gateway omits optional performance fields", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/workspace")) {
+          return jsonResponse({
+            as_of_date: "2026-03-28",
+            portfolio: {
+              portfolio_id: "MANUAL_PB_USD_001",
+              display_name: "MANUAL_PB_USD_001",
+              client_id: "MANUAL_CIF_001",
+              base_currency: "USD",
+              booking_center_code: "Singapore",
+            },
+            profile: {
+              status: "ACTIVE",
+              portfolio_type: "Advisory",
+            },
+            summary: {
+              assets_under_management_base: 1001550.05,
+              invested_market_value_base: 917032.95,
+              cash_market_value_base: 84517.1,
+              cash_weight_pct: 8.43863,
+              position_count: 9,
+              cash_balance_count: 2,
+            },
+            cashflow_outlook: null,
+            performance: null,
+            rebalance: null,
+            reporting: {
+              status: "READY",
+              generated_at_utc: "2026-03-28T08:00:00Z",
+              row_count: 4,
+            },
+            workflow_cues: [],
+            warnings: [],
+            partial_failures: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const shell = await getPortfolioWorkspaceShell("MANUAL_PB_USD_001");
+
+    expect(shell?.performance).toBeNull();
+    expect(shell?.rebalance).toBeNull();
   });
 
   it("loads summary detail modules without fetching detailed ledger and liquidity slices", async () => {

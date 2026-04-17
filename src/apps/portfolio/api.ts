@@ -27,6 +27,8 @@ type PortfolioWorkspaceSummaryResponse = {
     cash_balance_count: number;
   };
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
+  performance: PortfolioWorkspace["performance"];
+  rebalance: PortfolioWorkspace["rebalance"];
   reporting: PortfolioWorkspace["readiness"]["reporting"];
   operations?: Record<string, unknown> | null;
   workflow_cues: PortfolioWorkspace["workflow_cues"];
@@ -191,8 +193,8 @@ export async function getPortfolioWorkspaceShell(
       income_summary: null,
       activity_summary: null,
       cashflow_outlook: summaryPayload.cashflow_outlook,
-      performance: null,
-      rebalance: null,
+      performance: summaryPayload.performance,
+      rebalance: summaryPayload.rebalance,
       readiness: {
         has_positions: summaryPayload.summary.position_count > 0,
         reporting: summaryPayload.reporting,
