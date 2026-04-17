@@ -295,6 +295,7 @@ export async function getPortfolioWorkspaceDetailedDetails(
     }
     if (params.reportingCurrency) {
       liquiditySearchParams.set("reporting_currency", params.reportingCurrency);
+      transactionSearchParams.set("reporting_currency", params.reportingCurrency);
     }
     if (params.startDate) {
       transactionSearchParams.set("start_date", params.startDate);

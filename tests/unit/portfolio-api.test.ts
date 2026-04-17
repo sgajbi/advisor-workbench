@@ -1050,8 +1050,11 @@ describe("portfolio api", () => {
       String(call[0])
     );
     const liquidityRequestUrl = requestedUrls.find((url) => url.includes("/liquidity?")) ?? "";
+    const transactionRequestUrl = requestedUrls.find((url) => url.includes("/transactions?")) ?? "";
     expect(liquidityRequestUrl).toContain("as_of_date=2026-03-28");
     expect(liquidityRequestUrl).toContain("reporting_currency=SGD");
+    expect(transactionRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(transactionRequestUrl).toContain("reporting_currency=SGD");
   });
 
   it("uses the proxied portfolio API base in the browser", async () => {
