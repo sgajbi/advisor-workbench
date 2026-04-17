@@ -330,6 +330,26 @@ describe("portfolio api", () => {
     expect(
       requestedUrls.some(
         (url) =>
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/income-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
+      )
+    ).toBe(true);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/activity-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
+      )
+    ).toBe(true);
+    expect(
+      requestedUrls.some(
+        (url) =>
           url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/book?") &&
           url.includes("as_of_date=2026-03-28") &&
           url.includes("reporting_currency=USD") &&
@@ -740,12 +760,46 @@ describe("portfolio api", () => {
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/book")).length).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/book?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("reporting_currency=USD") &&
+          url.includes("include_projected=false")
+      ).length
+    ).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(0);
     expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(0);
-    expect(requestedUrls.filter((url) => url.includes("/income-summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/activity-summary")).length).toBe(1);
-    expect(requestedUrls.filter((url) => url.includes("/performance-snapshot")).length).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/income-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
+      ).length
+    ).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/activity-summary?") &&
+          url.includes("as_of_date=2026-03-28") &&
+          url.includes("start_date=2026-03-01") &&
+          url.includes("end_date=2026-03-28") &&
+          url.includes("reporting_currency=USD")
+      ).length
+    ).toBe(1);
+    expect(
+      requestedUrls.filter(
+        (url) =>
+          url.includes("/performance-snapshot?") &&
+          url.includes("period=EXPLICIT") &&
+          url.includes("report_start_date=2026-03-01") &&
+          url.includes("report_end_date=2026-03-28")
+      ).length
+    ).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(0);
     expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
   });

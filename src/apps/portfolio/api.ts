@@ -207,6 +207,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
   try {
     const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
     const bookQuery = buildPortfolioBookQuery(params);
+    const summaryQuery = buildPortfolioSummaryWindowQuery(params);
     const [
       bookPayload,
       incomePayload,
@@ -220,11 +221,13 @@ export async function getPortfolioWorkspaceSummaryDetails(
       ),
       fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
+        { query: summaryQuery }
       ),
       fetchPortfolioJson<PortfolioActivitySummaryResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`
+        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
+        { query: summaryQuery }
       ),
       fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
         resolvePortfolioRequestTarget(),
@@ -490,6 +493,26 @@ function buildPortfolioBookQuery(params: {
     query.set("reporting_currency", params.reportingCurrency);
   }
   query.set("include_projected", String(params.includeProjected ?? false));
+
+  return query;
+}
+
+function buildPortfolioSummaryWindowQuery(params: {
+  asOfDate?: string;
+  reportingCurrency?: string;
+  reportStartDate: string;
+  reportEndDate: string;
+}): URLSearchParams {
+  const query = new URLSearchParams();
+
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
+  }
+  query.set("start_date", params.reportStartDate);
+  query.set("end_date", params.reportEndDate);
 
   return query;
 }
