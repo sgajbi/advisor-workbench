@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createElement, useEffect, useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -9,12 +9,11 @@ import type { PortfolioWorkspaceContext } from "../../src/apps/portfolio/view-mo
 
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
-    const React = require("react");
     return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState(
-        null as React.ComponentType<Record<string, unknown>> | null
+      const [Component, setComponent] = useState<React.ComponentType<Record<string, unknown>> | null>(
+        null
       );
-      React.useEffect(() => {
+      useEffect(() => {
         loader().then((mod: unknown) => {
           const resolved =
             typeof mod === "function"
@@ -23,7 +22,7 @@ vi.mock("next/dynamic", () => ({
           setComponent(() => resolved ?? null);
         });
       }, []);
-      return Component ? React.createElement(Component, props) : null;
+      return Component ? createElement(Component, props) : null;
     };
   },
 }));
@@ -178,7 +177,12 @@ const context: PortfolioWorkspaceContext = {
   usesCustomDateRange: false,
   hasHistoricalGap: false,
   currencyOptions: ["USD"],
+  historicalSnapshotState: "unsupported",
+  historicalSnapshotReason: "Historical snapshots are not yet source-backed.",
   supportsHistoricalSnapshots: false,
+  reportingCurrencyRestatementState: "unsupported",
+  reportingCurrencyRestatementReason:
+    "Reporting currency restatement is not yet source-backed.",
   supportsReportingCurrencyRestatement: false,
 };
 

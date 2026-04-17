@@ -53,7 +53,11 @@ export type PortfolioWorkspaceContext = {
   usesCustomDateRange: boolean;
   hasHistoricalGap: boolean;
   currencyOptions: string[];
+  historicalSnapshotState: "supported" | "partial" | "unsupported";
+  historicalSnapshotReason: string;
   supportsHistoricalSnapshots: boolean;
+  reportingCurrencyRestatementState: "supported" | "partial" | "unsupported";
+  reportingCurrencyRestatementReason: string;
   supportsReportingCurrencyRestatement: boolean;
 };
 
@@ -156,8 +160,14 @@ export function buildPortfolioWorkspaceContext(
     controls.reportingCurrency;
   const historicalSnapshotState =
     workspace?.control_capabilities?.historical_snapshots.state ?? "unsupported";
+  const historicalSnapshotReason =
+    workspace?.control_capabilities?.historical_snapshots.reason ??
+    "Historical snapshots are not yet source-backed.";
   const reportingCurrencyState =
     workspace?.control_capabilities?.reporting_currency_restatement.state ?? "unsupported";
+  const reportingCurrencyReason =
+    workspace?.control_capabilities?.reporting_currency_restatement.reason ??
+    "Reporting currency restatement is not yet source-backed.";
 
   const effectivePeriod = resolveEffectivePeriod(
     selectedAsOfDate,
@@ -181,7 +191,11 @@ export function buildPortfolioWorkspaceContext(
     usesCustomDateRange: effectivePeriod.isCustomRange,
     hasHistoricalGap: Boolean(workspace && selectedAsOfDate !== workspace.as_of_date),
     currencyOptions,
+    historicalSnapshotState,
+    historicalSnapshotReason,
     supportsHistoricalSnapshots: historicalSnapshotState === "supported",
+    reportingCurrencyRestatementState: reportingCurrencyState,
+    reportingCurrencyRestatementReason: reportingCurrencyReason,
     supportsReportingCurrencyRestatement: reportingCurrencyState === "supported",
   };
 }

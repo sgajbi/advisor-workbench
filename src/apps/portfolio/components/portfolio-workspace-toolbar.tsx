@@ -60,8 +60,12 @@ export default function PortfolioWorkspaceToolbar({
   const [actionsAnchor, setActionsAnchor] = useState<HTMLElement | null>(null);
 
   const historicalContextCopy = useMemo(() => {
-    if (!context.supportsHistoricalSnapshots) {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Historical snapshots are not source-backed, so snapshot modules stay on the latest published state.`;
+    if (context.historicalSnapshotState === "unsupported") {
+      return `As of ${formatDate(context.selectedAsOfDate)}. ${context.historicalSnapshotReason}`;
+    }
+
+    if (context.historicalSnapshotState === "partial") {
+      return `As of ${formatDate(context.selectedAsOfDate)}. ${context.historicalSnapshotReason}`;
     }
 
     if (!context.hasHistoricalGap) {
@@ -69,14 +73,19 @@ export default function PortfolioWorkspaceToolbar({
     }
 
     return `As of ${formatDate(context.selectedAsOfDate)}. Date-aware modules use the selected context; snapshot-backed modules continue to use the latest available state.`;
-  }, [context.hasHistoricalGap, context.selectedAsOfDate, context.supportsHistoricalSnapshots]);
+  }, [
+    context.hasHistoricalGap,
+    context.historicalSnapshotReason,
+    context.historicalSnapshotState,
+    context.selectedAsOfDate,
+  ]);
   const activeFilterCount = getActivePortfolioFilterCount(controls);
   const supportsCustomRange = controls.viewMode === "detailed";
   const contextSegments = useMemo(() => {
     const segments = [historicalContextCopy];
 
-    if (!context.supportsReportingCurrencyRestatement) {
-      segments.push("Reporting currency restatement is pending source support.");
+    if (context.reportingCurrencyRestatementState !== "supported") {
+      segments.push(context.reportingCurrencyRestatementReason);
     }
 
     if (supportsCustomRange) {
@@ -94,7 +103,8 @@ export default function PortfolioWorkspaceToolbar({
     context.effectivePeriodEndDate,
     context.effectivePeriodStartDate,
     context.periodLabel,
-    context.supportsReportingCurrencyRestatement,
+    context.reportingCurrencyRestatementReason,
+    context.reportingCurrencyRestatementState,
     historicalContextCopy,
     supportsCustomRange,
   ]);

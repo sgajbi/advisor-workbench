@@ -256,6 +256,10 @@ describe("portfolio view model", () => {
 
     expect(context.currencyOptions).toEqual(["USD", "SGD"]);
     expect(context.selectedReportingCurrency).toBe("SGD");
+    expect(context.reportingCurrencyRestatementState).toBe("supported");
+    expect(context.reportingCurrencyRestatementReason).toBe(
+      "Gateway confirms reporting-currency restatement across the workspace."
+    );
     expect(context.supportsReportingCurrencyRestatement).toBe(true);
   });
 
@@ -504,7 +508,12 @@ describe("portfolio view model", () => {
     expect(context.periodLabel).toBe("30D");
     expect(context.effectivePeriodStartDate).toBe("2026-01-25");
     expect(context.effectivePeriodEndDate).toBe("2026-02-24");
+    expect(context.historicalSnapshotState).toBe("unsupported");
+    expect(context.historicalSnapshotReason).toBe(
+      "Historical snapshots are not yet source-backed."
+    );
     expect(context.supportsHistoricalSnapshots).toBe(false);
+    expect(context.reportingCurrencyRestatementState).toBe("unsupported");
     expect(context.supportsReportingCurrencyRestatement).toBe(false);
   });
 
@@ -528,6 +537,10 @@ describe("portfolio view model", () => {
       asOfDate: "2025-06-01",
     });
 
+    expect(context.historicalSnapshotState).toBe("supported");
+    expect(context.historicalSnapshotReason).toBe(
+      "Gateway confirms historical snapshot support across the workspace."
+    );
     expect(context.supportsHistoricalSnapshots).toBe(true);
     expect(context.selectedAsOfDate).toBe("2025-06-01");
   });
