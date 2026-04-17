@@ -105,7 +105,10 @@ export default function PerformanceWorkspaceView({
       capabilities={capabilities!}
     />
   ) : (
-    <PerformanceEvidenceMode capability={capabilities!.evidence} />
+    <PerformanceEvidenceMode
+      capability={capabilities!.evidence}
+      evidenceView={workspace.evidence_view ?? null}
+    />
   );
 
   return (

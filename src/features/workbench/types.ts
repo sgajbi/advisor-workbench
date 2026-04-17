@@ -273,18 +273,15 @@ export type PerformanceEvidenceArtifactView = {
 
 export type PerformanceEvidenceStageView = {
   stage_name: string;
-  state: string;
-  started_at?: string | null;
-  completed_at?: string | null;
-  detail?: string | null;
+  status: string;
+  completed_at_utc?: string | null;
 };
 
 export type PerformanceEvidenceUpstreamSnapshotView = {
-  source_service: string;
-  snapshot_id?: string | null;
-  as_of_date?: string | null;
-  freshness_state?: string | null;
-  detail?: string | null;
+  upstream_endpoint: string;
+  source_identifier: string;
+  as_of_date: string;
+  retrieval_status: string;
 };
 
 export type PerformanceCalculationEvidenceView = {
