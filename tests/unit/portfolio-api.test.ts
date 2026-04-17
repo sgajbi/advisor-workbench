@@ -673,6 +673,8 @@ describe("portfolio api", () => {
         return jsonResponse({
           period: "EXPLICIT",
           as_of_date: "2026-03-28",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
           benchmark_code: null,
           portfolio_return_pct: 2.1,
           benchmark_return_pct: null,
@@ -743,6 +745,79 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/performance-snapshot")).length).toBe(1);
     expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(0);
     expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
+  });
+
+  it("preserves source-authored performance snapshot report windows", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes("/allocations")) {
+          return jsonResponse({
+            views: [{ dimension: "asset_class", buckets: [] }],
+          });
+        }
+
+        if (url.includes("/positions")) {
+          return jsonResponse({
+            top_positions: [],
+            positions: [],
+          });
+        }
+
+        if (url.includes("/income-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (url.includes("/activity-summary")) {
+          return jsonResponse(null);
+        }
+
+        if (!url.includes("/performance-snapshot")) {
+          throw new Error(`Unexpected fetch: ${url}`);
+        }
+
+        return jsonResponse({
+          period: "EXPLICIT",
+          as_of_date: "2026-03-28",
+          report_start_date: "2026-02-15",
+          report_end_date: "2026-03-28",
+          benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+          portfolio_return_pct: 2.1,
+          benchmark_return_pct: 1.7,
+          excess_return_pct: 0.4,
+          sparkline: [
+            {
+              as_of_date: "2026-03-01",
+              portfolio_return_pct: 0.8,
+              benchmark_return_pct: 0.6,
+              excess_return_pct: 0.2,
+            },
+            {
+              as_of_date: "2026-03-28",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: 1.7,
+              excess_return_pct: 0.4,
+            },
+          ],
+          warnings: [],
+          partial_failures: [],
+        });
+      })
+    );
+
+    const workspace = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+
+    expect(workspace?.performance?.report_start_date).toBe("2026-02-15");
+    expect(workspace?.performance?.report_end_date).toBe("2026-03-28");
+    expect(workspace?.performance?.sparkline_points?.[0]?.label).toBe("2026-03-01");
   });
 
   it("coalesces identical in-flight ledger requests into a single fetch", async () => {

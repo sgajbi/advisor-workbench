@@ -104,6 +104,8 @@ type PortfolioWorkspaceSummaryDetails = Pick<
 type PortfolioPerformanceSnapshotResponse = {
   period: string;
   as_of_date: string;
+  report_start_date?: string | null;
+  report_end_date?: string | null;
   benchmark_code: string | null;
   portfolio_return_pct: number | null;
   benchmark_return_pct: number | null;
@@ -483,11 +485,10 @@ function mapPortfolioPerformanceSnapshot(
   }
 
   const reportStartDate = payload.sparkline[0]?.as_of_date ?? null;
-
   return {
     period: payload.period,
-    report_start_date: reportStartDate,
-    report_end_date: payload.as_of_date,
+    report_start_date: payload.report_start_date ?? reportStartDate,
+    report_end_date: payload.report_end_date ?? payload.as_of_date,
     return_pct: payload.portfolio_return_pct,
     money_weighted_return_pct: null,
     money_weighted_method: null,
