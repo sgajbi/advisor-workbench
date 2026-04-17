@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fallbackNormalizedCapabilities } from "../../src/features/platform-capabilities/api";
 import {
@@ -18,9 +18,16 @@ vi.mock("../../src/features/platform-capabilities/api", async () => {
 });
 
 describe("usePlatformCapabilities", () => {
+  beforeEach(() => {
+    getPlatformCapabilitiesMock.mockReset();
+    resetPlatformCapabilitiesHookCache();
+    window.sessionStorage.clear();
+  });
+
   afterEach(() => {
     getPlatformCapabilitiesMock.mockReset();
     resetPlatformCapabilitiesHookCache();
+    window.sessionStorage.clear();
   });
 
   it("loads normalized capabilities from the BFF and clears the loading state", async () => {
@@ -94,7 +101,9 @@ describe("usePlatformCapabilities", () => {
     const first = renderHook(() => usePlatformCapabilities());
     const second = renderHook(() => usePlatformCapabilities());
 
-    expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
+    });
     expect(first.result.current.loading).toBe(true);
     expect(second.result.current.loading).toBe(true);
 
@@ -127,7 +136,34 @@ describe("usePlatformCapabilities", () => {
       expect(first.result.current.loading).toBe(false);
     });
 
+    await waitFor(() => {
+      expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
+    });
+
+    const second = renderHook(() => usePlatformCapabilities());
+
+    expect(second.result.current.loading).toBe(false);
     expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses the session-scoped snapshot after the in-memory cache resets", async () => {
+    getPlatformCapabilitiesMock.mockResolvedValue({
+      normalized: fallbackNormalizedCapabilities(),
+      partialFailure: false,
+      errors: [],
+    });
+
+    const first = renderHook(() => usePlatformCapabilities());
+
+    await waitFor(() => {
+      expect(first.result.current.loading).toBe(false);
+    });
+
+    await waitFor(() => {
+      expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
+    });
+
+    resetPlatformCapabilitiesHookCache({ clearPersistedSnapshot: false });
 
     const second = renderHook(() => usePlatformCapabilities());
 
