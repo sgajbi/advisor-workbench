@@ -43,7 +43,6 @@ import {
   buildPortfolioExceptionSummaries,
   buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
-  buildPortfolioWorkflowActions,
   buildActivityDrilldownLabel,
   buildAllocationDrilldownLabel,
   buildHoldingsStatusDrilldownLabel,
@@ -181,7 +180,7 @@ export default function PortfolioWorkspaceView({
   const [copiedContextField, setCopiedContextField] = useState<string | null>(null);
   const [detailDrawer, setDetailDrawer] = useState<PortfolioDetailDrawerState | null>(null);
   const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
-  const setupActions = workspace?.workflow_actions ?? (workspace ? buildPortfolioWorkflowActions(workspace) : []);
+  const setupActions = workspace?.workflow_actions ?? [];
   const primaryWorkflowCue = orderedWorkflowCues.find((cue) => cue.key === "performance") ?? orderedWorkflowCues[0];
   const readinessIndicators = workspace
     ? workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace, context.viewMode)

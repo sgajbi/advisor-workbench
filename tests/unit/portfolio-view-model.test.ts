@@ -8,10 +8,10 @@ import {
   buildPortfolioFilterOptions,
   buildPortfolioInsights,
   buildPortfolioReadinessIndicators,
-  buildPortfolioWorkflowActions,
   filterPositionsByDrilldown,
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
+  getOrderedWorkflowCues,
   getRelatedTransactionsForSecurity,
   buildInitialPortfolioControls,
   buildPortfolioWorkspaceContext,
@@ -448,26 +448,16 @@ describe("portfolio view model", () => {
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
     ]);
 
-    expect(buildPortfolioWorkflowActions(workspace)).toEqual([
+    expect(getOrderedWorkflowCues(workspace)).toEqual([
       {
-        sequence: 1,
-        title: "Review performance",
-        impact:
-          "Review portfolio return, benchmark context, and contribution once the book is valued.",
-        target: "Target: Performance workflow for this portfolio",
-        href: "/performance?portfolioId=PORT_UI_1001",
-        cta_label: "Performance",
-        recommended: true,
+        key: "performance",
+        label: "Performance",
+        href: "/performance",
       },
       {
-        sequence: 2,
-        title: "Review risk",
-        impact:
-          "Validate suitability, exposure, and mandate fit before the next client action.",
-        target: "Target: Risk workflow for this portfolio",
-        href: "/performance?portfolioId=PORT_UI_1001&mode=risk",
-        cta_label: "Open Risk",
-        recommended: false,
+        key: "risk",
+        label: "Risk",
+        href: "/risk",
       },
     ]);
 
@@ -527,13 +517,7 @@ describe("portfolio view model", () => {
     workspace.readiness.reporting.status = "EMPTY";
     workspace.readiness.reporting.row_count = 0;
 
-    expect(buildPortfolioWorkflowActions(workspace).map((action) => action.title)).toEqual([
-      "Fund portfolio",
-      "Book first trade",
-      "Publish pricing",
-      "Review holdings",
-      "Open performance",
-    ]);
+    expect(getOrderedWorkflowCues(workspace)).toEqual([]);
     expect(buildPortfolioReadinessIndicators(workspace, "summary").map((indicator) => indicator.status)).toEqual([
       "Missing",
       "Missing",

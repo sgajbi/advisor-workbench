@@ -1,6 +1,4 @@
 import {
-  getWorkflowActionLabel,
-  getWorkflowTaskLabel,
   mapWorkflowHref,
   WORKFLOW_DISPLAY_ORDER,
 } from "./workspace-config";
@@ -14,7 +12,6 @@ import type {
   PortfolioReadinessIndicator,
   PortfolioReadinessStatus,
   PortfolioTransactionDrilldownFilter,
-  PortfolioWorkflowAction,
   PortfolioWorkflowCue,
   PortfolioWorkspace,
 } from "./types";
@@ -790,7 +787,6 @@ export function buildPortfolioInsights(workspace: PortfolioWorkspace): Portfolio
 
 export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): PortfolioWorkflowCue[] {
   const supportedWorkflowKeys = new Set<string>(WORKFLOW_DISPLAY_ORDER);
-  const portfolioId = workspace.portfolio.portfolio_id;
 
   return [...workspace.workflow_cues]
     .filter((cue) => supportedWorkflowKeys.has(cue.key))
@@ -807,84 +803,7 @@ export function getOrderedWorkflowCues(workspace: PortfolioWorkspace): Portfolio
 
       return (leftOrder === -1 ? Number.MAX_SAFE_INTEGER : leftOrder) -
         (rightOrder === -1 ? Number.MAX_SAFE_INTEGER : rightOrder);
-    })
-    .map((cue) => ({
-      ...cue,
-      href: mapWorkflowHref(cue.key, portfolioId),
-    }));
-}
-
-export function buildPortfolioWorkflowActions(
-  workspace: PortfolioWorkspace
-): PortfolioWorkflowAction[] {
-  const portfolioOperationsHref = `/workbench?portfolioId=${encodeURIComponent(
-    workspace.portfolio.portfolio_id
-  )}`;
-  const isEmptyPortfolio =
-    !workspace.positions.length &&
-    !workspace.recent_transactions.length &&
-    !workspace.cash_balances?.length;
-
-  if (isEmptyPortfolio) {
-    return [
-      {
-        sequence: 1,
-        title: "Fund portfolio",
-        impact:
-          "Create opening liquidity so balances, allocation, and readiness checks become meaningful.",
-        target: "Target: cash funding and opening balance setup",
-        href: portfolioOperationsHref,
-        cta_label: "Fund now",
-        recommended: true,
-      },
-      {
-        sequence: 2,
-        title: "Book first trade",
-        impact: "Activate the holdings book and create the first investable position.",
-        target: "Target: transaction entry and execution workflow",
-        href: portfolioOperationsHref,
-        cta_label: "Book trade",
-        recommended: false,
-      },
-      {
-        sequence: 3,
-        title: "Publish pricing",
-        impact: "Enable valuation, allocation, and downstream reporting coverage.",
-        target: "Target: pricing publication and valuation refresh",
-        href: portfolioOperationsHref,
-        cta_label: "Publish prices",
-        recommended: false,
-      },
-      {
-        sequence: 4,
-        title: "Review holdings",
-        impact: "Confirm the funded book, position weights, and coverage after valuation.",
-        target: "Target: holdings and allocation review",
-        href: "#portfolio-insights",
-        cta_label: "Open holdings",
-        recommended: false,
-      },
-      {
-        sequence: 5,
-        title: "Open performance",
-        impact: "Review return analytics once holdings are funded and valued.",
-        target: "Target: performance workspace after valuation is available",
-        href: "/performance",
-        cta_label: "Open performance",
-        recommended: false,
-      },
-    ];
-  }
-
-  return getOrderedWorkflowCues(workspace).map((cue, index) => ({
-    sequence: index + 1,
-    title: getWorkflowTaskLabel(cue.key),
-    impact: getWorkflowImpactLabel(cue.key),
-    target: `Target: ${cue.label} workflow for this portfolio`,
-    href: mapWorkflowHref(cue.key, workspace.portfolio.portfolio_id),
-    cta_label: getWorkflowActionLabel(cue.key),
-    recommended: index === 0,
-  }));
+    });
 }
 
 export function getRelatedTransactionsForSecurity(
@@ -1154,17 +1073,6 @@ function hasCashFundingEvidence(workspace: PortfolioWorkspace): boolean {
 function isReportingReady(status: string): boolean {
   const normalized = status.toUpperCase();
   return normalized === "READY" || normalized === "COMPLETE";
-}
-
-function getWorkflowImpactLabel(key: string): string {
-  switch (key) {
-    case "performance":
-      return "Review portfolio return, benchmark context, and contribution once the book is valued.";
-    case "risk":
-      return "Validate suitability, exposure, and mandate fit before the next client action.";
-    default:
-      return "Open the next available workflow for this portfolio.";
-  }
 }
 
 function includePosition(
