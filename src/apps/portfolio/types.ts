@@ -29,6 +29,12 @@ export type PortfolioAllocationView = {
   }>;
 };
 
+export type PortfolioAllocationLookThrough = {
+  requested_mode: string;
+  effective_mode: string;
+  applied: boolean;
+};
+
 export type PortfolioAllocationSelection = {
   dimension: string;
   bucket: string;

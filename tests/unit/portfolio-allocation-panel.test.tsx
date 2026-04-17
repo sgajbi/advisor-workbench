@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PortfolioAllocationPanel from "../../src/apps/portfolio/components/portfolio-allocation-panel";
 import type { PortfolioAllocationView } from "../../src/apps/portfolio/types";
+import { resetPortfolioApiRequestCache } from "../../src/apps/portfolio/api";
 
 const allocationViews: PortfolioAllocationView[] = [
   {
@@ -23,13 +24,77 @@ const allocationViews: PortfolioAllocationView[] = [
 ];
 
 describe("PortfolioAllocationPanel", () => {
-  it("renders supported dimensions, disables unsupported ones, and emits selections", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    resetPortfolioApiRequestCache();
+  });
+
+  it("hydrates strategic allocation views, enables live region support, and emits selections", async () => {
     const onSelectionChange = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (!url.includes("/allocations?")) {
+          throw new Error(`Unexpected fetch: ${url}`);
+        }
+
+        if (url.includes("look_through_mode=full")) {
+          return jsonResponse({
+            reporting_currency: "USD",
+            look_through: {
+              requested_mode: "full",
+              effective_mode: "full",
+              applied: true,
+            },
+            views: [
+              {
+                dimension: "region",
+                buckets: [
+                  {
+                    bucket: "Asia",
+                    position_count: 3,
+                    market_value_base: 300000,
+                    weight_pct: 24,
+                  },
+                ],
+              },
+            ],
+          });
+        }
+
+        return jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "direct_only",
+            effective_mode: "direct_only",
+            applied: false,
+          },
+          views: [
+            ...allocationViews,
+            {
+              dimension: "region",
+              buckets: [
+                {
+                  bucket: "North America",
+                  position_count: 6,
+                  market_value_base: 625000,
+                  weight_pct: 50,
+                },
+              ],
+            },
+          ],
+        });
+      })
+    );
 
     render(
       <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
         allocationViews={allocationViews}
         baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
         selectedAllocation={null}
         onSelectionChange={onSelectionChange}
       />
@@ -42,35 +107,69 @@ describe("PortfolioAllocationPanel", () => {
     expect(document.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Look-through pending source support" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Checking look-through support" })).toBeDisabled();
     expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
+
+    await waitFor(() => expect(screen.getByRole("tab", { name: "Region" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Look-through off" })).toBeEnabled());
 
     fireEvent.click(screen.getByRole("tab", { name: "Currency" }));
     expect(screen.getByRole("tabpanel", { name: "Currency allocation view" })).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Donut" }));
+    fireEvent.click(screen.getByRole("button", { name: "Look-through off" }));
+    await waitFor(() =>
+      expect(
+        screen.getByText("Region • 1 buckets • Expanded exposure")
+      ).toBeInTheDocument()
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Region" }));
     fireEvent.click(
       screen.getByRole("button", {
-        name: "USD: 925,000 USD, 74.00%, 9 positions. Filter holdings.",
+        name: "Asia: 300,000 USD, 24.00%, 3 positions. Filter holdings.",
       })
     );
     expect(onSelectionChange).toHaveBeenCalledWith({
-      dimension: "currency",
-      bucket: "USD",
+      dimension: "region",
+      bucket: "Asia",
     });
   });
 
-  it("supports keyboard activation on donut chart segments", () => {
+  it("supports keyboard activation on donut chart segments", async () => {
     const onSelectionChange = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "direct_only",
+            effective_mode: "direct_only",
+            applied: false,
+          },
+          views: allocationViews,
+        })
+      )
+    );
 
     render(
       <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
         allocationViews={allocationViews}
         baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
         selectedAllocation={null}
         onSelectionChange={onSelectionChange}
       />
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Look-through unavailable for current portfolio snapshot",
+        })
+      ).toBeDisabled()
     );
 
     fireEvent.keyDown(
@@ -84,14 +183,40 @@ describe("PortfolioAllocationPanel", () => {
     });
   });
 
-  it("renders a professional empty state while keeping the module controls", () => {
+  it("renders a professional empty state while keeping the module controls", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "direct_only",
+            effective_mode: "direct_only",
+            applied: false,
+          },
+          views: [{ dimension: "asset_class", buckets: [] }],
+        })
+      )
+    );
+
     render(
       <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
         allocationViews={[{ dimension: "asset_class", buckets: [] }]}
         baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
         selectedAllocation={null}
         onSelectionChange={() => {}}
       />
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Look-through unavailable for current portfolio snapshot",
+        })
+      ).toBeDisabled()
     );
 
     expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
@@ -105,15 +230,41 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
   });
 
-  it("uses a visual-only compact summary layout when requested", () => {
+  it("uses a visual-only compact summary layout when requested", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "direct_only",
+            effective_mode: "direct_only",
+            applied: false,
+          },
+          views: allocationViews,
+        })
+      )
+    );
+
     const { container } = render(
       <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
         allocationViews={allocationViews}
         baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
         compact
         selectedAllocation={null}
         onSelectionChange={() => {}}
       />
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Look-through unavailable for current portfolio snapshot",
+        })
+      ).toBeDisabled()
     );
 
     expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
@@ -123,4 +274,53 @@ describe("PortfolioAllocationPanel", () => {
     expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
     expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();
   });
+
+  it("keeps look-through disabled when gateway falls back to direct holdings", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (!url.includes("/allocations?")) {
+          throw new Error(`Unexpected fetch: ${url}`);
+        }
+
+        return jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: url.includes("look_through_mode=full") ? "full" : "direct_only",
+            effective_mode: "direct_only",
+            applied: false,
+          },
+          views: allocationViews,
+        });
+      })
+    );
+
+    render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={() => {}}
+      />
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Look-through unavailable for current portfolio snapshot",
+        })
+      ).toBeDisabled()
+    );
+  });
 });
+
+function jsonResponse(payload: unknown): Response {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+}

@@ -1,4 +1,8 @@
-import type { PortfolioCatalogResponse, PortfolioWorkspace } from "./types";
+import type {
+  PortfolioAllocationLookThrough,
+  PortfolioCatalogResponse,
+  PortfolioWorkspace,
+} from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
 import {
   resolveGatewayBaseUrl,
@@ -40,6 +44,12 @@ type PortfolioBookResponse = {
   allocation_views: NonNullable<PortfolioWorkspace["allocation_views"]>;
   top_positions: PortfolioWorkspace["top_positions"];
   positions: PortfolioWorkspace["positions"];
+};
+
+type PortfolioAllocationResponse = {
+  reporting_currency?: string | null;
+  views: NonNullable<PortfolioWorkspace["allocation_views"]>;
+  look_through?: PortfolioAllocationLookThrough | null;
 };
 
 type PortfolioLiquidityResponse = {
@@ -402,6 +412,34 @@ export async function getPortfolioTransactionLedger(
     return await fetchPortfolioJson<PortfolioTransactionLedgerResponse>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions`,
+      { query: searchParams }
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function getPortfolioAllocationViews(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+    lookThroughMode?: "direct_only" | "full";
+  } = {}
+): Promise<PortfolioAllocationResponse | null> {
+  try {
+    const searchParams = new URLSearchParams();
+    if (params.asOfDate) {
+      searchParams.set("as_of_date", params.asOfDate);
+    }
+    if (params.reportingCurrency) {
+      searchParams.set("reporting_currency", params.reportingCurrency);
+    }
+    searchParams.set("look_through_mode", params.lookThroughMode ?? "direct_only");
+
+    return await fetchPortfolioJson<PortfolioAllocationResponse>(
+      resolvePortfolioRequestTarget(),
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
       { query: searchParams }
     );
   } catch {
