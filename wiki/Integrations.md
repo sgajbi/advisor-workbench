@@ -29,3 +29,5 @@
 1. gateway-first integration is the default
 2. `/api/bff/*` is an internal bridge, not a second product API authority
 3. canonical front-office validation depends on governed `*.dev.lotus` routing and seeded data
+4. shell navigation supportability is informed by gateway-backed capability posture rather than by
+   the mere existence of historical routes

@@ -26,3 +26,5 @@ This repo does not own:
 - Portfolio and Performance are the active front-office paths
 - risk is served through Performance route modes
 - recommendations and proposals remain compatibility entrypoints rather than active shell apps
+- shell navigation currently exposes disabled `Proposal` and `Advisory` items through normalized
+  capability posture rather than treating them as active supported apps

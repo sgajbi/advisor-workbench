@@ -115,7 +115,12 @@ Important validation expectations:
 3. Docker and build validation remain part of the merge gate,
 4. canonical live validation matters when a change affects integrated product flows,
 5. README and wiki updates should keep active product-surface truth explicit, especially when
-   legacy compatibility routes still exist beside the supported Portfolio and Performance paths.
+   legacy compatibility routes still exist beside the supported Portfolio and Performance paths,
+6. product docs should distinguish active shell navigation from disabled or compatibility-only
+   routes when the shell bootstrap contract does not treat every historical route as supported,
+7. route-file existence alone is not enough for documentation truth; use shell registry,
+   capabilities tests, redirect behavior, and canonical runtime guidance before describing a surface
+   as supported.
 
 ### Visual Review Gate
 

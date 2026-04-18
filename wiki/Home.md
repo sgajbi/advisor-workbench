@@ -16,6 +16,7 @@
 - primary product client for Lotus
 - Portfolio and Performance are the most mature active front-office surfaces
 - recommendations and proposals remain compatibility routes, not the main supported shell apps
+- shell navigation currently treats `Proposal` and `Advisory` as disabled capability-gated entries
 
 ## Most important commands
 
@@ -24,6 +25,13 @@
 - `make test-e2e`
 - `npm run live:stack:up`
 - `npm run live:validate`
+
+## Review evidence
+
+- canonical validation output:
+  `output/playwright/live-canonical/`
+- governed seeded portfolio:
+  `PB_SG_GLOBAL_BAL_001`
 
 ## Navigation
 

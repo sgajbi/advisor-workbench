@@ -4,6 +4,8 @@
 
 - if the UI looks right on localhost but breaks on canonical hosts, fix the runtime and host mapping first
 - if a route appears active in old docs, verify whether it is now a compatibility redirect
+- if `Proposal` or `Advisory` appear unavailable, check shell capabilities before treating that as
+  a regression
 - if a screen looks populated but canonical validation fails, treat it as diagnostic evidence only
 - if product data looks wrong, inspect gateway responses before adjusting frontend presentation
 

@@ -23,3 +23,5 @@
 - keep active product-surface truth explicit
 - treat Portfolio and Performance as the supported front-office paths
 - document compatibility redirects without presenting them as active product ownership
+- distinguish disabled shell entries from active apps when capability posture says they are not
+  supported yet

@@ -35,6 +35,7 @@ BFF_BASE_URL=http://gateway.dev.lotus
 ```txt
 http://workbench.dev.lotus/portfolio
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001
+http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 ```
 
 If the product loads against localhost but not the canonical hostnames, fix the governed hosts and

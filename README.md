@@ -54,6 +54,11 @@ Boundary rules that matter:
    `PB_SG_GLOBAL_BAL_001`.
 4. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
    the primary supported front-office app surfaces.
+5. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
+   active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
+   bootstrap contract.
+6. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
+   `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
 
 ## Architecture At A Glance
 
@@ -69,6 +74,13 @@ Current main surfaces:
   `/workbench/*` compatibility and portfolio-linked workspace entry
 - `api/bff`
   internal Next.js proxy bridge to `lotus-gateway`
+
+Current shell navigation truth:
+
+- active:
+  `Portfolio`, `Performance`, `Risk`
+- currently disabled by capability posture:
+  `Proposal`, `Advisory`
 
 Current compatibility redirects:
 
@@ -148,6 +160,7 @@ Quick local browser-facing path:
 ```txt
 http://workbench.dev.lotus/portfolio
 http://workbench.dev.lotus/performance
+http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 ```
 
 ## Common Commands
@@ -201,6 +214,10 @@ Important current product and route truths:
    the main supported shell paths
 4. the internal `/api/bff/*` route proxies to `lotus-gateway` and preserves gateway-first
    integration posture
+5. shell navigation availability is contract-driven and currently exposes disabled `Proposal` and
+   `Advisory` items rather than live product routes
+6. evidence-oriented performance views must be documented truthfully as runtime-governed product
+   behavior, not as a promise of separate unsupported backend ownership inside Workbench
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 
@@ -220,6 +237,9 @@ Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Sur
 - use `npm run live:stack:up` and `npm run live:validate` for governed integrated validation
 - use seeded portfolio `PB_SG_GLOBAL_BAL_001` unless the slice explicitly targets another dataset
 - keep demo screenshots separate from diagnostic captures until canonical validation passes
+- canonical live validation artifacts are written under `output/playwright/live-canonical/`
+- use `output/playwright/live-canonical/live-validation-summary.json` as the structured evidence
+  record for review and troubleshooting
 
 ## Documentation Map
 

@@ -10,6 +10,16 @@
 - `/workbench/{portfolioId}`
 - `/api/bff/*`
 
+## Capability-gated shell navigation
+
+- active product entries:
+  `Portfolio`, `Performance`, `Risk`
+- disabled entries in the current normalized shell bootstrap contract:
+  `Proposal`, `Advisory`
+
+Treat the active shell contract as the source of truth for supported front-office navigation. Do not
+promote dormant labels into product ownership just because historical route files still exist.
+
 ## Compatibility routes
 
 - `/recommendations`
@@ -24,6 +34,10 @@
 - risk is currently served through `/performance` route mode selection, not a separate top-level URL
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
 - canonical product proof should use `workbench.dev.lotus`, not ad hoc localhost URLs
+- shell navigation support is narrower than the historical route set: `Proposal` and `Advisory`
+  are currently disabled even though compatibility routes still exist
+- canonical evidence should be taken from `output/playwright/live-canonical/` after
+  `npm run live:validate`
 
 ## Route examples
 
@@ -45,10 +59,25 @@ Performance risk mode:
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 ```
 
+Capability-gated navigation truth:
+
+```txt
+Active: Portfolio, Performance, Risk
+Disabled: Proposal, Advisory
+```
+
 Compatibility recommendation redirect:
 
 ```txt
 http://workbench.dev.lotus/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001
 ```
 
-These examples are here to keep the active-versus-legacy route posture explicit.
+Compatibility proposal redirect posture:
+
+```txt
+/proposals -> /portfolio
+/proposals/{proposalId} -> /portfolio
+/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001 -> /performance?portfolioId=PB_SG_GLOBAL_BAL_001
+```
+
+These examples keep the active-versus-legacy route posture explicit.
