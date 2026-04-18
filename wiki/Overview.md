@@ -1,0 +1,28 @@
+# Overview
+
+## Business role
+
+`lotus-workbench` is the primary front-office product UI for Lotus. It presents gateway-backed
+portfolio, performance, risk, advisory-brief, and evidence workflows in one governed shell.
+
+## Ownership boundaries
+
+This repo owns:
+
+1. user-facing product workflows
+2. shell and design-system presentation behavior
+3. truthful summary-first interaction patterns
+4. canonical front-office browser validation
+
+This repo does not own:
+
+1. domain data truth
+2. gateway or direct backend contract ownership
+3. analytics, risk, reporting, or AI methodology
+
+## Current posture
+
+- gateway-first product client
+- Portfolio and Performance are the active front-office paths
+- risk is served through Performance route modes
+- recommendations and proposals remain compatibility entrypoints rather than active shell apps

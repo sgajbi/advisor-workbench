@@ -1,213 +1,243 @@
 # lotus-workbench
 
-Unified product workspace for the Lotus ecosystem, evolving from proposal-first slices into a
-world-class multi-application operating surface for portfolio, analytics, risk, proposal,
-management, and reporting workflows.
+Primary product UI for the Lotus ecosystem, consumed through `lotus-gateway`.
 
-## Contribution Standards
+Repository-local engineering context:
+[REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
 
-- Contribution process: `CONTRIBUTING.md`
-- Repository-local engineering context: `REPOSITORY-ENGINEERING-CONTEXT.md`
-- Docs-with-code standard: `docs/documentation/implementation-documentation-standard.md`
-- PR checklist template: `.github/pull_request_template.md`
-- Platform-wide architecture governance source: `https://github.com/sgajbi/lotus-platform`
+Product architecture blueprint:
+[docs/documentation/product-architecture-blueprint.md](docs/documentation/product-architecture-blueprint.md)
 
-## Standard Frontend Stack
+Canonical front-office local runtime:
+[docs/operations/canonical-front-office-local-runtime.md](docs/operations/canonical-front-office-local-runtime.md)
 
-- Next.js (App Router)
-- React + TypeScript
-- TanStack Query
-- MUI
-- AG Grid
-- ECharts
-- React Hook Form
-- Zod
+## Purpose And Scope
 
-## Architecture Direction
+`lotus-workbench` owns the user-facing product experience for Lotus.
 
-- Product architecture blueprint:
-  `docs/documentation/product-architecture-blueprint.md`
-- Platform-wide architecture governance source:
-  `https://github.com/sgajbi/lotus-platform`
-- Current RFC history:
-  `docs/rfcs/README.md`
+It is responsible for:
 
-## Design System Foundation
+- coherent front-office user experience
+- truthful summary-first workflows
+- detail-on-demand product modules
+- rendering gateway-backed data in a banking-grade product surface
+- canonical local runtime and browser validation for supported product flows
 
-- Shared frontend primitives live in `src/design-system/`
-- Shared shell composition lives in `src/shell/`
-- New product surfaces should prefer design-system primitives over page-local structural markup
-- The current reference implementation is the `Portfolio` surface under `src/apps/portfolio/`
+It does not own portfolio, performance, risk, advisory, reporting, or AI business truth. Those stay
+behind governed backend contracts, primarily `lotus-gateway`.
 
-## App Package Direction
+## Ownership And Boundaries
 
-- `src/app/` owns route mounting only
-- `src/apps/home/` owns the home entry redirect
-- `src/apps/portfolio/` owns the portfolio workspace
-- `src/apps/performance/` owns the performance entry behavior
-- `src/apps/recommendations/` owns the recommendations entry behavior
+`lotus-workbench` is the primary product client in the Lotus ecosystem.
 
-## Quickstart
+It depends on:
+
+- `lotus-gateway`
+  primary backend contract for product flows
+- canonical `*.dev.lotus` runtime and ingress
+  governed local validation and screenshot posture
+- repo-local design-system and shell primitives
+  shared presentation and interaction foundations
+
+Boundary rules that matter:
+
+1. supported UI states must be backed by supported gateway behavior
+2. direct raw service consumption is not the default pattern
+3. presentation can prioritize and frame data, but domain authority stays upstream
+4. visual polish must not introduce fake data, duplicate meaning, or unsupported workflow states
+
+## Current Operational Posture
+
+1. `Portfolio` and `Performance` are the most mature live workflows.
+2. `lotus-workbench` uses `lotus-gateway` as its primary backend contract.
+3. Canonical local product proof uses the governed front-office runtime and seeded portfolio
+   `PB_SG_GLOBAL_BAL_001`.
+4. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
+   the primary supported front-office app surfaces.
+
+## Architecture At A Glance
+
+Route mounting comes from `src/app/`, while app-local ownership lives under `src/apps/`.
+
+Current main surfaces:
+
+- `portfolio`
+  `/portfolio`, `/portfolios`, `/intake`
+- `performance`
+  `/performance` with performance, risk, advisor-brief, and evidence modes
+- `workbench`
+  `/workbench/*` compatibility and portfolio-linked workspace entry
+- `api/bff`
+  internal Next.js proxy bridge to `lotus-gateway`
+
+Current compatibility redirects:
+
+- `/recommendations`
+  redirects to supported active surfaces
+- `/proposals`, `/proposals/simulate`, `/proposals/[proposalId]`
+  compatibility routes, not primary active shell apps
+
+Key code areas:
+
+- `src/app/`
+  Next.js app-router entrypoints and route mounting
+- `src/apps/portfolio/`
+  portfolio workspace
+- `src/apps/performance/`
+  performance and risk product surfaces
+- `src/apps/recommendations/`
+  current compatibility redirect behavior for legacy recommendation entry
+- `src/design-system/`
+  shared UI primitives and tokens
+- `src/shell/`
+  app shell, navigation, and app registry
+- `tests/`
+  unit, integration, and Playwright smoke coverage
+
+## Repository Layout
+
+- `src/app/`
+  route entries, layouts, and the `/api/bff` gateway proxy bridge
+- `src/apps/`
+  app-local product surfaces
+- `src/design-system/`
+  shared tokens, components, and data-display primitives
+- `src/shell/`
+  navigation, app registry, and shared shell structure
+- `src/features/`
+  reusable feature-specific API and view-model logic
+- `docs/`
+  product architecture, operations, automation, demo, and review guidance
+- `wiki/`
+  canonical authored source for GitHub wiki publication
+
+## Quick Start
+
+Install dependencies:
 
 ```bash
-npm install
-npm run dev
+make install
 ```
 
-Open `http://workbench.dev.lotus`.
+Local development server:
 
-Preferred local entry points follow the RFC-0071 service identity model:
+```bash
+make run
+```
 
-- Workbench: `http://workbench.dev.lotus`
-- Gateway: `http://gateway.dev.lotus`
+Canonical local identities:
 
-Set `BFF_BASE_URL` to the environment-scoped gateway URL, for example `http://gateway.dev.lotus`.
+- product UI: `http://workbench.dev.lotus`
+- gateway: `http://gateway.dev.lotus`
 
-Canonical local runtime and live validation:
+Set:
 
-- Runbook: `docs/operations/canonical-front-office-local-runtime.md`
-- Manage the canonical `*.dev.lotus` hosts block from `lotus-platform` with
-  `automation/Sync-Dev-Ingress-Hosts.ps1`
-- Bring up the full front-office stack and validate it:
+```txt
+BFF_BASE_URL=http://gateway.dev.lotus
+```
+
+Canonical front-office runtime:
 
 ```bash
 npm run live:stack:up
-```
-
-- Bring the canonical stack down cleanly:
-
-```bash
-npm run live:stack:down
-```
-
-- Validate an already-running canonical stack:
-
-```bash
 npm run live:validate
 ```
 
-The live validator writes browser screenshots and a machine-readable validation artifact to:
+Quick local browser-facing path:
 
 ```txt
-output/playwright/live-canonical/
+http://workbench.dev.lotus/portfolio
+http://workbench.dev.lotus/performance
 ```
 
-## Quality Gate
+## Common Commands
 
-Frontend changes are expected to pass a hard CI gate before merge.
+- `make install`
+  install dependencies
+- `make lint`
+  lint the Next.js app
+- `make typecheck`
+  TypeScript typecheck
+- `make test-coverage`
+  Vitest coverage-backed unit and integration gate
+- `make test-e2e`
+  Playwright smoke validation
+- `make check`
+  local feature-lane parity: lint, typecheck, coverage, build
+- `make ci-local-docker`
+  Docker parity check
+- `npm run live:stack:up`
+  canonical front-office stack bring-up
+- `npm run live:validate`
+  canonical front-office validation against the running stack
 
-Lane model:
+## Validation And CI Lanes
 
-- `Remote Feature Lane`: lint, typecheck, and fast `npm run test`
-- `Pull Request Merge Gate`: lint, typecheck, coverage, build, Playwright smoke, Docker validation, and local Docker parity
-- `Main Releasability Gate`: reruns the PR-grade gate on `main` with retained artifacts
+`lotus-workbench` follows the Lotus multi-lane model:
 
-Required layers:
+1. `Remote Feature Lane`
+2. `Pull Request Merge Gate`
+3. `Main Releasability Gate`
 
-- unit and integration tests through Vitest coverage
-- Playwright smoke checks against a built Next.js app
-- lint, typecheck, and production build validation
+Repo-native gate mapping:
 
-Current enforced coverage thresholds in `vitest.config.ts`:
+- `make check`
+  lint, typecheck, coverage-backed tests, build
+- `make test-e2e`
+  Playwright smoke
+- `make ci-local-docker`
+  Docker parity
+- `npm run live:validate`
+  canonical integrated product validation when cross-app flows change
 
-- lines: `86`
-- statements: `86`
-- functions: `70`
-- branches: `74`
+## Product Contract Notes
 
-Coverage is enforced against the real application surface, not a hand-picked subset. The Vitest
-coverage include set spans:
+Important current product and route truths:
 
-- `src/app/**/*.ts`
-- `src/app/**/*.tsx`
-- `src/apps/**/*.ts`
-- `src/apps/**/*.tsx`
-- `src/design-system/**/*.ts`
-- `src/design-system/**/*.tsx`
-- `src/features/**/*.ts`
-- `src/features/**/*.tsx`
-- `src/shell/**/*.ts`
-- `src/shell/**/*.tsx`
+1. the active front-office surfaces are `Portfolio` and `Performance`
+2. `Risk` is currently served through the `Performance` route via mode-based behavior, not as a
+   separate top-level route
+3. `/recommendations` and `/proposals*` remain compatibility routes and should not be documented as
+   the main supported shell paths
+4. the internal `/api/bff/*` route proxies to `lotus-gateway` and preserves gateway-first
+   integration posture
 
-This is a temporary baseline for the broadened real-app surface. Future refactors are expected to
-raise it from here, not narrow the protected surface.
+Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 
-Local commands:
+## Integration Boundaries
 
-```bash
-make test-coverage
-make test-e2e
-make check
-```
+- primary backend contract:
+  `lotus-gateway`
+- canonical local runtime:
+  `*.dev.lotus` direct ingress and governed seeded data
+- contract rule:
+  workbench should consume gateway-shaped product contracts instead of recreating backend semantics
+  in the browser
 
-CI must pass before merge.
+## Operations And Runtime Posture
 
-## Live Performance Demo
+- use `workbench.dev.lotus` and `gateway.dev.lotus` for canonical local product proof
+- use `npm run live:stack:up` and `npm run live:validate` for governed integrated validation
+- use seeded portfolio `PB_SG_GLOBAL_BAL_001` unless the slice explicitly targets another dataset
+- keep demo screenshots separate from diagnostic captures until canonical validation passes
 
-The current flagship demo path is the benchmark-aware performance workstation:
+## Documentation Map
 
-- UI: `http://workbench.dev.lotus/performance`
-- Gateway: `http://gateway.dev.lotus`
-- Required upstreams:
-  - `lotus-core` query: `http://core-query.dev.lotus`
-  - `lotus-core` control plane: `http://core-control.dev.lotus`
-  - `lotus-core` ingestion: `http://core-ingestion.dev.lotus`
-  - `lotus-performance`: `http://performance.dev.lotus`
-  - `lotus-ai`: `http://ai.dev.lotus`
+- product architecture:
+  [docs/documentation/product-architecture-blueprint.md](docs/documentation/product-architecture-blueprint.md)
+- canonical local runtime:
+  [docs/operations/canonical-front-office-local-runtime.md](docs/operations/canonical-front-office-local-runtime.md)
+- demo guidance:
+  [docs/demo/README.md](docs/demo/README.md)
+- architecture review ledger:
+  [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md)
+- RFC inventory:
+  [docs/rfcs/README.md](docs/rfcs/README.md)
+- wiki home:
+  [wiki/Home.md](wiki/Home.md)
 
-Flagship seeded mandate and benchmarks:
+## Wiki Source
 
-- portfolio: `PB_SG_GLOBAL_BAL_001`
-- assigned benchmark: `BMK_PB_GLOBAL_BALANCED_60_40` (`Private Banking Global Balanced 60/40`)
-- alternate benchmark: `BMK_GLOBAL_BALANCED_60_40` (`Global Balanced 60/40`)
-
-Expected live behavior:
-
-- the `Performance` route first paints benchmark-aware summary context immediately
-- the chart stage supports horizon, explicit dates, basis, frequency, and benchmark switching
-- the lower analytical canvas refreshes independently for heavy analytical modules
-- the multi-horizon comparison module shows `MTD`, `QTD`, `YTD`, and `1Y`
-- attribution-over-time, contribution, and relative segment analytics use real gateway data
-- `Advisor Brief` is a third Performance mode that fetches a source-grounded brief from Gateway,
-  shows evidence-backed talking points and drill-down actions, and degrades to truthful partial
-  or unavailable states when `lotus-ai` or source analytics are not ready
-
-## Current Routes
-
-- `/portfolio` - primary portfolio review surface for holdings, allocation, readiness, and next actions
-- `/performance` - front-office entry route for performance review
-- `/recommendations` - front-office entry route for investment recommendations
-- `/proposals/simulate` - recommendation drafting flow
-- `/proposals` - recommendation workspace list
-- `/proposals/[proposalId]` - recommendation detail with submit/approval/consent actions and workflow timeline
-- `/workbench/[portfolioId]` - legacy operational console compatibility route
-
-These routes are the current implementation baseline, not the final product topology. The target
-future direction is an app-shell model documented in
-`docs/documentation/product-architecture-blueprint.md`.
-
-## Docker
-
-```bash
-make docker-up
-make docker-down
-
-make ci-local-docker
-make ci-local-docker-down
-```
-
-## Demo Pack
-
-- `docs/demo/README.md`
-- `docs/demo/scripts/demo-ui-approval-chain.md`
-
-## Automation
-
-- Automation runbook: `docs/automation/Automation-Ecosystem.md`
-- One-shot pulse (sync + PR monitor): `npm run auto:pulse`
-- Sync all repositories: `npm run auto:sync`
-- Monitor open PRs (`author:@me`): `npm run auto:pr`
-- Continuous agent loop with status feed: `npm run auto:agent`
-- Single agent iteration: `npm run auto:agent:once`
-- Targeted lotus-core refresh: `npm run auto:refresh:pas -- query_service demo_data_loader`
-
+Repository-authored wiki pages live under [wiki/](wiki). If the GitHub wiki is published later,
+keep `wiki/` as the canonical source and treat any separate `*.wiki.git` clone as publication
+plumbing only.

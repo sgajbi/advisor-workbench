@@ -60,6 +60,8 @@ Primary areas:
    Shared shell composition and application framing.
 7. `tests/`
    Unit, integration, and Playwright smoke coverage.
+8. `wiki/`
+   canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
 
 ## Runtime And Integration Boundaries
 
@@ -111,7 +113,9 @@ Important validation expectations:
 1. unit and integration behavior is validated through Vitest coverage,
 2. browser smoke is validated through Playwright,
 3. Docker and build validation remain part of the merge gate,
-4. canonical live validation matters when a change affects integrated product flows.
+4. canonical live validation matters when a change affects integrated product flows,
+5. README and wiki updates should keep active product-surface truth explicit, especially when
+   legacy compatibility routes still exist beside the supported Portfolio and Performance paths.
 
 ### Visual Review Gate
 
@@ -145,7 +149,9 @@ Most relevant current governance:
 1. this repository evolves quickly, so stale UX assumptions and stale E2E expectations are a recurring drift risk,
 2. design-system and shell primitives should be preferred over page-local hacks,
 3. premium banking-grade UI in Lotus means clarity, density, trust, and backend truth over decorative novelty,
-4. when a screen changes materially, tests and docs should be updated in the same slice.
+4. when a screen changes materially, tests and docs should be updated in the same slice,
+5. repo-local `wiki/` content should summarize supported product surfaces, canonical runtime flow,
+   and legacy route posture without duplicating the full `docs/` tree.
 
 ## Context Maintenance Rule
 
@@ -155,7 +161,8 @@ Update this document when:
 2. repo-native commands or CI expectations change,
 3. the gateway-first integration model changes,
 4. dominant design-system or shell patterns change,
-5. current product-surface maturity or rollout posture materially changes.
+5. current product-surface maturity or rollout posture materially changes,
+6. active versus legacy route posture changes.
 
 ## Cross-Links
 
