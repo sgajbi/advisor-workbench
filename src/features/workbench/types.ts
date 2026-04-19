@@ -542,7 +542,7 @@ export type WorkbenchAdvisorBriefWorkflowPackRun = {
   run_id: string;
   runtime_state: string;
   review_state: string;
-  allowed_review_actions: string[];
+  allowed_review_actions: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType[];
   supportability_status: string;
   review_pending: boolean;
   superseded: boolean;

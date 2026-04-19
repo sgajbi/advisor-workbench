@@ -5,9 +5,11 @@ import PerformanceWorkspaceSection from "../performance-workspace-section";
 export default function LotusSupportabilityPanel({
   items,
   reviewNotes,
+  reviewActionForm,
 }: {
   items: PerformanceAdvisorBriefSupportabilityItem[];
   reviewNotes: string[];
+  reviewActionForm?: React.ReactNode;
 }) {
   const readyCount = items.filter((item) => item.tone === "success").length;
   const reviewItems = items.filter((item) => item.tone !== "success");
@@ -55,6 +57,7 @@ export default function LotusSupportabilityPanel({
           ))}
         </div>
       ) : null}
+      {reviewActionForm}
     </PerformanceWorkspaceSection>
   );
 }

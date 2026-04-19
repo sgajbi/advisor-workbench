@@ -2,8 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getWorkbenchPerformanceAdvisorBriefClient } from "@/features/workbench/api";
-import type { WorkbenchPerformanceAdvisorBrief } from "@/features/workbench/types";
+import {
+  getWorkbenchPerformanceAdvisorBriefClient,
+  postWorkbenchPerformanceAdvisorBriefReviewActionClient,
+} from "@/features/workbench/api";
+import type {
+  WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
+  WorkbenchPerformanceAdvisorBrief,
+} from "@/features/workbench/types";
 
 type PerformanceAdvisorBriefRequest = {
   portfolioId: string;
@@ -37,6 +43,8 @@ export function usePerformanceAdvisorBrief({
   const [advisorBrief, setAdvisorBrief] = useState<WorkbenchPerformanceAdvisorBrief | null>(null);
   const [advisorBriefUnavailable, setAdvisorBriefUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isApplyingReviewAction, setIsApplyingReviewAction] = useState(false);
+  const [reviewActionError, setReviewActionError] = useState<string | null>(null);
   const [refreshSequence, setRefreshSequence] = useState(0);
   const requestSequenceRef = useRef(0);
   const cacheRef = useRef<Map<string, WorkbenchPerformanceAdvisorBrief>>(new Map());
@@ -72,6 +80,7 @@ export function usePerformanceAdvisorBrief({
     const cachedResponse = cacheRef.current.get(requestKey) ?? null;
     setAdvisorBrief(cachedResponse);
     setAdvisorBriefUnavailable(false);
+    setReviewActionError(null);
 
     if (cachedResponse) {
       setIsLoading(false);
@@ -129,10 +138,61 @@ export function usePerformanceAdvisorBrief({
     setRefreshSequence((current) => current + 1);
   }, []);
 
+  const applyReviewAction = useCallback(
+    async (payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest) => {
+      setIsApplyingReviewAction(true);
+      setReviewActionError(null);
+
+      try {
+        const response = await postWorkbenchPerformanceAdvisorBriefReviewActionClient(
+          portfolioId,
+          {
+            period,
+            chartFrequency,
+            contributionDimension,
+            attributionDimension,
+            detailBasis,
+            benchmark: benchmark ?? undefined,
+            reportStartDate,
+            reportEndDate,
+          },
+          payload
+        );
+
+        cacheRef.current.set(requestKey, response);
+        setAdvisorBrief(response);
+        setAdvisorBriefUnavailable(false);
+        return response;
+      } catch (error) {
+        setReviewActionError(
+          "Gateway could not record the bounded review action. Refresh the brief and try again."
+        );
+        throw error;
+      } finally {
+        setIsApplyingReviewAction(false);
+      }
+    },
+    [
+      attributionDimension,
+      benchmark,
+      chartFrequency,
+      contributionDimension,
+      detailBasis,
+      period,
+      portfolioId,
+      requestKey,
+      reportEndDate,
+      reportStartDate,
+    ]
+  );
+
   return {
     advisorBrief,
     advisorBriefUnavailable,
     isLoading,
+    isApplyingReviewAction,
+    reviewActionError,
+    applyReviewAction,
     refresh,
   };
 }

@@ -1,118 +1,162 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAdvisorBriefMode from "../../src/apps/performance/components/performance-advisor-brief-mode";
 import { getPerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
-import { getWorkbenchPerformanceAdvisorBriefClient } from "../../src/features/workbench/api";
+import {
+  getWorkbenchPerformanceAdvisorBriefClient,
+  postWorkbenchPerformanceAdvisorBriefReviewActionClient,
+} from "../../src/features/workbench/api";
+import type { WorkbenchPerformanceAdvisorBrief } from "../../src/features/workbench/types";
 import { buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
 
-vi.mock("../../src/features/workbench/api", () => ({
-  getWorkbenchPerformanceAdvisorBriefClient: vi.fn(async () => ({
-    correlation_id: "corr-advisor-brief",
-    contract_version: "v1",
+const readyAdvisorBriefResponse: WorkbenchPerformanceAdvisorBrief = {
+  correlation_id: "corr-advisor-brief",
+  contract_version: "v1",
+  portfolio_id: "PF_1001",
+  portfolio: {
     portfolio_id: "PF_1001",
-    portfolio: {
-      portfolio_id: "PF_1001",
-      client_id: "CIF_1001",
-      base_currency: "USD",
-      booking_center_code: "SG",
-    },
-    as_of_date: "2026-02-24",
-    period: "YTD",
-    report_start_date: "2026-01-01",
-    report_end_date: "2026-02-24",
-    detail_basis: "NET",
-    chart_frequency: "monthly",
-    contribution_dimension: "asset_class",
-    attribution_dimension: "asset_class",
-    benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
-    status: "ready",
-    summary: "Gateway advisor brief is ready with source-grounded talking points.",
-    talking_points: [
-      {
-        headline: "Portfolio delivered 5.42% versus benchmark 4.91%.",
-        detail: "Active return was 0.51% over the selected period.",
-        tone: "positive",
-        evidence_refs: [
-          {
-            metric_label: "Active Return",
-            metric_value: "0.51%",
-            source_surface: "performance.return_path",
-            target_mode: "summary",
-            route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
-          },
-        ],
-      },
-    ],
-    recommended_actions: [
-      {
-        label: "Open Return Path",
-        target_mode: "summary",
-        route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
-      },
-      {
-        label: "Review Contribution",
-        target_mode: "analysis",
-        route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
-      },
-    ],
-    risks_and_exceptions: [],
-    source_metrics: [
-      {
-        label: "Active Return",
-        value: "0.51%",
-        support_label: "YTD Net",
-        target_mode: "summary",
-        route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
-      },
-    ],
-    supportability: [
-      { label: "Advisor Brief", value: "Ready", tone: "success" },
-      { label: "Evidence", value: "Partial", tone: "warn" },
-    ],
-    workflow_pack_run: {
-      run_id: "packrun_advisor_brief_req-1",
-      runtime_state: "COMPLETED",
-      review_state: "AWAITING_REVIEW",
-      allowed_review_actions: ["ACCEPT", "REJECT", "REVISE"],
-      supportability_status: "ACTION_REQUIRED",
-      review_pending: true,
-      superseded: false,
-      workflow_authority_owner: "lotus-gateway",
-      current_summary_note:
-        "Run completed but still requires bounded human review before downstream use.",
-      replacement_run_id: null,
-      findings: [
+    client_id: "CIF_1001",
+    base_currency: "USD",
+    booking_center_code: "SG",
+  },
+  as_of_date: "2026-02-24",
+  period: "YTD",
+  report_start_date: "2026-01-01",
+  report_end_date: "2026-02-24",
+  detail_basis: "NET",
+  chart_frequency: "monthly",
+  contribution_dimension: "asset_class",
+  attribution_dimension: "asset_class",
+  benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+  status: "ready",
+  summary: "Gateway advisor brief is ready with source-grounded talking points.",
+  talking_points: [
+    {
+      headline: "Portfolio delivered 5.42% versus benchmark 4.91%.",
+      detail: "Active return was 0.51% over the selected period.",
+      tone: "positive",
+      evidence_refs: [
         {
-          finding_id: "review_pending",
-          severity: "ACTION_REQUIRED",
-          summary: "Run is awaiting review.",
+          metric_label: "Active Return",
+          metric_value: "0.51%",
+          source_surface: "performance.return_path",
+          target_mode: "summary",
+          route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
         },
       ],
     },
-    ai_audit: {
-      task_id: "explain.v1",
-      output_label: "EXPLANATION_ONLY",
-      prompt_version: "foundation.explain.v1",
-      provider_mode: "local_openai_compatible",
-      provider_id: "text.local",
-      adapter_kind: "OPENAI_COMPATIBLE_LOCAL",
-      model_id: "qwen3:8b",
-      generated_at: "2026-02-24T00:00:00Z",
-      stubbed: false,
+  ],
+  recommended_actions: [
+    {
+      label: "Open Return Path",
+      target_mode: "summary",
+      route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
     },
-    ai_evidence: {
-      source_refs: [
-        "lotus-gateway:workbench:PF_1001:performance-summary:YTD",
-        "lotus-ai:task:explain.v1",
-      ],
+    {
+      label: "Review Contribution",
+      target_mode: "analysis",
+      route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
     },
-    warnings: ["AI provider returned bounded narrative only."],
-    partial_failures: [{ source_service: "lotus-ai", error_code: "PROVIDER_PARTIAL", detail: "AI provider unavailable for full narrative generation." }],
+  ],
+  risks_and_exceptions: [],
+  source_metrics: [
+    {
+      label: "Active Return",
+      value: "0.51%",
+      support_label: "YTD Net",
+      target_mode: "summary",
+      route: "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET",
+    },
+  ],
+  supportability: [
+    { label: "Advisor Brief", value: "Ready", tone: "success" },
+    { label: "Evidence", value: "Partial", tone: "warn" },
+  ],
+  workflow_pack_run: {
+    run_id: "packrun_advisor_brief_req-1",
+    runtime_state: "COMPLETED",
+    review_state: "AWAITING_REVIEW",
+    allowed_review_actions: ["ACCEPT", "REJECT", "REVISE"],
+    supportability_status: "ACTION_REQUIRED",
+    review_pending: true,
+    superseded: false,
+    workflow_authority_owner: "lotus-gateway",
+    current_summary_note:
+      "Run completed but still requires bounded human review before downstream use.",
+    replacement_run_id: null,
+    findings: [
+      {
+        finding_id: "review_pending",
+        severity: "ACTION_REQUIRED",
+        summary: "Run is awaiting review.",
+      },
+    ],
+  },
+  ai_audit: {
+    task_id: "explain.v1",
+    output_label: "EXPLANATION_ONLY",
+    prompt_version: "foundation.explain.v1",
+    provider_mode: "local_openai_compatible",
+    provider_id: "text.local",
+    adapter_kind: "OPENAI_COMPATIBLE_LOCAL",
+    model_id: "qwen3:8b",
+    generated_at: "2026-02-24T00:00:00Z",
+    stubbed: false,
+  },
+  ai_evidence: {
+    source_refs: [
+      "lotus-gateway:workbench:PF_1001:performance-summary:YTD",
+      "lotus-ai:task:explain.v1",
+    ],
+  },
+  warnings: ["AI provider returned bounded narrative only."],
+  partial_failures: [
+    {
+      source_service: "lotus-ai",
+      error_code: "PROVIDER_PARTIAL",
+      detail: "AI provider unavailable for full narrative generation.",
+    },
+  ],
+};
+
+vi.mock("../../src/features/workbench/api", () => ({
+  getWorkbenchPerformanceAdvisorBriefClient: vi.fn(async () => readyAdvisorBriefResponse),
+  postWorkbenchPerformanceAdvisorBriefReviewActionClient: vi.fn(async () => ({
+    ...readyAdvisorBriefResponse,
+    correlation_id: "corr-advisor-brief-review",
+    summary: "Advisor brief accepted for bounded downstream workflow use.",
+    workflow_pack_run: {
+      ...readyAdvisorBriefResponse.workflow_pack_run,
+      review_state: "ACCEPTED",
+      allowed_review_actions: [],
+      supportability_status: "READY",
+      review_pending: false,
+      current_summary_note: "Run accepted for bounded downstream workflow use.",
+      findings: [],
+    },
   })),
 }));
 
 describe("PerformanceAdvisorBriefMode", () => {
+  beforeEach(() => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValue(readyAdvisorBriefResponse);
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockResolvedValue({
+      ...readyAdvisorBriefResponse,
+      correlation_id: "corr-advisor-brief-review",
+      summary: "Advisor brief accepted for bounded downstream workflow use.",
+      workflow_pack_run: {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        review_state: "ACCEPTED",
+        allowed_review_actions: [],
+        supportability_status: "READY",
+        review_pending: false,
+        current_summary_note: "Run accepted for bounded downstream workflow use.",
+        findings: [],
+      },
+    });
+  });
+
   it("renders a source-grounded brief with supportability, metrics, and AI contract metadata", async () => {
     const workspace = buildSupportedPerformanceScenario().workspace;
     const onSelectMode = vi.fn();
@@ -375,6 +419,71 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(supportability).toHaveTextContent("Generating");
     await waitFor(() => {
       expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("records a bounded review action and refreshes the run posture in place", async () => {
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Advisor brief review actions")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Reviewed by"), {
+      target: { value: "advisor_1" },
+    });
+    fireEvent.change(screen.getByLabelText("Review reason"), {
+      target: {
+        value: "Advisor brief accepted for bounded downstream workflow use.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Accept Brief" }));
+
+    await waitFor(() => {
+      expect(postWorkbenchPerformanceAdvisorBriefReviewActionClient).toHaveBeenCalledWith(
+        "PF_1001",
+        {
+          period: "YTD",
+          chartFrequency: "monthly",
+          contributionDimension: "asset_class",
+          attributionDimension: "asset_class",
+          detailBasis: "NET",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-02-24",
+        },
+        {
+          action_type: "ACCEPT",
+          reviewed_by: "advisor_1",
+          reason: "Advisor brief accepted for bounded downstream workflow use.",
+        }
+      );
+      const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent(
+        "Run accepted for bounded downstream workflow use."
+      );
+      expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
+        "Advisor brief accepted for bounded downstream workflow use."
+      );
+      expect(screen.queryByLabelText("Advisor brief review actions")).not.toBeInTheDocument();
     });
   });
 });

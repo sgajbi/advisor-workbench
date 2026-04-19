@@ -9310,6 +9310,30 @@ a:hover {
   line-height: 1.4;
 }
 
+.performance-advisor-brief-review-actions {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.35rem;
+}
+
+.performance-advisor-brief-review-actions-copy {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.performance-advisor-brief-review-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.performance-advisor-brief-review-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
 .performance-advisor-brief-empty-note {
   padding: 0.95rem 1rem;
   background: rgba(248, 250, 252, 0.9);
