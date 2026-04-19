@@ -17,6 +17,7 @@ import {
   getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummaryClient,
   getWorkbenchPerformanceWorkspaceSummary,
+  postWorkbenchPerformanceAdvisorBriefReviewActionClient,
 } from "../../src/features/workbench/api";
 
 const expectedBaseUrl = "/api/bff/api/v1";
@@ -924,6 +925,96 @@ describe("workbench api", () => {
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+    );
+  });
+
+  it("posts advisor brief review actions through the client-side gateway seam", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-advisor-brief-review",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            portfolio: {
+              portfolio_id: "PF_1001",
+              client_id: "CIF_1",
+              base_currency: "USD",
+              booking_center_code: "SG",
+            },
+            as_of_date: "2026-02-24",
+            period: "YTD",
+            report_start_date: "2026-01-01",
+            report_end_date: "2026-02-24",
+            detail_basis: "NET",
+            chart_frequency: "monthly",
+            contribution_dimension: "asset_class",
+            attribution_dimension: "asset_class",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            status: "ready",
+            summary: "Advisor brief accepted.",
+            talking_points: [],
+            recommended_actions: [],
+            risks_and_exceptions: [],
+            source_metrics: [],
+            supportability: [],
+            workflow_pack_run: {
+              run_id: "packrun_advisor_brief_req-1",
+              runtime_state: "COMPLETED",
+              review_state: "ACCEPTED",
+              allowed_review_actions: [],
+              supportability_status: "READY",
+              review_pending: false,
+              superseded: false,
+              workflow_authority_owner: "lotus-gateway",
+              current_summary_note:
+                "Run accepted for bounded downstream workflow use.",
+              replacement_run_id: null,
+              findings: [],
+            },
+            ai_audit: {},
+            ai_evidence: {},
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await postWorkbenchPerformanceAdvisorBriefReviewActionClient(
+      "PF_1001",
+      {
+        period: "YTD",
+        chartFrequency: "monthly",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        detailBasis: "NET",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        reportStartDate: "2026-01-01",
+        reportEndDate: "2026-02-24",
+      },
+      {
+        action_type: "ACCEPT",
+        reviewed_by: "advisor_1",
+        reason: "Advisor brief accepted for bounded downstream workflow use.",
+      }
+    );
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief/review-actions?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action_type: "ACCEPT",
+          reviewed_by: "advisor_1",
+          reason: "Advisor brief accepted for bounded downstream workflow use.",
+        }),
+        cache: "no-store",
+      }
     );
   });
 

@@ -524,6 +524,20 @@ export type WorkbenchAdvisorBriefWorkflowPackRunFinding = {
   summary: string;
 };
 
+export type WorkbenchAdvisorBriefWorkflowPackRunReviewActionType =
+  | "ACCEPT"
+  | "REJECT"
+  | "REVISE"
+  | "SUPERSEDE"
+  | "ABANDON";
+
+export type WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest = {
+  action_type: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType;
+  reviewed_by: string;
+  reason: string;
+  replacement_run_id?: string | null;
+};
+
 export type WorkbenchAdvisorBriefWorkflowPackRun = {
   run_id: string;
   runtime_state: string;
