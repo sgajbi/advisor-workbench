@@ -518,6 +518,40 @@ export type WorkbenchAdvisorBriefSupportabilityItem = {
   reason?: string | null;
 };
 
+export type WorkbenchAdvisorBriefWorkflowPackRunFinding = {
+  finding_id: string;
+  severity: string;
+  summary: string;
+};
+
+export type WorkbenchAdvisorBriefWorkflowPackRunReviewActionType =
+  | "ACCEPT"
+  | "REJECT"
+  | "REVISE"
+  | "SUPERSEDE"
+  | "ABANDON";
+
+export type WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest = {
+  action_type: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType;
+  reviewed_by: string;
+  reason: string;
+  replacement_run_id?: string | null;
+};
+
+export type WorkbenchAdvisorBriefWorkflowPackRun = {
+  run_id: string;
+  runtime_state: string;
+  review_state: string;
+  allowed_review_actions: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType[];
+  supportability_status: string;
+  review_pending: boolean;
+  superseded: boolean;
+  workflow_authority_owner: string;
+  current_summary_note: string;
+  replacement_run_id?: string | null;
+  findings: WorkbenchAdvisorBriefWorkflowPackRunFinding[];
+};
+
 export type WorkbenchPerformanceAdvisorBrief = {
   correlation_id: string;
   contract_version: string;
@@ -539,6 +573,7 @@ export type WorkbenchPerformanceAdvisorBrief = {
   risks_and_exceptions: WorkbenchAdvisorBriefNarrativeItem[];
   source_metrics: WorkbenchAdvisorBriefSourceMetric[];
   supportability: WorkbenchAdvisorBriefSupportabilityItem[];
+  workflow_pack_run?: WorkbenchAdvisorBriefWorkflowPackRun | null;
   ai_audit: {
     task_id?: string;
     output_label?: string;

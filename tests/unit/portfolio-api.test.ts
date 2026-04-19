@@ -747,8 +747,8 @@ describe("portfolio api", () => {
       jsonResponse({
         reporting_currency: "USD",
         look_through: {
-          requested_mode: "full",
-          effective_mode: "full",
+          requested_mode: "prefer_look_through",
+          effective_mode: "prefer_look_through",
           applied: true,
         },
         views: [{ dimension: "region", buckets: [] }],
@@ -759,15 +759,15 @@ describe("portfolio api", () => {
     const payload = await getPortfolioAllocationViews("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       reportingCurrency: "USD",
-      lookThroughMode: "full",
+      lookThroughMode: "prefer_look_through",
     });
 
-    expect(payload?.look_through?.effective_mode).toBe("full");
+    expect(payload?.look_through?.effective_mode).toBe("prefer_look_through");
     const requestUrl = String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "");
     expect(requestUrl).toContain("/allocations?");
     expect(requestUrl).toContain("as_of_date=2026-03-28");
     expect(requestUrl).toContain("reporting_currency=USD");
-    expect(requestUrl).toContain("look_through_mode=full");
+    expect(requestUrl).toContain("look_through_mode=prefer_look_through");
   });
 
   it("reuses cached BFF responses for identical requests", async () => {

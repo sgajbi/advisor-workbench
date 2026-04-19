@@ -215,6 +215,7 @@ export async function validateAdvisorBriefPanel(
     benchmarkCode,
     timeoutMs,
     screenshotRegisteredPanel,
+    performAcceptReviewActionProof = false,
   }
 ) {
   await page.goto(
@@ -246,6 +247,27 @@ export async function validateAdvisorBriefPanel(
     buttonCount: sourceMetricButtons,
   });
   await screenshotRegisteredPanel(page, "performance.advisor_brief");
+
+  if (performAcceptReviewActionProof) {
+    const reviewRegion = page.getByLabel("Advisor brief review actions");
+    await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
+    await reviewRegion.getByLabel("Reviewed by").fill("live.validator.ui");
+    await reviewRegion
+      .getByLabel("Review reason")
+      .fill("Live canonical validator proving the Workbench ACCEPT review path.");
+    await reviewRegion.getByRole("button", { name: "Accept Brief" }).click();
+    await expect(
+      page.getByText("Run is supportable through the current bounded workflow-pack ledger posture.")
+    ).toBeVisible({ timeout: timeoutMs });
+    await expect(page.getByText("AI Review")).toBeVisible({ timeout: timeoutMs });
+    await expect(page.getByText("ACCEPTED")).toBeVisible({ timeout: timeoutMs });
+    summary.uiChecks.push({
+      description: "Advisor brief ACCEPT review action",
+      kind: "workflow-pack-review-action",
+      actionType: "ACCEPT",
+      state: "accepted",
+    });
+  }
 }
 
 export async function validateRiskPanel(

@@ -7,7 +7,10 @@ import {
   WorkbenchSummaryToolbar,
 } from "@/design-system";
 
-import { getPortfolioAllocationViews } from "../api";
+import {
+  getPortfolioAllocationViews,
+  type PortfolioLookThroughMode,
+} from "../api";
 import { formatCurrency, formatPct } from "../formatters";
 import type {
   PortfolioAllocationLookThrough,
@@ -39,8 +42,6 @@ const ALLOCATION_COLORS = [
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
 type AllocationDimension = (typeof DIMENSIONS)[number]["key"];
-type LookThroughMode = "direct_only" | "full";
-
 function handleInteractiveKeyPress(
   event: KeyboardEvent<Element>,
   onActivate: () => void
@@ -73,13 +74,13 @@ export default function PortfolioAllocationPanel({
   const [resolvedAllocationViews, setResolvedAllocationViews] =
     useState<PortfolioAllocationView[]>(allocationViews);
   const [lookThroughRequestedMode, setLookThroughRequestedMode] =
-    useState<LookThroughMode>("direct_only");
+    useState<PortfolioLookThroughMode>("direct_only");
   const [lookThroughEffectiveMode, setLookThroughEffectiveMode] =
-    useState<LookThroughMode>("direct_only");
+    useState<PortfolioLookThroughMode>("direct_only");
   const [lookThroughSupported, setLookThroughSupported] = useState(false);
   const [lookThroughBusy, setLookThroughBusy] = useState(false);
   const [lookThroughProbeComplete, setLookThroughProbeComplete] = useState(false);
-  const [cachedFullResponse, setCachedFullResponse] = useState<{
+  const [cachedLookThroughResponse, setCachedLookThroughResponse] = useState<{
     views: PortfolioAllocationView[];
     lookThrough: PortfolioAllocationLookThrough | null;
   } | null>(null);
@@ -104,7 +105,7 @@ export default function PortfolioAllocationPanel({
     setLookThroughSupported(false);
     setLookThroughBusy(true);
     setLookThroughProbeComplete(false);
-    setCachedFullResponse(null);
+    setCachedLookThroughResponse(null);
 
     void Promise.all([
       getPortfolioAllocationViews(portfolioId, {
@@ -115,9 +116,9 @@ export default function PortfolioAllocationPanel({
       getPortfolioAllocationViews(portfolioId, {
         asOfDate,
         reportingCurrency,
-        lookThroughMode: "full",
+        lookThroughMode: "prefer_look_through",
       }),
-    ]).then(([directResponse, fullResponse]) => {
+    ]).then(([directResponse, lookThroughResponse]) => {
       if (cancelled) {
         return;
       }
@@ -130,13 +131,13 @@ export default function PortfolioAllocationPanel({
       );
 
       const supportsExpandedLookThrough = isExpandedLookThroughSupported(
-        fullResponse?.look_through ?? null
+        lookThroughResponse?.look_through ?? null
       );
       setLookThroughSupported(supportsExpandedLookThrough);
-      if (supportsExpandedLookThrough && fullResponse?.views?.length) {
-        setCachedFullResponse({
-          views: fullResponse.views,
-          lookThrough: fullResponse.look_through ?? null,
+      if (supportsExpandedLookThrough && lookThroughResponse?.views?.length) {
+        setCachedLookThroughResponse({
+          views: lookThroughResponse.views,
+          lookThrough: lookThroughResponse.look_through ?? null,
         });
       }
       setLookThroughProbeComplete(true);
@@ -168,13 +169,14 @@ export default function PortfolioAllocationPanel({
     selectedAllocation?.dimension === activeDimension ? selectedAllocation.bucket : null;
 
   const lookThroughLabel =
-    lookThroughRequestedMode === "full" && lookThroughEffectiveMode === "full"
+    lookThroughRequestedMode === "prefer_look_through" &&
+    lookThroughEffectiveMode === "prefer_look_through"
       ? "Expanded exposure"
       : "Direct holdings";
 
   const syncAllocationViewState = (
     nextViews: PortfolioAllocationView[],
-    nextRequestedMode: LookThroughMode,
+    nextRequestedMode: PortfolioLookThroughMode,
     nextLookThrough: PortfolioAllocationLookThrough | null | undefined
   ) => {
     setResolvedAllocationViews(nextViews);
@@ -198,16 +200,18 @@ export default function PortfolioAllocationPanel({
   };
 
   const toggleLookThrough = async () => {
-    const nextMode: LookThroughMode =
-      lookThroughRequestedMode === "full" ? "direct_only" : "full";
+    const nextMode: PortfolioLookThroughMode =
+      lookThroughRequestedMode === "prefer_look_through"
+        ? "direct_only"
+        : "prefer_look_through";
     setLookThroughBusy(true);
 
     try {
       const response =
-        nextMode === "full" && cachedFullResponse
+        nextMode === "prefer_look_through" && cachedLookThroughResponse
           ? {
-              views: cachedFullResponse.views,
-              look_through: cachedFullResponse.lookThrough,
+              views: cachedLookThroughResponse.views,
+              look_through: cachedLookThroughResponse.lookThrough,
             }
           : await getPortfolioAllocationViews(portfolioId, {
               asOfDate,
@@ -269,10 +273,10 @@ export default function PortfolioAllocationPanel({
             className="portfolio-allocation-toggle"
             disabled={!lookThroughSupported || lookThroughBusy}
             aria-disabled={!lookThroughSupported || lookThroughBusy}
-            aria-pressed={lookThroughRequestedMode === "full"}
+            aria-pressed={lookThroughRequestedMode === "prefer_look_through"}
             aria-label={
               lookThroughSupported
-                ? `Look-through ${lookThroughRequestedMode === "full" ? "on" : "off"}`
+                ? `Look-through ${lookThroughRequestedMode === "prefer_look_through" ? "on" : "off"}`
                 : lookThroughProbeComplete
                   ? "Look-through unavailable for current portfolio snapshot"
                   : "Checking look-through support"
@@ -288,7 +292,9 @@ export default function PortfolioAllocationPanel({
               void toggleLookThrough();
             }}
           >
-            {lookThroughRequestedMode === "full" ? "Look-through on" : "Look-through off"}
+            {lookThroughRequestedMode === "prefer_look_through"
+              ? "Look-through on"
+              : "Look-through off"}
           </button>
         </div>
       </WorkbenchSummaryToolbar>
@@ -620,9 +626,9 @@ function formatDimensionLabel(value: string): string {
 
 function normalizeLookThroughMode(
   value: string | null | undefined,
-  fallback: LookThroughMode = "direct_only"
-): LookThroughMode {
-  return value === "full" ? "full" : fallback;
+  fallback: PortfolioLookThroughMode = "direct_only"
+): PortfolioLookThroughMode {
+  return value === "prefer_look_through" ? "prefer_look_through" : fallback;
 }
 
 function isExpandedLookThroughSupported(
@@ -631,7 +637,9 @@ function isExpandedLookThroughSupported(
   if (!lookThrough) {
     return false;
   }
-  return lookThrough.applied || lookThrough.effective_mode === "full";
+  return (
+    lookThrough.applied || lookThrough.effective_mode === "prefer_look_through"
+  );
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {

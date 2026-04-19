@@ -83,6 +83,7 @@ describe("live validation contract modules", () => {
       expect(shotIndex).toContain("performance.risk.snapshot");
       expect(shotIndex).toContain(summaryPath);
       expect(shotIndex).toContain("2026-04-10");
+      expect(persistedSummary.workflowPackChecks).toEqual([]);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

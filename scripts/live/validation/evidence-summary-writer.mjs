@@ -26,6 +26,7 @@ export function createValidationSummary({
     gatewayBaseUrl,
     dns: [],
     apiChecks: [],
+    workflowPackChecks: [],
     uiChecks: [],
     calculationChecks: [],
     panelClassifications: [],

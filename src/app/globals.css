@@ -9230,6 +9230,167 @@ a:hover {
   border-top: 1px solid rgba(23, 32, 43, 0.08);
 }
 
+.domain-products-page {
+  --domain-products-panel-radius: 8px;
+}
+
+.domain-products-overview,
+.domain-products-grid,
+.domain-products-dependencies,
+.domain-products-graph,
+.domain-products-issues {
+  display: grid;
+  gap: 12px;
+}
+
+.domain-products-overview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.domain-products-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.domain-products-graph {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.domain-products-summary-tile,
+.domain-products-card,
+.domain-products-row,
+.domain-products-state,
+.domain-products-loading {
+  border: 1px solid var(--border);
+  border-radius: var(--domain-products-panel-radius);
+  background: var(--surface-primary);
+}
+
+.domain-products-summary-tile {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  padding: 16px;
+  align-content: center;
+}
+
+.domain-products-summary-tile strong {
+  font-size: var(--type-metric-l-size);
+  line-height: var(--type-metric-l-line-height);
+  font-variant-numeric: var(--type-financial-numeric);
+}
+
+.domain-products-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+}
+
+.domain-products-card-header,
+.domain-products-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.domain-products-card-header {
+  align-items: flex-start;
+}
+
+.domain-products-card-header h2 {
+  margin: 4px 0;
+  color: var(--text);
+  font-size: var(--type-panel-title-size);
+  line-height: var(--type-panel-title-line-height);
+}
+
+.domain-products-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.domain-products-facts div {
+  min-width: 0;
+}
+
+.domain-products-facts dt {
+  color: var(--text-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  line-height: var(--type-label-line-height);
+}
+
+.domain-products-facts dd {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  overflow-wrap: anywhere;
+}
+
+.domain-products-row {
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.domain-products-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.domain-products-state,
+.domain-products-loading {
+  padding: 16px;
+  color: var(--text);
+}
+
+.domain-products-state-warn {
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.domain-products-state-danger {
+  border-color: var(--danger);
+  background: var(--status-danger-bg);
+  color: var(--danger);
+}
+
+@media (max-width: 960px) {
+  .domain-products-overview,
+  .domain-products-grid,
+  .domain-products-graph {
+    grid-template-columns: 1fr;
+  }
+
+  .domain-products-card-header,
+  .domain-products-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .domain-products-chip-row {
+    justify-content: flex-start;
+  }
+}
+
+.performance-advisor-brief-supportability-identity {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-supportability-detail {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .performance-advisor-brief-supportability-notes {
   display: grid;
   gap: 0.45rem;
@@ -9308,6 +9469,30 @@ a:hover {
   color: #6a522a;
   font-size: 0.75rem;
   line-height: 1.4;
+}
+
+.performance-advisor-brief-review-actions {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.35rem;
+}
+
+.performance-advisor-brief-review-actions-copy {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.performance-advisor-brief-review-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.performance-advisor-brief-review-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
 }
 
 .performance-advisor-brief-empty-note {

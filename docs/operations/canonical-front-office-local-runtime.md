@@ -97,9 +97,14 @@ That script performs:
 8. canonical `lotus-workbench` startup on port `3000`
 
 The command exits after the stack is usable. It does not block on browser validation.
+Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
+not considered success.
 
 Use this path when you want to bring the product up quickly, inspect it manually, or restart the
 runtime without waiting for the full validation lane to finish.
+
+The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed seed needs a longer
+drain window than the default `900` seconds.
 
 ## Canonical bring-up with validation
 
@@ -163,6 +168,7 @@ Validation layers:
    - risk rolling
    - risk attribution
    - advisor brief
+   - advisor-brief workflow-pack review actions for `ACCEPT`, `REVISE`, and `SUPERSEDE`
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
@@ -183,6 +189,11 @@ that directory instead. The summary records structured screenshot evidence for e
 stable file name, absolute path, route, panel identifier, portfolio ID, benchmark ID, as-of date,
 and demo readiness state. The validator also writes `SHOT-INDEX.md` in the screenshot directory so
 demo reviewers can quickly identify the captured product surfaces.
+
+The machine-readable summary also records `workflowPackChecks` for the advisor-brief live path.
+Those checks prove initial workflow-pack run visibility plus bounded `ACCEPT`, `REVISE`, and
+`SUPERSEDE` review transitions with replacement lineage through the live
+`lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract chain.
 
 Machine-readable validation evidence is written to:
 
@@ -292,6 +303,8 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - talking points render
   - source metrics render
   - source evidence actions render
+  - the Workbench `Accept Brief` action records a bounded review transition through the live
+    gateway and lotus-ai path
 - Risk:
   - `Risk Snapshot`
   - `Drawdown`

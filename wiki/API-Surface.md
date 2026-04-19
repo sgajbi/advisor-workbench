@@ -6,6 +6,7 @@
 - `/portfolios`
 - `/intake`
 - `/performance`
+- `/data-products`
 - `/workbench`
 - `/workbench/{portfolioId}`
 - `/api/bff/*`
@@ -32,6 +33,8 @@ promote dormant labels into product ownership just because historical route file
 ## Current contract notes
 
 - risk is currently served through `/performance` route mode selection, not a separate top-level URL
+- data-product discovery is served through `/data-products` and consumes gateway
+  `/api/v1/domain-products/*` APIs through the internal BFF only
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
 - canonical product proof should use `workbench.dev.lotus`, not ad hoc localhost URLs
 - shell navigation support is narrower than the historical route set: `Proposal` and `Advisory`
@@ -57,6 +60,12 @@ Performance risk mode:
 
 ```txt
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
+```
+
+Data products:
+
+```txt
+http://workbench.dev.lotus/data-products
 ```
 
 Capability-gated navigation truth:

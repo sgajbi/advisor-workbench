@@ -36,9 +36,13 @@ describe("canonical live validation script", () => {
       "utf8"
     );
 
+    expect(script).toContain("[int]$SeedWaitSeconds = 900");
+    expect(script).toContain("$global:LASTEXITCODE = 0");
+    expect(script).toContain("Command failed with exit code $LASTEXITCODE");
     expect(script).toContain("--portfolio-id $PortfolioId");
     expect(script).toContain("--end-date 2026-04-10");
     expect(script).toContain("--benchmark-start-date 2025-01-06");
+    expect(script).toContain("--wait-seconds $SeedWaitSeconds");
     expect(script).toContain("[string]$ScreenshotDirectory");
     expect(script).toContain("ScreenshotDirectory = $ScreenshotDirectory");
   });
@@ -60,6 +64,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("/risk/drawdown?");
     expect(script).toContain("/risk/rolling?");
     expect(script).toContain("/risk/attribution?");
+    expect(script).toContain('from "./validation/workflow-pack-proof.mjs"');
+    expect(script).toContain("validateAdvisorBriefWorkflowPackReviewChain");
+    expect(script).toContain("workflowPackChecks.push");
     expect(calculationModule).toContain("calculationChecks");
     expect(calculationModule).toContain("Contribution total does not reconcile with net portfolio return");
     expect(calculationModule).toContain("Historical risk attribution residual is too high");
@@ -203,6 +210,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("tableByExactLabel");
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Observation Trail");
+    expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
+    expect(browserWorkflowModule).toContain("Accept Brief");
+    expect(browserWorkflowModule).toContain("bounded workflow-pack ledger posture");
     expect(browserWorkflowModule).toContain("/^Performance Overview/");
     expect(browserWorkflowModule).toContain("/^Performance Analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
@@ -217,5 +227,7 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("ScreenshotDirectory");
     expect(runbook).toContain("structured screenshot evidence");
     expect(runbook).toContain("SHOT-INDEX.md");
+    expect(runbook).toContain("workflowPackChecks");
+    expect(runbook).toContain("ACCEPT`, `REVISE`, and");
   });
 });

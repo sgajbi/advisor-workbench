@@ -42,6 +42,7 @@ export type PerformanceAdvisorBriefSupportabilityItem = {
   label: string;
   value: string;
   tone: "success" | "warn" | "danger";
+  detail?: string | null;
 };
 
 export type PerformanceAdvisorBriefAudit = {

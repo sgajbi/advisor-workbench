@@ -1,5 +1,6 @@
 import {
   WorkbenchAnalytics,
+  WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
   WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceAttributionTrend,
   WorkbenchOverview,
@@ -361,6 +362,41 @@ export async function getWorkbenchPerformanceAdvisorBriefClient(
     "performance advisor brief",
     buildPerformanceWorkspaceQuery(params)
   );
+}
+
+export async function postWorkbenchPerformanceAdvisorBriefReviewActionClient(
+  portfolioId: string,
+  params: {
+    period: string;
+    chartFrequency: string;
+    contributionDimension: string;
+    attributionDimension: string;
+    detailBasis: string;
+    benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
+  },
+  payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest
+): Promise<WorkbenchPerformanceAdvisorBrief> {
+  const response = await fetch(
+    buildWorkbenchUrl(
+      "client",
+      `/workbench/${portfolioId}/performance/advisor-brief/review-actions`,
+      buildPerformanceWorkspaceQuery(params)
+    ),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Failed to record performance advisor brief review action (${response.status})`
+    );
+  }
+  return (await response.json()) as WorkbenchPerformanceAdvisorBrief;
 }
 
 function buildRiskWorkspaceQuery(params: {

@@ -15,6 +15,7 @@
 
 - primary product client for Lotus
 - Portfolio and Performance are the most mature active front-office surfaces
+- `/data-products` provides gateway-backed domain-product discovery and live trust posture
 - recommendations and proposals remain compatibility routes, not the main supported shell apps
 - shell navigation currently treats `Proposal` and `Advisory` as disabled capability-gated entries
 

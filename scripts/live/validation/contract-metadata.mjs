@@ -144,7 +144,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       panelId: "performance.evidence",
       owningService: "lotus-gateway",
       gatewayEndpoint: null,
-      requiredSupportState: "unavailable",
+      requiredSupportState: "partial",
       route: "/performance?portfolioId={portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
       screenshotName: "performance-evidence-live.png",

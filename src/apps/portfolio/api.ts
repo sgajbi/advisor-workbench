@@ -65,6 +65,8 @@ type PortfolioTransactionLedgerResponse = {
   transactions: PortfolioWorkspace["recent_transactions"];
 };
 
+export type PortfolioLookThroughMode = "direct_only" | "prefer_look_through";
+
 type PortfolioIncomeSummaryResponse = NonNullable<PortfolioWorkspace["income_summary"]>;
 
 type PortfolioActivitySummaryResponse = NonNullable<PortfolioWorkspace["activity_summary"]>;
@@ -427,7 +429,7 @@ export async function getPortfolioAllocationViews(
   params: {
     asOfDate?: string;
     reportingCurrency?: string;
-    lookThroughMode?: "direct_only" | "full";
+    lookThroughMode?: PortfolioLookThroughMode;
   } = {}
 ): Promise<PortfolioAllocationResponse | null> {
   try {

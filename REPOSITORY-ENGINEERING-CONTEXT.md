@@ -40,7 +40,9 @@ Current repository posture:
 1. the platform is converging on a premium private-banking product experience standard,
 2. `lotus-workbench` uses `lotus-gateway` as its primary backend contract,
 3. the `Portfolio` and `Performance` surfaces are the most mature live workflows,
-4. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+4. `/data-products` provides self-serve gateway-backed domain-product catalog, dependency, and
+   live trust discovery for RFC-0088,
+5. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
@@ -76,7 +78,9 @@ Boundary rules:
 1. UI features must be backed by supported gateway functionality,
 2. direct raw service consumption is not the default pattern,
 3. presentation logic may shape or prioritize information, but domain authority stays upstream,
-4. visual polish should not introduce fake data, duplicated meaning, or unsupported workflow states.
+4. visual polish should not introduce fake data, duplicated meaning, or unsupported workflow states,
+5. domain-product discovery UI must consume gateway domain-product APIs only and must render
+   unavailable, stale, partial, blocked, and error trust states truthfully.
 
 ## Repo-Native Commands
 
@@ -168,6 +172,7 @@ Update this document when:
 4. dominant design-system or shell patterns change,
 5. current product-surface maturity or rollout posture materially changes,
 6. active versus legacy route posture changes.
+7. domain-product discovery route, gateway endpoint usage, or trust-state rendering changes.
 
 ## Cross-Links
 
