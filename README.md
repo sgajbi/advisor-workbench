@@ -52,12 +52,14 @@ Boundary rules that matter:
 2. `lotus-workbench` uses `lotus-gateway` as its primary backend contract.
 3. Canonical local product proof uses the governed front-office runtime and seeded portfolio
    `PB_SG_GLOBAL_BAL_001`.
-4. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
+4. `Data Products` is available at `/data-products` for gateway-backed catalog, dependency, and
+   live trust discovery.
+5. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
    the primary supported front-office app surfaces.
-5. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
+6. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
    active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
    bootstrap contract.
-6. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
+7. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
    `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
 
 ## Architecture At A Glance
@@ -72,6 +74,8 @@ Current main surfaces:
   `/performance` with performance, risk, advisor-brief, and evidence modes
 - `workbench`
   `/workbench/*` compatibility and portfolio-linked workspace entry
+- `data-products`
+  `/data-products` self-serve catalog, dependency, and live trust discovery through gateway
 - `api/bff`
   internal Next.js proxy bridge to `lotus-gateway`
 
@@ -161,6 +165,7 @@ Quick local browser-facing path:
 http://workbench.dev.lotus/portfolio
 http://workbench.dev.lotus/performance
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
+http://workbench.dev.lotus/data-products
 ```
 
 ## Common Commands
@@ -214,9 +219,11 @@ Important current product and route truths:
    the main supported shell paths
 4. the internal `/api/bff/*` route proxies to `lotus-gateway` and preserves gateway-first
    integration posture
-5. shell navigation availability is contract-driven and currently exposes disabled `Proposal` and
+5. `/data-products` consumes only gateway domain-product discovery and trust-certification
+   endpoints; it must not read platform files directly or fabricate trust posture
+6. shell navigation availability is contract-driven and currently exposes disabled `Proposal` and
    `Advisory` items rather than live product routes
-6. evidence-oriented performance views must be documented truthfully as runtime-governed product
+7. evidence-oriented performance views must be documented truthfully as runtime-governed product
    behavior, not as a promise of separate unsupported backend ownership inside Workbench
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
