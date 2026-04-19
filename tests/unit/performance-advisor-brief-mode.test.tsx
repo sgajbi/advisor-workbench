@@ -496,4 +496,58 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(screen.queryByLabelText("Advisor brief review actions")).not.toBeInTheDocument();
     });
   });
+
+  it("shows superseded workflow-pack lineage without treating the replaced run as active-ready posture", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockReset().mockResolvedValue({
+      ...readyAdvisorBriefResponse,
+      correlation_id: "corr-advisor-brief-superseded",
+      summary: "A newer bounded advisor brief has replaced this run.",
+      workflow_pack_run: {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        review_state: "ACCEPTED",
+        allowed_review_actions: [],
+        supportability_status: "READY",
+        review_pending: false,
+        superseded: true,
+        current_summary_note: "Run was superseded by a newer bounded advisor-brief run.",
+        replacement_run_id: "packrun_advisor_brief_req-2",
+        findings: [],
+      },
+    });
+
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent("AI Review");
+      expect(supportability).toHaveTextContent("ACCEPTED");
+      expect(supportability).toHaveTextContent(
+        "Supportability READY • Superseded by packrun_advisor_brief_req-2"
+      );
+      expect(supportability).toHaveTextContent(
+        "Run was superseded by a newer bounded advisor-brief run."
+      );
+      expect(supportability).toHaveTextContent(
+        "Superseded by workflow-pack run packrun_advisor_brief_req-2."
+      );
+      expect(screen.queryByLabelText("Advisor brief review actions")).not.toBeInTheDocument();
+    });
+  });
 });

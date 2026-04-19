@@ -315,11 +315,13 @@ function buildWorkflowPackRunDetail(
 function buildWorkflowPackReviewDetail(
   workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
 ): string {
-  const detailParts = [
-    `Supportability ${normalizeWorkflowPackReviewValue(workflowPackRun.supportability_status)}`,
-  ];
-  if (workflowPackRun.superseded && workflowPackRun.replacement_run_id) {
-    detailParts.push(`Superseded by ${workflowPackRun.replacement_run_id}`);
+  const detailParts = [`Supportability ${normalizeWorkflowPackReviewValue(workflowPackRun.supportability_status)}`];
+  if (workflowPackRun.superseded) {
+    detailParts.push(
+      workflowPackRun.replacement_run_id
+        ? `Superseded by ${workflowPackRun.replacement_run_id}`
+        : "Superseded"
+    );
   }
   return detailParts.join(" • ");
 }
@@ -341,6 +343,9 @@ function normalizeWorkflowPackRuntimeTone(
 function normalizeWorkflowPackReviewTone(
   workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
 ): "success" | "warn" | "danger" {
+  if (workflowPackRun.superseded) {
+    return "warn";
+  }
   if (
     workflowPackRun.review_state === "REJECTED" ||
     workflowPackRun.review_state === "ABANDONED" ||

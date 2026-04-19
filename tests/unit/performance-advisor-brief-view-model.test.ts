@@ -636,4 +636,76 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect.arrayContaining(["lotus-ai:workflow-pack-run:packrun_advisor_brief_req-1"])
     );
   });
+
+  it("marks superseded workflow-pack runs as non-active posture and preserves replacement lineage", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-workflow-pack-superseded",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "ready",
+        summary: "Superseded workflow-pack backed advisor brief.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
+        workflow_pack_run: {
+          run_id: "packrun_advisor_brief_req-1",
+          runtime_state: "COMPLETED",
+          review_state: "ACCEPTED",
+          allowed_review_actions: [],
+          supportability_status: "READY",
+          review_pending: false,
+          superseded: true,
+          workflow_authority_owner: "lotus-gateway",
+          current_summary_note: "Run was superseded by a newer bounded advisor-brief run.",
+          replacement_run_id: "packrun_advisor_brief_req-2",
+          findings: [],
+        },
+        ai_audit: { stubbed: false, source_refs: [] },
+        ai_evidence: { source_refs: [] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.supportability).toEqual(
+      expect.arrayContaining([
+        {
+          label: "AI Review",
+          value: "ACCEPTED",
+          tone: "warn",
+          detail: "Supportability READY • Superseded by packrun_advisor_brief_req-2",
+        },
+      ])
+    );
+    expect(brief.reviewNotes).toEqual(
+      expect.arrayContaining([
+        "Run was superseded by a newer bounded advisor-brief run.",
+        "Superseded by workflow-pack run packrun_advisor_brief_req-2.",
+      ])
+    );
+  });
 });
