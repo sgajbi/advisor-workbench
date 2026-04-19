@@ -126,11 +126,13 @@ function normalizeGatewaySupportability(
       label: "AI Run",
       value: normalizeWorkflowPackRuntimeValue(advisorBrief.workflow_pack_run.runtime_state),
       tone: normalizeWorkflowPackRuntimeTone(advisorBrief.workflow_pack_run.runtime_state),
+      detail: buildWorkflowPackRunDetail(advisorBrief.workflow_pack_run),
     },
     {
       label: "AI Review",
       value: normalizeWorkflowPackReviewValue(advisorBrief.workflow_pack_run.review_state),
       tone: normalizeWorkflowPackReviewTone(advisorBrief.workflow_pack_run),
+      detail: buildWorkflowPackReviewDetail(advisorBrief.workflow_pack_run),
     },
   ];
 }
@@ -300,6 +302,26 @@ function normalizeWorkflowPackRuntimeValue(runtimeState: string): string {
 
 function normalizeWorkflowPackReviewValue(reviewState: string): string {
   return reviewState.replaceAll("_", " ");
+}
+
+function buildWorkflowPackRunDetail(
+  workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
+): string {
+  return [workflowPackRun.run_id, `Authority ${workflowPackRun.workflow_authority_owner}`].join(
+    " • "
+  );
+}
+
+function buildWorkflowPackReviewDetail(
+  workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
+): string {
+  const detailParts = [
+    `Supportability ${normalizeWorkflowPackReviewValue(workflowPackRun.supportability_status)}`,
+  ];
+  if (workflowPackRun.superseded && workflowPackRun.replacement_run_id) {
+    detailParts.push(`Superseded by ${workflowPackRun.replacement_run_id}`);
+  }
+  return detailParts.join(" • ");
 }
 
 function normalizeWorkflowPackRuntimeTone(

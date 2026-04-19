@@ -44,7 +44,14 @@ export default function LotusSupportabilityPanel({
             <div className="performance-advisor-brief-supportability-grid">
               {workflowPackStateItems.map((item) => (
                 <div key={item.label} className="performance-advisor-brief-supportability-row">
-                  <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+                  <div className="performance-advisor-brief-supportability-identity">
+                    <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+                    {item.detail ? (
+                      <span className="performance-advisor-brief-supportability-detail">
+                        {item.detail}
+                      </span>
+                    ) : null}
+                  </div>
                   <span
                     className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
                   >
@@ -62,7 +69,14 @@ export default function LotusSupportabilityPanel({
             <div className="performance-advisor-brief-supportability-grid">
               {reviewItems.map((item) => (
                 <div key={item.label} className="performance-advisor-brief-supportability-row">
-                  <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+                  <div className="performance-advisor-brief-supportability-identity">
+                    <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+                    {item.detail ? (
+                      <span className="performance-advisor-brief-supportability-detail">
+                        {item.detail}
+                      </span>
+                    ) : null}
+                  </div>
                   <span
                     className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
                   >

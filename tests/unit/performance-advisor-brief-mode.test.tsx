@@ -190,8 +190,11 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Review items");
       expect(supportability).toHaveTextContent("Evidence");
       expect(supportability).toHaveTextContent("Partial");
+      expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
+      expect(supportability).toHaveTextContent("Authority lotus-gateway");
       expect(supportability).toHaveTextContent("AI Review");
       expect(supportability).toHaveTextContent("AWAITING REVIEW");
+      expect(supportability).toHaveTextContent("Supportability ACTION REQUIRED");
       expect(supportability).toHaveTextContent(
         "Run completed but still requires bounded human review before downstream use."
       );
@@ -479,8 +482,11 @@ describe("PerformanceAdvisorBriefMode", () => {
       const supportability = screen.getByLabelText("Advisor brief supportability");
       expect(supportability).toHaveTextContent("AI Run");
       expect(supportability).toHaveTextContent("COMPLETED");
+      expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
+      expect(supportability).toHaveTextContent("Authority lotus-gateway");
       expect(supportability).toHaveTextContent("AI Review");
       expect(supportability).toHaveTextContent("ACCEPTED");
+      expect(supportability).toHaveTextContent("Supportability READY");
       expect(supportability).toHaveTextContent(
         "Run accepted for bounded downstream workflow use."
       );

@@ -9230,6 +9230,18 @@ a:hover {
   border-top: 1px solid rgba(23, 32, 43, 0.08);
 }
 
+.performance-advisor-brief-supportability-identity {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.performance-advisor-brief-supportability-detail {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .performance-advisor-brief-supportability-notes {
   display: grid;
   gap: 0.45rem;

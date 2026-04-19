@@ -612,8 +612,18 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
 
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
-        { label: "AI Run", value: "COMPLETED", tone: "success" },
-        { label: "AI Review", value: "AWAITING REVIEW", tone: "warn" },
+        {
+          label: "AI Run",
+          value: "COMPLETED",
+          tone: "success",
+          detail: "packrun_advisor_brief_req-1 • Authority lotus-gateway",
+        },
+        {
+          label: "AI Review",
+          value: "AWAITING REVIEW",
+          tone: "warn",
+          detail: "Supportability ACTION REQUIRED",
+        },
       ])
     );
     expect(brief.reviewNotes).toEqual(
