@@ -1,4 +1,37 @@
-import { checkDns, fetchJson, fetchText } from "../../scripts/live/validation/probes.mjs";
+import * as probeHelpers from "../../scripts/live/validation/probes.mjs";
+
+const { checkDns, fetchJson, fetchText, postJson } = probeHelpers as {
+  checkDns: (
+    summary: { dns: unknown[]; apiChecks: unknown[] },
+    hostname: string,
+    options?: {
+      required?: boolean;
+      lookup?: (hostname: string) => Promise<{ address: string }>;
+    }
+  ) => Promise<{ ok: boolean; required: boolean; warning?: string }>;
+  fetchJson: <T = unknown>(
+    summary: { dns: unknown[]; apiChecks: unknown[] },
+    url: string,
+    description: string,
+    timeoutMs: number,
+    fetchImpl?: typeof fetch
+  ) => Promise<T>;
+  fetchText: (
+    summary: { dns: unknown[]; apiChecks: unknown[] },
+    url: string,
+    description: string,
+    timeoutMs: number,
+    fetchImpl?: typeof fetch
+  ) => Promise<string>;
+  postJson: <T = unknown>(
+    summary: { dns: unknown[]; apiChecks: unknown[] },
+    url: string,
+    description: string,
+    timeoutMs: number,
+    body: unknown,
+    fetchImpl?: typeof fetch
+  ) => Promise<T>;
+};
 
 function createSummary() {
   return {
@@ -68,12 +101,57 @@ describe("live validation probe helpers", () => {
         url: "http://gateway.dev.lotus/api/v1/example",
         status: 200,
         kind: "json",
+        method: "GET",
       },
       {
         description: "Example text",
         url: "http://workbench.dev.lotus/example",
         status: 200,
         kind: "text",
+        method: "GET",
+      },
+    ]);
+  });
+
+  it("records successful JSON POST probes in the summary", async () => {
+    const summary = createSummary();
+    const calls: Array<{ url: string; method?: string; headers?: HeadersInit; body?: string }> = [];
+
+    const payload = await postJson(
+      summary,
+      "http://gateway.dev.lotus/api/v1/example",
+      "Example POST",
+      1000,
+      { ok: true },
+      async (url: string | URL | Request, init?: RequestInit) => {
+        calls.push({
+          url: String(url),
+          method: init?.method,
+          headers: init?.headers,
+          body: init?.body as string,
+        });
+        return new Response(JSON.stringify({ posted: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+    );
+
+    expect(payload).toEqual({ posted: true });
+    expect(calls).toEqual([
+      expect.objectContaining({
+        url: "http://gateway.dev.lotus/api/v1/example",
+        method: "POST",
+        body: JSON.stringify({ ok: true }),
+      }),
+    ]);
+    expect(summary.apiChecks).toEqual([
+      {
+        description: "Example POST",
+        url: "http://gateway.dev.lotus/api/v1/example",
+        status: 200,
+        kind: "json",
+        method: "POST",
       },
     ]);
   });

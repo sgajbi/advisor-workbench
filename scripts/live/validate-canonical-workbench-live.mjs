@@ -12,7 +12,7 @@ import {
   writeShotIndex,
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
-import { checkDns, fetchJson, fetchText } from "./validation/probes.mjs";
+import { checkDns, fetchJson, fetchText, postJson } from "./validation/probes.mjs";
 import {
   assertPerformanceCalculationSanity,
   assertRiskCalculationSanity,
@@ -27,6 +27,7 @@ import {
   validateRiskPanel,
 } from "./validation/browser-workflows.mjs";
 import { createPanelGovernance } from "./validation/panel-governance.mjs";
+import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
 
 const {
   portfolioId,
@@ -172,6 +173,27 @@ async function run() {
   if (!advisorBrief?.summary) {
     throw new Error("Advisor brief returned no summary.");
   }
+  if (!advisorBrief?.workflow_pack_run?.run_id) {
+    throw new Error("Advisor brief returned no workflow-pack run identity.");
+  }
+  summary.workflowPackChecks.push({
+    actionType: "INITIAL_VISIBLE",
+    route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
+    sourceRunId: advisorBrief.workflow_pack_run.run_id,
+    resultReviewState: advisorBrief.workflow_pack_run.review_state,
+    resultSupportabilityStatus: advisorBrief.workflow_pack_run.supportability_status,
+  });
+
+  await validateAdvisorBriefWorkflowPackReviewChain({
+    summary,
+    gatewayBaseUrl,
+    portfolioId,
+    benchmarkCode,
+    canonicalAsOfDate,
+    timeoutMs,
+    fetchJson,
+    postJson,
+  });
 
   const manageCapabilities = await fetchJson(
     summary,
@@ -287,6 +309,7 @@ async function run() {
       benchmarkCode,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+      performAcceptReviewActionProof: true,
     });
     await validateRiskPanel(page, {
       workbenchBaseUrl,

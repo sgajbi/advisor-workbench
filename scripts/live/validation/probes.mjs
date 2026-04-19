@@ -32,20 +32,60 @@ export async function fetchJson(
   timeoutMs,
   fetchImpl = globalThis.fetch
 ) {
+  return await sendJson(summary, url, description, timeoutMs, {
+    fetchImpl,
+  });
+}
+
+export async function postJson(
+  summary,
+  url,
+  description,
+  timeoutMs,
+  body,
+  fetchImpl = globalThis.fetch
+) {
+  return await sendJson(summary, url, description, timeoutMs, {
+    method: "POST",
+    body,
+    fetchImpl,
+  });
+}
+
+export async function sendJson(
+  summary,
+  url,
+  description,
+  timeoutMs,
+  { method = "GET", body: requestBody, headers = {}, fetchImpl = globalThis.fetch } = {}
+) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchImpl(url, { signal: controller.signal });
+    const response = await fetchImpl(url, {
+      method,
+      signal: controller.signal,
+      headers:
+        requestBody === undefined
+          ? headers
+          : {
+              "Content-Type": "application/json",
+              ...headers,
+            },
+      body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
+    });
     if (!response.ok) {
-      throw new Error(`${description} failed (${response.status}) at ${url}`);
+      const errorBody = await response.text();
+      const detail = errorBody.trim() ? `: ${errorBody.trim()}` : "";
+      throw new Error(`${description} failed (${response.status}) at ${url}${detail}`);
     }
-    const body = await response.text();
-    if (!body.trim()) {
+    const responseBody = await response.text();
+    if (!responseBody.trim()) {
       throw new Error(`${description} returned HTTP ${response.status} with an empty body at ${url}`);
     }
     let payload;
     try {
-      payload = JSON.parse(body);
+      payload = JSON.parse(responseBody);
     } catch (error) {
       throw new Error(
         `${description} returned non-JSON content at ${url}: ${
@@ -53,7 +93,13 @@ export async function fetchJson(
         }`
       );
     }
-    summary.apiChecks.push({ description, url, status: response.status, kind: "json" });
+    summary.apiChecks.push({
+      description,
+      url,
+      status: response.status,
+      kind: "json",
+      method,
+    });
     return payload;
   } finally {
     clearTimeout(timer);
@@ -75,7 +121,7 @@ export async function fetchText(
       throw new Error(`${description} failed (${response.status}) at ${url}`);
     }
     const payload = await response.text();
-    summary.apiChecks.push({ description, url, status: response.status, kind: "text" });
+    summary.apiChecks.push({ description, url, status: response.status, kind: "text", method: "GET" });
     return payload;
   } finally {
     clearTimeout(timer);
