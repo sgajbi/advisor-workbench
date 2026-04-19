@@ -39,12 +39,12 @@ describe("PortfolioAllocationPanel", () => {
           throw new Error(`Unexpected fetch: ${url}`);
         }
 
-        if (url.includes("look_through_mode=full")) {
+        if (url.includes("look_through_mode=prefer_look_through")) {
           return jsonResponse({
             reporting_currency: "USD",
             look_through: {
-              requested_mode: "full",
-              effective_mode: "full",
+              requested_mode: "prefer_look_through",
+              effective_mode: "prefer_look_through",
               applied: true,
             },
             views: [
@@ -287,7 +287,9 @@ describe("PortfolioAllocationPanel", () => {
         return jsonResponse({
           reporting_currency: "USD",
           look_through: {
-            requested_mode: url.includes("look_through_mode=full") ? "full" : "direct_only",
+            requested_mode: url.includes("look_through_mode=prefer_look_through")
+              ? "prefer_look_through"
+              : "direct_only",
             effective_mode: "direct_only",
             applied: false,
           },
