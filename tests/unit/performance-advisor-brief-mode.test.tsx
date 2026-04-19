@@ -77,7 +77,7 @@ const readyAdvisorBriefResponse: WorkbenchPerformanceAdvisorBrief = {
     run_id: "packrun_advisor_brief_req-1",
     runtime_state: "COMPLETED",
     review_state: "AWAITING_REVIEW",
-    allowed_review_actions: ["ACCEPT", "REJECT", "REVISE"],
+    allowed_review_actions: ["ACCEPT", "REJECT", "REVISE", "SUPERSEDE"],
     supportability_status: "ACTION_REQUIRED",
     review_pending: true,
     superseded: false,
@@ -125,7 +125,6 @@ vi.mock("../../src/features/workbench/api", () => ({
   postWorkbenchPerformanceAdvisorBriefReviewActionClient: vi.fn(async () => ({
     ...readyAdvisorBriefResponse,
     correlation_id: "corr-advisor-brief-review",
-    summary: "Advisor brief accepted for bounded downstream workflow use.",
     workflow_pack_run: {
       ...readyAdvisorBriefResponse.workflow_pack_run,
       review_state: "ACCEPTED",
@@ -144,7 +143,6 @@ describe("PerformanceAdvisorBriefMode", () => {
     vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockResolvedValue({
       ...readyAdvisorBriefResponse,
       correlation_id: "corr-advisor-brief-review",
-      summary: "Advisor brief accepted for bounded downstream workflow use.",
       workflow_pack_run: {
         ...readyAdvisorBriefResponse.workflow_pack_run!,
         review_state: "ACCEPTED",
@@ -449,6 +447,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Advisor brief review actions")).toBeInTheDocument();
     });
+    expect(screen.getByLabelText("Replacement run id")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Reviewed by"), {
       target: { value: "advisor_1" },
@@ -491,9 +490,105 @@ describe("PerformanceAdvisorBriefMode", () => {
         "Run accepted for bounded downstream workflow use."
       );
       expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
-        "Advisor brief accepted for bounded downstream workflow use."
+        "Gateway advisor brief is ready with source-grounded talking points."
       );
       expect(screen.queryByLabelText("Advisor brief review actions")).not.toBeInTheDocument();
+    });
+  });
+
+  it("requires replacement lineage input for revision actions before posting the bounded review action", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValue({
+      ...readyAdvisorBriefResponse,
+      workflow_pack_run: {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        allowed_review_actions: ["REVISE", "SUPERSEDE"],
+      },
+    });
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockResolvedValue({
+      ...readyAdvisorBriefResponse,
+      correlation_id: "corr-advisor-brief-revise",
+      workflow_pack_run: {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        review_state: "REVISED",
+        allowed_review_actions: [],
+        supportability_status: "HISTORICAL",
+        review_pending: false,
+        superseded: true,
+        current_summary_note: "Run was revised in favor of a replacement advisor-brief run.",
+        replacement_run_id: "packrun_advisor_brief_req-2",
+        findings: [],
+      },
+    });
+
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Advisor brief review actions")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Reviewed by"), {
+      target: { value: "advisor_2" },
+    });
+    fireEvent.change(screen.getByLabelText("Review reason"), {
+      target: {
+        value: "A replacement advisor brief run is available for downstream use.",
+      },
+    });
+
+    const reviseButton = screen.getByRole("button", { name: "Request Revision" });
+    expect(reviseButton).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Replacement run id"), {
+      target: { value: "packrun_advisor_brief_req-2" },
+    });
+
+    expect(reviseButton).toBeEnabled();
+    fireEvent.click(reviseButton);
+
+    await waitFor(() => {
+      expect(postWorkbenchPerformanceAdvisorBriefReviewActionClient).toHaveBeenCalledWith(
+        "PF_1001",
+        {
+          period: "YTD",
+          chartFrequency: "monthly",
+          contributionDimension: "asset_class",
+          attributionDimension: "asset_class",
+          detailBasis: "NET",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-02-24",
+        },
+        {
+          action_type: "REVISE",
+          reviewed_by: "advisor_2",
+          reason: "A replacement advisor brief run is available for downstream use.",
+          replacement_run_id: "packrun_advisor_brief_req-2",
+        }
+      );
+      const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent(
+        "Run was revised in favor of a replacement advisor-brief run."
+      );
+      expect(supportability).toHaveTextContent(
+        "Superseded by workflow-pack run packrun_advisor_brief_req-2."
+      );
     });
   });
 

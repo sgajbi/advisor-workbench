@@ -45,6 +45,7 @@ export default function PerformanceAdvisorBriefMode({
   });
   const [reviewedBy, setReviewedBy] = useState("");
   const [reviewReason, setReviewReason] = useState("");
+  const [replacementRunId, setReplacementRunId] = useState("");
   const {
     advisorBrief,
     advisorBriefUnavailable,
@@ -142,16 +143,31 @@ export default function PerformanceAdvisorBriefMode({
   const workflowPackRun = advisorBrief?.workflow_pack_run ?? null;
   const reviewActionAllowed =
     workflowPackRun !== null && workflowPackRun.allowed_review_actions.length > 0;
-  const canSubmitReviewAction =
-    reviewActionAllowed &&
-    reviewedBy.trim().length > 0 &&
-    reviewReason.trim().length > 0 &&
-    !isApplyingReviewAction;
+  const supportsReplacementRunId =
+    workflowPackRun !== null &&
+    workflowPackRun.allowed_review_actions.some(requiresReplacementRunId);
+
+  function canSubmitReviewAction(
+    actionType: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType
+  ): boolean {
+    if (
+      !reviewActionAllowed ||
+      reviewedBy.trim().length === 0 ||
+      reviewReason.trim().length === 0 ||
+      isApplyingReviewAction
+    ) {
+      return false;
+    }
+    if (requiresReplacementRunId(actionType) && replacementRunId.trim().length === 0) {
+      return false;
+    }
+    return true;
+  }
 
   async function handleReviewAction(
     actionType: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType
   ) {
-    if (!canSubmitReviewAction) {
+    if (!canSubmitReviewAction(actionType)) {
       return;
     }
     try {
@@ -159,8 +175,12 @@ export default function PerformanceAdvisorBriefMode({
         action_type: actionType,
         reviewed_by: reviewedBy.trim(),
         reason: reviewReason.trim(),
+        replacement_run_id: requiresReplacementRunId(actionType)
+          ? replacementRunId.trim()
+          : undefined,
       });
       setReviewReason("");
+      setReplacementRunId("");
     } catch {
       // The hook already exposes a user-facing error note for the supportability rail.
     }
@@ -196,12 +216,31 @@ export default function PerformanceAdvisorBriefMode({
             rows={3}
           />
         </label>
+        {supportsReplacementRunId ? (
+          <label className="performance-advisor-brief-review-field">
+            <span className="performance-advisor-brief-supportability-label">
+              Replacement run id
+            </span>
+            <input
+              className="input"
+              aria-label="Replacement run id"
+              value={replacementRunId}
+              onChange={(event) => setReplacementRunId(event.target.value)}
+              placeholder="packrun_advisor_brief_req-2"
+              autoComplete="off"
+            />
+            <span className="performance-advisor-brief-supportability-note">
+              Required only for revision or supersede transitions so bounded lineage stays
+              reconstructable.
+            </span>
+          </label>
+        ) : null}
         <div className="performance-advisor-brief-review-action-row">
           {workflowPackRun.allowed_review_actions.map((actionType) => (
             <ActionButton
               key={actionType}
               priority={actionType === "ACCEPT" ? "primary" : "secondary"}
-              disabled={!canSubmitReviewAction}
+              disabled={!canSubmitReviewAction(actionType)}
               onClick={() => void handleReviewAction(actionType)}
             >
               {getReviewActionLabel(actionType, isApplyingReviewAction)}
@@ -291,4 +330,10 @@ function getReviewActionLabel(
     default:
       return actionType;
   }
+}
+
+function requiresReplacementRunId(
+  actionType: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType
+): boolean {
+  return actionType === "REVISE" || actionType === "SUPERSEDE";
 }
