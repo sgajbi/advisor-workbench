@@ -3,6 +3,7 @@ param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
+  [int]$SeedWaitSeconds = 900,
   [switch]$BuildImages,
   [switch]$RunValidation
 )
@@ -29,7 +30,11 @@ function Invoke-RepoCommand {
 
   Push-Location $RepoPath
   try {
+    $global:LASTEXITCODE = 0
     Invoke-Expression $Command
+    if ($LASTEXITCODE -ne 0) {
+      throw "Command failed with exit code $LASTEXITCODE in '$RepoPath': $Command"
+    }
   } finally {
     Pop-Location
   }
@@ -76,12 +81,18 @@ docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/
 
 Write-Host "Starting canonical Gateway on :8111 ..."
 & (Join-Path $gatewayRepo "scripts\\Start-CanonicalGateway.ps1")
+if ($LASTEXITCODE -ne 0) {
+  throw "Canonical Gateway startup failed with exit code $LASTEXITCODE."
+}
 
 Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
-Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds 300"
+Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds $SeedWaitSeconds"
 
 Write-Host "Starting canonical lotus-manage on :8001 ..."
 & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1")
+if ($LASTEXITCODE -ne 0) {
+  throw "Canonical lotus-manage startup failed with exit code $LASTEXITCODE."
+}
 
 if (-not (Test-HttpReady "http://127.0.0.1:3000")) {
   Write-Host "Starting Workbench dev server on :3000 ..."

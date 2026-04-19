@@ -35,7 +35,7 @@ const registry: TestRegistry = {
       panelId: "performance.evidence",
       owningService: "lotus-gateway",
       gatewayEndpoint: null,
-      requiredSupportState: "unavailable",
+      requiredSupportState: "partial",
       allowedStates: ["ready", "partial", "unavailable", "supported_blank"],
       knownLimitations: ["deferred to RFC-0079"],
       ownerFollowUpRfc: "RFC-0079",
@@ -51,8 +51,8 @@ describe("live validation panel governance", () => {
     governance.recordPanelClassification("portfolio.summary", "ready", "lotus-gateway", {
       portfolioId: "PB_SG_GLOBAL_BAL_001",
     });
-    governance.recordPanelClassification("performance.evidence", "unavailable", "lotus-gateway", {
-      reason: "gateway contract pending",
+    governance.recordPanelClassification("performance.evidence", "partial", "lotus-gateway", {
+      reason: "lineage evidence remains partial",
     });
 
     governance.assertNoUnsupportedBlankPanels();
@@ -68,7 +68,7 @@ describe("live validation panel governance", () => {
         }),
         expect.objectContaining({
           panel: "performance.evidence",
-          state: "unavailable",
+          state: "partial",
           ownerFollowUpRfc: "RFC-0079",
         }),
       ])
@@ -82,8 +82,8 @@ describe("live validation panel governance", () => {
     governance.recordPanelClassification("portfolio.summary", "supported_blank", "lotus-gateway", {
       reason: "unexpected blank",
     });
-    governance.recordPanelClassification("performance.evidence", "unavailable", "lotus-gateway", {
-      reason: "gateway contract pending",
+    governance.recordPanelClassification("performance.evidence", "partial", "lotus-gateway", {
+      reason: "lineage evidence remains partial",
     });
 
     expect(() => governance.assertNoUnsupportedBlankPanels()).toThrow(
@@ -98,8 +98,8 @@ describe("live validation panel governance", () => {
     governance.recordPanelClassification("portfolio.summary", "ready", "lotus-performance", {
       portfolioId: "PB_SG_GLOBAL_BAL_001",
     });
-    governance.recordPanelClassification("performance.evidence", "unavailable", "lotus-gateway", {
-      reason: "gateway contract pending",
+    governance.recordPanelClassification("performance.evidence", "partial", "lotus-gateway", {
+      reason: "lineage evidence remains partial",
     });
 
     expect(() => governance.assertPanelSupportabilityAlignment()).toThrow("registry owner");

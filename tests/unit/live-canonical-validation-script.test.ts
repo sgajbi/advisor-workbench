@@ -36,9 +36,13 @@ describe("canonical live validation script", () => {
       "utf8"
     );
 
+    expect(script).toContain("[int]$SeedWaitSeconds = 900");
+    expect(script).toContain("$global:LASTEXITCODE = 0");
+    expect(script).toContain("Command failed with exit code $LASTEXITCODE");
     expect(script).toContain("--portfolio-id $PortfolioId");
     expect(script).toContain("--end-date 2026-04-10");
     expect(script).toContain("--benchmark-start-date 2025-01-06");
+    expect(script).toContain("--wait-seconds $SeedWaitSeconds");
     expect(script).toContain("[string]$ScreenshotDirectory");
     expect(script).toContain("ScreenshotDirectory = $ScreenshotDirectory");
   });

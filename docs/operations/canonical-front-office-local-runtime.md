@@ -97,9 +97,14 @@ That script performs:
 8. canonical `lotus-workbench` startup on port `3000`
 
 The command exits after the stack is usable. It does not block on browser validation.
+Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
+not considered success.
 
 Use this path when you want to bring the product up quickly, inspect it manually, or restart the
 runtime without waiting for the full validation lane to finish.
+
+The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed seed needs a longer
+drain window than the default `900` seconds.
 
 ## Canonical bring-up with validation
 

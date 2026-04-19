@@ -41,8 +41,8 @@ describe("live validation calculation sanity helpers", () => {
         },
         capabilities: {
           evidence: {
-            state: "unavailable",
-            reason: "gateway contract pending",
+            state: "partial",
+            reason: "lineage evidence remains partial",
           },
         },
       },
@@ -80,7 +80,7 @@ describe("live validation calculation sanity helpers", () => {
           panel: "performance.analysis.attribution",
           state: "partial",
         }),
-        expect.objectContaining({ panel: "performance.evidence", state: "unavailable" }),
+        expect.objectContaining({ panel: "performance.evidence", state: "partial" }),
       ])
     );
   });
