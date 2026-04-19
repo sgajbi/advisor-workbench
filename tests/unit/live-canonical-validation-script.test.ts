@@ -28,6 +28,8 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("runs the browser validator from the `lotus-workbench` repository root");
     expect(runbook).toContain("Browser validation failures must fail the PowerShell command");
     expect(runbook).toContain("stale summaries");
+    expect(runbook).toContain("-CleanCoreState");
+    expect(runbook).toContain("1000`-portfolio load scenario");
   });
 
   it("starts the governed seed with the canonical RFC-0075 as-of date", () => {
@@ -37,8 +39,11 @@ describe("canonical live validation script", () => {
     );
 
     expect(script).toContain("[int]$SeedWaitSeconds = 900");
+    expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("$global:LASTEXITCODE = 0");
     expect(script).toContain("Command failed with exit code $LASTEXITCODE");
+    expect(script).toContain("Resetting lotus-core Docker state before canonical reseed");
+    expect(script).toContain("docker compose down -v --remove-orphans");
     expect(script).toContain("--portfolio-id $PortfolioId");
     expect(script).toContain("--end-date 2026-04-10");
     expect(script).toContain("--benchmark-start-date 2025-01-06");

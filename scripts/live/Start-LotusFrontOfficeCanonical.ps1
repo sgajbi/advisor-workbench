@@ -4,6 +4,7 @@ param(
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
   [int]$SeedWaitSeconds = 900,
+  [switch]$CleanCoreState,
   [switch]$BuildImages,
   [switch]$RunValidation
 )
@@ -62,6 +63,11 @@ function Remove-ContainerIfPresent {
 
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
+
+if ($CleanCoreState) {
+  Write-Host "Resetting lotus-core Docker state before canonical reseed ..."
+  Invoke-RepoCommand $coreRepo "docker compose down -v --remove-orphans"
+}
 
 Write-Host "Starting Docker-backed upstream services..."
 $composeUpCommand = "docker compose up -d"

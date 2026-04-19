@@ -106,6 +106,12 @@ runtime without waiting for the full validation lane to finish.
 The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed seed needs a longer
 drain window than the default `900` seconds.
 
+When a prior local RFC-086 load/performance run has left stale `lotus-core` Kafka or Postgres
+state behind, use `-CleanCoreState` on the startup script to run `docker compose down -v
+--remove-orphans` in `lotus-core` before the canonical rebuild and reseed. This reset is explicit
+because routine front-office bring-up only seeds the governed `PB_SG_GLOBAL_BAL_001` portfolio and
+does not include the separate `1000`-portfolio load scenario.
+
 ## Canonical bring-up with validation
 
 From `lotus-workbench`:
