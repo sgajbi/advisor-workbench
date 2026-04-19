@@ -70,6 +70,26 @@ vi.mock("../../src/features/workbench/api", () => ({
       { label: "Advisor Brief", value: "Ready", tone: "success" },
       { label: "Evidence", value: "Partial", tone: "warn" },
     ],
+    workflow_pack_run: {
+      run_id: "packrun_advisor_brief_req-1",
+      runtime_state: "COMPLETED",
+      review_state: "AWAITING_REVIEW",
+      allowed_review_actions: ["ACCEPT", "REJECT", "REVISE"],
+      supportability_status: "ACTION_REQUIRED",
+      review_pending: true,
+      superseded: false,
+      workflow_authority_owner: "lotus-gateway",
+      current_summary_note:
+        "Run completed but still requires bounded human review before downstream use.",
+      replacement_run_id: null,
+      findings: [
+        {
+          finding_id: "review_pending",
+          severity: "ACTION_REQUIRED",
+          summary: "Run is awaiting review.",
+        },
+      ],
+    },
     ai_audit: {
       task_id: "explain.v1",
       output_label: "EXPLANATION_ONLY",
@@ -126,7 +146,15 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Review items");
       expect(supportability).toHaveTextContent("Evidence");
       expect(supportability).toHaveTextContent("Partial");
-      expect(supportability).toHaveTextContent("AI provider unavailable for full narrative generation.");
+      expect(supportability).toHaveTextContent("AI Review");
+      expect(supportability).toHaveTextContent("AWAITING REVIEW");
+      expect(supportability).toHaveTextContent(
+        "Run completed but still requires bounded human review before downstream use."
+      );
+      expect(supportability).toHaveTextContent("ACTION REQUIRED: Run is awaiting review.");
+      expect(supportability).toHaveTextContent(
+        "AI provider unavailable for full narrative generation."
+      );
     });
     expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
       "Gateway advisor brief is ready with source-grounded talking points."

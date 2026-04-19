@@ -51,12 +51,7 @@ export function buildGatewayAdvisorBriefViewModel(
       hasBackedRiskEvidence,
     }),
     supportability: normalizeGatewaySupportability(advisorBrief),
-    reviewNotes: Array.from(
-      new Set([
-        ...advisorBrief.partial_failures.map((failure) => failure.detail),
-        ...advisorBrief.warnings,
-      ])
-    ),
+    reviewNotes: buildGatewayReviewNotes(advisorBrief),
     audit: {
       taskId: advisorBrief.ai_audit.task_id ?? "explain.v1",
       outputLabel: advisorBrief.ai_audit.output_label ?? "EXPLANATION_ONLY",
@@ -76,17 +71,21 @@ export function buildGatewayAdvisorBriefViewModel(
 }
 
 function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
+  const workflowPackRunRef = advisorBrief.workflow_pack_run
+    ? [`lotus-ai:workflow-pack-run:${advisorBrief.workflow_pack_run.run_id}`]
+    : [];
   const aiEvidenceRefs = advisorBrief.ai_evidence.source_refs ?? [];
   if (aiEvidenceRefs.length > 0) {
-    return aiEvidenceRefs;
+    return Array.from(new Set([...aiEvidenceRefs, ...workflowPackRunRef]));
   }
 
   const aiAuditRefs = advisorBrief.ai_audit.source_refs ?? [];
   if (aiAuditRefs.length > 0) {
-    return aiAuditRefs;
+    return Array.from(new Set([...aiAuditRefs, ...workflowPackRunRef]));
   }
 
   return [
+    ...workflowPackRunRef,
     `lotus-gateway:workbench:${advisorBrief.portfolio_id}:performance-advisor-brief:${advisorBrief.period}`,
   ];
 }
@@ -94,7 +93,7 @@ function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisor
 function normalizeGatewaySupportability(
   advisorBrief: WorkbenchPerformanceAdvisorBrief
 ): PerformanceAdvisorBriefViewModel["supportability"] {
-  return advisorBrief.supportability.map((item) => {
+  const normalizedItems = advisorBrief.supportability.map((item) => {
     if (item.label.trim().toLowerCase() === "advisor brief") {
       const normalizedValue =
         advisorBrief.status === "ready"
@@ -116,6 +115,50 @@ function normalizeGatewaySupportability(
       tone: normalizeSupportabilityTone(item.tone, item.value),
     };
   });
+
+  if (!advisorBrief.workflow_pack_run) {
+    return normalizedItems;
+  }
+
+  return [
+    ...normalizedItems,
+    {
+      label: "AI Run",
+      value: normalizeWorkflowPackRuntimeValue(advisorBrief.workflow_pack_run.runtime_state),
+      tone: normalizeWorkflowPackRuntimeTone(advisorBrief.workflow_pack_run.runtime_state),
+    },
+    {
+      label: "AI Review",
+      value: normalizeWorkflowPackReviewValue(advisorBrief.workflow_pack_run.review_state),
+      tone: normalizeWorkflowPackReviewTone(advisorBrief.workflow_pack_run),
+    },
+  ];
+}
+
+function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief): string[] {
+  const workflowPackRun = advisorBrief.workflow_pack_run;
+  const workflowPackNotes = workflowPackRun
+    ? [
+        workflowPackRun.current_summary_note,
+        ...workflowPackRun.findings.map((finding) => {
+          const severityPrefix = finding.severity.replaceAll("_", " ");
+          return `${severityPrefix}: ${finding.summary}`;
+        }),
+        workflowPackRun.replacement_run_id
+          ? `Superseded by workflow-pack run ${workflowPackRun.replacement_run_id}.`
+          : null,
+      ]
+    : [];
+
+  return Array.from(
+    new Set(
+      [
+        ...advisorBrief.partial_failures.map((failure) => failure.detail),
+        ...advisorBrief.warnings,
+        ...workflowPackNotes,
+      ].filter((note): note is string => Boolean(note))
+    )
+  );
 }
 
 function normalizeGatewaySourceMetrics({
@@ -249,6 +292,47 @@ function normalizeSupportabilityTone(
     return "warn";
   }
   return "danger";
+}
+
+function normalizeWorkflowPackRuntimeValue(runtimeState: string): string {
+  return runtimeState.replaceAll("_", " ");
+}
+
+function normalizeWorkflowPackReviewValue(reviewState: string): string {
+  return reviewState.replaceAll("_", " ");
+}
+
+function normalizeWorkflowPackRuntimeTone(
+  runtimeState: string
+): "success" | "warn" | "danger" {
+  switch (runtimeState) {
+    case "COMPLETED":
+      return "success";
+    case "FAILED":
+    case "ABANDONED":
+      return "danger";
+    default:
+      return "warn";
+  }
+}
+
+function normalizeWorkflowPackReviewTone(
+  workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
+): "success" | "warn" | "danger" {
+  if (
+    workflowPackRun.review_state === "REJECTED" ||
+    workflowPackRun.review_state === "ABANDONED" ||
+    workflowPackRun.supportability_status === "FAILED"
+  ) {
+    return "danger";
+  }
+  if (
+    workflowPackRun.review_state === "ACCEPTED" ||
+    workflowPackRun.supportability_status === "READY"
+  ) {
+    return "success";
+  }
+  return "warn";
 }
 
 function normalizeAdvisorTargetMode(targetMode: string): PerformanceWorkspaceMode {
