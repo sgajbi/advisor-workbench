@@ -477,6 +477,10 @@ describe("PerformanceAdvisorBriefMode", () => {
         }
       );
       const supportability = screen.getByLabelText("Advisor brief supportability");
+      expect(supportability).toHaveTextContent("AI Run");
+      expect(supportability).toHaveTextContent("COMPLETED");
+      expect(supportability).toHaveTextContent("AI Review");
+      expect(supportability).toHaveTextContent("ACCEPTED");
       expect(supportability).toHaveTextContent(
         "Run accepted for bounded downstream workflow use."
       );

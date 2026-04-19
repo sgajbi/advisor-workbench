@@ -2,6 +2,10 @@ import type { PerformanceAdvisorBriefSupportabilityItem } from "../../advisor-br
 import PerformanceSupportabilitySummary from "../performance-supportability-summary";
 import PerformanceWorkspaceSection from "../performance-workspace-section";
 
+function isWorkflowPackStateItem(item: PerformanceAdvisorBriefSupportabilityItem): boolean {
+  return item.label === "AI Run" || item.label === "AI Review";
+}
+
 export default function LotusSupportabilityPanel({
   items,
   reviewNotes,
@@ -12,7 +16,12 @@ export default function LotusSupportabilityPanel({
   reviewActionForm?: React.ReactNode;
 }) {
   const readyCount = items.filter((item) => item.tone === "success").length;
-  const reviewItems = items.filter((item) => item.tone !== "success");
+  const workflowPackStateItems = items.filter(isWorkflowPackStateItem);
+  const reviewItems = items.filter(
+    (item) => item.tone !== "success" && !isWorkflowPackStateItem(item)
+  );
+  const hasVisibleSupportabilityItems =
+    workflowPackStateItems.length > 0 || reviewItems.length > 0;
 
   return (
     <PerformanceWorkspaceSection
@@ -29,20 +38,45 @@ export default function LotusSupportabilityPanel({
           { label: "Review items", value: reviewItems.length + reviewNotes.length },
         ]}
       />
-      {reviewItems.length ? (
-        <div className="performance-advisor-brief-supportability-grid">
-          {reviewItems.map((item) => (
-            <div key={item.label} className="performance-advisor-brief-supportability-row">
-              <span className="performance-advisor-brief-supportability-label">{item.label}</span>
-              <span
-                className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
-              >
-                <span aria-hidden="true" className="performance-advisor-brief-supportability-dot" />
-                {item.value}
-              </span>
+      {hasVisibleSupportabilityItems ? (
+        <>
+          {workflowPackStateItems.length ? (
+            <div className="performance-advisor-brief-supportability-grid">
+              {workflowPackStateItems.map((item) => (
+                <div key={item.label} className="performance-advisor-brief-supportability-row">
+                  <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+                  <span
+                    className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="performance-advisor-brief-supportability-dot"
+                    />
+                    {item.value}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          ) : null}
+          {reviewItems.length ? (
+            <div className="performance-advisor-brief-supportability-grid">
+              {reviewItems.map((item) => (
+                <div key={item.label} className="performance-advisor-brief-supportability-row">
+                  <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+                  <span
+                    className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="performance-advisor-brief-supportability-dot"
+                    />
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </>
       ) : (
         <div className="performance-advisor-brief-supportability-all-ready">
           All current brief dependencies are ready for the selected context.
