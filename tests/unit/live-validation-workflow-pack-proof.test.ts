@@ -150,4 +150,81 @@ describe("live validation workflow-pack proof", () => {
       }),
     ]);
   });
+
+  it("accepts truthfully action-required accept posture when the run remains degraded", async () => {
+    const summary = createSummary();
+
+    await validateAdvisorBriefWorkflowPackReviewChain({
+      summary,
+      gatewayBaseUrl: "http://gateway.dev.lotus",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+      canonicalAsOfDate: "2026-04-10",
+      timeoutMs: 1000,
+      fetchJson: async (_summary: unknown, url: string) => {
+        if (url.includes("report_start_date=2026-02-01")) {
+          return { workflow_pack_run: { run_id: "packrun-revise-replacement", review_state: "AWAITING_REVIEW" } };
+        }
+        if (url.includes("detail_basis=NET") && url.includes("period=EXPLICIT")) {
+          return { workflow_pack_run: { run_id: "packrun-explicit-net", review_state: "AWAITING_REVIEW" } };
+        }
+        if (url.includes("detail_basis=GROSS") && url.includes("period=EXPLICIT")) {
+          return { workflow_pack_run: { run_id: "packrun-explicit-gross", review_state: "AWAITING_REVIEW" } };
+        }
+        if (url.includes("detail_basis=GROSS") && url.includes("period=YTD")) {
+          return { workflow_pack_run: { run_id: "packrun-ytd-gross", review_state: "AWAITING_REVIEW" } };
+        }
+        return { workflow_pack_run: { run_id: "packrun-ytd-net", review_state: "AWAITING_REVIEW" } };
+      },
+      postJson: async (
+        _summary: unknown,
+        _url: string,
+        _description: string,
+        _timeoutMs: number,
+        body: Record<string, unknown>
+      ) => {
+        if (body.action_type === "ACCEPT") {
+          return {
+            workflow_pack_run: {
+              run_id: "packrun-ytd-net",
+              review_state: "ACCEPTED",
+              supportability_status: "ACTION_REQUIRED",
+              superseded: false,
+            },
+          };
+        }
+        if (body.action_type === "SUPERSEDE") {
+          return {
+            workflow_pack_run: {
+              run_id: "packrun-explicit-net",
+              review_state: "SUPERSEDED",
+              supportability_status: "HISTORICAL",
+              superseded: true,
+              replacement_run_id: body.replacement_run_id,
+            },
+          };
+        }
+        return {
+          workflow_pack_run: {
+            run_id: "packrun-ytd-gross",
+            review_state: "REVISED",
+            supportability_status: "HISTORICAL",
+            superseded: true,
+            replacement_run_id: body.replacement_run_id,
+          },
+        };
+      },
+    });
+
+    expect(summary.workflowPackChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          actionType: "ACCEPT",
+          sourceRunId: "packrun-ytd-net",
+          resultReviewState: "ACCEPTED",
+          resultSupportabilityStatus: "ACTION_REQUIRED",
+        }),
+      ])
+    );
+  });
 });
