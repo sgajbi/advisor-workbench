@@ -96,6 +96,10 @@ That script performs:
 7. canonical host-process startup for `lotus-manage` on `8001`
 8. canonical `lotus-workbench` startup on port `3000`
 
+The canonical startup flow replaces any existing Workbench listener on port `3000` before it
+launches `npm run dev`. This avoids stale Next.js chunk manifests and partially rebuilt `.next`
+state from older local sessions causing browser hydration failures during governed validation.
+
 The command exits after the stack is usable. It does not block on browser validation.
 Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
 not considered success.

@@ -30,6 +30,7 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("stale summaries");
     expect(runbook).toContain("-CleanCoreState");
     expect(runbook).toContain("1000`-portfolio load scenario");
+    expect(runbook).toContain("replaces any existing Workbench listener on port `3000`");
   });
 
   it("starts the governed seed with the canonical RFC-0075 as-of date", () => {
@@ -44,6 +45,10 @@ describe("canonical live validation script", () => {
     expect(script).toContain("Command failed with exit code $LASTEXITCODE");
     expect(script).toContain("Resetting lotus-core Docker state before canonical reseed");
     expect(script).toContain("docker compose down -v --remove-orphans");
+    expect(script).toContain("function Stop-HostProcessOnPort");
+    expect(script).toContain("Stopping stale $Description process on :$Port");
+    expect(script).toContain("Stop-HostProcessOnPort -Port 3000 -Description \"Workbench\"");
+    expect(script).not.toContain("Workbench already responding on :3000");
     expect(script).toContain("--portfolio-id $PortfolioId");
     expect(script).toContain("--end-date 2026-04-10");
     expect(script).toContain("--benchmark-start-date 2025-01-06");
@@ -217,7 +222,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Observation Trail");
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
     expect(browserWorkflowModule).toContain("Accept Brief");
-    expect(browserWorkflowModule).toContain("bounded workflow-pack ledger posture");
+    expect(browserWorkflowModule).toContain("hasAcceptedAdvisorBriefReviewPosture");
+    expect(browserWorkflowModule).toContain("Supportability ACTION REQUIRED");
+    expect(browserWorkflowModule).toContain("Supportability READY");
     expect(browserWorkflowModule).toContain("/^Performance Overview/");
     expect(browserWorkflowModule).toContain("/^Performance Analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
