@@ -110,6 +110,11 @@ runtime without waiting for the full validation lane to finish.
 The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed seed needs a longer
 drain window than the default `900` seconds.
 
+The canonical bring-up script accepts `-LotusAiEnvFile` to make the `lotus-ai` provider posture
+explicit for proof runs. Use `.env.example` for deterministic provider-disabled front-office proof.
+Use the repo-local `.env` only when the required live provider dependency, such as the `local-llm`
+Ollama compose profile and model, is intentionally running.
+
 When a prior local RFC-086 load/performance run has left stale `lotus-core` Kafka or Postgres
 state behind, use `-CleanCoreState` on the startup script to run `docker compose down -v
 --remove-orphans` in `lotus-core` before the canonical rebuild and reseed. This reset is explicit
