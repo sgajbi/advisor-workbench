@@ -2,10 +2,15 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import {
+import * as browserWorkflowModule from "../../scripts/live/validation/browser-workflows.mjs";
+
+const {
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
-} from "../../scripts/live/validation/browser-workflows.mjs";
+} = browserWorkflowModule as unknown as {
+  createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
+  hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
+};
 
 describe("live validation browser workflow helpers", () => {
   it("accepts both ready and degraded accepted advisor-brief review posture", () => {
