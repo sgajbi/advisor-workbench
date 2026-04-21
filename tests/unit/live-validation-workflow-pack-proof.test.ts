@@ -60,7 +60,7 @@ function createTaskFlow({
     flow_status: flowStatus,
     supportability_status: supportabilityStatus,
     replacement_lineage:
-      replacementRunId === undefined ? null : { replacement_run_id: replacementRunId },
+      replacementRunId === undefined ? [] : [{ replacement_run_id: replacementRunId }],
     handoff_refs: handoffStatus === undefined ? [] : [{ status: handoffStatus }],
   };
 }

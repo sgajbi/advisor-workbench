@@ -131,11 +131,12 @@ function assertReplacementTaskFlowPosture(
       )}' instead of 'HISTORICAL'.`
     );
   }
-  if (taskFlow.replacement_lineage?.replacement_run_id !== replacementRunId) {
+  const lineageRefs = Array.isArray(taskFlow.replacement_lineage)
+    ? taskFlow.replacement_lineage
+    : [];
+  if (!lineageRefs.some((lineage) => lineage?.replacement_run_id === replacementRunId)) {
     throw new Error(
-      `Advisor brief ${expectedReviewState} review action returned task-flow replacement_run_id '${String(
-        taskFlow.replacement_lineage?.replacement_run_id
-      )}' instead of '${replacementRunId}'.`
+      `Advisor brief ${expectedReviewState} review action returned no task-flow replacement lineage edge for '${replacementRunId}'.`
     );
   }
   return taskFlow;
