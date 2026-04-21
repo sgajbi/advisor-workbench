@@ -58,10 +58,12 @@ task-flow state, review state, or replacement lineage from narrative text or fal
 11. Live proof hardening follow-up `git diff --check`
     - passed with existing CRLF normalization warnings only.
 
-## Remaining RFC-0097 Gaps
+## Closure Assessment
 
 1. Domain handoff execution remains a future cross-service slice.
-2. A live end-to-end validation pass should prove task-flow posture across `lotus-ai` ->
-   `lotus-gateway` -> `lotus-workbench` before RFC closure.
-3. Final governance review, API certification posture, docs/context/wiki publication, skills
-   assessment, and branch hygiene remain required.
+2. Live end-to-end validation passed on 2026-04-21 through the governed clean-core proof profile:
+   `C:\Users\Sandeep\projects\lotus-platform\output\front-office-qa\canonical-front-office-qa-20260421-192148.md`.
+3. The proof validated initial advisor-brief workflow-pack posture plus `ACCEPT`, `SUPERSEDE`, and
+   `REVISE` task-flow posture through `lotus-ai` -> `lotus-gateway` -> `lotus-workbench`.
+4. Final governance review, docs/context/wiki publication, skills assessment, and branch hygiene
+   were completed as part of RFC closure.
