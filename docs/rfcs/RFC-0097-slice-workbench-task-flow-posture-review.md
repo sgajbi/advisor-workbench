@@ -13,6 +13,9 @@ task-flow state, review state, or replacement lineage from narrative text or fal
 3. Added task-flow supportability and replacement-lineage notes to the gateway-backed view model.
 4. Kept the existing review-action form governed by `workflow_pack_run.allowed_review_actions`.
 5. Updated repository context and wiki integration notes for the new gateway-backed posture.
+6. Tightened the canonical live workflow-pack proof so advisor-brief validation now fails if
+   gateway responses omit task-flow identity, source-run references, review-state mapping,
+   replacement lineage, or `READY_FOR_HANDOFF` posture.
 
 ## Review Findings
 
@@ -24,6 +27,9 @@ task-flow state, review state, or replacement lineage from narrative text or fal
    posture is read-only.
 4. Unit coverage now proves source-ref preservation, supportability rendering, replacement lineage
    rendering, and API payload preservation.
+5. The live validator now checks initial task-flow posture before review actions and refreshed
+   task-flow posture after `ACCEPT`, `SUPERSEDE`, and `REVISE`; this closes the previous evidence
+   gap where live proof could pass on `workflow_pack_run` alone.
 
 ## Proof
 
@@ -47,12 +53,15 @@ task-flow state, review state, or replacement lineage from narrative text or fal
    - passed.
 9. Handoff-readiness follow-up `npm run lint`
    - passed.
+10. Live proof hardening follow-up `npm test -- --run tests/unit/live-validation-workflow-pack-proof.test.ts`
+    - 2 passed.
+11. Live proof hardening follow-up `git diff --check`
+    - passed with existing CRLF normalization warnings only.
 
 ## Remaining RFC-0097 Gaps
 
-1. Heartbeat attention needs an adapter for stale, blocked, degraded, and review-waiting task flows.
-2. Domain handoff execution remains a future cross-service slice.
-3. A live end-to-end validation pass should prove task-flow posture across `lotus-ai` ->
+1. Domain handoff execution remains a future cross-service slice.
+2. A live end-to-end validation pass should prove task-flow posture across `lotus-ai` ->
    `lotus-gateway` -> `lotus-workbench` before RFC closure.
-4. Final governance review, API certification posture, docs/context/wiki publication, skills
+3. Final governance review, API certification posture, docs/context/wiki publication, skills
    assessment, and branch hygiene remain required.

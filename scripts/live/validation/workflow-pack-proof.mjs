@@ -27,6 +27,120 @@ function assertWorkflowPackRunPresence(payload, description) {
   return run;
 }
 
+function assertWorkflowPackTaskFlowPresence(payload, description) {
+  const taskFlow = payload?.workflow_pack_task_flow;
+  if (!taskFlow?.task_flow_id) {
+    throw new Error(`${description} returned no workflow-pack task-flow identity.`);
+  }
+  return taskFlow;
+}
+
+function assertTaskFlowRunRef(taskFlow, runId, description) {
+  const runRefs = Array.isArray(taskFlow.run_refs) ? taskFlow.run_refs : [];
+  if (!runRefs.includes(runId)) {
+    throw new Error(
+      `${description} task-flow run_refs did not include source run '${runId}'.`
+    );
+  }
+}
+
+function assertTaskFlowReviewState(taskFlow, runId, expectedReviewState, description) {
+  const reviewStates =
+    taskFlow.review_states && typeof taskFlow.review_states === "object"
+      ? taskFlow.review_states
+      : {};
+  if (reviewStates[runId] !== expectedReviewState) {
+    throw new Error(
+      `${description} task-flow review state for '${runId}' was '${String(
+        reviewStates[runId]
+      )}' instead of '${expectedReviewState}'.`
+    );
+  }
+}
+
+function assertAcceptedTaskFlowPosture(payload, runId) {
+  const taskFlow = assertWorkflowPackTaskFlowPresence(
+    payload,
+    "Advisor brief ACCEPT review action"
+  );
+  assertTaskFlowRunRef(taskFlow, runId, "Advisor brief ACCEPT review action");
+  assertTaskFlowReviewState(taskFlow, runId, "ACCEPTED", "Advisor brief ACCEPT review action");
+  if (taskFlow.flow_status !== "COMPLETED") {
+    throw new Error(
+      `Advisor brief ACCEPT review action returned task-flow status '${String(
+        taskFlow.flow_status
+      )}' instead of 'COMPLETED'.`
+    );
+  }
+  if (taskFlow.supportability_status !== "READY") {
+    throw new Error(
+      `Advisor brief ACCEPT review action returned task-flow supportability '${String(
+        taskFlow.supportability_status
+      )}' instead of 'READY'.`
+    );
+  }
+  const handoffRefs = Array.isArray(taskFlow.handoff_refs) ? taskFlow.handoff_refs : [];
+  if (!handoffRefs.some((handoff) => handoff?.handoff_type === "READY_FOR_HANDOFF")) {
+    throw new Error(
+      "Advisor brief ACCEPT review action returned no READY_FOR_HANDOFF task-flow handoff."
+    );
+  }
+  return taskFlow;
+}
+
+function assertInitialTaskFlowPosture(payload, runId, description) {
+  const taskFlow = assertWorkflowPackTaskFlowPresence(payload, description);
+  assertTaskFlowRunRef(taskFlow, runId, description);
+  if (!taskFlow.flow_status) {
+    throw new Error(`${description} returned no task-flow status.`);
+  }
+  if (!taskFlow.supportability_status) {
+    throw new Error(`${description} returned no task-flow supportability status.`);
+  }
+  return taskFlow;
+}
+
+function assertReplacementTaskFlowPosture(
+  payload,
+  expectedReviewState,
+  sourceRunId,
+  replacementRunId
+) {
+  const taskFlow = assertWorkflowPackTaskFlowPresence(
+    payload,
+    `Advisor brief ${expectedReviewState} review action`
+  );
+  assertTaskFlowRunRef(taskFlow, sourceRunId, `Advisor brief ${expectedReviewState} review action`);
+  assertTaskFlowReviewState(
+    taskFlow,
+    sourceRunId,
+    expectedReviewState,
+    `Advisor brief ${expectedReviewState} review action`
+  );
+  if (taskFlow.flow_status !== "SUPERSEDED") {
+    throw new Error(
+      `Advisor brief ${expectedReviewState} review action returned task-flow status '${String(
+        taskFlow.flow_status
+      )}' instead of 'SUPERSEDED'.`
+    );
+  }
+  if (taskFlow.supportability_status !== "HISTORICAL") {
+    throw new Error(
+      `Advisor brief ${expectedReviewState} review action returned task-flow supportability '${String(
+        taskFlow.supportability_status
+      )}' instead of 'HISTORICAL'.`
+    );
+  }
+  if (taskFlow.replacement_lineage?.replacement_run_id !== replacementRunId) {
+    throw new Error(
+      `Advisor brief ${expectedReviewState} review action returned task-flow replacement_run_id '${String(
+        taskFlow.replacement_lineage?.replacement_run_id
+      )}' instead of '${replacementRunId}'.`
+    );
+  }
+  return taskFlow;
+}
+
 function assertAcceptedRunPosture(payload) {
   const run = assertWorkflowPackRunPresence(payload, "Advisor brief ACCEPT review action");
   if (run.review_state !== "ACCEPTED") {
@@ -106,10 +220,14 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     }
   );
   const acceptedRun = assertAcceptedRunPosture(acceptedBrief);
+  const acceptedTaskFlow = assertAcceptedTaskFlowPosture(acceptedBrief, acceptedRun.run_id);
   recordWorkflowPackCheck(summary, {
     actionType: "ACCEPT",
     route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${acceptQuery}`,
     sourceRunId: acceptedRun.run_id,
+    taskFlowId: acceptedTaskFlow.task_flow_id,
+    taskFlowStatus: acceptedTaskFlow.flow_status,
+    taskFlowSupportabilityStatus: acceptedTaskFlow.supportability_status,
     resultReviewState: acceptedRun.review_state,
     resultSupportabilityStatus: acceptedRun.supportability_status,
   });
@@ -144,8 +262,18 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     supersedeOriginal,
     "Advisor brief supersede source run"
   );
+  assertInitialTaskFlowPosture(
+    supersedeOriginal,
+    supersedeSourceRun.run_id,
+    "Advisor brief supersede source run"
+  );
   const supersedeReplacementRun = assertWorkflowPackRunPresence(
     supersedeReplacement,
+    "Advisor brief supersede replacement run"
+  );
+  assertInitialTaskFlowPosture(
+    supersedeReplacement,
+    supersedeReplacementRun.run_id,
     "Advisor brief supersede replacement run"
   );
   const supersededBrief = await postJson(
@@ -165,11 +293,20 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     "SUPERSEDED",
     supersedeReplacementRun.run_id
   );
+  const supersededTaskFlow = assertReplacementTaskFlowPosture(
+    supersededBrief,
+    "SUPERSEDED",
+    supersedeSourceRun.run_id,
+    supersedeReplacementRun.run_id
+  );
   recordWorkflowPackCheck(summary, {
     actionType: "SUPERSEDE",
     route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${supersedeOriginalQuery}`,
     sourceRunId: supersedeSourceRun.run_id,
     replacementRunId: supersedeReplacementRun.run_id,
+    taskFlowId: supersededTaskFlow.task_flow_id,
+    taskFlowStatus: supersededTaskFlow.flow_status,
+    taskFlowSupportabilityStatus: supersededTaskFlow.supportability_status,
     resultReviewState: supersededRun.review_state,
     resultSupportabilityStatus: supersededRun.supportability_status,
   });
@@ -202,8 +339,18 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     reviseOriginal,
     "Advisor brief revise source run"
   );
+  assertInitialTaskFlowPosture(
+    reviseOriginal,
+    reviseSourceRun.run_id,
+    "Advisor brief revise source run"
+  );
   const reviseReplacementRun = assertWorkflowPackRunPresence(
     reviseReplacement,
+    "Advisor brief revise replacement run"
+  );
+  assertInitialTaskFlowPosture(
+    reviseReplacement,
+    reviseReplacementRun.run_id,
     "Advisor brief revise replacement run"
   );
   const revisedBrief = await postJson(
@@ -223,11 +370,20 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     "REVISED",
     reviseReplacementRun.run_id
   );
+  const revisedTaskFlow = assertReplacementTaskFlowPosture(
+    revisedBrief,
+    "REVISED",
+    reviseSourceRun.run_id,
+    reviseReplacementRun.run_id
+  );
   recordWorkflowPackCheck(summary, {
     actionType: "REVISE",
     route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${reviseOriginalQuery}`,
     sourceRunId: reviseSourceRun.run_id,
     replacementRunId: reviseReplacementRun.run_id,
+    taskFlowId: revisedTaskFlow.task_flow_id,
+    taskFlowStatus: revisedTaskFlow.flow_status,
+    taskFlowSupportabilityStatus: revisedTaskFlow.supportability_status,
     resultReviewState: revisedRun.review_state,
     resultSupportabilityStatus: revisedRun.supportability_status,
   });
