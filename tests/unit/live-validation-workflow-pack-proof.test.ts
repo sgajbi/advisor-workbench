@@ -41,7 +41,7 @@ function createTaskFlow({
   flowStatus,
   supportabilityStatus,
   replacementRunId,
-  handoffType,
+  handoffStatus,
 }: {
   taskFlowId: string;
   runId: string;
@@ -49,7 +49,7 @@ function createTaskFlow({
   flowStatus: string;
   supportabilityStatus: string;
   replacementRunId?: unknown;
-  handoffType?: string;
+  handoffStatus?: string;
 }) {
   return {
     task_flow_id: taskFlowId,
@@ -61,7 +61,7 @@ function createTaskFlow({
     supportability_status: supportabilityStatus,
     replacement_lineage:
       replacementRunId === undefined ? null : { replacement_run_id: replacementRunId },
-    handoff_refs: handoffType === undefined ? [] : [{ handoff_type: handoffType }],
+    handoff_refs: handoffStatus === undefined ? [] : [{ status: handoffStatus }],
   };
 }
 
@@ -74,7 +74,7 @@ function createAdvisorBriefPayload({
   taskFlowId,
   taskFlowStatus = "AWAITING_REVIEW",
   taskFlowSupportabilityStatus = "ACTION_REQUIRED",
-  handoffType,
+  handoffStatus,
 }: {
   runId: string;
   reviewState?: string;
@@ -84,7 +84,7 @@ function createAdvisorBriefPayload({
   taskFlowId: string;
   taskFlowStatus?: string;
   taskFlowSupportabilityStatus?: string;
-  handoffType?: string;
+  handoffStatus?: string;
 }) {
   return {
     workflow_pack_run: {
@@ -103,7 +103,7 @@ function createAdvisorBriefPayload({
       flowStatus: taskFlowStatus,
       supportabilityStatus: taskFlowSupportabilityStatus,
       replacementRunId,
-      handoffType,
+      handoffStatus,
     }),
   };
 }
@@ -175,7 +175,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-ytd-net",
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
-            handoffType: "READY_FOR_HANDOFF",
+            handoffStatus: "READY_FOR_HANDOFF",
           });
         }
         if (body.action_type === "SUPERSEDE") {
@@ -285,7 +285,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-ytd-net",
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
-            handoffType: "READY_FOR_HANDOFF",
+            handoffStatus: "READY_FOR_HANDOFF",
           });
         }
         if (body.action_type === "SUPERSEDE") {

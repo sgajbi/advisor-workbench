@@ -80,7 +80,7 @@ function assertAcceptedTaskFlowPosture(payload, runId) {
     );
   }
   const handoffRefs = Array.isArray(taskFlow.handoff_refs) ? taskFlow.handoff_refs : [];
-  if (!handoffRefs.some((handoff) => handoff?.handoff_type === "READY_FOR_HANDOFF")) {
+  if (!handoffRefs.some((handoff) => handoff?.status === "READY_FOR_HANDOFF")) {
     throw new Error(
       "Advisor brief ACCEPT review action returned no READY_FOR_HANDOFF task-flow handoff."
     );
