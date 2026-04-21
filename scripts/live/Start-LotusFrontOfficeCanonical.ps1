@@ -3,6 +3,7 @@ param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
+  [string]$LotusAiEnvFile = "",
   [int]$SeedWaitSeconds = 900,
   [switch]$CleanCoreState,
   [switch]$BuildImages,
@@ -85,6 +86,36 @@ function Stop-HostProcessOnPort {
   Start-Sleep -Seconds 2
 }
 
+function Resolve-LotusAiEnvFile {
+  param([string]$EnvFile)
+
+  if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    return ""
+  }
+
+  $resolved = if ([System.IO.Path]::IsPathRooted($EnvFile)) {
+    $EnvFile
+  } else {
+    Join-Path $aiRepo $EnvFile
+  }
+  if (-not (Test-Path $resolved)) {
+    throw "Lotus AI env file not found: $resolved"
+  }
+  return $resolved
+}
+
+function Get-EnvScopedComposeCommand {
+  param(
+    [string]$Command,
+    [string]$EnvFile
+  )
+
+  if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    return $Command
+  }
+  return "`$env:LOTUS_AI_ENV_FILE = '$EnvFile'; $Command"
+}
+
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
@@ -98,10 +129,11 @@ $composeUpCommand = "docker compose up -d"
 if ($BuildImages) {
   $composeUpCommand = "$composeUpCommand --build"
 }
+$resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
 Invoke-RepoCommand $coreRepo $composeUpCommand
 Invoke-RepoCommand $performanceRepo $composeUpCommand
 Invoke-RepoCommand $riskRepo $composeUpCommand
-Invoke-RepoCommand $aiRepo $composeUpCommand
+Invoke-RepoCommand $aiRepo (Get-EnvScopedComposeCommand -Command $composeUpCommand -EnvFile $resolvedLotusAiEnvFile)
 Invoke-RepoCommand $adviseRepo $composeUpCommand
 Invoke-RepoCommand $reportRepo $composeUpCommand
 
