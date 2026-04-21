@@ -96,6 +96,10 @@ That script performs:
 7. canonical host-process startup for `lotus-manage` on `8001`
 8. canonical `lotus-workbench` startup on port `3000`
 
+The canonical startup flow replaces any existing Workbench listener on port `3000` before it
+launches `npm run dev`. This avoids stale Next.js chunk manifests and partially rebuilt `.next`
+state from older local sessions causing browser hydration failures during governed validation.
+
 The command exits after the stack is usable. It does not block on browser validation.
 Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
 not considered success.
@@ -105,6 +109,12 @@ runtime without waiting for the full validation lane to finish.
 
 The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed seed needs a longer
 drain window than the default `900` seconds.
+
+When a prior local RFC-086 load/performance run has left stale `lotus-core` Kafka or Postgres
+state behind, use `-CleanCoreState` on the startup script to run `docker compose down -v
+--remove-orphans` in `lotus-core` before the canonical rebuild and reseed. This reset is explicit
+because routine front-office bring-up only seeds the governed `PB_SG_GLOBAL_BAL_001` portfolio and
+does not include the separate `1000`-portfolio load scenario.
 
 ## Canonical bring-up with validation
 

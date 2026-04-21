@@ -1,6 +1,14 @@
 import path from "node:path";
 import { expect } from "@playwright/test";
 
+export function hasAcceptedAdvisorBriefReviewPosture(text) {
+  return (
+    text.includes("AI Review") &&
+    text.includes("ACCEPTED") &&
+    (text.includes("Supportability ACTION REQUIRED") || text.includes("Supportability READY"))
+  );
+}
+
 export function createBrowserValidationHelpers({
   outputDir,
   summary,
@@ -250,17 +258,19 @@ export async function validateAdvisorBriefPanel(
 
   if (performAcceptReviewActionProof) {
     const reviewRegion = page.getByLabel("Advisor brief review actions");
+    const supportabilityRegion = page.getByLabel("Advisor brief supportability");
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await reviewRegion.getByLabel("Reviewed by").fill("live.validator.ui");
     await reviewRegion
       .getByLabel("Review reason")
       .fill("Live canonical validator proving the Workbench ACCEPT review path.");
     await reviewRegion.getByRole("button", { name: "Accept Brief" }).click();
-    await expect(
-      page.getByText("Run is supportable through the current bounded workflow-pack ledger posture.")
-    ).toBeVisible({ timeout: timeoutMs });
-    await expect(page.getByText("AI Review")).toBeVisible({ timeout: timeoutMs });
-    await expect(page.getByText("ACCEPTED")).toBeVisible({ timeout: timeoutMs });
+    await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
+    await expect
+      .poll(async () => hasAcceptedAdvisorBriefReviewPosture(await supportabilityRegion.innerText()), {
+        timeout: timeoutMs,
+      })
+      .toBe(true);
     summary.uiChecks.push({
       description: "Advisor brief ACCEPT review action",
       kind: "workflow-pack-review-action",

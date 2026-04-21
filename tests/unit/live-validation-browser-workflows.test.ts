@@ -2,9 +2,33 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createBrowserValidationHelpers } from "../../scripts/live/validation/browser-workflows.mjs";
+import * as browserWorkflowModule from "../../scripts/live/validation/browser-workflows.mjs";
+
+const {
+  createBrowserValidationHelpers,
+  hasAcceptedAdvisorBriefReviewPosture,
+} = browserWorkflowModule as unknown as {
+  createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
+  hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
+};
 
 describe("live validation browser workflow helpers", () => {
+  it("accepts both ready and degraded accepted advisor-brief review posture", () => {
+    expect(
+      hasAcceptedAdvisorBriefReviewPosture(
+        "AI Review Supportability ACTION REQUIRED ACCEPTED partial evidence remains visible"
+      )
+    ).toBe(true);
+    expect(
+      hasAcceptedAdvisorBriefReviewPosture(
+        "AI Review Supportability READY ACCEPTED run accepted for bounded downstream workflow use"
+      )
+    ).toBe(true);
+    expect(
+      hasAcceptedAdvisorBriefReviewPosture("AI Review AWAITING REVIEW Supportability ACTION REQUIRED")
+    ).toBe(false);
+  });
+
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "lotus-browser-workflow-"));
     const screenshotCalls: Array<{ path: string; fullPage: boolean }> = [];

@@ -4,6 +4,7 @@ param(
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
   [int]$SeedWaitSeconds = 900,
+  [switch]$CleanCoreState,
   [switch]$BuildImages,
   [switch]$RunValidation
 )
@@ -60,8 +61,37 @@ function Remove-ContainerIfPresent {
   }
 }
 
+function Stop-HostProcessOnPort {
+  param(
+    [int]$Port,
+    [string]$Description
+  )
+
+  $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+  if (-not $connections) {
+    return
+  }
+
+  $processIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+  foreach ($processId in $processIds) {
+    if (-not $processId) {
+      continue
+    }
+
+    Write-Host "Stopping stale $Description process on :$Port (PID $processId) ..."
+    Stop-Process -Id $processId -Force -ErrorAction Stop
+  }
+
+  Start-Sleep -Seconds 2
+}
+
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
+
+if ($CleanCoreState) {
+  Write-Host "Resetting lotus-core Docker state before canonical reseed ..."
+  Invoke-RepoCommand $coreRepo "docker compose down -v --remove-orphans"
+}
 
 Write-Host "Starting Docker-backed upstream services..."
 $composeUpCommand = "docker compose up -d"
@@ -94,21 +124,18 @@ if ($LASTEXITCODE -ne 0) {
   throw "Canonical lotus-manage startup failed with exit code $LASTEXITCODE."
 }
 
-if (-not (Test-HttpReady "http://127.0.0.1:3000")) {
-  Write-Host "Starting Workbench dev server on :3000 ..."
-  $out = Join-Path $workbenchRepo "workbench-3000.dev.out.log"
-  $err = Join-Path $workbenchRepo "workbench-3000.dev.err.log"
-  if (Test-Path $out) { Remove-Item $out -Force }
-  if (Test-Path $err) { Remove-Item $err -Force }
-  Start-Process -FilePath "npm.cmd" `
-    -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
-    -WorkingDirectory $workbenchRepo `
-    -RedirectStandardOutput $out `
-    -RedirectStandardError $err | Out-Null
-  Start-Sleep -Seconds 10
-} else {
-  Write-Host "Workbench already responding on :3000"
-}
+Stop-HostProcessOnPort -Port 3000 -Description "Workbench"
+Write-Host "Starting Workbench dev server on :3000 ..."
+$out = Join-Path $workbenchRepo "workbench-3000.dev.out.log"
+$err = Join-Path $workbenchRepo "workbench-3000.dev.err.log"
+if (Test-Path $out) { Remove-Item $out -Force }
+if (Test-Path $err) { Remove-Item $err -Force }
+Start-Process -FilePath "npm.cmd" `
+  -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
+  -WorkingDirectory $workbenchRepo `
+  -RedirectStandardOutput $out `
+  -RedirectStandardError $err | Out-Null
+Start-Sleep -Seconds 10
 
 if (-not $RunValidation) {
   if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {

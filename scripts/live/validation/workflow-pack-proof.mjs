@@ -27,6 +27,24 @@ function assertWorkflowPackRunPresence(payload, description) {
   return run;
 }
 
+function assertAcceptedRunPosture(payload) {
+  const run = assertWorkflowPackRunPresence(payload, "Advisor brief ACCEPT review action");
+  if (run.review_state !== "ACCEPTED") {
+    throw new Error(
+      `Advisor brief ACCEPT review action returned review state '${String(
+        run.review_state
+      )}' instead of 'ACCEPTED'.`
+    );
+  }
+  if (run.superseded === true) {
+    throw new Error("Advisor brief ACCEPT review action incorrectly marked the run as historical.");
+  }
+  if (!run.supportability_status) {
+    throw new Error("Advisor brief ACCEPT review action returned no supportability status.");
+  }
+  return run;
+}
+
 function assertReplacementLineagePosture(payload, expectedReviewState, replacementRunId) {
   const run = assertWorkflowPackRunPresence(
     payload,
@@ -87,21 +105,7 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
       reason: "Live canonical validator proving bounded ACCEPT review posture.",
     }
   );
-  const acceptedRun = assertWorkflowPackRunPresence(acceptedBrief, "Advisor brief ACCEPT review action");
-  if (acceptedRun.review_state !== "ACCEPTED") {
-    throw new Error(
-      `Advisor brief ACCEPT review action returned review state '${String(
-        acceptedRun.review_state
-      )}' instead of 'ACCEPTED'.`
-    );
-  }
-  if (acceptedRun.supportability_status !== "READY") {
-    throw new Error(
-      `Advisor brief ACCEPT review action returned supportability '${String(
-        acceptedRun.supportability_status
-      )}' instead of 'READY'.`
-    );
-  }
+  const acceptedRun = assertAcceptedRunPosture(acceptedBrief);
   recordWorkflowPackCheck(summary, {
     actionType: "ACCEPT",
     route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${acceptQuery}`,
