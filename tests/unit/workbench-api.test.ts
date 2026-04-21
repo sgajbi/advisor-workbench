@@ -913,6 +913,7 @@ describe("workbench api", () => {
               },
               supportability_status: "ACTION_REQUIRED",
               replacement_lineage: [],
+              handoff_refs: [],
               updated_at: "2026-04-21T03:00:00Z",
             },
             ai_audit: {},
@@ -1002,6 +1003,14 @@ describe("workbench api", () => {
               },
               supportability_status: "READY",
               replacement_lineage: [],
+              handoff_refs: [
+                {
+                  handoff_id: "taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1",
+                  owner_service: "lotus-gateway",
+                  status: "READY_FOR_HANDOFF",
+                  domain_ref: null,
+                },
+              ],
               updated_at: "2026-04-21T03:00:00Z",
             },
             ai_audit: {},

@@ -105,6 +105,7 @@ const readyAdvisorBriefResponse: WorkbenchPerformanceAdvisorBrief = {
     },
     supportability_status: "ACTION_REQUIRED",
     replacement_lineage: [],
+    handoff_refs: [],
     updated_at: "2026-04-21T03:00:00Z",
   },
   ai_audit: {
@@ -155,6 +156,14 @@ vi.mock("../../src/features/workbench/api", () => ({
         "packrun_advisor_brief_req-1": "ACCEPTED",
       },
       supportability_status: "READY",
+      handoff_refs: [
+        {
+          handoff_id: "taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1",
+          owner_service: "lotus-gateway",
+          status: "READY_FOR_HANDOFF",
+          domain_ref: null,
+        },
+      ],
     },
   })),
 }));
@@ -181,6 +190,14 @@ describe("PerformanceAdvisorBriefMode", () => {
           "packrun_advisor_brief_req-1": "ACCEPTED",
         },
         supportability_status: "READY",
+        handoff_refs: [
+          {
+            handoff_id: "taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1",
+            owner_service: "lotus-gateway",
+            status: "READY_FOR_HANDOFF",
+            domain_ref: null,
+          },
+        ],
       },
     });
   });
@@ -520,6 +537,9 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("AI Review");
       expect(supportability).toHaveTextContent("ACCEPTED");
       expect(supportability).toHaveTextContent("Supportability READY");
+      expect(supportability).toHaveTextContent(
+        "Handoff taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1 is ready for handoff for lotus-gateway."
+      );
       expect(supportability).toHaveTextContent(
         "Run accepted for bounded downstream workflow use."
       );

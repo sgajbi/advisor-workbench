@@ -39,6 +39,14 @@ task-flow state, review state, or replacement lineage from narrative text or fal
    - passed with existing CRLF normalization warnings only.
 6. `powershell -ExecutionPolicy Bypass -File C:\Users\Sandeep\projects\lotus-platform\automation\Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-workbench`
    - reported expected branch-local drift for `Integrations.md`; publish after merge to `main`.
+7. Handoff-readiness follow-up: Workbench now preserves and renders gateway task-flow
+   `handoff_refs`.
+   `npm test -- --run tests/unit/performance-advisor-brief-view-model.test.ts tests/unit/performance-advisor-brief-mode.test.tsx tests/unit/workbench-api.test.ts`
+   - 44 passed.
+8. Handoff-readiness follow-up `npm run typecheck`
+   - passed.
+9. Handoff-readiness follow-up `npm run lint`
+   - passed.
 
 ## Remaining RFC-0097 Gaps
 

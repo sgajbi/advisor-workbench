@@ -559,6 +559,13 @@ export type WorkbenchAdvisorBriefWorkflowPackTaskFlowLineage = {
   reason: string;
 };
 
+export type WorkbenchAdvisorBriefWorkflowPackTaskFlowHandoff = {
+  handoff_id: string;
+  owner_service: string;
+  status: string;
+  domain_ref?: string | null;
+};
+
 export type WorkbenchAdvisorBriefWorkflowPackTaskFlow = {
   task_flow_id: string;
   workflow_pack_id: string;
@@ -569,6 +576,7 @@ export type WorkbenchAdvisorBriefWorkflowPackTaskFlow = {
   review_states: Record<string, string>;
   supportability_status: string;
   replacement_lineage: WorkbenchAdvisorBriefWorkflowPackTaskFlowLineage[];
+  handoff_refs: WorkbenchAdvisorBriefWorkflowPackTaskFlowHandoff[];
   updated_at: string;
 };
 

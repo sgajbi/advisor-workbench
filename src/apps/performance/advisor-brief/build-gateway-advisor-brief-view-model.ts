@@ -178,6 +178,10 @@ function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief)
           (lineage) =>
             `${lineage.review_action_ref}: task flow links ${lineage.superseded_run_id} to replacement run ${lineage.replacement_run_id}.`
         ),
+        ...workflowPackTaskFlow.handoff_refs.map(
+          (handoff) =>
+            `Handoff ${handoff.handoff_id} is ${handoff.status.replaceAll("_", " ").toLowerCase()} for ${handoff.owner_service}.`
+        ),
       ]
     : [];
 
