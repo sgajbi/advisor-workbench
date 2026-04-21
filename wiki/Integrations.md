@@ -31,3 +31,6 @@
 3. canonical front-office validation depends on governed `*.dev.lotus` routing and seeded data
 4. shell navigation supportability is informed by gateway-backed capability posture rather than by
    the mere existence of historical routes
+5. Performance advisor-brief workflow-pack run posture and RFC-0097 task-flow lineage are rendered
+   from gateway payloads; Workbench does not infer replacement lineage from narrative text or local
+   fallback previews

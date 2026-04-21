@@ -552,6 +552,26 @@ export type WorkbenchAdvisorBriefWorkflowPackRun = {
   findings: WorkbenchAdvisorBriefWorkflowPackRunFinding[];
 };
 
+export type WorkbenchAdvisorBriefWorkflowPackTaskFlowLineage = {
+  superseded_run_id: string;
+  replacement_run_id: string;
+  review_action_ref: string;
+  reason: string;
+};
+
+export type WorkbenchAdvisorBriefWorkflowPackTaskFlow = {
+  task_flow_id: string;
+  workflow_pack_id: string;
+  version: string;
+  flow_status: string;
+  current_step_id?: string | null;
+  run_refs: string[];
+  review_states: Record<string, string>;
+  supportability_status: string;
+  replacement_lineage: WorkbenchAdvisorBriefWorkflowPackTaskFlowLineage[];
+  updated_at: string;
+};
+
 export type WorkbenchPerformanceAdvisorBrief = {
   correlation_id: string;
   contract_version: string;
@@ -574,6 +594,7 @@ export type WorkbenchPerformanceAdvisorBrief = {
   source_metrics: WorkbenchAdvisorBriefSourceMetric[];
   supportability: WorkbenchAdvisorBriefSupportabilityItem[];
   workflow_pack_run?: WorkbenchAdvisorBriefWorkflowPackRun | null;
+  workflow_pack_task_flow?: WorkbenchAdvisorBriefWorkflowPackTaskFlow | null;
   ai_audit: {
     task_id?: string;
     output_label?: string;

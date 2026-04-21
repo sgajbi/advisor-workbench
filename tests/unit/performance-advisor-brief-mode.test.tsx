@@ -93,6 +93,20 @@ const readyAdvisorBriefResponse: WorkbenchPerformanceAdvisorBrief = {
       },
     ],
   },
+  workflow_pack_task_flow: {
+    task_flow_id: "taskflow_advisor_brief_req-1",
+    workflow_pack_id: "advisor_brief.pack",
+    version: "v1",
+    flow_status: "WAITING_FOR_REVIEW",
+    current_step_id: "generate_advisor_brief",
+    run_refs: ["packrun_advisor_brief_req-1"],
+    review_states: {
+      "packrun_advisor_brief_req-1": "AWAITING_REVIEW",
+    },
+    supportability_status: "ACTION_REQUIRED",
+    replacement_lineage: [],
+    updated_at: "2026-04-21T03:00:00Z",
+  },
   ai_audit: {
     task_id: "explain.v1",
     output_label: "EXPLANATION_ONLY",
@@ -134,6 +148,14 @@ vi.mock("../../src/features/workbench/api", () => ({
       current_summary_note: "Run accepted for bounded downstream workflow use.",
       findings: [],
     },
+    workflow_pack_task_flow: {
+      ...readyAdvisorBriefResponse.workflow_pack_task_flow!,
+      flow_status: "COMPLETED",
+      review_states: {
+        "packrun_advisor_brief_req-1": "ACCEPTED",
+      },
+      supportability_status: "READY",
+    },
   })),
 }));
 
@@ -151,6 +173,14 @@ describe("PerformanceAdvisorBriefMode", () => {
         review_pending: false,
         current_summary_note: "Run accepted for bounded downstream workflow use.",
         findings: [],
+      },
+      workflow_pack_task_flow: {
+        ...readyAdvisorBriefResponse.workflow_pack_task_flow!,
+        flow_status: "COMPLETED",
+        review_states: {
+          "packrun_advisor_brief_req-1": "ACCEPTED",
+        },
+        supportability_status: "READY",
       },
     });
   });
@@ -193,6 +223,10 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("AI Review");
       expect(supportability).toHaveTextContent("AWAITING REVIEW");
       expect(supportability).toHaveTextContent("Supportability ACTION REQUIRED");
+      expect(supportability).toHaveTextContent("AI Task Flow");
+      expect(supportability).toHaveTextContent("WAITING FOR REVIEW");
+      expect(supportability).toHaveTextContent("taskflow_advisor_brief_req-1");
+      expect(supportability).toHaveTextContent("Current task-flow step: generate_advisor_brief.");
       expect(supportability).toHaveTextContent(
         "Run completed but still requires bounded human review before downstream use."
       );

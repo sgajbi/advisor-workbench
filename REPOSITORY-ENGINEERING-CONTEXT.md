@@ -42,7 +42,8 @@ Current repository posture:
 3. the `Portfolio` and `Performance` surfaces are the most mature live workflows,
 4. `/data-products` provides self-serve gateway-backed domain-product catalog, dependency, and
    live trust discovery for RFC-0088,
-5. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+5. the Performance advisor-brief surface consumes gateway-backed workflow-pack run posture and RFC-0097 task-flow posture without synthesizing review state or lineage client-side,
+6. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
