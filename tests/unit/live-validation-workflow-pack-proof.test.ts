@@ -34,11 +34,119 @@ function createSummary() {
   };
 }
 
+function createTaskFlow({
+  taskFlowId,
+  runId,
+  reviewState,
+  flowStatus,
+  supportabilityStatus,
+  replacementRunId,
+  handoffType,
+}: {
+  taskFlowId: string;
+  runId: string;
+  reviewState: string;
+  flowStatus: string;
+  supportabilityStatus: string;
+  replacementRunId?: unknown;
+  handoffType?: string;
+}) {
+  return {
+    task_flow_id: taskFlowId,
+    run_refs: [runId],
+    review_states: {
+      [runId]: reviewState,
+    },
+    flow_status: flowStatus,
+    supportability_status: supportabilityStatus,
+    replacement_lineage:
+      replacementRunId === undefined ? null : { replacement_run_id: replacementRunId },
+    handoff_refs: handoffType === undefined ? [] : [{ handoff_type: handoffType }],
+  };
+}
+
+function createAdvisorBriefPayload({
+  runId,
+  reviewState = "AWAITING_REVIEW",
+  supportabilityStatus,
+  superseded,
+  replacementRunId,
+  taskFlowId,
+  taskFlowStatus = "AWAITING_REVIEW",
+  taskFlowSupportabilityStatus = "ACTION_REQUIRED",
+  handoffType,
+}: {
+  runId: string;
+  reviewState?: string;
+  supportabilityStatus?: string;
+  superseded?: boolean;
+  replacementRunId?: unknown;
+  taskFlowId: string;
+  taskFlowStatus?: string;
+  taskFlowSupportabilityStatus?: string;
+  handoffType?: string;
+}) {
+  return {
+    workflow_pack_run: {
+      run_id: runId,
+      review_state: reviewState,
+      ...(supportabilityStatus === undefined
+        ? {}
+        : { supportability_status: supportabilityStatus }),
+      ...(superseded === undefined ? {} : { superseded }),
+      ...(replacementRunId === undefined ? {} : { replacement_run_id: replacementRunId }),
+    },
+    workflow_pack_task_flow: createTaskFlow({
+      taskFlowId,
+      runId,
+      reviewState,
+      flowStatus: taskFlowStatus,
+      supportabilityStatus: taskFlowSupportabilityStatus,
+      replacementRunId,
+      handoffType,
+    }),
+  };
+}
+
+function createFetchAdvisorBriefPayload() {
+  return (url: string) => {
+    if (url.includes("report_start_date=2026-02-01")) {
+      return createAdvisorBriefPayload({
+        runId: "packrun-revise-replacement",
+        taskFlowId: "taskflow-revise-replacement",
+      });
+    }
+    if (url.includes("detail_basis=NET") && url.includes("period=EXPLICIT")) {
+      return createAdvisorBriefPayload({
+        runId: "packrun-explicit-net",
+        taskFlowId: "taskflow-explicit-net",
+      });
+    }
+    if (url.includes("detail_basis=GROSS") && url.includes("period=EXPLICIT")) {
+      return createAdvisorBriefPayload({
+        runId: "packrun-explicit-gross",
+        taskFlowId: "taskflow-explicit-gross",
+      });
+    }
+    if (url.includes("detail_basis=GROSS") && url.includes("period=YTD")) {
+      return createAdvisorBriefPayload({
+        runId: "packrun-ytd-gross",
+        taskFlowId: "taskflow-ytd-gross",
+      });
+    }
+    return createAdvisorBriefPayload({
+      runId: "packrun-ytd-net",
+      taskFlowId: "taskflow-ytd-net",
+    });
+  };
+}
+
 describe("live validation workflow-pack proof", () => {
   it("records advisor-brief review-action lineage checks for accept, supersede, and revise", async () => {
     const summary = createSummary();
     const getCalls: string[] = [];
     const postCalls: Array<{ url: string; body: Record<string, unknown> }> = [];
+    const fetchAdvisorBriefPayload = createFetchAdvisorBriefPayload();
 
     await validateAdvisorBriefWorkflowPackReviewChain({
       summary,
@@ -49,24 +157,7 @@ describe("live validation workflow-pack proof", () => {
       timeoutMs: 1000,
       fetchJson: async (_summary: unknown, url: string) => {
         getCalls.push(url);
-        if (url.includes("report_start_date=2026-02-01")) {
-          return {
-            workflow_pack_run: {
-              run_id: "packrun-revise-replacement",
-              review_state: "AWAITING_REVIEW",
-            },
-          };
-        }
-        if (url.includes("detail_basis=NET") && url.includes("period=EXPLICIT")) {
-          return { workflow_pack_run: { run_id: "packrun-explicit-net", review_state: "AWAITING_REVIEW" } };
-        }
-        if (url.includes("detail_basis=GROSS") && url.includes("period=EXPLICIT")) {
-          return { workflow_pack_run: { run_id: "packrun-explicit-gross", review_state: "AWAITING_REVIEW" } };
-        }
-        if (url.includes("detail_basis=GROSS") && url.includes("period=YTD")) {
-          return { workflow_pack_run: { run_id: "packrun-ytd-gross", review_state: "AWAITING_REVIEW" } };
-        }
-        return { workflow_pack_run: { run_id: "packrun-explicit-net", review_state: "AWAITING_REVIEW" } };
+        return fetchAdvisorBriefPayload(url);
       },
       postJson: async (
         _summary: unknown,
@@ -77,34 +168,38 @@ describe("live validation workflow-pack proof", () => {
       ) => {
         postCalls.push({ url, body });
         if (body.action_type === "ACCEPT") {
-          return {
-            workflow_pack_run: {
-              run_id: "packrun-ytd-net",
-              review_state: "ACCEPTED",
-              supportability_status: "READY",
-            },
-          };
+          return createAdvisorBriefPayload({
+            runId: "packrun-ytd-net",
+            reviewState: "ACCEPTED",
+            supportabilityStatus: "READY",
+            taskFlowId: "taskflow-ytd-net",
+            taskFlowStatus: "COMPLETED",
+            taskFlowSupportabilityStatus: "READY",
+            handoffType: "READY_FOR_HANDOFF",
+          });
         }
         if (body.action_type === "SUPERSEDE") {
-          return {
-            workflow_pack_run: {
-              run_id: "packrun-explicit-net",
-              review_state: "SUPERSEDED",
-              supportability_status: "HISTORICAL",
-              superseded: true,
-              replacement_run_id: body.replacement_run_id,
-            },
-          };
-        }
-        return {
-          workflow_pack_run: {
-            run_id: "packrun-ytd-gross",
-            review_state: "REVISED",
-            supportability_status: "HISTORICAL",
+          return createAdvisorBriefPayload({
+            runId: "packrun-explicit-net",
+            reviewState: "SUPERSEDED",
+            supportabilityStatus: "HISTORICAL",
             superseded: true,
-            replacement_run_id: body.replacement_run_id,
-          },
-        };
+            replacementRunId: body.replacement_run_id,
+            taskFlowId: "taskflow-explicit-net",
+            taskFlowStatus: "SUPERSEDED",
+            taskFlowSupportabilityStatus: "HISTORICAL",
+          });
+        }
+        return createAdvisorBriefPayload({
+          runId: "packrun-ytd-gross",
+          reviewState: "REVISED",
+          supportabilityStatus: "HISTORICAL",
+          superseded: true,
+          replacementRunId: body.replacement_run_id,
+          taskFlowId: "taskflow-ytd-gross",
+          taskFlowStatus: "SUPERSEDED",
+          taskFlowSupportabilityStatus: "HISTORICAL",
+        });
       },
     });
 
@@ -131,6 +226,9 @@ describe("live validation workflow-pack proof", () => {
       expect.objectContaining({
         actionType: "ACCEPT",
         sourceRunId: "packrun-ytd-net",
+        taskFlowId: "taskflow-ytd-net",
+        taskFlowStatus: "COMPLETED",
+        taskFlowSupportabilityStatus: "READY",
         resultReviewState: "ACCEPTED",
         resultSupportabilityStatus: "READY",
       }),
@@ -138,6 +236,9 @@ describe("live validation workflow-pack proof", () => {
         actionType: "SUPERSEDE",
         sourceRunId: "packrun-explicit-net",
         replacementRunId: "packrun-explicit-gross",
+        taskFlowId: "taskflow-explicit-net",
+        taskFlowStatus: "SUPERSEDED",
+        taskFlowSupportabilityStatus: "HISTORICAL",
         resultReviewState: "SUPERSEDED",
         resultSupportabilityStatus: "HISTORICAL",
       }),
@@ -145,6 +246,9 @@ describe("live validation workflow-pack proof", () => {
         actionType: "REVISE",
         sourceRunId: "packrun-ytd-gross",
         replacementRunId: "packrun-revise-replacement",
+        taskFlowId: "taskflow-ytd-gross",
+        taskFlowStatus: "SUPERSEDED",
+        taskFlowSupportabilityStatus: "HISTORICAL",
         resultReviewState: "REVISED",
         resultSupportabilityStatus: "HISTORICAL",
       }),
@@ -153,6 +257,7 @@ describe("live validation workflow-pack proof", () => {
 
   it("accepts truthfully action-required accept posture when the run remains degraded", async () => {
     const summary = createSummary();
+    const fetchAdvisorBriefPayload = createFetchAdvisorBriefPayload();
 
     await validateAdvisorBriefWorkflowPackReviewChain({
       summary,
@@ -162,19 +267,7 @@ describe("live validation workflow-pack proof", () => {
       canonicalAsOfDate: "2026-04-10",
       timeoutMs: 1000,
       fetchJson: async (_summary: unknown, url: string) => {
-        if (url.includes("report_start_date=2026-02-01")) {
-          return { workflow_pack_run: { run_id: "packrun-revise-replacement", review_state: "AWAITING_REVIEW" } };
-        }
-        if (url.includes("detail_basis=NET") && url.includes("period=EXPLICIT")) {
-          return { workflow_pack_run: { run_id: "packrun-explicit-net", review_state: "AWAITING_REVIEW" } };
-        }
-        if (url.includes("detail_basis=GROSS") && url.includes("period=EXPLICIT")) {
-          return { workflow_pack_run: { run_id: "packrun-explicit-gross", review_state: "AWAITING_REVIEW" } };
-        }
-        if (url.includes("detail_basis=GROSS") && url.includes("period=YTD")) {
-          return { workflow_pack_run: { run_id: "packrun-ytd-gross", review_state: "AWAITING_REVIEW" } };
-        }
-        return { workflow_pack_run: { run_id: "packrun-ytd-net", review_state: "AWAITING_REVIEW" } };
+        return fetchAdvisorBriefPayload(url);
       },
       postJson: async (
         _summary: unknown,
@@ -184,35 +277,39 @@ describe("live validation workflow-pack proof", () => {
         body: Record<string, unknown>
       ) => {
         if (body.action_type === "ACCEPT") {
-          return {
-            workflow_pack_run: {
-              run_id: "packrun-ytd-net",
-              review_state: "ACCEPTED",
-              supportability_status: "ACTION_REQUIRED",
-              superseded: false,
-            },
-          };
+          return createAdvisorBriefPayload({
+            runId: "packrun-ytd-net",
+            reviewState: "ACCEPTED",
+            supportabilityStatus: "ACTION_REQUIRED",
+            superseded: false,
+            taskFlowId: "taskflow-ytd-net",
+            taskFlowStatus: "COMPLETED",
+            taskFlowSupportabilityStatus: "READY",
+            handoffType: "READY_FOR_HANDOFF",
+          });
         }
         if (body.action_type === "SUPERSEDE") {
-          return {
-            workflow_pack_run: {
-              run_id: "packrun-explicit-net",
-              review_state: "SUPERSEDED",
-              supportability_status: "HISTORICAL",
-              superseded: true,
-              replacement_run_id: body.replacement_run_id,
-            },
-          };
-        }
-        return {
-          workflow_pack_run: {
-            run_id: "packrun-ytd-gross",
-            review_state: "REVISED",
-            supportability_status: "HISTORICAL",
+          return createAdvisorBriefPayload({
+            runId: "packrun-explicit-net",
+            reviewState: "SUPERSEDED",
+            supportabilityStatus: "HISTORICAL",
             superseded: true,
-            replacement_run_id: body.replacement_run_id,
-          },
-        };
+            replacementRunId: body.replacement_run_id,
+            taskFlowId: "taskflow-explicit-net",
+            taskFlowStatus: "SUPERSEDED",
+            taskFlowSupportabilityStatus: "HISTORICAL",
+          });
+        }
+        return createAdvisorBriefPayload({
+          runId: "packrun-ytd-gross",
+          reviewState: "REVISED",
+          supportabilityStatus: "HISTORICAL",
+          superseded: true,
+          replacementRunId: body.replacement_run_id,
+          taskFlowId: "taskflow-ytd-gross",
+          taskFlowStatus: "SUPERSEDED",
+          taskFlowSupportabilityStatus: "HISTORICAL",
+        });
       },
     });
 
@@ -221,6 +318,9 @@ describe("live validation workflow-pack proof", () => {
         expect.objectContaining({
           actionType: "ACCEPT",
           sourceRunId: "packrun-ytd-net",
+          taskFlowId: "taskflow-ytd-net",
+          taskFlowStatus: "COMPLETED",
+          taskFlowSupportabilityStatus: "READY",
           resultReviewState: "ACCEPTED",
           resultSupportabilityStatus: "ACTION_REQUIRED",
         }),

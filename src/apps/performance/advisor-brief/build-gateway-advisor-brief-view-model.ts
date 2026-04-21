@@ -74,18 +74,22 @@ function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisor
   const workflowPackRunRef = advisorBrief.workflow_pack_run
     ? [`lotus-ai:workflow-pack-run:${advisorBrief.workflow_pack_run.run_id}`]
     : [];
+  const workflowPackTaskFlowRef = advisorBrief.workflow_pack_task_flow
+    ? [`lotus-ai:workflow-pack-task-flow:${advisorBrief.workflow_pack_task_flow.task_flow_id}`]
+    : [];
   const aiEvidenceRefs = advisorBrief.ai_evidence.source_refs ?? [];
   if (aiEvidenceRefs.length > 0) {
-    return Array.from(new Set([...aiEvidenceRefs, ...workflowPackRunRef]));
+    return Array.from(new Set([...aiEvidenceRefs, ...workflowPackRunRef, ...workflowPackTaskFlowRef]));
   }
 
   const aiAuditRefs = advisorBrief.ai_audit.source_refs ?? [];
   if (aiAuditRefs.length > 0) {
-    return Array.from(new Set([...aiAuditRefs, ...workflowPackRunRef]));
+    return Array.from(new Set([...aiAuditRefs, ...workflowPackRunRef, ...workflowPackTaskFlowRef]));
   }
 
   return [
     ...workflowPackRunRef,
+    ...workflowPackTaskFlowRef,
     `lotus-gateway:workbench:${advisorBrief.portfolio_id}:performance-advisor-brief:${advisorBrief.period}`,
   ];
 }
@@ -134,11 +138,22 @@ function normalizeGatewaySupportability(
       tone: normalizeWorkflowPackReviewTone(advisorBrief.workflow_pack_run),
       detail: buildWorkflowPackReviewDetail(advisorBrief.workflow_pack_run),
     },
+    ...(advisorBrief.workflow_pack_task_flow
+      ? [
+          {
+            label: "AI Task Flow",
+            value: normalizeTaskFlowStatusValue(advisorBrief.workflow_pack_task_flow.flow_status),
+            tone: normalizeTaskFlowStatusTone(advisorBrief.workflow_pack_task_flow.flow_status),
+            detail: buildTaskFlowDetail(advisorBrief.workflow_pack_task_flow),
+          } satisfies PerformanceAdvisorBriefViewModel["supportability"][number],
+        ]
+      : []),
   ];
 }
 
 function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief): string[] {
   const workflowPackRun = advisorBrief.workflow_pack_run;
+  const workflowPackTaskFlow = advisorBrief.workflow_pack_task_flow;
   const workflowPackNotes = workflowPackRun
     ? [
         workflowPackRun.current_summary_note,
@@ -151,6 +166,24 @@ function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief)
           : null,
       ]
     : [];
+  const taskFlowNotes = workflowPackTaskFlow
+    ? [
+        `Task flow ${workflowPackTaskFlow.task_flow_id} is ${normalizeTaskFlowStatusValue(
+          workflowPackTaskFlow.flow_status
+        ).toLowerCase()}.`,
+        workflowPackTaskFlow.current_step_id
+          ? `Current task-flow step: ${workflowPackTaskFlow.current_step_id}.`
+          : null,
+        ...workflowPackTaskFlow.replacement_lineage.map(
+          (lineage) =>
+            `${lineage.review_action_ref}: task flow links ${lineage.superseded_run_id} to replacement run ${lineage.replacement_run_id}.`
+        ),
+        ...workflowPackTaskFlow.handoff_refs.map(
+          (handoff) =>
+            `Handoff ${handoff.handoff_id} is ${handoff.status.replaceAll("_", " ").toLowerCase()} for ${handoff.owner_service}.`
+        ),
+      ]
+    : [];
 
   return Array.from(
     new Set(
@@ -158,6 +191,7 @@ function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief)
         ...advisorBrief.partial_failures.map((failure) => failure.detail),
         ...advisorBrief.warnings,
         ...workflowPackNotes,
+        ...taskFlowNotes,
       ].filter((note): note is string => Boolean(note))
     )
   );
@@ -360,6 +394,37 @@ function normalizeWorkflowPackReviewTone(
     return "success";
   }
   return "warn";
+}
+
+function normalizeTaskFlowStatusValue(flowStatus: string): string {
+  return flowStatus.replaceAll("_", " ");
+}
+
+function normalizeTaskFlowStatusTone(flowStatus: string): "success" | "warn" | "danger" {
+  switch (flowStatus) {
+    case "COMPLETED":
+      return "success";
+    case "FAILED":
+    case "CANCELLED":
+    case "EXPIRED":
+      return "danger";
+    default:
+      return "warn";
+  }
+}
+
+function buildTaskFlowDetail(
+  taskFlow: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_task_flow"]>
+): string {
+  const detailParts = [
+    taskFlow.task_flow_id,
+    `${taskFlow.workflow_pack_id}@${taskFlow.version}`,
+    `Supportability ${normalizeTaskFlowStatusValue(taskFlow.supportability_status)}`,
+  ];
+  if (taskFlow.replacement_lineage.length > 0) {
+    detailParts.push(`${taskFlow.replacement_lineage.length} lineage edge(s)`);
+  }
+  return detailParts.join(" • ");
 }
 
 function normalizeAdvisorTargetMode(targetMode: string): PerformanceWorkspaceMode {

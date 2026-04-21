@@ -595,6 +595,19 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
             },
           ],
         },
+        workflow_pack_task_flow: {
+          task_flow_id: "taskflow_advisor_brief_req-1",
+          workflow_pack_id: "advisor_brief.pack",
+          version: "v1",
+          flow_status: "WAITING_FOR_REVIEW",
+          current_step_id: "generate_advisor_brief",
+          run_refs: ["packrun_advisor_brief_req-1"],
+          review_states: { "packrun_advisor_brief_req-1": "AWAITING_REVIEW" },
+          supportability_status: "ACTION_REQUIRED",
+          replacement_lineage: [],
+          handoff_refs: [],
+          updated_at: "2026-04-21T03:00:00Z",
+        },
         ai_audit: { stubbed: false, source_refs: [] },
         ai_evidence: { source_refs: [] },
         warnings: [],
@@ -624,16 +637,27 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           tone: "warn",
           detail: "Supportability ACTION REQUIRED",
         },
+        {
+          label: "AI Task Flow",
+          value: "WAITING FOR REVIEW",
+          tone: "warn",
+          detail: "taskflow_advisor_brief_req-1 • advisor_brief.pack@v1 • Supportability ACTION REQUIRED",
+        },
       ])
     );
     expect(brief.reviewNotes).toEqual(
       expect.arrayContaining([
         "Run completed but still requires bounded human review before downstream use.",
         "ACTION REQUIRED: Run is awaiting review.",
+        "Task flow taskflow_advisor_brief_req-1 is waiting for review.",
+        "Current task-flow step: generate_advisor_brief.",
       ])
     );
     expect(brief.audit.sourceRefs).toEqual(
-      expect.arrayContaining(["lotus-ai:workflow-pack-run:packrun_advisor_brief_req-1"])
+      expect.arrayContaining([
+        "lotus-ai:workflow-pack-run:packrun_advisor_brief_req-1",
+        "lotus-ai:workflow-pack-task-flow:taskflow_advisor_brief_req-1",
+      ])
     );
   });
 
@@ -676,6 +700,33 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           replacement_run_id: "packrun_advisor_brief_req-2",
           findings: [],
         },
+        workflow_pack_task_flow: {
+          task_flow_id: "taskflow_advisor_brief_req-1",
+          workflow_pack_id: "advisor_brief.pack",
+          version: "v1",
+          flow_status: "SUPERSEDED",
+          current_step_id: null,
+          run_refs: ["packrun_advisor_brief_req-1"],
+          review_states: { "packrun_advisor_brief_req-1": "SUPERSEDED" },
+          supportability_status: "HISTORICAL",
+          replacement_lineage: [
+            {
+              superseded_run_id: "packrun_advisor_brief_req-1",
+              replacement_run_id: "packrun_advisor_brief_req-2",
+              review_action_ref: "SUPERSEDE",
+              reason: "Advisor brief superseded in favor of the replacement run.",
+            },
+          ],
+          handoff_refs: [
+            {
+              handoff_id: "taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1",
+              owner_service: "lotus-gateway",
+              status: "READY_FOR_HANDOFF",
+              domain_ref: null,
+            },
+          ],
+          updated_at: "2026-04-21T03:00:00Z",
+        },
         ai_audit: { stubbed: false, source_refs: [] },
         ai_evidence: { source_refs: [] },
         warnings: [],
@@ -699,12 +750,21 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           tone: "warn",
           detail: "Supportability READY • Superseded by packrun_advisor_brief_req-2",
         },
+        {
+          label: "AI Task Flow",
+          value: "SUPERSEDED",
+          tone: "warn",
+          detail: "taskflow_advisor_brief_req-1 • advisor_brief.pack@v1 • Supportability HISTORICAL • 1 lineage edge(s)",
+        },
       ])
     );
     expect(brief.reviewNotes).toEqual(
       expect.arrayContaining([
         "Run was superseded by a newer bounded advisor-brief run.",
         "Superseded by workflow-pack run packrun_advisor_brief_req-2.",
+        "Task flow taskflow_advisor_brief_req-1 is superseded.",
+        "SUPERSEDE: task flow links packrun_advisor_brief_req-1 to replacement run packrun_advisor_brief_req-2.",
+        "Handoff taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1 is ready for handoff for lotus-gateway.",
       ])
     );
   });

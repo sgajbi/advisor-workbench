@@ -901,6 +901,21 @@ describe("workbench api", () => {
             risks_and_exceptions: [],
             source_metrics: [],
             supportability: [],
+            workflow_pack_task_flow: {
+              task_flow_id: "taskflow_advisor_brief_req-1",
+              workflow_pack_id: "advisor_brief.pack",
+              version: "v1",
+              flow_status: "WAITING_FOR_REVIEW",
+              current_step_id: "generate_advisor_brief",
+              run_refs: ["packrun_advisor_brief_req-1"],
+              review_states: {
+                "packrun_advisor_brief_req-1": "AWAITING_REVIEW",
+              },
+              supportability_status: "ACTION_REQUIRED",
+              replacement_lineage: [],
+              handoff_refs: [],
+              updated_at: "2026-04-21T03:00:00Z",
+            },
             ai_audit: {},
             ai_evidence: {},
             warnings: [],
@@ -911,7 +926,7 @@ describe("workbench api", () => {
       )
     );
 
-    await getWorkbenchPerformanceAdvisorBriefClient("PF_1001", {
+    const advisorBrief = await getWorkbenchPerformanceAdvisorBriefClient("PF_1001", {
       period: "YTD",
       chartFrequency: "monthly",
       contributionDimension: "asset_class",
@@ -925,6 +940,9 @@ describe("workbench api", () => {
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+    );
+    expect(advisorBrief.workflow_pack_task_flow?.task_flow_id).toBe(
+      "taskflow_advisor_brief_req-1"
     );
   });
 
@@ -972,6 +990,28 @@ describe("workbench api", () => {
                 "Run accepted for bounded downstream workflow use.",
               replacement_run_id: null,
               findings: [],
+            },
+            workflow_pack_task_flow: {
+              task_flow_id: "taskflow_advisor_brief_req-1",
+              workflow_pack_id: "advisor_brief.pack",
+              version: "v1",
+              flow_status: "COMPLETED",
+              current_step_id: null,
+              run_refs: ["packrun_advisor_brief_req-1"],
+              review_states: {
+                "packrun_advisor_brief_req-1": "ACCEPTED",
+              },
+              supportability_status: "READY",
+              replacement_lineage: [],
+              handoff_refs: [
+                {
+                  handoff_id: "taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1",
+                  owner_service: "lotus-gateway",
+                  status: "READY_FOR_HANDOFF",
+                  domain_ref: null,
+                },
+              ],
+              updated_at: "2026-04-21T03:00:00Z",
             },
             ai_audit: {},
             ai_evidence: {},
