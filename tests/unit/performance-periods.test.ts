@@ -15,6 +15,13 @@ describe("performance period vocabulary", () => {
     ]);
   });
 
+  it("does not expose legacy service aliases in user-facing controls", () => {
+    expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("ONE_YEAR");
+    expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("THREE_YEAR");
+    expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("FIVE_YEAR");
+    expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("ITD");
+  });
+
   it("keeps YTD distinct from trailing 1Y semantics", () => {
     expect(getPerformancePeriodDefinition("YTD")).toEqual({
       code: "YTD",

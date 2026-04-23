@@ -574,6 +574,37 @@ describe("workbench api", () => {
     );
   });
 
+  it("keeps canonical trailing periods in client-side risk summary requests", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchRiskSummaryClient("PF_1001", {
+      period: "3Y",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain("/api/bff/api/v1/workbench/PF_1001/risk/summary?");
+    expect(requestedUrl).toContain("period=3Y");
+    expect(requestedUrl).not.toContain("THREE_YEAR");
+  });
+
   it("omits optional benchmark context from the client-side risk summary request when none is selected", async () => {
     vi.stubGlobal(
       "fetch",
