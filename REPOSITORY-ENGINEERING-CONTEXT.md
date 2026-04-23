@@ -43,7 +43,10 @@ Current repository posture:
 4. `/data-products` provides self-serve gateway-backed domain-product catalog, dependency, and
    live trust discovery for RFC-0088,
 5. the Performance advisor-brief surface consumes gateway-backed workflow-pack run posture and RFC-0097 task-flow posture without synthesizing review state or lineage client-side,
-6. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+6. Workbench currently reads reporting snapshot data through gateway but does not initiate
+   portfolio review report-generation jobs; RFC-0100 records this no-change decision in
+   `docs/operations/report-job-invocation-posture.md`,
+7. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
