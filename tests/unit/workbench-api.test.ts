@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   applySandboxChanges,
+  createPortfolioReportBatch,
   createSandboxSession,
+  getReportBatchStatus,
   getReportingSnapshot,
   getWorkbenchAnalytics,
   getWorkbenchRiskAttributionClient,
@@ -18,6 +20,7 @@ import {
   getWorkbenchPerformanceWorkspaceSummaryClient,
   getWorkbenchPerformanceWorkspaceSummary,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
+  runReportBatchOnce,
 } from "../../src/features/workbench/api";
 
 const expectedBaseUrl = "/api/bff/api/v1";
@@ -1115,6 +1118,161 @@ describe("workbench api", () => {
       expect.stringContaining("/api/v1/reports/PF_1001/snapshot?asOfDate=2026-02-24"),
       expect.objectContaining({ cache: "no-store" })
     );
+  });
+
+  it("creates an explicit portfolio report batch through the gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            batch_id: "rbch_1",
+            status: "materialized",
+            status_url: "/api/v1/report-batches/rbch_1",
+            idempotency_key: "workbench-report-batch-PF_1001-2026-02-24-USD",
+            item_count: 1,
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await createPortfolioReportBatch({
+      portfolioId: "PF_1001",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+      bookingCenterCode: "SG",
+      benchmarkCode: "BMK_GLOBAL_BALANCED_60_40",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const [url, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(String(init?.body));
+    const headers = init?.headers as Record<string, string>;
+
+    expect(url).toBe(`${expectedBaseUrl}/report-batches`);
+    expect(init).toEqual(expect.objectContaining({ method: "POST", cache: "no-store" }));
+    expect(headers["Idempotency-Key"]).toBe("workbench-report-batch-PF_1001-2026-02-24-USD");
+    expect(headers["X-Caller-Application"]).toBe("lotus-workbench");
+    expect(headers["X-Tenant-Id"]).toBe("tenant-sg");
+    expect(headers["X-Region"]).toBe("APAC");
+    expect(body).toEqual(
+      expect.objectContaining({
+        selector_mode: "explicit_portfolio_list",
+        portfolio_ids: ["PF_1001"],
+        as_of_date: "2026-02-24",
+        requested_output_formats: ["pdf"],
+        reporting_currency: "USD",
+        max_batch_size: 1,
+      })
+    );
+    expect(body.source_candidates[0]).toEqual(
+      expect.objectContaining({
+        portfolio_id: "PF_1001",
+        tenant_id: "tenant-sg",
+        region: "APAC",
+        active: true,
+        selected: true,
+        source_system: "lotus-core",
+      })
+    );
+    expect(body.options).toEqual(
+      expect.objectContaining({
+        benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+        source_surface: "lotus-workbench",
+      })
+    );
+  });
+
+  it("loads report batch status through the gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            batch_id: "rbch_1",
+            selector_mode: "explicit_portfolio_list",
+            tenant_id: "tenant-sg",
+            region: "APAC",
+            materialized_portfolio_ids: ["PF_1001"],
+            as_of_date: "2026-02-24",
+            requested_output_formats: ["pdf"],
+            reporting_currency: "USD",
+            status: "completed",
+            item_count: 1,
+            status_counts: { succeeded: 1 },
+            items: [],
+            created_at: "2026-02-24T00:00:00Z",
+            updated_at: null,
+            started_at: null,
+            completed_at: null,
+            cancelled_at: null,
+            failed_at: null,
+            correlation_id: "corr",
+            trace_id: "trace",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getReportBatchStatus("rbch_1");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/report-batches/rbch_1`,
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({
+          "X-Actor-Id": "workbench-report-operator",
+          "X-Caller-Application": "lotus-workbench",
+          "X-Tenant-Id": "tenant-sg",
+          "X-Region": "APAC",
+          "X-Correlation-Id": "corr-workbench-report-batch-status-rbch_1",
+        }),
+      })
+    );
+  });
+
+  it("runs one bounded report batch worker pass through the gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            batch_id: "rbch_1",
+            status: "completed",
+            batch_status_before: "materialized",
+            batch_status_after: "completed",
+            recovered_count: 0,
+            leased_count: 1,
+            dispatched_count: 1,
+            executed_count: 1,
+            report_job_ids: ["rjob_1"],
+            back_pressure_reasons: [],
+            skipped_reason: null,
+            execution_results: [],
+            status_url: "/api/v1/report-batches/rbch_1",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await runReportBatchOnce({ batchId: "rbch_1", bookingCenterCode: "SG" });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const [url, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(String(init?.body));
+    const headers = init?.headers as Record<string, string>;
+
+    expect(url).toBe(`${expectedBaseUrl}/report-batches/rbch_1:run-once`);
+    expect(init).toEqual(expect.objectContaining({ method: "POST", cache: "no-store" }));
+    expect(headers["X-Caller-Application"]).toBe("lotus-workbench");
+    expect(body.worker_id).toBe("lotus-workbench-report-batch-operator");
+    expect(body.dispatch_policy.max_active_items).toBe(100);
+    expect(body.dispatch_policy.max_active_batches).toBe(100);
+    expect(body.runtime_load.active_batches).toBe(0);
   });
 
   it("raises a labeled error when the split summary endpoint fails", async () => {

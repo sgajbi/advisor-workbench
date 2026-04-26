@@ -9,6 +9,7 @@ test-results/
 playwright-report/
 .playwright-cli/
 output/playwright/
+output/*.pdf
 output/pr-monitor.json
 output/agent-status.md
 output/async-docker-build-*.log

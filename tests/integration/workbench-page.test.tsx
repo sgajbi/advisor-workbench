@@ -248,5 +248,68 @@ describe("WorkbenchPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Create and update a sandbox session to see projected holdings\./i)).toBeInTheDocument();
   });
+
+  it("uses an explicit route as-of date for reporting batch operations", async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = input.toString();
+      if (url.includes("/api/v1/workbench/PF_3001/portfolio-360")) {
+        return {
+          ok: true,
+          json: async () => ({
+            correlation_id: "corr_1",
+            contract_version: "v1",
+            as_of_date: "2026-04-27",
+            portfolio: {
+              portfolio_id: "PF_3001",
+              client_id: "CL_3001",
+              base_currency: "USD",
+              booking_center_code: "SG",
+            },
+            overview: {
+              market_value_base: 100,
+              cash_weight_pct: 0,
+              position_count: 1,
+            },
+            performance_snapshot: null,
+            rebalance_snapshot: null,
+            current_positions: [],
+            projected_positions: [],
+            projected_summary: null,
+            active_session_id: null,
+            warnings: [],
+            partial_failures: [],
+          }),
+        } as Response;
+      }
+
+      if (url.includes("/api/v1/workbench/PF_3001/analytics?")) {
+        throw new Error("analytics unavailable");
+      }
+
+      if (url.includes("/api/v1/reports/PF_3001/snapshot?asOfDate=2026-04-10")) {
+        throw new Error("reporting unavailable");
+      }
+
+      return { ok: false, json: async () => ({}) } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_3001" }),
+        searchParams: Promise.resolve({ asOfDate: "2026-04-10" }),
+      })
+    );
+
+    expect(
+      screen.getByText("Portfolio data as of: 2026-04-27 | Report date: 2026-04-10")
+    ).toBeInTheDocument();
+    expect(screen.getByText("PDF portfolio review batch for 2026-04-10")).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/reports/PF_3001/snapshot?asOfDate=2026-04-10")
+      )
+    ).toBe(true);
+  });
 });
 
