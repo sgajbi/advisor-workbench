@@ -1066,3 +1066,74 @@ export type WorkbenchReportingSnapshot = {
   generatedAt: string;
   rows: Array<Record<string, unknown>>;
 };
+
+export type ReportBatchHandleResponse = {
+  batch_id: string;
+  status: string;
+  status_url: string;
+  idempotency_key: string;
+  item_count: number;
+};
+
+export type ReportBatchItemStatus = {
+  batch_item_id: string;
+  item_position: number;
+  portfolio_id: string;
+  status: string;
+  report_job_id: string | null;
+  attempt_count: number;
+  retry_eligible: boolean;
+  next_retry_at: string | null;
+  last_error_category: string | null;
+  last_error_summary: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+};
+
+export type ReportBatchStatusResponse = {
+  batch_id: string;
+  selector_mode: string;
+  tenant_id: string;
+  region: string;
+  materialized_portfolio_ids: string[];
+  as_of_date: string;
+  requested_output_formats: string[];
+  reporting_currency: string | null;
+  status: string;
+  item_count: number;
+  status_counts: Record<string, number>;
+  items: ReportBatchItemStatus[];
+  created_at: string;
+  updated_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  failed_at: string | null;
+  correlation_id: string;
+  trace_id: string;
+};
+
+export type ReportBatchWorkerRunResponse = {
+  batch_id: string;
+  status: string;
+  batch_status_before: string;
+  batch_status_after: string;
+  recovered_count: number;
+  leased_count: number;
+  dispatched_count: number;
+  executed_count: number;
+  report_job_ids: string[];
+  back_pressure_reasons: string[];
+  skipped_reason: string | null;
+  execution_results: Array<{
+    batch_item_id: string;
+    report_job_id: string;
+    item_status: string;
+    report_job_status: string;
+    failure_category: string | null;
+    retry_eligible: boolean;
+  }>;
+  status_url: string;
+};

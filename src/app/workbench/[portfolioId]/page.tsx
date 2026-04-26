@@ -23,6 +23,7 @@ import OverviewCards from "@/features/workbench/components/overview-cards";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
+import ReportBatchOperationsPanel from "@/features/workbench/components/report-batch-operations-panel";
 import ReportingSnapshotPanel from "@/features/workbench/components/reporting-snapshot-panel";
 import SandboxControls from "@/features/workbench/components/sandbox-controls";
 
@@ -55,6 +56,7 @@ export default async function WorkbenchPage({
     groupBy?: string;
     benchmark?: string;
     preset?: string;
+    asOfDate?: string;
   }>;
 }) {
   const { portfolioId } = await params;
@@ -63,6 +65,7 @@ export default async function WorkbenchPage({
   const period = resolvedSearch.period?.trim() || "YTD";
   const benchmark = resolvedSearch.benchmark?.trim() || "MODEL_60_40";
   const preset = resolvedSearch.preset?.trim() || "EXEC_SUMMARY";
+  const requestedAsOfDate = resolvedSearch.asOfDate?.trim() || undefined;
   const groupBy =
     resolvedSearch.groupBy?.trim() === "SECURITY" ? "SECURITY" : "ASSET_CLASS";
 
@@ -109,7 +112,10 @@ export default async function WorkbenchPage({
   }
 
   try {
-    reportingSnapshot = await getReportingSnapshot(portfolioId, data.as_of_date);
+    reportingSnapshot = await getReportingSnapshot(
+      portfolioId,
+      requestedAsOfDate ?? data.as_of_date
+    );
   } catch {
     reportingSnapshot = null;
   }
@@ -131,12 +137,17 @@ export default async function WorkbenchPage({
     ...data.partial_failures,
     ...(analytics?.partial_failures ?? []),
   ];
+  const reportingAsOfDate = requestedAsOfDate ?? data.as_of_date;
+  const pageSubtitle =
+    reportingAsOfDate === data.as_of_date
+      ? `As of: ${data.as_of_date}`
+      : `Portfolio data as of: ${data.as_of_date} | Report date: ${reportingAsOfDate}`;
 
   return (
     <main className="page-container">
       <WorkbenchPageFrame
         title={`Advisor Workbench: ${data.portfolio.portfolio_id}`}
-        subtitle={`As of: ${data.as_of_date}`}
+        subtitle={pageSubtitle}
         actions={
           <>
             <SemanticBadge tone={partialFailures.length > 0 ? "warn" : "success"}>
@@ -242,6 +253,14 @@ export default async function WorkbenchPage({
                   body="This panel will populate when reporting aggregation is online."
                 />
               )}
+
+              <ReportBatchOperationsPanel
+                portfolioId={data.portfolio.portfolio_id}
+                asOfDate={reportingAsOfDate}
+                reportingCurrency={data.portfolio.base_currency}
+                bookingCenterCode={data.portfolio.booking_center_code}
+                benchmarkCode={benchmark}
+              />
             </div>
 
             <div className="workbench-col">

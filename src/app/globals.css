@@ -163,6 +163,33 @@
   --focus-ring: 0 0 0 2px rgba(54, 95, 139, 0.32);
 }
 
+.report-batch-operations-panel .section-block-body {
+  gap: 0.75rem;
+}
+
+.report-batch-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.report-batch-status-strip,
+.report-batch-run-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.report-batch-status-strip span,
+.report-batch-run-summary span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 * {
   box-sizing: border-box;
 }
