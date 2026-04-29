@@ -25,6 +25,7 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
+import { observeWorkbenchAnalyticsRequest } from "@/features/analytics-observability/metrics";
 
 const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
 type WorkbenchRequestTarget = ServiceRequestTarget;
@@ -275,10 +276,18 @@ export async function getWorkbenchPerformanceWorkspaceSummaryClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
-  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
-    buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "client"),
-    "performance workspace summary",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchAnalyticsRequest(
+    {
+      route: "workbench.performance",
+      panel: "performance-summary",
+      operation: "performance.workspace.summary",
+    },
+    async () =>
+      await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
+        buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "client"),
+        "performance workspace summary",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
@@ -295,10 +304,18 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
-  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
-    buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "client"),
-    "performance workspace details",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchAnalyticsRequest(
+    {
+      route: "workbench.performance",
+      panel: "performance-details",
+      operation: "performance.workspace.details",
+    },
+    async () =>
+      await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
+        buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "client"),
+        "performance workspace details",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
@@ -483,10 +500,18 @@ export async function getWorkbenchRiskSummaryClient(
     reportingCurrency?: string;
   }
 ): Promise<WorkbenchRiskSummaryResponse> {
-  return await fetchWorkbenchJson<WorkbenchRiskSummaryResponse>(
-    buildRiskWorkspaceUrl(portfolioId, "/risk/summary", params, "client"),
-    "workbench risk summary",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchAnalyticsRequest(
+    {
+      route: "workbench.risk",
+      panel: "risk-summary",
+      operation: "risk.summary",
+    },
+    async () =>
+      await fetchWorkbenchJson<WorkbenchRiskSummaryResponse>(
+        buildRiskWorkspaceUrl(portfolioId, "/risk/summary", params, "client"),
+        "workbench risk summary",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
