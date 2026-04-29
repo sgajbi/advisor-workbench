@@ -11,11 +11,16 @@ import {
   mergePortfolioWorkspace,
   resetPortfolioApiRequestCache,
 } from "../../src/apps/portfolio/api";
+import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
 
 describe("portfolio api", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     resetPortfolioApiRequestCache();
+    resetAnalyticsUiMetricEvents();
   });
 
   it("builds a shell workspace without waiting for detail modules", async () => {
@@ -169,6 +174,24 @@ describe("portfolio api", () => {
     });
     expect(shell?.readiness_indicators).toBeUndefined();
     expect(shell?.workflow_actions).toBeUndefined();
+    expect(getAnalyticsUiMetricEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            route: "workbench.portfolio",
+            panel: "portfolio-workspace-shell",
+            operation: "portfolio.workspace.shell",
+            state: "stale",
+            freshness_bucket: "stale",
+          }),
+        }),
+      ])
+    );
+    const metricsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricsJson).not.toContain("MANUAL_PB_USD_001");
+    expect(metricsJson).not.toContain("MANUAL_CIF_001");
+    expect(metricsJson).not.toContain("ADV_1001");
   });
 
   it("keeps shell workspace compatible when gateway omits optional performance fields", async () => {

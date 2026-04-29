@@ -57,6 +57,139 @@ export interface WorkbenchAnalyticsUiObservationContext {
   service?: string;
 }
 
+export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
+  {
+    route: "workbench.performance",
+    panel: "performance-summary",
+    operation: "performance.workspace.summary",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-details",
+    operation: "performance.workspace.details",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-horizon-comparison",
+    operation: "performance.workspace.horizon-comparison",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-attribution-trend",
+    operation: "performance.workspace.attribution-trend",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-advisor-brief",
+    operation: "performance.workspace.advisor-brief",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-summary",
+    operation: "risk.summary",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-concentration",
+    operation: "risk.concentration",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-drawdown",
+    operation: "risk.drawdown",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-rolling",
+    operation: "risk.rolling",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-attribution",
+    operation: "risk.attribution",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "report-batch-create",
+    operation: "reporting.report-batch.create",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "report-batch-status",
+    operation: "reporting.report-batch.status",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "report-batch-run-once",
+    operation: "reporting.report-batch.run-once",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-catalog",
+    operation: "portfolio.catalog",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-workspace-shell",
+    operation: "portfolio.workspace.shell",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-book",
+    operation: "portfolio.book",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-income-summary",
+    operation: "portfolio.income-summary",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-activity-summary",
+    operation: "portfolio.activity-summary",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-performance-snapshot",
+    operation: "portfolio.performance-snapshot",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-liquidity",
+    operation: "portfolio.liquidity",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-transaction-ledger",
+    operation: "portfolio.transactions",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-readiness",
+    operation: "portfolio.readiness",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-insights",
+    operation: "portfolio.insights",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-workflow",
+    operation: "portfolio.workflow",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-allocation-views",
+    operation: "portfolio.allocations",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-projected-cashflow",
+    operation: "portfolio.projected-cashflow",
+  },
+] as const satisfies readonly WorkbenchAnalyticsUiObservationContext[];
+
 const metricEvents: WorkbenchAnalyticsUiMetricEvent[] = [];
 const attentionDedupeKeys = new Set<string>();
 const panelFailureCounts = new Map<string, number>();

@@ -576,6 +576,20 @@ describe("workbench api", () => {
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/horizon-comparison?period=EXPLICIT&detail_basis=NET&chart_frequency=monthly&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
     );
+    expect(getAnalyticsUiMetricEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            route: "workbench.performance",
+            panel: "performance-horizon-comparison",
+            operation: "performance.workspace.horizon-comparison",
+            state: "stale",
+            freshness_bucket: "stale",
+          }),
+        }),
+      ])
+    );
   });
 
   it("calls the client-side risk summary endpoint with benchmark-aware request context", async () => {
@@ -709,6 +723,19 @@ describe("workbench api", () => {
       "/api/bff/api/v1/workbench/PF_1001/risk/concentration?period=YTD&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
     );
     expect(requestedUrl).not.toContain("detail_basis=");
+    expect(getAnalyticsUiMetricEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            route: "workbench.risk",
+            panel: "risk-concentration",
+            operation: "risk.concentration",
+            state: "ready",
+          }),
+        }),
+      ])
+    );
   });
 
   it("keeps underwater detail out of first-paint drawdown requests by default", async () => {
@@ -1225,6 +1252,10 @@ describe("workbench api", () => {
         source_surface: "lotus-workbench",
       })
     );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("report-batch-create");
+    expect(metricEventsJson).not.toContain("rbch_1");
+    expect(metricEventsJson).not.toContain("PF_1001");
   });
 
   it("loads report batch status through the gateway BFF", async () => {

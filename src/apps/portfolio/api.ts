@@ -9,13 +9,70 @@ import {
   resolveWorkbenchApiBase,
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
+import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
+import {
+  WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
+  observeWorkbenchAnalyticsRequest,
+  type WorkbenchAnalyticsUiObservationContext,
+} from "@/features/analytics-observability/metrics";
 
 const portfolioApiResponseCache = new Map<string, unknown>();
 const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
 type PortfolioRequestTarget = ServiceRequestTarget;
+type ObservedPortfolioOperation = Extract<
+  (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
+  `portfolio.${string}`
+>;
 
 function resolvePortfolioRequestTarget(): PortfolioRequestTarget {
   return typeof window === "undefined" ? "server" : "client";
+}
+
+function observedPortfolioSurface(path: string): WorkbenchAnalyticsUiObservationContext {
+  const operation = resolvePortfolioOperation(path);
+  return WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.find(
+    (surface) => surface.operation === operation
+  )!;
+}
+
+function resolvePortfolioOperation(path: string): ObservedPortfolioOperation {
+  if (path.endsWith("/workspace")) {
+    return "portfolio.workspace.shell";
+  }
+  if (path.endsWith("/book")) {
+    return "portfolio.book";
+  }
+  if (path.endsWith("/income-summary")) {
+    return "portfolio.income-summary";
+  }
+  if (path.endsWith("/activity-summary")) {
+    return "portfolio.activity-summary";
+  }
+  if (path.endsWith("/performance-snapshot")) {
+    return "portfolio.performance-snapshot";
+  }
+  if (path.endsWith("/liquidity")) {
+    return "portfolio.liquidity";
+  }
+  if (path.endsWith("/transactions")) {
+    return "portfolio.transactions";
+  }
+  if (path.endsWith("/readiness")) {
+    return "portfolio.readiness";
+  }
+  if (path.endsWith("/insights")) {
+    return "portfolio.insights";
+  }
+  if (path.endsWith("/workflow")) {
+    return "portfolio.workflow";
+  }
+  if (path.endsWith("/allocations")) {
+    return "portfolio.allocations";
+  }
+  if (path.endsWith("/projected-cashflow")) {
+    return "portfolio.projected-cashflow";
+  }
+  return "portfolio.catalog";
 }
 
 type PortfolioWorkspaceSummaryResponse = {
@@ -633,12 +690,22 @@ async function fetchPortfolioJson<T>(
   }
 
   const request = (async () => {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) {
-      return null;
-    }
+    const payload = await observeWorkbenchAnalyticsRequest(
+      observedPortfolioSurface(path),
+      async () => {
+        const response = await fetch(url, {
+          cache: "no-store",
+          ...(target === "client"
+            ? { headers: buildAnalyticsUiCorrelationHeaders() }
+            : {}),
+        });
+        if (!response.ok) {
+          return null;
+        }
 
-    const payload = (await response.json()) as T;
+        return (await response.json()) as T;
+      }
+    );
     if (useCache) {
       portfolioApiResponseCache.set(url, payload);
     }

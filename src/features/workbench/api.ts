@@ -25,7 +25,11 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
-import { observeWorkbenchAnalyticsRequest } from "@/features/analytics-observability/metrics";
+import {
+  WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
+  observeWorkbenchAnalyticsRequest,
+  type WorkbenchAnalyticsUiObservationContext,
+} from "@/features/analytics-observability/metrics";
 
 const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
 type WorkbenchRequestTarget = ServiceRequestTarget;
@@ -81,6 +85,21 @@ async function fetchWorkbenchMutation<T>(
     throw new Error(`Failed to ${errorLabel} (${response.status}): ${body}`);
   }
   return (await response.json()) as T;
+}
+
+function observedSurface(
+  operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"]
+): WorkbenchAnalyticsUiObservationContext {
+  return WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.find(
+    (surface) => surface.operation === operation
+  )!;
+}
+
+async function observeWorkbenchClientResource<T>(
+  operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
+  request: () => Promise<T>
+): Promise<T> {
+  return await observeWorkbenchAnalyticsRequest(observedSurface(operation), request);
 }
 
 function buildWorkbenchUrl(
@@ -277,11 +296,7 @@ export async function getWorkbenchPerformanceWorkspaceSummaryClient(
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
   return await observeWorkbenchAnalyticsRequest(
-    {
-      route: "workbench.performance",
-      panel: "performance-summary",
-      operation: "performance.workspace.summary",
-    },
+    observedSurface("performance.workspace.summary"),
     async () =>
       await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
         buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "client"),
@@ -305,11 +320,7 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
   return await observeWorkbenchAnalyticsRequest(
-    {
-      route: "workbench.performance",
-      panel: "performance-details",
-      operation: "performance.workspace.details",
-    },
+    observedSurface("performance.workspace.details"),
     async () =>
       await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
         buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "client"),
@@ -345,11 +356,15 @@ export async function getWorkbenchPerformanceHorizonComparisonClient(
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
   }
-  return await fetchWorkbenchResource<WorkbenchPerformanceHorizonComparison>(
-    "client",
-    `/workbench/${portfolioId}/performance/horizon-comparison`,
-    "performance horizon comparison",
-    query
+  return await observeWorkbenchClientResource(
+    "performance.workspace.horizon-comparison",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchPerformanceHorizonComparison>(
+        "client",
+        `/workbench/${portfolioId}/performance/horizon-comparison`,
+        "performance horizon comparison",
+        query
+      )
   );
 }
 
@@ -379,11 +394,15 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
   }
-  return await fetchWorkbenchResource<WorkbenchPerformanceAttributionTrend>(
-    "client",
-    `/workbench/${portfolioId}/performance/attribution-trend`,
-    "performance attribution trend",
-    query
+  return await observeWorkbenchClientResource(
+    "performance.workspace.attribution-trend",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchPerformanceAttributionTrend>(
+        "client",
+        `/workbench/${portfolioId}/performance/attribution-trend`,
+        "performance attribution trend",
+        query
+      )
   );
 }
 
@@ -400,11 +419,15 @@ export async function getWorkbenchPerformanceAdvisorBriefClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceAdvisorBrief> {
-  return await fetchWorkbenchResource<WorkbenchPerformanceAdvisorBrief>(
-    "client",
-    `/workbench/${portfolioId}/performance/advisor-brief`,
-    "performance advisor brief",
-    buildPerformanceWorkspaceQuery(params)
+  return await observeWorkbenchClientResource(
+    "performance.workspace.advisor-brief",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchPerformanceAdvisorBrief>(
+        "client",
+        `/workbench/${portfolioId}/performance/advisor-brief`,
+        "performance advisor brief",
+        buildPerformanceWorkspaceQuery(params)
+      )
   );
 }
 
@@ -501,11 +524,7 @@ export async function getWorkbenchRiskSummaryClient(
   }
 ): Promise<WorkbenchRiskSummaryResponse> {
   return await observeWorkbenchAnalyticsRequest(
-    {
-      route: "workbench.risk",
-      panel: "risk-summary",
-      operation: "risk.summary",
-    },
+    observedSurface("risk.summary"),
     async () =>
       await fetchWorkbenchJson<WorkbenchRiskSummaryResponse>(
         buildRiskWorkspaceUrl(portfolioId, "/risk/summary", params, "client"),
@@ -524,10 +543,14 @@ export async function getWorkbenchRiskConcentrationClient(
     reportingCurrency?: string;
   }
 ): Promise<WorkbenchRiskConcentrationResponse> {
-  return await fetchWorkbenchJson<WorkbenchRiskConcentrationResponse>(
-    buildRiskWorkspaceUrl(portfolioId, "/risk/concentration", params, "client"),
-    "workbench risk concentration",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchClientResource(
+    "risk.concentration",
+    async () =>
+      await fetchWorkbenchJson<WorkbenchRiskConcentrationResponse>(
+        buildRiskWorkspaceUrl(portfolioId, "/risk/concentration", params, "client"),
+        "workbench risk concentration",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
@@ -554,10 +577,14 @@ export async function getWorkbenchRiskDrawdownClient(
   if (params.includeUnderwaterSeries) {
     query.set("include_underwater_series", "true");
   }
-  return await fetchWorkbenchJson<WorkbenchRiskDrawdownResponse>(
-    buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/drawdown`, query),
-    "workbench risk drawdown",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchClientResource(
+    "risk.drawdown",
+    async () =>
+      await fetchWorkbenchJson<WorkbenchRiskDrawdownResponse>(
+        buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/drawdown`, query),
+        "workbench risk drawdown",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
@@ -584,10 +611,14 @@ export async function getWorkbenchRiskRollingClient(
   if (params.includeTimeSeries) {
     query.set("include_time_series", "true");
   }
-  return await fetchWorkbenchJson<WorkbenchRiskRollingResponse>(
-    buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/rolling`, query),
-    "workbench risk rolling",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchClientResource(
+    "risk.rolling",
+    async () =>
+      await fetchWorkbenchJson<WorkbenchRiskRollingResponse>(
+        buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/rolling`, query),
+        "workbench risk rolling",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
@@ -614,10 +645,14 @@ export async function getWorkbenchRiskAttributionClient(
   );
   query.set("attribution_type", params.attributionType);
   query.set("grouping_dimension", params.groupingDimension);
-  return await fetchWorkbenchJson<WorkbenchRiskAttributionResponse>(
-    buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/attribution`, query),
-    "workbench risk attribution",
-    { headers: buildAnalyticsUiCorrelationHeaders() }
+  return await observeWorkbenchClientResource(
+    "risk.attribution",
+    async () =>
+      await fetchWorkbenchJson<WorkbenchRiskAttributionResponse>(
+        buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/attribution`, query),
+        "workbench risk attribution",
+        { headers: buildAnalyticsUiCorrelationHeaders() }
+      )
   );
 }
 
@@ -680,46 +715,50 @@ export async function createPortfolioReportBatch(params: {
     params.reportingCurrency,
   ].join("-");
 
-  return await fetchWorkbenchMutation<ReportBatchHandleResponse>(
-    buildWorkbenchUrl("client", "/report-batches"),
-    "create report batch",
-    {
-      method: "POST",
-      headers: {
-        ...buildReportBatchCallerHeaders({
-          actorId,
-          tenantId,
-          region,
-          bookingCenterCode: params.bookingCenterCode,
-          correlationId,
-        }),
-        "Idempotency-Key": idempotencyKey,
-      },
-      body: JSON.stringify({
-        selector_mode: "explicit_portfolio_list",
-        portfolio_ids: [params.portfolioId],
-        source_candidates: [
-          {
-            portfolio_id: params.portfolioId,
-            tenant_id: tenantId,
-            region,
-            active: true,
-            selected: true,
-            source_system: "lotus-core",
-            source_object: "PortfolioScope",
+  return await observeWorkbenchClientResource(
+    "reporting.report-batch.create",
+    async () =>
+      await fetchWorkbenchMutation<ReportBatchHandleResponse>(
+        buildWorkbenchUrl("client", "/report-batches"),
+        "create report batch",
+        {
+          method: "POST",
+          headers: {
+            ...buildReportBatchCallerHeaders({
+              actorId,
+              tenantId,
+              region,
+              bookingCenterCode: params.bookingCenterCode,
+              correlationId,
+            }),
+            "Idempotency-Key": idempotencyKey,
           },
-        ],
-        as_of_date: params.asOfDate,
-        requested_output_formats: ["pdf"],
-        reporting_currency: params.reportingCurrency,
-        options: {
-          sections: params.sections ?? ["OVERVIEW", "PERFORMANCE", "RISK_ANALYTICS"],
-          ...(params.benchmarkCode ? { benchmark_code: params.benchmarkCode } : {}),
-          source_surface: "lotus-workbench",
-        },
-        max_batch_size: 1,
-      }),
-    }
+          body: JSON.stringify({
+            selector_mode: "explicit_portfolio_list",
+            portfolio_ids: [params.portfolioId],
+            source_candidates: [
+              {
+                portfolio_id: params.portfolioId,
+                tenant_id: tenantId,
+                region,
+                active: true,
+                selected: true,
+                source_system: "lotus-core",
+                source_object: "PortfolioScope",
+              },
+            ],
+            as_of_date: params.asOfDate,
+            requested_output_formats: ["pdf"],
+            reporting_currency: params.reportingCurrency,
+            options: {
+              sections: params.sections ?? ["OVERVIEW", "PERFORMANCE", "RISK_ANALYTICS"],
+              ...(params.benchmarkCode ? { benchmark_code: params.benchmarkCode } : {}),
+              source_surface: "lotus-workbench",
+            },
+            max_batch_size: 1,
+          }),
+        }
+      )
   );
 }
 
@@ -735,19 +774,23 @@ export async function getReportBatchStatus(
   const tenantId = params.tenantId ?? "tenant-sg";
   const region = params.region ?? "APAC";
   const actorId = params.actorId ?? "workbench-report-operator";
-  return await fetchWorkbenchMutation<ReportBatchStatusResponse>(
-    buildWorkbenchUrl("client", `/report-batches/${encodeURIComponent(batchId)}`),
-    "report batch status",
-    {
-      method: "GET",
-      headers: buildReportBatchCallerHeaders({
-        actorId,
-        tenantId,
-        region,
-        bookingCenterCode: params.bookingCenterCode,
-        correlationId: `corr-workbench-report-batch-status-${batchId}`,
-      }),
-    }
+  return await observeWorkbenchClientResource(
+    "reporting.report-batch.status",
+    async () =>
+      await fetchWorkbenchMutation<ReportBatchStatusResponse>(
+        buildWorkbenchUrl("client", `/report-batches/${encodeURIComponent(batchId)}`),
+        "report batch status",
+        {
+          method: "GET",
+          headers: buildReportBatchCallerHeaders({
+            actorId,
+            tenantId,
+            region,
+            bookingCenterCode: params.bookingCenterCode,
+            correlationId: `corr-workbench-report-batch-status-${batchId}`,
+          }),
+        }
+      )
   );
 }
 
@@ -761,37 +804,44 @@ export async function runReportBatchOnce(params: {
   const tenantId = params.tenantId ?? "tenant-sg";
   const region = params.region ?? "APAC";
   const actorId = params.actorId ?? "workbench-report-operator";
-  return await fetchWorkbenchMutation<ReportBatchWorkerRunResponse>(
-    buildWorkbenchUrl("client", `/report-batches/${encodeURIComponent(params.batchId)}:run-once`),
-    "run report batch",
-    {
-      method: "POST",
-      headers: buildReportBatchCallerHeaders({
-        actorId,
-        tenantId,
-        region,
-        bookingCenterCode: params.bookingCenterCode,
-        correlationId: `corr-workbench-report-batch-run-${params.batchId}`,
-      }),
-      body: JSON.stringify({
-        worker_id: "lotus-workbench-report-batch-operator",
-        recover_expired_leases: true,
-        dispatch_policy: {
-          max_active_batches: 100,
-          max_active_items: 100,
-          max_active_upstream_jobs: 100,
-          max_active_render_jobs: 100,
-          max_active_archive_jobs: 100,
-          lease_seconds: 300,
-        },
-        runtime_load: {
-          active_batches: 0,
-          active_items: 0,
-          active_upstream_jobs: 0,
-          active_render_jobs: 0,
-          active_archive_jobs: 0,
-        },
-      }),
-    }
+  return await observeWorkbenchClientResource(
+    "reporting.report-batch.run-once",
+    async () =>
+      await fetchWorkbenchMutation<ReportBatchWorkerRunResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/report-batches/${encodeURIComponent(params.batchId)}:run-once`
+        ),
+        "run report batch",
+        {
+          method: "POST",
+          headers: buildReportBatchCallerHeaders({
+            actorId,
+            tenantId,
+            region,
+            bookingCenterCode: params.bookingCenterCode,
+            correlationId: `corr-workbench-report-batch-run-${params.batchId}`,
+          }),
+          body: JSON.stringify({
+            worker_id: "lotus-workbench-report-batch-operator",
+            recover_expired_leases: true,
+            dispatch_policy: {
+              max_active_batches: 100,
+              max_active_items: 100,
+              max_active_upstream_jobs: 100,
+              max_active_render_jobs: 100,
+              max_active_archive_jobs: 100,
+              lease_seconds: 300,
+            },
+            runtime_load: {
+              active_batches: 0,
+              active_items: 0,
+              active_upstream_jobs: 0,
+              active_render_jobs: 0,
+              active_archive_jobs: 0,
+            },
+          }),
+        }
+      )
   );
 }
