@@ -1,5 +1,7 @@
 import {
+  type AnalyticsUiAttentionEventType,
   type AnalyticsUiAllowedLabel,
+  type AnalyticsUiSeverity,
   type AnalyticsUiState,
   type WorkbenchAnalyticsUiBrowserEvent,
   type WorkbenchAnalyticsUiMetricFamily,
@@ -56,6 +58,8 @@ export interface WorkbenchAnalyticsUiObservationContext {
 }
 
 const metricEvents: WorkbenchAnalyticsUiMetricEvent[] = [];
+const attentionDedupeKeys = new Set<string>();
+const panelFailureCounts = new Map<string, number>();
 
 export function classifyAnalyticsUiPanelState(
   input: AnalyticsUiPanelClassificationInput
@@ -194,6 +198,30 @@ export function recordAnalyticsUiApiRequest(params: {
   });
 }
 
+export function recordAnalyticsUiAttentionEvent(params: {
+  context: WorkbenchAnalyticsUiObservationContext;
+  attentionType: AnalyticsUiAttentionEventType;
+  severity: AnalyticsUiSeverity;
+  state: AnalyticsUiState;
+  reason: string;
+  freshnessBucket?: AnalyticsUiFreshnessBucket;
+  supportabilityState?: AnalyticsUiSupportabilityState;
+}): WorkbenchAnalyticsUiMetricEvent | undefined {
+  const labels = buildAttentionLabels(params);
+  const dedupeKey = JSON.stringify(labels);
+  if (attentionDedupeKeys.has(dedupeKey)) {
+    return undefined;
+  }
+  attentionDedupeKeys.add(dedupeKey);
+  return recordMetricEvent({
+    eventName: "workbench.analytics.attention",
+    metricName: "lotus_analytics_ui_attention_events_total",
+    value: 1,
+    context: params.context,
+    labels,
+  });
+}
+
 export async function observeWorkbenchAnalyticsRequest<T>(
   context: WorkbenchAnalyticsUiObservationContext,
   request: () => Promise<T>
@@ -230,6 +258,13 @@ export async function observeWorkbenchAnalyticsRequest<T>(
       freshnessBucket,
       supportabilityState,
     });
+    recordAttentionForObservation({
+      context,
+      state,
+      response,
+      freshnessBucket,
+      supportabilityState,
+    });
     return response;
   } catch (error) {
     const durationMs = nowMs() - startedAt;
@@ -251,6 +286,16 @@ export async function observeWorkbenchAnalyticsRequest<T>(
           ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
           : "error",
       reason: errorCategoryFromStatusClass(statusClass),
+    });
+    recordAttentionForObservation({
+      context,
+      state:
+        statusClass === "4xx"
+          ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
+          : "error",
+      reason: errorCategoryFromStatusClass(statusClass),
+      supportabilityState: "unknown",
+      freshnessBucket: "unknown",
     });
     throw error;
   }
@@ -275,7 +320,8 @@ export function getAnalyticsUiMetricSamples(): WorkbenchAnalyticsUiMetricSample[
       samples.set(sampleKey, {
         metric_name: event.metric_name,
         metric_type:
-          event.metric_name === "lotus_workbench_panel_state_total"
+          event.metric_name === "lotus_workbench_panel_state_total" ||
+          event.metric_name === "lotus_analytics_ui_attention_events_total"
             ? "counter"
             : "histogram",
         labels: event.labels,
@@ -296,6 +342,8 @@ export function renderAnalyticsUiPrometheusMetrics(): string {
     "# TYPE lotus_workbench_panel_state_total counter",
     "# HELP lotus_workbench_api_request_duration_seconds Selected Workbench analytics API request duration.",
     "# TYPE lotus_workbench_api_request_duration_seconds histogram",
+    "# HELP lotus_analytics_ui_attention_events_total Bounded analytics UI attention events for selected Workbench panels.",
+    "# TYPE lotus_analytics_ui_attention_events_total counter",
   ];
   for (const sample of samples) {
     lines.push(
@@ -316,6 +364,117 @@ export function renderAnalyticsUiPrometheusMetrics(): string {
 
 export function resetAnalyticsUiMetricEvents(): void {
   metricEvents.length = 0;
+  attentionDedupeKeys.clear();
+  panelFailureCounts.clear();
+}
+
+function recordAttentionForObservation(params: {
+  context: WorkbenchAnalyticsUiObservationContext;
+  state: AnalyticsUiState;
+  response?: unknown;
+  reason?: string;
+  freshnessBucket?: AnalyticsUiFreshnessBucket;
+  supportabilityState?: AnalyticsUiSupportabilityState;
+}): void {
+  const panelKey = `${params.context.route}:${params.context.panel}`;
+  if (params.state === "error") {
+    const nextFailureCount = (panelFailureCounts.get(panelKey) ?? 0) + 1;
+    panelFailureCounts.set(panelKey, nextFailureCount);
+    if (nextFailureCount >= 3) {
+      recordAnalyticsUiAttentionEvent({
+        context: params.context,
+        attentionType: "panel_repeated_failure",
+        severity: "action_required",
+        state: params.state,
+        reason: sanitizeAttentionReason(params.reason ?? "repeated_failure"),
+        freshnessBucket: params.freshnessBucket,
+        supportabilityState: params.supportabilityState,
+      });
+    }
+    return;
+  }
+
+  panelFailureCounts.delete(panelKey);
+  const reason = resolveAttentionReason(params.response, params.reason);
+  if (params.state === "stale") {
+    recordAnalyticsUiAttentionEvent({
+      context: params.context,
+      attentionType: "panel_stale",
+      severity: "warning",
+      state: params.state,
+      reason,
+      freshnessBucket: params.freshnessBucket,
+      supportabilityState: params.supportabilityState,
+    });
+    return;
+  }
+  if (params.state === "degraded") {
+    recordAnalyticsUiAttentionEvent({
+      context: params.context,
+      attentionType: "panel_degraded",
+      severity:
+        params.supportabilityState === "action_required" ? "action_required" : "warning",
+      state: params.state,
+      reason,
+      freshnessBucket: params.freshnessBucket,
+      supportabilityState: params.supportabilityState,
+    });
+    return;
+  }
+  if (params.state === "partial") {
+    recordAnalyticsUiAttentionEvent({
+      context: params.context,
+      attentionType: "source_partial",
+      severity: "warning",
+      state: params.state,
+      reason,
+      freshnessBucket: params.freshnessBucket,
+      supportabilityState: params.supportabilityState,
+    });
+  }
+}
+
+function buildAttentionLabels(params: {
+  attentionType: AnalyticsUiAttentionEventType;
+  severity: AnalyticsUiSeverity;
+  state: AnalyticsUiState;
+  reason: string;
+  freshnessBucket?: AnalyticsUiFreshnessBucket;
+  supportabilityState?: AnalyticsUiSupportabilityState;
+}): Partial<Record<AnalyticsUiAllowedLabel, string>> {
+  return buildAnalyticsUiLabels({
+    attention_type: params.attentionType,
+    severity: params.severity,
+    state: params.state,
+    reason: sanitizeAttentionReason(params.reason),
+    freshness_bucket: params.freshnessBucket ?? "unknown",
+    supportability_state: params.supportabilityState ?? "unknown",
+  });
+}
+
+function resolveAttentionReason(response: unknown, fallback?: string): string {
+  const warning = readFirstString(response, "warnings");
+  if (warning) {
+    return sanitizeAttentionReason(warning);
+  }
+  const partialFailureReason = readFirstObjectString(response, "partial_failures", [
+    "error_code",
+    "reason",
+    "source_service",
+  ]);
+  if (partialFailureReason) {
+    return sanitizeAttentionReason(partialFailureReason);
+  }
+  return sanitizeAttentionReason(fallback ?? "source_state");
+}
+
+function sanitizeAttentionReason(reason: string): string {
+  const normalized = reason
+    .trim()
+    .replace(/[^A-Za-z0-9_.:-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+  return normalized || "unknown";
 }
 
 function recordMetricEvent(params: {
@@ -350,6 +509,46 @@ function readStringProperty(value: unknown, property: string): string | undefine
   }
   const propertyValue = (value as Record<string, unknown>)[property];
   return typeof propertyValue === "string" && propertyValue ? propertyValue : undefined;
+}
+
+function readFirstString(value: unknown, property: string): string | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  if (!Array.isArray(propertyValue)) {
+    return undefined;
+  }
+  const firstString = propertyValue.find(
+    (item): item is string => typeof item === "string" && item.length > 0
+  );
+  return firstString;
+}
+
+function readFirstObjectString(
+  value: unknown,
+  property: string,
+  keys: readonly string[]
+): string | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  if (!Array.isArray(propertyValue)) {
+    return undefined;
+  }
+  for (const item of propertyValue) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+    for (const key of keys) {
+      const candidate = (item as Record<string, unknown>)[key];
+      if (typeof candidate === "string" && candidate) {
+        return candidate;
+      }
+    }
+  }
+  return undefined;
 }
 
 function hasNonEmptyArrayProperty(value: unknown, property: string): boolean {

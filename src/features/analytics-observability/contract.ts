@@ -85,6 +85,7 @@ export const WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES = [
   "lotus_workbench_panel_hydration_duration_seconds",
   "lotus_workbench_panel_state_total",
   "lotus_workbench_api_request_duration_seconds",
+  "lotus_analytics_ui_attention_events_total",
 ] as const;
 
 export type WorkbenchAnalyticsUiMetricFamily =
@@ -94,6 +95,7 @@ export const WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS = [
   "workbench.analytics.panel_hydration",
   "workbench.analytics.panel_state",
   "workbench.analytics.api_request",
+  "workbench.analytics.attention",
 ] as const;
 
 export type WorkbenchAnalyticsUiBrowserEvent =
