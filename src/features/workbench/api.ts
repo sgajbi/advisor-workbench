@@ -24,6 +24,7 @@ import {
   resolveWorkbenchApiBase,
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
+import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
 
 const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
 type WorkbenchRequestTarget = ServiceRequestTarget;
@@ -56,8 +57,12 @@ function buildPerformanceWorkspaceQuery(params: {
   return query.toString();
 }
 
-async function fetchWorkbenchJson<T>(url: string, errorLabel: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" });
+async function fetchWorkbenchJson<T>(
+  url: string,
+  errorLabel: string,
+  init?: RequestInit
+): Promise<T> {
+  const response = await fetch(url, { cache: "no-store", ...init });
   if (!response.ok) {
     throw new Error(`Failed to fetch ${errorLabel} (${response.status})`);
   }
@@ -94,7 +99,11 @@ async function fetchWorkbenchResource<T>(
   errorLabel: string,
   query?: URLSearchParams | string
 ): Promise<T> {
-  return await fetchWorkbenchJson<T>(buildWorkbenchUrl(target, path, query), errorLabel);
+  return await fetchWorkbenchJson<T>(
+    buildWorkbenchUrl(target, path, query),
+    errorLabel,
+    target === "client" ? { headers: buildAnalyticsUiCorrelationHeaders() } : undefined
+  );
 }
 
 function buildPerformanceWorkspaceUrl(
@@ -268,7 +277,8 @@ export async function getWorkbenchPerformanceWorkspaceSummaryClient(
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
   return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
     buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "client"),
-    "performance workspace summary"
+    "performance workspace summary",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
@@ -287,7 +297,8 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
   return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
     buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "client"),
-    "performance workspace details"
+    "performance workspace details",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
@@ -402,7 +413,7 @@ export async function postWorkbenchPerformanceAdvisorBriefReviewActionClient(
     ),
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: buildAnalyticsUiCorrelationHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(payload),
       cache: "no-store",
     }
@@ -474,7 +485,8 @@ export async function getWorkbenchRiskSummaryClient(
 ): Promise<WorkbenchRiskSummaryResponse> {
   return await fetchWorkbenchJson<WorkbenchRiskSummaryResponse>(
     buildRiskWorkspaceUrl(portfolioId, "/risk/summary", params, "client"),
-    "workbench risk summary"
+    "workbench risk summary",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
@@ -489,7 +501,8 @@ export async function getWorkbenchRiskConcentrationClient(
 ): Promise<WorkbenchRiskConcentrationResponse> {
   return await fetchWorkbenchJson<WorkbenchRiskConcentrationResponse>(
     buildRiskWorkspaceUrl(portfolioId, "/risk/concentration", params, "client"),
-    "workbench risk concentration"
+    "workbench risk concentration",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
@@ -518,7 +531,8 @@ export async function getWorkbenchRiskDrawdownClient(
   }
   return await fetchWorkbenchJson<WorkbenchRiskDrawdownResponse>(
     buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/drawdown`, query),
-    "workbench risk drawdown"
+    "workbench risk drawdown",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
@@ -547,7 +561,8 @@ export async function getWorkbenchRiskRollingClient(
   }
   return await fetchWorkbenchJson<WorkbenchRiskRollingResponse>(
     buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/rolling`, query),
-    "workbench risk rolling"
+    "workbench risk rolling",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
@@ -576,7 +591,8 @@ export async function getWorkbenchRiskAttributionClient(
   query.set("grouping_dimension", params.groupingDimension);
   return await fetchWorkbenchJson<WorkbenchRiskAttributionResponse>(
     buildWorkbenchUrl("client", `/workbench/${portfolioId}/risk/attribution`, query),
-    "workbench risk attribution"
+    "workbench risk attribution",
+    { headers: buildAnalyticsUiCorrelationHeaders() }
   );
 }
 
