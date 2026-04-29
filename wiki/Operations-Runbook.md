@@ -25,6 +25,19 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 ```
 
+## Analytics UI observability posture
+
+- RFC-0108 analytics UI observability vocabulary is code-owned in
+  `src/features/analytics-observability/contract.ts`.
+- The module defines allowed labels, forbidden fields, state vocabulary, and planned Workbench
+  metric-family names before any product telemetry is emitted.
+- Do not add panel, route, or browser telemetry labels outside that contract.
+- `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `trace_id`,
+  `correlation_id`, request bodies, response bodies, and screen content must not become metric
+  labels or browser event fields.
+- Workbench panel metrics, dashboard claims, attention events, audit events, and canonical browser
+  proof remain planned until later RFC-0108 slices promote them with evidence.
+
 ## Output paths
 
 - screenshots and summary:
