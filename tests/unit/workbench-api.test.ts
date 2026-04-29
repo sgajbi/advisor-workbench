@@ -22,12 +22,17 @@ import {
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
   runReportBatchOnce,
 } from "../../src/features/workbench/api";
+import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
 
 const expectedBaseUrl = "/api/bff/api/v1";
 
 describe("workbench api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    resetAnalyticsUiMetricEvents();
   });
 
   it("calls sandbox session create endpoint", async () => {
@@ -297,7 +302,7 @@ describe("workbench api", () => {
             correlation_id: "corr-performance",
             contract_version: "v1",
             portfolio_id: "PF_1001",
-            as_of_date: "2026-02-24",
+            as_of_date: "2026-04-28",
             period: "3Y",
             report_start_date: "2023-02-25",
             report_end_date: "2026-02-24",
@@ -361,6 +366,33 @@ describe("workbench api", () => {
     expect(requestedUrl).toContain(
       "/api/bff/api/v1/workbench/PF_1001/performance/summary?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
+    expect(getAnalyticsUiMetricEvents()).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          route: "workbench.performance",
+          panel: "performance-summary",
+          operation: "performance.workspace.summary",
+          state: "ready",
+          status_class: "2xx",
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        labels: expect.objectContaining({
+          panel: "performance-summary",
+          state: "ready",
+          freshness_bucket: expect.any(String),
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_hydration_duration_seconds",
+        labels: expect.objectContaining({
+          panel: "performance-summary",
+          state: "ready",
+        }),
+      }),
+    ]);
   });
 
   it("uses the proxy path for client-side performance detail refreshes", async () => {

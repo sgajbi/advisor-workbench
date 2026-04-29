@@ -1,0 +1,462 @@
+import {
+  type AnalyticsUiAllowedLabel,
+  type AnalyticsUiState,
+  type WorkbenchAnalyticsUiBrowserEvent,
+  type WorkbenchAnalyticsUiMetricFamily,
+  assertAnalyticsUiLabels,
+  buildAnalyticsUiLabels,
+  isAnalyticsUiState,
+} from "./contract";
+
+export type AnalyticsUiFreshnessBucket = "fresh" | "stale" | "unknown";
+export type AnalyticsUiStatusClass = "2xx" | "3xx" | "4xx" | "5xx" | "network";
+
+export type AnalyticsUiSupportabilityState =
+  | "ready"
+  | "partial"
+  | "action_required"
+  | "unsupported"
+  | "unknown";
+
+export interface AnalyticsUiPanelClassificationInput {
+  loading?: boolean;
+  permissionBlocked?: boolean;
+  unsupported?: boolean;
+  error?: unknown;
+  status?: number;
+  response?: unknown;
+  freshnessBucket?: AnalyticsUiFreshnessBucket;
+  supportabilityState?: AnalyticsUiSupportabilityState;
+  empty?: boolean;
+  partial?: boolean;
+  degraded?: boolean;
+}
+
+export interface WorkbenchAnalyticsUiMetricEvent {
+  event_name: WorkbenchAnalyticsUiBrowserEvent;
+  metric_name: WorkbenchAnalyticsUiMetricFamily;
+  value: number;
+  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>;
+  recorded_at: string;
+}
+
+export interface WorkbenchAnalyticsUiMetricSample {
+  metric_name: WorkbenchAnalyticsUiMetricFamily;
+  metric_type: "counter" | "histogram";
+  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>;
+  value: number;
+  sample_count: number;
+}
+
+export interface WorkbenchAnalyticsUiObservationContext {
+  route: string;
+  panel: string;
+  operation: string;
+  service?: string;
+}
+
+const metricEvents: WorkbenchAnalyticsUiMetricEvent[] = [];
+
+export function classifyAnalyticsUiPanelState(
+  input: AnalyticsUiPanelClassificationInput
+): AnalyticsUiState {
+  const responseState = readStringProperty(input.response, "state");
+  if (responseState && isAnalyticsUiState(responseState)) {
+    return responseState;
+  }
+
+  if (input.loading) {
+    return "loading";
+  }
+  if (input.permissionBlocked || input.status === 401 || input.status === 403) {
+    return "permission_blocked";
+  }
+  if (input.unsupported) {
+    return "unsupported";
+  }
+  if (input.error || (input.status !== undefined && input.status >= 400)) {
+    return "error";
+  }
+  if (input.freshnessBucket === "stale") {
+    return "stale";
+  }
+  if (input.degraded || input.supportabilityState === "action_required") {
+    return "degraded";
+  }
+  if (
+    input.partial ||
+    input.supportabilityState === "partial" ||
+    hasNonEmptyArrayProperty(input.response, "partial_failures")
+  ) {
+    return "partial";
+  }
+  if (input.empty === true) {
+    return "empty";
+  }
+  return "ready";
+}
+
+export function classifyAnalyticsUiFreshnessBucket(input: {
+  asOfDate?: string | null;
+  now?: Date;
+  staleAfterDays?: number;
+}): AnalyticsUiFreshnessBucket {
+  if (!input.asOfDate) {
+    return "unknown";
+  }
+  const asOf = new Date(`${input.asOfDate}T00:00:00Z`);
+  if (Number.isNaN(asOf.getTime())) {
+    return "unknown";
+  }
+  const now = input.now ?? new Date();
+  const staleAfterMs = (input.staleAfterDays ?? 3) * 24 * 60 * 60 * 1000;
+  return now.getTime() - asOf.getTime() > staleAfterMs ? "stale" : "fresh";
+}
+
+export function deriveAnalyticsUiSupportabilityState(
+  response: unknown
+): AnalyticsUiSupportabilityState {
+  const direct = readStringProperty(response, "supportability_state");
+  if (direct) {
+    return normalizeSupportabilityState(direct);
+  }
+  const supportabilityStatus = readStringProperty(response, "supportability_status");
+  if (supportabilityStatus) {
+    return normalizeSupportabilityState(supportabilityStatus);
+  }
+  if (hasNonEmptyArrayProperty(response, "partial_failures")) {
+    return "partial";
+  }
+  if (hasNonEmptyArrayProperty(response, "supportability")) {
+    return "ready";
+  }
+  return "unknown";
+}
+
+export function recordAnalyticsUiPanelHydration(params: {
+  context: WorkbenchAnalyticsUiObservationContext;
+  durationMs: number;
+  state: AnalyticsUiState;
+  freshnessBucket?: AnalyticsUiFreshnessBucket;
+  supportabilityState?: AnalyticsUiSupportabilityState;
+}): WorkbenchAnalyticsUiMetricEvent {
+  return recordMetricEvent({
+    eventName: "workbench.analytics.panel_hydration",
+    metricName: "lotus_workbench_panel_hydration_duration_seconds",
+    value: Math.max(0, params.durationMs) / 1000,
+    context: params.context,
+    labels: {
+      state: params.state,
+      freshness_bucket: params.freshnessBucket ?? "unknown",
+      supportability_state: params.supportabilityState ?? "unknown",
+    },
+  });
+}
+
+export function recordAnalyticsUiPanelState(params: {
+  context: WorkbenchAnalyticsUiObservationContext;
+  state: AnalyticsUiState;
+  freshnessBucket?: AnalyticsUiFreshnessBucket;
+  supportabilityState?: AnalyticsUiSupportabilityState;
+  reason?: string;
+}): WorkbenchAnalyticsUiMetricEvent {
+  return recordMetricEvent({
+    eventName: "workbench.analytics.panel_state",
+    metricName: "lotus_workbench_panel_state_total",
+    value: 1,
+    context: params.context,
+    labels: {
+      state: params.state,
+      freshness_bucket: params.freshnessBucket ?? "unknown",
+      supportability_state: params.supportabilityState ?? "unknown",
+      reason: params.reason,
+    },
+  });
+}
+
+export function recordAnalyticsUiApiRequest(params: {
+  context: WorkbenchAnalyticsUiObservationContext;
+  durationMs: number;
+  statusClass: AnalyticsUiStatusClass;
+  state: AnalyticsUiState;
+  errorCategory?: string;
+}): WorkbenchAnalyticsUiMetricEvent {
+  return recordMetricEvent({
+    eventName: "workbench.analytics.api_request",
+    metricName: "lotus_workbench_api_request_duration_seconds",
+    value: Math.max(0, params.durationMs) / 1000,
+    context: params.context,
+    labels: {
+      status_class: params.statusClass,
+      state: params.state,
+      error_category: params.errorCategory,
+    },
+  });
+}
+
+export async function observeWorkbenchAnalyticsRequest<T>(
+  context: WorkbenchAnalyticsUiObservationContext,
+  request: () => Promise<T>
+): Promise<T> {
+  const startedAt = nowMs();
+  try {
+    const response = await request();
+    const durationMs = nowMs() - startedAt;
+    const freshnessBucket = classifyAnalyticsUiFreshnessBucket({
+      asOfDate: readStringProperty(response, "as_of_date"),
+    });
+    const supportabilityState = deriveAnalyticsUiSupportabilityState(response);
+    const state = classifyAnalyticsUiPanelState({
+      response,
+      freshnessBucket,
+      supportabilityState,
+    });
+    recordAnalyticsUiApiRequest({
+      context,
+      durationMs,
+      statusClass: "2xx",
+      state,
+    });
+    recordAnalyticsUiPanelState({
+      context,
+      state,
+      freshnessBucket,
+      supportabilityState,
+    });
+    recordAnalyticsUiPanelHydration({
+      context,
+      durationMs,
+      state,
+      freshnessBucket,
+      supportabilityState,
+    });
+    return response;
+  } catch (error) {
+    const durationMs = nowMs() - startedAt;
+    const statusClass = statusClassFromError(error);
+    recordAnalyticsUiApiRequest({
+      context,
+      durationMs,
+      statusClass,
+      state:
+        statusClass === "4xx"
+          ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
+          : "error",
+      errorCategory: errorCategoryFromStatusClass(statusClass),
+    });
+    recordAnalyticsUiPanelState({
+      context,
+      state:
+        statusClass === "4xx"
+          ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
+          : "error",
+      reason: errorCategoryFromStatusClass(statusClass),
+    });
+    throw error;
+  }
+}
+
+export function getAnalyticsUiMetricEvents(): readonly WorkbenchAnalyticsUiMetricEvent[] {
+  return metricEvents;
+}
+
+export function getAnalyticsUiMetricSamples(): WorkbenchAnalyticsUiMetricSample[] {
+  const samples = new Map<string, WorkbenchAnalyticsUiMetricSample>();
+  for (const event of metricEvents) {
+    const sampleKey = JSON.stringify({
+      metric_name: event.metric_name,
+      labels: event.labels,
+    });
+    const existing = samples.get(sampleKey);
+    if (existing) {
+      existing.value += event.value;
+      existing.sample_count += 1;
+    } else {
+      samples.set(sampleKey, {
+        metric_name: event.metric_name,
+        metric_type:
+          event.metric_name === "lotus_workbench_panel_state_total"
+            ? "counter"
+            : "histogram",
+        labels: event.labels,
+        value: event.value,
+        sample_count: 1,
+      });
+    }
+  }
+  return [...samples.values()];
+}
+
+export function renderAnalyticsUiPrometheusMetrics(): string {
+  const samples = getAnalyticsUiMetricSamples();
+  const lines = [
+    "# HELP lotus_workbench_panel_hydration_duration_seconds Selected Workbench analytics panel hydration duration.",
+    "# TYPE lotus_workbench_panel_hydration_duration_seconds histogram",
+    "# HELP lotus_workbench_panel_state_total Selected Workbench analytics panel state transitions.",
+    "# TYPE lotus_workbench_panel_state_total counter",
+    "# HELP lotus_workbench_api_request_duration_seconds Selected Workbench analytics API request duration.",
+    "# TYPE lotus_workbench_api_request_duration_seconds histogram",
+  ];
+  for (const sample of samples) {
+    lines.push(
+      `${sample.metric_name}${formatPrometheusLabels(sample.labels)} ${sample.value}`
+    );
+    if (sample.metric_type === "histogram") {
+      lines.push(...renderHistogramBucketLines(sample));
+      lines.push(
+        `${sample.metric_name}_sum${formatPrometheusLabels(sample.labels)} ${sample.value}`
+      );
+      lines.push(
+        `${sample.metric_name}_count${formatPrometheusLabels(sample.labels)} ${sample.sample_count}`
+      );
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function resetAnalyticsUiMetricEvents(): void {
+  metricEvents.length = 0;
+}
+
+function recordMetricEvent(params: {
+  eventName: WorkbenchAnalyticsUiBrowserEvent;
+  metricName: WorkbenchAnalyticsUiMetricFamily;
+  value: number;
+  context: WorkbenchAnalyticsUiObservationContext;
+  labels: Partial<Record<AnalyticsUiAllowedLabel, string | undefined>>;
+}): WorkbenchAnalyticsUiMetricEvent {
+  const labels = buildAnalyticsUiLabels({
+    route: params.context.route,
+    panel: params.context.panel,
+    service: params.context.service ?? "lotus-gateway",
+    operation: params.context.operation,
+    ...params.labels,
+  });
+  assertAnalyticsUiLabels(labels);
+  const event: WorkbenchAnalyticsUiMetricEvent = {
+    event_name: params.eventName,
+    metric_name: params.metricName,
+    value: params.value,
+    labels,
+    recorded_at: new Date().toISOString(),
+  };
+  metricEvents.push(event);
+  return event;
+}
+
+function readStringProperty(value: unknown, property: string): string | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  return typeof propertyValue === "string" && propertyValue ? propertyValue : undefined;
+}
+
+function hasNonEmptyArrayProperty(value: unknown, property: string): boolean {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  return Array.isArray(propertyValue) && propertyValue.length > 0;
+}
+
+function normalizeSupportabilityState(value: string): AnalyticsUiSupportabilityState {
+  const normalized = value.toLowerCase();
+  if (normalized === "ready") {
+    return "ready";
+  }
+  if (normalized === "partial") {
+    return "partial";
+  }
+  if (normalized === "action_required") {
+    return "action_required";
+  }
+  if (normalized === "unsupported") {
+    return "unsupported";
+  }
+  return "unknown";
+}
+
+function nowMs(): number {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function statusFromError(error: unknown): number | undefined {
+  if (!(error instanceof Error)) {
+    return undefined;
+  }
+  const match = error.message.match(/\((\d{3})\)/);
+  return match ? Number(match[1]) : undefined;
+}
+
+function statusClassFromError(error: unknown): AnalyticsUiStatusClass {
+  const status = statusFromError(error);
+  if (status === undefined) {
+    return "network";
+  }
+  if (status >= 500) {
+    return "5xx";
+  }
+  if (status >= 400) {
+    return "4xx";
+  }
+  if (status >= 300) {
+    return "3xx";
+  }
+  return "2xx";
+}
+
+function errorCategoryFromStatusClass(statusClass: AnalyticsUiStatusClass): string {
+  if (statusClass === "4xx") {
+    return "client";
+  }
+  if (statusClass === "5xx") {
+    return "server";
+  }
+  if (statusClass === "network") {
+    return "network";
+  }
+  return "none";
+}
+
+function formatPrometheusLabels(
+  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>
+): string {
+  const entries = Object.entries(labels).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) {
+    return "";
+  }
+  return `{${entries
+    .map(([key, value]) => `${key}="${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+    .join(",")}}`;
+}
+
+function renderHistogramBucketLines(
+  sample: WorkbenchAnalyticsUiMetricSample
+): string[] {
+  const buckets = [0.1, 0.5, 1, 3, 5, 10];
+  const sourceEvents = metricEvents.filter(
+    (event) =>
+      event.metric_name === sample.metric_name &&
+      JSON.stringify(event.labels) === JSON.stringify(sample.labels)
+  );
+  const lines = buckets.map((bucket) => {
+    const count = sourceEvents.filter((event) => event.value <= bucket).length;
+    return `${sample.metric_name}_bucket${formatPrometheusLabels({
+      ...sample.labels,
+      // Prometheus requires le on histogram buckets; the contract validator keeps
+      // service-owned labels bounded and dashboard tests normalize bucket suffixes.
+      le: String(bucket),
+    } as Partial<Record<AnalyticsUiAllowedLabel, string>>)} ${count}`;
+  });
+  lines.push(
+    `${sample.metric_name}_bucket${formatPrometheusLabels({
+      ...sample.labels,
+      le: "+Inf",
+    } as Partial<Record<AnalyticsUiAllowedLabel, string>>)} ${sample.sample_count}`
+  );
+  return lines;
+}
