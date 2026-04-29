@@ -53,6 +53,34 @@ export const ANALYTICS_UI_STATE_VOCABULARY = [
 
 export type AnalyticsUiState = (typeof ANALYTICS_UI_STATE_VOCABULARY)[number];
 
+export const ANALYTICS_UI_SEVERITY_LEVELS = [
+  "info",
+  "warning",
+  "action_required",
+  "critical",
+] as const;
+
+export type AnalyticsUiSeverity = (typeof ANALYTICS_UI_SEVERITY_LEVELS)[number];
+
+export const ANALYTICS_UI_ATTENTION_EVENT_TYPES = [
+  "panel_stale",
+  "panel_degraded",
+  "panel_repeated_failure",
+  "source_partial",
+  "permission_blocked",
+] as const;
+
+export type AnalyticsUiAttentionEventType =
+  (typeof ANALYTICS_UI_ATTENTION_EVENT_TYPES)[number];
+
+export const ANALYTICS_UI_AUDIT_EVENT_TYPES = [
+  "analytics_read_allowed",
+  "analytics_read_denied",
+  "protected_diagnostics_lookup",
+] as const;
+
+export type AnalyticsUiAuditEventType = (typeof ANALYTICS_UI_AUDIT_EVENT_TYPES)[number];
+
 export const WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES = [
   "lotus_workbench_panel_hydration_duration_seconds",
   "lotus_workbench_panel_state_total",
@@ -61,6 +89,49 @@ export const WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES = [
 
 export type WorkbenchAnalyticsUiMetricFamily =
   (typeof WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES)[number];
+
+export const WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS = [
+  "workbench.analytics.panel_hydration",
+  "workbench.analytics.panel_state",
+  "workbench.analytics.api_request",
+] as const;
+
+export type WorkbenchAnalyticsUiBrowserEvent =
+  (typeof WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS)[number];
+
+export const ANALYTICS_UI_TRACE_ATTRIBUTES = [
+  "route",
+  "panel",
+  "service",
+  "operation",
+  "state",
+  "freshness_bucket",
+  "supportability_state",
+  "status_class",
+  "error_category",
+] as const satisfies readonly AnalyticsUiAllowedLabel[];
+
+export const ANALYTICS_UI_ATTENTION_EVENT_ATTRIBUTES = [
+  "route",
+  "panel",
+  "attention_type",
+  "severity",
+  "state",
+  "reason",
+  "freshness_bucket",
+  "supportability_state",
+] as const satisfies readonly AnalyticsUiAllowedLabel[];
+
+export const ANALYTICS_UI_AUDIT_EVENT_ATTRIBUTES = [
+  "route",
+  "panel",
+  "operation",
+  "state",
+  "reason",
+  "status_class",
+  "region",
+  "environment",
+] as const satisfies readonly AnalyticsUiAllowedLabel[];
 
 const ALLOWED_LABEL_SET = new Set<string>(ANALYTICS_UI_ALLOWED_LABELS);
 const FORBIDDEN_FIELD_SET = new Set<string>(ANALYTICS_UI_FORBIDDEN_FIELDS);
@@ -71,18 +142,25 @@ export function isAnalyticsUiState(value: string): value is AnalyticsUiState {
 }
 
 export function assertAnalyticsUiLabels(labels: Record<string, unknown>): void {
-  const labelNames = Object.keys(labels);
-  const forbiddenLabels = labelNames.filter((label) => FORBIDDEN_FIELD_SET.has(label));
-  if (forbiddenLabels.length > 0) {
+  assertAnalyticsUiAttributeNames(Object.keys(labels));
+}
+
+export function assertAnalyticsUiAttributeNames(attributeNames: readonly string[]): void {
+  const forbiddenAttributes = attributeNames.filter((attribute) =>
+    FORBIDDEN_FIELD_SET.has(attribute)
+  );
+  if (forbiddenAttributes.length > 0) {
     throw new Error(
-      `Analytics UI labels include forbidden field(s): ${forbiddenLabels.join(", ")}`
+      `Analytics UI attributes include forbidden field(s): ${forbiddenAttributes.join(", ")}`
     );
   }
 
-  const unsupportedLabels = labelNames.filter((label) => !ALLOWED_LABEL_SET.has(label));
-  if (unsupportedLabels.length > 0) {
+  const unsupportedAttributes = attributeNames.filter(
+    (attribute) => !ALLOWED_LABEL_SET.has(attribute)
+  );
+  if (unsupportedAttributes.length > 0) {
     throw new Error(
-      `Analytics UI labels include unsupported field(s): ${unsupportedLabels.join(", ")}`
+      `Analytics UI attributes include unsupported field(s): ${unsupportedAttributes.join(", ")}`
     );
   }
 }
