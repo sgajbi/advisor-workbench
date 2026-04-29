@@ -53,6 +53,13 @@ describe("BFF proxy route", () => {
         cache: "no-store",
       })
     );
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamHeaders.get("host")).toBeNull();
+    expect(upstreamHeaders.get("authorization")).toBe("Bearer token");
+    expect(upstreamHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
+    expect(upstreamHeaders.get("traceparent")).toMatch(
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/
+    );
     expect(response.status).toBe(200);
     expect(response.headers.get("transfer-encoding")).toBeNull();
     expect(await response.text()).toBe('{"ok":true}');
@@ -87,5 +94,30 @@ describe("BFF proxy route", () => {
       })
     );
     expect(response.status).toBe(202);
+  });
+
+  it("preserves valid context and replaces malformed traceparent before proxying", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+
+    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/workbench/PF_1001/risk/summary", {
+      method: "GET",
+      headers: {
+        "X-Correlation-Id": "corr-workbench-route-1",
+        traceparent: "malformed",
+      },
+    });
+
+    await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "workbench", "PF_1001", "risk", "summary"] }),
+    });
+
+    const upstreamInit = fetchMock.mock.calls[0][1];
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamHeaders.get("X-Correlation-Id")).toBe("corr-workbench-route-1");
+    expect(upstreamHeaders.get("traceparent")).not.toBe("malformed");
+    expect(upstreamHeaders.get("traceparent")).toMatch(
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/
+    );
   });
 });

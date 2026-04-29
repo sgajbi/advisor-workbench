@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
+import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
 
 async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamPath = params.path.join("/");
@@ -8,13 +9,13 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
 
   const headers = new Headers();
   request.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "host") return;
     headers.set(key, value);
   });
+  const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
 
   const response = await fetch(url, {
     method: request.method,
-    headers,
+    headers: upstreamHeaders,
     body:
       request.method === "GET" || request.method === "HEAD"
         ? undefined

@@ -572,8 +572,17 @@ describe("workbench api", () => {
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    const requestInit = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const requestHeaders = requestInit?.headers as Headers;
     expect(requestedUrl).toBe(
       "/api/bff/api/v1/workbench/PF_1001/risk/summary?period=YTD&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
+    );
+    expect(requestHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
+    expect(requestHeaders.get("traceparent")).toMatch(
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/
+    );
+    expect(requestHeaders.get("X-Trace-Id")).toBe(
+      requestHeaders.get("traceparent")?.split("-")[1]
     );
   });
 
@@ -1079,17 +1088,19 @@ describe("workbench api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief/review-actions?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24",
-      {
+      expect.objectContaining({
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action_type: "ACCEPT",
           reviewed_by: "advisor_1",
           reason: "Advisor brief accepted for bounded downstream workflow use.",
         }),
         cache: "no-store",
-      }
+      })
     );
+    const requestHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(requestHeaders.get("Content-Type")).toBe("application/json");
+    expect(requestHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
   });
 
   it("calls backend reporting snapshot endpoint", async () => {
