@@ -24,6 +24,7 @@ describe("analytics UI observability contract", () => {
       "lotus_workbench_panel_hydration_duration_seconds",
       "lotus_workbench_panel_state_total",
       "lotus_workbench_api_request_duration_seconds",
+      "lotus_analytics_ui_attention_events_total",
     ]);
   });
 
@@ -38,6 +39,7 @@ describe("analytics UI observability contract", () => {
       "workbench.analytics.panel_hydration",
       "workbench.analytics.panel_state",
       "workbench.analytics.api_request",
+      "workbench.analytics.attention",
     ]);
     expect(ANALYTICS_UI_SEVERITY_LEVELS).toEqual([
       "info",

@@ -25,6 +25,7 @@ describe("metrics route", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/plain");
     expect(body).toContain("# TYPE lotus_workbench_panel_state_total counter");
+    expect(body).toContain("# TYPE lotus_analytics_ui_attention_events_total counter");
     expect(body).toContain(
       'lotus_workbench_panel_state_total{route="workbench.risk",panel="risk-summary"'
     );

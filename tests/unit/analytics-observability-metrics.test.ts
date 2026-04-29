@@ -7,6 +7,7 @@ import {
   getAnalyticsUiMetricEvents,
   renderAnalyticsUiPrometheusMetrics,
   observeWorkbenchAnalyticsRequest,
+  recordAnalyticsUiAttentionEvent,
   recordAnalyticsUiPanelState,
   resetAnalyticsUiMetricEvents,
 } from "../../src/features/analytics-observability/metrics";
@@ -136,6 +137,88 @@ describe("analytics UI observability metrics", () => {
     );
     expect(renderedMetrics).not.toContain("portfolio_id");
     expect(renderedMetrics).not.toContain("Sensitive Client");
+  });
+
+  it("emits one bounded attention event for stale source-backed panel state", async () => {
+    await observeWorkbenchAnalyticsRequest(context, async () => ({
+      as_of_date: "2026-04-01",
+      state: "stale",
+      warnings: ["PERFORMANCE_STALE_SOURCE"],
+      portfolio_id: "PF_SENSITIVE",
+      client_name: "Sensitive Client",
+    }));
+
+    const attentionEvents = getAnalyticsUiMetricEvents().filter(
+      (event) => event.metric_name === "lotus_analytics_ui_attention_events_total"
+    );
+    expect(attentionEvents).toEqual([
+      expect.objectContaining({
+        event_name: "workbench.analytics.attention",
+        labels: expect.objectContaining({
+          route: "workbench.performance",
+          panel: "performance-summary",
+          attention_type: "panel_stale",
+          severity: "warning",
+          state: "stale",
+          reason: "PERFORMANCE_STALE_SOURCE",
+          freshness_bucket: "stale",
+        }),
+      }),
+    ]);
+    expect(JSON.stringify(attentionEvents)).not.toContain("PF_SENSITIVE");
+    expect(JSON.stringify(attentionEvents)).not.toContain("Sensitive Client");
+  });
+
+  it("deduplicates attention events by bounded label identity", () => {
+    const first = recordAnalyticsUiAttentionEvent({
+      context,
+      attentionType: "panel_degraded",
+      severity: "action_required",
+      state: "degraded",
+      reason: "Performance source unavailable for private client",
+      freshnessBucket: "unknown",
+      supportabilityState: "action_required",
+    });
+    const duplicate = recordAnalyticsUiAttentionEvent({
+      context,
+      attentionType: "panel_degraded",
+      severity: "action_required",
+      state: "degraded",
+      reason: "Performance source unavailable for private client",
+      freshnessBucket: "unknown",
+      supportabilityState: "action_required",
+    });
+
+    expect(first).toBeDefined();
+    expect(duplicate).toBeUndefined();
+    expect(getAnalyticsUiMetricEvents()).toHaveLength(1);
+    expect(getAnalyticsUiMetricEvents()[0].labels.reason).toBe(
+      "Performance_source_unavailable_for_private_client"
+    );
+  });
+
+  it("emits repeated-failure attention only after repeated selected panel failures", async () => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await expect(
+        observeWorkbenchAnalyticsRequest(context, async () => {
+          throw new Error("Failed to fetch performance workspace summary (503)");
+        })
+      ).rejects.toThrow("503");
+    }
+
+    const attentionEvents = getAnalyticsUiMetricEvents().filter(
+      (event) => event.metric_name === "lotus_analytics_ui_attention_events_total"
+    );
+    expect(attentionEvents).toEqual([
+      expect.objectContaining({
+        labels: expect.objectContaining({
+          attention_type: "panel_repeated_failure",
+          severity: "action_required",
+          state: "error",
+          reason: "server",
+        }),
+      }),
+    ]);
   });
 
   it("records a bounded error state when a selected analytics request fails", async () => {

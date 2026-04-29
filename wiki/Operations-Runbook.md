@@ -31,14 +31,19 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   `src/features/analytics-observability/contract.ts`.
 - Workbench emits first-wave local analytics UI metric events for selected performance summary,
   performance details, and risk summary reads through `src/features/analytics-observability/metrics.ts`.
+- Workbench emits bounded local attention events and the
+  `lotus_analytics_ui_attention_events_total` counter for stale, degraded, partial-source, and
+  repeated-failure states on those selected analytics panels. Attention labels are deduplicated and
+  limited to governed route, panel, service, operation, state, reason, freshness, supportability,
+  attention type, and severity fields.
 - `/api/metrics` exposes the implemented Workbench analytics UI metric families in Prometheus text
   format for platform scrape and dashboard/alert contracts.
 - Do not add panel, route, or browser telemetry labels outside that contract.
 - `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `trace_id`,
   `correlation_id`, request bodies, response bodies, and screen content must not become metric
   labels or browser event fields.
-- Gateway/backend metrics, attention events, audit events, and canonical browser proof remain planned
-  until later RFC-0108 slices promote them with evidence.
+- Gateway/backend metrics, audit events, and canonical browser proof remain planned until later
+  RFC-0108 slices promote them with evidence.
 
 ## Output paths
 
