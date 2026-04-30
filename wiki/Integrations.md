@@ -41,3 +41,7 @@
    freshness/supportability observability labels
 8. Workbench report batch proof may use `/workbench/<portfolioId>?asOfDate=YYYY-MM-DD&benchmark=<backend benchmark code>`;
    the route keeps portfolio data date and report batch date visibly distinct when they differ
+9. Archived report metadata and binary downloads use Gateway `/api/v1/documents/{document_id}` and
+   `/api/v1/documents/{document_id}/download` through `/api/bff/api/v1/documents/*`; Workbench
+   does not call `lotus-archive` directly, and the BFF preserves binary responses and integrity
+   headers for PDF downloads

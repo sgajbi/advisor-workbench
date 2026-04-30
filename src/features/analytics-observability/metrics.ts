@@ -124,6 +124,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "reporting.report-batch.run-once",
   },
   {
+    route: "workbench.reporting",
+    panel: "archive-document-metadata",
+    operation: "reporting.archive-document.metadata",
+  },
+  {
     route: "workbench.portfolio",
     panel: "portfolio-catalog",
     operation: "portfolio.catalog",

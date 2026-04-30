@@ -46,7 +46,8 @@ Current repository posture:
 6. Workbench reads reporting snapshot data through gateway and exposes the RFC-0104 explicit
    single-portfolio report batch materialization/status/run-once panel through the gateway BFF; it
    honors route-level report date and backend benchmark controls for proof while still avoiding
-   direct `lotus-report` calls,
+   direct `lotus-report` calls, and it now retrieves archived report metadata/downloads through
+   Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
 7. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
@@ -134,8 +135,8 @@ Important validation expectations:
    Reporting operator reads is centralized in
    `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
    in sync when adding or retiring portfolio, performance, risk, or reporting operator panels, and
-   never emit portfolio, client, session, report batch, trace, request body, response body, or
-   screen-content identifiers as metric labels. The metrics helper consumes Gateway
+   never emit portfolio, client, document, session, report batch, trace, request body, response
+   body, or screen-content identifiers as metric labels. The metrics helper consumes Gateway
    `source_supportability` arrays for performance/risk freshness and supportability posture, with
    stale source freshness taking precedence over ready source items.
 

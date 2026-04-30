@@ -211,9 +211,20 @@ export default function PerformanceEvidenceMode({
               {calculation.artifacts.length > 0 ? (
                 <ul className="performance-evidence-detail-list" aria-label="Evidence artifacts">
                   {calculation.artifacts.map((artifact) => (
-                    <li key={`${calculation.calculation_id}-${artifact.artifact_name}`}>
-                      <a href={artifact.url}>{artifact.artifact_name}</a>
+                    <li
+                      key={`${calculation.calculation_id}-${artifact.artifact_name}`}
+                      className={artifact.archive_document_id ? "performance-evidence-archive-artifact" : undefined}
+                    >
+                      <a href={artifact.archive_document_download_url ?? artifact.url}>
+                        {artifact.artifact_name}
+                      </a>
                       {artifact.content_type ? ` (${artifact.content_type})` : ""}
+                      {artifact.archive_document_id ? (
+                        <span className="performance-evidence-archive-support">
+                          Archived document metadata and binary download are routed through the
+                          Workbench BFF and Gateway document boundary.
+                        </span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

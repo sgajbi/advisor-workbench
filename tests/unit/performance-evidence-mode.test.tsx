@@ -115,6 +115,40 @@ describe("PerformanceEvidenceMode", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders archived artifacts with a gateway-backed download route", () => {
+    const scenario = buildSupportedEvidencePerformanceScenario();
+    if (scenario.workspace.evidence_view) {
+      scenario.workspace.evidence_view.calculations[0].artifacts = [
+        {
+          artifact_name: "portfolio-review.pdf",
+          url: "/api/v1/documents/doc_1/download",
+          content_type: "application/pdf",
+          archive_document_id: "doc_1",
+          archive_document_metadata_url: "/api/bff/api/v1/documents/doc_1?current=true",
+          archive_document_download_url: "/api/bff/api/v1/documents/doc_1/download",
+        },
+      ];
+    }
+
+    render(
+      <PerformanceEvidenceMode
+        capability={scenario.capabilities.evidence}
+        evidenceView={scenario.workspace.evidence_view}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "portfolio-review.pdf" })).toHaveAttribute(
+      "href",
+      "/api/bff/api/v1/documents/doc_1/download"
+    );
+    expect(document.querySelector(".performance-evidence-archive-artifact")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Archived document metadata and binary download are routed through the Workbench BFF and Gateway document boundary."
+      )
+    ).toBeInTheDocument();
+  });
+
   it("renders RFC-0079 limitations when evidence is partially backed", () => {
     const scenario = buildPartialEvidencePerformanceScenario();
 

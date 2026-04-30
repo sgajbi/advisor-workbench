@@ -26,7 +26,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete("transfer-encoding");
 
-  return new NextResponse(await response.text(), {
+  return new NextResponse(await response.arrayBuffer(), {
     status: response.status,
     headers: responseHeaders,
   });

@@ -51,9 +51,9 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
 - `/api/metrics` exposes the implemented Workbench analytics UI metric families in Prometheus text
   format for platform scrape and dashboard/alert contracts.
 - Do not add panel, route, or browser telemetry labels outside that contract.
-- `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `batch_id`,
-  `report_job_id`, `session_id`, `trace_id`, `correlation_id`, request bodies, response bodies,
-  and screen content must not become metric labels or browser event fields.
+- `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `document_id`,
+  `batch_id`, `report_job_id`, `session_id`, `trace_id`, `correlation_id`, request bodies,
+  response bodies, and screen content must not become metric labels or browser event fields.
 - Canonical browser proof for the supported Slice 14 Portfolio, Performance, Risk, and
   report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; full RFC-0079 risk/evidence scope
   remains governed by later RFC-0108 evidence. The performance evidence surface now renders
@@ -61,6 +61,10 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   freshness, methodology, calculation versions, coverage, fallbacks, and limitations where the
   Gateway evidence contract provides it. Canonical validation records `supportabilityChecks` for
   Gateway `source_supportability` evidence on performance and risk payloads.
+- The report-batch operations panel includes a Gateway-backed archived document lookup for
+  operator retrieval. Metadata reads use `/api/bff/api/v1/documents/{document_id}?current=true`,
+  downloads use `/api/bff/api/v1/documents/{document_id}/download`, and the shared BFF proxy
+  preserves binary PDF payloads plus checksum/content-disposition headers.
 
 ## Output paths
 
