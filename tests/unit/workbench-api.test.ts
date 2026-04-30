@@ -1201,13 +1201,24 @@ describe("workbench api", () => {
             status_url: "/api/v1/report-batches/rbch_1",
             idempotency_key: "workbench-report-batch-PF_1001-2026-02-24-USD",
             item_count: 1,
+            supportability: {
+              feature_key: "report.observability.evidence_surface_supportability",
+              state: "ready",
+              reason: "evidence_surface_ready",
+              freshness_bucket: "current",
+              evidence_feature_count: 14,
+              ready_evidence_feature_count: 14,
+              degraded_evidence_feature_count: 0,
+              workflow_count: 4,
+              ready_workflow_count: 4,
+            },
           }),
           { status: 201, headers: { "Content-Type": "application/json" } }
         )
       )
     );
 
-    await createPortfolioReportBatch({
+    const response = await createPortfolioReportBatch({
       portfolioId: "PF_1001",
       asOfDate: "2026-02-24",
       reportingCurrency: "USD",
@@ -1252,8 +1263,14 @@ describe("workbench api", () => {
         source_surface: "lotus-workbench",
       })
     );
+    expect(response.supportability?.feature_key).toBe(
+      "report.observability.evidence_surface_supportability"
+    );
+    expect(response.supportability?.state).toBe("ready");
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("report-batch-create");
+    expect(metricEventsJson).toContain('"supportability_state":"ready"');
+    expect(metricEventsJson).toContain('"freshness_bucket":"fresh"');
     expect(metricEventsJson).not.toContain("rbch_1");
     expect(metricEventsJson).not.toContain("PF_1001");
   });

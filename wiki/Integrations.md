@@ -36,5 +36,8 @@
    fallback previews
 6. RFC-0104 report batch operations use `/api/bff/api/v1/report-batches` only; Workbench does not
    call `lotus-report` directly for batch materialization, status, or bounded run-once execution
-7. Workbench report batch proof may use `/workbench/<portfolioId>?asOfDate=YYYY-MM-DD&benchmark=<backend benchmark code>`;
+7. report batch materialization, status, and bounded run-once responses consume Gateway-preserved
+   `report.observability.evidence_surface_supportability` metadata and emit only bounded
+   freshness/supportability observability labels
+8. Workbench report batch proof may use `/workbench/<portfolioId>?asOfDate=YYYY-MM-DD&benchmark=<backend benchmark code>`;
    the route keeps portfolio data date and report batch date visibly distinct when they differ

@@ -824,6 +824,9 @@ function normalizeSupportabilityState(value: string): AnalyticsUiSupportabilityS
 
 function normalizeFreshnessBucket(value: string): AnalyticsUiFreshnessBucket {
   const normalized = value.toLowerCase();
+  if (normalized === "current" || normalized === "ready") {
+    return "fresh";
+  }
   if (normalized === "fresh" || normalized === "stale" || normalized === "unknown") {
     return normalized;
   }
