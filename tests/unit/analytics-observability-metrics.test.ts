@@ -124,6 +124,15 @@ describe("analytics UI observability metrics", () => {
     ).toBe("fresh");
     expect(
       deriveAnalyticsUiFreshnessBucket({
+        advisory_supportability: {
+          feature_key: "advise.observability.advisory_supportability",
+          state: "ready",
+          freshness_bucket: "current",
+        },
+      })
+    ).toBe("fresh");
+    expect(
+      deriveAnalyticsUiFreshnessBucket({
         render_supportability: {
           state: "ready",
           freshness_bucket: "current",
@@ -372,6 +381,58 @@ describe("analytics UI observability metrics", () => {
             attention_type: "panel_stale",
             severity: "warning",
             state: "stale",
+            supportability_state: "action_required",
+          }),
+        }),
+      ])
+    );
+    expect(JSON.stringify(events)).not.toContain("PF_SENSITIVE");
+    expect(JSON.stringify(events)).not.toContain("CIF_SENSITIVE");
+  });
+
+  it("records advisory source supportability state without sensitive labels", async () => {
+    await observeWorkbenchAnalyticsRequest(
+      {
+        route: "workbench.performance",
+        panel: "performance-advisor-brief",
+        operation: "performance.workspace.advisor-brief",
+      },
+      async () => ({
+        advisory_supportability: {
+          feature_key: "advise.observability.advisory_supportability",
+          state: "degraded",
+          reason: "dependency_degraded",
+          freshness_bucket: "unknown",
+          dependency_count: 5,
+          ready_dependency_count: 2,
+          degraded_dependency_count: 3,
+          enabled_feature_count: 9,
+          ready_feature_count: 7,
+          metric_name: "lotus_advise_advisory_supportability_total",
+        },
+        portfolio_id: "PF_SENSITIVE",
+        client_id: "CIF_SENSITIVE",
+      })
+    );
+
+    const events = getAnalyticsUiMetricEvents();
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            panel: "performance-advisor-brief",
+            state: "degraded",
+            freshness_bucket: "unknown",
+            supportability_state: "action_required",
+          }),
+        }),
+        expect.objectContaining({
+          metric_name: "lotus_analytics_ui_attention_events_total",
+          labels: expect.objectContaining({
+            panel: "performance-advisor-brief",
+            attention_type: "panel_degraded",
+            severity: "action_required",
             supportability_state: "action_required",
           }),
         }),
