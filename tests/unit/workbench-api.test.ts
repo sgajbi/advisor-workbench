@@ -1249,6 +1249,17 @@ describe("workbench api", () => {
               workflow_count: 4,
               ready_workflow_count: 4,
             },
+            render_supportability: {
+              feature_key: "render.observability.render_supportability",
+              state: "ready",
+              reason: "render_supportability_ready",
+              freshness_bucket: "current",
+              deterministic_output_supported: true,
+              render_store_ready: true,
+              template_registry_ready: true,
+              default_output_format: "pdf",
+              supported_output_formats: ["pdf"],
+            },
           }),
           { status: 201, headers: { "Content-Type": "application/json" } }
         )
@@ -1304,6 +1315,9 @@ describe("workbench api", () => {
       "report.observability.evidence_surface_supportability"
     );
     expect(response.supportability?.state).toBe("ready");
+    expect(response.render_supportability?.feature_key).toBe(
+      "render.observability.render_supportability"
+    );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("report-batch-create");
     expect(metricEventsJson).toContain('"supportability_state":"ready"');
