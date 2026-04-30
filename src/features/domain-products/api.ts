@@ -1,3 +1,9 @@
+import {
+  WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
+  observeWorkbenchAnalyticsRequest,
+  type WorkbenchAnalyticsUiObservationContext,
+} from "@/features/analytics-observability/metrics";
+
 const BFF_PROXY_BASE = "/api/bff/api/v1";
 
 export type DomainProductRepositorySummary = {
@@ -144,17 +150,44 @@ type GatewayEnvelope<T> = {
   data: T;
 };
 
-async function fetchGatewayData<T>(path: string): Promise<T> {
+type DomainProductObservedOperation = Extract<
+  (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
+  `domain-products.${string}`
+>;
+
+const DOMAIN_PRODUCT_OPERATION_BY_PATH = {
+  "/domain-products/catalog": "domain-products.catalog",
+  "/domain-products/dependency-graph": "domain-products.dependency-graph",
+  "/domain-products/trust-certification": "domain-products.trust-certification",
+} as const satisfies Record<string, DomainProductObservedOperation>;
+
+function observedDomainProductSurface(
+  path: keyof typeof DOMAIN_PRODUCT_OPERATION_BY_PATH
+): WorkbenchAnalyticsUiObservationContext {
+  const operation = DOMAIN_PRODUCT_OPERATION_BY_PATH[path];
+  return WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.find(
+    (surface) => surface.operation === operation
+  )!;
+}
+
+async function fetchGatewayData<T>(
+  path: keyof typeof DOMAIN_PRODUCT_OPERATION_BY_PATH
+): Promise<T> {
   const params = new URLSearchParams({ consumerSystem: "lotus-workbench" });
-  const response = await fetch(`${BFF_PROXY_BASE}${path}?${params.toString()}`, {
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Domain product discovery fetch failed (${response.status}): ${detail}`);
-  }
-  const payload = (await response.json()) as GatewayEnvelope<T>;
-  return payload.data;
+  return await observeWorkbenchAnalyticsRequest(
+    observedDomainProductSurface(path),
+    async () => {
+      const response = await fetch(`${BFF_PROXY_BASE}${path}?${params.toString()}`, {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`Domain product discovery fetch failed (${response.status}): ${detail}`);
+      }
+      const payload = (await response.json()) as GatewayEnvelope<T>;
+      return payload.data;
+    }
+  );
 }
 
 export async function getDomainProductDiscovery(): Promise<DomainProductDiscoveryData> {

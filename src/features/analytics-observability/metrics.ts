@@ -159,6 +159,21 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "workbench.sandbox-session.apply",
   },
   {
+    route: "workbench.data-products",
+    panel: "domain-product-catalog",
+    operation: "domain-products.catalog",
+  },
+  {
+    route: "workbench.data-products",
+    panel: "domain-product-dependency-graph",
+    operation: "domain-products.dependency-graph",
+  },
+  {
+    route: "workbench.data-products",
+    panel: "domain-product-trust-certification",
+    operation: "domain-products.trust-certification",
+  },
+  {
     route: "workbench.portfolio",
     panel: "portfolio-catalog",
     operation: "portfolio.catalog",

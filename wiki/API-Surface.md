@@ -42,9 +42,9 @@ promote dormant labels into product ownership just because historical route file
 - canonical evidence should be taken from `output/playwright/live-canonical/` after
   `npm run live:validate`
 - RFC-0108 observability coverage is implemented for supported Portfolio, Performance, Risk,
-  Reporting, and legacy advisor Workbench gateway-backed reads/mutations. The coverage registry is
-  code-backed and tested so active product surfaces cannot silently drift outside bounded
-  route/panel/operation metrics.
+  Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations. The
+  coverage registry is code-backed and tested so active product surfaces cannot silently drift
+  outside bounded route/panel/operation metrics.
 
 ## Route examples
 

@@ -1,10 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getDomainProductDiscovery } from "../../src/features/domain-products/api";
+import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
 
 describe("domain product discovery api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    resetAnalyticsUiMetricEvents();
   });
 
   it("loads catalog, dependency graph, and trust certification through the gateway BFF", async () => {
@@ -103,6 +108,18 @@ describe("domain product discovery api", () => {
       "/api/bff/api/v1/domain-products/trust-certification?consumerSystem=lotus-workbench",
       { cache: "no-store" }
     );
+
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("domain-product-catalog");
+    expect(metricEventsJson).toContain("domain-product-dependency-graph");
+    expect(metricEventsJson).toContain("domain-product-trust-certification");
+    expect(metricEventsJson).toContain('"supportability_state":"unknown"');
+    expect(metricEventsJson).not.toContain("lotus-core:PortfolioStateSnapshot:v1");
+    expect(metricEventsJson).not.toContain("corr-catalog");
+    expect(metricEventsJson).not.toContain("corr-graph");
+    expect(metricEventsJson).not.toContain("corr-trust");
+    expect(metricEventsJson).not.toContain("contracts/domain-data-products");
+    expect(metricEventsJson).not.toContain("/integration/portfolios");
   });
 
   it("fails when gateway discovery returns an error", async () => {
@@ -114,6 +131,11 @@ describe("domain product discovery api", () => {
     await expect(getDomainProductDiscovery()).rejects.toThrow(
       "Domain product discovery fetch failed (503): catalog missing"
     );
+
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("domain-product-catalog");
+    expect(metricEventsJson).toContain('"status_class":"5xx"');
+    expect(metricEventsJson).not.toContain("catalog missing");
   });
 });
 
