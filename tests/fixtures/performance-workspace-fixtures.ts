@@ -216,6 +216,31 @@ export function buildPerformanceWorkspaceSummary(
     capabilities: toContractCapabilities(capabilities),
     evidence_view: {
       state: capabilities.evidence.state,
+      as_of_date: "2026-02-24",
+      period: "YTD",
+      basis: "NET",
+      benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      calculation_scope: "performance_workspace",
+      source_services: ["lotus-performance"],
+      input_freshness: {
+        performance: "fresh",
+        benchmark: options?.unassignedBenchmark ? "unavailable" : "fresh",
+      },
+      methodology_references: ["lotus-performance/docs/methodologies"],
+      calculation_versions: {
+        analytics_types: "WORKSPACE_SUMMARY",
+        gateway_contract: "v1",
+      },
+      coverage: {
+        supported_dimensions: ["asset_class", "country", "currency", "sector"],
+        unsupported_dimensions: ["issuer"],
+      },
+      fallbacks: [],
+      limitations:
+        capabilities.evidence.state === "partial"
+          ? ["One or more performance calculations still have pending lineage evidence."]
+          : [],
+      generated_at: null,
       reason: capabilities.evidence.reason ?? null,
       calculations: [
         {
@@ -345,6 +370,31 @@ export function buildPerformanceWorkspaceDetails(
     capabilities: toContractCapabilities(capabilities),
     evidence_view: {
       state: capabilities.evidence.state,
+      as_of_date: "2026-02-24",
+      period: "YTD",
+      basis: "NET",
+      benchmark_code: options?.unassignedBenchmark ? null : "BMK_GLOBAL_BALANCED_60_40",
+      calculation_scope: "performance_workspace",
+      source_services: ["lotus-performance"],
+      input_freshness: {
+        performance: "fresh",
+        benchmark: options?.unassignedBenchmark ? "unavailable" : "fresh",
+      },
+      methodology_references: ["lotus-performance/docs/methodologies"],
+      calculation_versions: {
+        analytics_types: "WORKSPACE_SUMMARY",
+        gateway_contract: "v1",
+      },
+      coverage: {
+        supported_dimensions: ["asset_class", "country", "currency", "sector"],
+        unsupported_dimensions: ["issuer"],
+      },
+      fallbacks: [],
+      limitations:
+        capabilities.evidence.state === "partial"
+          ? ["One or more performance calculations still have pending lineage evidence."]
+          : [],
+      generated_at: null,
       reason: capabilities.evidence.reason ?? null,
       calculations: [
         {
@@ -494,11 +544,23 @@ export function buildPerformancePresentationScenario(options?: {
   suspiciousMoneyWeightedReturn?: boolean;
   useGrossPerformance?: boolean;
 }): PerformancePresentationScenario {
+  const capabilities = buildPerformanceCapabilities(options?.capabilityOverrides);
+  const baseWorkspace = buildPerformanceWorkspace(options?.portfolioId, options?.fixtureOptions);
+  const evidenceLimitations =
+    capabilities.evidence.state === "partial"
+      ? ["One or more performance calculations still have pending lineage evidence."]
+      : (baseWorkspace.evidence_view?.limitations ?? []);
   const workspace = {
-    ...buildPerformanceWorkspace(options?.portfolioId, options?.fixtureOptions),
-    capabilities: toContractCapabilities(
-      buildPerformanceCapabilities(options?.capabilityOverrides)
-    ),
+    ...baseWorkspace,
+    capabilities: toContractCapabilities(capabilities),
+    evidence_view: baseWorkspace.evidence_view
+      ? {
+          ...baseWorkspace.evidence_view,
+          state: capabilities.evidence.state,
+          reason: capabilities.evidence.reason ?? baseWorkspace.evidence_view.reason,
+          limitations: evidenceLimitations,
+        }
+      : null,
     ...options?.workspaceOverrides,
   };
 
@@ -508,7 +570,7 @@ export function buildPerformancePresentationScenario(options?: {
 
   return {
     workspace,
-    capabilities: buildPerformanceCapabilities(options?.capabilityOverrides),
+    capabilities,
     selectedPerformance: {
       ...baseSelectedPerformance,
       ...options?.selectedPerformanceOverrides,

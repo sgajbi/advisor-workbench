@@ -50,8 +50,11 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   and screen content must not become metric labels or browser event fields.
 - Canonical browser proof for the supported Slice 14 Portfolio, Performance, Risk, and
   report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; Gateway/backend metrics, audit
-  completion, RFC-0079 evidence posture, and residual freshness reconciliation remain governed by
-  later RFC-0108 evidence.
+  completion, full RFC-0079 risk/evidence scope, and residual freshness reconciliation remain
+  governed by later RFC-0108 evidence. The performance evidence surface now renders Gateway-backed
+  RFC-0079 product context for as-of date, period, basis, benchmark, source services, freshness,
+  methodology, calculation versions, coverage, fallbacks, and limitations where the Gateway
+  evidence contract provides it.
 
 ## Output paths
 

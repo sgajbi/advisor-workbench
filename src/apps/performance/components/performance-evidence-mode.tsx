@@ -42,12 +42,32 @@ export default function PerformanceEvidenceMode({
     (calculation) =>
       calculation.execution_status === "complete" && calculation.lineage_status === "complete"
   ).length;
+  const evidenceReason =
+    evidenceView.reason ??
+    capability.reason ??
+    "Execution and lineage evidence can be reviewed for this portfolio.";
   const postureLabel =
     capability.state === "supported"
       ? "Supported"
       : capability.state === "partial"
         ? "Partial"
         : "Unavailable";
+  const productContext = [
+    ["As of", evidenceView.as_of_date],
+    ["Period", evidenceView.period],
+    ["Basis", evidenceView.basis],
+    ["Benchmark", evidenceView.benchmark_code],
+    ["Scope", evidenceView.calculation_scope],
+    ["Generated", evidenceView.generated_at],
+  ].filter((item): item is [string, string] => Boolean(item[1]));
+  const sourceServices = evidenceView.source_services ?? [];
+  const methodologyReferences = evidenceView.methodology_references ?? [];
+  const inputFreshness = Object.entries(evidenceView.input_freshness ?? {});
+  const calculationVersions = Object.entries(evidenceView.calculation_versions ?? {});
+  const supportedDimensions = evidenceView.coverage?.supported_dimensions ?? [];
+  const unsupportedDimensions = evidenceView.coverage?.unsupported_dimensions ?? [];
+  const fallbacks = evidenceView.fallbacks ?? [];
+  const limitations = evidenceView.limitations ?? [];
 
   return (
     <WorkbenchDataGridFrame
@@ -69,10 +89,7 @@ export default function PerformanceEvidenceMode({
           {
             label: "Evidence posture",
             value: postureLabel,
-            support:
-              evidenceView.reason ??
-              capability.reason ??
-              "Execution and lineage evidence can be reviewed for this portfolio.",
+            support: evidenceReason,
           },
           {
             label: "Calculations",
@@ -90,7 +107,67 @@ export default function PerformanceEvidenceMode({
         Evidence review is contract-backed for this portfolio and retains execution, lineage, and
         artifact context without bypassing the gateway boundary.
       </p>
-      {capability.reason ? <p className="muted performance-evidence-copy">{capability.reason}</p> : null}
+      {productContext.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence product context">
+          {productContext.map(([label, value]) => (
+            <li key={label}>
+              {label}: {value}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {sourceServices.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence source services">
+          {sourceServices.map((service) => (
+            <li key={service}>{service}</li>
+          ))}
+        </ul>
+      ) : null}
+      {inputFreshness.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence input freshness">
+          {inputFreshness.map(([source, state]) => (
+            <li key={source}>
+              {source}: {state}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {methodologyReferences.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence methodology references">
+          {methodologyReferences.map((reference) => (
+            <li key={reference}>{reference}</li>
+          ))}
+        </ul>
+      ) : null}
+      {calculationVersions.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence calculation versions">
+          {calculationVersions.map(([key, value]) => (
+            <li key={key}>
+              {key}: {value}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {supportedDimensions.length > 0 || unsupportedDimensions.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence coverage">
+          {supportedDimensions.length > 0 ? (
+            <li>Supported dimensions: {supportedDimensions.join(", ")}</li>
+          ) : null}
+          {unsupportedDimensions.length > 0 ? (
+            <li>Unsupported dimensions: {unsupportedDimensions.join(", ")}</li>
+          ) : null}
+        </ul>
+      ) : null}
+      {fallbacks.length > 0 || limitations.length > 0 ? (
+        <ul className="performance-evidence-detail-list" aria-label="Evidence limitations">
+          {fallbacks.map((fallback) => (
+            <li key={`fallback-${fallback}`}>Fallback: {fallback}</li>
+          ))}
+          {limitations.map((limitation) => (
+            <li key={`limitation-${limitation}`}>Limitation: {limitation}</li>
+          ))}
+        </ul>
+      ) : null}
       {calculations.length === 0 ? (
         <p className="muted performance-evidence-copy">
           No calculation evidence was returned for the current selection.
