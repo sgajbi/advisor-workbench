@@ -109,6 +109,11 @@ describe("analytics UI observability metrics", () => {
       })
     ).toBe("stale");
     expect(deriveAnalyticsUiFreshnessBucket({ freshness_bucket: "fresh" })).toBe("fresh");
+    expect(
+      deriveAnalyticsUiFreshnessBucket({
+        supportability: { state: "ready", freshness_bucket: "current" },
+      })
+    ).toBe("fresh");
     expect(deriveAnalyticsUiFreshnessBucket({ freshness_bucket: "unexpected" })).toBe(
       "unknown"
     );

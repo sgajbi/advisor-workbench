@@ -1086,6 +1086,19 @@ export type ReportBatchHandleResponse = {
   status_url: string;
   idempotency_key: string;
   item_count: number;
+  supportability?: ReportEvidenceSurfaceSupportability | null;
+};
+
+export type ReportEvidenceSurfaceSupportability = {
+  feature_key: "report.observability.evidence_surface_supportability";
+  state: string;
+  reason: string;
+  freshness_bucket: string;
+  evidence_feature_count: number;
+  ready_evidence_feature_count: number;
+  degraded_evidence_feature_count: number;
+  workflow_count: number;
+  ready_workflow_count: number;
 };
 
 export type ReportBatchItemStatus = {
@@ -1126,6 +1139,7 @@ export type ReportBatchStatusResponse = {
   failed_at: string | null;
   correlation_id: string;
   trace_id: string;
+  supportability?: ReportEvidenceSurfaceSupportability | null;
 };
 
 export type ReportBatchWorkerRunResponse = {
@@ -1149,4 +1163,5 @@ export type ReportBatchWorkerRunResponse = {
     retry_eligible: boolean;
   }>;
   status_url: string;
+  supportability?: ReportEvidenceSurfaceSupportability | null;
 };
