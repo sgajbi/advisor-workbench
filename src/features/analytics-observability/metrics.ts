@@ -129,6 +129,36 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "reporting.archive-document.metadata",
   },
   {
+    route: "workbench.legacy-advisor",
+    panel: "advisor-overview",
+    operation: "workbench.overview",
+  },
+  {
+    route: "workbench.legacy-advisor",
+    panel: "portfolio-360",
+    operation: "workbench.portfolio-360",
+  },
+  {
+    route: "workbench.legacy-advisor",
+    panel: "portfolio-analytics",
+    operation: "workbench.analytics",
+  },
+  {
+    route: "workbench.legacy-advisor",
+    panel: "reporting-snapshot",
+    operation: "workbench.reporting-snapshot",
+  },
+  {
+    route: "workbench.legacy-advisor",
+    panel: "sandbox-session-create",
+    operation: "workbench.sandbox-session.create",
+  },
+  {
+    route: "workbench.legacy-advisor",
+    panel: "sandbox-session-apply",
+    operation: "workbench.sandbox-session.apply",
+  },
+  {
     route: "workbench.portfolio",
     panel: "portfolio-catalog",
     operation: "portfolio.catalog",

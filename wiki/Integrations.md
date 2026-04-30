@@ -45,3 +45,8 @@
    `/api/v1/documents/{document_id}/download` through `/api/bff/api/v1/documents/*`; Workbench
    does not call `lotus-archive` directly, and the BFF preserves binary responses and integrity
    headers for PDF downloads
+10. RFC-0108 analytics UI observability is centralized in
+    `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Performance, Risk,
+    Reporting, and legacy advisor Workbench gateway-backed reads/mutations emit bounded route,
+    panel, operation, freshness, and supportability labels only; portfolio, document, session,
+    trace, request, response, and screen-content identifiers must not appear in metric labels.
