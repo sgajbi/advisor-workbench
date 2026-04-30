@@ -45,8 +45,10 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
 - `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `batch_id`,
   `report_job_id`, `session_id`, `trace_id`, `correlation_id`, request bodies, response bodies,
   and screen content must not become metric labels or browser event fields.
-- Gateway/backend metrics, audit events, and canonical browser proof remain planned until later
-  RFC-0108 slices promote them with evidence.
+- Canonical browser proof for the supported Slice 14 Portfolio, Performance, Risk, and
+  report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; Gateway/backend metrics, audit
+  completion, support-state proof, and residual freshness reconciliation remain governed by later
+  RFC-0108 evidence.
 
 ## Output paths
 
