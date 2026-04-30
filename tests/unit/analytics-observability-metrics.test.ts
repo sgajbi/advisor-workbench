@@ -291,6 +291,26 @@ describe("analytics UI observability metrics", () => {
         "domain-product-trust-certification",
         "domain-products.trust-certification",
       ],
+      [
+        "workbench.intake",
+        "portfolio-intake-bundle",
+        "intake.portfolio-bundle.ingest",
+      ],
+      [
+        "workbench.intake",
+        "portfolio-intake-portfolio-lookups",
+        "intake.lookups.portfolios",
+      ],
+      [
+        "workbench.intake",
+        "portfolio-intake-instrument-lookups",
+        "intake.lookups.instruments",
+      ],
+      [
+        "workbench.intake",
+        "portfolio-intake-currency-lookups",
+        "intake.lookups.currencies",
+      ],
       ["workbench.portfolio", "portfolio-catalog", "portfolio.catalog"],
       ["workbench.portfolio", "portfolio-workspace-shell", "portfolio.workspace.shell"],
       ["workbench.portfolio", "portfolio-book", "portfolio.book"],
