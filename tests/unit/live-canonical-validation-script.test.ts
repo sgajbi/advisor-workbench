@@ -40,6 +40,8 @@ describe("canonical live validation script", () => {
     );
 
     expect(script).toContain("[int]$SeedWaitSeconds = 900");
+    expect(script).toContain('[string]$LotusAiEnvFile = ".env.example"');
+    expect(script).toContain("Using lotus-ai env file for canonical proof");
     expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("$global:LASTEXITCODE = 0");
     expect(script).toContain("Command failed with exit code $LASTEXITCODE");
