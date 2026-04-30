@@ -67,6 +67,15 @@ describe("portfolio api", () => {
               status: "PENDING_REVIEW",
               last_run_at_utc: "2026-03-27T12:00:00Z",
               last_rebalance_run_id: "rr_100",
+              supportability: {
+                feature_key: "manage.observability.action_register_supportability",
+                state: "healthy",
+                reason: "action_register_current",
+                freshness_bucket: "fresh",
+                run_count: 4,
+                operation_count: 12,
+                workflow_decision_count: 3,
+              },
             },
             control_capabilities: {
               historical_snapshots: {
@@ -150,6 +159,15 @@ describe("portfolio api", () => {
       status: "PENDING_REVIEW",
       last_run_at_utc: "2026-03-27T12:00:00Z",
       last_rebalance_run_id: "rr_100",
+      supportability: {
+        feature_key: "manage.observability.action_register_supportability",
+        state: "healthy",
+        reason: "action_register_current",
+        freshness_bucket: "fresh",
+        run_count: 4,
+        operation_count: 12,
+        workflow_decision_count: 3,
+      },
     });
     expect(shell?.control_capabilities?.historical_snapshots.state).toBe("partial");
     expect(shell?.control_capabilities?.reporting_currency_restatement.supported_currencies).toEqual([
@@ -182,8 +200,9 @@ describe("portfolio api", () => {
             route: "workbench.portfolio",
             panel: "portfolio-workspace-shell",
             operation: "portfolio.workspace.shell",
-            state: "stale",
-            freshness_bucket: "stale",
+            state: "ready",
+            freshness_bucket: "fresh",
+            supportability_state: "ready",
           }),
         }),
       ])

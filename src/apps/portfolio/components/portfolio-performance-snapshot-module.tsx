@@ -51,7 +51,7 @@ export default function PortfolioPerformanceSnapshotModule({
     performance?.sparkline_points?.length
       ? `${performance.sparkline_points.length} source-backed observations`
       : "Open Performance workspace for source-backed return path detail.";
-  const operationalSupport = getOperationalSupportLine(reportingRowCount, rebalance?.status ?? null);
+  const operationalSupport = getOperationalSupportLine(reportingRowCount, rebalance);
   const compactContextLine = buildCompactContextLine({
     benchmarkLabel,
     moneyWeightedMethod: performance?.money_weighted_method ?? null,
@@ -274,12 +274,23 @@ function buildPerformanceWorkspaceHref({
 
 function getOperationalSupportLine(
   reportingRowCount: number,
-  rebalanceStatus: string | null
+  rebalance: PortfolioWorkspace["rebalance"]
 ) {
   const parts = [`${reportingRowCount} report row${reportingRowCount === 1 ? "" : "s"}`];
 
-  if (rebalanceStatus) {
-    parts.push(`Rebalance ${formatPortfolioToken(rebalanceStatus)}`);
+  if (rebalance?.status) {
+    parts.push(`Rebalance ${formatPortfolioToken(rebalance.status)}`);
+  }
+
+  const supportability = rebalance?.supportability;
+  if (supportability?.state) {
+    const supportabilityParts = [
+      formatPortfolioToken(supportability.state),
+      supportability.freshness_bucket ? formatPortfolioToken(supportability.freshness_bucket) : null,
+    ].filter(Boolean);
+    if (supportabilityParts.length > 0) {
+      parts.push(`Action Register ${supportabilityParts.join(", ")}`);
+    }
   }
 
   return parts.join(" • ");
