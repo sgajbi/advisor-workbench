@@ -129,6 +129,16 @@ export type PortfolioSupportabilitySummary = {
   no_activity_domains: number;
 };
 
+export type PortfolioRebalanceSupportabilitySummary = {
+  feature_key: "manage.observability.action_register_supportability" | string;
+  state: string;
+  reason: string | null;
+  freshness_bucket: "fresh" | "stale" | "unknown" | string | null;
+  run_count: number | null;
+  operation_count: number | null;
+  workflow_decision_count: number | null;
+};
+
 export type PortfolioExceptionSummary = {
   key: string;
   title: string;
@@ -349,6 +359,7 @@ export type PortfolioWorkspace = {
     status: string;
     last_run_at_utc: string | null;
     last_rebalance_run_id: string | null;
+    supportability?: PortfolioRebalanceSupportabilitySummary | null;
   } | null;
   control_capabilities?: {
     historical_snapshots: {

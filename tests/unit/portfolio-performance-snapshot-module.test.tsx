@@ -150,7 +150,20 @@ describe("portfolio performance snapshot module", () => {
             },
           ],
         }}
-        rebalance={{ status: "READY", last_run_at_utc: null, last_rebalance_run_id: null }}
+        rebalance={{
+          status: "READY",
+          last_run_at_utc: null,
+          last_rebalance_run_id: null,
+          supportability: {
+            feature_key: "manage.observability.action_register_supportability",
+            state: "healthy",
+            reason: "action_register_current",
+            freshness_bucket: "fresh",
+            run_count: 4,
+            operation_count: 12,
+            workflow_decision_count: 3,
+          },
+        }}
         reportingRowCount={14}
         context={{
           selectedAsOfDate: "2026-03-28",
@@ -251,7 +264,20 @@ describe("portfolio performance snapshot module", () => {
             },
           ],
         }}
-        rebalance={{ status: "READY", last_run_at_utc: null, last_rebalance_run_id: null }}
+        rebalance={{
+          status: "READY",
+          last_run_at_utc: null,
+          last_rebalance_run_id: null,
+          supportability: {
+            feature_key: "manage.observability.action_register_supportability",
+            state: "healthy",
+            reason: "action_register_current",
+            freshness_bucket: "fresh",
+            run_count: 4,
+            operation_count: 12,
+            workflow_decision_count: 3,
+          },
+        }}
         reportingRowCount={14}
         context={{
           selectedAsOfDate: "2026-03-28",
@@ -288,7 +314,9 @@ describe("portfolio performance snapshot module", () => {
     expect(screen.getByText("3 source-backed observations")).toBeInTheDocument();
     expect(screen.getByText("Calculated • Stateful benchmark")).toBeInTheDocument();
     expect(screen.getAllByText("MWR XIRR").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("14 report rows • Rebalance Ready")).toBeInTheDocument();
+    expect(
+      screen.getByText("14 report rows • Rebalance Ready • Action Register Healthy, Fresh")
+    ).toBeInTheDocument();
     expect(screen.getByText("Comparison Context")).toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Performance snapshot comparison sparkline" })

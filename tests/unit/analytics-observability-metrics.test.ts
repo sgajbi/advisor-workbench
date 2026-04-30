@@ -315,6 +315,51 @@ describe("analytics UI observability metrics", () => {
     expect(JSON.stringify(events)).not.toContain("CIF_SENSITIVE");
   });
 
+  it("records rebalance source supportability state without sensitive labels", async () => {
+    await observeWorkbenchAnalyticsRequest(context, async () => ({
+      as_of_date: new Date().toISOString().slice(0, 10),
+      rebalance: {
+        status: "PENDING_REVIEW",
+        supportability: {
+          feature_key: "manage.observability.action_register_supportability",
+          state: "degraded",
+          reason: "action_register_stale",
+          freshness_bucket: "stale",
+          run_count: 4,
+          operation_count: 12,
+          workflow_decision_count: 3,
+        },
+      },
+      portfolio_id: "PF_SENSITIVE",
+      client_id: "CIF_SENSITIVE",
+    }));
+
+    const events = getAnalyticsUiMetricEvents();
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            state: "stale",
+            freshness_bucket: "stale",
+            supportability_state: "action_required",
+          }),
+        }),
+        expect.objectContaining({
+          metric_name: "lotus_analytics_ui_attention_events_total",
+          labels: expect.objectContaining({
+            attention_type: "panel_stale",
+            severity: "warning",
+            state: "stale",
+            supportability_state: "action_required",
+          }),
+        }),
+      ])
+    );
+    expect(JSON.stringify(events)).not.toContain("PF_SENSITIVE");
+    expect(JSON.stringify(events)).not.toContain("CIF_SENSITIVE");
+  });
+
   it("derives stale and partial posture from Gateway source supportability", async () => {
     await observeWorkbenchAnalyticsRequest(context, async () => ({
       source_supportability: [
