@@ -241,6 +241,12 @@ assert numeric ranges, contribution reconciliation, governed attribution fallbac
 observation coverage, concentration coverage, rolling-window availability, and historical risk
 attribution residuals before screenshots are accepted as demo evidence.
 
+The summary also includes `supportabilityChecks` for Gateway-backed source supportability evidence.
+For performance and risk payloads, the validator records the bounded source service set, item count,
+stale count, partial count, action-required count, and aggregate supportability state derived from
+Gateway `source_supportability` arrays. Stale source supportability takes precedence over fresh
+source supportability so browser proof cannot mask upstream freshness degradation.
+
 The summary also includes `panelClassifications` for the product surfaces validated during the run.
 Panels must be classified as `ready`, `partial`, `unavailable`, or another explicit governed state.
 The validator fails if a supported panel is recorded as blank without a governed empty, partial, or

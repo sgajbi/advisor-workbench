@@ -30,6 +30,79 @@ function recordCalculationCheck(summary, description, evidence) {
   summary.calculationChecks.push({ description, ...evidence });
 }
 
+function readSourceSupportabilityItems(...payloads) {
+  return payloads.flatMap((payload) =>
+    Array.isArray(payload?.source_supportability) ? payload.source_supportability : []
+  );
+}
+
+function normalizeSupportabilityState(value) {
+  const normalized = typeof value === "string" ? value.toLowerCase() : "";
+  if (["ready", "supported", "ok", "complete"].includes(normalized)) {
+    return "ready";
+  }
+  if (["partial", "stale"].includes(normalized)) {
+    return "partial";
+  }
+  if (["blocked", "degraded", "unavailable", "unsupported", "action_required"].includes(normalized)) {
+    return "action_required";
+  }
+  return "unknown";
+}
+
+function summarizeSourceSupportability(items) {
+  let staleCount = 0;
+  let partialCount = 0;
+  let actionRequiredCount = 0;
+  const services = new Set();
+
+  for (const item of items) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+    if (typeof item.source_service === "string" && item.source_service) {
+      services.add(item.source_service);
+    }
+    if (item.freshness_bucket === "stale") {
+      staleCount += 1;
+    }
+    const normalizedState = normalizeSupportabilityState(item.state ?? item.supportability_state);
+    if (normalizedState === "partial") {
+      partialCount += 1;
+    }
+    if (normalizedState === "action_required") {
+      actionRequiredCount += 1;
+    }
+  }
+
+  return {
+    itemCount: items.length,
+    services: [...services].sort(),
+    staleCount,
+    partialCount,
+    actionRequiredCount,
+    state:
+      actionRequiredCount > 0
+        ? "action_required"
+        : partialCount > 0 || staleCount > 0
+          ? "partial"
+          : items.length > 0
+            ? "ready"
+            : "unknown",
+  };
+}
+
+function recordSourceSupportabilityCheck(summary, panel, owner, items) {
+  const supportability = summarizeSourceSupportability(items);
+  summary.supportabilityChecks.push({
+    panel,
+    owner,
+    source: "gateway.source_supportability",
+    ...supportability,
+  });
+  return supportability;
+}
+
 export function assertPerformanceCalculationSanity({
   summary,
   performanceSummary,
@@ -106,12 +179,21 @@ export function assertPerformanceCalculationSanity({
     attributionState: attributionCapability.state,
     attributionRows,
   });
+  const performanceSupportability = recordSourceSupportabilityCheck(
+    summary,
+    "performance.summary",
+    "lotus-gateway",
+    readSourceSupportabilityItems(performanceSummary, performanceDetails)
+  );
 
   recordPanelClassification("performance.summary", "ready", "lotus-performance", {
     returnPathRows: performanceDetails.net_chart.length,
+    sourceSupportabilityState: performanceSupportability.state,
+    sourceSupportabilityItems: performanceSupportability.itemCount,
   });
   recordPanelClassification("performance.analysis.contribution", "ready", "lotus-performance", {
     contributionRows: contributionRows.length,
+    sourceSupportabilityState: performanceSupportability.state,
   });
   recordPanelClassification(
     "performance.analysis.attribution",
@@ -244,9 +326,17 @@ export function assertRiskCalculationSanity({
     rollingWindowsWithLatestVolatility,
     attributionContributorCount: contributors.length,
   });
+  const riskSupportability = recordSourceSupportabilityCheck(
+    summary,
+    "performance.risk.snapshot",
+    "lotus-gateway",
+    readSourceSupportabilityItems(riskSummary, concentration, drawdown, rolling, attribution)
+  );
 
   recordPanelClassification("performance.risk.snapshot", "ready", "lotus-risk", {
     readyMetricCount: readyMetrics.length,
+    sourceSupportabilityState: riskSupportability.state,
+    sourceSupportabilityItems: riskSupportability.itemCount,
   });
   recordPanelClassification("performance.risk.concentration", "ready", "lotus-risk", {
     issuerCoverageRatio: concentrationPayload.issuer_concentration?.coverage_ratio_current,

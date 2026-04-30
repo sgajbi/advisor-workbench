@@ -315,6 +315,53 @@ describe("analytics UI observability metrics", () => {
     expect(JSON.stringify(events)).not.toContain("CIF_SENSITIVE");
   });
 
+  it("derives stale and partial posture from Gateway source supportability", async () => {
+    await observeWorkbenchAnalyticsRequest(context, async () => ({
+      source_supportability: [
+        {
+          source_service: "lotus-performance",
+          operation: "performance.twr",
+          state: "ready",
+          freshness_bucket: "fresh",
+        },
+        {
+          source_service: "lotus-performance",
+          operation: "performance.attribution",
+          state: "partial",
+          freshness_bucket: "stale",
+          reason: "attribution_fallback_available",
+        },
+      ],
+      portfolio_id: "PF_SENSITIVE",
+      trace_id: "TRACE_SENSITIVE",
+    }));
+
+    const events = getAnalyticsUiMetricEvents();
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            state: "stale",
+            freshness_bucket: "stale",
+            supportability_state: "partial",
+          }),
+        }),
+        expect.objectContaining({
+          metric_name: "lotus_analytics_ui_attention_events_total",
+          labels: expect.objectContaining({
+            attention_type: "panel_stale",
+            severity: "warning",
+            state: "stale",
+            supportability_state: "partial",
+          }),
+        }),
+      ])
+    );
+    expect(JSON.stringify(events)).not.toContain("PF_SENSITIVE");
+    expect(JSON.stringify(events)).not.toContain("TRACE_SENSITIVE");
+  });
+
   it("deduplicates attention events by bounded label identity", () => {
     const first = recordAnalyticsUiAttentionEvent({
       context,

@@ -6,12 +6,14 @@ import {
 type TestValidationSummary = {
   calculationChecks: Array<Record<string, unknown>>;
   panelClassifications: Array<Record<string, unknown>>;
+  supportabilityChecks: Array<Record<string, unknown>>;
 };
 
 function createSummary(): TestValidationSummary {
   return {
     calculationChecks: [],
     panelClassifications: [],
+    supportabilityChecks: [],
   };
 }
 
@@ -45,6 +47,14 @@ describe("live validation calculation sanity helpers", () => {
             reason: "lineage evidence remains partial",
           },
         },
+        source_supportability: [
+          {
+            source_service: "lotus-performance",
+            operation: "performance.twr",
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
       },
       performanceDetails: {
         net_chart: [{}, {}, {}, {}],
@@ -69,6 +79,14 @@ describe("live validation calculation sanity helpers", () => {
             },
           ],
         },
+        source_supportability: [
+          {
+            source_service: "lotus-performance",
+            operation: "performance.attribution",
+            state: "partial",
+            freshness_bucket: "stale",
+          },
+        ],
       },
     });
 
@@ -83,6 +101,18 @@ describe("live validation calculation sanity helpers", () => {
         expect.objectContaining({ panel: "performance.evidence", state: "partial" }),
       ])
     );
+    expect(summary.supportabilityChecks).toEqual([
+      expect.objectContaining({
+        panel: "performance.summary",
+        owner: "lotus-gateway",
+        source: "gateway.source_supportability",
+        state: "partial",
+        itemCount: 2,
+        staleCount: 1,
+        partialCount: 1,
+        services: ["lotus-performance"],
+      }),
+    ]);
   });
 
   it("fails performance attribution when governed fallback is missing", () => {
@@ -145,8 +175,24 @@ describe("live validation calculation sanity helpers", () => {
             },
           ],
         },
+        source_supportability: [
+          {
+            source_service: "lotus-risk",
+            operation: "risk.summary",
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
       },
       concentration: {
+        source_supportability: [
+          {
+            source_service: "lotus-risk",
+            operation: "risk.concentration",
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
         payload: {
           portfolio_concentration: { hhi_current: 1356 },
           issuer_concentration: { coverage_ratio_current: 0.99 },
@@ -154,6 +200,14 @@ describe("live validation calculation sanity helpers", () => {
         },
       },
       drawdown: {
+        source_supportability: [
+          {
+            source_service: "lotus-risk",
+            operation: "risk.drawdown",
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
         payload: {
           periods: [
             {
@@ -165,6 +219,14 @@ describe("live validation calculation sanity helpers", () => {
         },
       },
       rolling: {
+        source_supportability: [
+          {
+            source_service: "lotus-risk",
+            operation: "risk.rolling",
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
         payload: {
           periods: [
             {
@@ -180,6 +242,14 @@ describe("live validation calculation sanity helpers", () => {
         },
       },
       attribution: {
+        source_supportability: [
+          {
+            source_service: "lotus-risk",
+            operation: "risk.attribution",
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
         payload: {
           periods: [
             {
@@ -208,6 +278,16 @@ describe("live validation calculation sanity helpers", () => {
         }),
       ])
     );
+    expect(summary.supportabilityChecks).toEqual([
+      expect.objectContaining({
+        panel: "performance.risk.snapshot",
+        owner: "lotus-gateway",
+        source: "gateway.source_supportability",
+        state: "ready",
+        itemCount: 5,
+        services: ["lotus-risk"],
+      }),
+    ]);
   });
 
   it("fails risk attribution when the residual breaches the governed tolerance", () => {
