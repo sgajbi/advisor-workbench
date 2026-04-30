@@ -39,6 +39,9 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   repeated-failure states on those selected analytics panels. Attention labels are deduplicated and
   limited to governed route, panel, service, operation, state, reason, freshness, supportability,
   attention type, and severity fields.
+- Workbench derives supported-read support state from source-shaped metadata such as
+  `supportability.state`, `supportability.freshness_bucket`, and supportability item arrays before
+  recording panel state, hydration, and attention metrics.
 - `/api/metrics` exposes the implemented Workbench analytics UI metric families in Prometheus text
   format for platform scrape and dashboard/alert contracts.
 - Do not add panel, route, or browser telemetry labels outside that contract.
@@ -47,8 +50,8 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   and screen content must not become metric labels or browser event fields.
 - Canonical browser proof for the supported Slice 14 Portfolio, Performance, Risk, and
   report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; Gateway/backend metrics, audit
-  completion, support-state proof, and residual freshness reconciliation remain governed by later
-  RFC-0108 evidence.
+  completion, RFC-0079 evidence posture, and residual freshness reconciliation remain governed by
+  later RFC-0108 evidence.
 
 ## Output paths
 

@@ -250,6 +250,23 @@ export function classifyAnalyticsUiFreshnessBucket(input: {
   return now.getTime() - asOf.getTime() > staleAfterMs ? "stale" : "fresh";
 }
 
+export function deriveAnalyticsUiFreshnessBucket(response: unknown): AnalyticsUiFreshnessBucket {
+  const direct = readStringProperty(response, "freshness_bucket");
+  if (direct) {
+    return normalizeFreshnessBucket(direct);
+  }
+
+  const supportability = readObjectProperty(response, "supportability");
+  const supportabilityFreshness = readStringProperty(supportability, "freshness_bucket");
+  if (supportabilityFreshness) {
+    return normalizeFreshnessBucket(supportabilityFreshness);
+  }
+
+  return classifyAnalyticsUiFreshnessBucket({
+    asOfDate: readStringProperty(response, "as_of_date"),
+  });
+}
+
 export function deriveAnalyticsUiSupportabilityState(
   response: unknown
 ): AnalyticsUiSupportabilityState {
@@ -261,11 +278,22 @@ export function deriveAnalyticsUiSupportabilityState(
   if (supportabilityStatus) {
     return normalizeSupportabilityState(supportabilityStatus);
   }
+  const supportability = readObjectProperty(response, "supportability");
+  const nestedSupportabilityState =
+    readStringProperty(supportability, "state") ??
+    readStringProperty(supportability, "supportability_state") ??
+    readStringProperty(supportability, "supportability_status");
+  if (nestedSupportabilityState) {
+    return normalizeSupportabilityState(nestedSupportabilityState);
+  }
+  const supportabilityItemsState = deriveArraySupportabilityState(
+    readArrayProperty(response, "supportability")
+  );
+  if (supportabilityItemsState !== "unknown") {
+    return supportabilityItemsState;
+  }
   if (hasNonEmptyArrayProperty(response, "partial_failures")) {
     return "partial";
-  }
-  if (hasNonEmptyArrayProperty(response, "supportability")) {
-    return "ready";
   }
   return "unknown";
 }
@@ -363,9 +391,7 @@ export async function observeWorkbenchAnalyticsRequest<T>(
   try {
     const response = await request();
     const durationMs = nowMs() - startedAt;
-    const freshnessBucket = classifyAnalyticsUiFreshnessBucket({
-      asOfDate: readStringProperty(response, "as_of_date"),
-    });
+    const freshnessBucket = deriveAnalyticsUiFreshnessBucket(response);
     const supportabilityState = deriveAnalyticsUiSupportabilityState(response);
     const state = classifyAnalyticsUiPanelState({
       response,
@@ -644,6 +670,25 @@ function readStringProperty(value: unknown, property: string): string | undefine
   return typeof propertyValue === "string" && propertyValue ? propertyValue : undefined;
 }
 
+function readObjectProperty(value: unknown, property: string): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  if (!propertyValue || typeof propertyValue !== "object" || Array.isArray(propertyValue)) {
+    return undefined;
+  }
+  return propertyValue as Record<string, unknown>;
+}
+
+function readArrayProperty(value: unknown, property: string): unknown[] {
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  return Array.isArray(propertyValue) ? propertyValue : [];
+}
+
 function readFirstString(value: unknown, property: string): string | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -700,13 +745,58 @@ function normalizeSupportabilityState(value: string): AnalyticsUiSupportabilityS
   if (normalized === "partial") {
     return "partial";
   }
-  if (normalized === "action_required") {
+  if (
+    normalized === "action_required" ||
+    normalized === "blocked" ||
+    normalized === "degraded" ||
+    normalized === "requires_action"
+  ) {
     return "action_required";
   }
-  if (normalized === "unsupported") {
+  if (normalized === "unsupported" || normalized === "unavailable") {
     return "unsupported";
   }
   return "unknown";
+}
+
+function normalizeFreshnessBucket(value: string): AnalyticsUiFreshnessBucket {
+  const normalized = value.toLowerCase();
+  if (normalized === "fresh" || normalized === "stale" || normalized === "unknown") {
+    return normalized;
+  }
+  return "unknown";
+}
+
+function deriveArraySupportabilityState(items: unknown[]): AnalyticsUiSupportabilityState {
+  if (!items.length) {
+    return "unknown";
+  }
+  const states = items
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return "unknown";
+      }
+      const state =
+        readStringProperty(item, "state") ??
+        readStringProperty(item, "supportability_state") ??
+        readStringProperty(item, "supportability_status");
+      return state ? normalizeSupportabilityState(state) : "unknown";
+    })
+    .filter((state) => state !== "unknown");
+
+  if (!states.length) {
+    return "ready";
+  }
+  if (states.includes("action_required")) {
+    return "action_required";
+  }
+  if (states.includes("partial")) {
+    return "partial";
+  }
+  if (states.includes("unsupported")) {
+    return "unsupported";
+  }
+  return "ready";
 }
 
 function nowMs(): number {
