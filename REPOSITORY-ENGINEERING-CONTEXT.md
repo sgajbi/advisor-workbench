@@ -135,7 +135,9 @@ Important validation expectations:
    `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
    in sync when adding or retiring portfolio, performance, risk, or reporting operator panels, and
    never emit portfolio, client, session, report batch, trace, request body, response body, or
-   screen-content identifiers as metric labels.
+   screen-content identifiers as metric labels. The metrics helper consumes Gateway
+   `source_supportability` arrays for performance/risk freshness and supportability posture, with
+   stale source freshness taking precedence over ready source items.
 
 ### Visual Review Gate
 

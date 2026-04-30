@@ -256,6 +256,11 @@ export function deriveAnalyticsUiFreshnessBucket(response: unknown): AnalyticsUi
     return normalizeFreshnessBucket(direct);
   }
 
+  const sourceSupportabilityFreshness = deriveSourceSupportabilityFreshnessBucket(response);
+  if (sourceSupportabilityFreshness !== "unknown") {
+    return sourceSupportabilityFreshness;
+  }
+
   const supportability = readObjectProperty(response, "supportability");
   const supportabilityFreshness = readStringProperty(supportability, "freshness_bucket");
   if (supportabilityFreshness) {
@@ -278,6 +283,12 @@ export function deriveAnalyticsUiSupportabilityState(
   if (supportabilityStatus) {
     return normalizeSupportabilityState(supportabilityStatus);
   }
+  const sourceSupportabilityState = deriveArraySupportabilityState(
+    readArrayProperty(response, "source_supportability")
+  );
+  if (sourceSupportabilityState !== "unknown") {
+    return sourceSupportabilityState;
+  }
   const supportability = readObjectProperty(response, "supportability");
   const nestedSupportabilityState =
     readStringProperty(supportability, "state") ??
@@ -296,6 +307,27 @@ export function deriveAnalyticsUiSupportabilityState(
     return "partial";
   }
   return "unknown";
+}
+
+function deriveSourceSupportabilityFreshnessBucket(response: unknown): AnalyticsUiFreshnessBucket {
+  let hasFreshSource = false;
+  for (const item of readArrayProperty(response, "source_supportability")) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+    const freshnessBucket = readStringProperty(item, "freshness_bucket");
+    if (!freshnessBucket) {
+      continue;
+    }
+    const normalized = normalizeFreshnessBucket(freshnessBucket);
+    if (normalized === "stale") {
+      return "stale";
+    }
+    if (normalized === "fresh") {
+      hasFreshSource = true;
+    }
+  }
+  return hasFreshSource ? "fresh" : "unknown";
 }
 
 export function recordAnalyticsUiPanelHydration(params: {

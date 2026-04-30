@@ -40,8 +40,10 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   limited to governed route, panel, service, operation, state, reason, freshness, supportability,
   attention type, and severity fields.
 - Workbench derives supported-read support state from source-shaped metadata such as
-  `supportability.state`, `supportability.freshness_bucket`, and supportability item arrays before
-  recording panel state, hydration, and attention metrics.
+  `supportability.state`, `supportability.freshness_bucket`, supportability item arrays, and
+  Gateway `source_supportability` arrays before recording panel state, hydration, and attention
+  metrics. Any stale source supportability item takes precedence over fresh source items so stale
+  upstream posture cannot be hidden by another ready source.
 - `/api/metrics` exposes the implemented Workbench analytics UI metric families in Prometheus text
   format for platform scrape and dashboard/alert contracts.
 - Do not add panel, route, or browser telemetry labels outside that contract.
@@ -49,12 +51,12 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   `report_job_id`, `session_id`, `trace_id`, `correlation_id`, request bodies, response bodies,
   and screen content must not become metric labels or browser event fields.
 - Canonical browser proof for the supported Slice 14 Portfolio, Performance, Risk, and
-  report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; Gateway/backend metrics, audit
-  completion, full RFC-0079 risk/evidence scope, and residual freshness reconciliation remain
-  governed by later RFC-0108 evidence. The performance evidence surface now renders Gateway-backed
-  RFC-0079 product context for as-of date, period, basis, benchmark, source services, freshness,
-  methodology, calculation versions, coverage, fallbacks, and limitations where the Gateway
-  evidence contract provides it.
+  report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; full RFC-0079 risk/evidence scope
+  remains governed by later RFC-0108 evidence. The performance evidence surface now renders
+  Gateway-backed RFC-0079 product context for as-of date, period, basis, benchmark, source services,
+  freshness, methodology, calculation versions, coverage, fallbacks, and limitations where the
+  Gateway evidence contract provides it. Canonical validation records `supportabilityChecks` for
+  Gateway `source_supportability` evidence on performance and risk payloads.
 
 ## Output paths
 
