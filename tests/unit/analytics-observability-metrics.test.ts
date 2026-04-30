@@ -276,6 +276,21 @@ describe("analytics UI observability metrics", () => {
         "sandbox-session-apply",
         "workbench.sandbox-session.apply",
       ],
+      [
+        "workbench.data-products",
+        "domain-product-catalog",
+        "domain-products.catalog",
+      ],
+      [
+        "workbench.data-products",
+        "domain-product-dependency-graph",
+        "domain-products.dependency-graph",
+      ],
+      [
+        "workbench.data-products",
+        "domain-product-trust-certification",
+        "domain-products.trust-certification",
+      ],
       ["workbench.portfolio", "portfolio-catalog", "portfolio.catalog"],
       ["workbench.portfolio", "portfolio-workspace-shell", "portfolio.workspace.shell"],
       ["workbench.portfolio", "portfolio-book", "portfolio.book"],

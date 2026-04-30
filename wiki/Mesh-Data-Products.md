@@ -17,3 +17,10 @@ Workbench consumes gateway APIs only. It must not read `lotus-platform/generated
 ## Operating rule
 
 Workbench discovery must show truthful loading, empty, partial, stale, blocked, unavailable, and error states. It must not show decorative mesh trust when gateway/platform certification evidence is missing.
+
+## Observability posture
+
+RFC-0108 coverage records bounded route, panel, operation, state, freshness, and supportability
+labels for catalog, dependency graph, and trust-certification reads. Metric labels must not include
+product identifiers, source paths, dependency routes, correlation identifiers, request bodies, or
+response bodies.
