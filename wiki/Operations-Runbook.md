@@ -17,6 +17,10 @@ npm run live:validate
 npm run live:stack:down
 ```
 
+The canonical startup script defaults `lotus-ai` to `.env.example` for deterministic
+provider-disabled proof, even if a local `lotus-ai/.env` asks for a live or local provider. Pass
+`-LotusAiEnvFile .env` only when the required provider dependency is intentionally running.
+
 ## Browser-facing probes
 
 ```txt

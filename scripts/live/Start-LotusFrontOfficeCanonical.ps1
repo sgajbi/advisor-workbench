@@ -3,7 +3,7 @@ param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
-  [string]$LotusAiEnvFile = "",
+  [string]$LotusAiEnvFile = ".env.example",
   [int]$SeedWaitSeconds = 900,
   [switch]$CleanCoreState,
   [switch]$BuildImages,
@@ -130,6 +130,7 @@ if ($BuildImages) {
   $composeUpCommand = "$composeUpCommand --build"
 }
 $resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
+Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
 Invoke-RepoCommand $coreRepo $composeUpCommand
 Invoke-RepoCommand $performanceRepo $composeUpCommand
 Invoke-RepoCommand $riskRepo $composeUpCommand

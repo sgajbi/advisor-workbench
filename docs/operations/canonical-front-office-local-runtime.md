@@ -111,9 +111,10 @@ The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed 
 drain window than the default `900` seconds.
 
 The canonical bring-up script accepts `-LotusAiEnvFile` to make the `lotus-ai` provider posture
-explicit for proof runs. Use `.env.example` for deterministic provider-disabled front-office proof.
-Use the repo-local `.env` only when the required live provider dependency, such as the `local-llm`
-Ollama compose profile and model, is intentionally running.
+explicit for proof runs. It defaults to `.env.example` for deterministic provider-disabled
+front-office proof, even when the local `lotus-ai/.env` requests a live or local provider. Use the
+repo-local `.env` only when the required live provider dependency, such as the `local-llm` Ollama
+compose profile and model, is intentionally running.
 
 When a prior local RFC-086 load/performance run has left stale `lotus-core` Kafka or Postgres
 state behind, use `-CleanCoreState` on the startup script to run `docker compose down -v
