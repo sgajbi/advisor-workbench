@@ -1031,6 +1031,18 @@ describe("workbench api", () => {
               ],
               status_summary: ["AI surface supportability is source-backed."],
             },
+            advisory_supportability: {
+              feature_key: "advise.observability.advisory_supportability",
+              state: "ready",
+              reason: "advisory_ready",
+              freshness_bucket: "current",
+              dependency_count: 5,
+              ready_dependency_count: 5,
+              degraded_dependency_count: 0,
+              enabled_feature_count: 9,
+              ready_feature_count: 9,
+              metric_name: "lotus_advise_advisory_supportability_total",
+            },
             workflow_pack_task_flow: {
               task_flow_id: "taskflow_advisor_brief_req-1",
               workflow_pack_id: "advisor_brief.pack",
@@ -1078,6 +1090,10 @@ describe("workbench api", () => {
       "ai.observability.ai_surface_supportability"
     );
     expect(advisorBrief.ai_surface_supportability?.state).toBe("action_required");
+    expect(advisorBrief.advisory_supportability?.feature_key).toBe(
+      "advise.observability.advisory_supportability"
+    );
+    expect(advisorBrief.advisory_supportability?.ready_feature_count).toBe(9);
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain('"supportability_state":"action_required"');
     expect(metricEventsJson).toContain('"freshness_bucket":"fresh"');

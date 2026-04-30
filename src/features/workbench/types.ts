@@ -560,6 +560,19 @@ export type WorkbenchAdvisorBriefAiSurfaceSupportability = {
   status_summary: string[];
 };
 
+export type WorkbenchAdvisorBriefAdvisorySupportability = {
+  feature_key: "advise.observability.advisory_supportability" | string;
+  state: string;
+  reason?: string | null;
+  freshness_bucket: string;
+  dependency_count: number;
+  ready_dependency_count: number;
+  degraded_dependency_count: number;
+  enabled_feature_count: number;
+  ready_feature_count: number;
+  metric_name: "lotus_advise_advisory_supportability_total" | string;
+};
+
 export type WorkbenchAdvisorBriefWorkflowPackRunFinding = {
   finding_id: string;
   severity: string;
@@ -644,6 +657,7 @@ export type WorkbenchPerformanceAdvisorBrief = {
   source_metrics: WorkbenchAdvisorBriefSourceMetric[];
   supportability: WorkbenchAdvisorBriefSupportabilityItem[];
   ai_surface_supportability?: WorkbenchAdvisorBriefAiSurfaceSupportability | null;
+  advisory_supportability?: WorkbenchAdvisorBriefAdvisorySupportability | null;
   workflow_pack_run?: WorkbenchAdvisorBriefWorkflowPackRun | null;
   workflow_pack_task_flow?: WorkbenchAdvisorBriefWorkflowPackTaskFlow | null;
   ai_audit: {
