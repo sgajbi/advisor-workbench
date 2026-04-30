@@ -46,7 +46,8 @@
    does not call `lotus-archive` directly, and the BFF preserves binary responses and integrity
    headers for PDF downloads
 10. RFC-0108 analytics UI observability is centralized in
-    `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Performance, Risk,
-    Reporting, and legacy advisor Workbench gateway-backed reads/mutations emit bounded route,
-    panel, operation, freshness, and supportability labels only; portfolio, document, session,
-    trace, request, response, and screen-content identifiers must not appear in metric labels.
+    `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Intake, Performance,
+    Risk, Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations
+    emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
+    intake payload, document, session, trace, request, response, and screen-content identifiers
+    must not appear in metric labels.

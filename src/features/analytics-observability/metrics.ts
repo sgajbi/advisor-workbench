@@ -174,6 +174,26 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "domain-products.trust-certification",
   },
   {
+    route: "workbench.intake",
+    panel: "portfolio-intake-bundle",
+    operation: "intake.portfolio-bundle.ingest",
+  },
+  {
+    route: "workbench.intake",
+    panel: "portfolio-intake-portfolio-lookups",
+    operation: "intake.lookups.portfolios",
+  },
+  {
+    route: "workbench.intake",
+    panel: "portfolio-intake-instrument-lookups",
+    operation: "intake.lookups.instruments",
+  },
+  {
+    route: "workbench.intake",
+    panel: "portfolio-intake-currency-lookups",
+    operation: "intake.lookups.currencies",
+  },
+  {
     route: "workbench.portfolio",
     panel: "portfolio-catalog",
     operation: "portfolio.catalog",
