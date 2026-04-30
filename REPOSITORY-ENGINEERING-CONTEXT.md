@@ -130,6 +130,12 @@ Important validation expectations:
 7. route-file existence alone is not enough for documentation truth; use shell registry,
    capabilities tests, redirect behavior, and canonical runtime guidance before describing a surface
    as supported.
+8. RFC-0108 analytics UI observability for supported Workbench Portfolio, Performance, Risk, and
+   Reporting operator reads is centralized in
+   `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
+   in sync when adding or retiring portfolio, performance, risk, or reporting operator panels, and
+   never emit portfolio, client, session, report batch, trace, request body, response body, or
+   screen-content identifiers as metric labels.
 
 ### Visual Review Gate
 

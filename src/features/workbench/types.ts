@@ -298,6 +298,19 @@ export type PerformanceCalculationEvidenceView = {
 
 export type PerformanceEvidenceView = {
   state: string;
+  as_of_date?: string | null;
+  period?: string | null;
+  basis?: string | null;
+  benchmark_code?: string | null;
+  calculation_scope?: string | null;
+  source_services?: string[] | null;
+  input_freshness?: Record<string, string> | null;
+  methodology_references?: string[] | null;
+  calculation_versions?: Record<string, string> | null;
+  coverage?: Record<string, string[]> | null;
+  fallbacks?: string[] | null;
+  limitations?: string[] | null;
+  generated_at?: string | null;
   reason?: string | null;
   calculations: PerformanceCalculationEvidenceView[];
 };

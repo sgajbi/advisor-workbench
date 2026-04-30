@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  deriveAnalyticsUiFreshnessBucket,
   classifyAnalyticsUiFreshnessBucket,
   classifyAnalyticsUiPanelState,
   deriveAnalyticsUiSupportabilityState,
@@ -10,6 +11,7 @@ import {
   recordAnalyticsUiAttentionEvent,
   recordAnalyticsUiPanelState,
   resetAnalyticsUiMetricEvents,
+  WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
 } from "../../src/features/analytics-observability/metrics";
 
 const context = {
@@ -72,6 +74,43 @@ describe("analytics UI observability metrics", () => {
     ).toBe("partial");
     expect(deriveAnalyticsUiSupportabilityState({ supportability_state: "unsupported" })).toBe(
       "unsupported"
+    );
+    expect(
+      deriveAnalyticsUiSupportabilityState({
+        supportability: { state: "ready", reason: "portfolio_supportability_ready" },
+      })
+    ).toBe("ready");
+    expect(
+      deriveAnalyticsUiSupportabilityState({
+        supportability: [
+          { label: "TWR", state: "ready" },
+          { label: "Attribution", state: "partial" },
+        ],
+      })
+    ).toBe("partial");
+    expect(
+      deriveAnalyticsUiSupportabilityState({
+        supportability: [
+          { label: "TWR", state: "ready" },
+          { label: "Risk", state: "blocked" },
+        ],
+      })
+    ).toBe("action_required");
+  });
+
+  it("derives freshness posture from source-owned supportability metadata", () => {
+    expect(
+      deriveAnalyticsUiFreshnessBucket({
+        supportability: {
+          state: "ready",
+          freshness_bucket: "stale",
+        },
+        as_of_date: new Date().toISOString().slice(0, 10),
+      })
+    ).toBe("stale");
+    expect(deriveAnalyticsUiFreshnessBucket({ freshness_bucket: "fresh" })).toBe("fresh");
+    expect(deriveAnalyticsUiFreshnessBucket({ freshness_bucket: "unexpected" })).toBe(
+      "unknown"
     );
   });
 
@@ -139,6 +178,75 @@ describe("analytics UI observability metrics", () => {
     expect(renderedMetrics).not.toContain("Sensitive Client");
   });
 
+  it("keeps the supported Workbench observed-surface registry explicit", () => {
+    expect(
+      WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.map((surface) => [
+        surface.route,
+        surface.panel,
+        surface.operation,
+      ])
+    ).toEqual([
+      [
+        "workbench.performance",
+        "performance-summary",
+        "performance.workspace.summary",
+      ],
+      [
+        "workbench.performance",
+        "performance-details",
+        "performance.workspace.details",
+      ],
+      [
+        "workbench.performance",
+        "performance-horizon-comparison",
+        "performance.workspace.horizon-comparison",
+      ],
+      [
+        "workbench.performance",
+        "performance-attribution-trend",
+        "performance.workspace.attribution-trend",
+      ],
+      [
+        "workbench.performance",
+        "performance-advisor-brief",
+        "performance.workspace.advisor-brief",
+      ],
+      ["workbench.risk", "risk-summary", "risk.summary"],
+      ["workbench.risk", "risk-concentration", "risk.concentration"],
+      ["workbench.risk", "risk-drawdown", "risk.drawdown"],
+      ["workbench.risk", "risk-rolling", "risk.rolling"],
+      ["workbench.risk", "risk-attribution", "risk.attribution"],
+      ["workbench.reporting", "report-batch-create", "reporting.report-batch.create"],
+      ["workbench.reporting", "report-batch-status", "reporting.report-batch.status"],
+      [
+        "workbench.reporting",
+        "report-batch-run-once",
+        "reporting.report-batch.run-once",
+      ],
+      ["workbench.portfolio", "portfolio-catalog", "portfolio.catalog"],
+      ["workbench.portfolio", "portfolio-workspace-shell", "portfolio.workspace.shell"],
+      ["workbench.portfolio", "portfolio-book", "portfolio.book"],
+      ["workbench.portfolio", "portfolio-income-summary", "portfolio.income-summary"],
+      ["workbench.portfolio", "portfolio-activity-summary", "portfolio.activity-summary"],
+      [
+        "workbench.portfolio",
+        "portfolio-performance-snapshot",
+        "portfolio.performance-snapshot",
+      ],
+      ["workbench.portfolio", "portfolio-liquidity", "portfolio.liquidity"],
+      ["workbench.portfolio", "portfolio-transaction-ledger", "portfolio.transactions"],
+      ["workbench.portfolio", "portfolio-readiness", "portfolio.readiness"],
+      ["workbench.portfolio", "portfolio-insights", "portfolio.insights"],
+      ["workbench.portfolio", "portfolio-workflow", "portfolio.workflow"],
+      ["workbench.portfolio", "portfolio-allocation-views", "portfolio.allocations"],
+      [
+        "workbench.portfolio",
+        "portfolio-projected-cashflow",
+        "portfolio.projected-cashflow",
+      ],
+    ]);
+  });
+
   it("emits one bounded attention event for stale source-backed panel state", async () => {
     await observeWorkbenchAnalyticsRequest(context, async () => ({
       as_of_date: "2026-04-01",
@@ -167,6 +275,44 @@ describe("analytics UI observability metrics", () => {
     ]);
     expect(JSON.stringify(attentionEvents)).not.toContain("PF_SENSITIVE");
     expect(JSON.stringify(attentionEvents)).not.toContain("Sensitive Client");
+  });
+
+  it("records nested source supportability state without sensitive labels", async () => {
+    await observeWorkbenchAnalyticsRequest(context, async () => ({
+      as_of_date: new Date().toISOString().slice(0, 10),
+      supportability: {
+        state: "action_required",
+        reason: "portfolio_supportability_action_required",
+        freshness_bucket: "fresh",
+      },
+      portfolio_id: "PF_SENSITIVE",
+      client_id: "CIF_SENSITIVE",
+    }));
+
+    const events = getAnalyticsUiMetricEvents();
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            state: "degraded",
+            freshness_bucket: "fresh",
+            supportability_state: "action_required",
+          }),
+        }),
+        expect.objectContaining({
+          metric_name: "lotus_analytics_ui_attention_events_total",
+          labels: expect.objectContaining({
+            attention_type: "panel_degraded",
+            severity: "action_required",
+            state: "degraded",
+            supportability_state: "action_required",
+          }),
+        }),
+      ])
+    );
+    expect(JSON.stringify(events)).not.toContain("PF_SENSITIVE");
+    expect(JSON.stringify(events)).not.toContain("CIF_SENSITIVE");
   });
 
   it("deduplicates attention events by bounded label identity", () => {

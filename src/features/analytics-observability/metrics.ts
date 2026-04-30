@@ -57,6 +57,139 @@ export interface WorkbenchAnalyticsUiObservationContext {
   service?: string;
 }
 
+export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
+  {
+    route: "workbench.performance",
+    panel: "performance-summary",
+    operation: "performance.workspace.summary",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-details",
+    operation: "performance.workspace.details",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-horizon-comparison",
+    operation: "performance.workspace.horizon-comparison",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-attribution-trend",
+    operation: "performance.workspace.attribution-trend",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-advisor-brief",
+    operation: "performance.workspace.advisor-brief",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-summary",
+    operation: "risk.summary",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-concentration",
+    operation: "risk.concentration",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-drawdown",
+    operation: "risk.drawdown",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-rolling",
+    operation: "risk.rolling",
+  },
+  {
+    route: "workbench.risk",
+    panel: "risk-attribution",
+    operation: "risk.attribution",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "report-batch-create",
+    operation: "reporting.report-batch.create",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "report-batch-status",
+    operation: "reporting.report-batch.status",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "report-batch-run-once",
+    operation: "reporting.report-batch.run-once",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-catalog",
+    operation: "portfolio.catalog",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-workspace-shell",
+    operation: "portfolio.workspace.shell",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-book",
+    operation: "portfolio.book",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-income-summary",
+    operation: "portfolio.income-summary",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-activity-summary",
+    operation: "portfolio.activity-summary",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-performance-snapshot",
+    operation: "portfolio.performance-snapshot",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-liquidity",
+    operation: "portfolio.liquidity",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-transaction-ledger",
+    operation: "portfolio.transactions",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-readiness",
+    operation: "portfolio.readiness",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-insights",
+    operation: "portfolio.insights",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-workflow",
+    operation: "portfolio.workflow",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-allocation-views",
+    operation: "portfolio.allocations",
+  },
+  {
+    route: "workbench.portfolio",
+    panel: "portfolio-projected-cashflow",
+    operation: "portfolio.projected-cashflow",
+  },
+] as const satisfies readonly WorkbenchAnalyticsUiObservationContext[];
+
 const metricEvents: WorkbenchAnalyticsUiMetricEvent[] = [];
 const attentionDedupeKeys = new Set<string>();
 const panelFailureCounts = new Map<string, number>();
@@ -117,6 +250,23 @@ export function classifyAnalyticsUiFreshnessBucket(input: {
   return now.getTime() - asOf.getTime() > staleAfterMs ? "stale" : "fresh";
 }
 
+export function deriveAnalyticsUiFreshnessBucket(response: unknown): AnalyticsUiFreshnessBucket {
+  const direct = readStringProperty(response, "freshness_bucket");
+  if (direct) {
+    return normalizeFreshnessBucket(direct);
+  }
+
+  const supportability = readObjectProperty(response, "supportability");
+  const supportabilityFreshness = readStringProperty(supportability, "freshness_bucket");
+  if (supportabilityFreshness) {
+    return normalizeFreshnessBucket(supportabilityFreshness);
+  }
+
+  return classifyAnalyticsUiFreshnessBucket({
+    asOfDate: readStringProperty(response, "as_of_date"),
+  });
+}
+
 export function deriveAnalyticsUiSupportabilityState(
   response: unknown
 ): AnalyticsUiSupportabilityState {
@@ -128,11 +278,22 @@ export function deriveAnalyticsUiSupportabilityState(
   if (supportabilityStatus) {
     return normalizeSupportabilityState(supportabilityStatus);
   }
+  const supportability = readObjectProperty(response, "supportability");
+  const nestedSupportabilityState =
+    readStringProperty(supportability, "state") ??
+    readStringProperty(supportability, "supportability_state") ??
+    readStringProperty(supportability, "supportability_status");
+  if (nestedSupportabilityState) {
+    return normalizeSupportabilityState(nestedSupportabilityState);
+  }
+  const supportabilityItemsState = deriveArraySupportabilityState(
+    readArrayProperty(response, "supportability")
+  );
+  if (supportabilityItemsState !== "unknown") {
+    return supportabilityItemsState;
+  }
   if (hasNonEmptyArrayProperty(response, "partial_failures")) {
     return "partial";
-  }
-  if (hasNonEmptyArrayProperty(response, "supportability")) {
-    return "ready";
   }
   return "unknown";
 }
@@ -230,9 +391,7 @@ export async function observeWorkbenchAnalyticsRequest<T>(
   try {
     const response = await request();
     const durationMs = nowMs() - startedAt;
-    const freshnessBucket = classifyAnalyticsUiFreshnessBucket({
-      asOfDate: readStringProperty(response, "as_of_date"),
-    });
+    const freshnessBucket = deriveAnalyticsUiFreshnessBucket(response);
     const supportabilityState = deriveAnalyticsUiSupportabilityState(response);
     const state = classifyAnalyticsUiPanelState({
       response,
@@ -511,6 +670,25 @@ function readStringProperty(value: unknown, property: string): string | undefine
   return typeof propertyValue === "string" && propertyValue ? propertyValue : undefined;
 }
 
+function readObjectProperty(value: unknown, property: string): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  if (!propertyValue || typeof propertyValue !== "object" || Array.isArray(propertyValue)) {
+    return undefined;
+  }
+  return propertyValue as Record<string, unknown>;
+}
+
+function readArrayProperty(value: unknown, property: string): unknown[] {
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+  const propertyValue = (value as Record<string, unknown>)[property];
+  return Array.isArray(propertyValue) ? propertyValue : [];
+}
+
 function readFirstString(value: unknown, property: string): string | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -567,13 +745,58 @@ function normalizeSupportabilityState(value: string): AnalyticsUiSupportabilityS
   if (normalized === "partial") {
     return "partial";
   }
-  if (normalized === "action_required") {
+  if (
+    normalized === "action_required" ||
+    normalized === "blocked" ||
+    normalized === "degraded" ||
+    normalized === "requires_action"
+  ) {
     return "action_required";
   }
-  if (normalized === "unsupported") {
+  if (normalized === "unsupported" || normalized === "unavailable") {
     return "unsupported";
   }
   return "unknown";
+}
+
+function normalizeFreshnessBucket(value: string): AnalyticsUiFreshnessBucket {
+  const normalized = value.toLowerCase();
+  if (normalized === "fresh" || normalized === "stale" || normalized === "unknown") {
+    return normalized;
+  }
+  return "unknown";
+}
+
+function deriveArraySupportabilityState(items: unknown[]): AnalyticsUiSupportabilityState {
+  if (!items.length) {
+    return "unknown";
+  }
+  const states = items
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return "unknown";
+      }
+      const state =
+        readStringProperty(item, "state") ??
+        readStringProperty(item, "supportability_state") ??
+        readStringProperty(item, "supportability_status");
+      return state ? normalizeSupportabilityState(state) : "unknown";
+    })
+    .filter((state) => state !== "unknown");
+
+  if (!states.length) {
+    return "ready";
+  }
+  if (states.includes("action_required")) {
+    return "action_required";
+  }
+  if (states.includes("partial")) {
+    return "partial";
+  }
+  if (states.includes("unsupported")) {
+    return "unsupported";
+  }
+  return "ready";
 }
 
 function nowMs(): number {

@@ -60,6 +60,7 @@ describe("analytics UI observability contract", () => {
       expect(() => assertAnalyticsUiAttributeNames(attributes)).not.toThrow();
       expect(attributes).not.toContain("portfolio_id");
       expect(attributes).not.toContain("client_name");
+      expect(attributes).not.toContain("batch_id");
       expect(attributes).not.toContain("screen_content");
     }
   });
@@ -87,6 +88,7 @@ describe("analytics UI observability contract", () => {
 
   it("rejects unsupported ad hoc labels", () => {
     expect(ANALYTICS_UI_ALLOWED_LABELS).not.toContain("portfolio_id");
+    expect(ANALYTICS_UI_ALLOWED_LABELS).not.toContain("batch_id");
     expect(() => assertAnalyticsUiLabels({ custom_dimension: "drift" })).toThrow(
       "unsupported field"
     );

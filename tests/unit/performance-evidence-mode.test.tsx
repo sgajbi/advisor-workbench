@@ -85,6 +85,26 @@ describe("PerformanceEvidenceMode", () => {
     expect(screen.getByText("Evidence posture")).toBeInTheDocument();
     expect(screen.getByText("Calculations")).toBeInTheDocument();
     expect(screen.getByText("Lineage artifacts")).toBeInTheDocument();
+    expect(screen.getByLabelText("Evidence product context")).toHaveTextContent("As of: 2026-02-24");
+    expect(screen.getByLabelText("Evidence product context")).toHaveTextContent("Period: YTD");
+    expect(screen.getByLabelText("Evidence product context")).toHaveTextContent("Basis: NET");
+    expect(screen.getByLabelText("Evidence product context")).toHaveTextContent(
+      "Benchmark: BMK_GLOBAL_BALANCED_60_40"
+    );
+    expect(screen.getByLabelText("Evidence source services")).toHaveTextContent("lotus-performance");
+    expect(screen.getByLabelText("Evidence input freshness")).toHaveTextContent("performance: fresh");
+    expect(screen.getByLabelText("Evidence methodology references")).toHaveTextContent(
+      "lotus-performance/docs/methodologies"
+    );
+    expect(screen.getByLabelText("Evidence calculation versions")).toHaveTextContent(
+      "gateway_contract: v1"
+    );
+    expect(screen.getByLabelText("Evidence coverage")).toHaveTextContent(
+      "Supported dimensions: asset_class, country, currency, sector"
+    );
+    expect(screen.getByLabelText("Evidence coverage")).toHaveTextContent(
+      "Unsupported dimensions: issuer"
+    );
     expect(screen.getByText("workspace_summary")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "request.json" })).toHaveAttribute(
       "href",
@@ -93,6 +113,21 @@ describe("PerformanceEvidenceMode", () => {
     expect(
       screen.getByText("Execution and lineage evidence can be reviewed for this portfolio.")
     ).toBeInTheDocument();
+  });
+
+  it("renders RFC-0079 limitations when evidence is partially backed", () => {
+    const scenario = buildPartialEvidencePerformanceScenario();
+
+    render(
+      <PerformanceEvidenceMode
+        capability={scenario.capabilities.evidence}
+        evidenceView={scenario.workspace.evidence_view}
+      />
+    );
+
+    expect(screen.getByLabelText("Evidence limitations")).toHaveTextContent(
+      "Limitation: One or more performance calculations still have pending lineage evidence."
+    );
   });
 
   it.each([
