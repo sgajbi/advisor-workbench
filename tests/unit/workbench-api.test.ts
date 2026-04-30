@@ -1003,6 +1003,34 @@ describe("workbench api", () => {
             risks_and_exceptions: [],
             source_metrics: [],
             supportability: [],
+            ai_surface_supportability: {
+              feature_key: "ai.observability.ai_surface_supportability",
+              state: "action_required",
+              freshness_bucket: "fresh",
+              posture: "degraded",
+              freshness: "current",
+              metric_name: "lotus_ai_surface_supportability_state",
+              supported_surface_count: 3,
+              executable_workflow_pack_count: 3,
+              action_required_surface_count: 3,
+              unavailable_surface_count: 0,
+              no_sensitive_content_telemetry: false,
+              surfaces: [
+                {
+                  surface_id: "advisor_brief",
+                  owning_service: "lotus-advise",
+                  workflow_authority_owner: "lotus-advise",
+                  workflow_pack_ref: "advisor_brief.pack@v1",
+                  supportability_status: "ACTION_REQUIRED",
+                  model_posture: "degraded",
+                  latest_ready_run_id: null,
+                  latest_action_required_run_id: "packrun_advisor_brief_req-1",
+                  no_sensitive_content_telemetry: false,
+                  status_summary: ["advisor_brief is grounded in workflow-pack runtime source."],
+                },
+              ],
+              status_summary: ["AI surface supportability is source-backed."],
+            },
             workflow_pack_task_flow: {
               task_flow_id: "taskflow_advisor_brief_req-1",
               workflow_pack_id: "advisor_brief.pack",
@@ -1046,6 +1074,15 @@ describe("workbench api", () => {
     expect(advisorBrief.workflow_pack_task_flow?.task_flow_id).toBe(
       "taskflow_advisor_brief_req-1"
     );
+    expect(advisorBrief.ai_surface_supportability?.feature_key).toBe(
+      "ai.observability.ai_surface_supportability"
+    );
+    expect(advisorBrief.ai_surface_supportability?.state).toBe("action_required");
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain('"supportability_state":"action_required"');
+    expect(metricEventsJson).toContain('"freshness_bucket":"fresh"');
+    expect(metricEventsJson).not.toContain("packrun_advisor_brief_req-1");
+    expect(metricEventsJson).not.toContain("PF_1001");
   });
 
   it("posts advisor brief review actions through the client-side gateway seam", async () => {
