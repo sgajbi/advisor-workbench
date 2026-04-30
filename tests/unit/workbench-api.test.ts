@@ -6,9 +6,11 @@ import {
   createPortfolioReportBatch,
   createSandboxSession,
   getArchivedDocumentMetadata,
+  getPortfolio360,
   getReportBatchStatus,
   getReportingSnapshot,
   getWorkbenchAnalytics,
+  getWorkbenchOverview,
   getWorkbenchRiskAttributionClient,
   getWorkbenchRiskConcentrationClient,
   getWorkbenchRiskDrawdownClient,
@@ -69,6 +71,10 @@ describe("workbench api", () => {
       `${expectedBaseUrl}/workbench/PF_1001/sandbox/sessions`,
       expect.objectContaining({ method: "POST" })
     );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("sandbox-session-create");
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(metricEventsJson).not.toContain("sess_1");
   });
 
   it("calls sandbox change apply endpoint", async () => {
@@ -107,6 +113,51 @@ describe("workbench api", () => {
       `${expectedBaseUrl}/workbench/PF_1001/sandbox/sessions/sess_1/changes`,
       expect.objectContaining({ method: "POST" })
     );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("sandbox-session-apply");
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(metricEventsJson).not.toContain("sess_1");
+  });
+
+  it("observes legacy advisor workbench overview and portfolio 360 reads without leaking IDs", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const payload = url.includes("/overview")
+          ? {
+              correlation_id: "corr",
+              portfolio_id: "PF_1001",
+              as_of_date: "2026-02-24",
+              summary: {},
+              alerts: [],
+              tasks: [],
+              warnings: [],
+              partial_failures: [],
+            }
+          : {
+              correlation_id: "corr",
+              portfolio_id: "PF_1001",
+              as_of_date: "2026-02-24",
+              portfolio: { portfolio_id: "PF_1001" },
+              positions: [],
+              warnings: [],
+              partial_failures: [],
+            };
+        return new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
+    );
+
+    await getWorkbenchOverview("PF_1001");
+    await getPortfolio360("PF_1001", "sess_1");
+
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("advisor-overview");
+    expect(metricEventsJson).toContain("portfolio-360");
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(metricEventsJson).not.toContain("sess_1");
   });
 
   it("calls backend analytics endpoint", async () => {
@@ -149,6 +200,10 @@ describe("workbench api", () => {
       ),
       expect.objectContaining({ cache: "no-store" })
     );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("portfolio-analytics");
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(metricEventsJson).not.toContain("sess_1");
   });
 
   it("omits benchmark code when performance summary is requested without an assigned benchmark", async () => {
@@ -1243,6 +1298,9 @@ describe("workbench api", () => {
       expect.stringContaining("/api/v1/reports/PF_1001/snapshot?asOfDate=2026-02-24"),
       expect.objectContaining({ cache: "no-store" })
     );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("reporting-snapshot");
+    expect(metricEventsJson).not.toContain("PF_1001");
   });
 
   it("creates an explicit portfolio report batch through the gateway BFF", async () => {

@@ -96,7 +96,7 @@ function observedSurface(
   )!;
 }
 
-async function observeWorkbenchClientResource<T>(
+async function observeWorkbenchResource<T>(
   operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
   request: () => Promise<T>
 ): Promise<T> {
@@ -151,10 +151,14 @@ function buildPerformanceWorkspaceUrl(
 }
 
 export async function getWorkbenchOverview(portfolioId: string): Promise<WorkbenchOverview> {
-  return await fetchWorkbenchResource<WorkbenchOverview>(
-    "server",
-    `/workbench/${portfolioId}/overview`,
-    "overview"
+  return await observeWorkbenchResource(
+    "workbench.overview",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchOverview>(
+        "server",
+        `/workbench/${portfolioId}/overview`,
+        "overview"
+      )
   );
 }
 
@@ -165,12 +169,15 @@ export async function getPortfolio360(
   const query = sessionId
     ? new URLSearchParams({ session_id: sessionId })
     : undefined;
-  return await fetchWorkbenchResource<WorkbenchPortfolio360>(
-    "server",
-    `/workbench/${portfolioId}/portfolio-360`,
-    "portfolio 360"
-    ,
-    query
+  return await observeWorkbenchResource(
+    "workbench.portfolio-360",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchPortfolio360>(
+        "server",
+        `/workbench/${portfolioId}/portfolio-360`,
+        "portfolio 360",
+        query
+      )
   );
 }
 
@@ -178,16 +185,19 @@ export async function createSandboxSession(
   portfolioId: string,
   payload: { created_by?: string; ttl_hours?: number }
 ): Promise<WorkbenchSandboxState> {
-  const response = await fetch(`${BFF_PROXY_BASE}/workbench/${portfolioId}/sandbox/sessions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Sandbox create failed (${response.status}): ${body}`);
-  }
-  return (await response.json()) as WorkbenchSandboxState;
+  return await observeWorkbenchResource(
+    "workbench.sandbox-session.create",
+    async () =>
+      await fetchWorkbenchMutation<WorkbenchSandboxState>(
+        `${BFF_PROXY_BASE}/workbench/${portfolioId}/sandbox/sessions`,
+        "create sandbox session",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      )
+  );
 }
 
 export async function applySandboxChanges(
@@ -204,19 +214,19 @@ export async function applySandboxChanges(
     evaluate_policy?: boolean;
   }
 ): Promise<WorkbenchSandboxState> {
-  const response = await fetch(
-    `${BFF_PROXY_BASE}/workbench/${portfolioId}/sandbox/sessions/${sessionId}/changes`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }
+  return await observeWorkbenchResource(
+    "workbench.sandbox-session.apply",
+    async () =>
+      await fetchWorkbenchMutation<WorkbenchSandboxState>(
+        `${BFF_PROXY_BASE}/workbench/${portfolioId}/sandbox/sessions/${sessionId}/changes`,
+        "apply sandbox changes",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      )
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Sandbox apply failed (${response.status}): ${body}`);
-  }
-  return (await response.json()) as WorkbenchSandboxState;
 }
 
 export async function getWorkbenchAnalytics(
@@ -237,11 +247,15 @@ export async function getWorkbenchAnalytics(
   if (params.sessionId) {
     query.set("session_id", params.sessionId);
   }
-  return await fetchWorkbenchResource<WorkbenchAnalytics>(
-    "server",
-    `/workbench/${portfolioId}/analytics`,
-    "workbench analytics",
-    query
+  return await observeWorkbenchResource(
+    "workbench.analytics",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchAnalytics>(
+        "server",
+        `/workbench/${portfolioId}/analytics`,
+        "workbench analytics",
+        query
+      )
   );
 }
 
@@ -357,7 +371,7 @@ export async function getWorkbenchPerformanceHorizonComparisonClient(
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
   }
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "performance.workspace.horizon-comparison",
     async () =>
       await fetchWorkbenchResource<WorkbenchPerformanceHorizonComparison>(
@@ -395,7 +409,7 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
   }
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "performance.workspace.attribution-trend",
     async () =>
       await fetchWorkbenchResource<WorkbenchPerformanceAttributionTrend>(
@@ -420,7 +434,7 @@ export async function getWorkbenchPerformanceAdvisorBriefClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceAdvisorBrief> {
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "performance.workspace.advisor-brief",
     async () =>
       await fetchWorkbenchResource<WorkbenchPerformanceAdvisorBrief>(
@@ -544,7 +558,7 @@ export async function getWorkbenchRiskConcentrationClient(
     reportingCurrency?: string;
   }
 ): Promise<WorkbenchRiskConcentrationResponse> {
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "risk.concentration",
     async () =>
       await fetchWorkbenchJson<WorkbenchRiskConcentrationResponse>(
@@ -578,7 +592,7 @@ export async function getWorkbenchRiskDrawdownClient(
   if (params.includeUnderwaterSeries) {
     query.set("include_underwater_series", "true");
   }
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "risk.drawdown",
     async () =>
       await fetchWorkbenchJson<WorkbenchRiskDrawdownResponse>(
@@ -612,7 +626,7 @@ export async function getWorkbenchRiskRollingClient(
   if (params.includeTimeSeries) {
     query.set("include_time_series", "true");
   }
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "risk.rolling",
     async () =>
       await fetchWorkbenchJson<WorkbenchRiskRollingResponse>(
@@ -646,7 +660,7 @@ export async function getWorkbenchRiskAttributionClient(
   );
   query.set("attribution_type", params.attributionType);
   query.set("grouping_dimension", params.groupingDimension);
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "risk.attribution",
     async () =>
       await fetchWorkbenchJson<WorkbenchRiskAttributionResponse>(
@@ -663,11 +677,15 @@ export async function getReportingSnapshot(
 ): Promise<WorkbenchReportingSnapshot> {
   const query = new URLSearchParams();
   query.set("asOfDate", asOfDate);
-  return await fetchWorkbenchResource<WorkbenchReportingSnapshot>(
-    "server",
-    `/reports/${portfolioId}/snapshot`,
-    "reporting snapshot",
-    query
+  return await observeWorkbenchResource(
+    "workbench.reporting-snapshot",
+    async () =>
+      await fetchWorkbenchResource<WorkbenchReportingSnapshot>(
+        "server",
+        `/reports/${portfolioId}/snapshot`,
+        "reporting snapshot",
+        query
+      )
   );
 }
 
@@ -716,7 +734,7 @@ export async function createPortfolioReportBatch(params: {
     params.reportingCurrency,
   ].join("-");
 
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "reporting.report-batch.create",
     async () =>
       await fetchWorkbenchMutation<ReportBatchHandleResponse>(
@@ -775,7 +793,7 @@ export async function getReportBatchStatus(
   const tenantId = params.tenantId ?? "tenant-sg";
   const region = params.region ?? "APAC";
   const actorId = params.actorId ?? "workbench-report-operator";
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "reporting.report-batch.status",
     async () =>
       await fetchWorkbenchMutation<ReportBatchStatusResponse>(
@@ -805,7 +823,7 @@ export async function runReportBatchOnce(params: {
   const tenantId = params.tenantId ?? "tenant-sg";
   const region = params.region ?? "APAC";
   const actorId = params.actorId ?? "workbench-report-operator";
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "reporting.report-batch.run-once",
     async () =>
       await fetchWorkbenchMutation<ReportBatchWorkerRunResponse>(
@@ -865,7 +883,7 @@ export async function getArchivedDocumentMetadata(
     query.set("current", "true");
   }
 
-  return await observeWorkbenchClientResource(
+  return await observeWorkbenchResource(
     "reporting.archive-document.metadata",
     async () =>
       await fetchWorkbenchMutation<ArchivedDocumentMetadataResponse>(
