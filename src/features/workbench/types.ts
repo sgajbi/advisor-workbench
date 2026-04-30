@@ -531,6 +531,35 @@ export type WorkbenchAdvisorBriefSupportabilityItem = {
   reason?: string | null;
 };
 
+export type WorkbenchAdvisorBriefAiSurfaceSupportabilityItem = {
+  surface_id: string;
+  owning_service: string;
+  workflow_authority_owner: string;
+  workflow_pack_ref: string;
+  supportability_status: string;
+  model_posture: string;
+  latest_ready_run_id?: string | null;
+  latest_action_required_run_id?: string | null;
+  no_sensitive_content_telemetry: boolean;
+  status_summary: string[];
+};
+
+export type WorkbenchAdvisorBriefAiSurfaceSupportability = {
+  feature_key: "ai.observability.ai_surface_supportability" | string;
+  state: string;
+  freshness_bucket: string;
+  posture: string;
+  freshness: string;
+  metric_name: string;
+  supported_surface_count: number;
+  executable_workflow_pack_count: number;
+  action_required_surface_count: number;
+  unavailable_surface_count: number;
+  no_sensitive_content_telemetry: boolean;
+  surfaces: WorkbenchAdvisorBriefAiSurfaceSupportabilityItem[];
+  status_summary: string[];
+};
+
 export type WorkbenchAdvisorBriefWorkflowPackRunFinding = {
   finding_id: string;
   severity: string;
@@ -614,6 +643,7 @@ export type WorkbenchPerformanceAdvisorBrief = {
   risks_and_exceptions: WorkbenchAdvisorBriefNarrativeItem[];
   source_metrics: WorkbenchAdvisorBriefSourceMetric[];
   supportability: WorkbenchAdvisorBriefSupportabilityItem[];
+  ai_surface_supportability?: WorkbenchAdvisorBriefAiSurfaceSupportability | null;
   workflow_pack_run?: WorkbenchAdvisorBriefWorkflowPackRun | null;
   workflow_pack_task_flow?: WorkbenchAdvisorBriefWorkflowPackTaskFlow | null;
   ai_audit: {

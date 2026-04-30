@@ -358,6 +358,10 @@ function readNestedSupportabilityObjects(response: unknown): Array<Record<string
   if (rebalanceSupportability) {
     items.push(rebalanceSupportability);
   }
+  const aiSurfaceSupportability = readObjectProperty(response, "ai_surface_supportability");
+  if (aiSurfaceSupportability) {
+    items.push(aiSurfaceSupportability);
+  }
   return items;
 }
 
