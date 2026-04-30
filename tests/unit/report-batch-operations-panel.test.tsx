@@ -5,9 +5,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const createPortfolioReportBatchMock = vi.fn();
 const getReportBatchStatusMock = vi.fn();
 const runReportBatchOnceMock = vi.fn();
+const getArchivedDocumentMetadataMock = vi.fn();
 
 vi.mock("../../src/features/workbench/api", () => ({
+  buildArchivedDocumentDownloadUrl: (documentId: string) =>
+    `/api/bff/api/v1/documents/${encodeURIComponent(documentId)}/download`,
   createPortfolioReportBatch: (...args: unknown[]) => createPortfolioReportBatchMock(...args),
+  getArchivedDocumentMetadata: (...args: unknown[]) => getArchivedDocumentMetadataMock(...args),
   getReportBatchStatus: (...args: unknown[]) => getReportBatchStatusMock(...args),
   runReportBatchOnce: (...args: unknown[]) => runReportBatchOnceMock(...args),
 }));
@@ -74,6 +78,7 @@ const materializedStatus = {
 describe("ReportBatchOperationsPanel", () => {
   afterEach(() => {
     createPortfolioReportBatchMock.mockReset();
+    getArchivedDocumentMetadataMock.mockReset();
     getReportBatchStatusMock.mockReset();
     runReportBatchOnceMock.mockReset();
   });
@@ -200,6 +205,79 @@ describe("ReportBatchOperationsPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run Once" }));
 
     expect(await screen.findByText("Back pressure max_active_items_reached")).toBeInTheDocument();
+  });
+
+  it("retrieves archived document metadata through the gateway-backed archive surface", async () => {
+    getArchivedDocumentMetadataMock.mockResolvedValue({
+      correlationId: "corr-archive-document-1",
+      contractVersion: "v1",
+      sourceService: "lotus-archive",
+      documentId: "doc_1",
+      reportJobId: "rjob_1",
+      reportRequestId: "rrq_1",
+      reportType: "PORTFOLIO_REVIEW",
+      portfolioScope: "single_portfolio",
+      portfolioId: "PF_1001",
+      clientReference: "relationship-1",
+      asOfDate: "2026-02-24",
+      reportingPeriodStart: "2026-01-01",
+      reportingPeriodEnd: "2026-02-24",
+      frequency: "ad_hoc",
+      templateId: "portfolio-review",
+      templateVersion: "v1",
+      renderServiceVersion: "render.1",
+      reportDataContractVersion: "v1",
+      checksumAlgorithm: "sha256",
+      checksum: "abc123",
+      sizeBytes: 2048,
+      mimeType: "application/pdf",
+      outputFormat: "pdf",
+      classification: "confidential",
+      region: "APAC",
+      tenantId: "tenant-sg",
+      retentionPolicyId: "retention-7y",
+      retentionStartDate: "2026-02-24",
+      retainUntilDate: "2033-02-24",
+      purgeStatus: "not_due",
+      legalHoldStatus: "none",
+      legalHoldCount: 0,
+      supersedesDocumentId: null,
+      supersededByDocumentId: null,
+      correctionOfDocumentId: null,
+      reissueOfDocumentId: null,
+      createdByService: "lotus-report",
+      createdByActor: "report-worker",
+      createdAt: "2026-02-24T00:00:00Z",
+      updatedAt: "2026-02-24T00:00:00Z",
+      downloadUrl: "/api/v1/documents/doc_1/download",
+    });
+
+    render(
+      <ReportBatchOperationsPanel
+        portfolioId="PF_1001"
+        asOfDate="2026-02-24"
+        reportingCurrency="USD"
+        bookingCenterCode="SG"
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Archived document ID"), {
+      target: { value: "doc_1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Load Document" }));
+
+    await waitFor(() => {
+      expect(getArchivedDocumentMetadataMock).toHaveBeenCalledWith("doc_1", {
+        current: true,
+        bookingCenterCode: "SG",
+      });
+    });
+    expect(await screen.findByText("PORTFOLIO_REVIEW")).toBeInTheDocument();
+    expect(screen.getByText("retention-7y")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/api/bff/api/v1/documents/doc_1/download"
+    );
   });
 
   it("does not offer run once after a terminal batch status is loaded", async () => {

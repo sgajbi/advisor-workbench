@@ -269,6 +269,9 @@ export type PerformanceEvidenceArtifactView = {
   artifact_name: string;
   url: string;
   content_type?: string | null;
+  archive_document_id?: string | null;
+  archive_document_metadata_url?: string | null;
+  archive_document_download_url?: string | null;
 };
 
 export type PerformanceEvidenceStageView = {
@@ -1156,6 +1159,50 @@ export type ReportRenderSupportability = {
   template_registry_ready: boolean;
   default_output_format: string | null;
   supported_output_formats: string[];
+};
+
+export type ArchivedDocumentMetadataResponse = {
+  correlationId: string;
+  contractVersion: string;
+  sourceService: "lotus-archive" | string;
+  documentId: string;
+  reportJobId: string;
+  reportRequestId: string;
+  reportType: string;
+  portfolioScope: string;
+  portfolioId: string;
+  clientReference?: string | null;
+  asOfDate: string;
+  reportingPeriodStart: string;
+  reportingPeriodEnd: string;
+  frequency: string;
+  templateId: string;
+  templateVersion: string;
+  renderServiceVersion: string;
+  reportDataContractVersion: string;
+  checksumAlgorithm: string;
+  checksum: string;
+  sizeBytes: number;
+  mimeType: string;
+  outputFormat: string;
+  classification: string;
+  region: string;
+  tenantId?: string | null;
+  retentionPolicyId?: string | null;
+  retentionStartDate?: string | null;
+  retainUntilDate?: string | null;
+  purgeStatus: string;
+  legalHoldStatus: string;
+  legalHoldCount: number;
+  supersedesDocumentId?: string | null;
+  supersededByDocumentId?: string | null;
+  correctionOfDocumentId?: string | null;
+  reissueOfDocumentId?: string | null;
+  createdByService: string;
+  createdByActor: string;
+  createdAt: string;
+  updatedAt: string;
+  downloadUrl: string;
 };
 
 export type ReportBatchItemStatus = {

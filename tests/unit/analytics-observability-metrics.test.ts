@@ -253,6 +253,11 @@ describe("analytics UI observability metrics", () => {
         "report-batch-run-once",
         "reporting.report-batch.run-once",
       ],
+      [
+        "workbench.reporting",
+        "archive-document-metadata",
+        "reporting.archive-document.metadata",
+      ],
       ["workbench.portfolio", "portfolio-catalog", "portfolio.catalog"],
       ["workbench.portfolio", "portfolio-workspace-shell", "portfolio.workspace.shell"],
       ["workbench.portfolio", "portfolio-book", "portfolio.book"],

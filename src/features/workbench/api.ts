@@ -16,6 +16,7 @@ import {
   ReportBatchHandleResponse,
   ReportBatchStatusResponse,
   ReportBatchWorkerRunResponse,
+  ArchivedDocumentMetadataResponse,
   WorkbenchReportingSnapshot,
   WorkbenchSandboxState,
 } from "./types";
@@ -844,4 +845,46 @@ export async function runReportBatchOnce(params: {
         }
       )
   );
+}
+
+export async function getArchivedDocumentMetadata(
+  documentId: string,
+  params: {
+    current?: boolean;
+    tenantId?: string;
+    region?: string;
+    bookingCenterCode?: string | null;
+    actorId?: string;
+  } = {}
+): Promise<ArchivedDocumentMetadataResponse> {
+  const tenantId = params.tenantId ?? "tenant-sg";
+  const region = params.region ?? "APAC";
+  const actorId = params.actorId ?? "workbench-report-operator";
+  const query = new URLSearchParams();
+  if (params.current) {
+    query.set("current", "true");
+  }
+
+  return await observeWorkbenchClientResource(
+    "reporting.archive-document.metadata",
+    async () =>
+      await fetchWorkbenchMutation<ArchivedDocumentMetadataResponse>(
+        buildWorkbenchUrl("client", `/documents/${encodeURIComponent(documentId)}`, query),
+        "load archived document metadata",
+        {
+          method: "GET",
+          headers: buildReportBatchCallerHeaders({
+            actorId,
+            tenantId,
+            region,
+            bookingCenterCode: params.bookingCenterCode,
+            correlationId: "corr-workbench-archive-document-metadata",
+          }),
+        }
+      )
+  );
+}
+
+export function buildArchivedDocumentDownloadUrl(documentId: string): string {
+  return buildWorkbenchUrl("client", `/documents/${encodeURIComponent(documentId)}/download`);
 }

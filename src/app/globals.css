@@ -10538,6 +10538,55 @@ a:hover {
   max-width: 72ch;
 }
 
+.performance-evidence-archive-artifact {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.performance-evidence-archive-support {
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-fallback-size);
+  line-height: 1.35;
+}
+
+.report-batch-archive-retrieval {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(23, 32, 43, 0.08);
+}
+
+.report-batch-archive-controls,
+.report-batch-archive-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.report-batch-archive-controls .workbench-input {
+  min-width: 220px;
+  max-width: 320px;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  font: inherit;
+}
+
+.report-batch-archive-summary {
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.report-batch-archive-empty {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
 @media (max-width: 1200px) {
   .performance-analysis-context-row.workbench-chart-context-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -4,11 +4,14 @@ import { useState } from "react";
 
 import { ActionButton, AnalyticsTable, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import {
+  buildArchivedDocumentDownloadUrl,
   createPortfolioReportBatch,
+  getArchivedDocumentMetadata,
   getReportBatchStatus,
   runReportBatchOnce,
 } from "@/features/workbench/api";
 import type {
+  ArchivedDocumentMetadataResponse,
   ReportBatchHandleResponse,
   ReportBatchStatusResponse,
   ReportBatchWorkerRunResponse,
@@ -59,7 +62,9 @@ export default function ReportBatchOperationsPanel({
   const [handle, setHandle] = useState<ReportBatchHandleResponse | null>(null);
   const [status, setStatus] = useState<ReportBatchStatusResponse | null>(null);
   const [runResult, setRunResult] = useState<ReportBatchWorkerRunResponse | null>(null);
-  const [pendingAction, setPendingAction] = useState<"create" | "refresh" | "run" | null>(null);
+  const [archiveDocumentId, setArchiveDocumentId] = useState("");
+  const [archiveMetadata, setArchiveMetadata] = useState<ArchivedDocumentMetadataResponse | null>(null);
+  const [pendingAction, setPendingAction] = useState<"create" | "refresh" | "run" | "archive" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const batchId = status?.batch_id ?? handle?.batch_id ?? null;
@@ -116,6 +121,26 @@ export default function ReportBatchOperationsPanel({
       setStatus(await getReportBatchStatus(batchId, { bookingCenterCode }));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Report batch run failed.");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function loadArchiveDocument() {
+    const documentId = archiveDocumentId.trim();
+    if (!documentId) return;
+    setPendingAction("archive");
+    setError(null);
+    try {
+      setArchiveMetadata(
+        await getArchivedDocumentMetadata(documentId, {
+          current: true,
+          bookingCenterCode,
+        })
+      );
+    } catch (caught) {
+      setArchiveMetadata(null);
+      setError(caught instanceof Error ? caught.message : "Archived document retrieval failed.");
     } finally {
       setPendingAction(null);
     }
@@ -194,6 +219,44 @@ export default function ReportBatchOperationsPanel({
           body: "Create a report batch to materialize the current portfolio review item.",
         }}
       />
+
+      <div className="report-batch-archive-retrieval" aria-label="Archived document retrieval">
+        <div className="report-batch-archive-controls">
+          <label className="workbench-field-label" htmlFor="report-batch-archive-document-id">
+            Archived document ID
+          </label>
+          <input
+            id="report-batch-archive-document-id"
+            className="workbench-input"
+            value={archiveDocumentId}
+            onChange={(event) => setArchiveDocumentId(event.target.value)}
+            placeholder="doc_..."
+          />
+          <ActionButton
+            onClick={loadArchiveDocument}
+            disabled={!archiveDocumentId.trim() || pendingAction !== null}
+          >
+            Load Document
+          </ActionButton>
+        </div>
+        {archiveMetadata ? (
+          <div className="report-batch-archive-summary">
+            <SemanticBadge tone={statusTone(archiveMetadata.purgeStatus)}>
+              {archiveMetadata.outputFormat.toUpperCase()}
+            </SemanticBadge>
+            <span>{archiveMetadata.reportType}</span>
+            <span>{archiveMetadata.asOfDate}</span>
+            <span>{archiveMetadata.retentionPolicyId ?? "No retention policy"}</span>
+            <span>{archiveMetadata.legalHoldStatus}</span>
+            <a href={buildArchivedDocumentDownloadUrl(archiveMetadata.documentId)}>Download</a>
+          </div>
+        ) : (
+          <p className="muted report-batch-archive-empty">
+            Retrieve archived report metadata and downloads through the Workbench BFF and Gateway
+            document boundary.
+          </p>
+        )}
+      </div>
     </SectionBlock>
   );
 }

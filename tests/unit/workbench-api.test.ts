@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   applySandboxChanges,
+  buildArchivedDocumentDownloadUrl,
   createPortfolioReportBatch,
   createSandboxSession,
+  getArchivedDocumentMetadata,
   getReportBatchStatus,
   getReportingSnapshot,
   getWorkbenchAnalytics,
@@ -1431,6 +1433,82 @@ describe("workbench api", () => {
     expect(body.dispatch_policy.max_active_items).toBe(100);
     expect(body.dispatch_policy.max_active_batches).toBe(100);
     expect(body.runtime_load.active_batches).toBe(0);
+  });
+
+  it("loads archived document metadata through the gateway BFF without leaking document ids into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlationId: "corr-archive-document-1",
+            contractVersion: "v1",
+            sourceService: "lotus-archive",
+            documentId: "doc_1",
+            reportJobId: "rjob_1",
+            reportRequestId: "rrq_1",
+            reportType: "PORTFOLIO_REVIEW",
+            portfolioScope: "single_portfolio",
+            portfolioId: "PF_1001",
+            clientReference: "relationship-1",
+            asOfDate: "2026-02-24",
+            reportingPeriodStart: "2026-01-01",
+            reportingPeriodEnd: "2026-02-24",
+            frequency: "ad_hoc",
+            templateId: "portfolio-review",
+            templateVersion: "v1",
+            renderServiceVersion: "render.1",
+            reportDataContractVersion: "v1",
+            checksumAlgorithm: "sha256",
+            checksum: "abc123",
+            sizeBytes: 2048,
+            mimeType: "application/pdf",
+            outputFormat: "pdf",
+            classification: "confidential",
+            region: "APAC",
+            tenantId: "tenant-sg",
+            retentionPolicyId: "retention-7y",
+            retentionStartDate: "2026-02-24",
+            retainUntilDate: "2033-02-24",
+            purgeStatus: "not_due",
+            legalHoldStatus: "none",
+            legalHoldCount: 0,
+            supersedesDocumentId: null,
+            supersededByDocumentId: null,
+            correctionOfDocumentId: null,
+            reissueOfDocumentId: null,
+            createdByService: "lotus-report",
+            createdByActor: "report-worker",
+            createdAt: "2026-02-24T00:00:00Z",
+            updatedAt: "2026-02-24T00:00:00Z",
+            downloadUrl: "/api/v1/documents/doc_1/download",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    const metadata = await getArchivedDocumentMetadata("doc_1", {
+      current: true,
+      bookingCenterCode: "SG",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const [url, init] = fetchMock.mock.calls[0];
+    const headers = init?.headers as Record<string, string>;
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+
+    expect(url).toBe(`${expectedBaseUrl}/documents/doc_1?current=true`);
+    expect(init).toEqual(expect.objectContaining({ method: "GET", cache: "no-store" }));
+    expect(headers["X-Caller-Application"]).toBe("lotus-workbench");
+    expect(headers["X-Booking-Center-Code"]).toBe("SG");
+    expect(metadata.downloadUrl).toBe("/api/v1/documents/doc_1/download");
+    expect(metricEventsJson).toContain("archive-document-metadata");
+    expect(metricEventsJson).not.toContain("doc_1");
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(buildArchivedDocumentDownloadUrl("doc_1")).toBe(
+      `${expectedBaseUrl}/documents/doc_1/download`
+    );
   });
 
   it("raises a labeled error when the split summary endpoint fails", async () => {

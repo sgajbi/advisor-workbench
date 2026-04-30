@@ -96,6 +96,47 @@ describe("BFF proxy route", () => {
     expect(response.status).toBe(202);
   });
 
+  it("preserves binary upstream responses for archived document downloads", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const pdfBytes = new Uint8Array([37, 80, 68, 70, 45, 49, 46, 55]);
+    fetchMock.mockResolvedValue(
+      new Response(pdfBytes, {
+        status: 200,
+        headers: {
+          "content-type": "application/pdf",
+          "content-disposition": "attachment; filename=portfolio-review.pdf",
+          "x-document-checksum-algorithm": "sha256",
+          "x-document-checksum": "abc123",
+        },
+      })
+    );
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/documents/doc_1/download",
+      {
+        method: "GET",
+        headers: {
+          "X-Actor-Id": "advisor_1",
+          "X-Tenant-Id": "tenant-sg",
+          "X-Region": "APAC",
+        },
+      }
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "documents", "doc_1", "download"] }),
+    });
+
+    const [upstreamUrl] = fetchMock.mock.calls[0];
+    const body = new Uint8Array(await response.arrayBuffer());
+
+    expect(String(upstreamUrl)).toBe("http://gateway.dev.lotus/api/v1/documents/doc_1/download");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("application/pdf");
+    expect(response.headers.get("x-document-checksum")).toBe("abc123");
+    expect(Array.from(body)).toEqual(Array.from(pdfBytes));
+  });
+
   it("preserves valid context and replaces malformed traceparent before proxying", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
