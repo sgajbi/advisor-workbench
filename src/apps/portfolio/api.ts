@@ -130,6 +130,7 @@ type PortfolioActivitySummaryResponse = NonNullable<PortfolioWorkspace["activity
 
 type PortfolioReadinessResponse = {
   indicators: NonNullable<PortfolioWorkspace["readiness_indicators"]>;
+  supportability?: PortfolioWorkspace["supportability"];
 };
 
 type PortfolioWorkflowResponse = {
@@ -190,6 +191,7 @@ type PortfolioWorkspaceDetailedDetails = Pick<
   | "recent_transactions"
   | "cashflow_outlook"
   | "readiness_indicators"
+  | "supportability"
   | "exception_summaries"
   | "insights"
   | "workflow_actions"
@@ -252,6 +254,7 @@ export async function getPortfolioWorkspaceShell(
         reporting: summaryPayload.reporting,
       },
       readiness_indicators: undefined,
+      supportability: undefined,
       workflow_cues: summaryPayload.workflow_cues,
       workflow_actions: undefined,
       warnings: summaryPayload.warnings,
@@ -405,6 +408,7 @@ export async function getPortfolioWorkspaceDetailedDetails(
       recent_transactions: transactionsPayload.transactions,
       cashflow_outlook: liquidityPayload.cashflow_outlook,
       readiness_indicators: readinessPayload?.indicators ?? undefined,
+      supportability: readinessPayload?.supportability ?? undefined,
       exception_summaries: insightsPayload?.exception_summaries ?? undefined,
       insights: insightsPayload?.insights ?? undefined,
       workflow_actions: workflowPayload?.actions ?? undefined,

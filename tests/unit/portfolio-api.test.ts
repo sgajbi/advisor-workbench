@@ -601,6 +601,16 @@ describe("portfolio api", () => {
             indicators: [
               { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
             ],
+            supportability: {
+              feature_key: "core.observability.portfolio_supportability",
+              state: "degraded",
+              reason: "portfolio_supportability_pending",
+              freshness_bucket: "fresh",
+              ready_domains: 3,
+              pending_domains: 1,
+              blocked_domains: 0,
+              no_activity_domains: 0,
+            },
           });
         }
 
@@ -702,6 +712,16 @@ describe("portfolio api", () => {
     expect(merged.cash_balances?.[0].market_value_base).toBe(66122);
     expect(merged.recent_transactions[0].transaction_id).toBe("TX_1");
     expect(merged.readiness_indicators?.[0].status).toBe("Ready");
+    expect(merged.supportability).toEqual({
+      feature_key: "core.observability.portfolio_supportability",
+      state: "degraded",
+      reason: "portfolio_supportability_pending",
+      freshness_bucket: "fresh",
+      ready_domains: 3,
+      pending_domains: 1,
+      blocked_domains: 0,
+      no_activity_domains: 0,
+    });
     expect(merged.insights?.[0].key).toBe("cash-above-target");
     expect(merged.exception_summaries?.[0].key).toBe("pricing");
     expect(merged.workflow_actions?.[0].title).toBe("Review performance");
@@ -721,6 +741,24 @@ describe("portfolio api", () => {
     expect(readinessRequestUrl).toContain("as_of_date=2026-03-28");
     expect(insightsRequestUrl).toContain("as_of_date=2026-03-28");
     expect(workflowRequestUrl).toContain("as_of_date=2026-03-28");
+    expect(getAnalyticsUiMetricEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            route: "workbench.portfolio",
+            panel: "portfolio-readiness",
+            operation: "portfolio.readiness",
+            state: "degraded",
+            freshness_bucket: "fresh",
+            supportability_state: "action_required",
+          }),
+        }),
+      ])
+    );
+    const metricsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricsJson).not.toContain("MANUAL_PB_USD_001");
+    expect(metricsJson).not.toContain("MANUAL_CIF_001");
   });
 
   it("requests the transaction ledger with scoped filter parameters", async () => {

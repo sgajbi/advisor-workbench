@@ -118,6 +118,17 @@ export type PortfolioReadinessIndicator = {
   href: string;
 };
 
+export type PortfolioSupportabilitySummary = {
+  feature_key: "core.observability.portfolio_supportability" | string;
+  state: string;
+  reason: string;
+  freshness_bucket: "fresh" | "stale" | "unknown" | string;
+  ready_domains: number;
+  pending_domains: number;
+  blocked_domains: number;
+  no_activity_domains: number;
+};
+
 export type PortfolioExceptionSummary = {
   key: string;
   title: string;
@@ -375,6 +386,7 @@ export type PortfolioWorkspace = {
     };
   };
   readiness_indicators?: PortfolioReadinessIndicator[];
+  supportability?: PortfolioSupportabilitySummary | null;
   exception_summaries?: PortfolioExceptionSummary[];
   insights?: PortfolioInsight[];
   operations?: {
