@@ -19,10 +19,16 @@ npm run live:stack:up
 npm run live:validate
 ```
 
+Use `npm run live:stack:up:workbench-local` when Workbench UI changes need hot reload while the
+rest of the canonical app set remains Docker-backed.
+
 Canonical identities:
 
 - workbench: `http://workbench.dev.lotus`
 - gateway: `http://gateway.dev.lotus`
+- manage: `http://manage.dev.lotus`
+- archive: `http://archive.dev.lotus`
+- render: `http://render.dev.lotus`
 
 Required environment posture:
 

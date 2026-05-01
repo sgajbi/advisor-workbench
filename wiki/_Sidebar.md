@@ -10,6 +10,7 @@
 - [Development Workflow](Development-Workflow)
 - [Validation and CI](Validation-and-CI)
 - [Operations Runbook](Operations-Runbook)
+- [Observability Evidence](Observability-Evidence)
 - [Troubleshooting](Troubleshooting)
 
 ### Boundaries

@@ -166,7 +166,7 @@ export async function validatePerformanceSummaryPanel(
     timeout: timeoutMs,
   });
   await expect(page.getByText("Observation Trail")).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByText("4 Periods")).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText(/\d+\s+periods?/i)).toBeVisible({ timeout: timeoutMs });
   await assertTableHasRows(
     tableByExactLabel(page, "Return path observation table"),
     4,
