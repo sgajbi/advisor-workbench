@@ -944,6 +944,61 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("Top Active Effects")).not.toBeInTheDocument();
   });
 
+  it("shows a truthful attribution state when a ready contract returns no attribution levels", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    scenario.workspace = {
+      ...scenario.workspace,
+      attribution: scenario.workspace.attribution
+        ? {
+            ...scenario.workspace.attribution,
+            levels: [],
+          }
+        : null,
+    };
+    installPerformancePageFetchScenario(scenario);
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+
+    expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Attribution detail is marked available, but no segment attribution levels were returned for the current selection."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class attribution totals")).not.toBeInTheDocument();
+  });
+
+  it("shows a truthful contribution state when a ready contract returns no contribution detail rows", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    scenario.workspace = {
+      ...scenario.workspace,
+      contribution: scenario.workspace.contribution
+        ? {
+            ...scenario.workspace.contribution,
+            position_rows: [],
+            levels: [],
+          }
+        : null,
+    };
+    installPerformancePageFetchScenario(scenario);
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+
+    expect(await screen.findByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Contribution detail is marked available, but no position or segment contribution rows were returned for the current selection."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Position contribution table")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
+  });
+
   it.each([
     {
       name: "supported analysis",

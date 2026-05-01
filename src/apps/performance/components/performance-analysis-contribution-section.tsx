@@ -39,6 +39,18 @@ export default function PerformanceAnalysisContributionSection({
 }: PerformanceAnalysisContributionSectionProps) {
   const hasAggregateContributionLevels = (workspace.contribution?.levels?.length ?? 0) > 0;
   const hasPositionContributionRows = (workspace.contribution?.position_rows?.length ?? 0) > 0;
+  const missingContributionDetailBody =
+    capabilities.contributionDetail.state !== "unavailable" &&
+    (!workspace.contribution || (!hasPositionContributionRows && !hasAggregateContributionLevels))
+      ? "Contribution detail is marked available, but no position or segment contribution rows were returned for the current selection."
+      : null;
+  const effectiveContributionCapability = missingContributionDetailBody
+    ? {
+        ...capabilities.contributionDetail,
+        state: "partial" as const,
+        reason: missingContributionDetailBody,
+      }
+    : capabilities.contributionDetail;
   const [detailView, setDetailView] = useState<ContributionDetailView>(
     hasPositionContributionRows ? "positions" : "segments"
   );
@@ -57,17 +69,20 @@ export default function PerformanceAnalysisContributionSection({
       className="performance-detail-panel-wide performance-analysis-module performance-workspace-panel"
     >
       <PerformanceAnalysisModuleState
-        capability={capabilities.contributionDetail}
+        capability={effectiveContributionCapability}
         isDetailsPending={isDetailsPending}
         loadingText="Loading contribution detail for the selected segment and horizon."
         partialTitle="Contribution detail is partial"
         unavailableTitle="Contribution detail unavailable"
         body={
-          capabilities.contributionDetail.reason ??
+          missingContributionDetailBody ??
+          effectiveContributionCapability.reason ??
           "Contribution detail is not available for the current selection."
         }
         hint={
-          hasAggregateContributionLevels
+          missingContributionDetailBody
+            ? "Use the summary contribution posture while the selected contribution detail is incomplete."
+            : hasAggregateContributionLevels
             ? "Aggregate contribution remains available even when position-level ranking is absent."
             : "Contribution detail requires source-backed contribution levels for the selected segment and horizon."
         }
