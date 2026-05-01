@@ -1287,6 +1287,59 @@ describe("workbench api", () => {
     const requestHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
     expect(requestHeaders.get("Content-Type")).toBe("application/json");
     expect(requestHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
+
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("performance-advisor-brief-review-action");
+    expect(metricEventsJson).toContain(
+      "performance.workspace.advisor-brief.review-action"
+    );
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(metricEventsJson).not.toContain("packrun_advisor_brief_req-1");
+    expect(metricEventsJson).not.toContain("advisor_1");
+    expect(metricEventsJson).not.toContain("Advisor brief accepted");
+  });
+
+  it("keeps advisor brief review action denial errors bounded", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            detail: "raw_entitlement_denied for portfolio PF_1001 and client CIF_1",
+          }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await expect(
+      postWorkbenchPerformanceAdvisorBriefReviewActionClient(
+        "PF_1001",
+        {
+          period: "YTD",
+          chartFrequency: "monthly",
+          contributionDimension: "asset_class",
+          attributionDimension: "asset_class",
+          detailBasis: "NET",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-02-24",
+        },
+        {
+          action_type: "ACCEPT",
+          reviewed_by: "advisor_1",
+          reason: "Advisor brief accepted for bounded downstream workflow use.",
+        }
+      )
+    ).rejects.toThrow("Failed to fetch performance advisor brief review action (403)");
+
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("performance-advisor-brief-review-action");
+    expect(metricEventsJson).toContain('"state":"permission_blocked"');
+    expect(metricEventsJson).not.toContain("raw_entitlement_denied");
+    expect(metricEventsJson).not.toContain("PF_1001");
+    expect(metricEventsJson).not.toContain("CIF_1");
+    expect(metricEventsJson).not.toContain("advisor_1");
   });
 
   it("calls backend reporting snapshot endpoint", async () => {

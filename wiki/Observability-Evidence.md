@@ -114,6 +114,15 @@ caller-context posture:
   `Access Restricted`
 - Advisor Brief denials should classify the advisor brief view model as `permission_blocked` and
   surface `Advisor brief access is restricted` in supportability and exception copy
+- Advisor Brief review-action denials should emit bounded Workbench metrics for
+  `performance-advisor-brief-review-action` and must not expose the raw Gateway entitlement
+  response body, reviewed-by identity, request body, portfolio id, or client id in UI errors or
+  metric labels
+- Browser-originated review-action metrics should be visible in `/api/metrics` after the
+  same-origin `/api/metrics/events` ingest accepts the bounded event. A successful proof should
+  show `performance-advisor-brief-review-action` and
+  `performance.workspace.advisor-brief.review-action` in Prometheus text while excluding reviewer
+  identity, portfolio id, client id, correlation id, and free-form review reason.
 - Workbench analytics metrics should classify denied `401` or `403` reads as
   `permission_blocked`, while still excluding portfolio id, client id, trace id, request body,
   response body, and entitlement-failure text from labels

@@ -59,6 +59,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("function Stop-HostProcessOnPort");
     expect(script).toContain("Stopping stale $Description process on :$Port");
     expect(script).toContain("Leaving Docker-owned $Description listener on :$Port");
+    expect(script).toContain("$previousBffBaseUrl = $env:BFF_BASE_URL");
+    expect(script).toContain('$env:BFF_BASE_URL = "http://gateway.dev.lotus"');
+    expect(script).toContain("$previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED");
     expect(script).toContain('Test-LocalApp "workbench"');
     expect(script).toContain('Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }');
     expect(script).toContain('Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }');
