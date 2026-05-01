@@ -59,6 +59,10 @@ export interface WorkbenchAnalyticsUiObservationContext {
   service?: string;
 }
 
+export interface WorkbenchAnalyticsUiObservationOptions {
+  recordPanelHydration?: boolean;
+}
+
 export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   {
     route: "workbench.performance",
@@ -549,9 +553,11 @@ export function recordAnalyticsUiAttentionEvent(params: {
 
 export async function observeWorkbenchAnalyticsRequest<T>(
   context: WorkbenchAnalyticsUiObservationContext,
-  request: () => Promise<T>
+  request: () => Promise<T>,
+  options: WorkbenchAnalyticsUiObservationOptions = {}
 ): Promise<T> {
   const startedAt = nowMs();
+  const recordPanelHydration = options.recordPanelHydration ?? true;
   try {
     const response = await request();
     const durationMs = nowMs() - startedAt;
@@ -574,13 +580,15 @@ export async function observeWorkbenchAnalyticsRequest<T>(
       freshnessBucket,
       supportabilityState,
     });
-    recordAnalyticsUiPanelHydration({
-      context,
-      durationMs,
-      state,
-      freshnessBucket,
-      supportabilityState,
-    });
+    if (recordPanelHydration) {
+      recordAnalyticsUiPanelHydration({
+        context,
+        durationMs,
+        state,
+        freshnessBucket,
+        supportabilityState,
+      });
+    }
     recordAttentionForObservation({
       context,
       state,

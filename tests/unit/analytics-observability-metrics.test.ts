@@ -208,6 +208,32 @@ describe("analytics UI observability metrics", () => {
     expect(renderedMetrics).not.toContain("Sensitive Client");
   });
 
+  it("can record mutation observations without panel hydration metrics", async () => {
+    await observeWorkbenchAnalyticsRequest(
+      {
+        route: "workbench.performance",
+        panel: "performance-advisor-brief-review-action",
+        operation: "performance.workspace.advisor-brief.review-action",
+      },
+      async () => ({
+        state: "ready",
+        supportability_status: "READY",
+        reviewed_by: "advisor_1",
+        reason: "Free-form review reason must not become metric content.",
+      }),
+      { recordPanelHydration: false }
+    );
+
+    const events = getAnalyticsUiMetricEvents();
+    expect(events.map((event) => event.metric_name)).toEqual([
+      "lotus_workbench_api_request_duration_seconds",
+      "lotus_workbench_panel_state_total",
+    ]);
+    expect(JSON.stringify(events)).toContain("performance-advisor-brief-review-action");
+    expect(JSON.stringify(events)).not.toContain("advisor_1");
+    expect(JSON.stringify(events)).not.toContain("Free-form review reason");
+  });
+
   it("keeps the supported Workbench observed-surface registry explicit", () => {
     expect(
       WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.map((surface) => [

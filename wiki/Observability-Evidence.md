@@ -122,7 +122,10 @@ caller-context posture:
   same-origin `/api/metrics/events` ingest accepts the bounded event. A successful proof should
   show `performance-advisor-brief-review-action` and
   `performance.workspace.advisor-brief.review-action` in Prometheus text while excluding reviewer
-  identity, portfolio id, client id, correlation id, and free-form review reason.
+  identity, portfolio id, client id, correlation id, and free-form review reason. Review actions
+  should emit API request and panel-state metrics, and may emit bounded attention metrics when the
+  returned advisor brief is not fully supportable; they must not increment panel hydration metrics
+  because no panel hydration occurs during the mutation.
 - Workbench analytics metrics should classify denied `401` or `403` reads as
   `permission_blocked`, while still excluding portfolio id, client id, trace id, request body,
   response body, and entitlement-failure text from labels

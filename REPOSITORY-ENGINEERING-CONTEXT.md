@@ -139,7 +139,9 @@ Important validation expectations:
    never emit portfolio, client, document, session, report batch, trace, request body, response
    body, or screen-content identifiers as metric labels. The metrics helper consumes Gateway
    `source_supportability` arrays for performance/risk freshness and supportability posture, with
-   stale source freshness taking precedence over ready source items.
+   stale source freshness taking precedence over ready source items. State-changing Workbench
+   actions should use the mutation observation helper so they emit bounded request, state, and
+   applicable attention metrics without incrementing panel hydration counters.
 
 ### Visual Review Gate
 

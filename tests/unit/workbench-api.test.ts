@@ -1288,7 +1288,17 @@ describe("workbench api", () => {
     expect(requestHeaders.get("Content-Type")).toBe("application/json");
     expect(requestHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
 
-    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    const metricEvents = getAnalyticsUiMetricEvents();
+    const metricEventsJson = JSON.stringify(metricEvents);
+    expect(metricEvents.map((event) => event.metric_name)).toContain(
+      "lotus_workbench_api_request_duration_seconds"
+    );
+    expect(metricEvents.map((event) => event.metric_name)).toContain(
+      "lotus_workbench_panel_state_total"
+    );
+    expect(metricEvents.map((event) => event.metric_name)).not.toContain(
+      "lotus_workbench_panel_hydration_duration_seconds"
+    );
     expect(metricEventsJson).toContain("performance-advisor-brief-review-action");
     expect(metricEventsJson).toContain(
       "performance.workspace.advisor-brief.review-action"
