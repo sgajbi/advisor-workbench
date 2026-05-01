@@ -36,6 +36,21 @@ Required environment posture:
 BFF_BASE_URL=http://gateway.dev.lotus
 ```
 
+Workbench BFF caller-context defaults:
+
+```txt
+WORKBENCH_BFF_ACTOR_ID=workbench-system
+WORKBENCH_BFF_CALLER_APPLICATION=lotus-workbench
+WORKBENCH_BFF_TENANT_ID=tenant-sg
+WORKBENCH_BFF_REGION=APAC
+WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
+WORKBENCH_BFF_ROLE=advisor
+```
+
+These values are injected only when a browser request does not provide explicit caller context.
+Use the overrides for scenario-specific validation, entitlement testing, or client-demo evidence
+capture that needs a named actor, tenant, region, booking center, or role.
+
 ## First checks
 
 ```txt

@@ -5,14 +5,36 @@ import { GET, POST } from "@/app/api/bff/[...path]/route";
 
 describe("BFF proxy route", () => {
   const originalBffBaseUrl = process.env.BFF_BASE_URL;
+  const callerContextEnvKeys = [
+    "WORKBENCH_BFF_ACTOR_ID",
+    "WORKBENCH_BFF_CALLER_APPLICATION",
+    "WORKBENCH_BFF_TENANT_ID",
+    "WORKBENCH_BFF_REGION",
+    "WORKBENCH_BFF_BOOKING_CENTER_CODE",
+    "WORKBENCH_BFF_ROLE",
+  ] as const;
+  const originalCallerContextEnv = Object.fromEntries(
+    callerContextEnvKeys.map((key) => [key, process.env[key]])
+  );
 
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     delete process.env.BFF_BASE_URL;
+    for (const key of callerContextEnvKeys) {
+      delete process.env[key];
+    }
   });
 
   afterEach(() => {
     process.env.BFF_BASE_URL = originalBffBaseUrl;
+    for (const key of callerContextEnvKeys) {
+      const original = originalCallerContextEnv[key];
+      if (original === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = original;
+      }
+    }
   });
 
   it("forwards GET requests to the configured upstream without the host header", async () => {
@@ -56,6 +78,12 @@ describe("BFF proxy route", () => {
     const upstreamHeaders = upstreamInit?.headers as Headers;
     expect(upstreamHeaders.get("host")).toBeNull();
     expect(upstreamHeaders.get("authorization")).toBe("Bearer token");
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
+    expect(upstreamHeaders.get("X-Role")).toBe("advisor");
     expect(upstreamHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
     expect(upstreamHeaders.get("traceparent")).toMatch(
       /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/
@@ -128,13 +156,50 @@ describe("BFF proxy route", () => {
     });
 
     const [upstreamUrl] = fetchMock.mock.calls[0];
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
     const body = new Uint8Array(await response.arrayBuffer());
 
     expect(String(upstreamUrl)).toBe("http://gateway.dev.lotus/api/v1/documents/doc_1/download");
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("advisor_1");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("application/pdf");
     expect(response.headers.get("x-document-checksum")).toBe("abc123");
     expect(Array.from(body)).toEqual(Array.from(pdfBytes));
+  });
+
+  it("uses configured caller context defaults for upstream analytics reads", async () => {
+    process.env.WORKBENCH_BFF_ACTOR_ID = "automation-advisor";
+    process.env.WORKBENCH_BFF_CALLER_APPLICATION = "lotus-demo-workbench";
+    process.env.WORKBENCH_BFF_TENANT_ID = "tenant-demo";
+    process.env.WORKBENCH_BFF_REGION = "EMEA";
+    process.env.WORKBENCH_BFF_BOOKING_CENTER_CODE = "CH";
+    process.env.WORKBENCH_BFF_ROLE = "relationship-manager";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/workbench/PF_1001/performance/summary",
+      {
+        method: "GET",
+      }
+    );
+
+    await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "workbench", "PF_1001", "performance", "summary"],
+      }),
+    });
+
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("automation-advisor");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-demo-workbench");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-demo");
+    expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("CH");
+    expect(upstreamHeaders.get("X-Role")).toBe("relationship-manager");
   });
 
   it("preserves valid context and replaces malformed traceparent before proxying", async () => {
