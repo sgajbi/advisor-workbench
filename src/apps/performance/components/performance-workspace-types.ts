@@ -7,6 +7,13 @@ import type {
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 
+export type PerformanceWorkspaceLoadIssueState = "permission_blocked" | "unavailable";
+
+export type PerformanceWorkspaceLoadIssue = {
+  state: PerformanceWorkspaceLoadIssueState;
+  status?: number;
+};
+
 export type PerformanceWorkspaceRequestPatch = {
   portfolioId?: string;
   period?: string;
@@ -109,6 +116,7 @@ export type PerformanceRiskModeProps = PerformanceWorkspaceControls & {
 
 export type PerformanceWorkspaceViewProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
+  loadIssue?: PerformanceWorkspaceLoadIssue | null;
   mode: PerformanceWorkspaceMode;
   period: string;
   detailBasis: string;

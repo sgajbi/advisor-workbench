@@ -9,6 +9,7 @@ export type ScreenStateKind =
   | "loading"
   | "empty"
   | "partial"
+  | "permission_blocked"
   | "unavailable"
   | "error";
 
@@ -84,7 +85,7 @@ export default function ScreenStatePanel({
 }
 
 function shouldRenderModulePanel(kind: ScreenStateKind, surface: ScreenStateSurface) {
-  if (kind === "partial" || kind === "error") {
+  if (kind === "partial" || kind === "error" || kind === "permission_blocked") {
     return true;
   }
 
@@ -100,7 +101,7 @@ function resolveModuleState(kind: ScreenStateKind): "empty" | "partial" | "error
     return "partial";
   }
 
-  if (kind === "error") {
+  if (kind === "error" || kind === "permission_blocked") {
     return "error";
   }
 

@@ -5,6 +5,7 @@ export type PerformanceAdvisorBriefStatus =
   | "loading"
   | "partial"
   | "empty"
+  | "permission_blocked"
   | "unavailable";
 
 export type PerformanceAdvisorBriefTone = "neutral" | "positive" | "warning";

@@ -8,6 +8,7 @@ import {
   getWorkbenchRiskDrawdownClient,
   getWorkbenchRiskRollingClient,
   getWorkbenchRiskSummaryClient,
+  isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
 import type {
   WorkbenchPerformanceWorkspace,
@@ -265,7 +266,8 @@ export function usePerformanceRiskContract({
             workspace: workspaceRef.current,
             period,
             detailBasis,
-            detail: error instanceof Error ? error.message : "Risk summary fetch failed.",
+            detail: buildRiskFetchFailureDetail(error, "Risk summary"),
+            permissionBlocked: isWorkbenchPermissionBlockedError(error),
           })
         )
       : Promise.resolve(cachedSummary);
@@ -280,7 +282,8 @@ export function usePerformanceRiskContract({
           buildUnavailableRiskConcentration({
             workspace: workspaceRef.current,
             period,
-            detail: error instanceof Error ? error.message : "Risk concentration fetch failed.",
+            detail: buildRiskFetchFailureDetail(error, "Risk concentration"),
+            permissionBlocked: isWorkbenchPermissionBlockedError(error),
           })
         )
       : Promise.resolve(cachedConcentration);
@@ -298,8 +301,9 @@ export function usePerformanceRiskContract({
             workspace: workspaceRef.current,
             period,
             detailBasis,
-            detail: error instanceof Error ? error.message : "Risk drawdown fetch failed.",
+            detail: buildRiskFetchFailureDetail(error, "Risk drawdown"),
             includeUnderwaterSeries: false,
+            permissionBlocked: isWorkbenchPermissionBlockedError(error),
           })
         )
       : Promise.resolve(cachedDrawdown);
@@ -317,8 +321,9 @@ export function usePerformanceRiskContract({
             workspace: workspaceRef.current,
             period,
             detailBasis,
-            detail: error instanceof Error ? error.message : "Risk rolling fetch failed.",
+            detail: buildRiskFetchFailureDetail(error, "Risk rolling"),
             includeTimeSeries: false,
+            permissionBlocked: isWorkbenchPermissionBlockedError(error),
           })
         )
       : Promise.resolve(cachedRolling);
@@ -554,4 +559,11 @@ export function usePerformanceRiskContract({
     requestDrawdownDetail,
     requestRollingDetail,
   };
+}
+
+function buildRiskFetchFailureDetail(error: unknown, label: string): string {
+  if (isWorkbenchPermissionBlockedError(error)) {
+    return `${label} is permission-blocked for this caller context.`;
+  }
+  return error instanceof Error ? error.message : `${label} fetch failed.`;
 }

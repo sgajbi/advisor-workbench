@@ -137,6 +137,9 @@ const readyAdvisorBriefResponse: WorkbenchPerformanceAdvisorBrief = {
 
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchPerformanceAdvisorBriefClient: vi.fn(async () => readyAdvisorBriefResponse),
+  isWorkbenchPermissionBlockedError: vi.fn((error: unknown) =>
+    error instanceof Error ? /\((401|403)\)$/.test(error.message) : false
+  ),
   postWorkbenchPerformanceAdvisorBriefReviewActionClient: vi.fn(async () => ({
     ...readyAdvisorBriefResponse,
     correlation_id: "corr-advisor-brief-review",

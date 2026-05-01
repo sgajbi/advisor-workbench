@@ -33,6 +33,7 @@ import type {
 export function buildFallbackAdvisorBriefViewModel({
   workspace,
   advisorBriefUnavailable,
+  advisorBriefPermissionBlocked,
   capabilities,
   period,
   detailBasis,
@@ -44,6 +45,7 @@ export function buildFallbackAdvisorBriefViewModel({
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   advisorBriefUnavailable: boolean;
+  advisorBriefPermissionBlocked?: boolean;
   capabilities: PerformanceWorkspaceCapabilities;
   period: string;
   detailBasis: string;
@@ -96,6 +98,7 @@ export function buildFallbackAdvisorBriefViewModel({
   const status = resolveAdvisorBriefStatus({
     capabilities,
     advisorBriefUnavailable,
+    advisorBriefPermissionBlocked: advisorBriefPermissionBlocked ?? false,
     isDetailsPending,
     hasTalkingPoints: talkingPoints.length > 0,
   });
@@ -115,6 +118,8 @@ export function buildFallbackAdvisorBriefViewModel({
               ? "Preview Partial"
               : status === "empty"
                 ? "No Material Brief"
+                : status === "permission_blocked"
+                  ? "Access Restricted"
                 : "Unavailable",
       tone:
         status === "ready"
@@ -122,6 +127,12 @@ export function buildFallbackAdvisorBriefViewModel({
           : status === "loading" || status === "partial"
             ? "warn"
             : "danger",
+      ...(advisorBriefPermissionBlocked
+        ? {
+            detail:
+              "The Gateway advisor brief contract returned a caller-context permission block.",
+          }
+        : {}),
     } satisfies PerformanceAdvisorBriefSupportabilityItem,
   ];
 
@@ -136,7 +147,8 @@ export function buildFallbackAdvisorBriefViewModel({
       topDetractorLabel: topDetractor?.label,
       attributionLabel: topEffect?.key_label,
     }),
-    talkingPoints: status === "unavailable" ? [] : talkingPoints,
+    talkingPoints:
+      status === "unavailable" || status === "permission_blocked" ? [] : talkingPoints,
     recommendedActions: [
       {
         label: "Open Return Path",
@@ -158,6 +170,7 @@ export function buildFallbackAdvisorBriefViewModel({
       capabilities,
       route,
       advisorBriefUnavailable,
+      advisorBriefPermissionBlocked: advisorBriefPermissionBlocked ?? false,
       isDetailsPending,
     }),
     sourceMetrics: [
@@ -200,6 +213,7 @@ export function buildFallbackAdvisorBriefViewModel({
     reviewNotes: buildReviewNotes({
       capabilities,
       advisorBriefUnavailable,
+      advisorBriefPermissionBlocked: advisorBriefPermissionBlocked ?? false,
       isDetailsPending,
     }),
     audit: {
@@ -224,13 +238,21 @@ export function buildFallbackAdvisorBriefViewModel({
 function buildReviewNotes({
   capabilities,
   advisorBriefUnavailable,
+  advisorBriefPermissionBlocked,
   isDetailsPending,
 }: {
   capabilities: PerformanceWorkspaceCapabilities;
   advisorBriefUnavailable: boolean;
+  advisorBriefPermissionBlocked: boolean;
   isDetailsPending: boolean;
 }) {
   const notes: string[] = [];
+
+  if (advisorBriefPermissionBlocked) {
+    notes.push(
+      "Gateway advisor brief contract is permission-blocked for this caller context; restricted entitlement details are not shown."
+    );
+  }
 
   if (advisorBriefUnavailable) {
     notes.push("Gateway advisor brief contract unavailable; review summary and analysis directly.");
@@ -252,14 +274,19 @@ function buildReviewNotes({
 function resolveAdvisorBriefStatus({
   capabilities,
   advisorBriefUnavailable,
+  advisorBriefPermissionBlocked,
   isDetailsPending,
   hasTalkingPoints,
 }: {
   capabilities: PerformanceWorkspaceCapabilities;
   advisorBriefUnavailable: boolean;
+  advisorBriefPermissionBlocked: boolean;
   isDetailsPending: boolean;
   hasTalkingPoints: boolean;
 }): PerformanceAdvisorBriefStatus {
+  if (advisorBriefPermissionBlocked) {
+    return "permission_blocked";
+  }
   if (advisorBriefUnavailable || capabilities.summaryKpis.state === "unavailable") {
     return "unavailable";
   }
@@ -318,6 +345,9 @@ function buildAdvisorSummaryCopy({
   }
   if (status === "unavailable") {
     return "Advisor brief preview is unavailable because the portfolio summary contract is not available.";
+  }
+  if (status === "permission_blocked") {
+    return "Advisor brief access is restricted for this caller context. Summary and analysis remain available when their source contracts are entitled.";
   }
 
   const driverCopy =
@@ -431,14 +461,35 @@ function buildRisksAndExceptions({
   capabilities,
   route,
   advisorBriefUnavailable,
+  advisorBriefPermissionBlocked,
   isDetailsPending,
 }: {
   capabilities: PerformanceWorkspaceCapabilities;
   route: string;
   advisorBriefUnavailable: boolean;
+  advisorBriefPermissionBlocked: boolean;
   isDetailsPending: boolean;
 }): PerformanceAdvisorBriefItem[] {
   const risks: PerformanceAdvisorBriefItem[] = [];
+  if (advisorBriefPermissionBlocked) {
+    return [
+      {
+        headline: "Advisor brief access is restricted.",
+        detail:
+          "The Gateway advisor brief contract returned a permission block for this caller context. Use an entitled front-office role or contact platform support.",
+        tone: "warning",
+        evidenceRefs: [
+          {
+            metricLabel: "Advisor Brief",
+            metricValue: "Permission Blocked",
+            sourceSurface: "performance.advisor_brief",
+            route,
+            targetMode: "summary",
+          },
+        ],
+      },
+    ];
+  }
   if (advisorBriefUnavailable) {
     return [
       {

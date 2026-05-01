@@ -25,6 +25,9 @@ vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskAttributionClient: vi.fn(),
   getWorkbenchRiskDrawdownClient: vi.fn(),
   getWorkbenchRiskRollingClient: vi.fn(),
+  isWorkbenchPermissionBlockedError: vi.fn((error: unknown) =>
+    error instanceof Error ? /\((401|403)\)$/.test(error.message) : false
+  ),
 }));
 
 function renderRiskMode(

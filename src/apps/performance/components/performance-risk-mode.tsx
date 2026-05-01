@@ -89,6 +89,7 @@ export default function PerformanceRiskMode({
   const statePanel =
     viewModel.state === "loading" ||
     viewModel.state === "empty" ||
+    viewModel.state === "permission_blocked" ||
     viewModel.state === "unavailable" ||
     viewModel.state === "error" ? (
       <ScreenStatePanel

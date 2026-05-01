@@ -20,6 +20,7 @@ export type PerformanceRiskState =
   | "ready"
   | "partial"
   | "empty"
+  | "permission_blocked"
   | "unavailable"
   | "error";
 
@@ -283,7 +284,10 @@ export function buildPerformanceRiskViewModel({
       rolling.payload?.periods.length
   );
   const moduleStates = [summary.state, concentration.state, drawdown.state, rolling.state];
-  const state = !hasPayload
+  const isPermissionBlocked = !hasPayload && moduleStates.some((moduleState) => moduleState === "blocked");
+  const state = isPermissionBlocked
+    ? "permission_blocked"
+    : !hasPayload
     ? "unavailable"
     : moduleStates.every((moduleState) => moduleState === "ready")
       ? "ready"
@@ -291,9 +295,16 @@ export function buildPerformanceRiskViewModel({
 
   return {
     state,
-    title: state === "unavailable" ? "Risk unavailable" : "Risk",
+    title:
+      state === "permission_blocked"
+        ? "Risk access restricted"
+        : state === "unavailable"
+          ? "Risk unavailable"
+          : "Risk",
     synopsis:
-      state === "unavailable"
+      state === "permission_blocked"
+        ? "Risk analytics are permission-blocked for this caller context."
+        : state === "unavailable"
         ? "Risk is not available for the selected portfolio context."
         : "Portfolio risk is available for the selected performance context.",
     contextItems: buildContextItems(workspace, period, detailBasis, summary.as_of_date),
@@ -1002,12 +1013,16 @@ export function buildUnavailableRiskSummary({
   period,
   detailBasis,
   detail,
+  permissionBlocked = false,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   period: string;
   detailBasis: string;
   detail: string;
+  permissionBlocked?: boolean;
 }): WorkbenchRiskSummaryResponse {
+  const state = permissionBlocked ? "blocked" : "unavailable";
+  const warning = permissionBlocked ? "RISK_SUMMARY_PERMISSION_BLOCKED" : "RISK_SUMMARY_UNAVAILABLE";
   return {
     correlation_id: "risk-summary-unavailable",
     contract_version: "risk-workspace.v1",
@@ -1016,20 +1031,20 @@ export function buildUnavailableRiskSummary({
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
-    state: "unavailable",
+    state,
     payload: null,
     supportability: [
       {
         key: "risk_summary",
         label: "Risk summary",
-        state: "unavailable",
+        state,
         reason: `${detail} (${detailBasis} basis)`,
         source_service: "lotus-risk",
       },
     ],
-    warnings: ["RISK_SUMMARY_UNAVAILABLE"],
+    warnings: [warning],
     partial_failures: [
-      { source_service: "risk", error_code: "RISK_SUMMARY_UNAVAILABLE", detail },
+      { source_service: "risk", error_code: warning, detail },
     ],
     metadata: {
       generated_at: workspace.as_of_date,
@@ -1043,11 +1058,17 @@ export function buildUnavailableRiskConcentration({
   workspace,
   period,
   detail,
+  permissionBlocked = false,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   period: string;
   detail: string;
+  permissionBlocked?: boolean;
 }): WorkbenchRiskConcentrationResponse {
+  const state = permissionBlocked ? "blocked" : "unavailable";
+  const warning = permissionBlocked
+    ? "RISK_CONCENTRATION_PERMISSION_BLOCKED"
+    : "RISK_CONCENTRATION_UNAVAILABLE";
   return {
     correlation_id: "risk-concentration-unavailable",
     contract_version: "risk-workspace.v1",
@@ -1056,20 +1077,20 @@ export function buildUnavailableRiskConcentration({
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
-    state: "unavailable",
+    state,
     payload: null,
     supportability: [
       {
         key: "risk_concentration",
         label: "Risk concentration",
-        state: "unavailable",
+        state,
         reason: detail,
         source_service: "lotus-risk",
       },
     ],
-    warnings: ["RISK_CONCENTRATION_UNAVAILABLE"],
+    warnings: [warning],
     partial_failures: [
-      { source_service: "risk", error_code: "RISK_CONCENTRATION_UNAVAILABLE", detail },
+      { source_service: "risk", error_code: warning, detail },
     ],
     metadata: {
       generated_at: workspace.as_of_date,
@@ -1085,13 +1106,17 @@ export function buildUnavailableRiskDrawdown({
   detailBasis,
   detail,
   includeUnderwaterSeries,
+  permissionBlocked = false,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   period: string;
   detailBasis: string;
   detail: string;
   includeUnderwaterSeries: boolean;
+  permissionBlocked?: boolean;
 }): WorkbenchRiskDrawdownResponse {
+  const state = permissionBlocked ? "blocked" : "unavailable";
+  const warning = permissionBlocked ? "RISK_DRAWDOWN_PERMISSION_BLOCKED" : "RISK_DRAWDOWN_UNAVAILABLE";
   return {
     correlation_id: "risk-drawdown-unavailable",
     contract_version: "risk-workspace.v1",
@@ -1100,20 +1125,20 @@ export function buildUnavailableRiskDrawdown({
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
-    state: "unavailable",
+    state,
     payload: null,
     supportability: [
       {
         key: "risk_drawdown",
         label: includeUnderwaterSeries ? "Risk drawdown detail" : "Risk drawdown",
-        state: "unavailable",
+        state,
         reason: `${detail} (${detailBasis} basis)`,
         source_service: "lotus-risk",
       },
     ],
-    warnings: ["RISK_DRAWDOWN_UNAVAILABLE"],
+    warnings: [warning],
     partial_failures: [
-      { source_service: "risk", error_code: "RISK_DRAWDOWN_UNAVAILABLE", detail },
+      { source_service: "risk", error_code: warning, detail },
     ],
     metadata: {
       generated_at: workspace.as_of_date,
@@ -1129,13 +1154,17 @@ export function buildUnavailableRiskRolling({
   detailBasis,
   detail,
   includeTimeSeries,
+  permissionBlocked = false,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   period: string;
   detailBasis: string;
   detail: string;
   includeTimeSeries: boolean;
+  permissionBlocked?: boolean;
 }): WorkbenchRiskRollingResponse {
+  const state = permissionBlocked ? "blocked" : "unavailable";
+  const warning = permissionBlocked ? "RISK_ROLLING_PERMISSION_BLOCKED" : "RISK_ROLLING_UNAVAILABLE";
   return {
     correlation_id: "risk-rolling-unavailable",
     contract_version: "risk-workspace.v1",
@@ -1144,20 +1173,20 @@ export function buildUnavailableRiskRolling({
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
-    state: "unavailable",
+    state,
     payload: null,
     supportability: [
       {
         key: "risk_rolling",
         label: includeTimeSeries ? "Rolling risk detail" : "Rolling risk",
-        state: "unavailable",
+        state,
         reason: `${detail} (${detailBasis} basis)`,
         source_service: "lotus-risk",
       },
     ],
-    warnings: ["RISK_ROLLING_UNAVAILABLE"],
+    warnings: [warning],
     partial_failures: [
-      { source_service: "risk", error_code: "RISK_ROLLING_UNAVAILABLE", detail },
+      { source_service: "risk", error_code: warning, detail },
     ],
     metadata: {
       generated_at: workspace.as_of_date,

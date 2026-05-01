@@ -17,7 +17,7 @@ export default function PerformanceAnalyticalUnavailableState({
   compact = false,
 }: {
   ariaLabel: string;
-  status: "partial" | "unavailable";
+  status: "partial" | "unavailable" | "permission_blocked";
   title: string;
   body: string;
   hint?: string;
@@ -44,7 +44,11 @@ export default function PerformanceAnalyticalUnavailableState({
           <strong>{title}</strong>
         </div>
         <span className="performance-analytical-state-status">
-          {status === "partial" ? "Partial" : "Unavailable"}
+          {status === "partial"
+            ? "Partial"
+            : status === "permission_blocked"
+              ? "Access Restricted"
+              : "Unavailable"}
         </span>
       </header>
 

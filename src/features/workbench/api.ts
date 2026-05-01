@@ -35,6 +35,32 @@ import {
 const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
 type WorkbenchRequestTarget = ServiceRequestTarget;
 
+export class WorkbenchApiError extends Error {
+  readonly status: number;
+
+  constructor(errorLabel: string, status: number) {
+    super(`Failed to fetch ${errorLabel} (${status})`);
+    this.name = "WorkbenchApiError";
+    this.status = status;
+  }
+}
+
+export function getWorkbenchApiErrorStatus(error: unknown): number | null {
+  if (error instanceof WorkbenchApiError) {
+    return error.status;
+  }
+  if (error instanceof Error) {
+    const match = error.message.match(/\((\d{3})\)$/);
+    return match ? Number(match[1]) : null;
+  }
+  return null;
+}
+
+export function isWorkbenchPermissionBlockedError(error: unknown): boolean {
+  const status = getWorkbenchApiErrorStatus(error);
+  return status === 401 || status === 403;
+}
+
 function buildPerformanceWorkspaceQuery(params: {
   period: string;
   chartFrequency: string;
@@ -70,7 +96,7 @@ async function fetchWorkbenchJson<T>(
 ): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${errorLabel} (${response.status})`);
+    throw new WorkbenchApiError(errorLabel, response.status);
   }
   return (await response.json()) as T;
 }

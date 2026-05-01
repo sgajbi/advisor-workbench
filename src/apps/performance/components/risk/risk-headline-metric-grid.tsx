@@ -7,7 +7,14 @@ type RiskHeadlineMetric = {
   support: string;
   metadata?: string;
   definition?: string;
-  state?: "loading" | "ready" | "partial" | "empty" | "unavailable" | "error";
+  state?:
+    | "loading"
+    | "ready"
+    | "partial"
+    | "empty"
+    | "permission_blocked"
+    | "unavailable"
+    | "error";
 };
 
 export default function RiskHeadlineMetricGrid({

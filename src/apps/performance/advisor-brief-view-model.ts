@@ -24,6 +24,7 @@ export function buildPerformanceAdvisorBriefViewModel({
   workspace,
   advisorBrief,
   advisorBriefUnavailable,
+  advisorBriefPermissionBlocked,
   capabilities,
   period,
   detailBasis,
@@ -36,6 +37,7 @@ export function buildPerformanceAdvisorBriefViewModel({
   workspace: WorkbenchPerformanceWorkspace;
   advisorBrief?: WorkbenchPerformanceAdvisorBrief | null;
   advisorBriefUnavailable?: boolean;
+  advisorBriefPermissionBlocked?: boolean;
   capabilities: PerformanceWorkspaceCapabilities;
   period: string;
   detailBasis: string;
@@ -52,6 +54,7 @@ export function buildPerformanceAdvisorBriefViewModel({
   return buildFallbackAdvisorBriefViewModel({
     workspace,
     advisorBriefUnavailable: advisorBriefUnavailable ?? false,
+    advisorBriefPermissionBlocked: advisorBriefPermissionBlocked ?? false,
     capabilities,
     period,
     detailBasis,
