@@ -152,6 +152,19 @@ Set:
 BFF_BASE_URL=http://gateway.dev.lotus
 ```
 
+The Workbench BFF adds governed caller-context headers before proxying to Gateway when an
+interactive request does not already provide them. Defaults are suitable for the canonical local
+front-office runtime and can be overridden for targeted validation:
+
+```txt
+WORKBENCH_BFF_ACTOR_ID=workbench-system
+WORKBENCH_BFF_CALLER_APPLICATION=lotus-workbench
+WORKBENCH_BFF_TENANT_ID=tenant-sg
+WORKBENCH_BFF_REGION=APAC
+WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
+WORKBENCH_BFF_ROLE=advisor
+```
+
 Canonical front-office runtime:
 
 ```bash
