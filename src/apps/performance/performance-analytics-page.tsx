@@ -1,5 +1,7 @@
 import {
   getWorkbenchPerformanceWorkspaceSummary,
+  getWorkbenchApiErrorStatus,
+  isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { AppPageShell } from "@/design-system";
@@ -7,6 +9,7 @@ import {
   normalizePerformanceWorkspaceMode,
 } from "./performance-workspace-modes";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
+import type { PerformanceWorkspaceLoadIssue } from "./components/performance-workspace-types";
 
 type LookupEnvelope = {
   items?: Array<{ id: string; label: string }>;
@@ -87,6 +90,7 @@ export default async function PerformanceAnalyticsPage({
 
   let workspaceSummary = null;
   let workspaceDetails = null;
+  let workspaceLoadIssue: PerformanceWorkspaceLoadIssue | null = null;
   if (selectedPortfolioId) {
     try {
       workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(
@@ -94,9 +98,15 @@ export default async function PerformanceAnalyticsPage({
         workspaceRequest
       );
       workspaceDetails = null;
-    } catch {
+    } catch (error) {
       workspaceSummary = null;
       workspaceDetails = null;
+      workspaceLoadIssue = {
+        state: isWorkbenchPermissionBlockedError(error)
+          ? "permission_blocked"
+          : "unavailable",
+        status: getWorkbenchApiErrorStatus(error) ?? undefined,
+      };
     }
   }
 
@@ -105,6 +115,7 @@ export default async function PerformanceAnalyticsPage({
       <PerformanceWorkspaceEntry
         initialSummary={workspaceSummary}
         initialDetails={workspaceDetails}
+        initialLoadIssue={workspaceLoadIssue}
         initialPortfolioId={selectedPortfolioId}
         initialPeriod={period}
         initialDetailBasis={detailBasis}

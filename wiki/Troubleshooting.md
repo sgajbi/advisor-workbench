@@ -14,6 +14,9 @@
 - if performance evidence is partial, review Gateway and performance logs for `correlation_id`,
   `request_id`, `trace_id`, lineage lookup status, and `PERFORMANCE_EVIDENCE_PARTIAL` before
   classifying the evidence as a runtime defect
+- if Summary, Risk Review, or Advisor Brief show `Access restricted`, verify caller-context
+  headers and Gateway `analytics_read_denied` audit logs; do not paste or expose raw entitlement
+  response bodies in screenshots, metric labels, support tickets, or demo evidence
 
 ## Useful commands
 

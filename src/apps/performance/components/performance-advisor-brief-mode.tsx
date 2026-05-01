@@ -49,6 +49,7 @@ export default function PerformanceAdvisorBriefMode({
   const {
     advisorBrief,
     advisorBriefUnavailable,
+    advisorBriefPermissionBlocked,
     isLoading,
     isApplyingReviewAction,
     reviewActionError,
@@ -73,6 +74,7 @@ export default function PerformanceAdvisorBriefMode({
     workspace,
     advisorBrief,
     advisorBriefUnavailable,
+    advisorBriefPermissionBlocked,
     capabilities,
     period,
     detailBasis,
@@ -80,7 +82,10 @@ export default function PerformanceAdvisorBriefMode({
     attributionDimension,
     chartFrequency,
     benchmark,
-    isDetailsPending: isDetailsPending || isLoading,
+    isDetailsPending:
+      isDetailsPending ||
+      isLoading ||
+      (!advisorBrief && !advisorBriefUnavailable && !advisorBriefPermissionBlocked),
   });
   const narrativeSections = [
     {

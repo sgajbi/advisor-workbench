@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import {
   getWorkbenchPerformanceWorkspaceDetailsClient,
   getWorkbenchPerformanceWorkspaceSummaryClient,
+  getWorkbenchApiErrorStatus,
+  isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
 import type {
   WorkbenchPerformanceWorkspace,
@@ -18,10 +20,12 @@ import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import { getNormalizedInitialPerformanceDetailControls } from "../performance-detail-control-resolution";
 import PerformanceWorkspaceView from "./performance-workspace-view";
+import type { PerformanceWorkspaceLoadIssue } from "./performance-workspace-types";
 
 type PerformanceWorkspaceClientProps = {
   initialSummary: WorkbenchPerformanceWorkspaceSummary | null;
   initialDetails?: WorkbenchPerformanceWorkspaceDetails | null;
+  initialLoadIssue?: PerformanceWorkspaceLoadIssue | null;
   initialPortfolioId: string | null;
   initialPeriod: string;
   initialDetailBasis: string;
@@ -49,6 +53,7 @@ type PerformanceDetailsStatus = "idle" | "loading" | "ready" | "failed";
 export default function PerformanceWorkspaceClient({
   initialSummary,
   initialDetails,
+  initialLoadIssue,
   initialPortfolioId,
   initialPeriod,
   initialDetailBasis,
@@ -106,6 +111,9 @@ export default function PerformanceWorkspaceClient({
 
   const [summary, setSummary] = useState<WorkbenchPerformanceWorkspaceSummary | null>(
     initialSummary
+  );
+  const [loadIssue, setLoadIssue] = useState<PerformanceWorkspaceLoadIssue | null>(
+    initialSummary ? null : initialLoadIssue ?? null
   );
   const [details, setDetails] = useState<WorkbenchPerformanceWorkspaceDetails | null>(
     initialDetails ?? null
@@ -276,6 +284,7 @@ export default function PerformanceWorkspaceClient({
       }
 
       setSummary(resolvedSummary);
+      setLoadIssue(null);
       setControls((current) =>
         current
           ? {
@@ -304,9 +313,26 @@ export default function PerformanceWorkspaceClient({
           requestId,
         }
       );
-    } catch {
+    } catch (error) {
       if (requestSequenceRef.current === requestId) {
-        setSummary((currentSummary) => currentSummary);
+        if (isWorkbenchPermissionBlockedError(error)) {
+          setSummary(null);
+          setDetails(null);
+          setDetailsKey(null);
+          setDetailsStatus("failed");
+          setLoadIssue({
+            state: "permission_blocked",
+            status: getWorkbenchApiErrorStatus(error) ?? undefined,
+          });
+        } else {
+          setSummary((currentSummary) => currentSummary);
+          if (!summary) {
+            setLoadIssue({
+              state: "unavailable",
+              status: getWorkbenchApiErrorStatus(error) ?? undefined,
+            });
+          }
+        }
       }
     } finally {
       if (requestSequenceRef.current === requestId) {
@@ -455,6 +481,7 @@ export default function PerformanceWorkspaceClient({
   return (
     <PerformanceWorkspaceView
       workspace={workspace}
+      loadIssue={loadIssue}
       mode={mode}
       period={controls?.period ?? initialPeriod}
       detailBasis={controls?.detailBasis ?? initialDetailBasis}

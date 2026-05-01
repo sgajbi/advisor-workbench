@@ -87,6 +87,15 @@ function isServerDetailsCall(url: string, portfolioId: string) {
   return url.includes(`gateway.dev.lotus/api/v1/workbench/${portfolioId}/performance/details`);
 }
 
+function deniedResponse(status = 403): Response {
+  return {
+    ok: false,
+    status,
+    text: async () => "raw_entitlement_denied_for_PB_SG_GLOBAL_BAL_001",
+    json: async () => ({ detail: "raw_entitlement_denied_for_PB_SG_GLOBAL_BAL_001" }),
+  } as Response;
+}
+
 async function expectTextPresent(text: string) {
   const matches = await screen.findAllByText(text);
   expect(matches.length).toBeGreaterThan(0);
@@ -206,6 +215,94 @@ describe("PerformanceAnalyticsPage", () => {
         isServerDetailsCall(input.toString(), "PB_SG_GLOBAL_BAL_001")
       )
     ).toBe(false);
+  });
+
+  it("renders a bounded permission-blocked state when the initial performance summary is denied", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")) {
+          return deniedResponse(403);
+        }
+        return { ok: false, status: 404, json: async () => ({}) } as Response;
+      })
+    );
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    const blockedState = await screen.findByLabelText("Performance workspace access restricted");
+    expect(blockedState).toHaveTextContent("Access restricted");
+    expect(blockedState).toHaveTextContent("permission-blocked");
+    expect(blockedState).toHaveTextContent("HTTP status");
+    expect(blockedState).toHaveTextContent("403");
+    expect(blockedState).not.toHaveTextContent("raw_entitlement_denied");
+    expect(screen.queryByText("raw_entitlement_denied_for_PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
+  });
+
+  it("renders Risk Review as permission-blocked when the gateway risk reads are denied", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/lookups/portfolios")) {
+          return {
+            ok: true,
+            json: async () => ({
+              items: [{ id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" }],
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...scenario.workspace,
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              portfolio: { ...scenario.workspace.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...scenario.workspace,
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              portfolio: { ...scenario.workspace.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/bff/api/v1/workbench/") && url.includes("/risk/")) {
+          return deniedResponse(403);
+        }
+        return { ok: false, status: 404, json: async () => ({}) } as Response;
+      })
+    );
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Risk Review/i }));
+
+    const riskRegion = await screen.findByRole("region", { name: "Risk" });
+    await waitFor(() => {
+      expect(within(riskRegion).getByText("Risk access restricted")).toBeInTheDocument();
+    });
+    expect(within(riskRegion).getByLabelText("Risk mode status")).toHaveTextContent(
+      "Access Restricted"
+    );
+    expect(riskRegion).toHaveTextContent("permission-blocked");
+    expect(riskRegion).not.toHaveTextContent("raw_entitlement_denied");
   });
 
   it("falls back to the demo performance portfolio when the front-office seed is unavailable", async () => {

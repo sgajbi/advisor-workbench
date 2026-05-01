@@ -103,6 +103,26 @@ When reviewing RFC-0108 performance evidence, do not stop at screenshots:
   acceptable for the current local canonical stack, but only if the canonical performance route,
   calculations, and validation summary are otherwise green.
 
+## Permission-Blocked Analytics Proof
+
+RFC-0108 entitlement evidence is valid only when the UI, metrics, and logs preserve a bounded
+caller-context posture:
+
+- performance Summary initial-load denials should render `Access restricted` with HTTP `401` or
+  `403`, not the raw Gateway entitlement response body
+- Risk Review denials should render `Risk access restricted` and mark the risk mode status as
+  `Access Restricted`
+- Advisor Brief denials should classify the advisor brief view model as `permission_blocked` and
+  surface `Advisor brief access is restricted` in supportability and exception copy
+- Workbench analytics metrics should classify denied `401` or `403` reads as
+  `permission_blocked`, while still excluding portfolio id, client id, trace id, request body,
+  response body, and entitlement-failure text from labels
+- Gateway logs should carry the corresponding bounded `analytics_read_denied` audit event with
+  correlation and trace identifiers, route/panel/operation, status class, region, and environment
+
+If raw entitlement text appears in screenshots, browser-rendered state, metric labels, or demo
+material, treat the pack as failed evidence even if the HTTP denial itself is correct.
+
 Current residual to classify honestly:
 
 - Performance evidence lineage may be reported as partial while lotus-performance materializes

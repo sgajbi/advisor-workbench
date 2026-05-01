@@ -14,6 +14,9 @@ function getStatusLabel(status: PerformanceAdvisorBriefStatus) {
   if (status === "empty") {
     return "No Material Brief";
   }
+  if (status === "permission_blocked") {
+    return "Access Restricted";
+  }
   return "Unavailable";
 }
 

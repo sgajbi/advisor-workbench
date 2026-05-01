@@ -205,7 +205,7 @@ test.describe('Performance workbench smoke', () => {
       firstHorizonPeriod.boundingBox(),
       firstHorizonSupport.boundingBox(),
     ]);
-    expect(supportBox?.y ?? 0).toBeGreaterThan((periodBox?.y ?? 0) + 12);
+    expect(Math.abs((supportBox?.y ?? 0) - (periodBox?.y ?? 9999))).toBeLessThanOrEqual(4);
     expect((supportBox?.x ?? 0) + (supportBox?.width ?? 0)).toBeLessThanOrEqual(
       (horizonBox?.x ?? 0) + (horizonBox?.width ?? 0) + 1
     );

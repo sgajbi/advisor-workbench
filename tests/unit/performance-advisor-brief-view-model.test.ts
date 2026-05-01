@@ -75,6 +75,45 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     );
   });
 
+  it("renders a bounded permission-blocked advisor brief without raw entitlement details", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      capabilities: scenario.capabilities,
+      advisorBriefPermissionBlocked: true,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    const renderedText = JSON.stringify(brief);
+    expect(brief.status).toBe("permission_blocked");
+    expect(brief.summary).toContain("access is restricted");
+    expect(brief.talkingPoints).toEqual([]);
+    expect(brief.risksAndExceptions).toEqual([
+      expect.objectContaining({
+        headline: "Advisor brief access is restricted.",
+        detail: expect.stringContaining("permission block"),
+      }),
+    ]);
+    expect(brief.supportability).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Advisor Brief",
+          value: "Access Restricted",
+          tone: "danger",
+        }),
+      ])
+    );
+    expect(renderedText).not.toContain("raw_entitlement_denied");
+    expect(renderedText).not.toContain("response body");
+  });
+
   it("marks the brief partial and surfaces source capability risks when analytics slices are incomplete", () => {
     const scenario = buildCombinedPartialPerformanceScenario();
 

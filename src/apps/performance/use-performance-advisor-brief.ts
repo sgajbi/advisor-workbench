@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   getWorkbenchPerformanceAdvisorBriefClient,
+  isWorkbenchPermissionBlockedError,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
 } from "@/features/workbench/api";
 import type {
@@ -42,7 +43,8 @@ export function usePerformanceAdvisorBrief({
   } = request;
   const [advisorBrief, setAdvisorBrief] = useState<WorkbenchPerformanceAdvisorBrief | null>(null);
   const [advisorBriefUnavailable, setAdvisorBriefUnavailable] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [advisorBriefPermissionBlocked, setAdvisorBriefPermissionBlocked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isApplyingReviewAction, setIsApplyingReviewAction] = useState(false);
   const [reviewActionError, setReviewActionError] = useState<string | null>(null);
   const [refreshSequence, setRefreshSequence] = useState(0);
@@ -80,6 +82,7 @@ export function usePerformanceAdvisorBrief({
     const cachedResponse = cacheRef.current.get(requestKey) ?? null;
     setAdvisorBrief(cachedResponse);
     setAdvisorBriefUnavailable(false);
+    setAdvisorBriefPermissionBlocked(false);
     setReviewActionError(null);
 
     if (cachedResponse) {
@@ -108,18 +111,21 @@ export function usePerformanceAdvisorBrief({
         cacheRef.current.set(requestKey, response);
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
+        setAdvisorBriefPermissionBlocked(false);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (requestSequenceRef.current !== requestId) {
           return;
         }
         setAdvisorBrief(null);
-        setAdvisorBriefUnavailable(true);
+        setAdvisorBriefUnavailable(!isWorkbenchPermissionBlockedError(error));
+        setAdvisorBriefPermissionBlocked(isWorkbenchPermissionBlockedError(error));
       })
       .finally(() => {
-        if (requestSequenceRef.current === requestId) {
-          setIsLoading(false);
+        if (requestSequenceRef.current !== requestId) {
+          return;
         }
+        setIsLoading(false);
       });
   }, [
     attributionDimension,
@@ -162,6 +168,7 @@ export function usePerformanceAdvisorBrief({
         cacheRef.current.set(requestKey, response);
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
+        setAdvisorBriefPermissionBlocked(false);
         return response;
       } catch (error) {
         setReviewActionError(
@@ -189,6 +196,7 @@ export function usePerformanceAdvisorBrief({
   return {
     advisorBrief,
     advisorBriefUnavailable,
+    advisorBriefPermissionBlocked,
     isLoading,
     isApplyingReviewAction,
     reviewActionError,

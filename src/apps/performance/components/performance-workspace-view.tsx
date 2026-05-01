@@ -31,6 +31,7 @@ import {
 
 export default function PerformanceWorkspaceView({
   workspace,
+  loadIssue,
   mode,
   period,
   detailBasis,
@@ -47,6 +48,7 @@ export default function PerformanceWorkspaceView({
   const capabilities = workspace ? getPerformanceWorkspaceCapabilities(workspace) : null;
   const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
   const workspaceTitle = modeDefinition.workspaceTitle;
+  const unavailableCopy = getWorkspaceUnavailableCopy(loadIssue, workspaceTitle, modeDefinition.label);
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -140,15 +142,12 @@ export default function PerformanceWorkspaceView({
             <WorkbenchSectionStack className="performance-page-sections">
               <Panel className="performance-page-unavailable-shell">
                 <PerformanceAnalyticalUnavailableState
-                  ariaLabel="Performance workspace unavailable"
-                  status="unavailable"
-                  title="Performance data unavailable"
-                  body="The selected portfolio could not be loaded from the performance workspace contract."
-                  hint="The performance workspace contract must resolve successfully before benchmark-aware return, contribution, and risk surfaces can render."
-                  contextItems={[
-                    { label: "Surface", value: workspaceTitle },
-                    { label: "Mode", value: modeDefinition.label },
-                  ]}
+                  ariaLabel={unavailableCopy.ariaLabel}
+                  status={unavailableCopy.status}
+                  title={unavailableCopy.title}
+                  body={unavailableCopy.body}
+                  hint={unavailableCopy.hint}
+                  contextItems={unavailableCopy.contextItems}
                   availableItems={[
                     {
                       label: "Shell",
@@ -199,4 +198,40 @@ export default function PerformanceWorkspaceView({
       }
     />
   );
+}
+
+function getWorkspaceUnavailableCopy(
+  loadIssue: PerformanceWorkspaceViewProps["loadIssue"],
+  workspaceTitle: string,
+  modeLabel: string
+) {
+  if (loadIssue?.state === "permission_blocked") {
+    return {
+      ariaLabel: "Performance workspace access restricted",
+      status: "permission_blocked" as const,
+      title: "Access restricted",
+      body:
+        "The selected analytics workspace is permission-blocked for this caller context.",
+      hint:
+        "Use an entitled front-office role or contact platform support to verify the caller-context policy. Restricted entitlement details are intentionally not shown in the browser.",
+      contextItems: [
+        { label: "Surface", value: workspaceTitle },
+        { label: "Mode", value: modeLabel },
+        { label: "HTTP status", value: String(loadIssue.status ?? "401/403") },
+      ],
+    };
+  }
+
+  return {
+    ariaLabel: "Performance workspace unavailable",
+    status: "unavailable" as const,
+    title: "Performance data unavailable",
+    body: "The selected portfolio could not be loaded from the performance workspace contract.",
+    hint:
+      "The performance workspace contract must resolve successfully before benchmark-aware return, contribution, and risk surfaces can render.",
+    contextItems: [
+      { label: "Surface", value: workspaceTitle },
+      { label: "Mode", value: modeLabel },
+    ],
+  };
 }
