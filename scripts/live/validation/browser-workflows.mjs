@@ -42,6 +42,8 @@ export function createBrowserValidationHelpers({
 
   async function screenshot(page, name, metadata) {
     const target = path.join(outputDir, name);
+    await page.mouse?.move(1, 1);
+    await page.keyboard?.press("Escape");
     await page.screenshot({ path: target, fullPage: true });
     summary.screenshots.push({
       name,

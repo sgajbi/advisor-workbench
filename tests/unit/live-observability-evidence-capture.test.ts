@@ -28,6 +28,10 @@ describe("canonical observability evidence capture", () => {
     expect(script).toContain("dns.json");
     expect(script).toContain("workbench-performance-route");
     expect(script).toContain("performance?portfolioId=$PortfolioId&mode=evidence");
+    expect(script).toContain("manage-supportability-summary");
+    expect(script).toContain("http://manage.dev.lotus/api/v1/rebalance/supportability/summary");
+    expect(script).not.toContain("manage-integration-capabilities");
+    expect(script).not.toContain("http://manage.dev.lotus/integration/capabilities");
     expect(script).toContain("http://workbench.dev.lotus/api/metrics");
     expect(script).toContain("http://localhost:9190/api/v1/targets");
     expect(script).toContain("http://localhost:3300/api/health");

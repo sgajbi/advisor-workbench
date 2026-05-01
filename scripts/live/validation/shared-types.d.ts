@@ -73,6 +73,12 @@ export interface ValidationSummary {
 }
 
 export interface BrowserValidationPage {
+  mouse?: {
+    move(x: number, y: number): Promise<void>;
+  };
+  keyboard?: {
+    press(key: string): Promise<void>;
+  };
   screenshot(options: { path: string; fullPage: boolean }): Promise<void>;
   goto?(url: string, options?: Record<string, unknown>): Promise<void>;
   getByRole?(role: string, options?: Record<string, unknown>): unknown;

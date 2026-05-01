@@ -26,3 +26,50 @@
 2. domain truth stays upstream
 3. shell and design-system primitives should be preferred over page-local hacks
 4. legacy compatibility routes should not be documented as the main active topology
+
+## Functional Architecture
+
+```mermaid
+flowchart LR
+  Shell[Application shell and navigation] --> Portfolio[Portfolio workspace]
+  Shell --> Performance[Performance workspace]
+  Performance --> Summary[Summary]
+  Performance --> Analysis[Analysis]
+  Performance --> AdvisorBrief[Advisor Brief]
+  Performance --> Risk[Risk Review]
+  Performance --> Evidence[Evidence]
+
+  Portfolio --> Gateway[lotus-gateway]
+  Summary --> Gateway
+  Analysis --> Gateway
+  AdvisorBrief --> Gateway
+  Risk --> Gateway
+  Evidence --> Gateway
+
+  Gateway --> Core[lotus-core]
+  Gateway --> PerfSvc[lotus-performance]
+  Gateway --> RiskSvc[lotus-risk]
+  Gateway --> AISvc[lotus-ai]
+  Gateway --> ReportSvc[lotus-report]
+  Gateway --> ArchiveSvc[lotus-archive]
+  Gateway --> RenderSvc[lotus-render]
+```
+
+## Non-Functional Architecture
+
+```mermaid
+flowchart LR
+  Browser[Browser interaction] --> MetricsEvents[/api/metrics/events]
+  Workbench[Workbench server routes] --> Metrics[/api/metrics]
+  MetricsEvents --> Metrics
+  Metrics --> Prometheus[Prometheus scrape]
+  Prometheus --> Grafana[Grafana dashboards]
+  Workbench --> Logs[structured route and BFF logs]
+  Gateway[Gateway] --> Logs
+  Services[Core, Performance, Risk, AI, Report, Archive, Render, Manage] --> Logs
+```
+
+Observability labels are bounded by the analytics UI contract. Metric labels may describe route,
+panel, operation, freshness, supportability, and status class, but must not include portfolio id,
+client id, request body, response body, document id, session id, trace id, correlation id, or
+screen content.

@@ -27,6 +27,7 @@ export default function RiskRollingWindowDetail({
     (row) => !PRIMARY_ROLLING_MEASURES.has(row.metric)
   );
   const fallbackDetail = resolveRollingFallbackDetail(viewModel);
+  const emptyDetail = selectedWindow ? riskRollingPanelCopy.detailTableEmptyState : fallbackDetail;
 
   return (
     <RiskDetailSection
@@ -55,46 +56,48 @@ export default function RiskRollingWindowDetail({
         ) : null
       }
     >
-      {!selectedWindow ? (
+      {detailRows.length === 0 ? (
         <div className="performance-risk-note-card performance-risk-note-card-compact">
           <div className="performance-risk-note-copy">
-            <Text variant="cardTitle">{fallbackDetail.title}</Text>
-            <Text variant="secondary">{fallbackDetail.body}</Text>
+            <Text variant="cardTitle">{emptyDetail.title}</Text>
+            <Text variant="secondary">{emptyDetail.body}</Text>
           </div>
         </div>
       ) : null}
-      <RiskAnalyticalTable
-        ariaLabel={riskRollingPanelCopy.detailTableAriaLabel}
-        density="compact"
-        className="performance-risk-rolling-detail-table"
-        columns={[
-          { key: "metric", label: "Measure" },
-          { key: "current", label: "Current", align: "right" },
-          { key: "typical", label: "Typical", align: "right" },
-          { key: "range", label: "Range", align: "right" },
-          { key: "interpretation", label: "Review note" },
-        ]}
-        rows={detailRows.map((row) => ({
-          key: row.key,
-          cells: [
-            <RiskTableText key={`${row.key}-metric`} value={row.metric} />,
-            <RiskRangeIndicator
-              key={`${row.key}-current`}
-              current={row.current}
-              currentPositionPct={row.currentPositionPct}
-              typicalPositionPct={row.typicalPositionPct}
-            />,
-            row.typical,
-            row.range,
-            <RiskTableText
-              key={`${row.key}-interpretation`}
-              value={row.interpretation}
-              clamp
-            />,
-          ],
-        }))}
-        emptyState={riskRollingPanelCopy.detailTableEmptyState}
-      />
+      {detailRows.length > 0 ? (
+        <RiskAnalyticalTable
+          ariaLabel={riskRollingPanelCopy.detailTableAriaLabel}
+          density="compact"
+          className="performance-risk-rolling-detail-table"
+          columns={[
+            { key: "metric", label: "Measure" },
+            { key: "current", label: "Current", align: "right" },
+            { key: "typical", label: "Typical", align: "right" },
+            { key: "range", label: "Range", align: "right" },
+            { key: "interpretation", label: "Review note" },
+          ]}
+          rows={detailRows.map((row) => ({
+            key: row.key,
+            cells: [
+              <RiskTableText key={`${row.key}-metric`} value={row.metric} />,
+              <RiskRangeIndicator
+                key={`${row.key}-current`}
+                current={row.current}
+                currentPositionPct={row.currentPositionPct}
+                typicalPositionPct={row.typicalPositionPct}
+              />,
+              row.typical,
+              row.range,
+              <RiskTableText
+                key={`${row.key}-interpretation`}
+                value={row.interpretation}
+                clamp
+              />,
+            ],
+          }))}
+          emptyState={riskRollingPanelCopy.detailTableEmptyState}
+        />
+      ) : null}
     </RiskDetailSection>
   );
 }

@@ -5,6 +5,11 @@
 - `lotus-gateway`
   primary backend contract for product flows
 
+Workbench must not call domain services directly for product behavior. Direct service probes in
+live validation and evidence capture are limited to readiness, supportability, and operational
+proof. User-facing portfolio, performance, risk, advisor brief, report, archive, and render flows
+must travel through Gateway-shaped contracts.
+
 ## Canonical local runtime participants
 
 - `lotus-core`
@@ -51,3 +56,38 @@
     emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
     intake payload, document, session, trace, request, response, and screen-content identifiers
     must not appear in metric labels.
+11. `lotus-manage` is not a proposal/advisory upstream for Workbench. Current Workbench proof uses
+    Manage only for readiness and supportability evidence through
+    `GET /api/v1/rebalance/supportability/summary`; any future discretionary mandate management
+    product surface must be backed by new strategic Gateway APIs before it is exposed in Workbench.
+12. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
+    not the active RFC-0108 product surface and should not be used as current client-demo evidence.
+
+## Ownership Diagram
+
+```mermaid
+flowchart TB
+  Workbench[lotus-workbench product UI]
+  Gateway[lotus-gateway product API]
+  Core[Portfolio and reference data]
+  Performance[Performance analytics]
+  Risk[Risk analytics]
+  AI[Advisor brief generation and workflow-pack review]
+  Report[Report batches and report supportability]
+  Archive[Document metadata and downloads]
+  Render[PDF render readiness]
+  Manage[Strategic DPM run lookup and supportability]
+  Advise[Advisor-led proposal workflows]
+
+  Workbench -->|/api/bff/api/v1/workbench/*| Gateway
+  Gateway --> Core
+  Gateway --> Performance
+  Gateway --> Risk
+  Gateway --> AI
+  Gateway --> Report
+  Gateway --> Archive
+  Gateway --> Render
+  Gateway --> Manage
+  Gateway -. future/current external proposal boundary .-> Advise
+  Workbench -. validation evidence only .-> Manage
+```

@@ -14,6 +14,7 @@
 ```powershell
 npm run live:stack:up
 npm run live:validate
+npm run live:evidence
 npm run live:stack:down
 ```
 
@@ -83,6 +84,10 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   operator retrieval. Metadata reads use `/api/bff/api/v1/documents/{document_id}?current=true`,
   downloads use `/api/bff/api/v1/documents/{document_id}/download`, and the shared BFF proxy
   preserves binary PDF payloads plus checksum/content-disposition headers.
+- Canonical live validation checks `lotus-manage` supportability through
+  `GET /api/v1/rebalance/supportability/summary`. The deprecated
+  `http://manage.dev.lotus/integration/capabilities` probe is not valid evidence for the current
+  Manage boundary.
 
 ```mermaid
 sequenceDiagram
@@ -116,6 +121,9 @@ sequenceDiagram
 - keep pre-validation captures clearly labeled as diagnostic artifacts only
 - when a route exists but is capability-disabled, capture the supported active path instead of the
   dormant compatibility page
+- review screenshots manually for accidental hover state, clipped labels, or overlapping content
+  before using them in client material; the validator clears transient hover state before each
+  governed screenshot, but human review remains part of the gold-pass bar
 
 ## Observability evidence capture
 

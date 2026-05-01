@@ -41,6 +41,7 @@ export default function RiskModuleShell({
           className={[
             "performance-risk-module-body",
             context ? "" : "performance-risk-module-body-detail-only",
+            context && !detail ? "performance-risk-module-body-context-only" : "",
           ]
             .filter(Boolean)
             .join(" ")}
