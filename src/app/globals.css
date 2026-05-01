@@ -9858,7 +9858,7 @@ a:hover {
 }
 
 .performance-detail-grid {
-  grid-template-columns: minmax(34rem, 1.08fr) minmax(31rem, 0.92fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .performance-detail-grid > * {
@@ -12305,7 +12305,7 @@ a:hover {
 
 .performance-horizon-matrix-header {
   display: grid;
-  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr) minmax(10rem, 0.44fr);
+  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.72rem;
   padding: 0 0.56rem 0.18rem;
 }
@@ -12325,7 +12325,7 @@ a:hover {
 }
 
 .performance-horizon-matrix-support-header {
-  display: grid;
+  display: none;
   gap: 0.16rem;
   min-width: 0;
 }
@@ -12338,7 +12338,7 @@ a:hover {
 
 .performance-horizon-matrix-row {
   display: grid;
-  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr) minmax(10rem, 0.44fr);
+  grid-template-columns: minmax(4.75rem, 0.18fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.72rem;
   align-items: stretch;
   padding: 0.6rem;
@@ -12425,12 +12425,14 @@ a:hover {
 
 .performance-horizon-matrix-support {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  grid-template-columns: auto auto auto auto;
   align-content: center;
-  align-items: center;
-  gap: 0.28rem 0.4rem;
-  padding-left: 0.4rem;
-  border-left: 1px solid rgba(148, 163, 184, 0.16);
+  align-items: baseline;
+  justify-content: end;
+  gap: 0.2rem 0.55rem;
+  padding-top: 0.38rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .performance-horizon-matrix-support-value {

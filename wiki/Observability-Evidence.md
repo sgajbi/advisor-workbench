@@ -89,6 +89,20 @@ Before using a pack in client or operator material, review it for obvious degrad
 - `observability-evidence-manifest.json` has `validation.summaryExists=true` and separates
   application `apiChecks` from dashboard and metrics `metricChecks`
 
+## Performance Trace Review
+
+When reviewing RFC-0108 performance evidence, do not stop at screenshots:
+
+- Workbench BFF logs should include elapsed timing for performance summary, details, attribution
+  trend, and related split endpoints.
+- Gateway logs should include `analytics_ui.gateway` fanout and audit events with stable
+  `correlation_id`, `request_id`, and `trace_id` fields.
+- Performance service logs should show the same correlation/trace chain reaching compute events.
+- Evidence partial states are valid only when the UI surfaces the partial posture and the payload
+  explains the lineage limitation. A pending lineage manifest or lineage lookup `404` may be
+  acceptable for the current local canonical stack, but only if the canonical performance route,
+  calculations, and validation summary are otherwise green.
+
 Current residual to classify honestly:
 
 - Performance evidence lineage may be reported as partial while lotus-performance materializes

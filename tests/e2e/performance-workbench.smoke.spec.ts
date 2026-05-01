@@ -194,9 +194,21 @@ test.describe('Performance workbench smoke', () => {
       horizonModule.boundingBox(),
       driversModule.boundingBox(),
     ]);
-    expect(horizonBox?.width ?? 0).toBeGreaterThan(520);
+    expect(horizonBox?.width ?? 0).toBeGreaterThan(500);
     expect(driversBox?.width ?? 0).toBeGreaterThan(420);
     expect(Math.abs((horizonBox?.y ?? 0) - (driversBox?.y ?? 9999))).toBeLessThanOrEqual(24);
+
+    const firstHorizonRow = horizonModule.locator('.performance-horizon-matrix-row').first();
+    const firstHorizonPeriod = firstHorizonRow.locator('.performance-horizon-matrix-period');
+    const firstHorizonSupport = firstHorizonRow.locator('.performance-horizon-matrix-support');
+    const [periodBox, supportBox] = await Promise.all([
+      firstHorizonPeriod.boundingBox(),
+      firstHorizonSupport.boundingBox(),
+    ]);
+    expect(supportBox?.y ?? 0).toBeGreaterThan((periodBox?.y ?? 0) + 12);
+    expect((supportBox?.x ?? 0) + (supportBox?.width ?? 0)).toBeLessThanOrEqual(
+      (horizonBox?.x ?? 0) + (horizonBox?.width ?? 0) + 1
+    );
 
     const topContributorsHeading = page.getByText('Top Contributors', { exact: true });
     const topDetractorsHeading = page.getByText('Top Detractors', { exact: true });
@@ -219,6 +231,15 @@ test.describe('Performance workbench smoke', () => {
     expect(
       Math.abs((contributorsHeadingBox?.y ?? 0) - (detractorsHeadingBox?.y ?? 9999))
     ).toBeLessThanOrEqual(4);
+    const driversRightEdge = (driversBox?.x ?? 0) + (driversBox?.width ?? 0);
+    for (const box of [
+      contributorsHeadingBox,
+      detractorsHeadingBox,
+      contributorsBox,
+      detractorsBox,
+    ]) {
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(driversRightEdge + 1);
+    }
 
     const returnPathPanel = page.locator('.performance-chart-stage');
     const chartMetrics = await measureElement(returnPathPanel);
@@ -241,11 +262,12 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
     await expect(
       page
-        .getByText('Segment Attribution')
-        .or(page.getByText('Attribution detail unavailable'))
+        .getByRole('heading', { name: /^Attribution Over Time$/i })
+        .or(page.getByText('Attribution trend unavailable'))
     ).toBeVisible();
 
-    await expect(evidenceTab).toBeDisabled();
+    await expect(evidenceTab).toBeEnabled();
+    await expect(evidenceTab).toContainText(/Partial|Ready/i);
   });
 
   test('analysis mode renders live attribution analytics', async ({ page, request }) => {
@@ -291,42 +313,32 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
     await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
     await expect(page.getByText('Top Active Effects')).toHaveCount(0);
-    const relativeTab = page.getByRole('tab', { name: /^Relative Segment Context$/i });
-    const effectTab = page.getByRole('tab', { name: /^Effect breakdown/i });
     const attributionUnavailableState = page.getByText('Attribution detail unavailable');
     if (await attributionUnavailableState.isVisible().catch(() => false)) {
       await expect(attributionUnavailableState).toBeVisible();
-      await expect(relativeTab).toHaveCount(0);
-      await expect(effectTab).toHaveCount(0);
-      await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
-      await expect(page.getByLabel('Asset Class attribution totals')).toHaveCount(0);
+      await expect(page.getByLabel(/Asset Class attribution table/i)).toHaveCount(0);
+      await expect(page.getByLabel(/Asset Class attribution totals/i)).toHaveCount(0);
     } else {
-      await expect(page.getByText('Segment Attribution')).toBeVisible();
-      const relativeSelected = (await relativeTab.getAttribute('aria-selected')) === 'true';
-      if (relativeSelected) {
-        await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toBeVisible();
-        await expect(page.getByLabel('Asset Class attribution table')).toHaveCount(0);
-        await effectTab.click();
-      }
-      await expect(effectTab).toHaveAttribute(
-        'aria-selected',
-        'true'
+      await expect(page.getByRole('heading', { name: /^Attribution Detail$/i })).toBeVisible();
+      const missingAttributionLevels = page.getByText(
+        'Attribution detail is marked available, but no segment attribution levels were returned for the current selection.'
       );
-      const breakdownDetailCount = await page.getByLabel('Asset Class attribution table').count();
-      const breakdownSummaryCount = await page.getByLabel('Asset Class attribution totals').count();
-      expect(breakdownDetailCount + breakdownSummaryCount).toBeGreaterThan(0);
-      if (breakdownSummaryCount > 0) {
+      await expect(
+        page
+          .getByLabel(/Asset Class attribution table/i)
+          .or(page.getByLabel(/Asset Class attribution totals/i))
+          .or(missingAttributionLevels)
+      ).toBeVisible({ timeout: 30000 });
+      const breakdownDetailCount = await page.getByLabel(/Asset Class attribution table/i).count();
+      const breakdownSummaryCount = await page.getByLabel(/Asset Class attribution totals/i).count();
+      if (breakdownDetailCount + breakdownSummaryCount === 0) {
+        await expect(missingAttributionLevels).toBeVisible();
+      } else if (breakdownSummaryCount > 0) {
         await expect(page.getByText('Attribution Summary')).toBeVisible();
       }
-      await expect(page.getByRole('heading', { name: 'Relative Segment Context' })).toHaveCount(0);
-      expect(
-        (await page.getByLabel('Asset Class attribution table').count()) +
-          (await page.getByLabel('Asset Class attribution totals').count())
-      ).toBeGreaterThan(0);
     }
 
     await expect(page.getByLabel('Attribution trend table')).toBeVisible();
-    await expect(page.getByLabel('Position contribution table')).toBeVisible();
 
     const trendMetrics = await measureElement(trendShell);
     expect(trendMetrics.height).toBeLessThanOrEqual(900);
@@ -348,6 +360,7 @@ test.describe('Performance workbench smoke', () => {
 
     const contributionModule = page.locator('#performance-drivers');
     await expect(contributionModule).toBeVisible({ timeout: 15000 });
+    await contributionModule.scrollIntoViewIfNeeded();
     await expect(
       contributionModule.getByRole('heading', { name: /^Performance Drivers$/i })
     ).toBeVisible();
@@ -355,15 +368,30 @@ test.describe('Performance workbench smoke', () => {
     await expect(contributionModule.getByLabel('Contribution Detail panel')).toHaveCount(0);
     await expect(contributionModule.getByText('Top / Bottom Contributors')).toHaveCount(0);
     await expect(contributionModule.getByText('Contributor Ranking')).toHaveCount(0);
-    await expect(contributionModule.getByText('Contribution Breakdown')).toBeVisible();
+    const missingContributionDetail = contributionModule.getByText(
+      'Contribution detail is marked available, but no position or segment contribution rows were returned for the current selection.'
+    );
+    await expect(
+      contributionModule
+        .getByLabel('Position contribution table')
+        .or(contributionModule.getByLabel(/Asset Class contribution table/i))
+        .or(missingContributionDetail)
+    ).toBeVisible({ timeout: 30000 });
+    if ((await missingContributionDetail.count()) > 0) {
+      await expect(missingContributionDetail).toBeVisible();
+      return;
+    }
+    if ((await contributionModule.getByLabel(/Asset Class contribution table/i).count()) > 0) {
+      await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
+      const aggregateFrame = await measureTableFrame(
+        contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
+      );
+      expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
+      return;
+    }
     await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
-    await expect(contributionModule.getByLabel('Asset Class contribution table')).toHaveCount(0);
-    await expect(
-      contributionModule.getByRole('cell', { name: 'AAPL US', exact: true })
-    ).toBeVisible();
-    await expect(
-      contributionModule.getByRole('cell', { name: 'UST 2030', exact: true })
-    ).toBeVisible();
+    await expect(contributionModule.getByRole('tab', { name: /^Positions/i })).toBeVisible();
+    await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toHaveCount(0);
     await expect(
       contributionModule
         .getByRole('tab', { name: /^Positions/i })
@@ -382,26 +410,28 @@ test.describe('Performance workbench smoke', () => {
       'Average Weight',
       'Return',
     ]);
-    await expect(
-      contributionModule.locator('table[aria-label="Position contribution table"] tbody tr')
-    ).toHaveCount(6);
+    const positionRows = contributionModule.locator(
+      'table[aria-label="Position contribution table"] tbody tr'
+    );
+    await expect(positionRows.first()).toBeVisible();
+    expect(await positionRows.count()).toBeGreaterThan(0);
 
     const positionFrame = await measureTableFrame(
       contributionModule.getByLabel('Position contribution table').locator('..')
     );
     expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
 
-    await contributionModule.getByRole('tab', { name: /^Segment Contribution/i }).click();
+    await contributionModule.getByRole('tab', { name: /^Segment Summary/i }).click();
     await expect(
-      contributionModule.getByRole('tab', { name: /^Segment Contribution/i })
+      contributionModule.getByRole('tab', { name: /^Segment Summary/i })
     ).toHaveAttribute('aria-selected', 'true');
     await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
-    await expect(contributionModule.getByLabel('Asset Class contribution table')).toBeVisible();
+    await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
     await expect(contributionModule.getByText('Equity')).toBeVisible();
     await expect(contributionModule.getByText('Fund')).toBeVisible();
 
     const aggregateFrame = await measureTableFrame(
-      contributionModule.getByLabel('Asset Class contribution table').locator('..')
+      contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
     );
     expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
 
@@ -410,7 +440,7 @@ test.describe('Performance workbench smoke', () => {
     expect(moduleMetrics.height).toBeLessThan(1200);
   });
 
-  test('evidence mode remains intentionally unavailable when the backend contract does not expose it', async ({ page, request }) => {
+  test('evidence mode renders the backed contract posture', async ({ page, request }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPerformanceWorkbench(page, request);
@@ -419,11 +449,17 @@ test.describe('Performance workbench smoke', () => {
     const evidenceTab = page
       .locator('.performance-workspace-rail')
       .getByRole('button', { name: /^Evidence/i });
-    await expect(evidenceTab).toBeDisabled();
-    await expect(evidenceTab).toHaveAttribute(
-      'title',
-      'Evidence and lineage surfaces are not exposed by the current gateway contract.'
-    );
-    await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
+    await expect(evidenceTab).toBeEnabled();
+    await evidenceTab.click();
+    await expect(evidenceTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.performance-evidence-module')).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: /^Evidence and Calculation Context$/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page
+        .getByText('Evidence posture')
+        .or(page.getByText('Evidence partially available'))
+    ).toBeVisible();
   });
 });

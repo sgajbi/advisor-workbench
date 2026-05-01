@@ -93,6 +93,7 @@ export default function PerformanceHorizonComparisonMatrix({
           </div>
           {showSupportColumn ? (
             <div className="performance-horizon-matrix-support">
+              <span>{supportHeader.primary}</span>
               {card.tertiaryValue != null ? (
                 <strong
                   className="performance-horizon-matrix-support-value"
@@ -108,6 +109,7 @@ export default function PerformanceHorizonComparisonMatrix({
                   -
                 </strong>
               )}
+              <span>{supportHeader.secondary}</span>
               <strong
                 className="performance-horizon-matrix-support-value"
                 aria-label={`${card.label} ${supportHeader.secondary}`}

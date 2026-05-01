@@ -81,6 +81,12 @@ Workbench local environment:
 BFF_BASE_URL=http://gateway.dev.lotus
 ```
 
+For `-LocalApps workbench`, this value must win over any stale `.env.local` entry. If Workbench
+BFF routes return `500` and the local dev log shows `ECONNREFUSED` against `127.0.0.1:8111` or
+`localhost:8111`, restart the Workbench dev server with `BFF_BASE_URL=http://gateway.dev.lotus` or
+correct `.env.local` before collecting evidence. Canonical proof must travel through the governed
+`gateway.dev.lotus` ingress boundary.
+
 ## Canonical bring-up
 
 From `lotus-workbench`:
@@ -263,6 +269,19 @@ overview for warnings or partial failures. Manage supportability must return HTT
 started stack may report `supportability.state=empty` when no management actions have been
 recorded, but an HTTP `503` indicates the Postgres-backed supportability store is not ready and the
 pack is diagnostic only.
+
+For RFC-0108 performance evidence review, pair the screenshots with bounded logs and timing
+signals:
+
+- Workbench BFF logs should show the performance BFF route and elapsed timing for summary,
+  details, attribution trend, and related split endpoints.
+- Gateway and performance logs should preserve `correlation_id`, `request_id`, and `trace_id`
+  through `analytics_ui.gateway`, fanout, audit, and compute events.
+- Gateway payloads may truthfully classify evidence lineage as partial when lineage materialization
+  is pending or a lineage manifest is absent. In that state Workbench must show the Evidence panel
+  as `PARTIAL`/`PENDING` rather than treating the route as fully certified.
+- Use repeated lineage `404` entries as investigation evidence only when the canonical performance
+  route, calculation outputs, and validation summary are otherwise green.
 
 The machine-readable summary also records the governed canonical contract identity and version from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json`. If the

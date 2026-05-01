@@ -32,11 +32,22 @@ export default function PerformanceAnalysisAttributionSection({
     partialFailures: workspace.partial_failures,
     attributionDimension,
   });
+  const missingAttributionLevelsBody =
+    capabilities.attributionDetail.state !== "unavailable" &&
+    (!workspace.attribution || !hasAttributionSummaryLevels)
+      ? "Attribution detail is marked available, but no segment attribution levels were returned for the current selection."
+      : null;
   const effectiveAttributionCapability = attributionClassificationGapBody
     ? {
         ...capabilities.attributionDetail,
         state: "partial" as const,
         reason: attributionClassificationGapBody,
+      }
+    : missingAttributionLevelsBody
+    ? {
+        ...capabilities.attributionDetail,
+        state: "partial" as const,
+        reason: missingAttributionLevelsBody,
       }
     : capabilities.attributionDetail;
   const attributionMethodologyRows = getAttributionMethodologyRows(
@@ -80,12 +91,15 @@ export default function PerformanceAnalysisAttributionSection({
         unavailableTitle="Attribution detail unavailable"
         body={
           attributionClassificationGapBody ??
+          missingAttributionLevelsBody ??
           effectiveAttributionCapability.reason ??
           "Attribution detail is not available for the current selection."
         }
         hint={
           attributionClassificationGapBody
             ? "Select a supported segment or use a benchmark with complete classification coverage for this dimension."
+            : missingAttributionLevelsBody
+            ? "Use the attribution trend and supportability posture while the selected segment detail is incomplete."
             : hasAttributionSummaryLevels
             ? "Summary-level attribution remains available even when segment rows are absent."
             : "Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
