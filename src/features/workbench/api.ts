@@ -30,6 +30,7 @@ import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
   type WorkbenchAnalyticsUiObservationContext,
+  type WorkbenchAnalyticsUiObservationOptions,
 } from "@/features/analytics-observability/metrics";
 
 const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
@@ -123,9 +124,23 @@ function observedSurface(
 
 async function observeWorkbenchResource<T>(
   operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
+  request: () => Promise<T>,
+  options?: WorkbenchAnalyticsUiObservationOptions
+): Promise<T> {
+  return await observeWorkbenchAnalyticsRequest(
+    observedSurface(operation),
+    request,
+    options
+  );
+}
+
+async function observeWorkbenchMutation<T>(
+  operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
   request: () => Promise<T>
 ): Promise<T> {
-  return await observeWorkbenchAnalyticsRequest(observedSurface(operation), request);
+  return await observeWorkbenchResource(operation, request, {
+    recordPanelHydration: false,
+  });
 }
 
 function buildWorkbenchUrl(
@@ -210,7 +225,7 @@ export async function createSandboxSession(
   portfolioId: string,
   payload: { created_by?: string; ttl_hours?: number }
 ): Promise<WorkbenchSandboxState> {
-  return await observeWorkbenchResource(
+  return await observeWorkbenchMutation(
     "workbench.sandbox-session.create",
     async () =>
       await fetchWorkbenchMutation<WorkbenchSandboxState>(
@@ -239,7 +254,7 @@ export async function applySandboxChanges(
     evaluate_policy?: boolean;
   }
 ): Promise<WorkbenchSandboxState> {
-  return await observeWorkbenchResource(
+  return await observeWorkbenchMutation(
     "workbench.sandbox-session.apply",
     async () =>
       await fetchWorkbenchMutation<WorkbenchSandboxState>(
@@ -485,7 +500,7 @@ export async function postWorkbenchPerformanceAdvisorBriefReviewActionClient(
   },
   payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest
 ): Promise<WorkbenchPerformanceAdvisorBrief> {
-  return await observeWorkbenchResource(
+  return await observeWorkbenchMutation(
     "performance.workspace.advisor-brief.review-action",
     async () =>
       await fetchWorkbenchMutation<WorkbenchPerformanceAdvisorBrief>(
@@ -757,7 +772,7 @@ export async function createPortfolioReportBatch(params: {
     params.reportingCurrency,
   ].join("-");
 
-  return await observeWorkbenchResource(
+  return await observeWorkbenchMutation(
     "reporting.report-batch.create",
     async () =>
       await fetchWorkbenchMutation<ReportBatchHandleResponse>(
@@ -846,7 +861,7 @@ export async function runReportBatchOnce(params: {
   const tenantId = params.tenantId ?? "tenant-sg";
   const region = params.region ?? "APAC";
   const actorId = params.actorId ?? "workbench-report-operator";
-  return await observeWorkbenchResource(
+  return await observeWorkbenchMutation(
     "reporting.report-batch.run-once",
     async () =>
       await fetchWorkbenchMutation<ReportBatchWorkerRunResponse>(

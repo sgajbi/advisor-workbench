@@ -63,7 +63,8 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   analytics metric events back to `/api/metrics/events`; the server-side metrics registry then
   exposes them through `/api/metrics`. This keeps mutation observability visible to Prometheus
   without accepting raw request bodies, response bodies, portfolio ids, client ids, correlation ids,
-  or reviewer identity as labels.
+  or reviewer identity as labels. State-changing actions are intentionally excluded from panel
+  hydration histograms because the action observes a mutation result rather than a panel load.
 - Do not add panel, route, or browser telemetry labels outside that contract.
 - `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `document_id`,
   `batch_id`, `report_job_id`, `session_id`, `trace_id`, `correlation_id`, request bodies,
