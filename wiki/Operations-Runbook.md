@@ -81,6 +81,8 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   `output/playwright/live-canonical/`
 - machine-readable summary:
   `output/playwright/live-canonical/live-validation-summary.json`
+- observability and operations evidence:
+  `output/observability-live/<timestamp>/`
 
 ## Review-ready evidence
 
@@ -88,6 +90,20 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
 - keep pre-validation captures clearly labeled as diagnostic artifacts only
 - when a route exists but is capability-disabled, capture the supported active path instead of the
   dormant compatibility page
+
+## Observability evidence capture
+
+After `npm run live:validate` passes, capture an operations-oriented evidence pack:
+
+```powershell
+npm run live:evidence
+```
+
+The pack includes hostname resolution, container inventory, readiness and representative API
+outputs, Workbench Prometheus metrics, Prometheus/Grafana API samples, bounded container log tails,
+and screenshots for Workbench evidence views plus Prometheus/Grafana entrypoints. Use this pack for
+offline client-demo preparation and operational documentation. It complements
+`live-validation-summary.json`; it does not replace the governed validation gate.
 
 ## Key references
 

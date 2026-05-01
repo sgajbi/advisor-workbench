@@ -1,0 +1,259 @@
+param(
+  [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
+  [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [string]$OutputDirectory = "",
+  [int]$LogTail = 200,
+  [switch]$SkipScreenshots
+)
+
+$ErrorActionPreference = "Stop"
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+
+if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $OutputDirectory = Join-Path $repoRoot "output\observability-live\$timestamp"
+}
+
+$apiDirectory = Join-Path $OutputDirectory "api"
+$logDirectory = Join-Path $OutputDirectory "logs"
+$metricsDirectory = Join-Path $OutputDirectory "metrics"
+$screenshotsDirectory = Join-Path $OutputDirectory "screenshots"
+
+foreach ($directory in @($OutputDirectory, $apiDirectory, $logDirectory, $metricsDirectory, $screenshotsDirectory)) {
+  New-Item -ItemType Directory -Force -Path $directory | Out-Null
+}
+
+function ConvertTo-SafeFileName {
+  param([string]$Value)
+
+  return ($Value -replace "[^A-Za-z0-9_.-]", "-").Trim("-")
+}
+
+function Resolve-ArtifactPath {
+  param([string]$RelativePath)
+
+  return Join-Path $OutputDirectory $RelativePath
+}
+
+function Write-HttpArtifact {
+  param(
+    [string]$Name,
+    [string]$Url,
+    [string]$RelativePath
+  )
+
+  $target = Resolve-ArtifactPath $RelativePath
+  $record = [ordered]@{
+    name = $Name
+    url = $Url
+    path = $target
+    status = "unknown"
+    capturedAt = (Get-Date).ToString("o")
+  }
+
+  try {
+    $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 45
+    $contentType = ($response.Headers["Content-Type"] -join ",")
+    Set-Content -Path $target -Value $response.Content -Encoding UTF8
+    $record.status = $response.StatusCode
+    $record.contentType = $contentType
+    $record.bytes = (Get-Item $target).Length
+  } catch {
+    $record.status = "error"
+    $record.error = $_.Exception.Message
+    Set-Content -Path $target -Value $record.error -Encoding UTF8
+  }
+
+  return [pscustomobject]$record
+}
+
+function Write-ContainerLogArtifact {
+  param(
+    [string]$ContainerName,
+    [int]$Tail
+  )
+
+  $safeName = ConvertTo-SafeFileName $ContainerName
+  $target = Join-Path $logDirectory "$safeName.log"
+  $record = [ordered]@{
+    container = $ContainerName
+    path = $target
+    tail = $Tail
+    status = "unknown"
+    capturedAt = (Get-Date).ToString("o")
+  }
+
+  $exists = docker ps --format "{{.Names}}" | Where-Object { $_ -eq $ContainerName }
+  if (-not $exists) {
+    $record.status = "missing"
+    Set-Content -Path $target -Value "Container not running: $ContainerName" -Encoding UTF8
+    return [pscustomobject]$record
+  }
+
+  try {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+      & docker logs --tail $Tail $ContainerName *> $target
+      if ($LASTEXITCODE -ne 0) {
+        $record.status = "error"
+        $record.error = "docker logs exited with code $LASTEXITCODE"
+      } else {
+        $record.status = "captured"
+      }
+      $record.bytes = (Get-Item $target).Length
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+  } catch {
+    $record.status = "error"
+    $record.error = $_.Exception.Message
+    Set-Content -Path $target -Value $record.error -Encoding UTF8
+  }
+
+  return [pscustomobject]$record
+}
+
+$canonicalHosts = @(
+  "workbench.dev.lotus",
+  "gateway.dev.lotus",
+  "manage.dev.lotus",
+  "report.dev.lotus",
+  "archive.dev.lotus",
+  "render.dev.lotus",
+  "performance.dev.lotus",
+  "risk.dev.lotus",
+  "advise.dev.lotus",
+  "ai.dev.lotus",
+  "core-query.dev.lotus",
+  "core-control.dev.lotus",
+  "core-ingestion.dev.lotus"
+)
+
+$dns = foreach ($hostName in $canonicalHosts) {
+  try {
+    $resolved = Resolve-DnsName -Name $hostName -ErrorAction Stop | Select-Object -First 1
+    [pscustomobject]@{
+      host = $hostName
+      status = "ok"
+      address = $resolved.IPAddress
+    }
+  } catch {
+    [pscustomobject]@{
+      host = $hostName
+      status = "error"
+      error = $_.Exception.Message
+    }
+  }
+}
+
+$dns | ConvertTo-Json -Depth 5 | Set-Content -Path (Join-Path $OutputDirectory "dns.json") -Encoding UTF8
+
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" |
+  Set-Content -Path (Join-Path $OutputDirectory "docker-ps.txt") -Encoding UTF8
+
+docker ps --format "{{json .}}" |
+  ForEach-Object { if (-not [string]::IsNullOrWhiteSpace($_)) { $_ | ConvertFrom-Json } } |
+  ConvertTo-Json -Depth 8 |
+  Set-Content -Path (Join-Path $OutputDirectory "docker-ps.json") -Encoding UTF8
+
+$apiChecks = @()
+$apiChecks += Write-HttpArtifact "gateway-ready" "http://gateway.dev.lotus/health/ready" "api\gateway-ready.json"
+$apiChecks += Write-HttpArtifact "workbench-home" "http://workbench.dev.lotus" "api\workbench-home.html"
+$apiChecks += Write-HttpArtifact "manage-ready" "http://manage.dev.lotus/health/ready" "api\manage-ready.json"
+$apiChecks += Write-HttpArtifact "report-ready" "http://report.dev.lotus/health/ready" "api\report-ready.json"
+$apiChecks += Write-HttpArtifact "archive-ready" "http://archive.dev.lotus/health/ready" "api\archive-ready.json"
+$apiChecks += Write-HttpArtifact "render-ready" "http://render.dev.lotus/health/ready" "api\render-ready.json"
+$apiChecks += Write-HttpArtifact "gateway-platform-capabilities" "http://gateway.dev.lotus/api/v1/platform/capabilities" "api\gateway-platform-capabilities.json"
+$apiChecks += Write-HttpArtifact "gateway-workbench-overview" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/overview" "api\gateway-workbench-overview.json"
+$apiChecks += Write-HttpArtifact "gateway-performance-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "api\gateway-performance-summary.json"
+$apiChecks += Write-HttpArtifact "gateway-risk-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "api\gateway-risk-summary.json"
+$apiChecks += Write-HttpArtifact "gateway-advisor-brief" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "api\gateway-advisor-brief.json"
+$apiChecks += Write-HttpArtifact "manage-integration-capabilities" "http://manage.dev.lotus/integration/capabilities?consumer_system=lotus-gateway&tenant_id=default" "api\manage-integration-capabilities.json"
+$apiChecks += Write-HttpArtifact "report-integration-capabilities" "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "api\report-integration-capabilities.json"
+$apiChecks += Write-HttpArtifact "workbench-prometheus-metrics" "http://workbench.dev.lotus/api/metrics" "metrics\workbench-api-metrics.prom"
+$apiChecks += Write-HttpArtifact "prometheus-targets" "http://localhost:9190/api/v1/targets" "metrics\prometheus-targets.json"
+$apiChecks += Write-HttpArtifact "prometheus-up-query" "http://localhost:9190/api/v1/query?query=up" "metrics\prometheus-up-query.json"
+$apiChecks += Write-HttpArtifact "grafana-health" "http://localhost:3300/api/health" "metrics\grafana-health.json"
+
+$containers = @(
+  "lotus-workbench-lotus-workbench-1",
+  "lotus-gateway-lotus-gateway-1",
+  "lotus-manage-lotus-manage-1",
+  "lotus-report",
+  "lotus-archive-lotus-archive-1",
+  "lotus-render-lotus-render-1",
+  "lotus-risk-lotus-risk-1",
+  "performance-analytics",
+  "lotus-ai-lotus-ai-1",
+  "lotus-core-app-local-query_control_plane_service-1",
+  "lotus-core-app-local-portfolio_aggregation_service-1",
+  "lotus-core-app-local-valuation_orchestrator_service-1",
+  "lotus-core-app-local-prometheus-1",
+  "lotus-core-app-local-grafana-1"
+)
+
+$logArtifacts = foreach ($container in $containers) {
+  Write-ContainerLogArtifact -ContainerName $container -Tail $LogTail
+}
+
+$screenshotManifest = $null
+if (-not $SkipScreenshots) {
+  $screenshotScript = Join-Path $PSScriptRoot "capture-observability-screenshots.mjs"
+  & node $screenshotScript --output-dir $OutputDirectory --portfolio-id $PortfolioId
+  if ($LASTEXITCODE -ne 0) {
+    throw "Observability screenshot capture failed with exit code $LASTEXITCODE."
+  }
+  $screenshotManifestPath = Join-Path $OutputDirectory "screenshots-manifest.json"
+  if (Test-Path $screenshotManifestPath) {
+    $screenshotManifest = Get-Content $screenshotManifestPath -Raw | ConvertFrom-Json
+  }
+}
+
+$manifest = [ordered]@{
+  generatedAt = (Get-Date).ToString("o")
+  portfolioId = $PortfolioId
+  benchmarkCode = $BenchmarkCode
+  outputDirectory = $OutputDirectory
+  dns = $dns
+  apiChecks = $apiChecks
+  logArtifacts = $logArtifacts
+  screenshots = $screenshotManifest
+  notes = @(
+    "Artifacts under output/ are local evidence and should not be committed by default.",
+    "Run npm run live:validate before treating screenshots as demo-ready.",
+    "Use this pack to demonstrate readiness, API behavior, metrics, logs, and dashboard investigation posture."
+  )
+}
+
+$manifestPath = Join-Path $OutputDirectory "observability-evidence-manifest.json"
+$manifest | ConvertTo-Json -Depth 12 | Set-Content -Path $manifestPath -Encoding UTF8
+
+$readme = @"
+# Lotus Front-Office Observability Evidence
+
+- Generated: $($manifest.generatedAt)
+- Portfolio: $PortfolioId
+- Benchmark: $BenchmarkCode
+- Manifest: $manifestPath
+
+## Contents
+
+- `dns.json`: canonical hostname resolution evidence
+- `docker-ps.txt` and `docker-ps.json`: live container inventory and health status
+- `api/`: readiness, capability, and representative Gateway API outputs
+- `metrics/`: Workbench Prometheus metrics plus Prometheus/Grafana API samples
+- `logs/`: bounded container log tails for investigation walkthroughs
+- `screenshots/`: Workbench, Prometheus, and Grafana screenshots when screenshot capture is enabled
+
+## Operator Notes
+
+Run `npm run live:validate` before using screenshots as demo-ready evidence. This evidence pack is
+for operational investigation and non-functional capability demonstration; it complements the
+canonical live validation summary rather than replacing it.
+"@
+
+Set-Content -Path (Join-Path $OutputDirectory "README.md") -Value $readme -Encoding UTF8
+
+Write-Host "Observability evidence captured: $OutputDirectory"
+Write-Host "Manifest: $manifestPath"

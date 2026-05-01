@@ -17,6 +17,7 @@
     "live:stack:up:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -RunValidation",
     "live:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1",
     "live:validate:ui": "node scripts/live/validate-canonical-workbench-live.mjs",
+    "live:evidence": "powershell -ExecutionPolicy Bypass -File scripts/live/Capture-LotusFrontOfficeEvidence.ps1",
     "auto:pulse": "powershell -ExecutionPolicy Bypass -File scripts/automation/Platform-Pulse.ps1",
     "auto:sync": "powershell -ExecutionPolicy Bypass -File scripts/automation/Sync-Repos.ps1",
     "auto:pr": "powershell -ExecutionPolicy Bypass -File scripts/automation/PR-Monitor.ps1",

@@ -18,6 +18,8 @@
   Docker parity
 - `npm run live:validate`
   canonical integrated product validation
+- `npm run live:evidence`
+  post-validation observability, logging, metrics, API, and dashboard evidence capture
 
 ## What the gates protect
 
@@ -30,6 +32,8 @@
 
 - canonical browser validation writes screenshots and structured summary output under
   `output/playwright/live-canonical/`
+- observability evidence capture writes local non-functional proof packs under
+  `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics
 
 ## Canonical live validation coverage

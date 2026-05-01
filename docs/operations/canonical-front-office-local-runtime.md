@@ -237,6 +237,24 @@ Machine-readable validation evidence is written to:
 output/playwright/live-canonical/live-validation-summary.json
 ```
 
+After validation passes, capture the companion operations and non-functional evidence pack:
+
+```powershell
+npm run live:evidence
+```
+
+This writes a timestamped pack under:
+
+```txt
+output/observability-live/<timestamp>/
+```
+
+The pack includes canonical DNS resolution, container inventory, readiness and representative API
+outputs, Workbench Prometheus metrics, Prometheus/Grafana API samples, bounded container log tails,
+and screenshots for Workbench evidence views plus Prometheus/Grafana entrypoints. Use this for
+offline demo preparation and operational investigation documentation. It complements
+`live-validation-summary.json`; it does not replace the governed validation pass.
+
 The machine-readable summary also records the governed canonical contract identity and version from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json`. If the
 platform contract file is unavailable, the validator emits a deterministic fallback that still
