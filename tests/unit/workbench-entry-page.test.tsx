@@ -19,10 +19,33 @@ describe("WorkbenchEntryPage", () => {
   });
 
   afterEach(() => {
-    process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS = originalFallback;
+    if (originalFallback === undefined) {
+      delete process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS;
+    } else {
+      process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS = originalFallback;
+    }
   });
 
-  it("redirects to the first lookup portfolio when the catalog is available", async () => {
+  it("redirects to the canonical portfolio when the lookup catalog contains it", async () => {
+    vi.resetModules();
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          { id: "DEMO_ADV_USD_001", label: "Legacy demo" },
+          { id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" },
+        ],
+      }),
+    } as Response);
+
+    const { default: WorkbenchEntryPage } = await import("@/app/workbench/page");
+    await expect(WorkbenchEntryPage()).rejects.toThrowError(
+      "REDIRECT:/workbench/PB_SG_GLOBAL_BAL_001"
+    );
+    expect(redirectMock).toHaveBeenCalledWith("/workbench/PB_SG_GLOBAL_BAL_001");
+  });
+
+  it("redirects to the first lookup portfolio when no preferred portfolio is available", async () => {
     vi.resetModules();
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
@@ -32,6 +55,17 @@ describe("WorkbenchEntryPage", () => {
     const { default: WorkbenchEntryPage } = await import("@/app/workbench/page");
     await expect(WorkbenchEntryPage()).rejects.toThrowError("REDIRECT:/workbench/PORT_1001");
     expect(redirectMock).toHaveBeenCalledWith("/workbench/PORT_1001");
+  });
+
+  it("uses the canonical portfolio before legacy fallbacks when lookup fetch fails", async () => {
+    vi.resetModules();
+    vi.mocked(fetch).mockRejectedValue(new Error("offline"));
+
+    const { default: WorkbenchEntryPage } = await import("@/app/workbench/page");
+    await expect(WorkbenchEntryPage()).rejects.toThrowError(
+      "REDIRECT:/workbench/PB_SG_GLOBAL_BAL_001"
+    );
+    expect(redirectMock).toHaveBeenCalledWith("/workbench/PB_SG_GLOBAL_BAL_001");
   });
 
   it("redirects to the configured fallback when lookup fetch fails", async () => {

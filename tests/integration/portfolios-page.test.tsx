@@ -307,6 +307,47 @@ describe("PortfolioFoundationPage", () => {
     expect(requestedUrls.some((url) => url.includes("/transactions?limit=200"))).toBe(false);
   }, 30000);
 
+  it("prefers the canonical front-office portfolio when no portfolio is requested", async () => {
+    const fetchSpy = stubPortfolioApis();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/api/v1/portfolio/portfolios")) {
+          if (url.includes("/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/")) {
+            return fetchSpy(String(input).replace("PB_SG_GLOBAL_BAL_001", "PORT_UI_1001"));
+          }
+          return {
+            ok: true,
+            json: async () => ({
+              items: [
+                {
+                  portfolio_id: "DEMO_ADV_USD_001",
+                  display_name: "Legacy demo portfolio",
+                },
+                {
+                  portfolio_id: "PB_SG_GLOBAL_BAL_001",
+                  display_name: "Private Banking Global Balanced",
+                },
+              ],
+            }),
+          } as Response;
+        }
+        return fetchSpy(input);
+      })
+    );
+
+    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+
+    const requestedUrls = vi.mocked(fetch).mock.calls.map((call) => String(call[0]));
+    expect(
+      requestedUrls.some((url) =>
+        url.includes("/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/workspace")
+      )
+    ).toBe(true);
+    expect(requestedUrls.some((url) => url.includes("DEMO_ADV_USD_001"))).toBe(false);
+  });
+
   it("restores detailed mode and exposes full drill-down content", async () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
     Object.assign(navigator, {

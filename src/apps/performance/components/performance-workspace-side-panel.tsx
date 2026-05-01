@@ -44,6 +44,9 @@ export default function PerformanceWorkspaceSidePanel({
     : [];
   const showSupportability = mode !== "summary" && trustItems.length > 0;
   const workflowActions = buildWorkflowActions(mode);
+  const portfolioHref = workspace
+    ? `/portfolio?portfolioId=${encodeURIComponent(workspace.portfolio_id)}`
+    : "/portfolio";
   const reviewContextItems = buildReviewContextItems({
     workspace,
     modeLabel: modeDefinition.label,
@@ -140,7 +143,7 @@ export default function PerformanceWorkspaceSidePanel({
               {action.label}
             </button>
           ))}
-          <ActionLink href="/portfolio" className="performance-side-link performance-side-action">
+          <ActionLink href={portfolioHref} className="performance-side-link performance-side-action">
             Return to Portfolio
           </ActionLink>
         </div>

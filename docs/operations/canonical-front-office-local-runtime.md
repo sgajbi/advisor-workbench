@@ -253,7 +253,16 @@ The pack includes canonical DNS resolution, container inventory, readiness and r
 outputs, Workbench Prometheus metrics, Prometheus/Grafana API samples, bounded container log tails,
 and screenshots for Workbench evidence views plus Prometheus/Grafana entrypoints. Use this for
 offline demo preparation and operational investigation documentation. It complements
-`live-validation-summary.json`; it does not replace the governed validation pass.
+`live-validation-summary.json`; it does not replace the governed validation pass. The manifest
+records the validation summary path and whether it existed at capture time, and it separates
+application API checks from metrics and dashboard HTTP samples so reviewers can audit the evidence
+without guessing the directory layout.
+
+Before presenting a pack, review `observability-evidence-manifest.json` and the captured Gateway
+overview for warnings or partial failures. Manage supportability must return HTTP `200`; a freshly
+started stack may report `supportability.state=empty` when no management actions have been
+recorded, but an HTTP `503` indicates the Postgres-backed supportability store is not ready and the
+pack is diagnostic only.
 
 The machine-readable summary also records the governed canonical contract identity and version from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json`. If the

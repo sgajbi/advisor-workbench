@@ -21,15 +21,33 @@ describe("canonical observability evidence capture", () => {
 
     expect(script).toContain("output\\observability-live");
     expect(script).toContain("observability-evidence-manifest.json");
+    expect(script).toContain("live-validation-summary.json");
+    expect(script).toContain("requiredBeforeDemo");
+    expect(script).toContain("summaryExists");
     expect(script).toContain("docker ps --format");
     expect(script).toContain("dns.json");
+    expect(script).toContain("workbench-performance-route");
+    expect(script).toContain("performance?portfolioId=$PortfolioId&mode=evidence");
     expect(script).toContain("http://workbench.dev.lotus/api/metrics");
     expect(script).toContain("http://localhost:9190/api/v1/targets");
     expect(script).toContain("http://localhost:3300/api/health");
-    expect(script).toContain("docker logs --tail");
+    expect(script).toContain("$metricChecks = @()");
+    expect(script).toContain("metricChecks = $metricChecks");
+    expect(script).toContain("docker logs --since");
+    expect(script).toContain("$captureStartedAt");
+    expect(script).toContain("ForbiddenEvidencePatterns");
+    expect(script).toContain("Assert-EvidenceDoesNotContainForbiddenPatterns");
+    expect(script).toContain("DEMO_ADV_USD_001");
+    expect(script.indexOf("$screenshotManifest = $null")).toBeLessThan(
+      script.indexOf("$logArtifacts = foreach")
+    );
+    expect(script).toContain("cmd.exe /d /c");
+    expect(script).toContain("__VALIDATION_SUMMARY_PATH__");
     expect(script).toContain("lotus-archive-lotus-archive-1");
     expect(script).toContain("lotus-render-lotus-render-1");
     expect(script).toContain("capture-observability-screenshots.mjs");
+    expect(script).toContain("__GENERATED_AT__");
+    expect(script).not.toContain("- `dns.json`");
     expect(screenshotScript).toContain("prometheus-targets");
     expect(screenshotScript).toContain("grafana-home");
     expect(screenshotScript).toContain("workbench-performance-evidence");

@@ -30,14 +30,39 @@ function Test-CanonicalHost {
 function Test-Endpoint {
   param(
     [string]$Url,
-    [string]$Label
+    [string]$Label,
+    [int]$Attempts = 8,
+    [int]$DelaySeconds = 3
   )
 
-  $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 45
-  if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) {
-    throw "$Label failed ($($response.StatusCode)) at $Url"
+  $lastError = $null
+  for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+    try {
+      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 45
+      if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
+        Write-Host "[ok] $Label -> $Url"
+        return
+      }
+      $lastError = "$Label returned HTTP $($response.StatusCode) at $Url"
+    } catch {
+      $statusCode = $null
+      if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+        $statusCode = [int]$_.Exception.Response.StatusCode
+      }
+      if ($statusCode) {
+        $lastError = "$Label returned HTTP $statusCode at $Url"
+      } else {
+        $lastError = "$Label request failed at ${Url}: $($_.Exception.Message)"
+      }
+    }
+
+    if ($attempt -lt $Attempts) {
+      Write-Warning "$lastError; retrying ($attempt/$Attempts)."
+      Start-Sleep -Seconds $DelaySeconds
+    }
   }
-  Write-Host "[ok] $Label -> $Url"
+
+  throw "$lastError after $Attempts attempts."
 }
 
 Test-CanonicalHost "workbench.dev.lotus"

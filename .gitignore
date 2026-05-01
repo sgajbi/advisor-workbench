@@ -9,6 +9,8 @@ test-results/
 playwright-report/
 .playwright-cli/
 output/playwright/
+output/observability-live/
+output/demo-rfc0108-live-evidence-*/
 output/*.pdf
 output/pr-monitor.json
 output/agent-status.md

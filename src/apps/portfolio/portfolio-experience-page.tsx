@@ -1,3 +1,4 @@
+import { resolvePreferredPortfolioId } from "@/features/canonical-portfolio-selection";
 import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "./api";
 import PortfolioWorkspaceClient from "./components/portfolio-workspace-client";
 
@@ -10,8 +11,7 @@ export default async function PortfolioExperiencePage({
   const resolvedSearch = await searchParams;
   const selectedPortfolioId =
     portfolios.find((item) => item.portfolio_id === resolvedSearch.portfolioId)?.portfolio_id ??
-    portfolios[0]?.portfolio_id ??
-    null;
+    resolvePreferredPortfolioId(portfolios, (item) => item.portfolio_id);
   const workspace = selectedPortfolioId
     ? await getPortfolioWorkspaceShell(selectedPortfolioId)
     : null;

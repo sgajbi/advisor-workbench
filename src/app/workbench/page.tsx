@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { DegradedStatePanel, WorkbenchPageFrame } from "@/design-system";
+import { resolvePreferredPortfolioId } from "@/features/canonical-portfolio-selection";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 const WORKBENCH_FALLBACK_PORTFOLIO_IDS =
   process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ??
-  "DEMO_DPM_EUR_001,DEMO_INCOME_CHF_001,DEMO_BALANCED_SGD_001,DEMO_REBAL_USD_001,DEMO_ADV_USD_001";
+  "PB_SG_GLOBAL_BAL_001,DEMO_DPM_EUR_001,DEMO_INCOME_CHF_001,DEMO_BALANCED_SGD_001,DEMO_REBAL_USD_001,DEMO_ADV_USD_001";
 
 type LookupItem = {
   id: string;
@@ -23,7 +24,7 @@ async function getDefaultPortfolioId(): Promise<string | null> {
       return null;
     }
     const payload = (await response.json()) as LookupEnvelope;
-    return payload.items?.[0]?.id ?? null;
+    return resolvePreferredPortfolioId(payload.items ?? [], (item) => item.id);
   } catch {
     return null;
   }

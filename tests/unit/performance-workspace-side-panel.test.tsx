@@ -54,4 +54,29 @@ describe("PerformanceWorkspaceSidePanel", () => {
     expect(onModeChange).toHaveBeenNthCalledWith(1, "advisor");
     expect(onModeChange).toHaveBeenNthCalledWith(2, "risk");
   });
+
+  it("preserves the active portfolio when returning to the Portfolio workspace", () => {
+    const workspace = {
+      ...buildSupportedPerformanceScenario().workspace,
+      portfolio_id: "PB_SG_GLOBAL_BAL_001",
+    };
+
+    render(
+      <PerformanceWorkspaceSidePanel
+        workspace={workspace}
+        mode="summary"
+        period="YTD"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        selectedBenchmarkLabel="Private Banking Global Balanced 60/40"
+        onModeChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "Return to Portfolio" })).toHaveAttribute(
+      "href",
+      "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001"
+    );
+  });
 });

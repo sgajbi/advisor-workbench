@@ -36,6 +36,8 @@ The output directory is intentionally local evidence and should not be committed
 
 - `observability-evidence-manifest.json`: machine-readable index of everything captured
 - `README.md`: human-readable artifact index
+- `validation`: manifest section linking the pack to the latest
+  `output/playwright/live-canonical/live-validation-summary.json`
 - `dns.json`: canonical hostname resolution evidence
 - `docker-ps.txt` and `docker-ps.json`: live container inventory and health status
 - `api/`: readiness, capability, and representative Gateway API outputs
@@ -70,6 +72,31 @@ Use the non-functional artifacts to explain how teams operate the stack:
 - Grafana health and screenshots show dashboard entrypoint posture
 - bounded log tails show where operators start when investigating Gateway, Workbench, Core,
   Performance, Risk, Manage, Report, Archive, Render, and AI behavior
+
+## Evidence Quality Checks
+
+Before using a pack in client or operator material, review it for obvious degradation:
+
+- `dns.json` has no `error` entries for canonical `*.dev.lotus` hosts
+- API capture records are HTTP `2xx`; Gateway overview has empty `warnings` and
+  `partial_failures`
+- `api/manage-ready.json` and Manage supportability evidence prove the management backing store is
+  ready, not only that `/docs` is reachable
+- `metrics/prometheus-targets.json` has active scrape targets without `lastError`
+- `logs/*.log` are raw container logs and do not contain PowerShell wrapper markers such as
+  `NativeCommandError`, `CategoryInfo`, or `FullyQualifiedErrorId`
+- screenshots are paired with `npm run live:validate` evidence from the same live stack window
+- `observability-evidence-manifest.json` has `validation.summaryExists=true` and separates
+  application `apiChecks` from dashboard and metrics `metricChecks`
+
+Current residual to classify honestly:
+
+- Performance evidence lineage may be reported as partial while lotus-performance materializes
+  lineage records. In that state the Workbench evidence panel should show
+  `PERFORMANCE_EVIDENCE_PARTIAL`, and bounded logs may include lineage lookup `404` entries. Treat
+  that as a known functional residual only when the canonical performance route, Gateway overview,
+  and validation summary are otherwise green. It is not acceptable for the pack to contain
+  non-canonical portfolio traffic such as `DEMO_ADV_USD_001` during canonical evidence capture.
 
 ## Suggested Offline Demo Flow
 

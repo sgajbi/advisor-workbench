@@ -17,6 +17,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("Canonical Workbench browser validation failed");
     expect(script).toContain("[string]$ScreenshotDirectory");
     expect(script).toContain('"--output-dir"');
+    expect(script).toContain("[int]$Attempts = 8");
+    expect(script).toContain("retrying ($attempt/$Attempts)");
+    expect(script).toContain("after $Attempts attempts");
   });
 
   it("documents stable live-validation artifact ownership", () => {
