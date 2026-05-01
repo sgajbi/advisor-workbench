@@ -30,7 +30,9 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("stale summaries");
     expect(runbook).toContain("-CleanCoreState");
     expect(runbook).toContain("1000`-portfolio load scenario");
-    expect(runbook).toContain("replaces any existing Workbench listener on port `3000`");
+    expect(runbook).toContain("Docker is the default for every canonical front-office app");
+    expect(runbook).toContain("-LocalApps workbench,gateway,manage");
+    expect(runbook).toContain("live:stack:up:workbench-local");
   });
 
   it("starts the governed seed with the canonical RFC-0075 as-of date", () => {
@@ -41,6 +43,10 @@ describe("canonical live validation script", () => {
 
     expect(script).toContain("[int]$SeedWaitSeconds = 900");
     expect(script).toContain('[string]$LotusAiEnvFile = ".env.example"');
+    expect(script).toContain("[string[]]$LocalApps = @()");
+    expect(script).toContain("function Test-LocalApp");
+    expect(script).toContain("function Invoke-ComposeUp");
+    expect(script).toContain("function Start-LocalUvicornService");
     expect(script).toContain("Using lotus-ai env file for canonical proof");
     expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("$global:LASTEXITCODE = 0");
@@ -49,7 +55,10 @@ describe("canonical live validation script", () => {
     expect(script).toContain("docker compose down -v --remove-orphans");
     expect(script).toContain("function Stop-HostProcessOnPort");
     expect(script).toContain("Stopping stale $Description process on :$Port");
-    expect(script).toContain("Stop-HostProcessOnPort -Port 3000 -Description \"Workbench\"");
+    expect(script).toContain("Leaving Docker-owned $Description listener on :$Port");
+    expect(script).toContain('Test-LocalApp "workbench"');
+    expect(script).toContain('Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }');
+    expect(script).toContain('Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }');
     expect(script).not.toContain("Workbench already responding on :3000");
     expect(script).toContain("--portfolio-id $PortfolioId");
     expect(script).toContain("--end-date 2026-04-10");
@@ -57,6 +66,40 @@ describe("canonical live validation script", () => {
     expect(script).toContain("--wait-seconds $SeedWaitSeconds");
     expect(script).toContain("[string]$ScreenshotDirectory");
     expect(script).toContain("ScreenshotDirectory = $ScreenshotDirectory");
+  });
+
+  it("covers the complete front-office Docker app set in canonical automation", () => {
+    const startScript = readFileSync(
+      join(process.cwd(), "scripts", "live", "Start-LotusFrontOfficeCanonical.ps1"),
+      "utf8"
+    );
+    const stopScript = readFileSync(
+      join(process.cwd(), "scripts", "live", "Stop-LotusFrontOfficeCanonical.ps1"),
+      "utf8"
+    );
+    const validationScript = readFileSync(
+      join(process.cwd(), "scripts", "live", "Validate-LotusFrontOfficeCanonical.ps1"),
+      "utf8"
+    );
+    const browserValidator = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+    const packageJson = readFileSync(join(process.cwd(), "package.json"), "utf8");
+
+    for (const service of ["lotus-archive", "lotus-render", "lotus-gateway", "lotus-workbench"]) {
+      expect(startScript).toContain(service);
+      expect(stopScript).toContain(service);
+    }
+    expect(stopScript).toContain("Stop-ListenersOnPorts @(3000, 8001, 8100, 8111, 8150, 8310)");
+    expect(stopScript).toContain("Leaving Docker-owned listener");
+    expect(validationScript).toContain('Test-CanonicalHost "archive.dev.lotus"');
+    expect(validationScript).toContain('Test-CanonicalHost "render.dev.lotus"');
+    expect(validationScript).toContain('Test-Endpoint "http://archive.dev.lotus/health/ready"');
+    expect(validationScript).toContain('Test-Endpoint "http://render.dev.lotus/health/ready"');
+    expect(browserValidator).toContain('checkDns(summary, "archive.dev.lotus")');
+    expect(browserValidator).toContain('checkDns(summary, "render.dev.lotus")');
+    expect(packageJson).toContain('"live:stack:up:workbench-local"');
   });
 
   it("asserts canonical performance and risk calculation sanity", () => {

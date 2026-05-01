@@ -5,6 +5,7 @@ param(
   [string]$ScreenshotDirectory = "",
   [string]$LotusAiEnvFile = ".env.example",
   [int]$SeedWaitSeconds = 900,
+  [string[]]$LocalApps = @(),
   [switch]$CleanCoreState,
   [switch]$BuildImages,
   [switch]$RunValidation
@@ -19,10 +20,25 @@ $aiRepo = Join-Path $ProjectsRoot "lotus-ai"
 $adviseRepo = Join-Path $ProjectsRoot "lotus-advise"
 $manageRepo = Join-Path $ProjectsRoot "lotus-manage"
 $reportRepo = Join-Path $ProjectsRoot "lotus-report"
+$archiveRepo = Join-Path $ProjectsRoot "lotus-archive"
+$renderRepo = Join-Path $ProjectsRoot "lotus-render"
 $gatewayRepo = Join-Path $ProjectsRoot "lotus-gateway"
 $workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 $platformRepo = Join-Path $ProjectsRoot "lotus-platform"
 $ingressCaddyfile = Join-Path $platformRepo "platform-stack\\dev-ingress\\Caddyfile.direct-host"
+$composeUpCommand = "docker compose up -d"
+if ($BuildImages) {
+  $composeUpCommand = "$composeUpCommand --build"
+}
+$localAppSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($item in $LocalApps) {
+  foreach ($appName in ($item -split ",")) {
+    $trimmed = $appName.Trim()
+    if (-not [string]::IsNullOrWhiteSpace($trimmed)) {
+      [void]$localAppSet.Add($trimmed)
+    }
+  }
+}
 
 function Invoke-RepoCommand {
   param(
@@ -79,11 +95,99 @@ function Stop-HostProcessOnPort {
       continue
     }
 
+    $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+    if ($process -and $process.ProcessName -match "^(com\.docker|docker|vpnkit)") {
+      Write-Host "Leaving Docker-owned $Description listener on :$Port (PID $processId) in place."
+      continue
+    }
+
     Write-Host "Stopping stale $Description process on :$Port (PID $processId) ..."
     Stop-Process -Id $processId -Force -ErrorAction Stop
   }
 
   Start-Sleep -Seconds 2
+}
+
+function Test-LocalApp {
+  param([string]$AppName)
+
+  return $localAppSet.Contains($AppName)
+}
+
+function Invoke-ComposeUp {
+  param(
+    [string]$RepoPath,
+    [hashtable]$Environment = @{}
+  )
+
+  $previousValues = @{}
+  foreach ($key in $Environment.Keys) {
+    $previousValues[$key] = [Environment]::GetEnvironmentVariable($key, "Process")
+    [Environment]::SetEnvironmentVariable($key, $Environment[$key], "Process")
+  }
+
+  try {
+    Invoke-RepoCommand $RepoPath $composeUpCommand
+  } finally {
+    foreach ($key in $Environment.Keys) {
+      [Environment]::SetEnvironmentVariable($key, $previousValues[$key], "Process")
+    }
+  }
+}
+
+function Start-LocalUvicornService {
+  param(
+    [string]$RepoPath,
+    [string]$ServiceName,
+    [string]$AppModule,
+    [int]$Port
+  )
+
+  Stop-HostProcessOnPort -Port $Port -Description $ServiceName
+
+  $python = if (Test-Path (Join-Path $RepoPath ".venv\\Scripts\\python.exe")) {
+    Join-Path $RepoPath ".venv\\Scripts\\python.exe"
+  } else {
+    "C:\\Python313\\python.exe"
+  }
+  $out = Join-Path $RepoPath "$ServiceName-$Port.dev.out.log"
+  $err = Join-Path $RepoPath "$ServiceName-$Port.dev.err.log"
+  if (Test-Path $out) { Remove-Item $out -Force }
+  if (Test-Path $err) { Remove-Item $err -Force }
+
+  $previousPythonPath = $env:PYTHONPATH
+  $env:PYTHONPATH = "$(Join-Path $RepoPath "src");$RepoPath"
+  try {
+    Start-Process -FilePath $python `
+      -ArgumentList "-m","uvicorn",$AppModule,"--app-dir","src","--host","0.0.0.0","--port","$Port" `
+      -WorkingDirectory $RepoPath `
+      -RedirectStandardOutput $out `
+      -RedirectStandardError $err `
+      -WindowStyle Hidden | Out-Null
+  } finally {
+    $env:PYTHONPATH = $previousPythonPath
+  }
+
+  Start-Sleep -Seconds 5
+  if (-not (Test-HttpReady "http://127.0.0.1:$Port/health/ready")) {
+    throw "$ServiceName local startup failed readiness on port $Port."
+  }
+}
+
+function Start-WorkbenchDevServer {
+  Stop-HostProcessOnPort -Port 3000 -Description "Workbench"
+  Write-Host "Starting Workbench local dev server on :3000 ..."
+  $out = Join-Path $workbenchRepo "workbench-3000.dev.out.log"
+  $err = Join-Path $workbenchRepo "workbench-3000.dev.err.log"
+  if (Test-Path $out) { Remove-Item $out -Force }
+  if (Test-Path $err) { Remove-Item $err -Force }
+  Start-Process -FilePath "npm.cmd" `
+    -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
+    -WorkingDirectory $workbenchRepo `
+    -RedirectStandardOutput $out `
+    -RedirectStandardError $err `
+    -WindowStyle Hidden | Out-Null
+  Start-Sleep -Seconds 10
 }
 
 function Resolve-LotusAiEnvFile {
@@ -124,51 +228,77 @@ if ($CleanCoreState) {
   Invoke-RepoCommand $coreRepo "docker compose down -v --remove-orphans"
 }
 
-Write-Host "Starting Docker-backed upstream services..."
-$composeUpCommand = "docker compose up -d"
-if ($BuildImages) {
-  $composeUpCommand = "$composeUpCommand --build"
+if ($localAppSet.Count -gt 0) {
+  Write-Host "Local app overrides: $(($localAppSet | Sort-Object) -join ', ')"
 }
+
+Write-Host "Starting Docker-backed canonical services..."
 $resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
 Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
-Invoke-RepoCommand $coreRepo $composeUpCommand
-Invoke-RepoCommand $performanceRepo $composeUpCommand
-Invoke-RepoCommand $riskRepo $composeUpCommand
+Invoke-ComposeUp $coreRepo
+Invoke-ComposeUp $performanceRepo
+Invoke-ComposeUp $riskRepo
 Invoke-RepoCommand $aiRepo (Get-EnvScopedComposeCommand -Command $composeUpCommand -EnvFile $resolvedLotusAiEnvFile)
-Invoke-RepoCommand $adviseRepo $composeUpCommand
-Invoke-RepoCommand $reportRepo $composeUpCommand
+Invoke-ComposeUp $adviseRepo
+
+if (Test-LocalApp "manage") {
+  Invoke-RepoCommand $manageRepo "docker compose down --remove-orphans"
+  Write-Host "Starting canonical lotus-manage locally on :8001 ..."
+  & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1") -Port 8001
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical lotus-manage local startup failed with exit code $LASTEXITCODE."
+  }
+} else {
+  Stop-HostProcessOnPort -Port 8001 -Description "lotus-manage"
+  Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }
+}
+
+Invoke-ComposeUp $reportRepo
+
+if (Test-LocalApp "archive") {
+  Invoke-RepoCommand $archiveRepo "docker compose down --remove-orphans"
+  Write-Host "Starting canonical lotus-archive locally on :8150 ..."
+  Start-LocalUvicornService -RepoPath $archiveRepo -ServiceName "lotus-archive" -AppModule "app.main:app" -Port 8150
+} else {
+  Stop-HostProcessOnPort -Port 8150 -Description "lotus-archive"
+  Invoke-ComposeUp $archiveRepo
+}
+
+if (Test-LocalApp "render") {
+  Invoke-RepoCommand $renderRepo "docker compose down --remove-orphans"
+  Write-Host "Starting canonical lotus-render locally on :8310 ..."
+  Start-LocalUvicornService -RepoPath $renderRepo -ServiceName "lotus-render" -AppModule "app.main:app" -Port 8310
+} else {
+  Stop-HostProcessOnPort -Port 8310 -Description "lotus-render"
+  Invoke-ComposeUp $renderRepo
+}
 
 Write-Host "Ensuring direct ingress container is running..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
 docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/etc/caddy/Caddyfile" caddy:2.8.4 | Out-Null
 
-Write-Host "Starting canonical Gateway on :8111 ..."
-& (Join-Path $gatewayRepo "scripts\\Start-CanonicalGateway.ps1")
-if ($LASTEXITCODE -ne 0) {
-  throw "Canonical Gateway startup failed with exit code $LASTEXITCODE."
+if (Test-LocalApp "gateway") {
+  Invoke-RepoCommand $gatewayRepo "docker compose down --remove-orphans"
+  Write-Host "Starting canonical Gateway locally on :8100 ..."
+  & (Join-Path $gatewayRepo "scripts\\Start-CanonicalGateway.ps1") -Port 8100
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical Gateway local startup failed with exit code $LASTEXITCODE."
+  }
+} else {
+  Stop-HostProcessOnPort -Port 8100 -Description "Gateway"
+  Invoke-ComposeUp $gatewayRepo
 }
 
 Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
 Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds $SeedWaitSeconds"
 
-Write-Host "Starting canonical lotus-manage on :8001 ..."
-& (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1")
-if ($LASTEXITCODE -ne 0) {
-  throw "Canonical lotus-manage startup failed with exit code $LASTEXITCODE."
+if (Test-LocalApp "workbench") {
+  Invoke-RepoCommand $workbenchRepo "docker compose down --remove-orphans"
+  Start-WorkbenchDevServer
+} else {
+  Stop-HostProcessOnPort -Port 3000 -Description "Workbench"
+  Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }
 }
-
-Stop-HostProcessOnPort -Port 3000 -Description "Workbench"
-Write-Host "Starting Workbench dev server on :3000 ..."
-$out = Join-Path $workbenchRepo "workbench-3000.dev.out.log"
-$err = Join-Path $workbenchRepo "workbench-3000.dev.err.log"
-if (Test-Path $out) { Remove-Item $out -Force }
-if (Test-Path $err) { Remove-Item $err -Force }
-Start-Process -FilePath "npm.cmd" `
-  -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
-  -WorkingDirectory $workbenchRepo `
-  -RedirectStandardOutput $out `
-  -RedirectStandardError $err | Out-Null
-Start-Sleep -Seconds 10
 
 if (-not $RunValidation) {
   if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
@@ -180,6 +310,8 @@ if (-not $RunValidation) {
   Write-Host "  Workbench: http://workbench.dev.lotus"
   Write-Host "  Gateway:   http://gateway.dev.lotus"
   Write-Host "  Manage:    http://manage.dev.lotus"
+  Write-Host "  Archive:   http://archive.dev.lotus"
+  Write-Host "  Render:    http://render.dev.lotus"
   Write-Host ""
   Write-Host "Run 'npm run live:validate' from lotus-workbench when you want end-to-end validation."
   return

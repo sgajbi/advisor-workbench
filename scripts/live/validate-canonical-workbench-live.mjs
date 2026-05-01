@@ -67,6 +67,8 @@ async function run() {
     checkDns(summary, "advise.dev.lotus"),
     checkDns(summary, "manage.dev.lotus"),
     checkDns(summary, "report.dev.lotus"),
+    checkDns(summary, "archive.dev.lotus"),
+    checkDns(summary, "render.dev.lotus"),
     checkDns(summary, "ai.dev.lotus", { required: false }),
   ]);
 
@@ -214,6 +216,19 @@ async function run() {
   if (!Array.isArray(reportCapabilities?.features) || reportCapabilities.features.length < 1) {
     throw new Error("lotus-report integration capabilities returned no feature flags.");
   }
+
+  await fetchJson(
+    summary,
+    "http://archive.dev.lotus/health/ready",
+    "lotus-archive readiness",
+    timeoutMs
+  );
+  await fetchJson(
+    summary,
+    "http://render.dev.lotus/health/ready",
+    "lotus-render readiness",
+    timeoutMs
+  );
 
   const gatewayCapabilities = await fetchJson(
     summary,

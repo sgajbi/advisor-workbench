@@ -50,6 +50,8 @@ Test-CanonicalHost "risk.dev.lotus"
 Test-CanonicalHost "advise.dev.lotus"
 Test-CanonicalHost "manage.dev.lotus"
 Test-CanonicalHost "report.dev.lotus"
+Test-CanonicalHost "archive.dev.lotus"
+Test-CanonicalHost "render.dev.lotus"
 Test-CanonicalHost "ai.dev.lotus" -Optional
 
 Test-Endpoint "$GatewayBaseUrl/health/ready" "Gateway readiness"
@@ -57,6 +59,8 @@ Test-Endpoint "$WorkbenchBaseUrl/portfolio?portfolioId=$PortfolioId" "Workbench 
 Test-Endpoint "$WorkbenchBaseUrl/performance?portfolioId=$PortfolioId" "Workbench performance route"
 Test-Endpoint "http://manage.dev.lotus/health/ready" "lotus-manage readiness"
 Test-Endpoint "http://report.dev.lotus/health/ready" "lotus-report readiness"
+Test-Endpoint "http://archive.dev.lotus/health/ready" "lotus-archive readiness"
+Test-Endpoint "http://render.dev.lotus/health/ready" "lotus-render readiness"
 Test-Endpoint "http://manage.dev.lotus/integration/capabilities?consumer_system=lotus-gateway&tenant_id=default" "lotus-manage integration capabilities"
 Test-Endpoint "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "lotus-report integration capabilities"
 Test-Endpoint "$GatewayBaseUrl/api/v1/foundation/portfolios/$PortfolioId/workspace" "Gateway foundation workspace"

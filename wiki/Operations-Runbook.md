@@ -21,6 +21,15 @@ The canonical startup script defaults `lotus-ai` to `.env.example` for determini
 provider-disabled proof, even if a local `lotus-ai/.env` asks for a live or local provider. Pass
 `-LotusAiEnvFile .env` only when the required provider dependency is intentionally running.
 
+Docker is the default runtime for the canonical front-office app set: Workbench, Gateway, Core,
+Performance, Risk, Advise, Manage, Report, Archive, Render, and AI. For active RFC development,
+use `-LocalApps` to replace selected Docker-backed apps with same-port local processes while
+keeping canonical hostnames and validation evidence stable. The common Workbench UI path is:
+
+```powershell
+npm run live:stack:up:workbench-local
+```
+
 ## Browser-facing probes
 
 ```txt

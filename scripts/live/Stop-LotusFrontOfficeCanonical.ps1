@@ -13,6 +13,10 @@ $aiRepo = Join-Path $ProjectsRoot "lotus-ai"
 $adviseRepo = Join-Path $ProjectsRoot "lotus-advise"
 $manageRepo = Join-Path $ProjectsRoot "lotus-manage"
 $reportRepo = Join-Path $ProjectsRoot "lotus-report"
+$archiveRepo = Join-Path $ProjectsRoot "lotus-archive"
+$renderRepo = Join-Path $ProjectsRoot "lotus-render"
+$gatewayRepo = Join-Path $ProjectsRoot "lotus-gateway"
+$workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 
 function Invoke-RepoCommand {
   param(
@@ -37,6 +41,11 @@ function Stop-ListenersOnPorts {
 
   foreach ($processId in $owningProcesses) {
     try {
+      $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+      if ($process -and $process.ProcessName -match "^(com\.docker|docker|vpnkit)") {
+        Write-Host "Leaving Docker-owned listener $processId ($($process.ProcessName)) in place"
+        continue
+      }
       Stop-Process -Id $processId -Force -ErrorAction Stop
       Write-Host "Stopped host process $processId"
     } catch {
@@ -56,7 +65,7 @@ function Remove-ContainerIfPresent {
 }
 
 Write-Host "Stopping canonical host processes..."
-Stop-ListenersOnPorts @(3000, 8001, 8111)
+Stop-ListenersOnPorts @(3000, 8001, 8100, 8111, 8150, 8310)
 
 Write-Host "Stopping direct ingress..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
@@ -76,5 +85,9 @@ Invoke-RepoCommand $aiRepo $downCommand
 Invoke-RepoCommand $adviseRepo $downCommand
 Invoke-RepoCommand $manageRepo $downCommand
 Invoke-RepoCommand $reportRepo $downCommand
+Invoke-RepoCommand $archiveRepo $downCommand
+Invoke-RepoCommand $renderRepo $downCommand
+Invoke-RepoCommand $gatewayRepo $downCommand
+Invoke-RepoCommand $workbenchRepo $downCommand
 
 Write-Host "Canonical front-office local runtime stopped."

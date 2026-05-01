@@ -15,6 +15,8 @@ This flow covers the local experience for:
 - `lotus-advise`
 - `lotus-manage`
 - `lotus-report`
+- `lotus-archive`
+- `lotus-render`
 - `lotus-gateway`
 - `lotus-workbench`
 - direct ingress via `*.dev.lotus`
@@ -36,6 +38,8 @@ Required canonical host mappings on the host:
 127.0.0.1 advise.dev.lotus
 127.0.0.1 manage.dev.lotus
 127.0.0.1 report.dev.lotus
+127.0.0.1 archive.dev.lotus
+127.0.0.1 render.dev.lotus
 127.0.0.1 core-query.dev.lotus
 127.0.0.1 core-control.dev.lotus
 127.0.0.1 core-ingestion.dev.lotus
@@ -68,7 +72,7 @@ so the exact required block can still be reviewed and applied manually.
 Direct Administrator fallback:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "Add-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Value \"`n127.0.0.1 workbench.dev.lotus`n127.0.0.1 gateway.dev.lotus`n127.0.0.1 performance.dev.lotus`n127.0.0.1 risk.dev.lotus`n127.0.0.1 advise.dev.lotus`n127.0.0.1 manage.dev.lotus`n127.0.0.1 report.dev.lotus`n127.0.0.1 core-query.dev.lotus`n127.0.0.1 core-control.dev.lotus`n127.0.0.1 core-ingestion.dev.lotus`n127.0.0.1 ai.dev.lotus\""
+powershell -ExecutionPolicy Bypass -Command "Add-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Value \"`n127.0.0.1 workbench.dev.lotus`n127.0.0.1 gateway.dev.lotus`n127.0.0.1 performance.dev.lotus`n127.0.0.1 risk.dev.lotus`n127.0.0.1 advise.dev.lotus`n127.0.0.1 manage.dev.lotus`n127.0.0.1 report.dev.lotus`n127.0.0.1 archive.dev.lotus`n127.0.0.1 render.dev.lotus`n127.0.0.1 core-query.dev.lotus`n127.0.0.1 core-control.dev.lotus`n127.0.0.1 core-ingestion.dev.lotus`n127.0.0.1 ai.dev.lotus\""
 ```
 
 Workbench local environment:
@@ -88,17 +92,31 @@ npm run live:stack:up
 That script performs:
 
 1. preview the canonical hosts block from `lotus-platform`
-2. `docker compose up -d` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, and `lotus-advise`
-3. `docker compose up -d` for `lotus-report`
+2. `docker compose up -d` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, `lotus-archive`, and `lotus-render`
+3. `docker compose up -d` for `lotus-gateway`
 4. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
-5. canonical `lotus-gateway` startup on port `8111`
+5. canonical `lotus-gateway` exposure on port `8100`
 6. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
-7. canonical host-process startup for `lotus-manage` on `8001`
-8. canonical `lotus-workbench` startup on port `3000`
+7. `docker compose up -d` for `lotus-workbench` on port `3000`
 
-The canonical startup flow replaces any existing Workbench listener on port `3000` before it
-launches `npm run dev`. This avoids stale Next.js chunk manifests and partially rebuilt `.next`
-state from older local sessions causing browser hydration failures during governed validation.
+Docker is the default for every canonical front-office app. The startup flow replaces stale local
+listeners on canonical app ports before Docker startup, while leaving Docker-owned listeners in
+place. This avoids stale local dev servers blocking Docker without terminating Docker port proxies.
+
+For active RFC or UI development, pass `-LocalApps` with a comma-separated app list. Local apps use
+the same canonical hostnames and public ports as Docker-backed apps, so live evidence remains
+comparable:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench
+powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench,gateway,manage
+```
+
+Workbench-focused development can also use:
+
+```powershell
+npm run live:stack:up:workbench-local
+```
 
 The command exits after the stack is usable. It does not block on browser validation.
 Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
@@ -143,9 +161,9 @@ npm run live:stack:down
 
 That script:
 
-1. stops canonical host processes on `3000`, `8001`, and `8111`
+1. stops canonical host processes on `3000`, `8001`, `8100`, `8111`, `8150`, and `8310` while preserving Docker-owned listeners
 2. removes direct ingress if it is present
-3. runs `docker compose down` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, and `lotus-report`
+3. runs `docker compose down` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, `lotus-archive`, `lotus-render`, `lotus-gateway`, and `lotus-workbench`
 
 ## Canonical validation
 
@@ -171,6 +189,8 @@ Validation layers:
 2. direct backend readiness and capability checks for:
    - `lotus-manage`
    - `lotus-report`
+   - `lotus-archive`
+   - `lotus-render`
 3. Gateway and Workbench route readiness
 4. live Gateway contracts for:
    - foundation workspace
@@ -255,16 +275,17 @@ unavailable posture.
 
 ## Gateway startup rule
 
-Canonical local Gateway startup must use:
+Canonical local Gateway startup must use the governed script when `gateway` is listed in
+`-LocalApps`:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/Start-CanonicalGateway.ps1
+powershell -ExecutionPolicy Bypass -File scripts/Start-CanonicalGateway.ps1 -Port 8100
 ```
 
 Do not start the local Gateway with a bare:
 
 ```powershell
-python -m uvicorn app.main:app --port 8111
+python -m uvicorn app.main:app --port 8100
 ```
 
 without `--app-dir src`.
@@ -278,7 +299,7 @@ Failure mode:
 The canonical Gateway start script fixes this by always launching:
 
 ```powershell
-python -m uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8111
+python -m uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8100
 ```
 
 ## lotus-manage coexistence rule
@@ -288,13 +309,15 @@ python -m uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8111
 To keep the ecosystem up together:
 
 - `lotus-advise` remains on `8000`
-- `lotus-manage` runs as a host process on `8001`
+- Docker-backed `lotus-manage` publishes container port `8000` to host port `8001` through
+  `LOTUS_MANAGE_HOST_PORT=8001`
+- local override `lotus-manage` also runs on `8001`
 - direct ingress maps `http://manage.dev.lotus` to `host.docker.internal:8001`
 
 Use:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File ..\\..\\lotus-manage\\scripts\\Start-CanonicalManage.ps1
+powershell -ExecutionPolicy Bypass -File ..\\..\\lotus-manage\\scripts\\Start-CanonicalManage.ps1 -Port 8001
 ```
 
 ## What the browser validator checks

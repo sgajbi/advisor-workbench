@@ -108,6 +108,7 @@ Use these commands as the primary local contract:
    `make ci-local-docker`
 8. canonical local runtime and validation
    `npm run live:stack:up`
+   `npm run live:stack:up:workbench-local`
    `npm run live:validate`
 
 ## Validation And CI Expectations
