@@ -44,8 +44,8 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   `src/features/analytics-observability/contract.ts`.
 - Workbench emits local analytics UI metric events for the supported Portfolio workspace,
   client-side Performance summary, Performance details, horizon comparison, attribution trend,
-  advisor brief, Risk summary, Risk concentration, Risk drawdown, Risk rolling, Risk attribution,
-  and explicit report-batch operator reads through
+  advisor brief, advisor brief review actions, Risk summary, Risk concentration, Risk drawdown,
+  Risk rolling, Risk attribution, and explicit report-batch operator reads through
   `src/features/analytics-observability/metrics.ts`.
 - Workbench emits bounded local attention events and the
   `lotus_analytics_ui_attention_events_total` counter for stale, degraded, partial-source, and
@@ -59,10 +59,18 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   upstream posture cannot be hidden by another ready source.
 - `/api/metrics` exposes the implemented Workbench analytics UI metric families in Prometheus text
   format for platform scrape and dashboard/alert contracts.
+- Client-side Workbench actions, including Advisor Brief review transitions, publish only bounded
+  analytics metric events back to `/api/metrics/events`; the server-side metrics registry then
+  exposes them through `/api/metrics`. This keeps mutation observability visible to Prometheus
+  without accepting raw request bodies, response bodies, portfolio ids, client ids, correlation ids,
+  or reviewer identity as labels.
 - Do not add panel, route, or browser telemetry labels outside that contract.
 - `portfolio_id`, `client_id`, `client_name`, `holding_id`, `transaction_id`, `document_id`,
   `batch_id`, `report_job_id`, `session_id`, `trace_id`, `correlation_id`, request bodies,
   response bodies, and screen content must not become metric labels or browser event fields.
+- Gateway or BFF mutation failures should surface bounded status-class posture only. Review-action
+  and report-batch failures must not copy raw upstream problem details or entitlement text into UI
+  error messages or metric labels.
 - Canonical browser proof for the supported Slice 14 Portfolio, Performance, Risk, and
   report-batch reads has passed for `PB_SG_GLOBAL_BAL_001`; full RFC-0079 risk/evidence scope
   remains governed by later RFC-0108 evidence. The performance evidence surface now renders
@@ -74,6 +82,23 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   operator retrieval. Metadata reads use `/api/bff/api/v1/documents/{document_id}?current=true`,
   downloads use `/api/bff/api/v1/documents/{document_id}/download`, and the shared BFF proxy
   preserves binary PDF payloads plus checksum/content-disposition headers.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Advisor as Advisor browser
+  participant Workbench as Workbench UI
+  participant MetricsEvents as /api/metrics/events
+  participant Metrics as /api/metrics
+  participant Gateway as Gateway BFF target
+
+  Advisor->>Workbench: Submit Advisor Brief review action
+  Workbench->>Gateway: POST review action with caller context
+  Gateway-->>Workbench: Bounded workflow-pack response or status
+  Workbench->>MetricsEvents: POST bounded metric event
+  MetricsEvents-->>Workbench: 202 accepted
+  Metrics->>Metrics: Export Prometheus text from server registry
+```
 
 ## Output paths
 

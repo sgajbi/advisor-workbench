@@ -5,6 +5,8 @@ import {
   type AnalyticsUiState,
   type WorkbenchAnalyticsUiBrowserEvent,
   type WorkbenchAnalyticsUiMetricFamily,
+  WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS,
+  WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES,
   assertAnalyticsUiLabels,
   buildAnalyticsUiLabels,
   isAnalyticsUiState,
@@ -82,6 +84,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     route: "workbench.performance",
     panel: "performance-advisor-brief",
     operation: "performance.workspace.advisor-brief",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-advisor-brief-review-action",
+    operation: "performance.workspace.advisor-brief.review-action",
   },
   {
     route: "workbench.risk",
@@ -260,9 +267,21 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
 ] as const satisfies readonly WorkbenchAnalyticsUiObservationContext[];
 
-const metricEvents: WorkbenchAnalyticsUiMetricEvent[] = [];
-const attentionDedupeKeys = new Set<string>();
-const panelFailureCounts = new Map<string, number>();
+const analyticsUiMetricStore = globalThis as typeof globalThis & {
+  __lotusAnalyticsUiMetricEvents?: WorkbenchAnalyticsUiMetricEvent[];
+  __lotusAnalyticsUiAttentionDedupeKeys?: Set<string>;
+  __lotusAnalyticsUiPanelFailureCounts?: Map<string, number>;
+};
+
+const metricEvents =
+  analyticsUiMetricStore.__lotusAnalyticsUiMetricEvents ??= [];
+const attentionDedupeKeys =
+  analyticsUiMetricStore.__lotusAnalyticsUiAttentionDedupeKeys ??= new Set<string>();
+const panelFailureCounts =
+  analyticsUiMetricStore.__lotusAnalyticsUiPanelFailureCounts ??= new Map<
+    string,
+    number
+  >();
 
 export function classifyAnalyticsUiPanelState(
   input: AnalyticsUiPanelClassificationInput
@@ -609,6 +628,14 @@ export function getAnalyticsUiMetricEvents(): readonly WorkbenchAnalyticsUiMetri
   return metricEvents;
 }
 
+export function recordAnalyticsUiExternalMetricEvent(
+  input: unknown
+): WorkbenchAnalyticsUiMetricEvent {
+  const event = parseExternalMetricEvent(input);
+  metricEvents.push(event);
+  return event;
+}
+
 export function getAnalyticsUiMetricSamples(): WorkbenchAnalyticsUiMetricSample[] {
   const samples = new Map<string, WorkbenchAnalyticsUiMetricSample>();
   for (const event of metricEvents) {
@@ -804,7 +831,78 @@ function recordMetricEvent(params: {
     recorded_at: new Date().toISOString(),
   };
   metricEvents.push(event);
+  publishBrowserMetricEvent(event);
   return event;
+}
+
+function publishBrowserMetricEvent(event: WorkbenchAnalyticsUiMetricEvent): void {
+  if (typeof window === "undefined" || process.env.NODE_ENV === "test") {
+    return;
+  }
+  void fetch("/api/metrics/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(event),
+    cache: "no-store",
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
+function parseExternalMetricEvent(input: unknown): WorkbenchAnalyticsUiMetricEvent {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("Analytics UI metric event must be an object.");
+  }
+  const event = input as Record<string, unknown>;
+  const eventName = event.event_name;
+  const metricName = event.metric_name;
+  const value = event.value;
+  const labels = event.labels;
+  const recordedAt = event.recorded_at;
+  if (
+    typeof eventName !== "string" ||
+    !WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS.includes(
+      eventName as WorkbenchAnalyticsUiBrowserEvent
+    )
+  ) {
+    throw new Error("Analytics UI metric event has unsupported event_name.");
+  }
+  if (
+    typeof metricName !== "string" ||
+    !WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES.includes(
+      metricName as WorkbenchAnalyticsUiMetricFamily
+    )
+  ) {
+    throw new Error("Analytics UI metric event has unsupported metric_name.");
+  }
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error("Analytics UI metric event has invalid value.");
+  }
+  if (!labels || typeof labels !== "object" || Array.isArray(labels)) {
+    throw new Error("Analytics UI metric event must include labels.");
+  }
+  const normalizedLabels = buildAnalyticsUiLabels(
+    Object.fromEntries(
+      Object.entries(labels as Record<string, unknown>).filter(
+        (entry): entry is [AnalyticsUiAllowedLabel, string] =>
+          typeof entry[1] === "string"
+      )
+    ) as Partial<Record<AnalyticsUiAllowedLabel, string>>
+  );
+  assertAnalyticsUiLabels(normalizedLabels);
+  if (
+    typeof normalizedLabels.route !== "string" ||
+    typeof normalizedLabels.panel !== "string" ||
+    typeof normalizedLabels.operation !== "string"
+  ) {
+    throw new Error("Analytics UI metric event must include route, panel, and operation labels.");
+  }
+  return {
+    event_name: eventName as WorkbenchAnalyticsUiBrowserEvent,
+    metric_name: metricName as WorkbenchAnalyticsUiMetricFamily,
+    value,
+    labels: normalizedLabels,
+    recorded_at: typeof recordedAt === "string" ? recordedAt : new Date().toISOString(),
+  };
 }
 
 function readStringProperty(value: unknown, property: string): string | undefined {

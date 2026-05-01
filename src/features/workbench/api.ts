@@ -108,8 +108,7 @@ async function fetchWorkbenchMutation<T>(
 ): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Failed to ${errorLabel} (${response.status}): ${body}`);
+    throw new WorkbenchApiError(errorLabel, response.status);
   }
   return (await response.json()) as T;
 }
@@ -486,25 +485,23 @@ export async function postWorkbenchPerformanceAdvisorBriefReviewActionClient(
   },
   payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest
 ): Promise<WorkbenchPerformanceAdvisorBrief> {
-  const response = await fetch(
-    buildWorkbenchUrl(
-      "client",
-      `/workbench/${portfolioId}/performance/advisor-brief/review-actions`,
-      buildPerformanceWorkspaceQuery(params)
-    ),
-    {
-      method: "POST",
-      headers: buildAnalyticsUiCorrelationHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    }
+  return await observeWorkbenchResource(
+    "performance.workspace.advisor-brief.review-action",
+    async () =>
+      await fetchWorkbenchMutation<WorkbenchPerformanceAdvisorBrief>(
+        buildWorkbenchUrl(
+          "client",
+          `/workbench/${portfolioId}/performance/advisor-brief/review-actions`,
+          buildPerformanceWorkspaceQuery(params)
+        ),
+        "performance advisor brief review action",
+        {
+          method: "POST",
+          headers: buildAnalyticsUiCorrelationHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify(payload),
+        }
+      )
   );
-  if (!response.ok) {
-    throw new Error(
-      `Failed to record performance advisor brief review action (${response.status})`
-    );
-  }
-  return (await response.json()) as WorkbenchPerformanceAdvisorBrief;
 }
 
 function buildRiskWorkspaceQuery(params: {

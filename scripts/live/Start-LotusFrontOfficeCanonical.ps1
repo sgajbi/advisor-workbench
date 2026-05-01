@@ -181,12 +181,21 @@ function Start-WorkbenchDevServer {
   $err = Join-Path $workbenchRepo "workbench-3000.dev.err.log"
   if (Test-Path $out) { Remove-Item $out -Force }
   if (Test-Path $err) { Remove-Item $err -Force }
-  Start-Process -FilePath "npm.cmd" `
-    -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
-    -WorkingDirectory $workbenchRepo `
-    -RedirectStandardOutput $out `
-    -RedirectStandardError $err `
-    -WindowStyle Hidden | Out-Null
+  $previousBffBaseUrl = $env:BFF_BASE_URL
+  $previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED
+  $env:BFF_BASE_URL = "http://gateway.dev.lotus"
+  $env:NEXT_TELEMETRY_DISABLED = "1"
+  try {
+    Start-Process -FilePath "npm.cmd" `
+      -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
+      -WorkingDirectory $workbenchRepo `
+      -RedirectStandardOutput $out `
+      -RedirectStandardError $err `
+      -WindowStyle Hidden | Out-Null
+  } finally {
+    $env:BFF_BASE_URL = $previousBffBaseUrl
+    $env:NEXT_TELEMETRY_DISABLED = $previousNextTelemetryDisabled
+  }
   Start-Sleep -Seconds 10
 }
 
