@@ -40,6 +40,7 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("-LocalApps workbench,gateway,manage");
     expect(runbook).toContain("live:stack:up:workbench-local");
     expect(runbook).toContain("live:stack:up:core-manage");
+    expect(runbook).toContain("core seed in ingest-only mode");
     expect(runbook).toContain("Use it only for API-level RFC proof");
     expect(runbook).toContain("GET /api/v1/rebalance/supportability/summary");
   });
@@ -85,6 +86,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("[switch]$CoreManageOnly");
     expect(script).toContain("Core/manage proof mode enabled");
+    expect(script).toContain("param([switch]$IngestOnly)");
+    expect(script).toContain("--ingest-only");
     expect(script).toContain("$global:LASTEXITCODE = 0");
     expect(script).toContain("Command failed with exit code $LASTEXITCODE");
     expect(script).toContain("Resetting lotus-core Docker state before canonical reseed");

@@ -132,7 +132,7 @@ npm run live:stack:up:core-manage
 
 This mode still uses the canonical hosts block, starts Docker-backed `lotus-core`, starts
 `lotus-manage` on the canonical coexistence port `8001`, restarts direct ingress, and runs the
-governed `PB_SG_GLOBAL_BAL_001` core seed. It intentionally skips `lotus-performance`,
+governed `PB_SG_GLOBAL_BAL_001` core seed in ingest-only mode. It intentionally skips `lotus-performance`,
 `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-report`, `lotus-archive`, `lotus-render`,
 `lotus-gateway`, and `lotus-workbench`. Use it only for API-level RFC proof where the evidence
 target is core source-data products plus manage APIs, not populated Workbench screenshots or

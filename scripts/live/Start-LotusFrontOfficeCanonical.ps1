@@ -252,8 +252,15 @@ function Start-DirectIngress {
 }
 
 function Invoke-CanonicalCoreSeed {
+  param([switch]$IngestOnly)
+
+  $seedCommand = "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds $SeedWaitSeconds"
+  if ($IngestOnly) {
+    $seedCommand = "$seedCommand --ingest-only"
+  }
+
   Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
-  Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds $SeedWaitSeconds"
+  Invoke-RepoCommand $coreRepo $seedCommand
 }
 
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
@@ -277,7 +284,7 @@ if ($CoreManageOnly) {
   Write-Host "Core/manage proof mode enabled; skipping non-essential front-office services."
   Start-CanonicalManage
   Start-DirectIngress
-  Invoke-CanonicalCoreSeed
+  Invoke-CanonicalCoreSeed -IngestOnly
   Write-Host ""
   Write-Host "Canonical core/manage proof stack is up."
   Write-Host "  Core query:   http://core-query.dev.lotus"
