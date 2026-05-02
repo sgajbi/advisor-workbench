@@ -312,9 +312,13 @@ export async function getWorkbenchPerformanceWorkspaceSummary(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
-  return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
-    buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "server"),
-    "performance workspace summary"
+  return await observeWorkbenchResource(
+    "performance.workspace.summary",
+    async () =>
+      await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
+        buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "server"),
+        "performance workspace summary"
+      )
   );
 }
 
