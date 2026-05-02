@@ -197,14 +197,14 @@ async function run() {
     postJson,
   });
 
-  const manageCapabilities = await fetchJson(
+  const manageSupportabilitySummary = await fetchJson(
     summary,
-    "http://manage.dev.lotus/integration/capabilities?consumer_system=lotus-gateway&tenant_id=default",
-    "lotus-manage integration capabilities",
+    "http://manage.dev.lotus/api/v1/rebalance/supportability/summary",
+    "lotus-manage supportability summary",
     timeoutMs
   );
-  if (!Array.isArray(manageCapabilities?.features) || manageCapabilities.features.length < 1) {
-    throw new Error("lotus-manage integration capabilities returned no feature flags.");
+  if (manageSupportabilitySummary?.supportability?.state !== "ready") {
+    throw new Error("lotus-manage supportability summary returned non-ready supportability.");
   }
 
   const reportCapabilities = await fetchJson(
@@ -236,9 +236,14 @@ async function run() {
     "Gateway platform capabilities",
     timeoutMs
   );
-  const gatewayManageFeatures = gatewayCapabilities?.data?.sources?.lotus_manage?.features;
-  if (!Array.isArray(gatewayManageFeatures) || gatewayManageFeatures.length < 1) {
-    throw new Error("Gateway platform capabilities returned no lotus-manage feature flags.");
+  const gatewayModuleHealth = gatewayCapabilities?.data?.normalized?.moduleHealth;
+  if (!gatewayModuleHealth || typeof gatewayModuleHealth.lotus_manage !== "string") {
+    throw new Error("Gateway platform capabilities returned no explicit lotus-manage module health.");
+  }
+  for (const requiredSource of ["lotus_core", "lotus_performance", "lotus_risk"]) {
+    if (gatewayModuleHealth[requiredSource] !== "available") {
+      throw new Error(`Gateway platform capabilities returned non-available ${requiredSource}.`);
+    }
   }
 
   const gatewayOverview = await fetchJson(

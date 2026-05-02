@@ -42,6 +42,7 @@ describe("RiskConcentrationPanel", () => {
     expect(screen.queryByRole("heading", { name: "Concentration scale" })).not.toBeInTheDocument();
     const scaleSection = screen.getByLabelText("Risk concentration scale");
     expect(scaleSection).toHaveClass("performance-risk-concentration-scale");
+    expect(container.querySelector(".performance-risk-module-body-context-only")).toBeTruthy();
     expect(
       container.querySelectorAll(".performance-risk-concentration-scale-card")
     ).toHaveLength(2);

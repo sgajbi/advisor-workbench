@@ -195,6 +195,7 @@ describe("RiskRollingPanel", () => {
         /Historical attribution remains available, but rolling-window review is incomplete for this selection\./i
       )
     ).toBeInTheDocument();
-    expect(screen.getByText("No rolling risk metrics")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Rolling risk summary table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Review note" })).not.toBeInTheDocument();
   });
 });

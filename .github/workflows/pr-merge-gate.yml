@@ -61,7 +61,7 @@ jobs:
       - name: Install
         run: make install
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
       - name: Run Playwright Smoke
         run: make test-e2e
       - name: Upload Playwright Artifacts

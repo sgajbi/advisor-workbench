@@ -54,12 +54,36 @@ Use the API samples to show that the UI is backed by live services rather than s
 - performance summary
 - risk summary
 - advisor brief
-- Manage integration capabilities
+- Manage supportability summary through `GET /api/v1/rebalance/supportability/summary`
 - Report integration capabilities
 - Archive and Render readiness
 
 These files are useful in offline demos because they preserve the actual response shape used by
 Workbench and Gateway during the proof run.
+
+```mermaid
+flowchart LR
+  Advisor[Advisor browser] --> Workbench[lotus-workbench]
+  Workbench --> BFF[/api/bff/*/]
+  BFF --> Gateway[lotus-gateway]
+  Gateway --> Core[lotus-core]
+  Gateway --> Performance[lotus-performance]
+  Gateway --> Risk[lotus-risk]
+  Gateway --> AI[lotus-ai]
+  Gateway --> Report[lotus-report]
+  Gateway --> Archive[lotus-archive]
+  Gateway --> Render[lotus-render]
+  Gateway --> ManageRuns[lotus-manage run/supportability]
+  Workbench -. live evidence only .-> ManageSummary[manage.dev.lotus api/v1/rebalance/supportability/summary]
+  Workbench --> Metrics[/api/metrics and /api/metrics/events/]
+  Metrics --> Prometheus[Prometheus]
+  Prometheus --> Grafana[Grafana]
+```
+
+The direct Manage probe is an evidence-readiness check, not a product data shortcut. Workbench
+product surfaces continue to consume Gateway-shaped contracts. Current `lotus-manage` proof is
+limited to strategic run lookup and supportability posture while discretionary mandate management
+APIs are being revamped.
 
 ## Demonstrating Non-Functional Capabilities
 
@@ -88,6 +112,8 @@ Before using a pack in client or operator material, review it for obvious degrad
 - screenshots are paired with `npm run live:validate` evidence from the same live stack window
 - `observability-evidence-manifest.json` has `validation.summaryExists=true` and separates
   application `apiChecks` from dashboard and metrics `metricChecks`
+- canonical screenshots are captured after transient hover overlays are dismissed, so demo packs
+  should not contain accidental tooltips or pointer-triggered state
 
 ## Performance Trace Review
 
@@ -143,6 +169,24 @@ Current residual to classify honestly:
   that as a known functional residual only when the canonical performance route, Gateway overview,
   and validation summary are otherwise green. It is not acceptable for the pack to contain
   non-canonical portfolio traffic such as `DEMO_ADV_USD_001` during canonical evidence capture.
+
+## Current Gold-Pass Evidence
+
+The 2026-05-02 RFC-0108 Workbench gold-pass run produced these local artifacts:
+
+- canonical validation summary:
+  `output/rfc-0108-live-gold-pass-20260502/live-validation-summary.json`
+- demo screenshot index:
+  `output/rfc-0108-live-gold-pass-20260502/SHOT-INDEX.md`
+- observability manifest:
+  `output/rfc-0108-live-gold-pass-20260502-observability/observability-evidence-manifest.json`
+- observability screenshots:
+  `output/rfc-0108-live-gold-pass-20260502-observability/screenshots/`
+
+The canonical validation recorded 24 API checks, 8 UI checks, 7 governed screenshots, 12 panel
+classifications, and 4 advisor-brief workflow-pack checks for `PB_SG_GLOBAL_BAL_001` against
+`BMK_PB_GLOBAL_BALANCED_60_40`. All application API samples in the companion observability pack
+returned HTTP `200`, including Manage readiness and Manage supportability summary.
 
 ## Suggested Offline Demo Flow
 

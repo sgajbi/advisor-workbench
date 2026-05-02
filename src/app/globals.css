@@ -7316,6 +7316,10 @@ a:hover {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.performance-risk-module-body-context-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .performance-risk-module-shell-compact .performance-risk-module-body {
   gap: 0.58rem;
 }
@@ -8294,7 +8298,7 @@ a:hover {
 }
 
 .performance-risk-concentration-scale-header .performance-risk-term-label {
-  max-width: 24ch;
+  max-width: 100%;
 }
 
 .performance-risk-concentration-scale-band-label {

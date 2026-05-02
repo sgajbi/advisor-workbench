@@ -197,6 +197,7 @@ Validation layers:
    - `lotus-report`
    - `lotus-archive`
    - `lotus-render`
+   - `lotus-manage` supportability summary through `GET /api/v1/rebalance/supportability/summary`
 3. Gateway and Workbench route readiness
 4. live Gateway contracts for:
    - foundation workspace

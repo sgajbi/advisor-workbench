@@ -32,6 +32,8 @@ describe("live validation browser workflow helpers", () => {
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "lotus-browser-workflow-"));
     const screenshotCalls: Array<{ path: string; fullPage: boolean }> = [];
+    const mouseMoves: Array<{ x: number; y: number }> = [];
+    const keyPresses: string[] = [];
     const summary = {
       uiChecks: [],
       screenshots: [],
@@ -67,6 +69,16 @@ describe("live validation browser workflow helpers", () => {
 
       await helpers.screenshotRegisteredPanel(
         {
+          mouse: {
+            move: async (x: number, y: number) => {
+              mouseMoves.push({ x, y });
+            },
+          },
+          keyboard: {
+            press: async (key: string) => {
+              keyPresses.push(key);
+            },
+          },
           screenshot: async ({ path, fullPage }: { path: string; fullPage: boolean }) => {
             screenshotCalls.push({ path, fullPage });
           },
@@ -74,6 +86,8 @@ describe("live validation browser workflow helpers", () => {
         "performance.risk.snapshot"
       );
 
+      expect(mouseMoves).toEqual([{ x: 1, y: 1 }]);
+      expect(keyPresses).toEqual(["Escape"]);
       expect(screenshotCalls).toEqual([
         {
           path: join(tempDir, "performance-risk-live.png"),

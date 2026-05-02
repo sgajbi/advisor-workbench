@@ -20,6 +20,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("[int]$Attempts = 8");
     expect(script).toContain("retrying ($attempt/$Attempts)");
     expect(script).toContain("after $Attempts attempts");
+    expect(script).toContain("http://manage.dev.lotus/api/v1/rebalance/supportability/summary");
+    expect(script).toContain("lotus-manage supportability summary");
+    expect(script).not.toContain("http://manage.dev.lotus/integration/capabilities");
   });
 
   it("documents stable live-validation artifact ownership", () => {
@@ -36,6 +39,29 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("Docker is the default for every canonical front-office app");
     expect(runbook).toContain("-LocalApps workbench,gateway,manage");
     expect(runbook).toContain("live:stack:up:workbench-local");
+    expect(runbook).toContain("GET /api/v1/rebalance/supportability/summary");
+  });
+
+  it("uses strategic lotus-manage supportability during live proof without stale capability probes", () => {
+    const validationScript = readFileSync(
+      join(process.cwd(), "scripts", "live", "Validate-LotusFrontOfficeCanonical.ps1"),
+      "utf8"
+    );
+    const browserValidator = readFileSync(
+      join(process.cwd(), "scripts", "live", "validate-canonical-workbench-live.mjs"),
+      "utf8"
+    );
+
+    for (const script of [validationScript, browserValidator]) {
+      expect(script).toContain("http://manage.dev.lotus/api/v1/rebalance/supportability/summary");
+      expect(script).toContain("lotus-manage supportability summary");
+      expect(script).not.toContain("http://manage.dev.lotus/integration/capabilities");
+      expect(script).not.toContain("lotus-manage integration capabilities");
+    }
+
+    expect(browserValidator).toContain('supportability?.state !== "ready"');
+    expect(browserValidator).toContain("gatewayModuleHealth.lotus_manage");
+    expect(browserValidator).not.toContain("gatewayManageFeatures");
   });
 
   it("starts the governed seed with the canonical RFC-0075 as-of date", () => {

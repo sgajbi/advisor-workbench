@@ -192,7 +192,7 @@ $apiChecks += Write-HttpArtifact "gateway-workbench-overview" "http://gateway.de
 $apiChecks += Write-HttpArtifact "gateway-performance-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "api\gateway-performance-summary.json"
 $apiChecks += Write-HttpArtifact "gateway-risk-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "api\gateway-risk-summary.json"
 $apiChecks += Write-HttpArtifact "gateway-advisor-brief" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "api\gateway-advisor-brief.json"
-$apiChecks += Write-HttpArtifact "manage-integration-capabilities" "http://manage.dev.lotus/integration/capabilities?consumer_system=lotus-gateway&tenant_id=default" "api\manage-integration-capabilities.json"
+$apiChecks += Write-HttpArtifact "manage-supportability-summary" "http://manage.dev.lotus/api/v1/rebalance/supportability/summary" "api\manage-supportability-summary.json"
 $apiChecks += Write-HttpArtifact "report-integration-capabilities" "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "api\report-integration-capabilities.json"
 
 $metricChecks = @()
