@@ -8,6 +8,7 @@ param(
   [string[]]$LocalApps = @(),
   [switch]$CleanCoreState,
   [switch]$BuildImages,
+  [switch]$CoreManageOnly,
   [switch]$RunValidation
 )
 
@@ -229,6 +230,32 @@ function Get-EnvScopedComposeCommand {
   return "`$env:LOTUS_AI_ENV_FILE = '$EnvFile'; $Command"
 }
 
+function Start-CanonicalManage {
+  if (Test-LocalApp "manage") {
+    Invoke-RepoCommand $manageRepo "docker compose down --remove-orphans"
+    Write-Host "Starting canonical lotus-manage locally on :8001 ..."
+    & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1") -Port 8001
+    if ($LASTEXITCODE -ne 0) {
+      throw "Canonical lotus-manage local startup failed with exit code $LASTEXITCODE."
+    }
+    return
+  }
+
+  Stop-HostProcessOnPort -Port 8001 -Description "lotus-manage"
+  Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }
+}
+
+function Start-DirectIngress {
+  Write-Host "Ensuring direct ingress container is running..."
+  Remove-ContainerIfPresent "lotus-direct-dev-ingress"
+  docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/etc/caddy/Caddyfile" caddy:2.8.4 | Out-Null
+}
+
+function Invoke-CanonicalCoreSeed {
+  Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
+  Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds $SeedWaitSeconds"
+}
+
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
@@ -245,22 +272,28 @@ Write-Host "Starting Docker-backed canonical services..."
 $resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
 Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
 Invoke-ComposeUp $coreRepo
+
+if ($CoreManageOnly) {
+  Write-Host "Core/manage proof mode enabled; skipping non-essential front-office services."
+  Start-CanonicalManage
+  Start-DirectIngress
+  Invoke-CanonicalCoreSeed
+  Write-Host ""
+  Write-Host "Canonical core/manage proof stack is up."
+  Write-Host "  Core query:   http://core-query.dev.lotus"
+  Write-Host "  Core control: http://core-control.dev.lotus"
+  Write-Host "  Manage:       http://manage.dev.lotus"
+  Write-Host ""
+  Write-Host "Run the core and manage API validators for RFC-087/RFC-0036 proof."
+  return
+}
+
 Invoke-ComposeUp $performanceRepo
 Invoke-ComposeUp $riskRepo
 Invoke-RepoCommand $aiRepo (Get-EnvScopedComposeCommand -Command $composeUpCommand -EnvFile $resolvedLotusAiEnvFile)
 Invoke-ComposeUp $adviseRepo
 
-if (Test-LocalApp "manage") {
-  Invoke-RepoCommand $manageRepo "docker compose down --remove-orphans"
-  Write-Host "Starting canonical lotus-manage locally on :8001 ..."
-  & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1") -Port 8001
-  if ($LASTEXITCODE -ne 0) {
-    throw "Canonical lotus-manage local startup failed with exit code $LASTEXITCODE."
-  }
-} else {
-  Stop-HostProcessOnPort -Port 8001 -Description "lotus-manage"
-  Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }
-}
+Start-CanonicalManage
 
 Invoke-ComposeUp $reportRepo
 
@@ -282,9 +315,7 @@ if (Test-LocalApp "render") {
   Invoke-ComposeUp $renderRepo
 }
 
-Write-Host "Ensuring direct ingress container is running..."
-Remove-ContainerIfPresent "lotus-direct-dev-ingress"
-docker run -d --name lotus-direct-dev-ingress -p 80:80 -v "${ingressCaddyfile}:/etc/caddy/Caddyfile" caddy:2.8.4 | Out-Null
+Start-DirectIngress
 
 if (Test-LocalApp "gateway") {
   Invoke-RepoCommand $gatewayRepo "docker compose down --remove-orphans"
@@ -298,8 +329,7 @@ if (Test-LocalApp "gateway") {
   Invoke-ComposeUp $gatewayRepo
 }
 
-Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
-Invoke-RepoCommand $coreRepo "python tools/front_office_portfolio_seed.py --portfolio-id $PortfolioId --start-date 2025-03-31 --end-date 2026-04-10 --benchmark-start-date 2025-01-06 --wait-seconds $SeedWaitSeconds"
+Invoke-CanonicalCoreSeed
 
 if (Test-LocalApp "workbench") {
   Invoke-RepoCommand $workbenchRepo "docker compose down --remove-orphans"
