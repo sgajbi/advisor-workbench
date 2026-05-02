@@ -124,6 +124,20 @@ Workbench-focused development can also use:
 npm run live:stack:up:workbench-local
 ```
 
+Core/manage RFC proof can use a narrower governed bring-up path:
+
+```powershell
+npm run live:stack:up:core-manage
+```
+
+This mode still uses the canonical hosts block, starts Docker-backed `lotus-core`, starts
+`lotus-manage` on the canonical coexistence port `8001`, restarts direct ingress, and runs the
+governed `PB_SG_GLOBAL_BAL_001` core seed in ingest-only mode. It intentionally skips `lotus-performance`,
+`lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-report`, `lotus-archive`, `lotus-render`,
+`lotus-gateway`, and `lotus-workbench`. Use it only for API-level RFC proof where the evidence
+target is core source-data products plus manage APIs, not populated Workbench screenshots or
+gateway-mediated product flows.
+
 The command exits after the stack is usable. It does not block on browser validation.
 Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
 not considered success.
