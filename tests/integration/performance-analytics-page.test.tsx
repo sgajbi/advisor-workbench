@@ -4,6 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
 import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
+import {
   buildPerformanceAttributionTrend,
   buildAggregateContributionPerformanceScenario,
   buildBenchmarkUnassignedPerformanceScenario,
@@ -104,6 +108,7 @@ async function expectTextPresent(text: string) {
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
     replaceMock.mockReset();
+    resetAnalyticsUiMetricEvents();
     vi.unstubAllGlobals();
   });
 
@@ -151,6 +156,41 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Review Context")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
+  });
+
+  it("records bounded route-load observability for the initial performance summary", async () => {
+    installPerformancePageFetchMock();
+
+    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+
+    const summaryEvents = getAnalyticsUiMetricEvents().filter(
+      (event) => event.labels.operation === "performance.workspace.summary"
+    );
+    const summaryMetricNames = new Set(summaryEvents.map((event) => event.metric_name));
+
+    expect(summaryMetricNames.has("lotus_workbench_api_request_duration_seconds")).toBe(true);
+    expect(summaryMetricNames.has("lotus_workbench_panel_state_total")).toBe(true);
+    expect(summaryMetricNames.has("lotus_workbench_panel_hydration_duration_seconds")).toBe(true);
+    expect(summaryEvents.length).toBeGreaterThanOrEqual(3);
+
+    for (const event of summaryEvents) {
+      expect(event.labels).toEqual(
+        expect.objectContaining({
+          route: "workbench.performance",
+          panel: "performance-summary",
+          operation: "performance.workspace.summary",
+          service: "lotus-gateway",
+        })
+      );
+    }
+
+    const renderedMetrics = JSON.stringify(summaryEvents);
+    expect(renderedMetrics).not.toContain("portfolio_id");
+    expect(renderedMetrics).not.toContain("client_id");
+    expect(renderedMetrics).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(renderedMetrics).not.toContain("CIF_");
   });
 
   it("prefers the front-office seeded performance portfolio when it is available", async () => {

@@ -92,6 +92,9 @@ Use the non-functional artifacts to explain how teams operate the stack:
 - container inventory proves which apps and support services were live
 - readiness samples show health/readiness posture by app
 - Workbench `/api/metrics` shows Prometheus-formatted UI observability metrics
+- the initial Performance Summary route load emits the same bounded
+  `performance.workspace.summary` API, panel-state, and hydration metrics as supported client-side
+  refreshes
 - Prometheus target and `up` query samples show scrape posture
 - Grafana health and screenshots show dashboard entrypoint posture
 - bounded log tails show where operators start when investigating Gateway, Workbench, Core,
