@@ -60,6 +60,9 @@ must travel through Gateway-shaped contracts.
     Manage only for readiness and supportability evidence through
     `GET /api/v1/rebalance/supportability/summary`; any future discretionary mandate management
     product surface must be backed by new strategic Gateway APIs before it is exposed in Workbench.
+    RFC-0098 defines that future DPM command-center experience and keeps Workbench as a renderer of
+    Gateway-composed mandate truth, not a direct caller of manage, risk, performance, core, report,
+    archive, or AI.
 12. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
     not the active RFC-0108 product surface and should not be used as current client-demo evidence.
 
@@ -78,8 +81,11 @@ flowchart TB
   Render[PDF render readiness]
   Manage[Strategic DPM run lookup and supportability]
   Advise[Advisor-led proposal workflows]
+  DpmCenter[Future DPM command center UI]
 
   Workbench -->|/api/bff/api/v1/workbench/*| Gateway
+  Workbench --> DpmCenter
+  DpmCenter -->|Gateway RFC-0098 contract| Gateway
   Gateway --> Core
   Gateway --> Performance
   Gateway --> Risk

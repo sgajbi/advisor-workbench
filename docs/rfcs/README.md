@@ -29,4 +29,5 @@ Governance boundary:
 | RFC-0021 | UI Architecture Hardening and Design-System Governance | IMPLEMENTED | `docs/rfcs/RFC-0021-ui-architecture-hardening-and-design-system-governance.md` |
 | RFC-0022 | Stateful Risk Workspace and lotus-risk UI Integration | IMPLEMENTED | `docs/rfcs/RFC-0022-stateful-risk-workspace-and-lotus-risk-ui-integration.md` |
 | RFC-0023 | Risk Workspace UX Hardening and Production Readiness | IMPLEMENTED | `docs/rfcs/RFC-0023-risk-workspace-ux-hardening-and-production-readiness.md` |
+| RFC-0098 | DPM Mandate Command Center Experience | PROPOSED | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
 

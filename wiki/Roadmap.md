@@ -13,5 +13,7 @@
 ## Next priorities
 
 1. keep strengthening Portfolio and Performance truth and density
-2. preserve gateway-first integration discipline
-3. continue aligning route ownership to the product architecture blueprint
+2. implement RFC-0098 as the Gateway-backed DPM mandate command-center experience once Gateway
+   RFC-0098 provides the certified composition contract
+3. preserve gateway-first integration discipline
+4. continue aligning route ownership to the product architecture blueprint

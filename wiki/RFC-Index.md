@@ -10,6 +10,8 @@
   CI and validation governance
 - RFC-0073
   context and agent guidance system
+- RFC-0098
+  proposed DPM mandate command-center product experience backed by Gateway RFC-0098
 
 ## Local references
 
