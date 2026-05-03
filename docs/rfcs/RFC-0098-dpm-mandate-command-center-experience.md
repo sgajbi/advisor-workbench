@@ -2,13 +2,13 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | PROPOSED - RFC-0040 PROOF-PACK EXPERIENCE ALIGNED |
+| **Status** | PROPOSED - RFC-0041 WAVE ORCHESTRATION EXPERIENCE ALIGNED |
 | **Created** | 2026-05-03 |
-| **Last Tightened** | 2026-05-03 |
+| **Last Tightened** | 2026-05-04 |
 | **Owner** | `lotus-workbench` |
 | **Primary Upstream Contract** | `lotus-gateway` RFC-0098 `DPM Command Center` |
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
-| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
+| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
 | **Implementation Branch** | TBD when implementation begins |
 
@@ -283,6 +283,96 @@ Required UI states:
 
 Supported-feature promotion is forbidden until Gateway implementation, Workbench browser proof,
 canonical screenshots, accessibility checks, and live validation pass.
+
+### 7.0B Rebalance Wave Command Center Addendum
+
+Workbench RFC-0098 must include a rebalance-wave command-center workspace once Gateway exposes the
+RFC-0041 wave composition family backed by `lotus-manage`. This workspace belongs inside the DPM
+command center because waves are the operating container for affected portfolios, source checks,
+construction alternatives, proof-pack linkage, approval, staging, and internal operations handoff.
+
+Workbench must consume Gateway only. It must not call `lotus-manage` directly, must not calculate
+source readiness, aggregate metrics, construction alternatives, proof-pack state, action
+eligibility, supportability, or handoff posture, and must not imply external execution from manage
+handoff refs.
+
+Target user journey:
+
+1. PM or CIO opens the DPM wave command-center view from `/dpm`.
+2. The user previews or opens a wave backed by a Gateway route under
+   `/api/v1/dpm/command-center/waves`.
+3. Workbench renders mixed readiness across ready, degraded, blocked, simulated, selected,
+   proof-pack-ready, approved, staged, and handoff-ready items.
+4. Workbench enables only Gateway-returned actions and shows disabled reasons for every blocked
+   source-check, simulate, select, approve, stage, or handoff action.
+5. Operations opens the supportability drawer and sees support refs, source owner, reason codes,
+   and remediation route without portfolio/client identifiers or raw payloads.
+6. Sales/pre-sales can demonstrate candidate selection through internal handoff, while clearly
+   stating that external execution is not claimed by manage or Workbench.
+
+Required wave panels:
+
+| Panel | Purpose | Required behavior |
+| --- | --- | --- |
+| Wave Header | Show wave identity, trigger, as-of date, state, version, item counts, and supportability. | Preserve Gateway/manage state names and display `external_execution_claimed=false` when handoff refs are shown. |
+| Item Matrix | Let PM, CIO, and operations scan mixed item readiness. | Render item state, reason codes, selected alternative refs, proof-pack refs, and product-safe diagnostics from Gateway only. |
+| Action Rail | Guide source-check, simulate, select, approve, stage, and handoff progression. | Buttons are enabled only from Gateway `action_eligibility`; disabled reasons remain visible and auditable. |
+| Construction Drawer | Compare generated alternatives for eligible items. | Render Gateway construction module data; never run optimization or infer selection locally. |
+| Proof-Pack Evidence Drawer | Explain selected item evidence. | Link proof-pack id, section posture, content hash, Markdown/report/AI input posture, and degraded reasons when Gateway provides them. |
+| Supportability Drawer | Support operator triage. | Show support refs, source owners, remediation routes, and safe diagnostics; hide portfolio/client/raw request/trace details. |
+| Operations Handoff Rail | Show internal staging and handoff posture. | Render staged and handoff-ready refs as internal evidence only; do not expose unsupported execution controls. |
+
+Required UI states:
+
+1. no wave selected,
+2. preview available but not durable,
+3. created wave awaiting source check,
+4. source-checked wave with mixed ready/degraded/blocked items,
+5. simulation in progress,
+6. simulated or partially simulated wave,
+7. alternative selection required,
+8. proof-pack pending or degraded,
+9. approval available or approval blocked,
+10. approved with exceptions,
+11. staged,
+12. handoff-ready with internal handoff evidence,
+13. Gateway unavailable,
+14. manage wave authority unavailable,
+15. supportability blocked/degraded/not found.
+
+```mermaid
+flowchart LR
+  User[PM / CIO / Operations] --> UI[Workbench DPM Wave Workspace]
+  UI --> BFF[Workbench BFF wrapper]
+  BFF --> Gateway[Gateway RFC-0098 wave composition]
+  Gateway --> Manage[lotus-manage RFC-0041 wave authority]
+  Gateway --> Risk[lotus-risk]
+  Gateway --> Perf[lotus-performance]
+  Gateway --> Report[lotus-report]
+  Gateway --> Archive[lotus-archive]
+  Gateway --> AI[lotus-ai]
+```
+
+Workbench must consume these Gateway wave routes when implemented:
+
+| Gateway endpoint | Workbench route/use |
+| --- | --- |
+| `GET /api/v1/dpm/command-center/waves` | `/dpm/waves` list or embedded wave rail |
+| `GET /api/v1/dpm/command-center/waves/{wave_id}` | `/dpm/waves/[waveId]` detail workspace |
+| `GET /api/v1/dpm/command-center/waves/{wave_id}/supportability` | supportability drawer |
+| `POST /api/v1/dpm/command-center/waves/preview` | non-durable preview workflow |
+| `POST /api/v1/dpm/command-center/waves` | durable wave creation |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/source-check` | source-check action |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/simulate` | construction simulation action |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/items/{wave_item_id}/select` | alternative selection drawer |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/approve` | approval action |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/stage` | staging action |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/handoff` | internal operations handoff action |
+
+Supported-feature promotion is forbidden until Gateway implementation is merged, Workbench BFF and
+browser implementation is complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual
+and accessibility evidence is captured, screenshots are reviewed for layout/state correctness, and
+the wiki/supported-feature material is updated with implementation-backed wording.
 
 Workbench must consume these Gateway routes:
 
