@@ -64,7 +64,9 @@ must travel through Gateway-shaped contracts.
     Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,
     report-input payloads, and AI-evidence payloads remain manage-owned and must reach Workbench
-    through Gateway composition.
+    through Gateway composition. RFC-0041 rebalance-wave preview, create, source-check,
+    simulation, selection, approval, staging, handoff, and supportability also remain
+    manage-owned and must reach Workbench through Gateway wave composition only.
 12. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
     not the active RFC-0108 product surface and should not be used as current client-demo evidence.
 
@@ -82,11 +84,13 @@ flowchart TB
   Archive[Document metadata and downloads]
   Render[PDF render readiness]
   Manage[Strategic DPM run lookup, supportability, and proof packs]
+  Waves[Future rebalance-wave workspace]
   Advise[Advisor-led proposal workflows]
   DpmCenter[Future DPM command center UI]
 
   Workbench -->|/api/bff/api/v1/workbench/*| Gateway
   Workbench --> DpmCenter
+  DpmCenter --> Waves
   DpmCenter -->|Gateway RFC-0098 contract| Gateway
   Gateway --> Core
   Gateway --> Performance

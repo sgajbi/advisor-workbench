@@ -12,7 +12,8 @@
   context and agent guidance system
 - RFC-0098
   proposed DPM mandate command-center product experience backed by Gateway RFC-0098, including
-  manage-owned RFC-0040 proof-pack evidence rendered through Gateway
+  manage-owned RFC-0040 proof-pack evidence and RFC-0041 rebalance-wave orchestration rendered
+  through Gateway without direct Workbench service calls or client-side readiness calculation
 
 ## Local references
 

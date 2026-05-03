@@ -45,6 +45,10 @@ promote dormant labels into product ownership just because historical route file
   Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations. The
   coverage registry is code-backed and tested so active product surfaces cannot silently drift
   outside bounded route/panel/operation metrics.
+- RFC-0098 now defines the future DPM rebalance-wave workspace. It is not an active supported
+  route yet; promotion requires Gateway `/api/v1/dpm/command-center/waves*` implementation,
+  Workbench BFF/browser implementation, canonical `PB_SG_GLOBAL_BAL_001` live validation, visual
+  and accessibility evidence, and implementation-backed wiki/support wording.
 
 ## Route examples
 
