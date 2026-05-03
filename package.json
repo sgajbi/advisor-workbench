@@ -14,6 +14,7 @@
     "live:stack:down": "powershell -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1",
     "live:stack:up": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1",
     "live:stack:up:core-manage": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -CoreManageOnly",
+    "live:stack:up:core-manage:build": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -CoreManageOnly -BuildImages",
     "live:stack:up:workbench-local": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench",
     "live:stack:up:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -RunValidation",
     "live:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1",

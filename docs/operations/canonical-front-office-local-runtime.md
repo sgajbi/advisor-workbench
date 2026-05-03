@@ -138,6 +138,25 @@ governed `PB_SG_GLOBAL_BAL_001` core seed in ingest-only mode. It intentionally 
 target is core source-data products plus manage APIs, not populated Workbench screenshots or
 gateway-mediated product flows.
 
+When the proof depends on local `lotus-manage` or `lotus-core` code that has changed since the
+last Docker image build, use the build variant so the evidence cannot accidentally validate a stale
+container image:
+
+```powershell
+npm run live:stack:up:core-manage:build
+```
+
+The core/manage proof mode starts Docker-backed `lotus-manage` with the explicit stateful sourcing
+posture required by the validator:
+
+- `DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED=true`
+- `DPM_STATEFUL_CORE_SOURCING_ENABLED=true`
+- `DPM_CORE_BASE_URL=http://host.docker.internal:8202` for Docker-backed manage
+
+Local manage overrides use the canonical host URL `http://core-control.dev.lotus` for the same
+source-data authority. This keeps capability truth aligned with the proof target: stateful mode
+should be advertised only when the managed core source path is actually configured.
+
 The command exits after the stack is usable. It does not block on browser validation.
 Non-zero seed or upstream startup failures must fail the PowerShell command; a partial bring-up is
 not considered success.

@@ -99,7 +99,15 @@ describe("canonical live validation script", () => {
     expect(script).toContain('$env:BFF_BASE_URL = "http://gateway.dev.lotus"');
     expect(script).toContain("$previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED");
     expect(script).toContain('Test-LocalApp "workbench"');
-    expect(script).toContain('Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }');
+    expect(script).toContain("function Invoke-WithProcessEnvironment");
+    expect(script).toContain("$localManageEnvironment = @{");
+    expect(script).toContain('LOTUS_MANAGE_HOST_PORT = "8001"');
+    expect(script).toContain('DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED = "true"');
+    expect(script).toContain('DPM_STATEFUL_CORE_SOURCING_ENABLED = "true"');
+    expect(script).toContain('DPM_CORE_BASE_URL = "http://core-control.dev.lotus"');
+    expect(script).toContain('$dockerManageEnvironment["DPM_CORE_BASE_URL"] = "http://host.docker.internal:8202"');
+    expect(script).toContain("Invoke-WithProcessEnvironment -Environment $localManageEnvironment");
+    expect(script).toContain("Invoke-ComposeUp $manageRepo $dockerManageEnvironment");
     expect(script).toContain('Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }');
     expect(script).not.toContain("Workbench already responding on :3000");
     expect(script).toContain("--portfolio-id $PortfolioId");

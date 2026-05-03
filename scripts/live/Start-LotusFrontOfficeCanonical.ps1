@@ -121,6 +121,17 @@ function Invoke-ComposeUp {
     [hashtable]$Environment = @{}
   )
 
+  Invoke-WithProcessEnvironment -Environment $Environment -ScriptBlock {
+    Invoke-RepoCommand $RepoPath $composeUpCommand
+  }
+}
+
+function Invoke-WithProcessEnvironment {
+  param(
+    [hashtable]$Environment,
+    [scriptblock]$ScriptBlock
+  )
+
   $previousValues = @{}
   foreach ($key in $Environment.Keys) {
     $previousValues[$key] = [Environment]::GetEnvironmentVariable($key, "Process")
@@ -128,7 +139,7 @@ function Invoke-ComposeUp {
   }
 
   try {
-    Invoke-RepoCommand $RepoPath $composeUpCommand
+    & $ScriptBlock
   } finally {
     foreach ($key in $Environment.Keys) {
       [Environment]::SetEnvironmentVariable($key, $previousValues[$key], "Process")
@@ -231,10 +242,21 @@ function Get-EnvScopedComposeCommand {
 }
 
 function Start-CanonicalManage {
+  $localManageEnvironment = @{
+    LOTUS_MANAGE_HOST_PORT = "8001"
+    DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED = "true"
+    DPM_STATEFUL_CORE_SOURCING_ENABLED = "true"
+    DPM_CORE_BASE_URL = "http://core-control.dev.lotus"
+  }
+  $dockerManageEnvironment = $localManageEnvironment.Clone()
+  $dockerManageEnvironment["DPM_CORE_BASE_URL"] = "http://host.docker.internal:8202"
+
   if (Test-LocalApp "manage") {
     Invoke-RepoCommand $manageRepo "docker compose down --remove-orphans"
     Write-Host "Starting canonical lotus-manage locally on :8001 ..."
-    & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1") -Port 8001
+    Invoke-WithProcessEnvironment -Environment $localManageEnvironment -ScriptBlock {
+      & (Join-Path $manageRepo "scripts\\Start-CanonicalManage.ps1") -Port 8001
+    }
     if ($LASTEXITCODE -ne 0) {
       throw "Canonical lotus-manage local startup failed with exit code $LASTEXITCODE."
     }
@@ -242,7 +264,7 @@ function Start-CanonicalManage {
   }
 
   Stop-HostProcessOnPort -Port 8001 -Description "lotus-manage"
-  Invoke-ComposeUp $manageRepo @{ LOTUS_MANAGE_HOST_PORT = "8001" }
+  Invoke-ComposeUp $manageRepo $dockerManageEnvironment
 }
 
 function Start-DirectIngress {
