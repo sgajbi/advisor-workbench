@@ -2,13 +2,13 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | PROPOSED - IMPLEMENTATION READY |
+| **Status** | PROPOSED - RFC-0040 PROOF-PACK EXPERIENCE ALIGNED |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-03 |
 | **Owner** | `lotus-workbench` |
 | **Primary Upstream Contract** | `lotus-gateway` RFC-0098 `DPM Command Center` |
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
-| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
+| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
 | **Implementation Branch** | TBD when implementation begins |
 
@@ -17,9 +17,10 @@
 ## 0. Executive Summary
 
 `lotus-manage` RFC-0038 delivered the backend foundation for mandate digital twin, health scoring,
-DPM operating state, and stateful core-sourced management. Gateway RFC-0098 defines the certified
-composition contract that brings core, manage, risk, performance, reporting, archive, and optional
-AI posture together without violating domain ownership.
+DPM operating state, stateful core-sourced management, and RFC-0040 proof-pack authority. Gateway
+RFC-0098 defines the certified composition contract that brings core, manage proof-pack evidence,
+risk, performance, report materialization, archive, and optional AI posture together without
+violating domain ownership.
 
 This RFC defines the Workbench product experience that realizes the business outcome: a
 private-banking-grade discretionary portfolio management command center.
@@ -118,7 +119,7 @@ truth. Workbench is the product experience layer; it is not a domain authority.
 2. Consume Gateway RFC-0098 and no raw domain services.
 3. Render book-level mandate oversight and single-mandate detail.
 4. Render source readiness, mandate operating state, risk posture, performance posture,
-   proof/reporting, evidence archive, and optional narrative support.
+   proof-pack evidence, reporting, evidence archive, and optional narrative support.
 5. Gate all actions through Gateway-provided eligibility.
 6. Provide evidence drawer and supportability behavior for business and operations users.
 7. Prove the surface with canonical `PB_SG_GLOBAL_BAL_001` live validation and screenshot evidence.
@@ -164,10 +165,10 @@ flowchart LR
   Bff[Workbench BFF wrapper]
   Gateway[lotus-gateway RFC-0098 DPM Command Center]
   Core[lotus-core source readiness]
-  Manage[lotus-manage mandate operating state]
+  Manage[lotus-manage mandate operating state and proof packs]
   Risk[lotus-risk risk posture]
   Performance[lotus-performance performance posture]
-  Report[lotus-report proof/reporting]
+  Report[lotus-report report materialization]
   Archive[lotus-archive evidence archive]
   AI[lotus-ai narrative support]
 
@@ -246,6 +247,42 @@ The UI must reserve product claims carefully: manage backend construction altern
 supported after RFC-0039 proof, but Workbench construction lab support is not supported until
 Gateway RFC-0098 implementation, browser validation, screenshot evidence, accessibility checks,
 and canonical front-office live proof pass.
+
+### 7.0A Proof-Pack Review Workspace Addendum
+
+Workbench RFC-0098 must include a proof-pack review workspace once Gateway exposes the
+`proof_pack_evidence` module backed by `lotus-manage` RFC-0040. This workspace belongs inside the
+DPM command center because proof packs explain why a discretionary action is proposed and whether
+the evidence is ready for PM, compliance, operations, and audit review.
+
+Workbench must consume Gateway only. It must not call `lotus-manage`, `lotus-report`, or
+`lotus-ai` directly for this surface, must not rebuild proof-pack sections, and must not generate
+proof-pack hashes, report inputs, AI evidence inputs, PM memos, or report outputs in browser code.
+
+Required proof-pack panels:
+
+| Panel | Purpose | Required behavior |
+| --- | --- | --- |
+| Proof-Pack Header | Show portfolio, mandate, as-of, proof-pack id, status, content hash, and generation posture. | Keep proof-pack identity and immutable hash visible when Gateway provides them. |
+| Section Matrix | Let PM, compliance, and operations scan evidence readiness. | Render section states, titles, summaries, reason codes, and remediation owner without changing supportability truth. |
+| Markdown Preview | Provide a business-readable proof-pack summary. | Render Gateway-provided Markdown only; do not synthesize narrative locally. |
+| Evidence Drawer | Support audit and operations review. | Show lineage refs, source hashes, generated report-input ref, AI-evidence ref, support reference, and unavailable/degraded reasons. |
+| Report/AI Handoff Rail | Show downstream materialization readiness. | Distinguish manage report-input and AI-evidence readiness from `lotus-report` report output and `lotus-ai` memo state. |
+
+Required UI states:
+
+1. no proof pack generated,
+2. proof-pack generation available,
+3. generation blocked by source readiness or entitlement,
+4. proof pack ready,
+5. proof pack degraded or pending review,
+6. proof pack blocked,
+7. report-input ready but report output unavailable,
+8. AI-evidence ready but AI memo unavailable,
+9. Gateway or manage unavailable.
+
+Supported-feature promotion is forbidden until Gateway implementation, Workbench browser proof,
+canonical screenshots, accessibility checks, and live validation pass.
 
 Workbench must consume these Gateway routes:
 
@@ -380,10 +417,11 @@ Required elements:
 6. mandate operating-state panel,
 7. risk posture panel,
 8. performance posture panel,
-9. proof/reporting panel,
-10. evidence archive panel or refs,
-11. optional narrative support panel,
-12. evidence drawer.
+9. proof-pack evidence panel,
+10. reporting panel,
+11. evidence archive panel or refs,
+12. optional narrative support panel,
+13. evidence drawer.
 
 ---
 
@@ -395,7 +433,8 @@ Required elements:
 | `mandate_operating_state` | Mandate Operating State | health, drift, constraints, restrictions, rebalance readiness, active run refs |
 | `risk_posture` | Risk Posture | concentration, drawdown, liquidity/stress if available, active risk, supportability |
 | `performance_posture` | Performance Posture | return path, contribution, attribution, benchmark-relative posture, horizon trend |
-| `proof_and_reporting` | Proof and Reporting | proof pack readiness, report batch status, generated material refs |
+| `proof_pack_evidence` | Proof-Pack Evidence | proof-pack readiness, section states, content hash, source hashes, Markdown, report-input ref, AI-evidence ref |
+| `reporting` | Reporting | report batch status, materialized report state, generated material refs |
 | `evidence_archive` | Evidence Archive | document metadata refs, controlled download refs, retention/access posture |
 | `narrative_support` | Narrative Support | optional PM explanation, task-flow posture, handoff refs |
 
@@ -652,7 +691,8 @@ Scope:
 2. add mandate identity and policy context,
 3. add health score/dimensions and primary exception,
 4. add action rail,
-5. add source, manage, risk, performance, proof/reporting, archive, and narrative modules,
+5. add source, manage, risk, performance, proof-pack evidence, reporting, archive, and narrative
+   modules,
 6. add evidence drawer.
 
 Acceptance:
