@@ -189,6 +189,64 @@ They must not reshape domain states into unsupported UI states.
 
 ## 7. Gateway Contract Consumption
 
+### 7.0 Construction Alternatives Lab Addendum
+
+Workbench RFC-0098 must include a DPM construction alternatives lab once Gateway exposes the
+construction module backed by `lotus-manage` RFC-0039. This belongs inside the command-center
+experience because the portfolio manager reaches construction alternatives from mandate attention,
+rebalance readiness, and action posture. It must not become a separate decorative optimizer page.
+
+Business outcome:
+
+1. PMs compare `do nothing`, explainable rebalance, minimum-turnover, and tax-aware choices before
+   selecting an action path,
+2. CIO and investment-control users inspect objective and constraint evidence before approval,
+3. tax and operations users understand why turnover, tax, liquidity, source readiness, or
+   supportability affects a construction choice,
+4. sales/pre-sales can demonstrate institutional-grade portfolio construction with visible
+   trade-offs and evidence.
+
+Workbench must consume Gateway only. It must not call `lotus-manage` directly and must not run
+optimizer logic or construction-method rules in the browser.
+
+Required construction lab panels:
+
+| Panel | Purpose | Required behavior |
+| --- | --- | --- |
+| Alternative Set Header | Show portfolio, mandate, as-of, supportability, and generation state. | Keep `alternative_set_id`, method count, generated timestamp, source posture, and downstream action posture visible. |
+| Comparison Matrix | Let PM compare construction alternatives. | Display method, status, drift before/after, drift reduction, turnover, trade count, estimated cost, cash impact, and supportability. |
+| Objective And Constraint Trace | Explain why each alternative exists or is constrained. | Render bounded objective terms, constraint statuses, reason codes, and source family without raw payloads. |
+| Trade Intent Preview | Show business impact without executing orders. | Render trade count and intent identifiers as preview evidence; do not expose unsupported order execution affordances. |
+| Selection Drawer | Capture PM rationale. | Submit selected alternative id, actor, bounded reason code, optional comment, and correlation id through Gateway. |
+| Evidence Drawer | Support audit, operations, and demo storytelling. | Show source supportability, lineage, degraded reason codes, and canonical proof refs where Gateway provides them. |
+
+Required UI states:
+
+1. no alternatives generated,
+2. generation in progress,
+3. ready alternatives,
+4. partial or degraded supportability,
+5. pending-review alternative,
+6. blocked or infeasible alternative,
+7. selected alternative,
+8. selection saved,
+9. selection failed with a bounded error,
+10. downstream action unavailable because Gateway/Manage says it is not supported.
+
+Canonical proof must use `PB_SG_GLOBAL_BAL_001` and show a meaningful comparison:
+
+1. do-nothing preserves drift with zero turnover,
+2. explainable heuristic reduces drift with visible trade intents,
+3. minimum-turnover shows review-required behavior when turnover budget suppresses intents,
+4. tax-aware posture carries explicit supportability/degraded reason codes until all authoritative
+   enrichment is available,
+5. selected alternative persists and remains visible after reload.
+
+The UI must reserve product claims carefully: manage backend construction alternatives are
+supported after RFC-0039 proof, but Workbench construction lab support is not supported until
+Gateway RFC-0098 implementation, browser validation, screenshot evidence, accessibility checks,
+and canonical front-office live proof pass.
+
 Workbench must consume these Gateway routes:
 
 | Gateway endpoint | Workbench route/use |
