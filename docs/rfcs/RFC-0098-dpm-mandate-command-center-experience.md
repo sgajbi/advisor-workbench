@@ -2,269 +2,375 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | PROPOSED |
+| **Status** | PROPOSED - IMPLEMENTATION READY |
 | **Created** | 2026-05-03 |
-| **Owner** | lotus-workbench |
-| **Primary Upstream Contract** | lotus-gateway RFC-0098 `DPM Command Center` |
-| **Depends On** | lotus-manage RFC-0037, lotus-manage RFC-0038, lotus-gateway RFC-0098, lotus-core RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
+| **Last Tightened** | 2026-05-03 |
+| **Owner** | `lotus-workbench` |
+| **Primary Upstream Contract** | `lotus-gateway` RFC-0098 `DPM Command Center` |
+| **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
+| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
+| **Implementation Branch** | TBD when implementation begins |
 
 ---
 
 ## 0. Executive Summary
 
-`lotus-manage` now has the backend foundation for mandate digital twin, health scoring, DPM
-operating state, and core-sourced stateful execution. `lotus-gateway` RFC-0098 defines the
-composition contract that brings manage, core, risk, performance, reporting, archive, and AI signals
-together without violating domain ownership.
+`lotus-manage` RFC-0038 delivered the backend foundation for mandate digital twin, health scoring,
+DPM operating state, and stateful core-sourced management. Gateway RFC-0098 defines the certified
+composition contract that brings core, manage, risk, performance, reporting, archive, and optional
+AI posture together without violating domain ownership.
 
-This RFC defines the Workbench product experience that turns those service capabilities into a
-sellable, client-demo-ready discretionary portfolio management command center.
+This RFC defines the Workbench product experience that realizes the business outcome: a
+private-banking-grade discretionary portfolio management command center.
 
-The goal is not another analytics page. The goal is a daily operating cockpit for portfolio
-managers and investment control teams:
+The command center is not a generic analytics dashboard. It is a daily operating cockpit for
+portfolio managers and investment control teams:
 
 1. what needs attention,
 2. why it needs attention,
 3. who owns remediation,
 4. what action is safe,
-5. what evidence supports the decision.
+5. what evidence supports the decision,
+6. what can be shown in a credible client or sales demo.
+
+Workbench must consume Gateway truth only. It must not stitch raw domain services together and must
+not invent unsupported readiness, action, risk, performance, or proof-pack states.
 
 ---
 
-## 1. Business Outcomes
+## 1. Gold-Standard Tightening Review
 
-The command center must produce clear business outcomes:
+This review records the changes made before implementation to turn the first draft into an execution
+guide.
+
+| Area | First-draft weakness | Tightened requirement |
+| --- | --- | --- |
+| Business outcome | Strong intent but not sufficiently measurable by persona. | Added PM, CIO, operations, sales/demo, and audit outcomes with route-level proof. |
+| Gateway dependency | Gateway-first was stated, but not strict enough. | Workbench must consume only Gateway RFC-0098 command-center routes; direct raw domain-service calls are forbidden. |
+| Screen design | Layout was directionally correct but lacked detailed screen anatomy. | Added book view, mandate detail, action rail, evidence drawer, module states, and route responsibilities. |
+| State handling | States existed but were not mapped to UI behavior and blocked actions in enough detail. | Added complete ready/attention/degraded/blocked/stale/not-supported/not-requested/unavailable/error handling. |
+| Testing | Testing strategy was useful but too broad. | Added unit, integration, browser, live, visual, accessibility, observability, and evidence package gates. |
+| Documentation | Docs were listed but not audience-specific. | Added business, engineering, operations, sales/pre-sales, marketing, and client-demo documentation expectations. |
+| Slices | Missing the full Lotus delivery slices. | Added platform/scaffolding, cleanup, implementation proof, second-last hardening, and final closure slices. |
+| Proof boundary | Needed clearer separation between backend proof and UI proof. | UI supported-feature promotion requires Gateway-ready contract plus canonical browser evidence. |
+
+Implementation must not begin until Gateway RFC-0098 is accepted as the upstream contract and this
+RFC maps every visible Workbench state to fields in that contract.
+
+---
+
+## 2. Business Outcomes
+
+The command center must deliver these business outcomes:
 
 1. **Portfolio manager control of the DPM book**
    PMs can start the day with a prioritized view of mandates that are ready, drifting, blocked,
-   stale, underperforming, or awaiting action.
+   stale, degraded, underperforming, or awaiting action.
 2. **Institutional mandate governance**
-   Every visible exception is tied to client mandate, model portfolio, risk limit, performance
-   posture, source readiness, or workflow evidence.
+   Every visible exception is tied to mandate policy, model portfolio, risk posture, performance
+   posture, source readiness, proof-pack state, or workflow evidence.
 3. **Faster action with less operational noise**
    PMs can move from issue detection to simulation, proof-pack generation, deferral, or escalation
    without manually checking multiple systems.
-4. **Business-friendly explanation**
-   Sales, pre-sales, and client-demo users can explain how Lotus monitors discretionary mandates and
-   protects client objectives.
+4. **CIO and investment-control oversight**
+   CIO teams can see model-level drift, mandate concentration of issues, and action readiness across
+   the book.
 5. **Operations-grade supportability**
    Operations can identify whether a bad state is caused by source data, analytics calculation,
    archive/report readiness, entitlement, or manage workflow state.
 6. **Audit-ready decision trail**
-   Actions, evidence refs, source systems, and supportability states are visible without exposing
-   sensitive raw payloads.
+   Actions, evidence refs, source systems, supportability states, and action outcomes are visible
+   without exposing sensitive raw payloads.
+7. **Client-demo and sales credibility**
+   Sales, pre-sales, and client-demo users can explain how Lotus monitors discretionary mandates,
+   protects client objectives, and links action to evidence.
 
 ---
 
-## 2. Problem Statement
+## 3. Problem Statement
 
-Workbench currently has strong portfolio, performance, risk, advisor-brief, and reporting surfaces,
-but the DPM business journey is not yet realized as one coherent command center. The user should not
-have to understand service boundaries to answer these questions:
+Workbench currently has strong Portfolio, Performance, Risk, advisor-brief, reporting, archive, and
+data-product surfaces. It does not yet realize the DPM business journey as one coherent command
+center.
+
+The user should not have to understand service topology to answer:
 
 1. Which mandates need attention today?
 2. Which issue is most severe and why?
 3. Is the portfolio ready to rebalance or blocked by source data?
 4. Is the mandate drifting from the model?
-5. Is the portfolio underperforming, riskier than intended, or breaching concentration limits?
+5. Is risk or performance posture driving the review?
 6. Is there a proof pack or report ready for governance review?
-7. What action can I safely take now?
+7. Which action is safe now?
+8. Which source system owns the degraded state?
 
-The command center must make these answers visible while remaining truthful about upstream
-supportability and domain ownership.
+The command center must make these answers visible while preserving Gateway and domain-service
+truth. Workbench is the product experience layer; it is not a domain authority.
 
 ---
 
-## 3. Product Principles
+## 4. Goals and Non-Goals
+
+### 4.1 Goals
+
+1. Add a first-class DPM command-center product surface.
+2. Consume Gateway RFC-0098 and no raw domain services.
+3. Render book-level mandate oversight and single-mandate detail.
+4. Render source readiness, mandate operating state, risk posture, performance posture,
+   proof/reporting, evidence archive, and optional narrative support.
+5. Gate all actions through Gateway-provided eligibility.
+6. Provide evidence drawer and supportability behavior for business and operations users.
+7. Prove the surface with canonical `PB_SG_GLOBAL_BAL_001` live validation and screenshot evidence.
+8. Produce polished README/wiki/demo material after implementation.
+
+### 4.2 Non-Goals
+
+1. Workbench does not call `lotus-core`, `lotus-manage`, `lotus-risk`, `lotus-performance`,
+   `lotus-report`, `lotus-archive`, or `lotus-ai` directly for this product surface.
+2. Workbench does not calculate mandate health, risk, performance, or proof-pack state.
+3. Workbench does not invent actions not returned by Gateway.
+4. Workbench does not promote target-state DPM capability as supported until live proof exists.
+5. Workbench does not build a decorative command-center landing page. The first screen is the
+   usable operating cockpit.
+
+---
+
+## 5. Product Principles
 
 1. **Gateway-first**
-   Workbench consumes only `lotus-gateway` command-center APIs for this surface.
+   Workbench consumes Gateway RFC-0098 routes through the Workbench BFF only.
 2. **Exception-first**
-   The first screen prioritizes attention, readiness, severity, and next action, not chart
-   inventory.
+   The first screen prioritizes readiness, severity, business impact, and next action.
 3. **Evidence always available**
-   Every important state links to source evidence, supportability, and ownership.
+   Every material state has a source, freshness, supportability, and evidence path.
 4. **No fake readiness**
-   Empty, partial, blocked, stale, and degraded states must be explicit.
+   Empty, partial, blocked, stale, degraded, not-supported, unavailable, and error states are
+   explicit.
 5. **PM workflow before service topology**
-   The UI should read like a DPM operating cockpit, not a stitched set of backend modules.
-6. **Demo-grade and operations-grade**
-   The same surface should support client demos and real operator troubleshooting.
+   The UI reads like a DPM operating cockpit, not a stitched service dashboard.
+6. **Enterprise density**
+   Information is dense, aligned, scannable, and domain-labeled, without decorative spectacle.
+7. **Demo-grade and operations-grade**
+   The same surface supports credible client demos and real support triage.
 
 ---
 
-## 4. Target User Journeys
-
-### 4.1 Portfolio Manager Morning Review
-
-1. PM opens the DPM command center.
-2. PM sees book-level counts by `ready`, `attention_required`, `blocked`, `stale`, and `degraded`.
-3. PM filters to `attention_required`.
-4. PM sorts by exception severity and business impact.
-5. PM opens `PB_SG_GLOBAL_BAL_001`.
-6. PM sees the primary issue, source readiness, mandate health score, model drift, risk posture,
-   performance posture, and available action.
-7. PM launches a stateful rebalance simulation only if Gateway marks simulation as eligible.
-
-### 4.2 CIO / Investment Control Review
-
-1. CIO desk opens the book view grouped by model portfolio.
-2. The screen highlights mandates affected by model drift or CIO model change.
-3. The user inspects risk and performance side panels without leaving the mandate context.
-4. The user exports or triggers proof-pack generation when governance evidence is needed.
-
-### 4.3 Operations Triage
-
-1. Operations filters blocked mandates.
-2. The screen identifies whether the block is market data, tax lots, eligibility, source readiness,
-   report generation, entitlement, or upstream timeout.
-3. Operations opens evidence and sees source owner, support reference, freshness, and remediation
-   route.
-
-### 4.4 Sales / Client Demo
-
-1. Presenter opens the canonical portfolio `PB_SG_GLOBAL_BAL_001`.
-2. The command center explains how Lotus connects core source data, mandate policy, risk,
-   performance, and DPM workflow.
-3. The presenter shows the evidence drawer and proof-pack posture.
-4. The presenter demonstrates simulation handoff only from a truthful eligible state.
-
----
-
-## 5. Information Architecture
-
-### 5.1 Route Structure
-
-| Route | Purpose |
-| --- | --- |
-| `/dpm` | Book-level DPM command center. |
-| `/dpm/mandates/[portfolioId]` | Single-mandate command-center detail. |
-| `/dpm/mandates/[portfolioId]/evidence` | Deep-linkable evidence and provenance view if needed. |
-
-The route may live under an existing portfolio shell if product navigation makes that clearer, but
-the DPM command center must remain a first-class application surface.
-
-### 5.2 Book-Level Layout
+## 6. Architecture Direction
 
 ```mermaid
-flowchart TB
-    Header[Book identity, as-of date, currency, freshness] --> Scoreboard[Ready / attention / blocked / stale counts]
-    Scoreboard --> Priority[Highest priority exceptions and next best operating action]
-    Priority --> Queue[Mandate exception queue]
-    Queue --> Drawer[Evidence and supportability drawer]
-    Queue --> Detail[Mandate detail route]
+flowchart LR
+  Workbench[lotus-workbench DPM Command Center]
+  Bff[Workbench BFF wrapper]
+  Gateway[lotus-gateway RFC-0098 DPM Command Center]
+  Core[lotus-core source readiness]
+  Manage[lotus-manage mandate operating state]
+  Risk[lotus-risk risk posture]
+  Performance[lotus-performance performance posture]
+  Report[lotus-report proof/reporting]
+  Archive[lotus-archive evidence archive]
+  AI[lotus-ai narrative support]
+
+  Workbench --> Bff
+  Bff --> Gateway
+  Gateway --> Core
+  Gateway --> Manage
+  Gateway --> Risk
+  Gateway --> Performance
+  Gateway --> Report
+  Gateway --> Archive
+  Gateway --> AI
 ```
 
-Required modules:
-
-1. book summary strip,
-2. mandate state distribution,
-3. prioritized exception queue,
-4. filters by PM, region, model, severity, state, source owner, action eligibility,
-5. compact row detail with health score, primary issue, rebalance readiness, risk state,
-   performance state, source readiness, and latest action,
-6. evidence drawer.
-
-### 5.3 Single-Mandate Layout
-
-```mermaid
-flowchart TB
-    Identity[Mandate identity and source freshness] --> Health[Mandate health and primary exception]
-    Health --> Actions[Eligible actions]
-    Health --> Sections[Core / Manage / Risk / Performance / Reporting]
-    Sections --> Evidence[Evidence trail and provenance]
-```
-
-Required modules:
-
-1. mandate identity header,
-2. health score and decomposed dimensions,
-3. primary exception narrative,
-4. source readiness panel,
-5. DPM operating-state panel,
-6. risk posture panel,
-7. performance posture panel,
-8. proof-pack/reporting panel,
-9. evidence and provenance drawer,
-10. action rail.
-
----
-
-## 6. App Feature Contribution Map
-
-Workbench must present each app contribution with domain-correct labels.
-
-| App | Workbench display contribution |
-| --- | --- |
-| `lotus-core` | "Source Data Readiness": portfolio source state, holdings freshness, market data, model binding, tax lots, eligibility, lineage. |
-| `lotus-manage` | "Mandate Operating State": digital twin, health score, drift, constraints, rebalance readiness, DPM action queue, active run refs. |
-| `lotus-risk` | "Risk Posture": concentration, drawdown, liquidity, stress, active risk, risk attribution, risk supportability. |
-| `lotus-performance` | "Performance Posture": return path, contribution, attribution, benchmark-relative performance, horizon trends, calculation supportability. |
-| `lotus-report` | "Proof and Reporting": proof-pack readiness, report batch status, latest generated material, recovery posture. |
-| `lotus-archive` | "Evidence Archive": generated document metadata, controlled download links, retention and archive refs. |
-| `lotus-ai` | "Narrative Support": optional PM summary, explanation draft, task-flow posture, handoff refs. |
-| `lotus-gateway` | "Composed Product Contract": unified command-center payload, degraded-state normalization, support references. |
-
-Workbench must not expose raw service names as the main user journey. Service ownership should be
-visible in evidence and operations views.
+Workbench may add BFF wrappers for Next.js ergonomics, but BFF wrappers must preserve Gateway truth.
+They must not reshape domain states into unsupported UI states.
 
 ---
 
 ## 7. Gateway Contract Consumption
 
-Workbench must consume:
+Workbench must consume these Gateway routes:
 
-1. `GET /api/v1/dpm/command-center`
-2. `GET /api/v1/dpm/command-center/mandates/{portfolio_id}`
-3. `GET /api/v1/dpm/command-center/mandates/{portfolio_id}/evidence`
-4. `POST /api/v1/dpm/command-center/mandates/{portfolio_id}/actions/simulate`
+| Gateway endpoint | Workbench route/use |
+| --- | --- |
+| `GET /api/v1/dpm/command-center` | `/dpm` book-level command center |
+| `GET /api/v1/dpm/command-center/mandates/{portfolio_id}` | `/dpm/mandates/[portfolioId]` detail route |
+| `GET /api/v1/dpm/command-center/mandates/{portfolio_id}/evidence` | evidence drawer or deep-link view |
+| `POST /api/v1/dpm/command-center/mandates/{portfolio_id}/actions/simulate` | action rail simulate handoff |
 
-Workbench BFF routes may wrap these Gateway endpoints for Next.js ergonomics, but they must not
-reshape domain truth or call upstream domain apps directly.
+The Workbench view model must preserve:
 
-The Workbench view model should preserve:
-
-1. `mandate_state`,
-2. `health_score`,
-3. `health_band`,
-4. `primary_exception`,
-5. `rebalance_readiness`,
-6. `risk_state`,
-7. `performance_state`,
-8. `source_readiness`,
-9. `proof_pack_state`,
+1. contract name and version,
+2. as-of date and generated timestamp,
+3. portfolio book and mandate identity,
+4. `mandate_state`,
+5. `health_score`,
+6. `health_band`,
+7. `primary_exception`,
+8. `rebalance_readiness`,
+9. module states,
 10. `recommended_actions`,
 11. `supportability`,
 12. `evidence_refs`,
-13. `lineage`.
+13. lineage,
+14. support reference.
+
+Forbidden:
+
+1. direct raw service calls for this surface,
+2. local calculation of mandate/risk/performance state,
+3. local action eligibility overrides,
+4. fallback demo data that appears as live supported behavior,
+5. metric labels containing portfolio, client, document, trace, request, response, or screen
+   content identifiers.
 
 ---
 
-## 8. UX States
+## 8. User Journeys
 
-Every module must support:
+### 8.1 Portfolio Manager Morning Review
 
-| State | UX behavior |
-| --- | --- |
-| `loading` | Skeletons with stable layout dimensions. |
-| `ready` | Full actionable module with as-of date and source freshness. |
-| `attention_required` | Promote reason, severity, and next action. |
-| `blocked` | Disable dependent action and show remediation owner. |
-| `degraded` | Show partial data with explicit missing source and business impact. |
-| `stale` | Mark stale data and suppress time-sensitive actions. |
-| `not_supported` | Show a truthful unavailable state without implying failure. |
-| `error` | Product-safe error with support reference and retry behavior. |
+1. PM opens `/dpm`.
+2. PM sees book-level counts by ready, attention, blocked, stale, and degraded.
+3. PM filters to attention-required mandates.
+4. PM sorts by severity and business impact.
+5. PM opens `PB_SG_GLOBAL_BAL_001`.
+6. PM sees primary exception, source readiness, mandate health score, drift, risk posture,
+   performance posture, proof-pack posture, and available action.
+7. PM launches a stateful rebalance simulation only if Gateway marks simulation eligible.
 
-No state may silently hide an unavailable source if that source affects action eligibility.
+### 8.2 CIO / Investment Control Review
+
+1. CIO desk opens `/dpm` grouped or filtered by model portfolio.
+2. The screen highlights model drift, mandate clusters, and high-severity exceptions.
+3. The user inspects risk and performance posture without leaving the mandate context.
+4. The user triggers proof-pack generation only when Gateway exposes that action.
+
+### 8.3 Operations Triage
+
+1. Operations filters blocked or unavailable mandates.
+2. The screen identifies source owner and remediation reason.
+3. Operations opens the evidence drawer to see support reference, freshness, and owner.
+4. Operations avoids raw payloads and uses product-safe diagnostics only.
+
+### 8.4 Sales / Client Demo
+
+1. Presenter opens the canonical DPM command center.
+2. Presenter uses `PB_SG_GLOBAL_BAL_001` to show source data, mandate controls, risk,
+   performance, and DPM workflow.
+3. Presenter shows evidence drawer and proof-pack posture.
+4. Presenter demonstrates action gating from a truthful eligible or blocked state.
 
 ---
 
-## 9. Interaction Requirements
+## 9. Information Architecture
 
-### 9.1 Book Filters
+### 9.1 Route Structure
 
-Required controls:
+| Route | Purpose | Support status before implementation |
+| --- | --- | --- |
+| `/dpm` | Book-level DPM command center. | target-state only |
+| `/dpm/mandates/[portfolioId]` | Single mandate command-center detail. | target-state only |
+| `/dpm/mandates/[portfolioId]/evidence` | Optional deep-link evidence route if drawer is insufficient. | target-state only |
+
+The command center must be a first-class Workbench application surface once supported. It may also
+be cross-linked from the portfolio workspace, but it should not be hidden as a minor panel.
+
+### 9.2 Book-Level Screen Anatomy
+
+```mermaid
+flowchart TB
+    Header[Book identity, as-of date, currency, freshness, supportability]
+    Header --> Counts[Ready / attention / blocked / stale / degraded counts]
+    Counts --> Priority[Primary business issue and next operating action]
+    Priority --> Filters[PM / region / model / state / severity / source owner / action eligibility]
+    Filters --> Queue[Mandate exception queue]
+    Queue --> Evidence[Evidence and supportability drawer]
+    Queue --> Detail[Mandate detail route]
+```
+
+Required elements:
+
+1. book identity and governed as-of context,
+2. state distribution with counts,
+3. highest-priority exception area,
+4. next best operating action,
+5. filter and sort controls,
+6. mandate exception queue,
+7. compact row with health, primary exception, module states, action eligibility,
+8. evidence drawer trigger,
+9. empty/degraded/error states.
+
+### 9.3 Single-Mandate Screen Anatomy
+
+```mermaid
+flowchart TB
+    Identity[Mandate identity and policy context]
+    Identity --> Health[Health score, health band, primary exception]
+    Health --> ActionRail[Eligible actions and blocked reasons]
+    Health --> Modules[Source / Manage / Risk / Performance / Proof / Archive / Narrative]
+    Modules --> Evidence[Evidence drawer and provenance]
+```
+
+Required elements:
+
+1. mandate identity header,
+2. health score and dimension breakdown,
+3. primary exception narrative,
+4. action rail,
+5. source readiness panel,
+6. mandate operating-state panel,
+7. risk posture panel,
+8. performance posture panel,
+9. proof/reporting panel,
+10. evidence archive panel or refs,
+11. optional narrative support panel,
+12. evidence drawer.
+
+---
+
+## 10. Module Display Contract
+
+| Module | UI label | Required display |
+| --- | --- | --- |
+| `source_data_readiness` | Source Data Readiness | holdings freshness, market data, eligibility, tax lots, lineage, source owner |
+| `mandate_operating_state` | Mandate Operating State | health, drift, constraints, restrictions, rebalance readiness, active run refs |
+| `risk_posture` | Risk Posture | concentration, drawdown, liquidity/stress if available, active risk, supportability |
+| `performance_posture` | Performance Posture | return path, contribution, attribution, benchmark-relative posture, horizon trend |
+| `proof_and_reporting` | Proof and Reporting | proof pack readiness, report batch status, generated material refs |
+| `evidence_archive` | Evidence Archive | document metadata refs, controlled download refs, retention/access posture |
+| `narrative_support` | Narrative Support | optional PM explanation, task-flow posture, handoff refs |
+
+Service ownership belongs in evidence/operations context, not as the main navigation vocabulary.
+
+---
+
+## 11. State Handling
+
+Every module must handle:
+
+| State | UI behavior | Action behavior |
+| --- | --- | --- |
+| `loading` | stable skeleton shaped like final content | no action |
+| `ready` | full module with source freshness and action affordance where relevant | action may be enabled if Gateway marks eligible |
+| `attention_required` | promote reason, severity, and next action | action follows Gateway eligibility |
+| `degraded` | show available data, missing source, business impact, and support reference | disable only dependent actions |
+| `blocked` | show blocking reason, remediation owner, and support reference | disable dependent actions |
+| `stale` | show freshness and safe interpretation | disable time-sensitive actions |
+| `not_supported` | show truthful unavailable state without implying failure | no action |
+| `not_requested` | do not render as degraded | no action |
+| `unavailable` | show product-safe failure with retry/support reference | no action unless Gateway says otherwise |
+| `error` | show route-level recovery path and support reference | no action |
+
+No module may silently hide a source issue if that issue affects action eligibility.
+
+---
+
+## 12. Interaction Requirements
+
+### 12.1 Book Filters
+
+Required filters:
 
 1. PM or book owner,
 2. region,
@@ -275,9 +381,14 @@ Required controls:
 7. action eligibility,
 8. as-of date.
 
-### 9.2 Mandate Row Actions
+Filters must be URL-addressable where practical and preserve state when returning from mandate
+detail.
 
-Possible row actions:
+### 12.2 Mandate Row and Detail Actions
+
+Actions must be rendered only from Gateway `recommended_actions`.
+
+Initial action set:
 
 1. open mandate detail,
 2. simulate rebalance,
@@ -286,176 +397,328 @@ Possible row actions:
 5. investigate performance,
 6. generate proof pack,
 7. defer exception,
-8. escalate for CIO/compliance/operations review.
+8. escalate for CIO, compliance, or operations review.
 
-Actions must be enabled only when Gateway returns them as eligible.
+Unavailable actions should show a reason if visible. Unsafe actions must not be clickable.
 
-### 9.3 Evidence Drawer
+### 12.3 Evidence Drawer
 
 The evidence drawer must show:
 
 1. source systems,
-2. data products,
+2. domain products,
 3. as-of dates,
 4. freshness,
 5. calculation supportability,
 6. report/archive refs,
 7. support reference,
 8. remediation owner,
-9. restricted-field notice when data cannot be shown.
+9. restricted-field notice when data cannot be shown,
+10. controlled download links when Gateway provides them.
+
+The drawer must not display raw holdings, raw tax lots, raw prompts, raw AI output, raw entitlement
+state, or raw upstream payloads.
 
 ---
 
-## 10. Visual and Content Standard
+## 13. Visual and Content Standard
 
-This is a private-banking operating surface, not a marketing landing page.
+This is a private-banking operating surface.
 
 Design requirements:
 
-1. dense but readable information hierarchy,
-2. restrained color use tied to state and severity,
-3. compact summary-first cards only where they represent repeated business objects,
-4. no decorative gradients, oversized hero panels, or generic empty illustrations,
-5. stable table and panel dimensions,
-6. source freshness and as-of date visible in context,
-7. business-friendly labels such as "Mandate Drift", "Source Readiness", "Risk Posture",
-   "Performance Posture", and "Proof Pack",
-8. drill-down by need, not by backend service boundary.
+1. restrained, information-dense enterprise layout,
+2. no landing-page hero,
+3. no decorative gradients, glassmorphism, generic AI purple, or large marketing illustrations,
+4. neutral workstation shell with domain-colored severity accents,
+5. tabular numerals for values, weights, returns, dates, ranks, and counts,
+6. visible units, currency, benchmark, as-of date, and source posture,
+7. summary-first hierarchy with drill-down on demand,
+8. stable table and panel dimensions,
+9. no nested cards,
+10. no figures without source/supportability context,
+11. no color-only meaning,
+12. no overlapping or clipped text at supported desktop and mobile widths.
+
+Recommended screen composition:
+
+1. compact sticky context header,
+2. state/count strip,
+3. exception queue as the primary book object,
+4. secondary evidence drawer,
+5. single-mandate detail route with action rail and modular panels.
 
 ---
 
-## 11. Implementation Slices
+## 14. Accessibility and Responsiveness
+
+Minimum requirements:
+
+1. keyboard navigation for filters, queue rows, action rail, tabs, drawers, and proof links,
+2. visible focus state,
+3. semantic headings and landmarks,
+4. table headers and row labels accessible to assistive tech,
+5. severity labels not dependent on color alone,
+6. WCAG AA contrast for text and critical states,
+7. touch targets at least 44px by 44px on mobile,
+8. mobile workflow preserves mandate identity, state, action eligibility, and evidence access,
+9. reduced-motion respect for any dynamic state changes,
+10. screenshot validation at desktop and mobile viewports before closure.
+
+---
+
+## 15. Observability and Product Analytics
+
+Workbench must use the existing analytics observability helpers for supported read and mutation
+paths.
+
+Allowed labels:
+
+1. route,
+2. panel/module,
+3. operation,
+4. state,
+5. freshness class,
+6. supportability class,
+7. source owner class where low-cardinality.
+
+Forbidden labels:
+
+1. portfolio id,
+2. client id or name,
+3. document id,
+4. report batch id,
+5. trace id,
+6. request body,
+7. response body,
+8. screen content,
+9. raw action payload.
+
+Action handoff must emit bounded mutation observability without leaking action payload details.
+
+---
+
+## 16. Implementation Slices
 
 ### Slice 0: Product and Contract Alignment
 
-1. Finalize this RFC with Gateway RFC-0098.
-2. Confirm command-center payload and module support states.
-3. Update Workbench navigation plan and panel registry if a new DPM app surface is added.
-4. Confirm canonical demo portfolio requirements.
+Scope:
+
+1. finalize this RFC with Gateway RFC-0098,
+2. verify Gateway endpoint names, module ids, state taxonomy, and action contract,
+3. decide route registration and shell/navigation placement,
+4. update panel registry plan if a new governed panel is introduced,
+5. confirm canonical demo portfolio and seed requirements.
 
 Acceptance:
 
 1. Workbench RFC references only Gateway command-center APIs.
 2. No direct raw service consumption is planned.
-3. Supported feature wording remains target-state until implementation proof exists.
+3. Every visible UI state maps to a Gateway field.
+4. Supported-features wording remains target-state until live proof exists.
 
-### Slice 1: Route, BFF, and View-Model Foundation
+### Slice 1: Platform Automation and Scaffolding Improvement Slice
 
-1. Add `/dpm` route and optional `/dpm/mandates/[portfolioId]` route.
-2. Add Workbench BFF wrappers over Gateway command-center endpoints.
-3. Add typed view models and fixtures for ready, attention, blocked, degraded, stale, and
-   not-supported states.
-4. Add route-level error and loading states.
+Scope:
+
+1. identify Workbench/platform scaffolding gaps that would affect DPM command-center delivery,
+2. check route scaffolding, BFF route tests, panel registry, observability helpers, screenshot
+   evidence, canonical validation, wiki scaffolding, and CI defaults,
+3. improve `lotus-platform` automation when gaps are cross-cutting,
+4. improve Workbench reusable patterns when gaps are product-surface-specific.
+
+Acceptance:
+
+1. Cross-cutting gaps are fixed at platform level when applicable.
+2. Workbench route scaffolding supports Gateway-backed BFF wrappers, view models, state fixtures,
+   observability, and browser evidence.
+3. No-change decisions are explicit and evidence-backed.
+
+### Slice 2: Cleanup and Structure Slice
+
+Scope:
+
+1. remove or de-emphasize stale DPM/advisory leftovers that conflict with the new DPM surface,
+2. align docs, RFC index, repository context, and wiki roadmap,
+3. keep long-lived business material in wiki source,
+4. avoid duplicating full RFC detail in wiki,
+5. verify navigation does not expose unsupported DPM routes.
+
+Acceptance:
+
+1. No stale route or doc claims suggest DPM command center is already supported before proof.
+2. Wiki source explains target-state command center clearly but truthfully.
+3. `Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-workbench` passes before merge.
+
+### Slice 3: BFF, Types, View Models, and Fixtures
+
+Scope:
+
+1. add BFF wrappers over Gateway RFC-0098 routes,
+2. add typed Gateway response contracts,
+3. add Workbench view models,
+4. add high-value fixtures for ready, attention-required, degraded, blocked, stale, not-supported,
+   unavailable, and error states,
+5. add observability mapping.
 
 Acceptance:
 
 1. Unit tests prove view-model preservation and state mapping.
-2. Integration tests prove route rendering with mocked Gateway payloads.
-3. No unsupported backend behavior is invented.
+2. Forbidden raw-service calls are absent.
+3. BFF tests prove Gateway contract preservation and error propagation.
 
-### Slice 2: Book-Level Command Center
+### Slice 4: Book-Level Command Center
 
-1. Build the book summary strip.
-2. Build state distribution and priority action area.
-3. Build mandate exception queue.
-4. Add filters and sort behavior.
-5. Add evidence drawer from Gateway evidence refs.
+Scope:
+
+1. implement `/dpm`,
+2. add book identity/header,
+3. add state distribution,
+4. add primary issue and next operating action,
+5. add filters and sorting,
+6. add mandate exception queue,
+7. add evidence drawer entry points.
 
 Acceptance:
 
 1. Ready and attention-required mandates render correctly.
 2. Blocked and stale mandates disable unsafe actions.
-3. Filtering and sorting preserve business state.
-4. Accessibility roles and keyboard navigation are covered.
+3. Filtering and sorting are tested and preserve state.
+4. Desktop and mobile screenshots show no overlap, clipping, or fake actions.
 
-### Slice 3: Single-Mandate Detail
+### Slice 5: Single-Mandate Detail
 
-1. Build mandate identity header.
-2. Build mandate health and primary exception section.
-3. Build source readiness, DPM operating state, risk posture, performance posture, and proof/report
-   panels.
-4. Add action rail with Gateway-provided eligible actions.
-5. Add drill-down to evidence drawer.
+Scope:
+
+1. implement `/dpm/mandates/[portfolioId]`,
+2. add mandate identity and policy context,
+3. add health score/dimensions and primary exception,
+4. add action rail,
+5. add source, manage, risk, performance, proof/reporting, archive, and narrative modules,
+6. add evidence drawer.
 
 Acceptance:
 
-1. Canonical `PB_SG_GLOBAL_BAL_001` route renders complete state when Gateway is ready.
-2. Partial analytics degrade truthfully.
+1. Canonical `PB_SG_GLOBAL_BAL_001` renders complete state when Gateway is ready.
+2. Optional modules degrade truthfully.
 3. Source blocked state disables simulation.
+4. All modules show as-of/source/supportability context.
 
-### Slice 4: Action Handoff and Workflow Feedback
+### Slice 6: Action Handoff and Workflow Feedback
 
-1. Wire simulate action to Gateway action endpoint.
-2. Show run refs, next action, and supportability after simulation.
-3. Support defer/escalate/proof-pack action placeholders only when Gateway implements them.
-4. Preserve audit/evidence refs in the UI.
+Scope:
+
+1. wire simulate action to Gateway action endpoint,
+2. show run refs, next action, and supportability after simulation,
+3. support future defer/escalate/proof-pack actions only when Gateway implements them,
+4. preserve evidence refs and bounded mutation observability.
 
 Acceptance:
 
 1. Simulation cannot be triggered when Gateway marks it ineligible.
 2. Successful simulation updates action state and run refs.
 3. Failed action shows support reference and remediation guidance.
+4. Action tests cover eligible, blocked, denied, timeout, and malformed response cases.
 
-### Slice 5: Canonical Runtime and Live Evidence
+### Slice 7: Implementation Proof Slice
 
-1. Extend canonical front-office validation for DPM command center.
-2. Seed or verify `PB_SG_GLOBAL_BAL_001` has realistic DPM, risk, performance, and reporting
-   support data.
-3. Capture browser evidence and request/response evidence in non-git tracked output.
-4. Update panel registry and screenshot proof naming.
+Scope:
+
+1. prove all implemented UI paths against mocked Gateway contracts,
+2. run canonical front-office stack once Gateway RFC-0098 is implemented,
+3. capture browser evidence and request/response evidence in non-git tracked output,
+4. validate evidence critically and fix gaps,
+5. keep diagnostic screenshots separate from demo screenshots.
 
 Acceptance:
 
 1. `npm run live:stack:up` and `npm run live:validate` prove the surface.
 2. Screenshots are captured only after API and panel validation pass.
 3. Evidence includes ready and degraded/blocked examples where possible.
+4. No UI supported-feature claim is made from backend-only proof.
 
-### Slice 6: Documentation, Wiki, and Demo Material
+### Slice 8: Second-Last Hardening and Review Slice
 
-1. Update README and wiki with business explanation, diagrams, screenshots, and operating notes.
-2. Add client-demo narrative for DPM command center.
-3. Add operations troubleshooting guide for degraded sources.
-4. Update supported features only after live proof.
+Scope:
 
-Acceptance:
-
-1. Wiki is useful to developers, business, operations, sales, pre-sales, marketing, and clients.
-2. Documentation distinguishes implemented truth from target-state roadmap.
-3. `Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-workbench` passes before merge.
-
-### Slice 7: Hardening and Closure
-
-1. Code review the complete surface.
-2. Remove dead UI code or stale DPM/advisory leftovers encountered.
-3. Verify no direct raw service calls exist.
-4. Verify accessibility, responsive layout, keyboard navigation, and non-overlapping text.
-5. Run full Workbench CI lane and canonical runtime proof.
+1. perform full code review of the implementation,
+2. verify Gateway-only consumption,
+3. verify accessibility and responsive behavior,
+4. verify observability labels,
+5. verify panel registry and screenshot naming,
+6. remove dead code or duplicate UI paths,
+7. run full Workbench CI and browser proof.
 
 Acceptance:
 
-1. Lint, typecheck, tests, coverage, build, Playwright, and Docker parity pass.
-2. Canonical live proof passes.
-3. Branch is clean, PR is merged, wiki is published.
+1. Lint, typecheck, tests, coverage, build, Playwright, Docker parity, and canonical validation pass.
+2. No direct raw service calls exist for the DPM command center.
+3. No unsupported actions or fake states are visible.
+4. UI is polished, dense, readable, and stable across desktop and mobile.
+
+### Slice 9: Final Closure Slice
+
+Scope:
+
+1. update README, repository context, RFC index, wiki, and supported-features material,
+2. add business-facing documentation with diagrams and demo script,
+3. add operations troubleshooting notes,
+4. update agent context or skills if this creates reusable guidance,
+5. publish wiki after merge,
+6. record final gold-pass assessment.
+
+Acceptance:
+
+1. Documentation is useful to developers, business, operations, sales/pre-sales, marketing, and
+   client-demo audiences.
+2. Supported features are implementation-backed, not aspirational.
+3. Wiki check-only passes before merge and publish succeeds after merge.
+4. Branch hygiene is clean.
 
 ---
 
-## 12. Testing Strategy
+## 17. Test Pyramid
 
 | Layer | Required coverage |
 | --- | --- |
-| Unit | view-model mapping, supportability state rendering, action eligibility, formatters, filter logic |
-| Integration | route rendering, BFF wrappers, error/degraded states, evidence drawer |
-| Browser smoke | book view, mandate detail, filters, action rail, evidence drawer |
-| Live canonical | Gateway-backed command-center response for `PB_SG_GLOBAL_BAL_001` |
-| Visual proof | screenshot pack and `SHOT-INDEX.md` after validation |
-| Accessibility | keyboard navigation, roles, focus order, visible labels, non-color-only severity |
+| Unit | view-model mapping, state rendering, action eligibility, formatters, filters, observability mapping |
+| BFF/API | Gateway wrapper preservation, error propagation, forbidden direct service calls |
+| Integration | `/dpm`, mandate detail, evidence drawer, action rail, degraded/blocked/error states |
+| Browser smoke | book view, filters, mandate detail, action gating, evidence drawer |
+| Live canonical | Gateway-backed command center for `PB_SG_GLOBAL_BAL_001` |
+| Visual proof | desktop/mobile screenshot pack and `SHOT-INDEX.md` after validation |
+| Accessibility | keyboard navigation, labels, focus order, semantic table/grid behavior, contrast |
+| Observability | bounded read and mutation metrics without forbidden labels |
 
-Tests must prove real behavior and risks. Snapshot-only or text-presence-only tests are not enough
-for this surface.
+Tests must prove real behavior and user risk. Snapshot-only tests or text-presence-only tests are
+not sufficient for this surface.
 
 ---
 
-## 13. Documentation and Wiki Requirements
+## 18. Canonical Evidence Package
+
+Implementation proof must produce a non-git-tracked evidence folder, for example:
+
+`output/front-office-qa/<timestamp>/dpm-command-center-workbench/`
+
+Required artifacts:
+
+1. Gateway book request/response used by Workbench,
+2. Gateway mandate detail request/response for `PB_SG_GLOBAL_BAL_001`,
+3. Gateway evidence request/response,
+4. eligible simulation request/response,
+5. blocked simulation request/response,
+6. desktop screenshot of `/dpm`,
+7. desktop screenshot of `/dpm/mandates/PB_SG_GLOBAL_BAL_001`,
+8. evidence drawer screenshot,
+9. mobile screenshot of critical path,
+10. `SHOT-INDEX.md`,
+11. validation summary,
+12. critical review notes and any fixed gaps.
+
+---
+
+## 19. Documentation and Wiki Requirements
 
 Workbench documentation must include:
 
@@ -468,27 +731,32 @@ Workbench documentation must include:
 7. degraded-state behavior,
 8. canonical validation instructions,
 9. demo script,
-10. screenshot evidence index.
+10. screenshot evidence index,
+11. operations troubleshooting guide,
+12. unsupported/deferred feature list.
 
-The documentation must be polished enough for business users, operations, sales, pre-sales, and
-client pitches. It must also be implementation-backed and honest about unsupported features.
+The documentation must be polished enough for business users, operations, sales, pre-sales,
+marketing, and client pitches. It must also be implementation-backed and honest about unsupported
+features.
 
 ---
 
-## 14. Risks and Controls
+## 20. Risks and Controls
 
 | Risk | Control |
 | --- | --- |
 | UI becomes a stitched service dashboard | Use Gateway command-center contract and PM workflow language. |
 | UI invents unsupported actions | Enable actions only from Gateway `recommended_actions`. |
-| Business users misunderstand degraded data | Show source owner, reason, freshness, and business impact. |
-| Surface becomes too dense | Use summary-first hierarchy and detail-on-demand. |
+| Business users misunderstand degraded data | Show source owner, reason, freshness, business impact, and support reference. |
+| Surface becomes too dense | Use summary-first hierarchy, table discipline, filters, and detail-on-demand. |
 | Demo claims exceed implementation | Promote supported features only after live proof and screenshots. |
 | Raw sensitive data leaks | Evidence drawer uses Gateway-safe refs and controlled links only. |
+| Direct service calls creep in | Add tests that forbid raw domain-service command-center calls. |
+| Accessibility weakens under dense layout | Add keyboard, labels, contrast, and screenshot review gates. |
 
 ---
 
-## 15. Definition of Done
+## 21. Definition of Done
 
 This RFC is complete only when:
 
@@ -496,17 +764,38 @@ This RFC is complete only when:
 2. Gateway RFC-0098 contract is consumed end to end,
 3. no direct raw service calls are used for command-center data,
 4. book and single-mandate journeys are implemented,
-5. ready, attention, blocked, degraded, stale, not-supported, and error states are tested,
+5. ready, attention, blocked, degraded, stale, not-supported, unavailable, and error states are
+   tested,
 6. simulation handoff is action-gated by Gateway,
 7. canonical live proof passes with `PB_SG_GLOBAL_BAL_001`,
 8. screenshots and request/response evidence are captured,
-9. README, wiki, RFC index, supported-features, and repository context are updated,
-10. CI is green,
-11. post-merge wiki publication is complete.
+9. accessibility, responsive layout, and visual quality are reviewed,
+10. README, wiki, RFC index, supported-features, and repository context are updated,
+11. CI is green,
+12. post-merge wiki publication is complete,
+13. branch and remote hygiene are clean.
 
 ---
 
-## 16. Relationship to Gateway RFC-0098
+## 22. Gold-Pass Assessment Template
+
+To be completed during the final closure slice:
+
+| Assessment Area | Final Result |
+| --- | --- |
+| What was truly completed | TBD |
+| Quality improvements made | TBD |
+| Debt removed | TBD |
+| Tests and live evidence captured | TBD |
+| Accessibility and visual proof result | TBD |
+| Gateway-only integration result | TBD |
+| Documentation/wiki result | TBD |
+| Remaining governed follow-up | TBD |
+| Gold-standard conclusion | TBD |
+
+---
+
+## 23. Relationship to Gateway RFC-0098
 
 Gateway RFC-0098 is the contract RFC. This RFC is the product realization RFC. The business outcome
 is complete only when both are delivered:
@@ -515,3 +804,5 @@ is complete only when both are delivered:
 2. Workbench renders that contract into a daily DPM operating cockpit.
 3. Domain services retain their authority.
 4. Platform canonical automation proves the integrated stack.
+5. README/wiki/demo material explains the feature to business, engineering, operations,
+   sales/pre-sales, marketing, and clients.
