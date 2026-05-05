@@ -283,6 +283,81 @@ describe("workbench api", () => {
     expect(requestedUrl).not.toContain("benchmark_code=");
   });
 
+  it("adds governed caller context to server-side Gateway performance reads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-03-26",
+            period: "YTD",
+            chart_frequency: "monthly",
+            contribution_dimension: "asset_class",
+            attribution_dimension: "asset_class",
+            detail_basis: "NET",
+            benchmark_code: null,
+            portfolio: {
+              portfolio_id: "PF_1001",
+              client_id: "CIF_1",
+              base_currency: "USD",
+              booking_center_code: "SG",
+            },
+            overview: {
+              market_value_base: 1000000,
+              cash_weight_pct: 5,
+              position_count: 10,
+            },
+            net_performance: {
+              metric_basis: "NET",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: null,
+              active_return_pct: 0.5,
+              annualized_return_pct: 2.1,
+              benchmark_id: null,
+              benchmark_return_source: null,
+            },
+            gross_performance: {
+              metric_basis: "GROSS",
+              portfolio_return_pct: 2.4,
+              benchmark_return_pct: null,
+              active_return_pct: 0.8,
+              annualized_return_pct: 2.4,
+              benchmark_id: null,
+              benchmark_return_source: null,
+            },
+            money_weighted_return: null,
+            net_chart: [],
+            gross_chart: [],
+            contribution: null,
+            attribution: null,
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceWorkspaceSummary("PF_1001", {
+      period: "YTD",
+      chartFrequency: "monthly",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      detailBasis: "NET",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get("X-Actor-Id")).toBe("workbench-system");
+    expect(headers.get("X-Caller-Application")).toBe("lotus-workbench");
+    expect(headers.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(headers.get("X-Region")).toBe("APAC");
+    expect(headers.get("X-Correlation-Id")).toMatch(/^corr-workbench-/);
+  });
+
   it("includes benchmark code when performance details are requested with a selected benchmark", async () => {
     vi.stubGlobal(
       "fetch",

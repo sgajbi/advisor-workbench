@@ -8,6 +8,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$canonicalCallerContextHeaders = @{
+  "X-Actor-Id" = "workbench-system"
+  "X-Tenant-Id" = "tenant-sg"
+  "X-Region" = "APAC"
+}
 
 function Test-CanonicalHost {
   param(
@@ -31,6 +36,7 @@ function Test-Endpoint {
   param(
     [string]$Url,
     [string]$Label,
+    [hashtable]$Headers = @{},
     [int]$Attempts = 8,
     [int]$DelaySeconds = 3
   )
@@ -38,7 +44,7 @@ function Test-Endpoint {
   $lastError = $null
   for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
     try {
-      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 45
+      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 45 -Headers $Headers
       if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
         Write-Host "[ok] $Label -> $Url"
         return
@@ -88,12 +94,12 @@ Test-Endpoint "http://archive.dev.lotus/health/ready" "lotus-archive readiness"
 Test-Endpoint "http://render.dev.lotus/health/ready" "lotus-render readiness"
 Test-Endpoint "http://manage.dev.lotus/api/v1/rebalance/supportability/summary" "lotus-manage supportability summary"
 Test-Endpoint "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "lotus-report integration capabilities"
-Test-Endpoint "$GatewayBaseUrl/api/v1/foundation/portfolios/$PortfolioId/workspace" "Gateway foundation workspace"
-Test-Endpoint "$GatewayBaseUrl/api/v1/platform/capabilities" "Gateway platform capabilities"
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/overview" "Gateway workbench overview"
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway performance summary"
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "Gateway risk summary"
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway advisor brief"
+Test-Endpoint "$GatewayBaseUrl/api/v1/foundation/portfolios/$PortfolioId/workspace" "Gateway foundation workspace" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/platform/capabilities" "Gateway platform capabilities" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/overview" "Gateway workbench overview" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway performance summary" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
 
 Push-Location $repoRoot
 try {

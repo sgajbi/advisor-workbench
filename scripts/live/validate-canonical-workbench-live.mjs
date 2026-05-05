@@ -24,6 +24,7 @@ import {
   validatePerformanceAnalysisPanel,
   validatePerformanceSummaryPanel,
   validatePortfolioPanels,
+  validateOutcomeReviewPanel,
   validateRiskPanel,
 } from "./validation/browser-workflows.mjs";
 import { createPanelGovernance } from "./validation/panel-governance.mjs";
@@ -207,6 +208,17 @@ async function run() {
     throw new Error("lotus-manage supportability summary returned non-ready supportability.");
   }
 
+  const outcomeReviews = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/outcome-reviews?portfolio_id=${portfolioId}&limit=5`,
+    "DPM outcome reviews",
+    timeoutMs
+  );
+  const outcomeReviewItems = outcomeReviews?.data?.items ?? outcomeReviews?.items ?? [];
+  if (!Array.isArray(outcomeReviewItems) || outcomeReviewItems.length < 1) {
+    throw new Error("DPM outcome-review list returned no manage-backed reviews.");
+  }
+
   const reportCapabilities = await fetchJson(
     summary,
     "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default",
@@ -263,6 +275,10 @@ async function run() {
   });
   panelGovernance.recordPanelClassification("performance.advisor_brief", "ready", "lotus-performance", {
     sourceMetricMinimum: 3,
+  });
+  panelGovernance.recordPanelClassification("dpm.outcome_review", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}`,
+    outcomeReviewMinimum: 1,
   });
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();
@@ -345,6 +361,13 @@ async function run() {
       portfolioId,
       benchmarkCode,
       timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateOutcomeReviewPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
   } finally {

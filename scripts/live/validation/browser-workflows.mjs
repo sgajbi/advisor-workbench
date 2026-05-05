@@ -60,6 +60,7 @@ export function createBrowserValidationHelpers({
   function resolveRegistryRoute(routeTemplate) {
     return routeTemplate
       .replaceAll("{portfolioId}", portfolioId)
+      .replaceAll("{portfolio_id}", portfolioId)
       .replaceAll("{benchmarkCode}", benchmarkCode);
   }
 
@@ -361,4 +362,42 @@ export async function validateEvidencePanel(
   await screenshotRegisteredPanel(page, "performance.evidence", {
     state: "truthfully_degraded",
   });
+}
+
+export async function validateOutcomeReviewPanel(
+  page,
+  {
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    assertTableHasRows,
+    screenshotRegisteredPanel,
+  }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Post-Trade Outcome Review" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("Status lotus-manage")).toBeVisible({ timeout: timeoutMs });
+  await assertTableHasRows(
+    tableByExactLabel(page, "Post-trade outcome reviews"),
+    1,
+    "Post-trade outcome reviews"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "Outcome review dimensions"),
+    1,
+    "Outcome review dimensions"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "Outcome review source lineage"),
+    1,
+    "Outcome review source lineage"
+  );
+  await expect(page.getByText("Report Input")).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("AI Evidence")).toBeVisible({ timeout: timeoutMs });
+  await screenshotRegisteredPanel(page, "dpm.outcome_review");
 }

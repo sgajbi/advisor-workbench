@@ -142,6 +142,11 @@ describe("live validation probe helpers", () => {
       expect.objectContaining({
         url: "http://gateway.dev.lotus/api/v1/example",
         method: "POST",
+        headers: expect.objectContaining({
+          "X-Actor-Id": "workbench-system",
+          "X-Tenant-Id": "tenant-sg",
+          "X-Region": "APAC",
+        }),
         body: JSON.stringify({ ok: true }),
       }),
     ]);

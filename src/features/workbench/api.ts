@@ -28,6 +28,7 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
+import { applyDefaultCallerContextHeaders } from "./caller-context";
 import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
@@ -156,6 +157,12 @@ function buildWorkbenchUrl(
   return suffix ? `${baseUrl}${path}?${suffix}` : `${baseUrl}${path}`;
 }
 
+function buildServerGatewayHeaders(initialHeaders?: HeadersInit): Headers {
+  const headers = buildAnalyticsUiCorrelationHeaders(initialHeaders);
+  applyDefaultCallerContextHeaders(headers);
+  return headers;
+}
+
 async function fetchWorkbenchResource<T>(
   target: WorkbenchRequestTarget,
   path: string,
@@ -165,7 +172,9 @@ async function fetchWorkbenchResource<T>(
   return await fetchWorkbenchJson<T>(
     buildWorkbenchUrl(target, path, query),
     errorLabel,
-    target === "client" ? { headers: buildAnalyticsUiCorrelationHeaders() } : undefined
+    target === "client"
+      ? { headers: buildAnalyticsUiCorrelationHeaders() }
+      : { headers: buildServerGatewayHeaders() }
   );
 }
 
@@ -319,7 +328,8 @@ export async function getWorkbenchPerformanceWorkspaceSummary(
     async () =>
       await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
         buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "server"),
-        "performance workspace summary"
+        "performance workspace summary",
+        { headers: buildServerGatewayHeaders() }
       )
   );
 }
@@ -339,7 +349,8 @@ export async function getWorkbenchPerformanceWorkspaceDetails(
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
   return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
     buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "server"),
-    "performance workspace details"
+    "performance workspace details",
+    { headers: buildServerGatewayHeaders() }
   );
 }
 
