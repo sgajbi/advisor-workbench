@@ -160,6 +160,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.outcome-review.ai-evidence",
   },
   {
+    route: "workbench.dpm-command-center",
+    panel: "outcome-review-ai-narrative",
+    operation: "dpm.outcome-review.ai-narrative",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

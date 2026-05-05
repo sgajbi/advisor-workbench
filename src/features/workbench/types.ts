@@ -1147,6 +1147,19 @@ export type DpmOutcomeReviewGatewayResponse = {
 
 export type DpmOutcomeReviewHandoffResponse = DpmOutcomeReviewGatewayResponse;
 
+export type DpmOutcomeReviewNarrativeResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: "lotus-ai";
+  evidence_source_service: "lotus-manage";
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  supportability: DpmOutcomeReviewSupportability;
+  ai_evidence_input: Record<string, unknown>;
+  narrative_request: Record<string, unknown>;
+  data: Record<string, unknown>;
+};
+
 export type ReportJobHandleResponse = {
   report_request_id: string;
   report_job_id: string;

@@ -11,6 +11,7 @@ import {
   Text,
 } from "@/design-system";
 import {
+  requestDpmOutcomeReviewAiNarrative,
   getDpmOutcomeReviewReportInput,
   submitDpmOutcomeReviewReportJob,
 } from "@/features/workbench/api";
@@ -87,6 +88,9 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
   const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
   const [reportJobError, setReportJobError] = useState<string | null>(null);
   const [reportJobPending, setReportJobPending] = useState(false);
+  const [aiNarrativeStatus, setAiNarrativeStatus] = useState<string | null>(null);
+  const [aiNarrativeError, setAiNarrativeError] = useState<string | null>(null);
+  const [aiNarrativePending, setAiNarrativePending] = useState(false);
   const model = buildOutcomeReviewPanelModel(response);
   const primaryReview = model.items[0] ?? null;
   const hasItems = model.items.length > 0;
@@ -94,6 +98,11 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     Boolean(errorMessage) || model.state === "empty" || model.state === "blocked" || model.state === "unsupported" || model.state === "unavailable";
   const stateCopy = statePanelCopy(model.state, portfolioId);
   const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
+  const aiNarrativeAvailable = Boolean(primaryReview && !primaryReview.aiEvidenceBlocked);
+  const handoffStatusMessages = [
+    reportJobError ?? reportJobStatus,
+    aiNarrativeError ?? aiNarrativeStatus,
+  ].filter((message): message is string => Boolean(message));
 
   async function requestOutcomeReportJob() {
     if (!primaryReview || primaryReview.reportInputBlocked || reportJobPending) {
@@ -112,6 +121,26 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       setReportJobError(error instanceof Error ? error.message : "Outcome report job failed");
     } finally {
       setReportJobPending(false);
+    }
+  }
+
+  async function requestOutcomeAiNarrative() {
+    if (!primaryReview || primaryReview.aiEvidenceBlocked || aiNarrativePending) {
+      return;
+    }
+    setAiNarrativePending(true);
+    setAiNarrativeError(null);
+    try {
+      const narrative = await requestDpmOutcomeReviewAiNarrative({
+        outcomeReviewId: primaryReview.outcomeReviewId,
+      });
+      setAiNarrativeStatus(describeNarrativeRun(narrative.data));
+    } catch (error) {
+      setAiNarrativeError(
+        error instanceof Error ? error.message : "Outcome AI narrative request failed"
+      );
+    } finally {
+      setAiNarrativePending(false);
     }
   }
 
@@ -168,9 +197,24 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           >
             {reportJobPending ? "Requesting report" : "Request report"}
           </ActionButton>
-          <Text variant="secondary" className="muted">
-            {reportJobError ?? reportJobStatus ?? "Creates a Gateway-backed governed PDF job."}
-          </Text>
+          <ActionButton
+            priority="secondary"
+            onClick={requestOutcomeAiNarrative}
+            disabled={!aiNarrativeAvailable || aiNarrativePending}
+          >
+            {aiNarrativePending ? "Requesting AI review" : "Request AI review"}
+          </ActionButton>
+          {handoffStatusMessages.length > 0 ? (
+            handoffStatusMessages.map((message) => (
+              <Text key={message} variant="secondary" className="muted">
+                {message}
+              </Text>
+            ))
+          ) : (
+            <Text variant="secondary" className="muted">
+              Creates Gateway-backed governed report and AI review handoffs.
+            </Text>
+          )}
         </div>
       ) : null}
 
@@ -278,4 +322,22 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       </Text>
     </SectionBlock>
   );
+}
+
+function describeNarrativeRun(data: Record<string, unknown>): string {
+  const workflowPackRun = readRecord(data.workflow_pack_run);
+  const execution = readRecord(data.execution);
+  const runId = readString(workflowPackRun.run_id) ?? "workflow-pack run";
+  const status = readString(execution.status) ?? "submitted";
+  return `${status} / ${runId}`;
+}
+
+function readRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }

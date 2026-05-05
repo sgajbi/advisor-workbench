@@ -50,8 +50,9 @@ Current repository posture:
    Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
 7. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
    `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
-   dimensions, source lineage, supportability, report-input posture, and AI-evidence posture
-   without client-side outcome calculation,
+   dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
+   Gateway-backed governed AI narrative requests without client-side outcome calculation or direct
+   `lotus-manage`/`lotus-ai` calls,
 8. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
@@ -150,6 +151,10 @@ Important validation expectations:
    must identify only governed route, panel, operation, freshness, supportability, and status
    classes; outcome review ids, portfolio ids, proof-pack ids, rebalance run ids, request payloads,
    response payloads, hashes, and lineage references must stay out of metric labels.
+10. DPM outcome-review AI narrative requests are Workbench state-changing mutations through
+    Gateway only. Workbench may display bounded workflow-pack run status returned by Gateway/AI,
+    but it must not construct AI prompts, generate recommendations, score PMs, or treat a narrative
+    run as autonomous approval.
 
 ### Visual Review Gate
 
