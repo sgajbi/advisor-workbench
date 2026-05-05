@@ -71,8 +71,12 @@ export function buildOutcomeReviewPanelModel(
     };
   }
 
-  const supportabilityState = normalizeState(response.supportability.state);
-  const items = extractOutcomeReviewRecords(response.data).map((record, index) =>
+  const records = extractOutcomeReviewRecords(response.data);
+  const supportabilityState = resolveSupportabilityState(
+    normalizeState(response.supportability.state),
+    records
+  );
+  const items = records.map((record, index) =>
     buildOutcomeReviewListItem(record, response.supportability.blocked_actions, index)
   );
   return {
@@ -102,6 +106,26 @@ function resolvePanelState(
     return itemCount > 0 ? "partial" : "unavailable";
   }
   return itemCount > 0 ? "ready" : "empty";
+}
+
+function resolveSupportabilityState(
+  gatewayState: string,
+  records: Record<string, unknown>[]
+): string {
+  if (gatewayState !== "UNKNOWN" || records.length === 0) {
+    return gatewayState;
+  }
+  const recordStates = records.map((record) => normalizeState(readString(record, "state")));
+  if (recordStates.every((state) => state === "READY")) {
+    return "READY";
+  }
+  if (recordStates.some((state) => state === "BLOCKED" || state === "UNSUPPORTED")) {
+    return recordStates.find((state) => state === "BLOCKED" || state === "UNSUPPORTED") ?? "UNKNOWN";
+  }
+  if (recordStates.some((state) => state === "DEGRADED" || state === "SOURCE_STALE")) {
+    return "DEGRADED";
+  }
+  return gatewayState;
 }
 
 function buildOutcomeReviewListItem(
@@ -150,14 +174,31 @@ function buildDimensionRow(
 }
 
 function buildLineageRow(record: Record<string, unknown>, index: number): OutcomeReviewLineageRow {
-  const source = readString(record, "source_service") || readString(record, "source") || "N/A";
-  const reference = readString(record, "source_ref") || readString(record, "reference") || readString(record, "id") || "N/A";
+  const source =
+    readString(record, "source_service") ||
+    readString(record, "source_system") ||
+    readString(record, "source") ||
+    "N/A";
+  const reference =
+    readString(record, "source_ref") ||
+    readString(record, "source_id") ||
+    readString(record, "reference") ||
+    readString(record, "id") ||
+    "N/A";
   return {
     key: `${source}-${reference}-${index}`,
     source,
     reference,
-    freshness: readString(record, "freshness") || readString(record, "freshness_bucket") || "N/A",
-    hash: readString(record, "hash") || readString(record, "payload_hash") || "N/A",
+    freshness:
+      readString(record, "freshness") ||
+      readString(record, "freshness_bucket") ||
+      readString(record, "freshness_state") ||
+      "N/A",
+    hash:
+      readString(record, "hash") ||
+      readString(record, "payload_hash") ||
+      readString(record, "content_hash") ||
+      "N/A",
   };
 }
 
