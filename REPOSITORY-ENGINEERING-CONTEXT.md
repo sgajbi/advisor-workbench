@@ -48,7 +48,11 @@ Current repository posture:
    honors route-level report date and backend benchmark controls for proof while still avoiding
    direct `lotus-report` calls, and it now retrieves archived report metadata/downloads through
    Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
-7. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+7. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
+   `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
+   dimensions, source lineage, supportability, report-input posture, and AI-evidence posture
+   without client-side outcome calculation,
+8. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
@@ -142,6 +146,10 @@ Important validation expectations:
    stale source freshness taking precedence over ready source items. State-changing Workbench
    actions should use the mutation observation helper so they emit bounded request, state, and
    applicable attention metrics without incrementing panel hydration counters.
+9. DPM outcome-review Workbench reads use the same bounded observability registry. Metric labels
+   must identify only governed route, panel, operation, freshness, supportability, and status
+   classes; outcome review ids, portfolio ids, proof-pack ids, rebalance run ids, request payloads,
+   response payloads, hashes, and lineage references must stay out of metric labels.
 
 ### Visual Review Gate
 

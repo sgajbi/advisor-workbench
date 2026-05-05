@@ -13,6 +13,8 @@ import {
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPortfolio360,
+  DpmOutcomeReviewGatewayResponse,
+  DpmOutcomeReviewHandoffResponse,
   ReportBatchHandleResponse,
   ReportBatchStatusResponse,
   ReportBatchWorkerRunResponse,
@@ -26,6 +28,7 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
+import { applyDefaultCallerContextHeaders } from "./caller-context";
 import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
@@ -154,6 +157,12 @@ function buildWorkbenchUrl(
   return suffix ? `${baseUrl}${path}?${suffix}` : `${baseUrl}${path}`;
 }
 
+function buildServerGatewayHeaders(initialHeaders?: HeadersInit): Headers {
+  const headers = buildAnalyticsUiCorrelationHeaders(initialHeaders);
+  applyDefaultCallerContextHeaders(headers);
+  return headers;
+}
+
 async function fetchWorkbenchResource<T>(
   target: WorkbenchRequestTarget,
   path: string,
@@ -163,7 +172,9 @@ async function fetchWorkbenchResource<T>(
   return await fetchWorkbenchJson<T>(
     buildWorkbenchUrl(target, path, query),
     errorLabel,
-    target === "client" ? { headers: buildAnalyticsUiCorrelationHeaders() } : undefined
+    target === "client"
+      ? { headers: buildAnalyticsUiCorrelationHeaders() }
+      : { headers: buildServerGatewayHeaders() }
   );
 }
 
@@ -317,7 +328,8 @@ export async function getWorkbenchPerformanceWorkspaceSummary(
     async () =>
       await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
         buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "server"),
-        "performance workspace summary"
+        "performance workspace summary",
+        { headers: buildServerGatewayHeaders() }
       )
   );
 }
@@ -337,7 +349,8 @@ export async function getWorkbenchPerformanceWorkspaceDetails(
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
   return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
     buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "server"),
-    "performance workspace details"
+    "performance workspace details",
+    { headers: buildServerGatewayHeaders() }
   );
 }
 
@@ -727,6 +740,61 @@ export async function getReportingSnapshot(
         `/reports/${portfolioId}/snapshot`,
         "reporting snapshot",
         query
+      )
+  );
+}
+
+export async function getDpmOutcomeReviews(params: {
+  portfolioId: string;
+  state?: string;
+  limit?: number;
+  cursor?: string;
+}): Promise<DpmOutcomeReviewGatewayResponse> {
+  const query = new URLSearchParams();
+  query.set("portfolio_id", params.portfolioId);
+  query.set("limit", String(params.limit ?? 10));
+  if (params.state) {
+    query.set("state", params.state);
+  }
+  if (params.cursor) {
+    query.set("cursor", params.cursor);
+  }
+  return await observeWorkbenchResource(
+    "dpm.outcome-reviews.list",
+    async () =>
+      await fetchWorkbenchResource<DpmOutcomeReviewGatewayResponse>(
+        "server",
+        "/dpm/command-center/outcome-reviews",
+        "DPM outcome reviews",
+        query
+      )
+  );
+}
+
+export async function getDpmOutcomeReviewReportInput(
+  outcomeReviewId: string
+): Promise<DpmOutcomeReviewHandoffResponse> {
+  return await observeWorkbenchResource(
+    "dpm.outcome-review.report-input",
+    async () =>
+      await fetchWorkbenchResource<DpmOutcomeReviewHandoffResponse>(
+        "client",
+        `/dpm/command-center/outcome-reviews/${encodeURIComponent(outcomeReviewId)}/report-input`,
+        "DPM outcome review report input"
+      )
+  );
+}
+
+export async function getDpmOutcomeReviewAiEvidenceInput(
+  outcomeReviewId: string
+): Promise<DpmOutcomeReviewHandoffResponse> {
+  return await observeWorkbenchResource(
+    "dpm.outcome-review.ai-evidence",
+    async () =>
+      await fetchWorkbenchResource<DpmOutcomeReviewHandoffResponse>(
+        "client",
+        `/dpm/command-center/outcome-reviews/${encodeURIComponent(outcomeReviewId)}/ai-evidence-input`,
+        "DPM outcome review AI evidence input"
       )
   );
 }

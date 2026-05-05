@@ -5,6 +5,9 @@ import {
   buildArchivedDocumentDownloadUrl,
   createPortfolioReportBatch,
   createSandboxSession,
+  getDpmOutcomeReviewAiEvidenceInput,
+  getDpmOutcomeReviewReportInput,
+  getDpmOutcomeReviews,
   getArchivedDocumentMetadata,
   getPortfolio360,
   getReportBatchStatus,
@@ -278,6 +281,81 @@ describe("workbench api", () => {
       "/api/v1/workbench/PF_1001/performance/summary?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET"
     );
     expect(requestedUrl).not.toContain("benchmark_code=");
+  });
+
+  it("adds governed caller context to server-side Gateway performance reads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr",
+            contract_version: "v1",
+            portfolio_id: "PF_1001",
+            as_of_date: "2026-03-26",
+            period: "YTD",
+            chart_frequency: "monthly",
+            contribution_dimension: "asset_class",
+            attribution_dimension: "asset_class",
+            detail_basis: "NET",
+            benchmark_code: null,
+            portfolio: {
+              portfolio_id: "PF_1001",
+              client_id: "CIF_1",
+              base_currency: "USD",
+              booking_center_code: "SG",
+            },
+            overview: {
+              market_value_base: 1000000,
+              cash_weight_pct: 5,
+              position_count: 10,
+            },
+            net_performance: {
+              metric_basis: "NET",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: null,
+              active_return_pct: 0.5,
+              annualized_return_pct: 2.1,
+              benchmark_id: null,
+              benchmark_return_source: null,
+            },
+            gross_performance: {
+              metric_basis: "GROSS",
+              portfolio_return_pct: 2.4,
+              benchmark_return_pct: null,
+              active_return_pct: 0.8,
+              annualized_return_pct: 2.4,
+              benchmark_id: null,
+              benchmark_return_source: null,
+            },
+            money_weighted_return: null,
+            net_chart: [],
+            gross_chart: [],
+            contribution: null,
+            attribution: null,
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getWorkbenchPerformanceWorkspaceSummary("PF_1001", {
+      period: "YTD",
+      chartFrequency: "monthly",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      detailBasis: "NET",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get("X-Actor-Id")).toBe("workbench-system");
+    expect(headers.get("X-Caller-Application")).toBe("lotus-workbench");
+    expect(headers.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(headers.get("X-Region")).toBe("APAC");
+    expect(headers.get("X-Correlation-Id")).toMatch(/^corr-workbench-/);
   });
 
   it("includes benchmark code when performance details are requested with a selected benchmark", async () => {
@@ -1647,6 +1725,87 @@ describe("workbench api", () => {
     expect(buildArchivedDocumentDownloadUrl("doc_1")).toBe(
       `${expectedBaseUrl}/documents/doc_1/download`
     );
+  });
+
+  it("loads DPM outcome reviews through the gateway BFF with portfolio filters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc42",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042",
+              state: "SUPPORTED",
+              reason_codes: ["READY_FOR_REPORT_INPUT"],
+              blocked_actions: [],
+            },
+            data: { items: [{ outcome_review_id: "or_1", state: "READY" }] },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmOutcomeReviews({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      state: "READY",
+      limit: 5,
+      cursor: "cursor_1",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=5&state=READY&cursor=cursor_1"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("outcome-review-list");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("or_1");
+  });
+
+  it("loads DPM report and AI handoff inputs through gateway-only client endpoints", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc42-handoff",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042",
+              state: "SUPPORTED",
+              reason_codes: [],
+              blocked_actions: [],
+            },
+            data: { outcome_review_id: "or_1" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmOutcomeReviewReportInput("or_1");
+    await getDpmOutcomeReviewAiEvidenceInput("or_1");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/outcome-reviews/or_1/report-input`
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/outcome-reviews/or_1/ai-evidence-input`
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("outcome-review-report-input");
+    expect(metricEventsJson).toContain("outcome-review-ai-evidence");
+    expect(metricEventsJson).not.toContain("or_1");
   });
 
   it("raises a labeled error when the split summary endpoint fails", async () => {

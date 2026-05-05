@@ -151,6 +151,19 @@ export const DEFAULT_PANEL_REGISTRY = {
       knownLimitations: ["full evidence and lineage support is deferred pending RFC-0079"],
       ownerFollowUpRfc: "RFC-0079",
     },
+    {
+      panelId: "dpm.outcome_review",
+      owningService: "lotus-manage",
+      gatewayEndpoint: "/api/v1/dpm/command-center/outcome-reviews",
+      requiredSupportState: "ready",
+      route: "/workbench/{portfolioId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "dpm-outcome-review-live.png",
+      knownLimitations: [
+        "embedded /workbench/{portfolioId} panel is implemented before the dedicated /dpm/outcomes workspace",
+      ],
+      ownerFollowUpRfc: "RFC-0098",
+    },
   ],
 };
 

@@ -1127,6 +1127,26 @@ export type WorkbenchReportingSnapshot = {
   rows: Array<Record<string, unknown>>;
 };
 
+export type DpmOutcomeReviewSupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  reason_codes: string[];
+  blocked_actions: string[];
+  remediation_owner?: string | null;
+};
+
+export type DpmOutcomeReviewGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmOutcomeReviewSupportability;
+  data: Record<string, unknown>;
+};
+
+export type DpmOutcomeReviewHandoffResponse = DpmOutcomeReviewGatewayResponse;
+
 export type ReportBatchHandleResponse = {
   batch_id: string;
   status: string;

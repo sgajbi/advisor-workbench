@@ -1,4 +1,5 @@
 import {
+  getDpmOutcomeReviews,
   getPortfolio360,
   getReportingSnapshot,
   getWorkbenchAnalytics,
@@ -20,6 +21,7 @@ import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics
 import DecisionReadinessPanel from "@/features/workbench/components/decision-readiness-panel";
 import ExceptionQueue from "@/features/workbench/components/exception-queue";
 import OverviewCards from "@/features/workbench/components/overview-cards";
+import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
@@ -72,6 +74,8 @@ export default async function WorkbenchPage({
   let data: Awaited<ReturnType<typeof getPortfolio360>>;
   let analytics: Awaited<ReturnType<typeof getWorkbenchAnalytics>> | null = null;
   let reportingSnapshot: Awaited<ReturnType<typeof getReportingSnapshot>> | null = null;
+  let outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null = null;
+  let outcomeReviewError: string | null = null;
   try {
     data = await getPortfolio360(portfolioId, sessionId);
   } catch (error) {
@@ -118,6 +122,17 @@ export default async function WorkbenchPage({
     );
   } catch {
     reportingSnapshot = null;
+  }
+
+  try {
+    outcomeReviews = await getDpmOutcomeReviews({
+      portfolioId: data.portfolio.portfolio_id,
+      limit: 10,
+    });
+  } catch (error) {
+    outcomeReviews = null;
+    outcomeReviewError =
+      error instanceof Error ? error.message : "Outcome review endpoint unavailable.";
   }
 
   const projectedCoveragePct =
@@ -238,6 +253,12 @@ export default async function WorkbenchPage({
               <RebalanceStatus
                 status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
                 lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
+              />
+
+              <OutcomeReviewPanel
+                portfolioId={data.portfolio.portfolio_id}
+                response={outcomeReviews}
+                errorMessage={outcomeReviewError}
               />
 
               {reportingSnapshot ? (

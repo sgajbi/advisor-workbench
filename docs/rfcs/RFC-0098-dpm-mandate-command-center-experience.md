@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | PROPOSED - RFC-0041/0042 WAVE AND OUTCOME EXPERIENCE ALIGNED |
+| **Status** | IN PROGRESS - RFC-0042 OUTCOME PANEL IMPLEMENTED, LIVE PROOF PENDING |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-05 |
 | **Owner** | `lotus-workbench` |
@@ -10,7 +10,7 @@
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
 | **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-manage` RFC-0042, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
-| **Implementation Branch** | `feat/rfc0042-outcome-realization` for RFC-0042 realization alignment |
+| **Implementation Branch** | `feat/rfc42-outcome-review-workbench` for RFC-0042 outcome-review realization |
 
 ---
 
@@ -386,6 +386,15 @@ Workbench must consume Gateway only. It must not call `lotus-manage`, `lotus-cor
 must not recompute expected values, realized values, variance, tolerance, dimension state, source
 freshness, supportability, report-input posture, or AI-evidence posture.
 
+Implementation note as of 2026-05-05: the first RFC-0042 outcome-review realization is embedded in
+`/workbench/{portfolioId}` using Gateway
+`GET /api/v1/dpm/command-center/outcome-reviews`. It includes typed Workbench API wrappers,
+bounded analytics UI observability surfaces, deterministic view-model normalization, and a
+portfolio-linked panel that renders manage-owned review state, dimension rows, lineage rows,
+snapshot hashes, supportability reasons, blocked actions, and report/AI handoff posture. Dedicated
+`/dpm/outcomes` routing, mutation actions, drawers, and canonical live screenshot proof remain
+future RFC-0098 command-center work unless separately promoted by implementation evidence.
+
 Target user journey:
 
 1. PM opens the DPM outcome workspace from `/dpm` or a wave/proof-pack link.
@@ -455,10 +464,11 @@ Workbench must consume these Gateway outcome routes when implemented:
 | `POST /api/v1/dpm/command-center/outcome-reviews` | durable outcome-review creation |
 | `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/refresh-sources` | source refresh action |
 
-Supported-feature promotion is forbidden until Gateway implementation is merged, Workbench BFF and
-browser implementation is complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual
-and accessibility evidence is captured, screenshots are reviewed for outcome-state correctness,
-and the wiki/supported-feature material is updated with implementation-backed wording.
+Supported-feature promotion for the embedded `/workbench/{portfolioId}` outcome-review panel now
+requires canonical `PB_SG_GLOBAL_BAL_001` live validation, visual and accessibility evidence,
+screenshots reviewed for outcome-state correctness, and implementation-backed wiki/support wording.
+Promotion for the larger `/dpm/outcomes` command-center route remains forbidden until that route is
+implemented and proven.
 
 Workbench must consume these Gateway routes:
 

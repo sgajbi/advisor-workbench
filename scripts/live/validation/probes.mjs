@@ -1,5 +1,11 @@
 import dns from "node:dns/promises";
 
+export const CANONICAL_CALLER_CONTEXT_HEADERS = {
+  "X-Actor-Id": "workbench-system",
+  "X-Tenant-Id": "tenant-sg",
+  "X-Region": "APAC",
+};
+
 export async function checkDns(summary, hostname, { required = true, lookup = dns.lookup } = {}) {
   try {
     const resolution = await lookup(hostname);
@@ -67,9 +73,13 @@ export async function sendJson(
       signal: controller.signal,
       headers:
         requestBody === undefined
-          ? headers
+          ? {
+              ...CANONICAL_CALLER_CONTEXT_HEADERS,
+              ...headers,
+            }
           : {
               "Content-Type": "application/json",
+              ...CANONICAL_CALLER_CONTEXT_HEADERS,
               ...headers,
             },
       body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
