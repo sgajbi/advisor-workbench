@@ -2,15 +2,15 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | PROPOSED - RFC-0041 WAVE ORCHESTRATION EXPERIENCE ALIGNED |
+| **Status** | PROPOSED - RFC-0041/0042 WAVE AND OUTCOME EXPERIENCE ALIGNED |
 | **Created** | 2026-05-03 |
-| **Last Tightened** | 2026-05-04 |
+| **Last Tightened** | 2026-05-05 |
 | **Owner** | `lotus-workbench` |
 | **Primary Upstream Contract** | `lotus-gateway` RFC-0098 `DPM Command Center` |
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
-| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
+| **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-manage` RFC-0042, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
-| **Implementation Branch** | TBD when implementation begins |
+| **Implementation Branch** | `feat/rfc0042-outcome-realization` for RFC-0042 realization alignment |
 
 ---
 
@@ -19,7 +19,8 @@
 `lotus-manage` RFC-0038 delivered the backend foundation for mandate digital twin, health scoring,
 DPM operating state, stateful core-sourced management, and RFC-0040 proof-pack authority. Gateway
 RFC-0098 defines the certified composition contract that brings core, manage proof-pack evidence,
-risk, performance, report materialization, archive, and optional AI posture together without
+RFC-0042 outcome-review evidence, risk, performance, report materialization, archive, and optional
+AI posture together without
 violating domain ownership.
 
 This RFC defines the Workbench product experience that realizes the business outcome: a
@@ -373,6 +374,91 @@ Supported-feature promotion is forbidden until Gateway implementation is merged,
 browser implementation is complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual
 and accessibility evidence is captured, screenshots are reviewed for layout/state correctness, and
 the wiki/supported-feature material is updated with implementation-backed wording.
+
+### 7.0C Post-Trade Outcome Review Workspace Addendum
+
+Workbench RFC-0098 must include a post-trade outcome-review workspace once Gateway exposes the
+RFC-0042 outcome-review composition family backed by `lotus-manage`. This workspace closes the DPM
+loop after construction, proof-pack generation, wave approval, staging, and internal handoff.
+
+Workbench must consume Gateway only. It must not call `lotus-manage`, `lotus-core`, `lotus-risk`,
+`lotus-performance`, `lotus-report`, `lotus-archive`, or `lotus-ai` directly for this surface. It
+must not recompute expected values, realized values, variance, tolerance, dimension state, source
+freshness, supportability, report-input posture, or AI-evidence posture.
+
+Target user journey:
+
+1. PM opens the DPM outcome workspace from `/dpm` or a wave/proof-pack link.
+2. The user searches or opens an outcome review backed by Gateway routes under
+   `/api/v1/dpm/command-center/outcome-reviews`.
+3. Workbench renders expected-versus-realized dimensions across ready, pending-review, breached,
+   degraded, blocked, and not-supported states.
+4. Workbench shows source lineage, source-owner families, source hashes, freshness, reason codes,
+   and remediation routes from Gateway/manage truth only.
+5. Operations opens the supportability drawer and sees dimension counts, source-owner families,
+   freshness counts, support refs, and remediation routes without raw source payloads.
+6. Sales/pre-sales can demonstrate a closed-loop outcome story while clearly stating that reports,
+   archive artifacts, AI narrative, external execution, and PM scoring are not claimed unless the
+   owning apps have implemented and proven them.
+
+Required outcome panels:
+
+| Panel | Purpose | Required behavior |
+| --- | --- | --- |
+| Outcome Header | Show review id, portfolio, mandate, review window, run, proof-pack, wave, state, and reason codes. | Preserve Gateway/manage names and never infer state from local UI rules. |
+| Dimension Matrix | Compare expected versus realized outcome dimensions. | Render expected, realized, variance, tolerance, state, source freshness, and reason codes from Gateway only. |
+| Source Lineage Drawer | Support audit and operations. | Show source owners, source refs, hashes, timestamps, freshness, and supportability without raw payloads. |
+| Supportability Drawer | Support operator triage. | Show dimension counts, source-owner families, freshness counts, remediation routes, and safe diagnostics. |
+| Report Input Panel | Explain downstream report readiness. | Show report-input availability only; do not imply rendered report or archive completion. |
+| AI Evidence Panel | Explain downstream AI readiness. | Show AI-evidence permitted use and forbidden actions only; do not generate prompts, memos, or recommendations. |
+| Action Rail | Guide preview, create, source refresh, and handoff reads. | Buttons are enabled only from Gateway action eligibility; unsupported report, AI, archive, execution, and PM-scoring actions remain disabled or absent. |
+
+Required UI states:
+
+1. no outcome review selected,
+2. preview available but not durable,
+3. created review ready,
+4. pending review due soft-tolerance variance,
+5. breached hard tolerance,
+6. degraded source evidence,
+7. blocked mandatory source evidence,
+8. not-supported dimension,
+9. source refresh available,
+10. report input available but rendered report unavailable,
+11. AI evidence available but AI memo unavailable,
+12. Gateway unavailable,
+13. manage outcome authority unavailable,
+14. supportability blocked/degraded/not found.
+
+```mermaid
+flowchart LR
+  User[PM / CIO / Operations] --> UI[Workbench DPM Outcome Workspace]
+  UI --> BFF[Workbench BFF wrapper]
+  BFF --> Gateway[Gateway RFC-0098 outcome composition]
+  Gateway --> Manage[lotus-manage RFC-0042 outcome authority]
+  Manage --> Proof[lotus-manage RFC-0040 proof pack]
+  Manage --> Wave[lotus-manage RFC-0041 wave and handoff]
+  Gateway --> Report[lotus-report report materialization]
+  Gateway --> AI[lotus-ai governed narrative]
+```
+
+Workbench must consume these Gateway outcome routes when implemented:
+
+| Gateway endpoint | Workbench route/use |
+| --- | --- |
+| `GET /api/v1/dpm/command-center/outcome-reviews` | `/dpm/outcomes` list or embedded outcome rail |
+| `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}` | `/dpm/outcomes/[outcomeReviewId]` detail workspace |
+| `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/supportability` | supportability drawer |
+| `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/report-input` | report-input panel |
+| `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-evidence-input` | AI-evidence panel |
+| `POST /api/v1/dpm/command-center/outcome-reviews/preview` | non-durable preview workflow |
+| `POST /api/v1/dpm/command-center/outcome-reviews` | durable outcome-review creation |
+| `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/refresh-sources` | source refresh action |
+
+Supported-feature promotion is forbidden until Gateway implementation is merged, Workbench BFF and
+browser implementation is complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual
+and accessibility evidence is captured, screenshots are reviewed for outcome-state correctness,
+and the wiki/supported-feature material is updated with implementation-backed wording.
 
 Workbench must consume these Gateway routes:
 
