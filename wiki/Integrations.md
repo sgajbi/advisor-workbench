@@ -56,21 +56,19 @@ must travel through Gateway-shaped contracts.
     emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
     intake payload, document, session, trace, request, response, and screen-content identifiers
     must not appear in metric labels.
-11. `lotus-manage` is not a proposal/advisory upstream for Workbench. Current Workbench proof uses
-    Manage only for readiness and supportability evidence through
-    `GET /api/v1/rebalance/supportability/summary`; any future discretionary mandate management
-    product surface must be backed by new strategic Gateway APIs before it is exposed in Workbench.
-    RFC-0098 defines that future DPM command-center experience and keeps Workbench as a renderer of
-    Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
+11. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
+    backed by strategic Gateway APIs before Workbench exposes them. RFC-0098 keeps Workbench as a
+    renderer of Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,
     report-input payloads, and AI-evidence payloads remain manage-owned and must reach Workbench
     through Gateway composition. RFC-0041 rebalance-wave preview, create, source-check,
     simulation, selection, approval, staging, handoff, and supportability also remain
     manage-owned and must reach Workbench through Gateway wave composition only. RFC-0042
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and
-    source-refresh posture also remains manage-owned and must reach Workbench through Gateway
-    outcome-review composition only; Workbench must not calculate expected-versus-realized values
-    or infer PM quality.
+    source-refresh posture also remain manage-owned and must reach Workbench through Gateway
+    outcome-review composition only; the implemented Workbench panel consumes the Gateway
+    outcome-review list contract and must not calculate expected-versus-realized values or infer
+    PM quality.
 12. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
     not the active RFC-0108 product surface and should not be used as current client-demo evidence.
 
@@ -87,14 +85,15 @@ flowchart TB
   Report[Report materialization and report supportability]
   Archive[Document metadata and downloads]
   Render[PDF render readiness]
-  Manage[Strategic DPM run lookup, supportability, and proof packs]
+  Manage[Strategic DPM proof packs, waves, and outcome reviews]
   Waves[Future rebalance-wave workspace]
-  Outcomes[Future post-trade outcome workspace]
+  Outcomes[Post-trade outcome panel]
   Advise[Advisor-led proposal workflows]
   DpmCenter[Future DPM command center UI]
 
   Workbench -->|/api/bff/api/v1/workbench/*| Gateway
   Workbench --> DpmCenter
+  Workbench -->|/api/bff/api/v1/dpm/command-center/outcome-reviews*| Gateway
   DpmCenter --> Waves
   DpmCenter --> Outcomes
   DpmCenter -->|Gateway RFC-0098 contract| Gateway

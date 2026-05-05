@@ -5,6 +5,9 @@ import {
   buildArchivedDocumentDownloadUrl,
   createPortfolioReportBatch,
   createSandboxSession,
+  getDpmOutcomeReviewAiEvidenceInput,
+  getDpmOutcomeReviewReportInput,
+  getDpmOutcomeReviews,
   getArchivedDocumentMetadata,
   getPortfolio360,
   getReportBatchStatus,
@@ -1647,6 +1650,87 @@ describe("workbench api", () => {
     expect(buildArchivedDocumentDownloadUrl("doc_1")).toBe(
       `${expectedBaseUrl}/documents/doc_1/download`
     );
+  });
+
+  it("loads DPM outcome reviews through the gateway BFF with portfolio filters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc42",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042",
+              state: "SUPPORTED",
+              reason_codes: ["READY_FOR_REPORT_INPUT"],
+              blocked_actions: [],
+            },
+            data: { items: [{ outcome_review_id: "or_1", state: "READY" }] },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmOutcomeReviews({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      state: "READY",
+      limit: 5,
+      cursor: "cursor_1",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=5&state=READY&cursor=cursor_1"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("outcome-review-list");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("or_1");
+  });
+
+  it("loads DPM report and AI handoff inputs through gateway-only client endpoints", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc42-handoff",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042",
+              state: "SUPPORTED",
+              reason_codes: [],
+              blocked_actions: [],
+            },
+            data: { outcome_review_id: "or_1" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmOutcomeReviewReportInput("or_1");
+    await getDpmOutcomeReviewAiEvidenceInput("or_1");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/outcome-reviews/or_1/report-input`
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/outcome-reviews/or_1/ai-evidence-input`
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("outcome-review-report-input");
+    expect(metricEventsJson).toContain("outcome-review-ai-evidence");
+    expect(metricEventsJson).not.toContain("or_1");
   });
 
   it("raises a labeled error when the split summary endpoint fails", async () => {

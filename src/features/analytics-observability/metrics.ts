@@ -140,6 +140,21 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "reporting.archive-document.metadata",
   },
   {
+    route: "workbench.dpm-command-center",
+    panel: "outcome-review-list",
+    operation: "dpm.outcome-reviews.list",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "outcome-review-report-input",
+    operation: "dpm.outcome-review.report-input",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "outcome-review-ai-evidence",
+    operation: "dpm.outcome-review.ai-evidence",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

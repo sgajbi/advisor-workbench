@@ -289,6 +289,21 @@ describe("analytics UI observability metrics", () => {
         "archive-document-metadata",
         "reporting.archive-document.metadata",
       ],
+      [
+        "workbench.dpm-command-center",
+        "outcome-review-list",
+        "dpm.outcome-reviews.list",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "outcome-review-report-input",
+        "dpm.outcome-review.report-input",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "outcome-review-ai-evidence",
+        "dpm.outcome-review.ai-evidence",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],

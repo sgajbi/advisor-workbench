@@ -122,6 +122,47 @@ describe("WorkbenchPage", () => {
           } as Response;
         }
 
+        if (url.includes("/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PF_1001")) {
+          return {
+            ok: true,
+            json: async () => ({
+              correlation_id: "corr_rfc42",
+              contract_version: "v1",
+              source_service: "lotus-manage",
+              upstream_status: 200,
+              supportability: {
+                source_service: "lotus-manage",
+                authority: "lotus-manage:RFC-0042",
+                state: "SUPPORTED",
+                reason_codes: ["READY_FOR_REPORT_INPUT"],
+                blocked_actions: [],
+              },
+              data: {
+                items: [
+                  {
+                    outcome_review_id: "or_1",
+                    state: "READY",
+                    portfolio_id: "PF_1001",
+                    rebalance_run_id: "run_001",
+                    proof_pack_id: "ppack_1",
+                    expected_snapshot_hash: "sha256:expected",
+                    realized_snapshot_hash: "sha256:realized",
+                    dimension_results: [
+                      {
+                        dimension: "cash_weight",
+                        expected: { value: "0.0340", unit: "ratio" },
+                        realized: { value: "0.0342", unit: "ratio" },
+                        variance: { value: "0.0002", unit: "ratio" },
+                        state: "WITHIN_TOLERANCE",
+                      },
+                    ],
+                  },
+                ],
+              },
+            }),
+          } as Response;
+        }
+
         return { ok: false, json: async () => ({}) } as Response;
       })
     );
@@ -145,6 +186,9 @@ describe("WorkbenchPage", () => {
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("heading", { name: "Post-Trade Outcome Review" })).toBeInTheDocument();
+    expect(screen.getByText("or_1")).toBeInTheDocument();
+    expect(screen.getByText("cash_weight")).toBeInTheDocument();
   });
 
   it("falls back to the degraded route shell when the portfolio overview cannot be loaded", async () => {
