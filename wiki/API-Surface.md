@@ -49,6 +49,13 @@ promote dormant labels into product ownership just because historical route file
   route yet; promotion requires Gateway `/api/v1/dpm/command-center/waves*` implementation,
   Workbench BFF/browser implementation, canonical `PB_SG_GLOBAL_BAL_001` live validation, visual
   and accessibility evidence, and implementation-backed wiki/support wording.
+- RFC-0098 now also defines the future DPM post-trade outcome-review workspace. It is not an
+  active supported route yet; promotion requires Gateway
+  `/api/v1/dpm/command-center/outcome-reviews*` implementation, Workbench BFF/browser
+  implementation, canonical `PB_SG_GLOBAL_BAL_001` live validation, visual/accessibility
+  evidence, and implementation-backed wiki/support wording. Workbench must not calculate
+  expected-versus-realized values, source freshness, supportability, report-input posture, or
+  AI-evidence posture client-side.
 
 ## Route examples
 

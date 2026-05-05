@@ -15,6 +15,7 @@
 1. keep strengthening Portfolio and Performance truth and density
 2. implement RFC-0098 as the Gateway-backed DPM mandate command-center experience once Gateway
    RFC-0098 provides the certified composition contract, including manage-owned RFC-0040
-   proof-pack evidence and RFC-0041 rebalance-wave orchestration rendered through Gateway
+   proof-pack evidence, RFC-0041 rebalance-wave orchestration, and RFC-0042 post-trade
+   outcome-review evidence rendered through Gateway
 3. preserve gateway-first integration discipline
 4. continue aligning route ownership to the product architecture blueprint
