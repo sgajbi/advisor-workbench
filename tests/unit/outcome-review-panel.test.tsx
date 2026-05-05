@@ -1,8 +1,17 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import OutcomeReviewPanel from "../../src/features/workbench/components/outcome-review-panel";
 import type { DpmOutcomeReviewGatewayResponse } from "../../src/features/workbench/types";
+import {
+  getDpmOutcomeReviewReportInput,
+  submitDpmOutcomeReviewReportJob,
+} from "../../src/features/workbench/api";
+
+vi.mock("../../src/features/workbench/api", () => ({
+  getDpmOutcomeReviewReportInput: vi.fn(),
+  submitDpmOutcomeReviewReportJob: vi.fn(),
+}));
 
 const readyResponse: DpmOutcomeReviewGatewayResponse = {
   correlation_id: "corr-rfc42",
@@ -50,6 +59,10 @@ const readyResponse: DpmOutcomeReviewGatewayResponse = {
 };
 
 describe("OutcomeReviewPanel", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders manage-backed outcome review state and evidence posture", () => {
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
 
@@ -60,6 +73,33 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("tracking_error")).toBeInTheDocument();
     expect(screen.getByText("sha256:risk")).toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBe(2);
+    expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
+  });
+
+  it("requests a governed outcome-review report job from manage report input", async () => {
+    vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue({
+      ...readyResponse,
+      data: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
+    });
+    vi.mocked(submitDpmOutcomeReviewReportJob).mockResolvedValue({
+      report_request_id: "rrq_outcome_1",
+      report_job_id: "rjob_outcome_1",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_outcome_1",
+      idempotency_key: "outcome-review-or_1-pdf",
+    });
+
+    render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
+    fireEvent.click(screen.getByRole("button", { name: "Request report" }));
+
+    await waitFor(() => {
+      expect(getDpmOutcomeReviewReportInput).toHaveBeenCalledWith("or_1");
+      expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledWith({
+        outcomeReviewId: "or_1",
+        outcomeReportInput: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
+      });
+    });
+    expect(screen.getByText("accepted / rjob_outcome_1")).toBeInTheDocument();
   });
 
   it("renders blocked handoff posture from Gateway supportability", () => {

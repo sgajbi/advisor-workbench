@@ -151,6 +151,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.dpm-command-center",
+    panel: "outcome-review-report-job",
+    operation: "dpm.outcome-review.report-job.submit",
+  },
+  {
+    route: "workbench.dpm-command-center",
     panel: "outcome-review-ai-evidence",
     operation: "dpm.outcome-review.ai-evidence",
   },

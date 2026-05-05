@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import {
+  ActionButton,
   AnalyticsTable,
   MetricRow,
   ScreenStatePanel,
@@ -8,6 +10,10 @@ import {
   SemanticBadge,
   Text,
 } from "@/design-system";
+import {
+  getDpmOutcomeReviewReportInput,
+  submitDpmOutcomeReviewReportJob,
+} from "@/features/workbench/api";
 import type { DpmOutcomeReviewGatewayResponse } from "@/features/workbench/types";
 import {
   buildOutcomeReviewPanelModel,
@@ -78,12 +84,36 @@ function handoffTone(blocked: boolean | undefined): "default" | "success" | "dan
 }
 
 export default function OutcomeReviewPanel({ portfolioId, response, errorMessage }: Props) {
+  const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
+  const [reportJobError, setReportJobError] = useState<string | null>(null);
+  const [reportJobPending, setReportJobPending] = useState(false);
   const model = buildOutcomeReviewPanelModel(response);
   const primaryReview = model.items[0] ?? null;
   const hasItems = model.items.length > 0;
   const shouldShowStatePanel =
     Boolean(errorMessage) || model.state === "empty" || model.state === "blocked" || model.state === "unsupported" || model.state === "unavailable";
   const stateCopy = statePanelCopy(model.state, portfolioId);
+  const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
+
+  async function requestOutcomeReportJob() {
+    if (!primaryReview || primaryReview.reportInputBlocked || reportJobPending) {
+      return;
+    }
+    setReportJobPending(true);
+    setReportJobError(null);
+    try {
+      const reportInput = await getDpmOutcomeReviewReportInput(primaryReview.outcomeReviewId);
+      const handle = await submitDpmOutcomeReviewReportJob({
+        outcomeReviewId: primaryReview.outcomeReviewId,
+        outcomeReportInput: reportInput.data,
+      });
+      setReportJobStatus(`${handle.status} / ${handle.report_job_id}`);
+    } catch (error) {
+      setReportJobError(error instanceof Error ? error.message : "Outcome report job failed");
+    } finally {
+      setReportJobPending(false);
+    }
+  }
 
   return (
     <SectionBlock
@@ -128,6 +158,21 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         />
         <MetricRow label="Remediation Owner" value={model.remediationOwner} />
       </div>
+
+      {primaryReview ? (
+        <div className="outcome-review-report-actions">
+          <ActionButton
+            priority="secondary"
+            onClick={requestOutcomeReportJob}
+            disabled={!reportJobAvailable || reportJobPending}
+          >
+            {reportJobPending ? "Requesting report" : "Request report"}
+          </ActionButton>
+          <Text variant="secondary" className="muted">
+            {reportJobError ?? reportJobStatus ?? "Creates a Gateway-backed governed PDF job."}
+          </Text>
+        </div>
+      ) : null}
 
       {model.supportabilityReasons.length > 0 || model.blockedActions.length > 0 ? (
         <div className="outcome-review-reason-row">

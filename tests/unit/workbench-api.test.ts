@@ -28,6 +28,7 @@ import {
   getWorkbenchPerformanceWorkspaceSummary,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
   runReportBatchOnce,
+  submitDpmOutcomeReviewReportJob,
 } from "../../src/features/workbench/api";
 import {
   getAnalyticsUiMetricEvents,
@@ -1805,6 +1806,47 @@ describe("workbench api", () => {
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("outcome-review-report-input");
     expect(metricEventsJson).toContain("outcome-review-ai-evidence");
+    expect(metricEventsJson).not.toContain("or_1");
+  });
+
+  it("submits DPM outcome-review report jobs through the gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            report_request_id: "rrq_outcome_1",
+            report_job_id: "rjob_outcome_1",
+            status: "accepted",
+            status_url: "/api/v1/report-jobs/rjob_outcome_1",
+            idempotency_key: "outcome-review-or_1-pdf",
+          }),
+          { status: 202, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    const handle = await submitDpmOutcomeReviewReportJob({
+      outcomeReviewId: "or_1",
+      outcomeReportInput: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
+    });
+
+    expect(handle.report_job_id).toBe("rjob_outcome_1");
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(`${expectedBaseUrl}/reports/outcome-reviews`);
+    expect(fetchMock.mock.calls[0][1].headers["Idempotency-Key"]).toBe(
+      "outcome-review-or_1-pdf"
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      outcome_report_input: {
+        outcome_review_id: "or_1",
+        content_hash: "sha256:report-input",
+      },
+      requested_output_formats: ["pdf"],
+      options: { retention_policy_id: "generated-report-standard" },
+    });
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("outcome-review-report-job");
     expect(metricEventsJson).not.toContain("or_1");
   });
 

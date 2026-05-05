@@ -15,6 +15,7 @@ import {
   WorkbenchPortfolio360,
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
+  ReportJobHandleResponse,
   ReportBatchHandleResponse,
   ReportBatchStatusResponse,
   ReportBatchWorkerRunResponse,
@@ -795,6 +796,47 @@ export async function getDpmOutcomeReviewAiEvidenceInput(
         "client",
         `/dpm/command-center/outcome-reviews/${encodeURIComponent(outcomeReviewId)}/ai-evidence-input`,
         "DPM outcome review AI evidence input"
+      )
+  );
+}
+
+export async function submitDpmOutcomeReviewReportJob(params: {
+  outcomeReviewId: string;
+  outcomeReportInput: Record<string, unknown>;
+  requestedOutputFormats?: string[];
+  tenantId?: string;
+  region?: string;
+  bookingCenterCode?: string | null;
+  actorId?: string;
+}): Promise<ReportJobHandleResponse> {
+  const tenantId = params.tenantId ?? "tenant-sg";
+  const region = params.region ?? "APAC";
+  const actorId = params.actorId ?? "workbench-outcome-review-operator";
+  const idempotencyKey = `outcome-review-${params.outcomeReviewId}-pdf`;
+  return await observeWorkbenchMutation(
+    "dpm.outcome-review.report-job.submit",
+    async () =>
+      await fetchWorkbenchMutation<ReportJobHandleResponse>(
+        buildWorkbenchUrl("client", "/reports/outcome-reviews"),
+        "submit outcome-review report job",
+        {
+          method: "POST",
+          headers: {
+            ...buildReportBatchCallerHeaders({
+              actorId,
+              tenantId,
+              region,
+              bookingCenterCode: params.bookingCenterCode,
+              correlationId: `corr-workbench-outcome-report-${params.outcomeReviewId}`,
+            }),
+            "Idempotency-Key": idempotencyKey,
+          },
+          body: JSON.stringify({
+            outcome_report_input: params.outcomeReportInput,
+            requested_output_formats: params.requestedOutputFormats ?? ["pdf"],
+            options: { retention_policy_id: "generated-report-standard" },
+          }),
+        }
       )
   );
 }

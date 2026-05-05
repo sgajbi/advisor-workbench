@@ -196,11 +196,16 @@
 
 .outcome-review-badge-row,
 .outcome-review-reason-row,
+.outcome-review-report-actions,
 .outcome-review-hash-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.outcome-review-report-actions {
+  justify-content: flex-start;
 }
 
 .outcome-review-status-strip {
