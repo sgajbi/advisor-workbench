@@ -301,6 +301,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.dpm-command-center",
+        "outcome-review-report-job",
+        "dpm.outcome-review.report-job.submit",
+      ],
+      [
+        "workbench.dpm-command-center",
         "outcome-review-ai-evidence",
         "dpm.outcome-review.ai-evidence",
       ],

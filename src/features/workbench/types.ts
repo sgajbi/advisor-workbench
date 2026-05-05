@@ -1147,6 +1147,14 @@ export type DpmOutcomeReviewGatewayResponse = {
 
 export type DpmOutcomeReviewHandoffResponse = DpmOutcomeReviewGatewayResponse;
 
+export type ReportJobHandleResponse = {
+  report_request_id: string;
+  report_job_id: string;
+  status: string;
+  status_url: string;
+  idempotency_key: string;
+};
+
 export type ReportBatchHandleResponse = {
   batch_id: string;
   status: string;

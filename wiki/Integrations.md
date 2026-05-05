@@ -50,13 +50,17 @@ must travel through Gateway-shaped contracts.
    `/api/v1/documents/{document_id}/download` through `/api/bff/api/v1/documents/*`; Workbench
    does not call `lotus-archive` directly, and the BFF preserves binary responses and integrity
    headers for PDF downloads
-10. RFC-0108 analytics UI observability is centralized in
+10. Outcome-review report job requests use Gateway `POST /api/v1/reports/outcome-reviews` through
+    `/api/bff/api/v1/reports/outcome-reviews` after loading manage-owned `DpmOutcomeReportInput`.
+    Workbench does not call `lotus-report`, `lotus-render`, or `lotus-archive` directly for
+    report materialization.
+11. RFC-0108 analytics UI observability is centralized in
     `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Intake, Performance,
     Risk, Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations
     emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
     intake payload, document, session, trace, request, response, and screen-content identifiers
     must not appear in metric labels.
-11. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
+12. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
     backed by strategic Gateway APIs before Workbench exposes them. RFC-0098 keeps Workbench as a
     renderer of Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,
@@ -69,7 +73,7 @@ must travel through Gateway-shaped contracts.
     outcome-review composition only; the implemented Workbench panel consumes the Gateway
     outcome-review list contract and must not calculate expected-versus-realized values or infer
     PM quality.
-12. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
+13. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
     not the active RFC-0108 product surface and should not be used as current client-demo evidence.
 
 ## Ownership Diagram
