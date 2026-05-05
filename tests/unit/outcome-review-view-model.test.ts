@@ -93,6 +93,51 @@ describe("outcome review view model", () => {
     );
   });
 
+  it("maps manage RFC-0042 source lineage fields without degrading them to N/A", () => {
+    const model = buildOutcomeReviewPanelModel(
+      response(
+        {
+          items: [
+            {
+              outcome_review_id: "dor_1",
+              state: "READY",
+              source_lineage: [
+                {
+                  source_system: "lotus-manage",
+                  source_type: "DPM_SELECTED_ALTERNATIVE_EXPECTED_OUTCOME",
+                  source_id: "selected-alternative-1",
+                  content_hash: "sha256:selected",
+                },
+                {
+                  source_system: "lotus-core",
+                  source_type: "POST_TRADE_HOLDINGS_WINDOW",
+                  source_id: "post-trade-holdings-1",
+                  content_hash: "sha256:realized",
+                },
+              ],
+            },
+          ],
+        },
+        { state: "UNKNOWN" }
+      )
+    );
+
+    expect(model.state).toBe("ready");
+    expect(model.supportabilityState).toBe("READY");
+    expect(model.items[0].lineage).toEqual([
+      expect.objectContaining({
+        source: "lotus-manage",
+        reference: "selected-alternative-1",
+        hash: "sha256:selected",
+      }),
+      expect.objectContaining({
+        source: "lotus-core",
+        reference: "post-trade-holdings-1",
+        hash: "sha256:realized",
+      }),
+    ]);
+  });
+
   it("marks blocked handoffs from manage supportability without inventing UI support", () => {
     const model = buildOutcomeReviewPanelModel(
       response(
