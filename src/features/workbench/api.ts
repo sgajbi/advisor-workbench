@@ -15,6 +15,7 @@ import {
   WorkbenchPortfolio360,
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
+  DpmOutcomeReviewNarrativeResponse,
   ReportJobHandleResponse,
   ReportBatchHandleResponse,
   ReportBatchStatusResponse,
@@ -796,6 +797,44 @@ export async function getDpmOutcomeReviewAiEvidenceInput(
         "client",
         `/dpm/command-center/outcome-reviews/${encodeURIComponent(outcomeReviewId)}/ai-evidence-input`,
         "DPM outcome review AI evidence input"
+      )
+  );
+}
+
+export async function requestDpmOutcomeReviewAiNarrative(params: {
+  outcomeReviewId: string;
+  requestedOutputs?: string[];
+  audience?: string[];
+}): Promise<DpmOutcomeReviewNarrativeResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.outcome-review.ai-narrative",
+    async () =>
+      await fetchWorkbenchMutation<DpmOutcomeReviewNarrativeResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/outcome-reviews/${encodeURIComponent(params.outcomeReviewId)}/ai-narrative`
+        ),
+        "request DPM outcome review AI narrative",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Correlation-Id": `corr-workbench-outcome-ai-${params.outcomeReviewId}`,
+          },
+          body: JSON.stringify({
+            requested_outputs: params.requestedOutputs ?? [
+              "pm_summary",
+              "cio_summary",
+              "control_summary",
+              "evidence_gaps",
+            ],
+            audience: params.audience ?? [
+              "portfolio_manager",
+              "cio_office",
+              "investment_control",
+            ],
+          }),
+        }
       )
   );
 }

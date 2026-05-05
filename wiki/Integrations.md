@@ -54,13 +54,18 @@ must travel through Gateway-shaped contracts.
     `/api/bff/api/v1/reports/outcome-reviews` after loading manage-owned `DpmOutcomeReportInput`.
     Workbench does not call `lotus-report`, `lotus-render`, or `lotus-archive` directly for
     report materialization.
-11. RFC-0108 analytics UI observability is centralized in
+11. Outcome-review AI narrative requests use Gateway
+    `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative` through
+    `/api/bff/api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative`.
+    Workbench does not call `lotus-manage` or `lotus-ai` directly, does not construct prompts, and
+    displays only bounded workflow-pack run posture returned by Gateway.
+12. RFC-0108 analytics UI observability is centralized in
     `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Intake, Performance,
     Risk, Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations
     emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
     intake payload, document, session, trace, request, response, and screen-content identifiers
     must not appear in metric labels.
-12. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
+13. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
     backed by strategic Gateway APIs before Workbench exposes them. RFC-0098 keeps Workbench as a
     renderer of Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,
@@ -69,11 +74,12 @@ must travel through Gateway-shaped contracts.
     simulation, selection, approval, staging, handoff, and supportability also remain
     manage-owned and must reach Workbench through Gateway wave composition only. RFC-0042
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and
-    source-refresh posture also remain manage-owned and must reach Workbench through Gateway
-    outcome-review composition only; the implemented Workbench panel consumes the Gateway
-    outcome-review list contract and must not calculate expected-versus-realized values or infer
+    source-refresh posture also remain manage-owned, while AI narrative execution remains
+    `lotus-ai` owned; both must reach Workbench through Gateway outcome-review composition only.
+    The implemented Workbench panel consumes the Gateway outcome-review list and AI-narrative
+    contracts and must not calculate expected-versus-realized values, construct prompts, or infer
     PM quality.
-13. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
+14. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
     not the active RFC-0108 product surface and should not be used as current client-demo evidence.
 
 ## Ownership Diagram
@@ -98,6 +104,7 @@ flowchart TB
   Workbench -->|/api/bff/api/v1/workbench/*| Gateway
   Workbench --> DpmCenter
   Workbench -->|/api/bff/api/v1/dpm/command-center/outcome-reviews*| Gateway
+  Workbench -->|AI narrative action via Gateway only| Gateway
   DpmCenter --> Waves
   DpmCenter --> Outcomes
   DpmCenter -->|Gateway RFC-0098 contract| Gateway

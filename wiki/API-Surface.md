@@ -56,7 +56,11 @@ promote dormant labels into product ownership just because historical route file
   calculating those values client-side. The panel can request a governed outcome-review PDF job by
   loading manage report input through Gateway and then submitting Gateway
   `POST /api/v1/reports/outcome-reviews`; report rendering and archive lifecycle remain owned by
-  `lotus-report`, `lotus-render`, and `lotus-archive`. Demo promotion still requires the canonical
+  `lotus-report`, `lotus-render`, and `lotus-archive`. The panel can also request a governed
+  outcome-review AI narrative through Gateway
+  `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative`; evidence
+  remains manage-owned, narrative execution remains `lotus-ai` owned, and Workbench shows only
+  bounded workflow-pack run posture. Demo promotion still requires the canonical
   `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review in the implementation ledger.
 
 ## Route examples

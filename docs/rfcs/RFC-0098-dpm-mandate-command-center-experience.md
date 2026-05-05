@@ -391,9 +391,13 @@ Implementation note as of 2026-05-05: the first RFC-0042 outcome-review realizat
 `GET /api/v1/dpm/command-center/outcome-reviews`. It includes typed Workbench API wrappers,
 bounded analytics UI observability surfaces, deterministic view-model normalization, and a
 portfolio-linked panel that renders manage-owned review state, dimension rows, lineage rows,
-snapshot hashes, supportability reasons, blocked actions, and report/AI handoff posture. Dedicated
-`/dpm/outcomes` routing, mutation actions, drawers, and canonical live screenshot proof remain
-future RFC-0098 command-center work unless separately promoted by implementation evidence.
+snapshot hashes, supportability reasons, blocked actions, report handoff posture, and
+Gateway-backed governed AI narrative request posture. Workbench does not call `lotus-ai` or
+construct prompts; the narrative action uses Gateway
+`POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative`, which composes
+manage-owned AI evidence with `lotus-ai` workflow-pack execution. Dedicated `/dpm/outcomes`
+routing, preview/create/source-refresh mutations, drawers, and canonical live screenshot proof
+remain future RFC-0098 command-center work unless separately promoted by implementation evidence.
 
 Target user journey:
 
@@ -406,9 +410,11 @@ Target user journey:
    and remediation routes from Gateway/manage truth only.
 5. Operations opens the supportability drawer and sees dimension counts, source-owner families,
    freshness counts, support refs, and remediation routes without raw source payloads.
-6. Sales/pre-sales can demonstrate a closed-loop outcome story while clearly stating that reports,
-   archive artifacts, AI narrative, external execution, and PM scoring are not claimed unless the
-   owning apps have implemented and proven them.
+6. Sales/pre-sales can demonstrate a closed-loop outcome story while clearly stating that report
+   rendering/archive artifacts, external execution, PM scoring, and autonomous AI recommendations
+   are not claimed unless the owning apps have implemented and proven them. The implemented AI
+   narrative action is a governed Gateway/AI workflow-pack request over manage-owned evidence, not
+   an approval, client contact, or PM score.
 
 Required outcome panels:
 
@@ -419,7 +425,7 @@ Required outcome panels:
 | Source Lineage Drawer | Support audit and operations. | Show source owners, source refs, hashes, timestamps, freshness, and supportability without raw payloads. |
 | Supportability Drawer | Support operator triage. | Show dimension counts, source-owner families, freshness counts, remediation routes, and safe diagnostics. |
 | Report Input Panel | Explain downstream report readiness. | Show report-input availability only; do not imply rendered report or archive completion. |
-| AI Evidence Panel | Explain downstream AI readiness. | Show AI-evidence permitted use and forbidden actions only; do not generate prompts, memos, or recommendations. |
+| AI Evidence Panel | Explain downstream AI readiness. | Show AI-evidence permitted use and forbidden actions only; request governed narrative execution through Gateway only and show bounded run status. Do not generate prompts, autonomous recommendations, approvals, or PM scores. |
 | Action Rail | Guide preview, create, source refresh, and handoff reads. | Buttons are enabled only from Gateway action eligibility; unsupported report, AI, archive, execution, and PM-scoring actions remain disabled or absent. |
 
 Required UI states:
@@ -434,7 +440,7 @@ Required UI states:
 8. not-supported dimension,
 9. source refresh available,
 10. report input available but rendered report unavailable,
-11. AI evidence available but AI memo unavailable,
+11. AI evidence available and governed AI narrative request available,
 12. Gateway unavailable,
 13. manage outcome authority unavailable,
 14. supportability blocked/degraded/not found.
@@ -460,6 +466,7 @@ Workbench must consume these Gateway outcome routes when implemented:
 | `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/supportability` | supportability drawer |
 | `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/report-input` | report-input panel |
 | `GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-evidence-input` | AI-evidence panel |
+| `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative` | governed AI narrative action from embedded outcome panel |
 | `POST /api/v1/dpm/command-center/outcome-reviews/preview` | non-durable preview workflow |
 | `POST /api/v1/dpm/command-center/outcome-reviews` | durable outcome-review creation |
 | `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/refresh-sources` | source refresh action |

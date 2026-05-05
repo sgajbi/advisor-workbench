@@ -5,11 +5,13 @@ import OutcomeReviewPanel from "../../src/features/workbench/components/outcome-
 import type { DpmOutcomeReviewGatewayResponse } from "../../src/features/workbench/types";
 import {
   getDpmOutcomeReviewReportInput,
+  requestDpmOutcomeReviewAiNarrative,
   submitDpmOutcomeReviewReportJob,
 } from "../../src/features/workbench/api";
 
 vi.mock("../../src/features/workbench/api", () => ({
   getDpmOutcomeReviewReportInput: vi.fn(),
+  requestDpmOutcomeReviewAiNarrative: vi.fn(),
   submitDpmOutcomeReviewReportJob: vi.fn(),
 }));
 
@@ -74,6 +76,7 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("sha256:risk")).toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBe(2);
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Request AI review" })).toBeEnabled();
   });
 
   it("requests a governed outcome-review report job from manage report input", async () => {
@@ -102,6 +105,79 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("accepted / rjob_outcome_1")).toBeInTheDocument();
   });
 
+  it("requests a governed outcome-review AI narrative through Gateway", async () => {
+    vi.mocked(requestDpmOutcomeReviewAiNarrative).mockResolvedValue({
+      correlation_id: "corr-ai",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: readyResponse.supportability,
+      ai_evidence_input: {
+        outcome_review_id: "or_1",
+        content_hash: "sha256:ai-evidence",
+      },
+      narrative_request: {
+        requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
+        audience: ["portfolio_manager", "cio_office", "investment_control"],
+      },
+      data: {
+        execution: { status: "COMPLETED" },
+        workflow_pack_run: { run_id: "packrun_or_1", workflow_authority_owner: "lotus-manage" },
+      },
+    });
+
+    render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
+    fireEvent.click(screen.getByRole("button", { name: "Request AI review" }));
+
+    await waitFor(() => {
+      expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledWith({
+        outcomeReviewId: "or_1",
+      });
+    });
+    expect(screen.getByText("COMPLETED / packrun_or_1")).toBeInTheDocument();
+  });
+
+  it("keeps report and AI handoff run posture visible after both actions", async () => {
+    vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue({
+      ...readyResponse,
+      data: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
+    });
+    vi.mocked(submitDpmOutcomeReviewReportJob).mockResolvedValue({
+      report_request_id: "rrq_outcome_1",
+      report_job_id: "rjob_outcome_1",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_outcome_1",
+      idempotency_key: "outcome-review-or_1-pdf",
+    });
+    vi.mocked(requestDpmOutcomeReviewAiNarrative).mockResolvedValue({
+      correlation_id: "corr-ai",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: readyResponse.supportability,
+      ai_evidence_input: { outcome_review_id: "or_1" },
+      narrative_request: {
+        requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
+        audience: ["portfolio_manager", "cio_office", "investment_control"],
+      },
+      data: {
+        execution: { status: "COMPLETED" },
+        workflow_pack_run: { run_id: "packrun_or_1" },
+      },
+    });
+
+    render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
+    fireEvent.click(screen.getByRole("button", { name: "Request report" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request AI review" }));
+
+    expect(await screen.findByText("accepted / rjob_outcome_1")).toBeInTheDocument();
+    expect(screen.getByText("COMPLETED / packrun_or_1")).toBeInTheDocument();
+  });
+
   it("renders blocked handoff posture from Gateway supportability", () => {
     render(
       <OutcomeReviewPanel
@@ -121,6 +197,7 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Outcome review handoff is blocked")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked").length).toBe(2);
     expect(screen.getByText("Portfolio Operations")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Request AI review" })).toBeDisabled();
   });
 
   it("renders unavailable state without claiming support", () => {

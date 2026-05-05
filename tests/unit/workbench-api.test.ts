@@ -8,6 +8,7 @@ import {
   getDpmOutcomeReviewAiEvidenceInput,
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
+  requestDpmOutcomeReviewAiNarrative,
   getArchivedDocumentMetadata,
   getPortfolio360,
   getReportBatchStatus,
@@ -1807,6 +1808,54 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("outcome-review-report-input");
     expect(metricEventsJson).toContain("outcome-review-ai-evidence");
     expect(metricEventsJson).not.toContain("or_1");
+  });
+
+  it("requests DPM outcome-review AI narrative through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc42-ai-narrative",
+            contract_version: "v1",
+            source_service: "lotus-ai",
+            evidence_source_service: "lotus-manage",
+            manage_upstream_status: 200,
+            ai_upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042",
+              state: "SUPPORTED",
+              reason_codes: [],
+              blocked_actions: [],
+            },
+            ai_evidence_input: { outcome_review_id: "or_1" },
+            narrative_request: { requested_outputs: ["pm_summary"], audience: ["pm"] },
+            data: { workflow_pack_run: { run_id: "packrun_or_1" } },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await requestDpmOutcomeReviewAiNarrative({
+      outcomeReviewId: "or_1",
+      requestedOutputs: ["pm_summary"],
+      audience: ["pm"],
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/outcome-reviews/or_1/ai-narrative`
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      requested_outputs: ["pm_summary"],
+      audience: ["pm"],
+    });
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("outcome-review-ai-narrative");
+    expect(metricEventsJson).not.toContain("or_1");
+    expect(metricEventsJson).not.toContain("packrun_or_1");
   });
 
   it("submits DPM outcome-review report jobs through the gateway BFF", async () => {
