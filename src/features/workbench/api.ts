@@ -31,7 +31,11 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
-import { applyDefaultCallerContextHeaders, resolveDefaultCallerContext } from "./caller-context";
+import {
+  applyDefaultCallerContextHeaders,
+  resolveDefaultCallerContext,
+  resolveDefaultDpmContext,
+} from "./caller-context";
 import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
@@ -781,6 +785,22 @@ export async function generateDpmConstructionAlternatives(params: {
 }): Promise<DpmConstructionGatewayResponse> {
   const portfolioId = params.portfolio.portfolio.portfolio_id;
   const actorId = params.actorId ?? "workbench-construction-operator";
+  const methods = params.methods ?? [
+    "DO_NOTHING_BASELINE",
+    "HEURISTIC_EXPLAINABLE",
+    "MIN_TURNOVER",
+  ];
+  const requestBody = buildConstructionAlternativeSetRequest(
+    params.portfolio,
+    methods
+  );
+  const statefulInput = requestBody.stateful_input as
+    | { as_of?: unknown }
+    | undefined;
+  const constructionAsOf =
+    typeof statefulInput?.as_of === "string"
+      ? statefulInput.as_of
+      : params.portfolio.as_of_date;
   return await observeWorkbenchMutation(
     "dpm.construction.alternatives.generate",
     async () =>
@@ -791,14 +811,11 @@ export async function generateDpmConstructionAlternatives(params: {
           method: "POST",
           headers: buildDpmConstructionCallerHeaders({
             actorId,
-            correlationId: `corr-workbench-construction-${portfolioId}-${params.portfolio.as_of_date}`,
+            correlationId: `corr-workbench-construction-${portfolioId}-${constructionAsOf}`,
           }),
           body: JSON.stringify({
-            idempotency_key: `workbench-construction-${portfolioId}-${params.portfolio.as_of_date}`,
-            body: buildConstructionAlternativeSetRequest(
-              params.portfolio,
-              params.methods ?? ["DO_NOTHING_BASELINE", "HEURISTIC_EXPLAINABLE", "MIN_TURNOVER"]
-            ),
+            idempotency_key: `workbench-construction-${portfolioId}-${constructionAsOf}`,
+            body: requestBody,
           }),
         }
       )
@@ -1004,15 +1021,21 @@ function buildConstructionAlternativeSetRequest(
   const portfolioId = portfolio.portfolio.portfolio_id;
   const baseCurrency = portfolio.portfolio.base_currency;
   const callerContext = resolveDefaultCallerContext();
+  const dpmContext = resolveDefaultDpmContext();
+  const sourceAsOfDate = dpmContext.sourceAsOfDate || portfolio.as_of_date;
   return {
     input_mode: "stateful",
     methods,
     stateful_input: {
       portfolio_id: portfolioId,
-      as_of: portfolio.as_of_date,
+      as_of: sourceAsOfDate,
+      mandate_id: dpmContext.mandateId,
+      model_portfolio_id: dpmContext.modelPortfolioId,
       tenant_id: callerContext.tenantId,
       booking_center_code:
-        portfolio.portfolio.booking_center_code || callerContext.bookingCenterCode,
+        dpmContext.bookingCenterCode ||
+        portfolio.portfolio.booking_center_code ||
+        callerContext.bookingCenterCode,
       include_tax_lots: true,
       include_settlement_profile: true,
       include_shelf: true,

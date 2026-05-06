@@ -214,16 +214,17 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
             ? "Generating alternatives"
             : "Generate alternatives"}
         </ActionButton>
-        {actionMessage ? (
+        <div>
+          {actionMessage ? (
+            <Text variant="secondary" className="muted">
+              {actionMessage}
+            </Text>
+          ) : null}
           <Text variant="secondary" className="muted">
-            {actionMessage}
+            LOTUS-GATEWAY forwards this request to manage and preserves the
+            returned construction truth.
           </Text>
-        ) : (
-          <Text variant="secondary" className="muted">
-            Gateway forwards this request to manage and preserves the returned
-            construction truth.
-          </Text>
-        )}
+        </div>
       </div>
 
       {model.supportabilityReasons.length > 0 ? (

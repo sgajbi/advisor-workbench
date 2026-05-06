@@ -18,6 +18,7 @@
     "live:stack:up:workbench-local": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench",
     "live:stack:up:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -RunValidation",
     "live:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1",
+    "live:validate:construction": "playwright test tests/live/construction-alternatives.live.spec.ts --config playwright.live.config.ts",
     "live:validate:ui": "node scripts/live/validate-canonical-workbench-live.mjs",
     "live:evidence": "powershell -ExecutionPolicy Bypass -File scripts/live/Capture-LotusFrontOfficeEvidence.ps1",
     "auto:pulse": "powershell -ExecutionPolicy Bypass -File scripts/automation/Platform-Pulse.ps1",

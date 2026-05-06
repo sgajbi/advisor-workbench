@@ -174,6 +174,10 @@ WORKBENCH_BFF_TENANT_ID=tenant-sg
 WORKBENCH_BFF_REGION=APAC
 WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
 WORKBENCH_BFF_ROLE=advisor
+WORKBENCH_DPM_MANDATE_ID=MANDATE_PB_SG_GLOBAL_BAL_001
+WORKBENCH_DPM_MODEL_PORTFOLIO_ID=MODEL_PB_SG_GLOBAL_BAL_DPM
+WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
+WORKBENCH_DPM_SOURCE_AS_OF_DATE=2026-04-10
 ```
 
 Canonical front-office runtime:
@@ -213,6 +217,8 @@ http://workbench.dev.lotus/data-products
   canonical front-office stack bring-up
 - `npm run live:validate`
   canonical front-office validation against the running stack
+- `npm run live:validate:construction`
+  focused live proof for the Gateway/manage-backed construction alternatives lab
 
 ## Validation And CI Lanes
 
@@ -232,6 +238,8 @@ Repo-native gate mapping:
   Docker parity
 - `npm run live:validate`
   canonical integrated product validation when cross-app flows change
+- `npm run live:validate:construction`
+  focused browser proof for RFC-0039 construction alternatives when the construction lab changes
 
 ## Product Contract Notes
 

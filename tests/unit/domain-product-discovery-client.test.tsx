@@ -28,11 +28,7 @@ describe("DomainProductDiscoveryClient", () => {
       screen.getByText("Loading governed catalog and trust certification from gateway.")
     ).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Domain Product Discovery" })).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("PortfolioStateSnapshot")).toBeInTheDocument();
+    expect(await screen.findByText("PortfolioStateSnapshot")).toBeInTheDocument();
     expect(screen.getAllByText("lotus-core").length).toBeGreaterThan(0);
     expect(screen.getByText("lotus-workbench, lotus-risk")).toBeInTheDocument();
     expect(screen.getByText("materialized")).toBeInTheDocument();

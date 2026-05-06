@@ -18,6 +18,8 @@
   Docker parity
 - `npm run live:validate`
   canonical integrated product validation
+- `npm run live:validate:construction`
+  focused RFC-0039 construction alternatives proof against the running canonical stack
 - `npm run live:evidence`
   post-validation observability, logging, metrics, API, and dashboard evidence capture
 
@@ -32,6 +34,8 @@
 
 - canonical browser validation writes screenshots and structured summary output under
   `output/playwright/live-canonical/`
+- construction alternatives live proof writes focused machine-readable evidence and a panel
+  screenshot under `output/rfc39-wtbd002-construction-lab/construction-live/`
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics
