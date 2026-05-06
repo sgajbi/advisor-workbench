@@ -65,13 +65,18 @@ must travel through Gateway-shaped contracts.
     comparison and supportability truth, and records PM selection through Gateway; it does not call
     `lotus-manage` directly or invent stateless portfolio snapshots, prices, optimizer output, or
     selected-alternative state.
-13. RFC-0108 analytics UI observability is centralized in
+13. Rebalance action-register supportability is read from the Gateway portfolio overview
+    `rebalance_snapshot`. Workbench displays manage-owned status, source support state, freshness,
+    run count, operation count, workflow decision count, last-run identity, and reason posture; it
+    does not call `lotus-manage` directly and does not convert missing supportability into
+    apparently verified zero activity.
+14. RFC-0108 analytics UI observability is centralized in
     `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Intake, Performance,
     Risk, Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations
     emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
     intake payload, document, session, trace, request, response, and screen-content identifiers
     must not appear in metric labels.
-14. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
+15. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
     backed by strategic Gateway APIs before Workbench exposes them. RFC-0098 keeps Workbench as a
     renderer of Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,

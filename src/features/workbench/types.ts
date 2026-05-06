@@ -22,6 +22,15 @@ export type WorkbenchOverview = {
     status: string;
     last_rebalance_run_id: string | null;
     last_run_at_utc: string | null;
+    supportability?: {
+      feature_key?: string | null;
+      state?: string | null;
+      reason?: string | null;
+      freshness_bucket?: string | null;
+      run_count?: number | null;
+      operation_count?: number | null;
+      workflow_decision_count?: number | null;
+    } | null;
   } | null;
   warnings: string[];
   partial_failures: Array<{

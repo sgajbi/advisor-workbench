@@ -56,6 +56,12 @@ promote dormant labels into product ownership just because historical route file
   method statuses, comparison metrics, objective/constraint trace counts, supportability, and
   selected-alternative state, and records PM selection through Gateway. It does not synthesize
   source snapshots, prices, optimizer results, supportability, or selection truth locally.
+- RFC-0098/RFC-0041 action-register supportability is rendered on `/workbench/{portfolioId}` from
+  the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
+  manage-owned status, source support state, freshness, run count, operation count, workflow
+  decision count, last-run identity, and reason posture. When Gateway does not provide
+  supportability, Workbench renders unknown/N/A instead of implying verified zero activity or
+  calculating supportability locally.
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
   Workbench renders manage-owned review state, expected-versus-realized dimensions, hashes,

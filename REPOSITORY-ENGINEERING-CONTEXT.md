@@ -58,7 +58,12 @@ Current repository posture:
    manage/core source selector through Gateway, preserves manage-owned alternatives,
    supportability, objective/constraint traces, and selected-alternative state, and must not build
    stateless source bundles, optimizer logic, prices, or selection truth in the browser,
-9. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+9. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
+   supportability from the portfolio overview `rebalance_snapshot`, including source state,
+   freshness, run count, operation count, workflow decision count, last-run identity, and reason
+   posture. Missing Gateway supportability is shown as unknown/N/A rather than as verified zero
+   activity.
+10. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
