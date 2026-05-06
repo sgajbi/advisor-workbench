@@ -291,6 +291,31 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.dpm-command-center",
+        "mandate-command-center",
+        "dpm.command-center.summary",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "mandate-command-center-monitoring",
+        "dpm.command-center.monitoring.run-once",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "mandate-command-center-exceptions",
+        "dpm.command-center.exceptions.list",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "mandate-command-center-mandate",
+        "dpm.command-center.mandate.by-portfolio",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "mandate-command-center-health",
+        "dpm.command-center.mandate.health",
+      ],
+      [
+        "workbench.dpm-command-center",
         "outcome-review-list",
         "dpm.outcome-reviews.list",
       ],

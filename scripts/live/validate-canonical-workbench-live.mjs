@@ -20,6 +20,7 @@ import {
 import {
   createBrowserValidationHelpers,
   validateAdvisorBriefPanel,
+  validateDpmCommandCenterPanel,
   validateEvidencePanel,
   validatePerformanceAnalysisPanel,
   validatePerformanceSummaryPanel,
@@ -42,6 +43,13 @@ const {
 const { summaryPath, shotIndexPath } = buildSummaryPaths(outputDir);
 const canonicalContract = await loadCanonicalContractMetadata();
 const panelRegistry = await loadWorkbenchPanelRegistryMetadata();
+const dpmCommandCenterDefaults = {
+  tenantId: process.env.WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID ?? "default",
+  portfolioManagerId:
+    process.env.WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID ?? "PM_SG_DPM_001",
+  bookId: process.env.WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID ?? "BOOK_SG_BALANCED_DPM",
+  asOfDate: process.env.WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE ?? "2026-05-03",
+};
 
 const summary = createValidationSummary({
   generatedAt: new Date().toISOString(),
@@ -53,6 +61,22 @@ const summary = createValidationSummary({
   panelRegistry,
 });
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
+
+async function fetchOptionalJson(description, url) {
+  try {
+    return await fetchJson(summary, url, description, timeoutMs);
+  } catch (error) {
+    summary.apiChecks.push({
+      description,
+      url,
+      status: "seed_gap",
+      kind: "json",
+      method: "GET",
+      warning: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
 
 async function run() {
   await ensureDirectory(outputDir);
@@ -219,6 +243,64 @@ async function run() {
     throw new Error("DPM outcome-review list returned no manage-backed reviews.");
   }
 
+  const commandCenterParams = new URLSearchParams({
+    tenant_id: dpmCommandCenterDefaults.tenantId,
+    portfolio_manager_id: dpmCommandCenterDefaults.portfolioManagerId,
+    book_id: dpmCommandCenterDefaults.bookId,
+    as_of_date: dpmCommandCenterDefaults.asOfDate,
+    limit: "25",
+  });
+  const dpmCommandCenter = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center?${commandCenterParams.toString()}`,
+    "DPM command-center summary",
+    timeoutMs
+  );
+  const dpmCommandCenterPayload = dpmCommandCenter?.data ?? dpmCommandCenter;
+  if (!dpmCommandCenterPayload?.supportability) {
+    throw new Error("DPM command-center summary returned no manage supportability envelope.");
+  }
+
+  const dpmExceptions = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/exceptions?tenant_id=${encodeURIComponent(
+      dpmCommandCenterDefaults.tenantId
+    )}&portfolio_manager_id=${encodeURIComponent(
+      dpmCommandCenterDefaults.portfolioManagerId
+    )}&limit=25&state=ACTIVE`,
+    "DPM command-center active exceptions",
+    timeoutMs
+  );
+  const dpmExceptionItems =
+    dpmExceptions?.data?.items ?? dpmExceptions?.items ?? dpmExceptions?.exceptions ?? [];
+  if (!Array.isArray(dpmExceptionItems)) {
+    throw new Error("DPM command-center exceptions returned no list envelope.");
+  }
+
+  const dpmMandate = await fetchOptionalJson(
+    "DPM command-center mandate by portfolio",
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/by-portfolio/${portfolioId}`
+  );
+  const dpmMandatePayload = dpmMandate?.data ?? dpmMandate;
+  const mandateId =
+    dpmMandatePayload?.mandate_id ??
+    dpmMandatePayload?.mandateId ??
+    dpmMandatePayload?.mandate?.mandate_id ??
+    dpmMandatePayload?.mandate?.mandateId;
+
+  if (mandateId) {
+    const dpmMandateHealth = await fetchJson(
+      summary,
+      `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health`,
+      "DPM command-center mandate health",
+      timeoutMs
+    );
+    const dpmMandateHealthPayload = dpmMandateHealth?.data ?? dpmMandateHealth;
+    if (!dpmMandateHealthPayload?.health_state && !dpmMandateHealthPayload?.state) {
+      throw new Error("DPM command-center mandate health returned no health state.");
+    }
+  }
+
   const reportCapabilities = await fetchJson(
     summary,
     "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default",
@@ -369,6 +451,12 @@ async function run() {
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateDpmCommandCenterPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
     });
   } finally {
     await browser.close();

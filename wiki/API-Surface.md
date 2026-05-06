@@ -49,6 +49,16 @@ promote dormant labels into product ownership just because historical route file
   route yet; promotion requires Gateway `/api/v1/dpm/command-center/waves*` implementation,
   Workbench BFF/browser implementation, canonical `PB_SG_GLOBAL_BAL_001` live validation, visual
   and accessibility evidence, and implementation-backed wiki/support wording.
+- RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on
+  `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center`,
+  `/api/v1/dpm/command-center/monitoring/run-once`,
+  `/api/v1/dpm/command-center/exceptions`, and
+  `/api/v1/dpm/command-center/mandates*`. Workbench renders manage-owned book health
+  distribution, source readiness, attention queue, recommended actions, latest monitoring-run
+  lineage, active exceptions, and mandate health dimensions. It does not calculate mandate health,
+  infer PM-book membership, reconstruct source readiness, merge exceptions, resolve exceptions
+  locally, or call `lotus-manage` directly. Demo promotion still requires the canonical
+  `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review.
 - RFC-0098/RFC-0039 construction alternatives rendering is implemented on
   `/workbench/{portfolioId}` through Gateway
   `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful

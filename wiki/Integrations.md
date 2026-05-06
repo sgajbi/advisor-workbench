@@ -94,7 +94,13 @@ must travel through Gateway-shaped contracts.
     contracts, and the implemented outcome panel consumes the Gateway outcome-review list and
     AI-narrative contracts. Workbench must not calculate expected-versus-realized values, construct
     prompts, infer PM quality, or optimize construction alternatives.
-15. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
+16. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
+    `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`
+    contracts. Workbench renders manage-owned health distribution, source readiness,
+    supportability, active exceptions, monitoring-run lineage, and mandate health dimensions
+    without reconstructing mandate-health scores, source readiness, PM-book membership, exception
+    queues, or resolution state.
+17. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
     not the active RFC-0108 product surface and should not be used as current client-demo evidence.
 
 ## Ownership Diagram
@@ -115,10 +121,11 @@ flowchart TB
   Waves[Future rebalance-wave workspace]
   Outcomes[Post-trade outcome panel]
   Advise[Advisor-led proposal workflows]
-  DpmCenter[Future DPM command center UI]
+  DpmCenter[DPM command center UI]
 
   Workbench -->|/api/bff/api/v1/workbench/*| Gateway
   Workbench --> DpmCenter
+  Workbench -->|/api/bff/api/v1/dpm/command-center*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/construction/alternative-sets*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/outcome-reviews*| Gateway
   Workbench -->|AI narrative action via Gateway only| Gateway
