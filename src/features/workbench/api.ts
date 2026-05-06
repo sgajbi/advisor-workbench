@@ -13,6 +13,7 @@ import {
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPortfolio360,
+  DpmCommandCenterGatewayResponse,
   DpmConstructionGatewayResponse,
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
@@ -751,6 +752,147 @@ export async function getReportingSnapshot(
   );
 }
 
+export async function getDpmCommandCenter(params?: {
+  tenantId?: string;
+  portfolioManagerId?: string;
+  bookId?: string;
+  asOfDate?: string;
+  healthState?: string;
+  limit?: number;
+}): Promise<DpmCommandCenterGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("tenant_id", params?.tenantId ?? dpmContext.commandCenterTenantId);
+  query.set(
+    "portfolio_manager_id",
+    params?.portfolioManagerId ?? dpmContext.commandCenterPortfolioManagerId
+  );
+  query.set("book_id", params?.bookId ?? dpmContext.commandCenterBookId);
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  query.set("limit", String(params?.limit ?? 25));
+  if (params?.healthState) {
+    query.set("health_state", params.healthState);
+  }
+  return await observeWorkbenchResource(
+    "dpm.command-center.summary",
+    async () =>
+      await fetchWorkbenchResource<DpmCommandCenterGatewayResponse>(
+        "server",
+        "/dpm/command-center",
+        "DPM command center",
+        query
+      )
+  );
+}
+
+export async function runDpmCommandCenterMonitoring(params?: {
+  mandateIds?: string[];
+  tenantId?: string;
+  portfolioManagerId?: string;
+  bookId?: string;
+  asOfDate?: string;
+  requestedBy?: string;
+}): Promise<DpmCommandCenterGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const callerContext = resolveDefaultCallerContext();
+  const mandateIds = params?.mandateIds?.length
+    ? params.mandateIds
+    : [dpmContext.mandateId];
+  const asOfDate = params?.asOfDate ?? dpmContext.commandCenterAsOfDate;
+  return await observeWorkbenchMutation(
+    "dpm.command-center.monitoring.run-once",
+    async () =>
+      await fetchWorkbenchMutation<DpmCommandCenterGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/monitoring/run-once"),
+        "run DPM command-center monitoring",
+        {
+          method: "POST",
+          headers: buildDpmCommandCenterCallerHeaders({
+            actorId: params?.requestedBy ?? callerContext.actorId,
+            correlationId: `corr-workbench-command-center-run-${asOfDate}`,
+          }),
+          body: JSON.stringify({
+            body: {
+              mandate_ids: mandateIds,
+              as_of_date: asOfDate,
+              tenant_id: params?.tenantId ?? dpmContext.commandCenterTenantId,
+              portfolio_manager_id:
+                params?.portfolioManagerId ??
+                dpmContext.commandCenterPortfolioManagerId,
+              book_id: params?.bookId ?? dpmContext.commandCenterBookId,
+              requested_by: params?.requestedBy ?? callerContext.actorId,
+            },
+          }),
+        }
+      )
+  );
+}
+
+export async function getDpmCommandCenterExceptions(params?: {
+  tenantId?: string;
+  portfolioManagerId?: string;
+  monitoringRunId?: string;
+  state?: string;
+  severity?: string;
+  limit?: number;
+}): Promise<DpmCommandCenterGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("tenant_id", params?.tenantId ?? dpmContext.commandCenterTenantId);
+  query.set(
+    "portfolio_manager_id",
+    params?.portfolioManagerId ?? dpmContext.commandCenterPortfolioManagerId
+  );
+  query.set("limit", String(params?.limit ?? 25));
+  if (params?.monitoringRunId) {
+    query.set("monitoring_run_id", params.monitoringRunId);
+  }
+  if (params?.state) {
+    query.set("state", params.state);
+  }
+  if (params?.severity) {
+    query.set("severity", params.severity);
+  }
+  return await observeWorkbenchResource(
+    "dpm.command-center.exceptions.list",
+    async () =>
+      await fetchWorkbenchResource<DpmCommandCenterGatewayResponse>(
+        "server",
+        "/dpm/command-center/exceptions",
+        "DPM command-center exceptions",
+        query
+      )
+  );
+}
+
+export async function getDpmMandateByPortfolio(
+  portfolioId: string
+): Promise<DpmCommandCenterGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.command-center.mandate.by-portfolio",
+    async () =>
+      await fetchWorkbenchResource<DpmCommandCenterGatewayResponse>(
+        "server",
+        `/dpm/command-center/mandates/by-portfolio/${encodeURIComponent(portfolioId)}`,
+        "DPM mandate by portfolio"
+      )
+  );
+}
+
+export async function getDpmMandateHealth(
+  mandateId: string
+): Promise<DpmCommandCenterGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.command-center.mandate.health",
+    async () =>
+      await fetchWorkbenchResource<DpmCommandCenterGatewayResponse>(
+        "server",
+        `/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health`,
+        "DPM mandate health"
+      )
+  );
+}
+
 export async function getDpmOutcomeReviews(params: {
   portfolioId: string;
   state?: string;
@@ -1003,6 +1145,18 @@ function buildReportBatchCallerHeaders(params: {
 }
 
 function buildDpmConstructionCallerHeaders(params: {
+  actorId: string;
+  correlationId: string;
+}): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "X-Actor-Id": params.actorId,
+    "X-Caller-Application": "lotus-workbench",
+    "X-Correlation-Id": params.correlationId,
+  };
+}
+
+function buildDpmCommandCenterCallerHeaders(params: {
   actorId: string;
   correlationId: string;
 }): Record<string, string> {

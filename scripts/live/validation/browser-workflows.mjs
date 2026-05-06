@@ -378,10 +378,15 @@ export async function validateOutcomeReviewPanel(
     waitUntil: "networkidle",
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Post-Trade Outcome Review" })).toBeVisible({
+  const outcomeReviewPanel = page.getByRole("group", { name: "Post-Trade Outcome Review" });
+  await expect(
+    outcomeReviewPanel.getByRole("heading", { name: "Post-Trade Outcome Review" })
+  ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByLabel("Status lotus-manage")).toBeVisible({ timeout: timeoutMs });
+  await expect(outcomeReviewPanel.getByLabel("Status lotus-manage")).toBeVisible({
+    timeout: timeoutMs,
+  });
   await assertTableHasRows(
     tableByExactLabel(page, "Post-trade outcome reviews"),
     1,
@@ -400,4 +405,40 @@ export async function validateOutcomeReviewPanel(
   await expect(page.getByText("Report Input")).toBeVisible({ timeout: timeoutMs });
   await expect(page.getByText("AI Evidence")).toBeVisible({ timeout: timeoutMs });
   await screenshotRegisteredPanel(page, "dpm.outcome_review");
+}
+
+export async function validateDpmCommandCenterPanel(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "DPM Command Center" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("button", { name: "Run monitoring" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await assertTableHasRows(
+    tableByExactLabel(page, "DPM command-center health distribution"),
+    1,
+    "DPM command-center health distribution"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "DPM attention queue"),
+    0,
+    "DPM attention queue"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "DPM active exceptions"),
+    0,
+    "DPM active exceptions"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "DPM mandate health dimensions"),
+    0,
+    "DPM mandate health dimensions"
+  );
 }

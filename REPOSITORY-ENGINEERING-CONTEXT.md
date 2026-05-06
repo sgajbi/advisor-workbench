@@ -48,23 +48,29 @@ Current repository posture:
    honors route-level report date and backend benchmark controls for proof while still avoiding
    direct `lotus-report` calls, and it now retrieves archived report metadata/downloads through
    Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
-7. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
+7. `/workbench/{portfolioId}` renders the RFC-0038 DPM mandate command-center cockpit from
+   Gateway `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and
+   `/mandates*`. Workbench shows manage-owned book health distribution, source readiness,
+   attention queue, recommended actions, latest monitoring-run lineage, active exceptions, and
+   mandate health dimensions without calculating mandate health, inferring PM-book membership,
+   reconstructing source readiness, merging exceptions, or calling `lotus-manage` directly.
+8. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
    `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
    dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
    Gateway-backed governed AI narrative requests without client-side outcome calculation or direct
    `lotus-manage`/`lotus-ai` calls,
-8. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
+9. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
    `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
    manage/core source selector through Gateway, preserves manage-owned alternatives,
    supportability, objective/constraint traces, and selected-alternative state, and must not build
    stateless source bundles, optimizer logic, prices, or selection truth in the browser,
-9. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
+10. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
    supportability and portfolio-level DPM operations posture from the portfolio overview
    `rebalance_snapshot`, including source state, freshness, run count, operation count, workflow
    decision count, last-run identity, bounded recent runs, workflow posture, run issue count, and
    reason posture. Missing Gateway supportability is shown as unknown/N/A rather than as verified
    zero activity.
-10. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+11. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
@@ -162,11 +168,16 @@ Important validation expectations:
    must identify only governed route, panel, operation, freshness, supportability, and status
    classes; outcome review ids, portfolio ids, proof-pack ids, rebalance run ids, request payloads,
    response payloads, hashes, and lineage references must stay out of metric labels.
-10. DPM outcome-review AI narrative requests are Workbench state-changing mutations through
+10. DPM mandate command-center reads and monitoring actions use bounded observability labels for
+    command-center summary, exceptions, mandate lookup, mandate health, and monitoring run-once
+    operations. Metric labels must not include portfolio ids, mandate ids, PM ids, book ids,
+    monitoring run ids, exception ids, source-run ids, request bodies, response bodies, or screen
+    content.
+11. DPM outcome-review AI narrative requests are Workbench state-changing mutations through
     Gateway only. Workbench may display bounded workflow-pack run status returned by Gateway/AI,
     but it must not construct AI prompts, generate recommendations, score PMs, or treat a narrative
     run as autonomous approval.
-11. DPM construction alternative generation and selection are Workbench state-changing mutations
+12. DPM construction alternative generation and selection are Workbench state-changing mutations
     through Gateway only. Workbench may construct the stateful source selector needed to invoke the
     Gateway/manage contract, but it must not synthesize stateless portfolio snapshots, price
     payloads, target weights, optimization outcomes, supportability states, or selection decisions.

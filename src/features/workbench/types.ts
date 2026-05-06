@@ -1143,6 +1143,25 @@ export type WorkbenchReportingSnapshot = {
   rows: Array<Record<string, unknown>>;
 };
 
+export type DpmCommandCenterSupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  data_completeness_state?: string | null;
+  partial_readiness_reasons: string[];
+  source_run_id?: string | null;
+  remediation_owner?: string | null;
+};
+
+export type DpmCommandCenterGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmCommandCenterSupportability;
+  data: Record<string, unknown>;
+};
+
 export type DpmOutcomeReviewSupportability = {
   source_service: string;
   authority: string;

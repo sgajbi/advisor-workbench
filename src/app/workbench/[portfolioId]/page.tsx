@@ -1,4 +1,8 @@
 import {
+  getDpmCommandCenter,
+  getDpmCommandCenterExceptions,
+  getDpmMandateByPortfolio,
+  getDpmMandateHealth,
   getDpmOutcomeReviews,
   getPortfolio360,
   getReportingSnapshot,
@@ -20,6 +24,7 @@ import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-str
 import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
 import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
 import DecisionReadinessPanel from "@/features/workbench/components/decision-readiness-panel";
+import DpmCommandCenterPanel from "@/features/workbench/components/dpm-command-center-panel";
 import ExceptionQueue from "@/features/workbench/components/exception-queue";
 import OverviewCards from "@/features/workbench/components/overview-cards";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
@@ -75,6 +80,11 @@ export default async function WorkbenchPage({
   let data: Awaited<ReturnType<typeof getPortfolio360>>;
   let analytics: Awaited<ReturnType<typeof getWorkbenchAnalytics>> | null = null;
   let reportingSnapshot: Awaited<ReturnType<typeof getReportingSnapshot>> | null = null;
+  let dpmCommandCenter: Awaited<ReturnType<typeof getDpmCommandCenter>> | null = null;
+  let dpmCommandCenterExceptions: Awaited<ReturnType<typeof getDpmCommandCenterExceptions>> | null = null;
+  let dpmMandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null = null;
+  let dpmMandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
+  let dpmCommandCenterError: string | null = null;
   let outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null = null;
   let outcomeReviewError: string | null = null;
   try {
@@ -123,6 +133,35 @@ export default async function WorkbenchPage({
     );
   } catch {
     reportingSnapshot = null;
+  }
+
+  try {
+    dpmCommandCenter = await getDpmCommandCenter({ limit: 25 });
+  } catch (error) {
+    dpmCommandCenter = null;
+    dpmCommandCenterError =
+      error instanceof Error ? error.message : "DPM command-center endpoint unavailable.";
+  }
+
+  try {
+    dpmCommandCenterExceptions = await getDpmCommandCenterExceptions({
+      state: "ACTIVE",
+      limit: 25,
+    });
+  } catch {
+    dpmCommandCenterExceptions = null;
+  }
+
+  try {
+    dpmMandate = await getDpmMandateByPortfolio(data.portfolio.portfolio_id);
+    const mandateId =
+      typeof dpmMandate.data.mandate_id === "string"
+        ? dpmMandate.data.mandate_id
+        : null;
+    dpmMandateHealth = mandateId ? await getDpmMandateHealth(mandateId) : null;
+  } catch {
+    dpmMandate = null;
+    dpmMandateHealth = null;
   }
 
   try {
@@ -253,6 +292,14 @@ export default async function WorkbenchPage({
 
               <RebalanceStatus
                 snapshot={data.rebalance_snapshot}
+              />
+
+              <DpmCommandCenterPanel
+                commandCenter={dpmCommandCenter}
+                exceptions={dpmCommandCenterExceptions}
+                mandate={dpmMandate}
+                mandateHealth={dpmMandateHealth}
+                errorMessage={dpmCommandCenterError}
               />
 
               <ConstructionAlternativesPanel portfolio={data} />

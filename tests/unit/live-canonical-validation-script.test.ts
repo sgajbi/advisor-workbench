@@ -64,6 +64,15 @@ describe("canonical live validation script", () => {
 
     expect(browserValidator).toContain('supportability?.state !== "ready"');
     expect(browserValidator).toContain("gatewayModuleHealth.lotus_manage");
+    expect(browserValidator).toContain("/api/v1/dpm/command-center?");
+    expect(browserValidator).toContain("DPM command-center summary");
+    expect(browserValidator).toContain("/api/v1/dpm/command-center/exceptions?");
+    expect(browserValidator).toContain("/api/v1/dpm/command-center/mandates/by-portfolio/");
+    expect(browserValidator).toContain("fetchOptionalJson");
+    expect(browserValidator).toContain('status: "seed_gap"');
+    expect(browserValidator).toContain(
+      "/api/v1/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health"
+    );
     expect(browserValidator).not.toContain("gatewayManageFeatures");
   });
 
@@ -310,6 +319,10 @@ describe("canonical live validation script", () => {
 
     expect(script).toContain("canonicalAsOfDate");
     expect(script).toContain("createBrowserValidationHelpers");
+    expect(browserWorkflowModule).toContain("validateDpmCommandCenterPanel");
+    expect(browserWorkflowModule).toContain("DPM Command Center");
+    expect(browserWorkflowModule).toContain("DPM attention queue");
+    expect(browserWorkflowModule).toContain("DPM mandate health dimensions");
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
     expect(browserWorkflowModule).toContain("resolveRegistryRoute");
     expect(browserWorkflowModule).toContain("assertRailModeActive");

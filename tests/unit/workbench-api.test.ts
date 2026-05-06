@@ -6,6 +6,10 @@ import {
   createPortfolioReportBatch,
   createSandboxSession,
   generateDpmConstructionAlternatives,
+  getDpmCommandCenter,
+  getDpmCommandCenterExceptions,
+  getDpmMandateByPortfolio,
+  getDpmMandateHealth,
   getDpmOutcomeReviewAiEvidenceInput,
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
@@ -31,6 +35,7 @@ import {
   getWorkbenchPerformanceWorkspaceSummary,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
   runReportBatchOnce,
+  runDpmCommandCenterMonitoring,
   selectDpmConstructionAlternative,
   submitDpmOutcomeReviewReportJob,
 } from "../../src/features/workbench/api";
@@ -1731,6 +1736,155 @@ describe("workbench api", () => {
     expect(buildArchivedDocumentDownloadUrl("doc_1")).toBe(
       `${expectedBaseUrl}/documents/doc_1/download`
     );
+  });
+
+  it("loads DPM mandate command-center cockpit data through Gateway filters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc38",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0038",
+              state: "PARTIAL",
+              data_completeness_state: "PARTIAL",
+              partial_readiness_reasons: ["PM_BOOK_DISCOVERY_NOT_AVAILABLE"],
+              source_run_id: "dmr_1",
+            },
+            data: { evaluated_mandates: 4 },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmCommandCenter({
+      tenantId: "default",
+      portfolioManagerId: "PM_SG_DPM_001",
+      bookId: "BOOK_SG_BALANCED_DPM",
+      asOfDate: "2026-05-03",
+      healthState: "PENDING_REVIEW",
+      limit: 25,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&book_id=BOOK_SG_BALANCED_DPM&as_of_date=2026-05-03&limit=25&health_state=PENDING_REVIEW"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("mandate-command-center");
+    expect(metricEventsJson).not.toContain("PM_SG_DPM_001");
+    expect(metricEventsJson).not.toContain("dmr_1");
+  });
+
+  it("runs DPM command-center monitoring through Gateway without reconstructing health", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-command-run",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0038",
+              state: "UNKNOWN",
+              partial_readiness_reasons: [],
+            },
+            data: { monitoring_run_id: "dmr_1", status: "SUCCEEDED" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await runDpmCommandCenterMonitoring({
+      mandateIds: ["MANDATE_PB_SG_GLOBAL_BAL_001"],
+      tenantId: "default",
+      portfolioManagerId: "PM_SG_DPM_001",
+      bookId: "BOOK_SG_BALANCED_DPM",
+      asOfDate: "2026-05-03",
+      requestedBy: "workbench.pm.sg.001",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/monitoring/run-once`
+    );
+    expect(fetchMock.mock.calls[0][1].headers["X-Caller-Application"]).toBe(
+      "lotus-workbench"
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      body: {
+        mandate_ids: ["MANDATE_PB_SG_GLOBAL_BAL_001"],
+        as_of_date: "2026-05-03",
+        tenant_id: "default",
+        portfolio_manager_id: "PM_SG_DPM_001",
+        book_id: "BOOK_SG_BALANCED_DPM",
+        requested_by: "workbench.pm.sg.001",
+      },
+    });
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("mandate-command-center-monitoring");
+    expect(metricEventsJson).not.toContain("MANDATE_PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("dmr_1");
+  });
+
+  it("loads DPM command-center exceptions and mandate drill-down through Gateway", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-command-drill",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0038",
+              state: "UNKNOWN",
+              partial_readiness_reasons: [],
+            },
+            data: {},
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmCommandCenterExceptions({
+      tenantId: "default",
+      portfolioManagerId: "PM_SG_DPM_001",
+      state: "ACTIVE",
+      limit: 25,
+    });
+    await getDpmMandateByPortfolio("PB_SG_GLOBAL_BAL_001");
+    await getDpmMandateHealth("MANDATE_PB_SG_GLOBAL_BAL_001");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+      "/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&state=ACTIVE"
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "http://gateway.dev.lotus/api/v1/dpm/command-center/mandates/by-portfolio/PB_SG_GLOBAL_BAL_001"
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      "http://gateway.dev.lotus/api/v1/dpm/command-center/mandates/MANDATE_PB_SG_GLOBAL_BAL_001/health"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("mandate-command-center-exceptions");
+    expect(metricEventsJson).toContain("mandate-command-center-mandate");
+    expect(metricEventsJson).toContain("mandate-command-center-health");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("MANDATE_PB_SG_GLOBAL_BAL_001");
   });
 
   it("loads DPM outcome reviews through the gateway BFF with portfolio filters", async () => {

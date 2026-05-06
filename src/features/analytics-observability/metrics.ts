@@ -141,6 +141,31 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.dpm-command-center",
+    panel: "mandate-command-center",
+    operation: "dpm.command-center.summary",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "mandate-command-center-monitoring",
+    operation: "dpm.command-center.monitoring.run-once",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "mandate-command-center-exceptions",
+    operation: "dpm.command-center.exceptions.list",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "mandate-command-center-mandate",
+    operation: "dpm.command-center.mandate.by-portfolio",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "mandate-command-center-health",
+    operation: "dpm.command-center.mandate.health",
+  },
+  {
+    route: "workbench.dpm-command-center",
     panel: "outcome-review-list",
     operation: "dpm.outcome-reviews.list",
   },

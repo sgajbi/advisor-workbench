@@ -12,6 +12,10 @@ const DEFAULT_DPM_CONTEXT = {
   modelPortfolioId: "MODEL_PB_SG_GLOBAL_BAL_DPM",
   bookingCenterCode: "Singapore",
   sourceAsOfDate: "2026-04-10",
+  commandCenterTenantId: "default",
+  commandCenterPortfolioManagerId: "PM_SG_DPM_001",
+  commandCenterBookId: "BOOK_SG_BALANCED_DPM",
+  commandCenterAsOfDate: "2026-05-03",
 } as const;
 
 const CALLER_CONTEXT_ENV_OVERRIDES: Record<
@@ -58,6 +62,18 @@ export function resolveDefaultDpmContext() {
     sourceAsOfDate:
       process.env.WORKBENCH_DPM_SOURCE_AS_OF_DATE?.trim() ||
       DEFAULT_DPM_CONTEXT.sourceAsOfDate,
+    commandCenterTenantId:
+      process.env.WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID?.trim() ||
+      DEFAULT_DPM_CONTEXT.commandCenterTenantId,
+    commandCenterPortfolioManagerId:
+      process.env.WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID?.trim() ||
+      DEFAULT_DPM_CONTEXT.commandCenterPortfolioManagerId,
+    commandCenterBookId:
+      process.env.WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID?.trim() ||
+      DEFAULT_DPM_CONTEXT.commandCenterBookId,
+    commandCenterAsOfDate:
+      process.env.WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE?.trim() ||
+      DEFAULT_DPM_CONTEXT.commandCenterAsOfDate,
   };
 }
 

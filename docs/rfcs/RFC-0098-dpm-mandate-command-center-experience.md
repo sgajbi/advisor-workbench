@@ -2,15 +2,21 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0042 OUTCOME PANEL IMPLEMENTED, LIVE PROOF PENDING |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; RFC-0038 LIVE PROOF PASSED WITH WTBD-003 SEED GAP RECORDED |
 | **Created** | 2026-05-03 |
-| **Last Tightened** | 2026-05-05 |
+| **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
 | **Primary Upstream Contract** | `lotus-gateway` RFC-0098 `DPM Command Center` |
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
 | **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-manage` RFC-0042, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
-| **Implementation Branch** | `feat/rfc42-outcome-review-workbench` for RFC-0042 outcome-review realization |
+| **Implementation Branch** | `feat/rfc38-wtbd002-dpm-command-center-cockpit` for RFC-0038 command-center cockpit realization |
+
+RFC-0038 command-center cockpit live proof passed on 2026-05-06 with local Workbench and Gateway:
+`output/rfc38-wtbd002-command-center-cockpit-command-center-validated/live-validation-summary.json`.
+The run proved Gateway command-center summary and exceptions responses, populated DPM command-center
+UI tables, and recorded the canonical `mandates/by-portfolio/PB_SG_GLOBAL_BAL_001` lookup as a
+`seed_gap` (`DPM_MANDATE_NOT_FOUND`) owned by WTBD-003 canonical seed automation.
 
 ---
 
@@ -487,31 +493,33 @@ screenshots reviewed for outcome-state correctness, and implementation-backed wi
 Promotion for the larger `/dpm/outcomes` command-center route remains forbidden until that route is
 implemented and proven.
 
-Workbench must consume these Gateway routes:
+RFC-0038 command-center cockpit support is now implemented as an embedded
+`/workbench/{portfolioId}` panel. Workbench consumes these Gateway routes:
 
 | Gateway endpoint | Workbench route/use |
 | --- | --- |
-| `GET /api/v1/dpm/command-center` | `/dpm` book-level command center |
-| `GET /api/v1/dpm/command-center/mandates/{portfolio_id}` | `/dpm/mandates/[portfolioId]` detail route |
-| `GET /api/v1/dpm/command-center/mandates/{portfolio_id}/evidence` | evidence drawer or deep-link view |
-| `POST /api/v1/dpm/command-center/mandates/{portfolio_id}/actions/simulate` | action rail simulate handoff |
+| `GET /api/v1/dpm/command-center` | `/workbench/{portfolioId}` DPM command-center cockpit |
+| `POST /api/v1/dpm/command-center/monitoring/run-once` | `/workbench/{portfolioId}` run-monitoring action |
+| `GET /api/v1/dpm/command-center/exceptions` | `/workbench/{portfolioId}` active exception queue |
+| `GET /api/v1/dpm/command-center/mandates/by-portfolio/{portfolio_id}` | `/workbench/{portfolioId}` mandate binding |
+| `GET /api/v1/dpm/command-center/mandates/{mandate_id}/health` | `/workbench/{portfolioId}` mandate health dimensions |
 
 The Workbench view model must preserve:
 
 1. contract name and version,
-2. as-of date and generated timestamp,
+2. command-center as-of and source-run lineage when Gateway/manage publish it,
 3. portfolio book and mandate identity,
-4. `mandate_state`,
+4. manage-published health distribution,
 5. `health_score`,
-6. `health_band`,
-7. `primary_exception`,
-8. `rebalance_readiness`,
-9. module states,
+6. mandate health state,
+7. attention buckets,
+8. active exception queue,
+9. latest monitoring run identity and status,
 10. `recommended_actions`,
 11. `supportability`,
-12. `evidence_refs`,
-13. lineage,
-14. support reference.
+12. partial-readiness reason codes,
+13. mandate health dimensions,
+14. remediation owner.
 
 Forbidden:
 
@@ -869,22 +877,34 @@ Acceptance:
 
 ### Slice 4: Book-Level Command Center
 
+Implementation status:
+
+RFC-0038 book-level command-center support is implemented on `/workbench/{portfolioId}` in the
+current `feat/rfc38-wtbd002-dpm-command-center-cockpit` slice. The broader standalone `/dpm`
+route, richer book filters, and evidence drawer remain target-state until separately implemented
+and proven.
+
 Scope:
 
-1. implement `/dpm`,
-2. add book identity/header,
-3. add state distribution,
-4. add primary issue and next operating action,
-5. add filters and sorting,
-6. add mandate exception queue,
-7. add evidence drawer entry points.
+1. implemented embedded `/workbench/{portfolioId}` command-center cockpit,
+2. implemented Gateway-only command-center summary, monitoring run-once, exception list,
+   mandate-by-portfolio, and mandate-health calls,
+3. implemented book health distribution,
+4. implemented source readiness, attention queue, recommended actions, latest monitoring-run
+   lineage, active exception queue, and mandate health dimensions,
+5. implemented complete, partial, empty, unavailable, and error state handling,
+6. kept standalone `/dpm`, richer filters/sorting, and evidence drawer entry points as future
+   route work.
 
 Acceptance:
 
-1. Ready and attention-required mandates render correctly.
-2. Blocked and stale mandates disable unsafe actions.
-3. Filtering and sorting are tested and preserve state.
-4. Desktop and mobile screenshots show no overlap, clipping, or fake actions.
+1. Ready and attention-required command-center records render correctly in unit/component tests.
+2. Monitoring action calls Gateway only and forwards mandate/run context without calculating health.
+3. View-model tests prove Workbench does not infer ready supportability from a successful monitoring
+   run.
+4. Observability tests prove command-center route/panel/operation labels exclude portfolio ids,
+   mandate ids, PM ids, run ids, and exception ids.
+5. Canonical live evidence and screenshots remain required before demo promotion.
 
 ### Slice 5: Single-Mandate Detail
 
