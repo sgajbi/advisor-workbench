@@ -409,7 +409,7 @@ export async function validateOutcomeReviewPanel(
 
 export async function validateDpmCommandCenterPanel(
   page,
-  { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows }
+  { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows, screenshotRegisteredPanel }
 ) {
   await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}`, {
     waitUntil: "networkidle",
@@ -441,4 +441,5 @@ export async function validateDpmCommandCenterPanel(
     0,
     "DPM mandate health dimensions"
   );
+  await screenshotRegisteredPanel(page, "dpm.command_center");
 }

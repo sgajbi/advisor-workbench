@@ -362,6 +362,10 @@ async function run() {
     route: `/workbench/${portfolioId}`,
     outcomeReviewMinimum: 1,
   });
+  panelGovernance.recordPanelClassification("dpm.command_center", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}`,
+    source: "Gateway DPM command-center summary",
+  });
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();
 
@@ -457,6 +461,7 @@ async function run() {
       portfolioId,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
   } finally {
     await browser.close();
