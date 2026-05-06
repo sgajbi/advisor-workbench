@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; RFC-0038 LIVE PROOF PASSED WITH WTBD-003 SEED GAP RECORDED |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; RFC-0038 POPULATED COMMAND-CENTER LIVE PROOF PASSED AFTER WTBD-003 SEED AUTOMATION |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -17,6 +17,14 @@ RFC-0038 command-center cockpit live proof passed on 2026-05-06 with local Workb
 The run proved Gateway command-center summary and exceptions responses, populated DPM command-center
 UI tables, and recorded the canonical `mandates/by-portfolio/PB_SG_GLOBAL_BAL_001` lookup as a
 `seed_gap` (`DPM_MANDATE_NOT_FOUND`) owned by WTBD-003 canonical seed automation.
+
+WTBD-003 populated seed automation was then completed locally on 2026-05-07 through
+`lotus-platform` canonical front-office QA. The governed runtime now refreshes
+`MANDATE_PB_SG_GLOBAL_BAL_001` from core through manage, verifies Gateway mandate lookup, health,
+and command-center summary, classifies `dpm.command_center` as `ready`, and captures the registered
+DPM command-center screenshot under `output/playwright/live-canonical/`. Workbench still preserves
+`seed_gap` for non-populated environments, but the governed canonical portfolio path is no longer
+gap-coded.
 
 ---
 
