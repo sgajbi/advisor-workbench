@@ -44,6 +44,7 @@ import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
 } from "../../src/features/analytics-observability/metrics";
+import { resolveGatewayBaseUrl } from "../../src/features/platform-runtime/service-addressing";
 
 const expectedBaseUrl = "/api/bff/api/v1";
 
@@ -1874,10 +1875,10 @@ describe("workbench api", () => {
       "/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&state=ACTIVE"
     );
     expect(fetchMock.mock.calls[1][0]).toBe(
-      "http://gateway.dev.lotus/api/v1/dpm/command-center/mandates/by-portfolio/PB_SG_GLOBAL_BAL_001"
+      `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/mandates/by-portfolio/PB_SG_GLOBAL_BAL_001`
     );
     expect(fetchMock.mock.calls[2][0]).toBe(
-      "http://gateway.dev.lotus/api/v1/dpm/command-center/mandates/MANDATE_PB_SG_GLOBAL_BAL_001/health"
+      `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/mandates/MANDATE_PB_SG_GLOBAL_BAL_001/health`
     );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("mandate-command-center-exceptions");
