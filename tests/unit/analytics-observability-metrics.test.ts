@@ -314,6 +314,21 @@ describe("analytics UI observability metrics", () => {
         "outcome-review-ai-narrative",
         "dpm.outcome-review.ai-narrative",
       ],
+      [
+        "workbench.dpm-command-center",
+        "construction-alternatives",
+        "dpm.construction.alternatives.generate",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "construction-alternative-set",
+        "dpm.construction.alternative-set.get",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "construction-selection",
+        "dpm.construction.alternative.select",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],

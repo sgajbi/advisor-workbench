@@ -249,6 +249,16 @@ supported after RFC-0039 proof, but Workbench construction lab support is not su
 Gateway RFC-0098 implementation, browser validation, screenshot evidence, accessibility checks,
 and canonical front-office live proof pass.
 
+Implementation note as of 2026-05-06: the first RFC-0039 construction-lab realization is embedded
+in `/workbench/{portfolioId}` using Gateway
+`/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful manage/core
+source selector through Gateway, displays manage-owned alternative ids, methods, method statuses,
+comparison metrics, supportability, objective/constraint trace counts, and selected-alternative
+state, and records selection through Gateway. It does not build stateless source snapshots, prices,
+optimizer results, source readiness, or selection truth in browser code. Dedicated `/dpm`
+command-center routes, richer drawers, and canonical demo promotion remain gated until final live
+proof, visual review, accessibility review, and wiki/support wording are complete.
+
 ### 7.0A Proof-Pack Review Workspace Addendum
 
 Workbench RFC-0098 must include a proof-pack review workspace once Gateway exposes the

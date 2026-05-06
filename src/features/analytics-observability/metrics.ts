@@ -165,6 +165,21 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.outcome-review.ai-narrative",
   },
   {
+    route: "workbench.dpm-command-center",
+    panel: "construction-alternatives",
+    operation: "dpm.construction.alternatives.generate",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "construction-alternative-set",
+    operation: "dpm.construction.alternative-set.get",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "construction-selection",
+    operation: "dpm.construction.alternative.select",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

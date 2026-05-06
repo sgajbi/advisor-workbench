@@ -1147,6 +1147,23 @@ export type DpmOutcomeReviewGatewayResponse = {
 
 export type DpmOutcomeReviewHandoffResponse = DpmOutcomeReviewGatewayResponse;
 
+export type DpmConstructionSupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  reason_codes: string[];
+  selected_alternative_id?: string | null;
+};
+
+export type DpmConstructionGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmConstructionSupportability;
+  data: Record<string, unknown>;
+};
+
 export type DpmOutcomeReviewNarrativeResponse = {
   correlation_id: string;
   contract_version: string;

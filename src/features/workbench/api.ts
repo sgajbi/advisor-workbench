@@ -13,6 +13,7 @@ import {
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPortfolio360,
+  DpmConstructionGatewayResponse,
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
   DpmOutcomeReviewNarrativeResponse,
@@ -30,7 +31,7 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
-import { applyDefaultCallerContextHeaders } from "./caller-context";
+import { applyDefaultCallerContextHeaders, resolveDefaultCallerContext } from "./caller-context";
 import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
@@ -773,6 +774,87 @@ export async function getDpmOutcomeReviews(params: {
   );
 }
 
+export async function generateDpmConstructionAlternatives(params: {
+  portfolio: WorkbenchPortfolio360;
+  methods?: string[];
+  actorId?: string;
+}): Promise<DpmConstructionGatewayResponse> {
+  const portfolioId = params.portfolio.portfolio.portfolio_id;
+  const actorId = params.actorId ?? "workbench-construction-operator";
+  return await observeWorkbenchMutation(
+    "dpm.construction.alternatives.generate",
+    async () =>
+      await fetchWorkbenchMutation<DpmConstructionGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/construction/alternative-sets/generate"),
+        "generate DPM construction alternatives",
+        {
+          method: "POST",
+          headers: buildDpmConstructionCallerHeaders({
+            actorId,
+            correlationId: `corr-workbench-construction-${portfolioId}-${params.portfolio.as_of_date}`,
+          }),
+          body: JSON.stringify({
+            idempotency_key: `workbench-construction-${portfolioId}-${params.portfolio.as_of_date}`,
+            body: buildConstructionAlternativeSetRequest(
+              params.portfolio,
+              params.methods ?? ["DO_NOTHING_BASELINE", "HEURISTIC_EXPLAINABLE", "MIN_TURNOVER"]
+            ),
+          }),
+        }
+      )
+  );
+}
+
+export async function getDpmConstructionAlternativeSet(
+  alternativeSetId: string
+): Promise<DpmConstructionGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.construction.alternative-set.get",
+    async () =>
+      await fetchWorkbenchResource<DpmConstructionGatewayResponse>(
+        "client",
+        `/dpm/command-center/construction/alternative-sets/${encodeURIComponent(alternativeSetId)}`,
+        "DPM construction alternative set"
+      )
+  );
+}
+
+export async function selectDpmConstructionAlternative(params: {
+  alternativeSetId: string;
+  alternativeId: string;
+  actorId?: string;
+  reasonCode?: string;
+  comment?: string;
+}): Promise<DpmConstructionGatewayResponse> {
+  const actorId = params.actorId ?? "workbench-construction-operator";
+  return await observeWorkbenchMutation(
+    "dpm.construction.alternative.select",
+    async () =>
+      await fetchWorkbenchMutation<DpmConstructionGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/construction/alternative-sets/${encodeURIComponent(params.alternativeSetId)}/selections`
+        ),
+        "select DPM construction alternative",
+        {
+          method: "POST",
+          headers: buildDpmConstructionCallerHeaders({
+            actorId,
+            correlationId: `corr-workbench-construction-select-${params.alternativeSetId}`,
+          }),
+          body: JSON.stringify({
+            body: {
+              alternative_id: params.alternativeId,
+              actor_id: actorId,
+              reason_code: params.reasonCode ?? "PM_SELECTED_WORKBENCH_CONSTRUCTION_ALTERNATIVE",
+              comment: params.comment ?? "Selected from Workbench construction lab.",
+            },
+          }),
+        }
+      )
+  );
+}
+
 export async function getDpmOutcomeReviewReportInput(
   outcomeReviewId: string
 ): Promise<DpmOutcomeReviewHandoffResponse> {
@@ -901,6 +983,51 @@ function buildReportBatchCallerHeaders(params: {
     headers["X-Booking-Center-Code"] = params.bookingCenterCode;
   }
   return headers;
+}
+
+function buildDpmConstructionCallerHeaders(params: {
+  actorId: string;
+  correlationId: string;
+}): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "X-Actor-Id": params.actorId,
+    "X-Caller-Application": "lotus-workbench",
+    "X-Correlation-Id": params.correlationId,
+  };
+}
+
+function buildConstructionAlternativeSetRequest(
+  portfolio: WorkbenchPortfolio360,
+  methods: string[]
+): Record<string, unknown> {
+  const portfolioId = portfolio.portfolio.portfolio_id;
+  const baseCurrency = portfolio.portfolio.base_currency;
+  const callerContext = resolveDefaultCallerContext();
+  return {
+    input_mode: "stateful",
+    methods,
+    stateful_input: {
+      portfolio_id: portfolioId,
+      as_of: portfolio.as_of_date,
+      tenant_id: callerContext.tenantId,
+      booking_center_code:
+        portfolio.portfolio.booking_center_code || callerContext.bookingCenterCode,
+      include_tax_lots: true,
+      include_settlement_profile: true,
+      include_shelf: true,
+      include_model_portfolio: true,
+    },
+    options_override: {
+      valuation_mode: "TRUST_SNAPSHOT",
+      cash_band_min_weight: "0.00",
+      cash_band_max_weight: "0.15",
+      min_trade_notional: {
+        amount: "100",
+        currency: baseCurrency,
+      },
+    },
+  };
 }
 
 export async function createPortfolioReportBatch(params: {

@@ -13498,6 +13498,33 @@ a:hover {
   content: "×";
 }
 
+.construction-alternatives-panel .analytics-table-frame {
+  margin-top: 0.35rem;
+}
+
+.construction-alternatives-badge-row,
+.construction-alternatives-action-row,
+.construction-alternatives-reason-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.construction-alternatives-action-row {
+  justify-content: space-between;
+}
+
+.construction-alternatives-status-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.construction-alternatives-reason-row {
+  margin-top: 0.25rem;
+}
+
 @media (max-width: 640px) {
   .performance-executive-strip-grid,
   .performance-trust-strip-grid {
@@ -13679,6 +13706,10 @@ a:hover {
   .performance-detail-panel-compact,
   .performance-detail-panel-wide {
     padding: 0.78rem;
+  }
+
+  .construction-alternatives-status-strip {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

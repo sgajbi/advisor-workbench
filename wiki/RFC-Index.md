@@ -14,9 +14,10 @@
   proposed DPM mandate command-center product experience backed by Gateway RFC-0098, including
   manage-owned RFC-0040 proof-pack evidence and RFC-0041 rebalance-wave orchestration rendered
   through Gateway without direct Workbench service calls or client-side readiness calculation. It
-  now includes implemented RFC-0042 post-trade outcome-review rendering for
+  now includes implemented RFC-0039 construction alternatives rendering for manage-owned
+  alternative comparison and selection, plus RFC-0042 post-trade outcome-review rendering for
   expected-versus-realized dimensions, source lineage, supportability, report-input posture, and
-  AI-evidence posture without client-side outcome calculation.
+  AI-evidence posture without client-side calculation or optimization.
 
 ## Local references
 

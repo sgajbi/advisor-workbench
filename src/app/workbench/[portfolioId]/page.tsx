@@ -17,6 +17,7 @@ import {
 import AnalyticsControls from "@/features/workbench/components/analytics-controls";
 import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
 import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
+import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
 import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
 import DecisionReadinessPanel from "@/features/workbench/components/decision-readiness-panel";
 import ExceptionQueue from "@/features/workbench/components/exception-queue";
@@ -254,6 +255,8 @@ export default async function WorkbenchPage({
                 status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
                 lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
               />
+
+              <ConstructionAlternativesPanel portfolio={data} />
 
               <OutcomeReviewPanel
                 portfolioId={data.portfolio.portfolio_id}
