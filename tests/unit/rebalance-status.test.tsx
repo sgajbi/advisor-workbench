@@ -26,6 +26,22 @@ describe("RebalanceStatus", () => {
             operation_count: 12,
             workflow_decision_count: 3,
           },
+          recent_runs: [
+            {
+              rebalance_run_id: "rr_100",
+              status: "PENDING_REVIEW",
+              created_at_utc: "2026-03-27T12:00:00Z",
+              error_code: null,
+              workflow_state: "PM_REVIEW_REQUIRED",
+            },
+            {
+              rebalance_run_id: "rr_099",
+              status: "FAILED",
+              created_at_utc: "2026-03-26T12:00:00Z",
+              error_code: "SOURCE_READINESS_BLOCKED",
+              workflow_state: null,
+            },
+          ],
         }}
       />
     );
@@ -42,6 +58,15 @@ describe("RebalanceStatus", () => {
     expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("Decisions");
     expect(scope.getByText("Last run: rr_100 - 2026-03-27T12:00:00Z")).toBeInTheDocument();
     expect(scope.getByText("action_register_current")).toBeInTheDocument();
+    const dashboard = scope.getByLabelText("DPM operations dashboard");
+    expect(dashboard).toHaveTextContent("2");
+    expect(dashboard).toHaveTextContent("Recent runs");
+    expect(dashboard).toHaveTextContent("1");
+    expect(dashboard).toHaveTextContent("Run issues");
+    expect(dashboard).toHaveTextContent("rr_100");
+    expect(dashboard).toHaveTextContent("PM Review Required");
+    expect(dashboard).toHaveTextContent("rr_099");
+    expect(dashboard).toHaveTextContent("Source Readiness Blocked");
   });
 
   it("surfaces source-incomplete posture without inventing readiness", () => {
@@ -70,6 +95,9 @@ describe("RebalanceStatus", () => {
     expect(scope.getByText("Stale")).toBeInTheDocument();
     expect(scope.getByText("Last run: N/A")).toBeInTheDocument();
     expect(scope.getByText("SOURCE_READINESS_INCOMPLETE")).toBeInTheDocument();
+    expect(scope.getByLabelText("DPM operations dashboard")).toHaveTextContent(
+      "No recent manage rebalance runs were returned by Gateway for this portfolio."
+    );
   });
 
   it("marks missing Gateway supportability as unknown", () => {

@@ -15,6 +15,8 @@ export default function RebalanceStatus(props: Props) {
   const supportabilityReason = supportability?.reason ?? null;
   const lastRunId = props.snapshot?.last_rebalance_run_id ?? null;
   const lastRunAt = props.snapshot?.last_run_at_utc ?? null;
+  const recentRuns = props.snapshot?.recent_runs ?? [];
+  const failedRunCount = recentRuns.filter((run) => isFailureStatus(run.status)).length;
   const hasSourceContext = supportability !== null;
   const tone = badgeTone(status);
   const missingEvidenceValue = hasSourceContext ? 0 : "N/A";
@@ -61,6 +63,56 @@ export default function RebalanceStatus(props: Props) {
           </Text>
         </span>
       </div>
+      <div className="rebalance-operations-dashboard" aria-label="DPM operations dashboard">
+        <div className="rebalance-operations-dashboard-summary">
+          <span>
+            <strong>{recentRuns.length}</strong>
+            <Text as="span" variant="bodySmall" className="muted">
+              Recent runs
+            </Text>
+          </span>
+          <span>
+            <strong>{failedRunCount}</strong>
+            <Text as="span" variant="bodySmall" className="muted">
+              Run issues
+            </Text>
+          </span>
+        </div>
+        {recentRuns.length > 0 ? (
+          <div className="rebalance-operations-run-list">
+            {recentRuns.map((run, index) => (
+              <div
+                className="rebalance-operations-run-row"
+                key={`${run.rebalance_run_id ?? "run"}-${index}`}
+              >
+                <div>
+                  <Text as="span" variant="bodySmall" className="rebalance-operations-run-id">
+                    {run.rebalance_run_id ?? "N/A"}
+                  </Text>
+                  <Text as="span" variant="bodySmall" className="muted">
+                    {run.created_at_utc ?? "Timestamp N/A"}
+                  </Text>
+                </div>
+                <div className="rebalance-operations-run-state">
+                  <SemanticBadge tone={badgeTone(run.status)}>{formatToken(run.status)}</SemanticBadge>
+                  {run.workflow_state ? (
+                    <SemanticBadge tone={badgeTone(run.workflow_state)}>
+                      {formatToken(run.workflow_state)}
+                    </SemanticBadge>
+                  ) : null}
+                  {run.error_code ? (
+                    <SemanticBadge tone="danger">{formatToken(run.error_code)}</SemanticBadge>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Text variant="secondary" className="muted">
+            No recent manage rebalance runs were returned by Gateway for this portfolio.
+          </Text>
+        )}
+      </div>
       <Text variant="secondary" className="muted">
         Last run: {lastRunId ?? "N/A"}
         {lastRunAt ? ` - ${lastRunAt}` : ""}
@@ -72,6 +124,11 @@ export default function RebalanceStatus(props: Props) {
       </Text>
     </SectionBlock>
   );
+}
+
+function isFailureStatus(state: string): boolean {
+  const normalized = state.toLowerCase();
+  return ["failed", "error", "blocked", "rejected"].some((token) => normalized.includes(token));
 }
 
 function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
@@ -113,6 +170,12 @@ function formatToken(value: string): string {
   return value
     .split(/[_\s-]+/)
     .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .map((segment) => {
+      const upper = segment.toUpperCase();
+      if (["DPM", "PM", "CIO", "SLA", "SLO", "ID", "API"].includes(upper)) {
+        return upper;
+      }
+      return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
+    })
     .join(" ");
 }
