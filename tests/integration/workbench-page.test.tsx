@@ -186,6 +186,10 @@ describe("WorkbenchPage", () => {
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("heading", { name: "Construction Alternatives" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Construction alternatives have not been generated")
+    ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Post-Trade Outcome Review" })).toBeInTheDocument();
     expect(screen.getByText("or_1")).toBeInTheDocument();
     expect(screen.getByText("cash_weight")).toBeInTheDocument();

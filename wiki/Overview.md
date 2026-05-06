@@ -24,6 +24,8 @@ This repo does not own:
 
 - gateway-first product client
 - Portfolio and Performance are the active front-office paths
+- `/workbench/{portfolioId}` includes Gateway/manage-backed DPM construction alternatives and
+  post-trade outcome-review panels without direct Workbench calls to manage, report, archive, or AI
 - risk is served through Performance route modes
 - recommendations and proposals remain compatibility entrypoints rather than active shell apps
 - shell navigation currently exposes disabled `Proposal` and `Advisory` items through normalized

@@ -58,12 +58,17 @@ Boundary rules that matter:
    panel for manage-owned expected-versus-realized dimensions, source lineage, supportability,
    and report/AI handoff posture. Workbench renders the Gateway contract and does not calculate
    outcome variance, freshness, supportability, or handoff eligibility locally.
-6. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
+6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0039 construction alternatives
+   lab. Workbench sends stateful construction requests through Gateway
+   `/api/v1/dpm/command-center/construction/alternative-sets*`, renders manage-owned
+   alternatives, objective/constraint trace counts, supportability, and selected-alternative
+   state, and does not create optimizer logic, source data, prices, or selection truth locally.
+7. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
    the primary supported front-office app surfaces.
-7. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
+8. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
    active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
    bootstrap contract.
-8. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
+9. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
    `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
 
 ## Architecture At A Glance
@@ -78,7 +83,8 @@ Current main surfaces:
   `/performance` with performance, risk, advisor-brief, and evidence modes
 - `workbench`
   `/workbench/*` compatibility and portfolio-linked workspace entry, including the Gateway-backed
-  DPM outcome-review panel when manage has materialized RFC-0042 outcome evidence
+  DPM construction alternatives lab and outcome-review panel when Gateway/manage have
+  materialized the relevant DPM evidence
 - `data-products`
   `/data-products` self-serve catalog, dependency, and live trust discovery through gateway
 - `api/bff`
@@ -248,6 +254,11 @@ Important current product and route truths:
    `/api/v1/dpm/command-center/outcome-reviews*`; Workbench may normalize presentation shape but
    must not derive expected, realized, variance, lineage, source freshness, supportability, report
    input, or AI evidence eligibility outside the Gateway/manage contract.
+9. RFC-0039 construction alternatives rendering on `/workbench/{portfolioId}` is backed by
+   Gateway `/api/v1/dpm/command-center/construction/alternative-sets*`; Workbench sends a
+   stateful source selector and option overrides through Gateway and must not synthesize
+   stateless portfolio snapshots, prices, optimization results, objective scores, supportability,
+   or PM selection truth.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

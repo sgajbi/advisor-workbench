@@ -5,9 +5,11 @@ import {
   buildArchivedDocumentDownloadUrl,
   createPortfolioReportBatch,
   createSandboxSession,
+  generateDpmConstructionAlternatives,
   getDpmOutcomeReviewAiEvidenceInput,
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
+  getDpmConstructionAlternativeSet,
   requestDpmOutcomeReviewAiNarrative,
   getArchivedDocumentMetadata,
   getPortfolio360,
@@ -29,8 +31,10 @@ import {
   getWorkbenchPerformanceWorkspaceSummary,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
   runReportBatchOnce,
+  selectDpmConstructionAlternative,
   submitDpmOutcomeReviewReportJob,
 } from "../../src/features/workbench/api";
+import type { WorkbenchPortfolio360 } from "../../src/features/workbench/types";
 import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
@@ -1810,6 +1814,118 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("or_1");
   });
 
+  it("generates DPM construction alternatives through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc39",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0039",
+              state: "READY",
+              reason_codes: ["REGIME_SCENARIO_PACK_READY"],
+            },
+            data: { alternative_set_id: "cas_1", alternatives: [] },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await generateDpmConstructionAlternatives({
+      portfolio: constructionPortfolio(),
+      methods: ["DO_NOTHING_BASELINE", "MIN_TURNOVER"],
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/construction/alternative-sets/generate`
+    );
+    const options = fetchMock.mock.calls[0][1];
+    expect(options.headers["X-Caller-Application"]).toBe("lotus-workbench");
+    expect(options.headers["X-Actor-Id"]).toBe("workbench-construction-operator");
+    const body = JSON.parse(options.body);
+    expect(body.idempotency_key).toBe(
+      "workbench-construction-PB_SG_GLOBAL_BAL_001-2026-02-24"
+    );
+    expect(body.body.input_mode).toBe("stateful");
+    expect(body.body.methods).toEqual([
+      "DO_NOTHING_BASELINE",
+      "MIN_TURNOVER",
+    ]);
+    expect(body.body.stateful_input.portfolio_id).toBe(
+      "PB_SG_GLOBAL_BAL_001"
+    );
+    expect(body.body.stateful_input.tenant_id).toBe("tenant-sg");
+    expect(body.body.stateful_input.booking_center_code).toBe("SG");
+    expect(body.body.stateful_input.include_model_portfolio).toBe(true);
+    expect(body.body.options_override.valuation_mode).toBe("TRUST_SNAPSHOT");
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("construction-alternatives");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("cas_1");
+  });
+
+  it("loads and selects DPM construction alternatives through Gateway endpoints", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc39",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0039",
+              state: "READY",
+              reason_codes: [],
+              selected_alternative_id: "alt_1",
+            },
+            data: { alternative_set_id: "cas_1", selected_alternative_id: "alt_1" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmConstructionAlternativeSet("cas_1");
+    await selectDpmConstructionAlternative({
+      alternativeSetId: "cas_1",
+      alternativeId: "alt_1",
+      actorId: "pm_1",
+      reasonCode: "PM_APPROVED",
+      comment: "Approved by PM.",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/construction/alternative-sets/cas_1`
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/construction/alternative-sets/cas_1/selections`
+    );
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      body: {
+        alternative_id: "alt_1",
+        actor_id: "pm_1",
+        reason_code: "PM_APPROVED",
+        comment: "Approved by PM.",
+      },
+    });
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("construction-alternative-set");
+    expect(metricEventsJson).toContain("construction-selection");
+    expect(metricEventsJson).not.toContain("cas_1");
+    expect(metricEventsJson).not.toContain("alt_1");
+  });
+
   it("requests DPM outcome-review AI narrative through the Gateway BFF", async () => {
     vi.stubGlobal(
       "fetch",
@@ -1916,3 +2032,47 @@ describe("workbench api", () => {
     ).rejects.toThrow("Failed to fetch performance workspace summary (503)");
   });
 });
+
+function constructionPortfolio(): WorkbenchPortfolio360 {
+  return {
+    correlation_id: "corr-p360",
+    contract_version: "v1",
+    as_of_date: "2026-02-24",
+    portfolio: {
+      portfolio_id: "PB_SG_GLOBAL_BAL_001",
+      client_id: "C1",
+      base_currency: "SGD",
+      booking_center_code: "SG",
+    },
+    overview: {
+      market_value_base: 100000,
+      cash_weight_pct: 8,
+      position_count: 2,
+    },
+    performance_snapshot: null,
+    rebalance_snapshot: null,
+    current_positions: [
+      {
+        security_id: "UOB_EQ",
+        instrument_name: "UOB",
+        asset_class: "EQUITY",
+        quantity: 100,
+        market_value_base: 50000,
+        weight_pct: 50,
+      },
+      {
+        security_id: "SG_BOND",
+        instrument_name: "SG Bond",
+        asset_class: "FIXED_INCOME",
+        quantity: 50,
+        market_value_base: 42000,
+        weight_pct: 42,
+      },
+    ],
+    projected_positions: [],
+    projected_summary: null,
+    active_session_id: null,
+    warnings: [],
+    partial_failures: [],
+  };
+}

@@ -26,6 +26,17 @@ function defaultCallerContextValue(
   return configured || DEFAULT_CALLER_CONTEXT_HEADERS[headerName];
 }
 
+export function resolveDefaultCallerContext() {
+  return {
+    actorId: defaultCallerContextValue("X-Actor-Id"),
+    callerApplication: defaultCallerContextValue("X-Caller-Application"),
+    tenantId: defaultCallerContextValue("X-Tenant-Id"),
+    region: defaultCallerContextValue("X-Region"),
+    bookingCenterCode: defaultCallerContextValue("X-Booking-Center-Code"),
+    role: defaultCallerContextValue("X-Role"),
+  };
+}
+
 export function applyDefaultCallerContextHeaders(headers: Headers) {
   for (const headerName of Object.keys(DEFAULT_CALLER_CONTEXT_HEADERS) as Array<
     keyof typeof DEFAULT_CALLER_CONTEXT_HEADERS

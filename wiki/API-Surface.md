@@ -49,6 +49,13 @@ promote dormant labels into product ownership just because historical route file
   route yet; promotion requires Gateway `/api/v1/dpm/command-center/waves*` implementation,
   Workbench BFF/browser implementation, canonical `PB_SG_GLOBAL_BAL_001` live validation, visual
   and accessibility evidence, and implementation-backed wiki/support wording.
+- RFC-0098/RFC-0039 construction alternatives rendering is implemented on
+  `/workbench/{portfolioId}` through Gateway
+  `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
+  manage/core source selector through Gateway, renders manage-owned alternative ids, methods,
+  method statuses, comparison metrics, objective/constraint trace counts, supportability, and
+  selected-alternative state, and records PM selection through Gateway. It does not synthesize
+  source snapshots, prices, optimizer results, supportability, or selection truth locally.
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
   Workbench renders manage-owned review state, expected-versus-realized dimensions, hashes,
@@ -89,7 +96,7 @@ Data products:
 http://workbench.dev.lotus/data-products
 ```
 
-Workbench outcome review:
+Workbench construction alternatives and outcome review:
 
 ```txt
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001
