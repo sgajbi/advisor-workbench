@@ -1,0 +1,103 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { expect, test } from "@playwright/test";
+
+const portfolioId = process.env.LOTUS_CANONICAL_PORTFOLIO_ID ?? "PB_SG_GLOBAL_BAL_001";
+const outputDir =
+  process.env.LOTUS_LIVE_EVIDENCE_DIR ??
+  "output/rfc39-wtbd002-construction-lab/construction-live";
+
+test("construction alternatives lab renders and exercises Gateway-backed generation", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  await mkdir(outputDir, { recursive: true });
+
+  await page.goto(`/workbench/${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 60_000,
+  });
+
+  const panel = page.locator(".construction-alternatives-panel");
+  await expect(panel.getByRole("heading", { name: "Construction Alternatives" })).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(panel.getByText("Manage authority: lotus-manage:RFC-0039")).toBeVisible();
+  await expect(panel.getByLabel("Status lotus-gateway")).toBeVisible();
+  await expect(
+    panel.getByText("Construction alternatives have not been generated")
+  ).toBeVisible();
+
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response
+        .url()
+        .includes("/api/bff/api/v1/dpm/command-center/construction/alternative-sets/generate"),
+    { timeout: 90_000 }
+  );
+  await panel.getByRole("button", { name: "Generate alternatives" }).click();
+  const response = await responsePromise;
+  const responseText = await response.text().catch(() => "");
+  let responseBody: Record<string, any> | null = null;
+  try {
+    responseBody = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    responseBody = null;
+  }
+
+  await expect(panel.getByRole("button", { name: "Generate alternatives" })).toBeEnabled({
+    timeout: 90_000,
+  });
+
+  const panelText = await panel.innerText();
+  const screenshotPath = path.join(outputDir, "construction-alternatives-live.png");
+  await panel.screenshot({ path: screenshotPath });
+
+  const evidence = {
+    generatedAt: new Date().toISOString(),
+    portfolioId,
+    baseUrl: testInfo.project.use.baseURL,
+    request: {
+      method: "POST",
+      path: "/api/bff/api/v1/dpm/command-center/construction/alternative-sets/generate",
+    },
+    response: {
+      status: response.status(),
+      ok: response.ok(),
+      body: responseBody ?? responseText,
+      supportabilityState: responseBody?.supportability?.state ?? null,
+      reasonCodes: responseBody?.supportability?.reason_codes ?? [],
+      sourceService:
+        responseBody?.supportability?.source_service ?? responseBody?.source_service ?? null,
+      authority: responseBody?.supportability?.authority ?? null,
+      correlationId: responseBody?.correlation_id ?? null,
+      alternativeSetId: responseBody?.data?.alternative_set_id ?? null,
+      alternativeCount: Array.isArray(responseBody?.data?.alternatives)
+        ? responseBody.data.alternatives.length
+        : 0,
+      selectedAlternativeId:
+        responseBody?.supportability?.selected_alternative_id ??
+        responseBody?.data?.selected_alternative_id ??
+        null,
+    },
+    ui: {
+      screenshotPath,
+      includesGatewaySource: panelText.includes("LOTUS-GATEWAY"),
+      includesManageAuthority: panelText.includes("lotus-manage:RFC-0039"),
+      includesNoLocalMethodologyClaim: !panelText.includes("local optimizer"),
+      textExcerpt: panelText.slice(0, 2000),
+    },
+  };
+  await writeFile(
+    path.join(outputDir, "construction-alternatives-live-summary.json"),
+    `${JSON.stringify(evidence, null, 2)}\n`,
+    "utf8"
+  );
+
+  expect(response.ok(), `generation response status ${response.status()}`).toBe(true);
+  expect(evidence.response.sourceService).toMatch(/lotus-(gateway|manage)/i);
+  expect(evidence.response.authority).toBe("lotus-manage:RFC-0039");
+  expect(evidence.ui.includesGatewaySource).toBe(true);
+  expect(evidence.ui.includesManageAuthority).toBe(true);
+  expect(evidence.ui.includesNoLocalMethodologyClaim).toBe(true);
+});

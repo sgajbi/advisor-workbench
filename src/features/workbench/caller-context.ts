@@ -7,6 +7,13 @@ const DEFAULT_CALLER_CONTEXT_HEADERS = {
   "X-Role": "advisor",
 } as const;
 
+const DEFAULT_DPM_CONTEXT = {
+  mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
+  modelPortfolioId: "MODEL_PB_SG_GLOBAL_BAL_DPM",
+  bookingCenterCode: "Singapore",
+  sourceAsOfDate: "2026-04-10",
+} as const;
+
 const CALLER_CONTEXT_ENV_OVERRIDES: Record<
   keyof typeof DEFAULT_CALLER_CONTEXT_HEADERS,
   string
@@ -34,6 +41,23 @@ export function resolveDefaultCallerContext() {
     region: defaultCallerContextValue("X-Region"),
     bookingCenterCode: defaultCallerContextValue("X-Booking-Center-Code"),
     role: defaultCallerContextValue("X-Role"),
+  };
+}
+
+export function resolveDefaultDpmContext() {
+  return {
+    mandateId:
+      process.env.WORKBENCH_DPM_MANDATE_ID?.trim() ||
+      DEFAULT_DPM_CONTEXT.mandateId,
+    modelPortfolioId:
+      process.env.WORKBENCH_DPM_MODEL_PORTFOLIO_ID?.trim() ||
+      DEFAULT_DPM_CONTEXT.modelPortfolioId,
+    bookingCenterCode:
+      process.env.WORKBENCH_DPM_BOOKING_CENTER_CODE?.trim() ||
+      DEFAULT_DPM_CONTEXT.bookingCenterCode,
+    sourceAsOfDate:
+      process.env.WORKBENCH_DPM_SOURCE_AS_OF_DATE?.trim() ||
+      DEFAULT_DPM_CONTEXT.sourceAsOfDate,
   };
 }
 

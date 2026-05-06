@@ -1851,7 +1851,7 @@ describe("workbench api", () => {
     expect(options.headers["X-Actor-Id"]).toBe("workbench-construction-operator");
     const body = JSON.parse(options.body);
     expect(body.idempotency_key).toBe(
-      "workbench-construction-PB_SG_GLOBAL_BAL_001-2026-02-24"
+      "workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10"
     );
     expect(body.body.input_mode).toBe("stateful");
     expect(body.body.methods).toEqual([
@@ -1861,8 +1861,15 @@ describe("workbench api", () => {
     expect(body.body.stateful_input.portfolio_id).toBe(
       "PB_SG_GLOBAL_BAL_001"
     );
+    expect(body.body.stateful_input.as_of).toBe("2026-04-10");
+    expect(body.body.stateful_input.mandate_id).toBe(
+      "MANDATE_PB_SG_GLOBAL_BAL_001"
+    );
+    expect(body.body.stateful_input.model_portfolio_id).toBe(
+      "MODEL_PB_SG_GLOBAL_BAL_DPM"
+    );
     expect(body.body.stateful_input.tenant_id).toBe("tenant-sg");
-    expect(body.body.stateful_input.booking_center_code).toBe("SG");
+    expect(body.body.stateful_input.booking_center_code).toBe("Singapore");
     expect(body.body.stateful_input.include_model_portfolio).toBe(true);
     expect(body.body.options_override.valuation_mode).toBe("TRUST_SNAPSHOT");
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
