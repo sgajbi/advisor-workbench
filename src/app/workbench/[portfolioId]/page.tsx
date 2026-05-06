@@ -252,8 +252,7 @@ export default async function WorkbenchPage({
               />
 
               <RebalanceStatus
-                status={data.rebalance_snapshot?.status ?? "UNKNOWN"}
-                lastRunId={data.rebalance_snapshot?.last_rebalance_run_id ?? null}
+                snapshot={data.rebalance_snapshot}
               />
 
               <ConstructionAlternativesPanel portfolio={data} />
