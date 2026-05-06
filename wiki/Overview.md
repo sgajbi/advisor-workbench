@@ -28,7 +28,8 @@ This repo does not own:
   post-trade outcome-review panels without direct Workbench calls to manage, report, archive, or AI
 - `/workbench/{portfolioId}` surfaces Gateway-provided manage action-register supportability in the
   rebalance status panel, including source state, freshness, run/operation/decision counts, last-run
-  identity, and explicit unknown/N/A handling when supportability is absent
+  identity, bounded recent runs, workflow posture, run issue count, and explicit unknown/N/A or
+  empty-run handling when supportability or recent runs are absent
 - risk is served through Performance route modes
 - recommendations and proposals remain compatibility entrypoints rather than active shell apps
 - shell navigation currently exposes disabled `Proposal` and `Advisory` items through normalized

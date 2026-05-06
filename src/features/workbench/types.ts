@@ -31,6 +31,13 @@ export type WorkbenchOverview = {
       operation_count?: number | null;
       workflow_decision_count?: number | null;
     } | null;
+    recent_runs?: Array<{
+      rebalance_run_id: string | null;
+      status: string;
+      created_at_utc: string | null;
+      error_code: string | null;
+      workflow_state: string | null;
+    }>;
   } | null;
   warnings: string[];
   partial_failures: Array<{

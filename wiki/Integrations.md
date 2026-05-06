@@ -67,9 +67,10 @@ must travel through Gateway-shaped contracts.
     selected-alternative state.
 13. Rebalance action-register supportability is read from the Gateway portfolio overview
     `rebalance_snapshot`. Workbench displays manage-owned status, source support state, freshness,
-    run count, operation count, workflow decision count, last-run identity, and reason posture; it
-    does not call `lotus-manage` directly and does not convert missing supportability into
-    apparently verified zero activity.
+    run count, operation count, workflow decision count, last-run identity, bounded recent runs,
+    workflow posture, run issue count, and reason posture; it does not call `lotus-manage`
+    directly and does not convert missing supportability or absent recent runs into apparently
+    verified zero activity.
 14. RFC-0108 analytics UI observability is centralized in
     `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Intake, Performance,
     Risk, Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations

@@ -49,6 +49,31 @@ describe("WorkbenchPage", () => {
                 status: "READY",
                 last_rebalance_run_id: "run_001",
                 last_run_at_utc: "2026-02-24T00:00:00Z",
+                supportability: {
+                  feature_key: "manage.observability.action_register_supportability",
+                  state: "healthy",
+                  reason: "action_register_current",
+                  freshness_bucket: "fresh",
+                  run_count: 2,
+                  operation_count: 4,
+                  workflow_decision_count: 1,
+                },
+                recent_runs: [
+                  {
+                    rebalance_run_id: "run_001",
+                    status: "PENDING_REVIEW",
+                    created_at_utc: "2026-02-24T00:00:00Z",
+                    error_code: null,
+                    workflow_state: "PM_REVIEW_REQUIRED",
+                  },
+                  {
+                    rebalance_run_id: "run_000",
+                    status: "FAILED",
+                    created_at_utc: "2026-02-23T00:00:00Z",
+                    error_code: "SOURCE_READINESS_BLOCKED",
+                    workflow_state: null,
+                  },
+                ],
               },
               current_positions: [
                 {
@@ -183,6 +208,13 @@ describe("WorkbenchPage", () => {
     );
     expect(screen.getAllByText(/RISK_BFF_NOT_IMPLEMENTED/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Data Integrity")).toBeInTheDocument();
+    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("Recent runs");
+    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("Run issues");
+    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("run_001");
+    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("PM Review Required");
+    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent(
+      "Source Readiness Blocked"
+    );
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);

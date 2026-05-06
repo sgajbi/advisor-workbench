@@ -59,8 +59,9 @@ promote dormant labels into product ownership just because historical route file
 - RFC-0098/RFC-0041 action-register supportability is rendered on `/workbench/{portfolioId}` from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow
-  decision count, last-run identity, and reason posture. When Gateway does not provide
-  supportability, Workbench renders unknown/N/A instead of implying verified zero activity or
+  decision count, last-run identity, bounded recent runs, workflow posture, run issue count, and
+  reason posture. When Gateway does not provide supportability or recent run detail, Workbench
+  renders unknown/N/A or an explicit empty run state instead of implying verified zero activity or
   calculating supportability locally.
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
