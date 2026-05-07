@@ -60,7 +60,9 @@ Boundary rules that matter:
    not generate proof-pack sections, hashes, report inputs, AI evidence, narratives, or reports
    locally. It generates RFC-0040 proof packs from the Gateway Workbench rebalance snapshot's
    manage run id and does not treat RFC-0042 outcome-review `dpp_*` proof ids or expected-snapshot
-   run ids as RFC-0040 proof-pack sources.
+   run ids as RFC-0040 proof-pack sources. Reviewable Manage states such as `PENDING_REVIEW` are
+   displayed truthfully when the proof pack includes identity, sections, hashes/lineage, and handoff
+   posture.
 6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0042 post-trade outcome-review
    panel for manage-owned expected-versus-realized dimensions, source lineage, supportability,
    and report/AI handoff posture. Workbench renders the Gateway contract and does not calculate

@@ -323,6 +323,10 @@ synthesize Markdown, construct report input, construct AI evidence, construct pr
 reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly. The live canonical
 validator now generates an RFC-0040 proof pack from the Gateway Workbench rebalance snapshot before
 registering the `dpm.proof_pack` panel against the governed Workbench panel registry.
+Populated proof packs with manage business state `PENDING_REVIEW` or `DEGRADED` are valid product
+evidence when they include proof-pack identity, reviewable sections, source hashes or lineage, and
+handoff posture; Workbench must preserve that business state instead of relabelling it as fully
+ready.
 
 ### 7.0B Rebalance Wave Command Center Addendum
 

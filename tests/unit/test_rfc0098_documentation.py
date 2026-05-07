@@ -20,6 +20,7 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "`/api/v1/dpm/command-center/proof-packs*`" in rfc
     assert "Outcome-review proof ids such as" in rfc
     assert "Gateway Workbench rebalance snapshot" in rfc
+    assert "Populated proof packs with manage business state `PENDING_REVIEW`" in rfc
     assert "expected-snapshot run ids" in (
         ROOT / "wiki" / "API-Surface.md"
     ).read_text(encoding="utf-8")
