@@ -68,6 +68,8 @@ Current repository posture:
    proof-pack ids or proof-pack generation sources, and it avoids client-side proof-pack construction, hash generation,
    Markdown synthesis, report-input synthesis, AI-evidence synthesis, or direct calls to
    `lotus-manage`, `lotus-report`, or `lotus-ai`,
+   while preserving reviewable Manage business states such as `PENDING_REVIEW` when sections,
+   hashes/lineage, and handoff posture are present,
 10. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
    `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
    manage/core source selector through Gateway, preserves manage-owned alternatives,

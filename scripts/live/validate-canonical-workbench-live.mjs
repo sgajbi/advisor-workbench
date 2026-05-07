@@ -103,6 +103,15 @@ function extractWorkbenchRebalanceRunId(gatewayOverview) {
   return readString(recentRun?.rebalance_run_id);
 }
 
+function recordArrayCount(value) {
+  return Array.isArray(value) ? value.filter((item) => item && typeof item === "object").length : 0;
+}
+
+function isReviewableProofPackState(state) {
+  const normalized = readString(state)?.toUpperCase();
+  return normalized === "READY" || normalized === "PENDING_REVIEW" || normalized === "DEGRADED";
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -314,12 +323,19 @@ async function run() {
   if (!proofPackPayload?.proof_pack_id) {
     throw new Error("DPM proof-pack evidence returned no proof-pack identity.");
   }
+  const proofPackSectionCount = recordArrayCount(proofPackPayload.sections ?? proofPackPayload.section_posture);
+  const proofPackSourceHashCount = recordArrayCount(
+    proofPackPayload.source_hashes ?? proofPackPayload.source_lineage
+  );
+  if (proofPackSectionCount < 1) {
+    throw new Error("DPM proof-pack evidence returned no reviewable proof-pack sections.");
+  }
+  if (proofPackSourceHashCount < 1) {
+    throw new Error("DPM proof-pack evidence returned no source hashes or lineage references.");
+  }
   const proofPackSupportability = proofPack?.supportability;
-  if (
-    proofPackSupportability?.state &&
-    proofPackSupportability.state.toUpperCase() !== "READY"
-  ) {
-    throw new Error(`DPM proof-pack evidence returned non-ready state: ${proofPackSupportability.state}.`);
+  if (proofPackSupportability?.state && !isReviewableProofPackState(proofPackSupportability.state)) {
+    throw new Error(`DPM proof-pack evidence returned non-reviewable state: ${proofPackSupportability.state}.`);
   }
 
   const commandCenterParams = new URLSearchParams({
@@ -435,6 +451,9 @@ async function run() {
   panelGovernance.recordPanelClassification("dpm.proof_pack", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     proofPackId,
+    proofPackBusinessState: proofPackSupportability?.state ?? proofPackPayload.status ?? "UNKNOWN",
+    sectionCount: proofPackSectionCount,
+    sourceHashCount: proofPackSourceHashCount,
   });
   panelGovernance.recordPanelClassification("dpm.command_center", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
