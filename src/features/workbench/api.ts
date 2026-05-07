@@ -120,11 +120,41 @@ async function fetchWorkbenchMutation<T>(
   errorLabel: string,
   init: RequestInit
 ): Promise<T> {
-  const response = await fetch(url, { cache: "no-store", ...init });
+  const response = await fetch(url, { cache: "no-store", ...withJsonMutationHeaders(init) });
   if (!response.ok) {
     throw new WorkbenchApiError(errorLabel, response.status);
   }
   return (await response.json()) as T;
+}
+
+function withJsonMutationHeaders(init: RequestInit): RequestInit {
+  if (typeof init.body !== "string") {
+    return init;
+  }
+
+  const headers = init.headers;
+  if (headers instanceof Headers) {
+    const nextHeaders = new Headers(headers);
+    if (!nextHeaders.has("Content-Type")) {
+      nextHeaders.set("Content-Type", "application/json");
+    }
+    return { ...init, headers: nextHeaders };
+  }
+
+  if (Array.isArray(headers)) {
+    const hasContentType = headers.some(([key]) => key.toLowerCase() === "content-type");
+    return {
+      ...init,
+      headers: hasContentType ? headers : [["Content-Type", "application/json"], ...headers],
+    };
+  }
+
+  const nextHeaders: Record<string, string> = { ...(headers as Record<string, string> | undefined) };
+  const hasContentType = Object.keys(nextHeaders).some((key) => key.toLowerCase() === "content-type");
+  if (!hasContentType) {
+    nextHeaders["Content-Type"] = "application/json";
+  }
+  return { ...init, headers: nextHeaders };
 }
 
 function observedSurface(
