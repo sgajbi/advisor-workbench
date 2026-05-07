@@ -92,6 +92,17 @@ function extractGeneratedProofPackId(response) {
   );
 }
 
+function extractWorkbenchRebalanceRunId(gatewayOverview) {
+  const snapshot = gatewayOverview?.rebalance_snapshot;
+  const latestRunId = readString(snapshot?.last_rebalance_run_id);
+  if (latestRunId) {
+    return latestRunId;
+  }
+  const recentRuns = Array.isArray(snapshot?.recent_runs) ? snapshot.recent_runs : [];
+  const recentRun = recentRuns.find((item) => readString(item?.rebalance_run_id));
+  return readString(recentRun?.rebalance_run_id);
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -256,10 +267,19 @@ async function run() {
   if (!Array.isArray(outcomeReviewItems) || outcomeReviewItems.length < 1) {
     throw new Error("DPM outcome-review list returned no manage-backed reviews.");
   }
-  const proofPackSourceReview = outcomeReviewItems.find((item) => item?.rebalance_run_id);
-  const rebalanceRunId = readString(proofPackSourceReview?.rebalance_run_id);
+  const gatewayOverview = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/overview`,
+    "Gateway workbench overview",
+    timeoutMs
+  );
+  if (gatewayOverview?.portfolio?.portfolio_id !== portfolioId) {
+    throw new Error("Gateway workbench overview returned no portfolio payload.");
+  }
+  const proofPackSourceReview = outcomeReviewItems.find((item) => readString(item?.mandate_id));
+  const rebalanceRunId = extractWorkbenchRebalanceRunId(gatewayOverview);
   if (!rebalanceRunId) {
-    throw new Error("DPM outcome-review list returned no rebalance-run reference for proof-pack generation.");
+    throw new Error("Gateway workbench overview returned no manage rebalance-run reference for proof-pack generation.");
   }
   const generatedProofPack = await postJson(
     summary,
@@ -276,7 +296,7 @@ async function run() {
         include_report_input: true,
         include_ai_evidence_input: true,
         actor_id: "workbench-live-validator",
-        reason: "Canonical Workbench live validation generated an RFC-0040 proof pack from Gateway truth.",
+        reason: "Canonical Workbench live validation generated an RFC-0040 proof pack from the Gateway Workbench rebalance snapshot.",
       },
     }
   );
@@ -399,15 +419,6 @@ async function run() {
     }
   }
 
-  const gatewayOverview = await fetchJson(
-    summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/overview`,
-    "Gateway workbench overview",
-    timeoutMs
-  );
-  if (gatewayOverview?.portfolio?.portfolio_id !== portfolioId) {
-    throw new Error("Gateway workbench overview returned no portfolio payload.");
-  }
   panelGovernance.recordPanelClassification("portfolio.summary", "ready", "lotus-gateway", {
     portfolioId,
   });

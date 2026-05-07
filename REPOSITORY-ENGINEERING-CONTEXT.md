@@ -63,8 +63,9 @@ Current repository posture:
    `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
    section posture, content hash, source hashes, Markdown availability, report-input readiness,
    and AI-evidence readiness after Gateway generates or returns an RFC-0040 proof pack for a
-   linked rebalance run. Workbench does not treat RFC-0042 outcome-review `dpp_*` proof ids as
-   RFC-0040 proof-pack ids, and it avoids client-side proof-pack construction, hash generation,
+   manage rebalance run surfaced by the Gateway Workbench rebalance snapshot. Workbench does not
+   treat RFC-0042 outcome-review `dpp_*` proof ids or expected-snapshot run ids as RFC-0040
+   proof-pack ids or proof-pack generation sources, and it avoids client-side proof-pack construction, hash generation,
    Markdown synthesis, report-input synthesis, AI-evidence synthesis, or direct calls to
    `lotus-manage`, `lotus-report`, or `lotus-ai`,
 10. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway

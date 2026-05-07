@@ -1,6 +1,7 @@
 import type {
   DpmOutcomeReviewGatewayResponse,
   DpmProofPackGatewayResponse,
+  WorkbenchOverview,
 } from "./types";
 
 export type ProofPackPanelState =
@@ -58,14 +59,15 @@ export type ProofPackPanelModel = {
 };
 
 export function deriveProofPackContext(
-  outcomeReviews: DpmOutcomeReviewGatewayResponse | null
+  outcomeReviews: DpmOutcomeReviewGatewayResponse | null,
+  rebalanceSnapshot: WorkbenchOverview["rebalance_snapshot"] | null = null
 ): ProofPackContext {
   const review = extractOutcomeReviewRecords(outcomeReviews?.data ?? {}).find(
-    (record) => readString(record, "rebalance_run_id")
+    (record) => readString(record, "mandate_id")
   );
   return {
     proofPackId: null,
-    rebalanceRunId: review ? readString(review, "rebalance_run_id") || null : null,
+    rebalanceRunId: readRebalanceRunId(rebalanceSnapshot),
     mandateId: review ? readString(review, "mandate_id") || null : null,
   };
 }
@@ -190,6 +192,19 @@ function extractOutcomeReviewRecords(data: Record<string, unknown>): Record<stri
     return items;
   }
   return typeof data.outcome_review_id === "string" ? [data] : [];
+}
+
+function readRebalanceRunId(
+  snapshot: WorkbenchOverview["rebalance_snapshot"] | null
+): string | null {
+  if (!snapshot) {
+    return null;
+  }
+  if (snapshot.last_rebalance_run_id?.trim()) {
+    return snapshot.last_rebalance_run_id;
+  }
+  const recentRun = snapshot.recent_runs?.find((run) => run.rebalance_run_id?.trim());
+  return recentRun?.rebalance_run_id ?? null;
 }
 
 function buildSectionRow(record: Record<string, unknown>, index: number): ProofPackSectionRow {

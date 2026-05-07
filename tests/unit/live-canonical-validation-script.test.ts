@@ -325,6 +325,8 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("DPM mandate health dimensions");
     expect(script).toContain("Generate DPM proof-pack evidence");
     expect(script).toContain("live-canonical-proof-pack");
+    expect(script).toContain("extractWorkbenchRebalanceRunId");
+    expect(script).toContain("Gateway workbench overview returned no manage rebalance-run reference");
     expect(script).toContain("source_type: \"REBALANCE_RUN\"");
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
     expect(browserWorkflowModule).toContain("Proof-pack generation completed through Gateway.");
