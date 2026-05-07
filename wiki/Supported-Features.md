@@ -13,7 +13,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | DPM mandate command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit and monitoring action. |
 | DPM rebalance-wave command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, and supportability through Gateway only; canonical live wave proof pending. |
 | DPM construction alternatives | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
-| DPM proof-pack evidence | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture. |
+| DPM proof-pack evidence | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
 | DPM outcome review | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/outcome-reviews*` | Implemented for review list, dimensions, source lineage, report input, AI evidence, report job, and AI narrative request. |
 
 ## DPM Wave Command Center

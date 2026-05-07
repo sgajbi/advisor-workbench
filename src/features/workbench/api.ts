@@ -18,6 +18,7 @@ import {
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
   DpmOutcomeReviewNarrativeResponse,
+  DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
   DpmWaveGatewayResponse,
@@ -1385,6 +1386,46 @@ export async function getDpmProofPackAiEvidenceInput(
         "client",
         `/dpm/command-center/proof-packs/${encodeURIComponent(proofPackId)}/ai-evidence-input`,
         "DPM proof pack AI evidence input"
+      )
+  );
+}
+
+export async function requestDpmProofPackAiPmMemo(params: {
+  proofPackId: string;
+  requestedOutputs?: string[];
+  audience?: string[];
+}): Promise<DpmProofPackAiPmMemoResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.proof-pack.ai-pm-memo",
+    async () =>
+      await fetchWorkbenchMutation<DpmProofPackAiPmMemoResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/proof-packs/${encodeURIComponent(params.proofPackId)}/ai-pm-memo`
+        ),
+        "request DPM proof-pack AI PM memo",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Correlation-Id": `corr-workbench-proof-pack-ai-memo-${params.proofPackId}`,
+          },
+          body: JSON.stringify({
+            requested_outputs: params.requestedOutputs ?? [
+              "pm_memo",
+              "rationale_summary",
+              "approval_checklist",
+              "risk_caveats",
+              "operations_handoff",
+              "evidence_gaps",
+            ],
+            audience: params.audience ?? [
+              "portfolio_manager",
+              "investment_control",
+              "operations",
+            ],
+          }),
+        }
       )
   );
 }

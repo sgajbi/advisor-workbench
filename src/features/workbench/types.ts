@@ -1226,6 +1226,19 @@ export type DpmProofPackMarkdownResponse = DpmProofPackGatewayResponse & {
   markdown?: string;
 };
 
+export type DpmProofPackAiPmMemoResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  evidence_source_service: string;
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  supportability: DpmProofPackSupportability;
+  ai_evidence_input: Record<string, unknown>;
+  memo_request: Record<string, unknown>;
+  data: Record<string, unknown>;
+};
+
 export type DpmWaveSupportability = {
   source_service: string;
   authority: string;

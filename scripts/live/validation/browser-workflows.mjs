@@ -515,10 +515,19 @@ export async function validateProofPackPanel(
   await expect(proofPackPanel.getByText(/AI Evidence (Available|Unavailable)/)).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(proofPackPanel.getByRole("button", { name: "AI PM Memo" })).toBeVisible({
+    timeout: timeoutMs,
+  });
   await proofPackPanel.getByRole("button", { name: "Generate proof pack" }).click({
     timeout: timeoutMs,
   });
   await expect(proofPackPanel.getByText("Proof-pack generation completed through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await proofPackPanel.getByRole("button", { name: "AI PM Memo" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(proofPackPanel.getByText(/^PM memo /)).toBeVisible({
     timeout: timeoutMs,
   });
   await assertTableHasRows(

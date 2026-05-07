@@ -62,12 +62,13 @@ Current repository posture:
 9. `/workbench/{portfolioId}` renders the RFC-0040 proof-pack evidence panel from Gateway
    `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
    section posture, content hash, source hashes, Markdown availability, report-input readiness,
-   and AI-evidence readiness after Gateway generates or returns an RFC-0040 proof pack for a
-   manage rebalance run surfaced by the Gateway Workbench rebalance snapshot. Workbench does not
+   AI-evidence readiness, and governed PM memo workflow-pack posture after Gateway generates or
+   returns an RFC-0040 proof pack for a manage rebalance run surfaced by the Gateway Workbench
+   rebalance snapshot. Workbench does not
    treat RFC-0042 outcome-review `dpp_*` proof ids or expected-snapshot run ids as RFC-0040
-   proof-pack ids or proof-pack generation sources, and it avoids client-side proof-pack construction, hash generation,
-   Markdown synthesis, report-input synthesis, AI-evidence synthesis, or direct calls to
-   `lotus-manage`, `lotus-report`, or `lotus-ai`,
+   proof-pack ids or proof-pack generation sources, and it avoids client-side proof-pack construction,
+   hash generation, Markdown synthesis, report-input synthesis, AI-evidence synthesis, PM memo
+   prompt construction, or direct calls to `lotus-manage`, `lotus-report`, or `lotus-ai`,
    while preserving reviewable Manage business states such as `PENDING_REVIEW` when sections,
    hashes/lineage, and handoff posture are present,
 10. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
@@ -200,11 +201,12 @@ Important validation expectations:
     through Gateway only. Workbench may construct the stateful source selector needed to invoke the
     Gateway/manage contract, but it must not synthesize stateless portfolio snapshots, price
     payloads, target weights, optimization outcomes, supportability states, or selection decisions.
-13. DPM proof-pack generation, retrieval, Markdown, report-input, and AI-evidence reads/actions are
-    Workbench gateway-only operations. Observability labels must remain bounded to route, panel,
-    operation, freshness, supportability, status class, and error category; proof-pack ids,
-    rebalance run ids, mandate ids, portfolio ids, content hashes, source hashes, request bodies,
-    response bodies, and screen content must never be emitted as metric labels.
+13. DPM proof-pack generation, retrieval, Markdown, report-input, AI-evidence reads/actions, and
+    governed AI PM memo requests are Workbench gateway-only operations. Observability labels must
+    remain bounded to route, panel, operation, freshness, supportability, status class, and error
+    category; proof-pack ids, rebalance run ids, mandate ids, portfolio ids, content hashes, source
+    hashes, workflow-pack run ids, request bodies, response bodies, and screen content must never
+    be emitted as metric labels.
 14. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
     labels must remain bounded to route, panel, operation, freshness, supportability, status class,
     and error category; wave ids, wave item ids, portfolio ids, proof-pack ids, handoff refs,

@@ -12,6 +12,7 @@ import {
   getDpmProofPackAiEvidenceInput,
   getDpmProofPackMarkdown,
   getDpmProofPackReportInput,
+  requestDpmProofPackAiPmMemo,
 } from "../../src/features/workbench/api";
 
 vi.mock("../../src/features/workbench/api", () => ({
@@ -20,6 +21,7 @@ vi.mock("../../src/features/workbench/api", () => ({
   getDpmProofPackAiEvidenceInput: vi.fn(),
   getDpmProofPackMarkdown: vi.fn(),
   getDpmProofPackReportInput: vi.fn(),
+  requestDpmProofPackAiPmMemo: vi.fn(),
 }));
 
 const outcomeReviews: DpmOutcomeReviewGatewayResponse = {
@@ -159,6 +161,23 @@ describe("ProofPackPanel", () => {
     });
     vi.mocked(getDpmProofPackReportInput).mockResolvedValue(readyProofPack);
     vi.mocked(getDpmProofPackAiEvidenceInput).mockResolvedValue(readyProofPack);
+    vi.mocked(requestDpmProofPackAiPmMemo).mockResolvedValue({
+      correlation_id: "corr-rfc40-ai-memo",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: readyProofPack.supportability,
+      ai_evidence_input: { proof_pack_id: "ppack_1" },
+      memo_request: { requested_outputs: ["pm_memo"], audience: ["portfolio_manager"] },
+      data: {
+        workflow_pack_run: {
+          run_id: "packrun_ppack_1",
+          review_state: "AWAITING_REVIEW",
+        },
+      },
+    });
 
     render(
       <ProofPackPanel
@@ -180,6 +199,11 @@ describe("ProofPackPanel", () => {
     await waitFor(() => expect(getDpmProofPackReportInput).toHaveBeenCalledWith("ppack_1"));
     fireEvent.click(screen.getByRole("button", { name: "AI Evidence" }));
     await waitFor(() => expect(getDpmProofPackAiEvidenceInput).toHaveBeenCalledWith("ppack_1"));
+    fireEvent.click(screen.getByRole("button", { name: "AI PM Memo" }));
+    await waitFor(() =>
+      expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" })
+    );
+    expect(screen.getByText("PM memo AWAITING_REVIEW (packrun_ppack_1).")).toBeInTheDocument();
   });
 
   it("renders unavailable state without claiming generated proof", () => {

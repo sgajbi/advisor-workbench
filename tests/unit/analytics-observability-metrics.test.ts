@@ -379,6 +379,11 @@ describe("analytics UI observability metrics", () => {
         "proof-pack-ai-evidence",
         "dpm.proof-pack.ai-evidence",
       ],
+      [
+        "workbench.dpm-command-center",
+        "proof-pack-ai-pm-memo",
+        "dpm.proof-pack.ai-pm-memo",
+      ],
       ["workbench.dpm-command-center", "wave-list", "dpm.waves.list"],
       ["workbench.dpm-command-center", "wave-preview", "dpm.waves.preview"],
       ["workbench.dpm-command-center", "wave-create", "dpm.waves.create"],

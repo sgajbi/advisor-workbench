@@ -136,6 +136,15 @@ function isReviewableProofPackState(state) {
   return normalized === "READY" || normalized === "PENDING_REVIEW" || normalized === "DEGRADED";
 }
 
+function extractWorkflowPackRunId(payload) {
+  return (
+    readString(payload?.workflow_pack_run?.run_id) ||
+    readString(payload?.execution?.audit?.workflow_pack_run_id) ||
+    readString(payload?.audit?.workflow_pack_run_id) ||
+    null
+  );
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -360,6 +369,40 @@ async function run() {
   if (proofPackSupportability?.state && !isReviewableProofPackState(proofPackSupportability.state)) {
     throw new Error(`DPM proof-pack evidence returned non-reviewable state: ${proofPackSupportability.state}.`);
   }
+  const proofPackAiPmMemo = await postJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs/${encodeURIComponent(proofPackId)}/ai-pm-memo`,
+    "DPM proof-pack AI PM memo",
+    timeoutMs,
+    {
+      requested_outputs: ["pm_memo", "rationale_summary", "evidence_gaps"],
+      audience: ["portfolio_manager", "investment_control"],
+    }
+  );
+  const proofPackAiPmMemoPayload = proofPackAiPmMemo?.data ?? proofPackAiPmMemo;
+  const proofPackAiPmMemoSourceService =
+    readString(proofPackAiPmMemo?.source_service) ?? readString(proofPackAiPmMemo?.sourceService);
+  if (proofPackAiPmMemoSourceService !== "lotus-ai") {
+    throw new Error("DPM proof-pack AI PM memo did not return lotus-ai source authority.");
+  }
+  const proofPackAiPmMemoRunId = extractWorkflowPackRunId(proofPackAiPmMemoPayload);
+  if (!proofPackAiPmMemoRunId) {
+    throw new Error("DPM proof-pack AI PM memo returned no workflow-pack run reference.");
+  }
+  summary.workflowPackChecks.push({
+    description: "DPM proof-pack AI PM memo",
+    sourceService: proofPackAiPmMemoSourceService,
+    proofPackId,
+    sourceRunId: proofPackAiPmMemoRunId,
+    resultReviewState:
+      proofPackAiPmMemoPayload?.workflow_pack_run?.review_state ??
+      proofPackAiPmMemoPayload?.execution?.review_state ??
+      "unknown",
+    resultSupportabilityStatus:
+      proofPackAiPmMemoPayload?.workflow_pack_run?.supportability_status ??
+      proofPackAiPmMemoPayload?.execution?.supportability_status ??
+      "unknown",
+  });
 
   const commandCenterParams = new URLSearchParams({
     tenant_id: dpmCommandCenterDefaults.tenantId,

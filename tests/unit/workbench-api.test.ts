@@ -28,6 +28,7 @@ import {
   listDpmWaves,
   previewDpmWave,
   requestDpmOutcomeReviewAiNarrative,
+  requestDpmProofPackAiPmMemo,
   getArchivedDocumentMetadata,
   getPortfolio360,
   getReportBatchStatus,
@@ -2288,6 +2289,11 @@ describe("workbench api", () => {
     await getDpmProofPackMarkdown("ppack_1");
     await getDpmProofPackReportInput("ppack_1");
     await getDpmProofPackAiEvidenceInput("ppack_1");
+    await requestDpmProofPackAiPmMemo({
+      proofPackId: "ppack_1",
+      requestedOutputs: ["pm_memo"],
+      audience: ["pm"],
+    });
     await getDpmProofPack("ppack_1", "server");
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -2325,6 +2331,13 @@ describe("workbench api", () => {
       `${expectedBaseUrl}/dpm/command-center/proof-packs/ppack_1/ai-evidence-input`
     );
     expect(fetchMock.mock.calls[5][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/proof-packs/ppack_1/ai-pm-memo`
+    );
+    expect(JSON.parse(fetchMock.mock.calls[5][1].body)).toEqual({
+      requested_outputs: ["pm_memo"],
+      audience: ["pm"],
+    });
+    expect(fetchMock.mock.calls[6][0]).toBe(
       `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/proof-packs/ppack_1`
     );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
@@ -2333,6 +2346,7 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("proof-pack-markdown");
     expect(metricEventsJson).toContain("proof-pack-report-input");
     expect(metricEventsJson).toContain("proof-pack-ai-evidence");
+    expect(metricEventsJson).toContain("proof-pack-ai-pm-memo");
     expect(metricEventsJson).not.toContain("ppack_1");
     expect(metricEventsJson).not.toContain("sha256:proof-pack");
     expect(metricEventsJson).not.toContain("rr_1");

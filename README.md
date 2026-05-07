@@ -56,9 +56,10 @@ Boundary rules that matter:
    live trust discovery.
 5. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0040 proof-pack evidence panel
    for manage-owned proof-pack identity, section posture, content hash, source hashes, Markdown,
-   report-input posture, and AI-evidence posture. Workbench renders Gateway/manage truth and does
-   not generate proof-pack sections, hashes, report inputs, AI evidence, narratives, or reports
-   locally. It generates RFC-0040 proof packs from the Gateway Workbench rebalance snapshot's
+   report-input posture, AI-evidence posture, and governed PM memo request posture. Workbench
+   renders Gateway/manage/lotus-ai workflow-pack truth and does not generate proof-pack sections,
+   hashes, report inputs, AI evidence, PM memos, narratives, or reports locally. It generates
+   RFC-0040 proof packs from the Gateway Workbench rebalance snapshot's
    manage run id and does not treat RFC-0042 outcome-review `dpp_*` proof ids or expected-snapshot
    run ids as RFC-0040 proof-pack sources. Reviewable Manage states such as `PENDING_REVIEW` are
    displayed truthfully when the proof pack includes identity, sections, hashes/lineage, and handoff
@@ -278,9 +279,10 @@ Important current product and route truths:
    or PM selection truth.
 10. RFC-0040 proof-pack evidence rendering on `/workbench/{portfolioId}` is backed by Gateway
    `/api/v1/dpm/command-center/proof-packs*`; Workbench may render Gateway/manage proof-pack
-   identity, sections, hashes, Markdown, report-input readiness, and AI-evidence readiness, but
-   must not rebuild proof-pack sections, compute hashes, synthesize Markdown, construct report
-   input, construct AI evidence, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
+   identity, sections, hashes, Markdown, report-input readiness, AI-evidence readiness, and
+   lotus-ai PM memo workflow-pack posture through Gateway, but must not rebuild proof-pack
+   sections, compute hashes, synthesize Markdown, construct report input, construct AI evidence,
+   construct PM memo prompts, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

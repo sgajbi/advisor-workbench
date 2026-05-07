@@ -298,7 +298,7 @@ Required proof-pack panels:
 | Section Matrix | Let PM, compliance, and operations scan evidence readiness. | Render section states, titles, summaries, reason codes, and remediation owner without changing supportability truth. |
 | Markdown Preview | Provide a business-readable proof-pack summary. | Render Gateway-provided Markdown only; do not synthesize narrative locally. |
 | Evidence Drawer | Support audit and operations review. | Show lineage refs, source hashes, generated report-input ref, AI-evidence ref, support reference, and unavailable/degraded reasons. |
-| Report/AI Handoff Rail | Show downstream materialization readiness. | Distinguish manage report-input and AI-evidence readiness from `lotus-report` report output and `lotus-ai` memo state. |
+| Report/AI Handoff Rail | Show downstream materialization readiness. | Distinguish manage report-input and AI-evidence readiness from `lotus-report` report output and `lotus-ai` memo workflow-pack state. Request PM memo generation through Gateway only. |
 
 Required UI states:
 
@@ -309,7 +309,7 @@ Required UI states:
 5. proof pack degraded or pending review,
 6. proof pack blocked,
 7. report-input ready but report output unavailable,
-8. AI-evidence ready but AI memo unavailable,
+8. AI-evidence ready but AI PM memo unavailable or waiting for review,
 9. Gateway or manage unavailable.
 
 Supported-feature promotion is forbidden until Gateway implementation, Workbench browser proof,
@@ -323,10 +323,11 @@ rebalance run surfaced by the Gateway Workbench rebalance snapshot, not an RFC-0
 expected-snapshot run id. Outcome-review proof ids such as RFC-0042 `dpp_*` references are not
 treated as RFC-0040 proof-pack ids. Workbench renders
 Gateway/manage proof-pack identity, status, content hash, section states, source hashes, Markdown
-availability, report-input readiness, and AI-evidence readiness only after Gateway returns the
-generated proof-pack payload. Browser code does not rebuild proof-pack sections, compute hashes,
-synthesize Markdown, construct report input, construct AI evidence, construct prompts, materialize
-reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly. The live canonical
+availability, report-input readiness, AI-evidence readiness, and lotus-ai PM memo workflow-pack
+posture only after Gateway returns the generated proof-pack payload or memo handoff response.
+Browser code does not rebuild proof-pack sections, compute hashes, synthesize Markdown, construct
+report input, construct AI evidence, construct PM memo prompts, materialize reports, or call
+`lotus-manage`, `lotus-report`, or `lotus-ai` directly. The live canonical
 validator now generates an RFC-0040 proof pack from the Gateway Workbench rebalance snapshot before
 registering the `dpm.proof_pack` panel against the governed Workbench panel registry.
 Populated proof packs with manage business state `PENDING_REVIEW` or `DEGRADED` are valid product
