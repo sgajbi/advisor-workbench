@@ -309,13 +309,14 @@ async function run() {
   if (!rebalanceRunId) {
     throw new Error("Gateway workbench overview returned no manage rebalance-run reference for proof-pack generation.");
   }
+  const proofPackIdempotencyKey = `workbench-proof-pack-${rebalanceRunId}`;
   const generatedProofPack = await postJson(
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs`,
     "Generate DPM proof-pack evidence",
     timeoutMs,
     {
-      idempotency_key: `live-canonical-proof-pack-${rebalanceRunId}`,
+      idempotency_key: proofPackIdempotencyKey,
       body: {
         source_type: "REBALANCE_RUN",
         rebalance_run_id: rebalanceRunId,
@@ -323,8 +324,8 @@ async function run() {
         include_markdown: true,
         include_report_input: true,
         include_ai_evidence_input: true,
-        actor_id: "workbench-live-validator",
-        reason: "Canonical Workbench live validation generated an RFC-0040 proof pack from the Gateway Workbench rebalance snapshot.",
+        actor_id: "workbench-proof-pack-operator",
+        reason: "Workbench PM generated proof pack from Gateway-backed rebalance run.",
       },
     }
   );
