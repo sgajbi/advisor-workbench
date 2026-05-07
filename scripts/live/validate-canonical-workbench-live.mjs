@@ -107,6 +107,25 @@ function recordArrayCount(value) {
   return Array.isArray(value) ? value.filter((item) => item && typeof item === "object").length : 0;
 }
 
+function recordMapCount(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return 0;
+  }
+  return Object.values(value).filter((item) => {
+    if (typeof item === "string") {
+      return item.trim().length > 0;
+    }
+    return item !== null && item !== undefined;
+  }).length;
+}
+
+function sourceEvidenceCount(proofPackPayload) {
+  const sourceHashCount =
+    recordArrayCount(proofPackPayload.source_hashes) || recordMapCount(proofPackPayload.source_hashes);
+  const lineageCount = recordArrayCount(proofPackPayload.source_lineage);
+  return sourceHashCount + lineageCount;
+}
+
 function isReviewableProofPackState(state) {
   const normalized = readString(state)?.toUpperCase();
   return normalized === "READY" || normalized === "PENDING_REVIEW" || normalized === "DEGRADED";
@@ -324,9 +343,7 @@ async function run() {
     throw new Error("DPM proof-pack evidence returned no proof-pack identity.");
   }
   const proofPackSectionCount = recordArrayCount(proofPackPayload.sections ?? proofPackPayload.section_posture);
-  const proofPackSourceHashCount = recordArrayCount(
-    proofPackPayload.source_hashes ?? proofPackPayload.source_lineage
-  );
+  const proofPackSourceHashCount = sourceEvidenceCount(proofPackPayload);
   if (proofPackSectionCount < 1) {
     throw new Error("DPM proof-pack evidence returned no reviewable proof-pack sections.");
   }

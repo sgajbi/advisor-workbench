@@ -108,9 +108,9 @@ export function buildProofPackPanelModel(
     proofPack.sections ?? proofPack.section_posture ?? response.data.sections
   ).map(buildSectionRow);
   const sourceHashes = [
-    ...extractRecordArray(proofPack.source_hashes),
+    ...extractSourceHashRecords(proofPack.source_hashes),
     ...extractRecordArray(proofPack.source_lineage),
-    ...extractRecordArray(response.data.source_hashes),
+    ...extractSourceHashRecords(response.data.source_hashes),
   ].map(buildSourceHashRow);
   const contentHash =
     readString(proofPack, "content_hash") ||
@@ -270,6 +270,21 @@ function extractRecordArray(value: unknown): Record<string, unknown>[] {
     return [];
   }
   return value.filter(isRecord);
+}
+
+function extractSourceHashRecords(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) {
+    return value.filter(isRecord);
+  }
+  if (!isRecord(value)) {
+    return [];
+  }
+  return Object.entries(value)
+    .filter(([, hash]) => typeof hash === "string" && hash.trim().length > 0)
+    .map(([sourceRef, hash]) => ({
+      source_ref: sourceRef,
+      hash,
+    }));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
