@@ -465,6 +465,12 @@ export async function validateProofPackPanel(
   await expect(proofPackPanel.getByText(/AI Evidence (Available|Unavailable)/)).toBeVisible({
     timeout: timeoutMs,
   });
+  await proofPackPanel.getByRole("button", { name: "Generate proof pack" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(proofPackPanel.getByText("Proof-pack generation completed through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
   await assertTableHasRows(
     tableByExactLabel(page, "Proof-pack sections"),
     1,

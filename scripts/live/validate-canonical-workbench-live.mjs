@@ -79,6 +79,19 @@ async function fetchOptionalJson(description, url) {
   }
 }
 
+function readString(value) {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function extractGeneratedProofPackId(response) {
+  return (
+    readString(response?.data?.proof_pack?.proof_pack_id) ||
+    readString(response?.data?.proof_pack_id) ||
+    readString(response?.supportability?.proof_pack_id) ||
+    null
+  );
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -243,9 +256,33 @@ async function run() {
   if (!Array.isArray(outcomeReviewItems) || outcomeReviewItems.length < 1) {
     throw new Error("DPM outcome-review list returned no manage-backed reviews.");
   }
-  const proofPackId = outcomeReviewItems.find((item) => item?.proof_pack_id)?.proof_pack_id;
+  const proofPackSourceReview = outcomeReviewItems.find((item) => item?.rebalance_run_id);
+  const rebalanceRunId = readString(proofPackSourceReview?.rebalance_run_id);
+  if (!rebalanceRunId) {
+    throw new Error("DPM outcome-review list returned no rebalance-run reference for proof-pack generation.");
+  }
+  const generatedProofPack = await postJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs`,
+    "Generate DPM proof-pack evidence",
+    timeoutMs,
+    {
+      idempotency_key: `live-canonical-proof-pack-${rebalanceRunId}`,
+      body: {
+        source_type: "REBALANCE_RUN",
+        rebalance_run_id: rebalanceRunId,
+        mandate_id: readString(proofPackSourceReview?.mandate_id) ?? undefined,
+        include_markdown: true,
+        include_report_input: true,
+        include_ai_evidence_input: true,
+        actor_id: "workbench-live-validator",
+        reason: "Canonical Workbench live validation generated an RFC-0040 proof pack from Gateway truth.",
+      },
+    }
+  );
+  const proofPackId = extractGeneratedProofPackId(generatedProofPack);
   if (!proofPackId) {
-    throw new Error("DPM outcome-review list returned no proof-pack reference.");
+    throw new Error("DPM proof-pack generation returned no proof-pack reference.");
   }
   const proofPack = await fetchJson(
     summary,

@@ -323,7 +323,11 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("DPM Command Center");
     expect(browserWorkflowModule).toContain("DPM attention queue");
     expect(browserWorkflowModule).toContain("DPM mandate health dimensions");
+    expect(script).toContain("Generate DPM proof-pack evidence");
+    expect(script).toContain("live-canonical-proof-pack");
+    expect(script).toContain("source_type: \"REBALANCE_RUN\"");
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
+    expect(browserWorkflowModule).toContain("Proof-pack generation completed through Gateway.");
     expect(browserWorkflowModule).toContain("resolveRegistryRoute");
     expect(browserWorkflowModule).toContain("assertRailModeActive");
     expect(browserWorkflowModule).toContain("tableByExactLabel");

@@ -169,7 +169,7 @@ describe("WorkbenchPage", () => {
                     state: "READY",
                     portfolio_id: "PF_1001",
                     rebalance_run_id: "run_001",
-                    proof_pack_id: "ppack_1",
+                    proof_pack_id: "dpp_rfc0042_1",
                     expected_snapshot_hash: "sha256:expected",
                     realized_snapshot_hash: "sha256:realized",
                     dimension_results: [
@@ -264,8 +264,8 @@ describe("WorkbenchPage", () => {
       "Source Readiness Blocked"
     );
     expect(screen.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeInTheDocument();
-    expect(screen.getByText("investment_policy")).toBeInTheDocument();
-    expect(screen.getAllByText("sha256:proof-pack").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Proof-pack evidence is unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Generate proof pack" })).toBeEnabled();
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);
