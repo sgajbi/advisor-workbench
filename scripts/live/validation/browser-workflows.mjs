@@ -98,6 +98,10 @@ function tableByExactLabel(page, label) {
   return page.locator(`table[aria-label="${label}"]`);
 }
 
+function workbenchPanelByClass(page, className) {
+  return page.locator(`article.${className}`).first();
+}
+
 export async function validatePortfolioPanels(
   page,
   {
@@ -378,7 +382,7 @@ export async function validateOutcomeReviewPanel(
     waitUntil: "networkidle",
     timeout: timeoutMs,
   });
-  const outcomeReviewPanel = page.getByRole("group", { name: "Post-Trade Outcome Review" });
+  const outcomeReviewPanel = workbenchPanelByClass(page, "outcome-review-panel");
   await expect(
     outcomeReviewPanel.getByRole("heading", { name: "Post-Trade Outcome Review" })
   ).toBeVisible({
@@ -456,7 +460,7 @@ export async function validateProofPackPanel(
     waitUntil: "networkidle",
     timeout: timeoutMs,
   });
-  const proofPackPanel = page.getByRole("group", { name: "Proof-Pack Evidence" });
+  const proofPackPanel = workbenchPanelByClass(page, "proof-pack-panel");
   await expect(proofPackPanel.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeVisible({
     timeout: timeoutMs,
   });

@@ -338,6 +338,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("resolveRegistryRoute");
     expect(browserWorkflowModule).toContain("assertRailModeActive");
     expect(browserWorkflowModule).toContain("tableByExactLabel");
+    expect(browserWorkflowModule).toContain("workbenchPanelByClass");
+    expect(browserWorkflowModule).toContain('workbenchPanelByClass(page, "outcome-review-panel")');
+    expect(browserWorkflowModule).toContain('workbenchPanelByClass(page, "proof-pack-panel")');
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Observation Trail");
     expect(browserWorkflowModule).toContain('outcomeReviewPanel.getByText("Report Input", { exact: true })');
@@ -349,6 +352,8 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("/^Performance Overview/");
     expect(browserWorkflowModule).toContain("/^Performance Analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
+    expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Post-Trade Outcome Review"');
+    expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Proof-Pack Evidence"');
     expect(browserWorkflowModule).not.toContain('getByRole("tab", { name: "Summary"');
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
