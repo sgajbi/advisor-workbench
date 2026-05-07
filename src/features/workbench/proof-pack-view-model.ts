@@ -61,10 +61,10 @@ export function deriveProofPackContext(
   outcomeReviews: DpmOutcomeReviewGatewayResponse | null
 ): ProofPackContext {
   const review = extractOutcomeReviewRecords(outcomeReviews?.data ?? {}).find(
-    (record) => readString(record, "proof_pack_id") || readString(record, "rebalance_run_id")
+    (record) => readString(record, "rebalance_run_id")
   );
   return {
-    proofPackId: review ? readString(review, "proof_pack_id") || null : null,
+    proofPackId: null,
     rebalanceRunId: review ? readString(review, "rebalance_run_id") || null : null,
     mandateId: review ? readString(review, "mandate_id") || null : null,
   };

@@ -311,14 +311,16 @@ canonical screenshots, accessibility checks, and live validation pass.
 
 Implementation note as of 2026-05-07: the first RFC-0040 proof-pack review realization is embedded
 in `/workbench/{portfolioId}` using Gateway `/api/v1/dpm/command-center/proof-packs*`.
-Workbench derives the launch context from Gateway outcome-review proof-pack and rebalance-run
-references, can trigger Gateway proof-pack generation for the linked run, and renders
+Workbench derives the launch context from Gateway outcome-review rebalance-run references and can
+trigger Gateway proof-pack generation for the linked run. Outcome-review proof ids such as
+RFC-0042 `dpp_*` references are not treated as RFC-0040 proof-pack ids. Workbench renders
 Gateway/manage proof-pack identity, status, content hash, section states, source hashes, Markdown
-availability, report-input readiness, and AI-evidence readiness. Browser code does not rebuild
-proof-pack sections, compute hashes, synthesize Markdown, construct report input, construct AI
-evidence, construct prompts, materialize reports, or call `lotus-manage`, `lotus-report`, or
-`lotus-ai` directly. The live canonical validator now registers the `dpm.proof_pack` panel against
-the governed Workbench panel registry.
+availability, report-input readiness, and AI-evidence readiness only after Gateway returns the
+generated proof-pack payload. Browser code does not rebuild proof-pack sections, compute hashes,
+synthesize Markdown, construct report input, construct AI evidence, construct prompts, materialize
+reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly. The live canonical
+validator now generates an RFC-0040 proof pack from the Gateway-linked rebalance run before
+registering the `dpm.proof_pack` panel against the governed Workbench panel registry.
 
 ### 7.0B Rebalance Wave Command Center Addendum
 

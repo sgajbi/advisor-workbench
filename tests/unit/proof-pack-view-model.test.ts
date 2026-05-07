@@ -106,7 +106,7 @@ describe("proof pack view model", () => {
         items: [
           {
             outcome_review_id: "or_1",
-            proof_pack_id: "ppack_1",
+            proof_pack_id: "dpp_rfc0042_1",
             rebalance_run_id: "rr_1",
             mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
           },
@@ -115,7 +115,7 @@ describe("proof pack view model", () => {
     };
 
     expect(deriveProofPackContext(outcomeReviews)).toEqual({
-      proofPackId: "ppack_1",
+      proofPackId: null,
       rebalanceRunId: "rr_1",
       mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
     });
