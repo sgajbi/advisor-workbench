@@ -79,13 +79,9 @@ const readyProofPack: DpmProofPackGatewayResponse = {
           content_hash: "sha256:policy",
         },
       ],
-      source_hashes: [
-        {
-          source_service: "lotus-risk",
-          source_ref: "risk_snapshot_1",
-          hash: "sha256:risk",
-        },
-      ],
+      source_hashes: {
+        risk_snapshot_1: "sha256:risk",
+      },
     },
   },
 };
