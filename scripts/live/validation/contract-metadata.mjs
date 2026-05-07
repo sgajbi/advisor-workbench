@@ -164,6 +164,19 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       ownerFollowUpRfc: "RFC-0098",
     },
+    {
+      panelId: "dpm.wave_command_center",
+      owningService: "lotus-manage",
+      gatewayEndpoint: "/api/v1/dpm/command-center/waves",
+      requiredSupportState: "ready",
+      route: "/workbench/{portfolioId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "dpm-wave-command-center-live.png",
+      knownLimitations: [
+        "embedded /workbench/{portfolioId} panel is implemented before the dedicated /dpm/waves workspace",
+      ],
+      ownerFollowUpRfc: "RFC-0098",
+    },
   ],
 };
 

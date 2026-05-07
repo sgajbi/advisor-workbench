@@ -230,6 +230,66 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.proof-pack.ai-evidence",
   },
   {
+    route: "workbench.dpm-command-center",
+    panel: "wave-list",
+    operation: "dpm.waves.list",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-preview",
+    operation: "dpm.waves.preview",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-create",
+    operation: "dpm.waves.create",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-detail",
+    operation: "dpm.waves.get",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-items",
+    operation: "dpm.waves.items",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-source-check",
+    operation: "dpm.waves.source-check",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-simulate",
+    operation: "dpm.waves.simulate",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-approve",
+    operation: "dpm.waves.approve",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-stage",
+    operation: "dpm.waves.stage",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-handoff",
+    operation: "dpm.waves.handoff",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-proof-pack",
+    operation: "dpm.waves.proof-pack",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-supportability",
+    operation: "dpm.waves.supportability",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

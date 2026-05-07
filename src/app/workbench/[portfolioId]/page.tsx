@@ -4,6 +4,7 @@ import {
   getDpmMandateByPortfolio,
   getDpmMandateHealth,
   getDpmOutcomeReviews,
+  listDpmWaves,
   getPortfolio360,
   getReportingSnapshot,
   getWorkbenchAnalytics,
@@ -25,6 +26,7 @@ import ConstructionAlternativesPanel from "@/features/workbench/components/const
 import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
 import DecisionReadinessPanel from "@/features/workbench/components/decision-readiness-panel";
 import DpmCommandCenterPanel from "@/features/workbench/components/dpm-command-center-panel";
+import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
 import ExceptionQueue from "@/features/workbench/components/exception-queue";
 import OverviewCards from "@/features/workbench/components/overview-cards";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
@@ -86,6 +88,8 @@ export default async function WorkbenchPage({
   let dpmMandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null = null;
   let dpmMandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
   let dpmCommandCenterError: string | null = null;
+  let dpmWaves: Awaited<ReturnType<typeof listDpmWaves>> | null = null;
+  let dpmWavesError: string | null = null;
   let outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null = null;
   let outcomeReviewError: string | null = null;
   try {
@@ -163,6 +167,17 @@ export default async function WorkbenchPage({
   } catch {
     dpmMandate = null;
     dpmMandateHealth = null;
+  }
+
+  try {
+    dpmWaves = await listDpmWaves({
+      triggerType: "EXPLICIT_PORTFOLIO_LIST",
+      limit: 10,
+    });
+  } catch (error) {
+    dpmWaves = null;
+    dpmWavesError =
+      error instanceof Error ? error.message : "DPM wave endpoint unavailable.";
   }
 
   try {
@@ -305,6 +320,12 @@ export default async function WorkbenchPage({
               />
 
               <ConstructionAlternativesPanel portfolio={data} />
+
+              <DpmWaveCommandCenterPanel
+                portfolioId={data.portfolio.portfolio_id}
+                waveList={dpmWaves}
+                errorMessage={dpmWavesError}
+              />
 
               <ProofPackPanel
                 portfolioId={data.portfolio.portfolio_id}

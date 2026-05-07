@@ -20,6 +20,7 @@ import {
   DpmOutcomeReviewNarrativeResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
+  DpmWaveGatewayResponse,
   ReportJobHandleResponse,
   ReportBatchHandleResponse,
   ReportBatchStatusResponse,
@@ -48,6 +49,8 @@ import {
 
 const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
 type WorkbenchRequestTarget = ServiceRequestTarget;
+type WorkbenchObservedOperation =
+  (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"];
 
 export class WorkbenchApiError extends Error {
   readonly status: number;
@@ -158,7 +161,7 @@ function withJsonMutationHeaders(init: RequestInit): RequestInit {
 }
 
 function observedSurface(
-  operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"]
+  operation: WorkbenchObservedOperation
 ): WorkbenchAnalyticsUiObservationContext {
   return WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.find(
     (surface) => surface.operation === operation
@@ -166,7 +169,7 @@ function observedSurface(
 }
 
 async function observeWorkbenchResource<T>(
-  operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
+  operation: WorkbenchObservedOperation,
   request: () => Promise<T>,
   options?: WorkbenchAnalyticsUiObservationOptions
 ): Promise<T> {
@@ -178,7 +181,7 @@ async function observeWorkbenchResource<T>(
 }
 
 async function observeWorkbenchMutation<T>(
-  operation: (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
+  operation: WorkbenchObservedOperation,
   request: () => Promise<T>
 ): Promise<T> {
   return await observeWorkbenchResource(operation, request, {
@@ -952,6 +955,219 @@ export async function getDpmOutcomeReviews(params: {
   );
 }
 
+export async function listDpmWaves(params?: {
+  state?: string;
+  triggerType?: string;
+  asOfDate?: string;
+  supportabilityState?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmWaveGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("trigger_type", params?.triggerType ?? "EXPLICIT_PORTFOLIO_LIST");
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.state) {
+    query.set("state", params.state);
+  }
+  if (params?.supportabilityState) {
+    query.set("supportability_state", params.supportabilityState);
+  }
+  return await observeWorkbenchResource(
+    "dpm.waves.list",
+    async () =>
+      await fetchWorkbenchResource<DpmWaveGatewayResponse>(
+        "server",
+        "/dpm/command-center/waves",
+        "DPM rebalance waves",
+        query
+      )
+  );
+}
+
+export async function previewDpmWave(params: {
+  portfolioId: string;
+  asOfDate?: string;
+  actorId?: string;
+  rationale?: string;
+}): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.waves.preview",
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/waves/preview"),
+        "preview DPM rebalance wave",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(params.actorId),
+          body: JSON.stringify({
+            body: buildExplicitPortfolioWaveBody(params),
+          }),
+        }
+      )
+  );
+}
+
+export async function createDpmWave(params: {
+  portfolioId: string;
+  asOfDate?: string;
+  actorId?: string;
+  rationale?: string;
+}): Promise<DpmWaveGatewayResponse> {
+  const body = buildExplicitPortfolioWaveBody(params);
+  return await observeWorkbenchMutation(
+    "dpm.waves.create",
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/waves"),
+        "create DPM rebalance wave",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(params.actorId),
+          body: JSON.stringify({
+            idempotency_key: [
+              "workbench-wave",
+              params.portfolioId,
+              body.as_of_date,
+            ].join("-"),
+            body,
+          }),
+        }
+      )
+  );
+}
+
+export async function getDpmWave(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.get",
+    async () =>
+      await fetchWorkbenchResource<DpmWaveGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/${encodeURIComponent(waveId)}`,
+        "DPM rebalance wave"
+      )
+  );
+}
+
+export async function getDpmWaveItems(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.items",
+    async () =>
+      await fetchWorkbenchResource<DpmWaveGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/${encodeURIComponent(waveId)}/items`,
+        "DPM rebalance wave items"
+      )
+  );
+}
+
+export async function sourceCheckDpmWave(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.waves.source-check",
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/${encodeURIComponent(waveId)}/source-check`
+        ),
+        "source-check DPM rebalance wave",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(),
+          body: JSON.stringify({
+            body: {
+              actor_id: resolveDefaultCallerContext().actorId,
+            },
+          }),
+        }
+      )
+  );
+}
+
+export async function simulateDpmWave(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.waves.simulate",
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/${encodeURIComponent(waveId)}/simulate`
+        ),
+        "simulate DPM rebalance wave",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(),
+          body: JSON.stringify({
+            body: {
+              actor_id: resolveDefaultCallerContext().actorId,
+              methods: ["DO_NOTHING_BASELINE", "HEURISTIC_EXPLAINABLE", "MIN_TURNOVER"],
+            },
+          }),
+        }
+      )
+  );
+}
+
+export async function approveDpmWave(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await runDpmWaveWorkflowAction(
+    waveId,
+    "approve",
+    "dpm.waves.approve",
+    "approve DPM rebalance wave",
+    buildDpmWaveWorkflowBody("PM_APPROVED_AFTER_PROOF_REVIEW")
+  );
+}
+
+export async function stageDpmWave(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await runDpmWaveWorkflowAction(
+    waveId,
+    "stage",
+    "dpm.waves.stage",
+    "stage DPM rebalance wave",
+    buildDpmWaveWorkflowBody("READY_FOR_INTERNAL_OPERATIONS")
+  );
+}
+
+export async function handoffDpmWave(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await runDpmWaveWorkflowAction(
+    waveId,
+    "handoff",
+    "dpm.waves.handoff",
+    "handoff DPM rebalance wave",
+    buildDpmWaveWorkflowBody("INTERNAL_HANDOFF_READY")
+  );
+}
+
+export async function getDpmWaveProofPackPosture(
+  waveId: string
+): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.proof-pack",
+    async () =>
+      await fetchWorkbenchResource<DpmWaveGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/${encodeURIComponent(waveId)}/proof-pack`,
+        "DPM rebalance wave proof-pack posture"
+      )
+  );
+}
+
+export async function getDpmWaveSupportability(
+  waveId: string
+): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.supportability",
+    async () =>
+      await fetchWorkbenchResource<DpmWaveGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/${encodeURIComponent(waveId)}/supportability`,
+        "DPM rebalance wave supportability"
+      )
+  );
+}
+
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];
@@ -1309,6 +1525,81 @@ function buildDpmProofPackCallerHeaders(params: {
     "X-Caller-Application": "lotus-workbench",
     "X-Correlation-Id": params.correlationId,
   };
+}
+
+function buildDpmWaveCallerHeaders(actorId?: string): Record<string, string> {
+  const callerContext = resolveDefaultCallerContext();
+  return {
+    "Content-Type": "application/json",
+    "X-Actor-Id": actorId ?? callerContext.actorId,
+    "X-Caller-Application": "lotus-workbench",
+    "X-Correlation-Id": "corr-workbench-dpm-wave",
+  };
+}
+
+function buildExplicitPortfolioWaveBody(params: {
+  portfolioId: string;
+  asOfDate?: string;
+  actorId?: string;
+  rationale?: string;
+}): {
+  trigger_type: string;
+  trigger_id: string;
+  rationale: string;
+  as_of_date: string;
+  actor_id: string;
+  portfolios: Array<{ portfolio_id: string }>;
+} {
+  const dpmContext = resolveDefaultDpmContext();
+  const callerContext = resolveDefaultCallerContext();
+  const asOfDate = params.asOfDate ?? dpmContext.commandCenterAsOfDate;
+  return {
+    trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+    trigger_id: `workbench-wave-${params.portfolioId}-${asOfDate}`,
+    rationale:
+      params.rationale ??
+      "Workbench PM requested a Gateway-backed explicit portfolio-list rebalance wave.",
+    as_of_date: asOfDate,
+    actor_id: params.actorId ?? callerContext.actorId,
+    portfolios: [{ portfolio_id: params.portfolioId }],
+  };
+}
+
+function buildDpmWaveWorkflowBody(reasonCode: string): {
+  actor_id: string;
+  reason_code: string;
+  comment: string;
+} {
+  return {
+    actor_id: resolveDefaultCallerContext().actorId,
+    reason_code: reasonCode,
+    comment: "Workbench Gateway-backed rebalance-wave command-center action.",
+  };
+}
+
+async function runDpmWaveWorkflowAction(
+  waveId: string,
+  actionPath: "approve" | "stage" | "handoff",
+  operation: WorkbenchObservedOperation,
+  label: string,
+  body: Record<string, unknown>
+): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchMutation(
+    operation,
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/${encodeURIComponent(waveId)}/${actionPath}`
+        ),
+        label,
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(),
+          body: JSON.stringify({ body }),
+        }
+      )
+  );
 }
 
 function buildConstructionAlternativeSetRequest(

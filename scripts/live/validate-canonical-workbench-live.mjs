@@ -21,6 +21,7 @@ import {
   createBrowserValidationHelpers,
   validateAdvisorBriefPanel,
   validateDpmCommandCenterPanel,
+  validateDpmWaveCommandCenterPanel,
   validateEvidencePanel,
   validatePerformanceAnalysisPanel,
   validatePerformanceSummaryPanel,
@@ -81,6 +82,10 @@ async function fetchOptionalJson(description, url) {
 
 function readString(value) {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function readSupportabilityState(supportability) {
+  return readString(supportability?.state) || readString(supportability?.supportability_state);
 }
 
 function extractGeneratedProofPackId(response) {
@@ -414,6 +419,48 @@ async function run() {
     }
   }
 
+  const dpmWaveParams = new URLSearchParams({
+    trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+    as_of_date: dpmCommandCenterDefaults.asOfDate,
+    limit: "10",
+    offset: "0",
+  });
+  const dpmWaves = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves?${dpmWaveParams.toString()}`,
+    "DPM rebalance waves",
+    timeoutMs
+  );
+  const dpmWaveSupportability = dpmWaves?.supportability;
+  if (!readSupportabilityState(dpmWaveSupportability)) {
+    throw new Error("DPM rebalance-wave list returned no manage supportability state.");
+  }
+  const dpmWavePreview = await postJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
+    "DPM rebalance-wave preview",
+    timeoutMs,
+    {
+      body: {
+        trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+        trigger_id: `live-validation-wave-${portfolioId}-${dpmCommandCenterDefaults.asOfDate}`,
+        rationale: "Canonical Workbench live validation previewed an RFC-0041 rebalance wave.",
+        as_of_date: dpmCommandCenterDefaults.asOfDate,
+        actor_id: "workbench-system",
+        portfolios: [{ portfolio_id: portfolioId }],
+      },
+    }
+  );
+  const dpmWavePreviewSupportability = dpmWavePreview?.supportability;
+  const dpmWavePreviewSupportabilityState = readSupportabilityState(dpmWavePreviewSupportability);
+  if (dpmWavePreviewSupportabilityState?.toLowerCase() !== "ready") {
+    throw new Error(
+      `DPM rebalance-wave preview did not return ready manage supportability; observed ${
+        dpmWavePreviewSupportabilityState ?? "missing"
+      }.`
+    );
+  }
+
   const reportCapabilities = await fetchJson(
     summary,
     "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default",
@@ -476,6 +523,10 @@ async function run() {
   panelGovernance.recordPanelClassification("dpm.command_center", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     source: "Gateway DPM command-center summary",
+  });
+  panelGovernance.recordPanelClassification("dpm.wave_command_center", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}`,
+    source: "Gateway DPM rebalance-wave composition",
   });
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();
@@ -579,6 +630,12 @@ async function run() {
       portfolioId,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateDpmWaveCommandCenterPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
   } finally {

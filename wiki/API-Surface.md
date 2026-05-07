@@ -45,10 +45,15 @@ promote dormant labels into product ownership just because historical route file
   Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations. The
   coverage registry is code-backed and tested so active product surfaces cannot silently drift
   outside bounded route/panel/operation metrics.
-- RFC-0098 now defines the future DPM rebalance-wave workspace. It is not an active supported
-  route yet; promotion requires Gateway `/api/v1/dpm/command-center/waves*` implementation,
-  Workbench BFF/browser implementation, canonical `PB_SG_GLOBAL_BAL_001` live validation, visual
-  and accessibility evidence, and implementation-backed wiki/support wording.
+- RFC-0098/RFC-0041 rebalance-wave command-center rendering is implemented on
+  `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/waves*`. Workbench loads
+  the explicit portfolio-list wave queue, previews and creates canonical portfolio waves, opens
+  wave detail and item posture, and sends source-check, simulation, approval, staging, handoff,
+  proof-posture, and supportability actions through Gateway. It renders manage-owned wave
+  lifecycle, item state, source-readiness state, supportability, proof-pack refs, handoff refs, and
+  `external_execution_claimed` posture without direct `lotus-manage` calls or local readiness
+  calculation. Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, CIO
+  workflow, and external OMS execution remain future scope until separately implemented and proven.
 - RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center`,
   `/api/v1/dpm/command-center/monitoring/run-once`,
@@ -125,7 +130,7 @@ Data products:
 http://workbench.dev.lotus/data-products
 ```
 
-Workbench construction alternatives, proof-pack evidence, and outcome review:
+Workbench DPM command-center, waves, construction alternatives, proof-pack evidence, and outcome review:
 
 ```txt
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001

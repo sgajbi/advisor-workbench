@@ -75,13 +75,21 @@ Current repository posture:
    manage/core source selector through Gateway, preserves manage-owned alternatives,
    supportability, objective/constraint traces, and selected-alternative state, and must not build
    stateless source bundles, optimizer logic, prices, or selection truth in the browser,
-11. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
+11. `/workbench/{portfolioId}` renders the RFC-0041 DPM rebalance-wave command-center panel
+   through Gateway `/api/v1/dpm/command-center/waves*`. Workbench lists explicit portfolio-list
+   waves, previews and creates canonical portfolio waves, opens wave detail and item posture, and
+   sends source-check and simulation through Gateway only. It preserves manage-owned wave state,
+   item state, source-readiness state, supportability, aggregate metrics, proof-pack refs,
+   handoff refs, blocked actions, and `external_execution_claimed` posture without calling
+   `lotus-manage` directly, calculating readiness, claiming external execution, or inferring
+   PM-book discovery.
+12. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
    supportability and portfolio-level DPM operations posture from the portfolio overview
    `rebalance_snapshot`, including source state, freshness, run count, operation count, workflow
    decision count, last-run identity, bounded recent runs, workflow posture, run issue count, and
    reason posture. Missing Gateway supportability is shown as unknown/N/A rather than as verified
    zero activity.
-12. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+13. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
@@ -197,6 +205,10 @@ Important validation expectations:
     operation, freshness, supportability, status class, and error category; proof-pack ids,
     rebalance run ids, mandate ids, portfolio ids, content hashes, source hashes, request bodies,
     response bodies, and screen content must never be emitted as metric labels.
+14. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
+    labels must remain bounded to route, panel, operation, freshness, supportability, status class,
+    and error category; wave ids, wave item ids, portfolio ids, proof-pack ids, handoff refs,
+    request bodies, response bodies, and screen content must never be emitted as metric labels.
 
 ### Visual Review Gate
 

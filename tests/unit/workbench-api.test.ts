@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  approveDpmWave,
   applySandboxChanges,
   buildArchivedDocumentDownloadUrl,
   createPortfolioReportBatch,
@@ -19,6 +20,13 @@ import {
   getDpmProofPackAiEvidenceInput,
   getDpmProofPackMarkdown,
   getDpmProofPackReportInput,
+  getDpmWave,
+  getDpmWaveItems,
+  getDpmWaveProofPackPosture,
+  getDpmWaveSupportability,
+  handoffDpmWave,
+  listDpmWaves,
+  previewDpmWave,
   requestDpmOutcomeReviewAiNarrative,
   getArchivedDocumentMetadata,
   getPortfolio360,
@@ -41,8 +49,12 @@ import {
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
   runReportBatchOnce,
   runDpmCommandCenterMonitoring,
+  simulateDpmWave,
   selectDpmConstructionAlternative,
+  sourceCheckDpmWave,
+  stageDpmWave,
   submitDpmOutcomeReviewReportJob,
+  createDpmWave,
 } from "../../src/features/workbench/api";
 import type { WorkbenchPortfolio360 } from "../../src/features/workbench/types";
 import {
@@ -1891,6 +1903,151 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("mandate-command-center-health");
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(metricEventsJson).not.toContain("MANDATE_PB_SG_GLOBAL_BAL_001");
+  });
+
+  it("loads DPM rebalance waves through Gateway without leaking wave identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-wave-list",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0041",
+              state: "ready",
+              reason_codes: ["wave_supportability_ready"],
+              blocked_actions: [],
+              wave_id: "dwv_001",
+              wave_state: "HANDOFF_READY",
+              item_count: 1,
+              issue_count: 0,
+            },
+            data: { items: [{ wave_id: "dwv_001", state: "HANDOFF_READY" }] },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await listDpmWaves({
+      triggerType: "EXPLICIT_PORTFOLIO_LIST",
+      asOfDate: "2026-05-03",
+      supportabilityState: "ready",
+      limit: 10,
+      offset: 0,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/waves?trigger_type=EXPLICIT_PORTFOLIO_LIST&as_of_date=2026-05-03&limit=10&offset=0&supportability_state=ready"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-list");
+    expect(metricEventsJson).not.toContain("dwv_001");
+  });
+
+  it("previews, creates, reviews, actions, and inspects DPM waves through Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-wave",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0041",
+              state: "ready",
+              reason_codes: ["wave_supportability_ready"],
+              blocked_actions: [],
+              wave_id: "dwv_001",
+              wave_state: "SOURCE_CHECKED",
+              item_count: 1,
+              issue_count: 0,
+            },
+            data: { wave: { wave_id: "dwv_001", state: "SOURCE_CHECKED" } },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await previewDpmWave({ portfolioId: "PB_SG_GLOBAL_BAL_001", actorId: "pm_1" });
+    await createDpmWave({ portfolioId: "PB_SG_GLOBAL_BAL_001", actorId: "pm_1" });
+    await getDpmWave("dwv_001");
+    await getDpmWaveItems("dwv_001");
+    await sourceCheckDpmWave("dwv_001");
+    await simulateDpmWave("dwv_001");
+    await approveDpmWave("dwv_001");
+    await stageDpmWave("dwv_001");
+    await handoffDpmWave("dwv_001");
+    await getDpmWaveProofPackPosture("dwv_001");
+    await getDpmWaveSupportability("dwv_001");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/preview`);
+    expect(fetchMock.mock.calls[1][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves`);
+    expect(fetchMock.mock.calls[2][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001`);
+    expect(fetchMock.mock.calls[3][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/items`);
+    expect(fetchMock.mock.calls[4][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/source-check`);
+    expect(fetchMock.mock.calls[5][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/simulate`);
+    expect(fetchMock.mock.calls[6][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/approve`);
+    expect(fetchMock.mock.calls[7][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/stage`);
+    expect(fetchMock.mock.calls[8][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/handoff`);
+    expect(fetchMock.mock.calls[9][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/proof-pack`);
+    expect(fetchMock.mock.calls[10][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/supportability`);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      body: {
+        trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+        trigger_id: "workbench-wave-PB_SG_GLOBAL_BAL_001-2026-05-03",
+        rationale: "Workbench PM requested a Gateway-backed explicit portfolio-list rebalance wave.",
+        as_of_date: "2026-05-03",
+        actor_id: "pm_1",
+        portfolios: [{ portfolio_id: "PB_SG_GLOBAL_BAL_001" }],
+      },
+    });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).idempotency_key).toBe(
+      "workbench-wave-PB_SG_GLOBAL_BAL_001-2026-05-03"
+    );
+    expect(JSON.parse(fetchMock.mock.calls[4][1].body).body).toMatchObject({
+      actor_id: "workbench-system",
+    });
+    expect(JSON.parse(fetchMock.mock.calls[5][1].body).body).toMatchObject({
+      actor_id: "workbench-system",
+      methods: ["DO_NOTHING_BASELINE", "HEURISTIC_EXPLAINABLE", "MIN_TURNOVER"],
+    });
+    expect(JSON.parse(fetchMock.mock.calls[6][1].body).body).toMatchObject({
+      actor_id: "workbench-system",
+      reason_code: "PM_APPROVED_AFTER_PROOF_REVIEW",
+    });
+    expect(JSON.parse(fetchMock.mock.calls[7][1].body).body).toMatchObject({
+      actor_id: "workbench-system",
+      reason_code: "READY_FOR_INTERNAL_OPERATIONS",
+    });
+    expect(JSON.parse(fetchMock.mock.calls[8][1].body).body).toMatchObject({
+      actor_id: "workbench-system",
+      reason_code: "INTERNAL_HANDOFF_READY",
+    });
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-preview");
+    expect(metricEventsJson).toContain("wave-create");
+    expect(metricEventsJson).toContain("wave-detail");
+    expect(metricEventsJson).toContain("wave-items");
+    expect(metricEventsJson).toContain("wave-source-check");
+    expect(metricEventsJson).toContain("wave-simulate");
+    expect(metricEventsJson).toContain("wave-approve");
+    expect(metricEventsJson).toContain("wave-stage");
+    expect(metricEventsJson).toContain("wave-handoff");
+    expect(metricEventsJson).toContain("wave-proof-pack");
+    expect(metricEventsJson).toContain("wave-supportability");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("dwv_001");
   });
 
   it("loads DPM outcome reviews through the gateway BFF with portfolio filters", async () => {

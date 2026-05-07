@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; RFC-0038 POPULATED COMMAND-CENTER LIVE PROOF PASSED AFTER WTBD-003 SEED AUTOMATION |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0041 REBALANCE-WAVE PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE PROOF PENDING |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -25,6 +25,12 @@ and command-center summary, classifies `dpm.command_center` as `ready`, and capt
 DPM command-center screenshot under `output/playwright/live-canonical/`. Workbench still preserves
 `seed_gap` for non-populated environments, but the governed canonical portfolio path is no longer
 gap-coded.
+
+RFC41-WTBD-006 implementation is now in progress on the
+`wtbd-rfc41-workbench-wave-command-center` branch. The first Workbench wave command-center panel is
+embedded in `/workbench/{portfolioId}` and consumes Gateway
+`/api/v1/dpm/command-center/waves*` routes only. Promotion remains pending focused CI, canonical
+front-office proof, PR merge, wiki publication, and Manage WTBD closure.
 
 ---
 
@@ -413,10 +419,23 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/stage` | staging action |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/handoff` | internal operations handoff action |
 
-Supported-feature promotion is forbidden until Gateway implementation is merged, Workbench BFF and
-browser implementation is complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual
-and accessibility evidence is captured, screenshots are reviewed for layout/state correctness, and
-the wiki/supported-feature material is updated with implementation-backed wording.
+Implementation note as of 2026-05-07: the first RFC-0041 rebalance-wave command-center
+realization is embedded in `/workbench/{portfolioId}` through Gateway
+`/api/v1/dpm/command-center/waves*`. Workbench loads the explicit portfolio-list wave queue,
+previews and creates canonical portfolio waves, opens wave detail and item posture, and calls
+source-check, simulation, approval, staging, handoff, proof-posture, and supportability through the
+Workbench BFF/Gateway boundary. The panel renders manage-owned wave id, lifecycle state, item
+count, issue count, supportability reason codes, blocked actions, aggregate metrics, item states,
+source-readiness state, alternative refs, proof-pack refs, handoff refs, and
+`external_execution_claimed` posture without direct `lotus-manage` calls or client-side readiness
+calculation. Item-selection drawers, richer supportability drawers, dedicated `/dpm/waves` routes,
+PM-book discovery, CIO approval workflow, and external OMS execution remain future scope until
+Gateway/Manage and Workbench proof promote them.
+
+Supported-feature promotion is forbidden until the Workbench BFF and browser implementation is
+complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual and accessibility
+evidence is captured, screenshots are reviewed for layout/state correctness, and the
+wiki/supported-feature material is updated with implementation-backed wording.
 
 ### 7.0C Post-Trade Outcome Review Workspace Addendum
 
