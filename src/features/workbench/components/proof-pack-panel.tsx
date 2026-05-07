@@ -16,6 +16,7 @@ import {
   getDpmProofPackAiEvidenceInput,
   getDpmProofPackMarkdown,
   getDpmProofPackReportInput,
+  requestDpmProofPackAiPmMemo,
 } from "@/features/workbench/api";
 import type {
   DpmOutcomeReviewGatewayResponse,
@@ -184,6 +185,16 @@ export default function ProofPackPanel({
     });
   }
 
+  function requestAiPmMemo() {
+    if (!proofPackId) {
+      return;
+    }
+    void runAction("Request AI PM Memo", async () => {
+      const response = await requestDpmProofPackAiPmMemo({ proofPackId });
+      setHandoffStatus(`PM memo ${readAiWorkflowPackStatus(response.data)}.`);
+    });
+  }
+
   return (
     <SectionBlock
       title="Proof-Pack Evidence"
@@ -245,6 +256,13 @@ export default function ProofPackPanel({
         >
           AI Evidence
         </ActionButton>
+        <ActionButton
+          priority="secondary"
+          onClick={requestAiPmMemo}
+          disabled={!proofPackId || !model.aiEvidenceInputAvailable || Boolean(pendingAction)}
+        >
+          {pendingAction === "Request AI PM Memo" ? "Requesting memo" : "AI PM Memo"}
+        </ActionButton>
       </div>
 
       {actionError || handoffStatus ? (
@@ -253,7 +271,7 @@ export default function ProofPackPanel({
         </Text>
       ) : (
         <Text variant="secondary" className="muted">
-          Shows Gateway-composed proof-pack identity, sections, hashes, Markdown, report-input, and AI-evidence posture.
+          Shows Gateway-composed proof-pack identity, sections, hashes, Markdown, report-input, AI-evidence, and AI memo posture.
         </Text>
       )}
 
@@ -345,4 +363,31 @@ function readMarkdown(response: DpmProofPackGatewayResponse & { markdown?: unkno
     return response.data.content;
   }
   return "Gateway returned no Markdown content for this proof pack.";
+}
+
+function readAiWorkflowPackStatus(data: Record<string, unknown>): string {
+  const workflowPackRun = readRecord(data.workflow_pack_run);
+  const runId = readString(workflowPackRun.run_id);
+  const reviewState = readString(workflowPackRun.review_state);
+  if (runId && reviewState) {
+    return `${reviewState} (${runId})`;
+  }
+  if (runId) {
+    return `requested (${runId})`;
+  }
+
+  const execution = readRecord(data.execution);
+  const audit = readRecord(execution.audit);
+  const auditRunId = readString(audit.workflow_pack_run_id);
+  return auditRunId ? `requested (${auditRunId})` : "request submitted through Gateway";
+}
+
+function readRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
 }

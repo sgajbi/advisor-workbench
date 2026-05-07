@@ -231,6 +231,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.dpm-command-center",
+    panel: "proof-pack-ai-pm-memo",
+    operation: "dpm.proof-pack.ai-pm-memo",
+  },
+  {
+    route: "workbench.dpm-command-center",
     panel: "wave-list",
     operation: "dpm.waves.list",
   },

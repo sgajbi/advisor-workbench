@@ -74,15 +74,16 @@ promote dormant labels into product ownership just because historical route file
 - RFC-0098/RFC-0040 proof-pack evidence rendering is implemented on `/workbench/{portfolioId}`
   through Gateway `/api/v1/dpm/command-center/proof-packs*`. Workbench renders manage-owned
   proof-pack id, status, content hash, section states, source hashes, Markdown availability,
-  report-input readiness, and AI-evidence readiness. Browser code may trigger Gateway proof-pack
-  generation from the manage rebalance run surfaced by the Gateway Workbench rebalance snapshot and
-  load Gateway-provided Markdown/report/AI evidence payload posture; it does not treat RFC-0042
+  report-input readiness, AI-evidence readiness, and Gateway/lotus-ai PM memo workflow-pack
+  posture. Browser code may trigger Gateway proof-pack generation from the manage rebalance run
+  surfaced by the Gateway Workbench rebalance snapshot, load Gateway-provided Markdown/report/AI
+  evidence payload posture, and request the governed PM memo through Gateway; it does not treat RFC-0042
   outcome-review `dpp_*` proof ids or expected-snapshot run ids as RFC-0040 proof-pack ids or
   generation sources. Reviewable Manage business states such as `PENDING_REVIEW` remain valid
   populated product evidence when proof-pack identity, sections, hashes/lineage, and handoff posture
   are present. It does not rebuild proof-pack sections, compute hashes, synthesize Markdown,
-  construct report input, construct AI evidence, construct AI prompts, materialize PDF reports, or
-  call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
+  construct report input, construct AI evidence, construct PM memo prompts, materialize PDF
+  reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 - RFC-0098/RFC-0041 action-register supportability is rendered on `/workbench/{portfolioId}` from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow
