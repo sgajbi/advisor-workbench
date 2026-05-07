@@ -1226,6 +1226,28 @@ export type DpmProofPackMarkdownResponse = DpmProofPackGatewayResponse & {
   markdown?: string;
 };
 
+export type DpmWaveSupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  reason_codes: string[];
+  blocked_actions: string[];
+  wave_id?: string | null;
+  wave_state?: string | null;
+  item_count?: number | null;
+  issue_count: number;
+  remediation_owner?: string | null;
+};
+
+export type DpmWaveGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmWaveSupportability;
+  data: Record<string, unknown>;
+};
+
 export type DpmOutcomeReviewNarrativeResponse = {
   correlation_id: string;
   contract_version: string;

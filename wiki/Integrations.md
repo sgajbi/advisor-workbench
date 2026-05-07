@@ -91,10 +91,14 @@ must travel through Gateway-shaped contracts.
     source-refresh posture also remain manage-owned, while AI narrative execution remains
     `lotus-ai` owned; both must reach Workbench through Gateway outcome-review composition only.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
-    contracts, the implemented proof-pack panel consumes the Gateway proof-pack generation,
-    detail, Markdown, report-input, and AI-evidence contracts, and the implemented outcome panel
-    consumes the Gateway outcome-review list and AI-narrative contracts. Workbench must not calculate expected-versus-realized values. It must not rebuild proof-pack sections, compute
-    proof-pack hashes, construct prompts, infer PM quality, or optimize construction alternatives.
+    contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
+    create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture, and
+    supportability contracts, the implemented proof-pack panel consumes the Gateway proof-pack
+    generation, detail, Markdown, report-input, and AI-evidence contracts, and the implemented
+    outcome panel consumes the Gateway outcome-review list and AI-narrative contracts. Workbench
+    must not calculate expected-versus-realized values. It must not rebuild proof-pack sections,
+    compute proof-pack hashes, construct prompts, infer PM quality, calculate wave readiness, claim
+    external execution, or optimize construction alternatives.
 16. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
     `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`
     contracts. Workbench renders manage-owned health distribution, source readiness,
@@ -120,7 +124,7 @@ flowchart TB
   Manage[Strategic DPM proof packs, waves, and outcome reviews]
   Construction[Construction alternatives lab]
   ProofPacks[Proof-pack evidence panel]
-  Waves[Future rebalance-wave workspace]
+  Waves[Rebalance-wave command-center panel]
   Outcomes[Post-trade outcome panel]
   Advise[Advisor-led proposal workflows]
   DpmCenter[DPM command center UI]
@@ -130,6 +134,7 @@ flowchart TB
   Workbench -->|/api/bff/api/v1/dpm/command-center*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/construction/alternative-sets*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/proof-packs*| Gateway
+  Workbench -->|/api/bff/api/v1/dpm/command-center/waves*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/outcome-reviews*| Gateway
   Workbench -->|AI narrative action via Gateway only| Gateway
   DpmCenter --> Waves

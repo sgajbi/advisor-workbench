@@ -16,6 +16,7 @@
 ### Boundaries
 - [Integrations](Integrations)
 - [Security and Governance](Security-and-Governance)
+- [Supported Features](Supported-Features)
 - [RFC Index](RFC-Index)
 - [Roadmap](Roadmap)
 

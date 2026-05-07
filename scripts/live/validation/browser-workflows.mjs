@@ -452,6 +452,48 @@ export async function validateDpmCommandCenterPanel(
   await screenshotRegisteredPanel(page, "dpm.command_center");
 }
 
+export async function validateDpmWaveCommandCenterPanel(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  const wavePanel = workbenchPanelByClass(page, "dpm-wave-command-center-panel");
+  await expect(
+    wavePanel.getByRole("heading", { name: "Rebalance Wave Command Center" })
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByRole("button", { name: "Preview wave" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByRole("button", { name: "Create wave" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  for (const actionName of [
+    "Source-check",
+    "Simulate",
+    "Approve",
+    "Stage",
+    "Handoff",
+    "Proof posture",
+    "Supportability",
+  ]) {
+    await expect(wavePanel.getByRole("button", { name: actionName })).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
+  await wavePanel.getByRole("button", { name: "Preview wave" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Preview wave completed through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await screenshotRegisteredPanel(page, "dpm.wave_command_center");
+}
+
 export async function validateProofPackPanel(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows, screenshotRegisteredPanel }

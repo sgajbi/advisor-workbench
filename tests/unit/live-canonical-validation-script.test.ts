@@ -62,7 +62,8 @@ describe("canonical live validation script", () => {
       expect(script).not.toContain("lotus-manage integration capabilities");
     }
 
-    expect(browserValidator).toContain('supportability?.state !== "ready"');
+    expect(browserValidator).toContain("readSupportabilityState");
+    expect(browserValidator).toContain("DPM rebalance-wave preview did not return ready manage supportability");
     expect(browserValidator).toContain("gatewayModuleHealth.lotus_manage");
     expect(browserValidator).toContain("/api/v1/dpm/command-center?");
     expect(browserValidator).toContain("DPM command-center summary");
