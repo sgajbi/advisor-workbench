@@ -310,6 +310,7 @@ export default async function WorkbenchPage({
                 portfolioId={data.portfolio.portfolio_id}
                 mandateId={dpmMandateId}
                 outcomeReviews={outcomeReviews}
+                rebalanceSnapshot={data.rebalance_snapshot}
                 initialProofPack={null}
                 errorMessage={null}
               />

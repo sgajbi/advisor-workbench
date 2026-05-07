@@ -19,7 +19,11 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "first RFC-0040 proof-pack review realization is embedded" in rfc
     assert "`/api/v1/dpm/command-center/proof-packs*`" in rfc
     assert "Outcome-review proof ids such as" in rfc
-    assert "does not treat RFC-0042 outcome-review `dpp_*` proof ids as RFC-0040" in (
+    assert "Gateway Workbench rebalance snapshot" in rfc
+    assert "expected-snapshot run ids" in (
+        ROOT / "wiki" / "API-Surface.md"
+    ).read_text(encoding="utf-8")
+    assert "outcome-review `dpp_*` proof ids or expected-snapshot run ids as RFC-0040" in (
         ROOT / "wiki" / "API-Surface.md"
     ).read_text(encoding="utf-8")
     assert "`dpm.proof_pack`" in rfc

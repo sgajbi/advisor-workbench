@@ -7,6 +7,7 @@ import {
 import type {
   DpmOutcomeReviewGatewayResponse,
   DpmProofPackGatewayResponse,
+  WorkbenchOverview,
 } from "../../src/features/workbench/types";
 
 const proofPackResponse: DpmProofPackGatewayResponse = {
@@ -89,7 +90,7 @@ describe("proof pack view model", () => {
     expect(model.aiEvidenceInputAvailable).toBe(true);
   });
 
-  it("derives proof-pack launch context from outcome reviews", () => {
+  it("derives proof-pack launch context from the Workbench rebalance snapshot", () => {
     const outcomeReviews: DpmOutcomeReviewGatewayResponse = {
       correlation_id: "corr-rfc42",
       contract_version: "v1",
@@ -113,10 +114,56 @@ describe("proof pack view model", () => {
         ],
       },
     };
+    const rebalanceSnapshot: WorkbenchOverview["rebalance_snapshot"] = {
+      status: "READY",
+      last_rebalance_run_id: "run_001",
+      last_run_at_utc: "2026-05-07T01:00:00Z",
+      recent_runs: [
+        {
+          rebalance_run_id: "run_001",
+          status: "READY",
+          created_at_utc: "2026-05-07T01:00:00Z",
+          error_code: null,
+          workflow_state: "REVIEW_READY",
+        },
+      ],
+    };
+
+    expect(deriveProofPackContext(outcomeReviews, rebalanceSnapshot)).toEqual({
+      proofPackId: null,
+      rebalanceRunId: "run_001",
+      mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
+    });
+  });
+
+  it("does not use outcome-review run ids as proof-pack generation sources", () => {
+    const outcomeReviews: DpmOutcomeReviewGatewayResponse = {
+      correlation_id: "corr-rfc42",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:RFC-0042",
+        state: "SUPPORTED",
+        reason_codes: [],
+        blocked_actions: [],
+      },
+      data: {
+        items: [
+          {
+            outcome_review_id: "or_1",
+            proof_pack_id: "dpp_rfc0042_1",
+            rebalance_run_id: "rr_rfc0042_expected_snapshot",
+            mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+          },
+        ],
+      },
+    };
 
     expect(deriveProofPackContext(outcomeReviews)).toEqual({
       proofPackId: null,
-      rebalanceRunId: "rr_1",
+      rebalanceRunId: null,
       mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
     });
   });

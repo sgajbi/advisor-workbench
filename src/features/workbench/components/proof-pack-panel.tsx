@@ -20,6 +20,7 @@ import {
 import type {
   DpmOutcomeReviewGatewayResponse,
   DpmProofPackGatewayResponse,
+  WorkbenchOverview,
 } from "@/features/workbench/types";
 import {
   buildProofPackPanelModel,
@@ -31,6 +32,7 @@ type Props = {
   portfolioId: string;
   mandateId?: string | null;
   outcomeReviews: DpmOutcomeReviewGatewayResponse | null;
+  rebalanceSnapshot?: WorkbenchOverview["rebalance_snapshot"] | null;
   initialProofPack: DpmProofPackGatewayResponse | null;
   errorMessage?: string | null;
 };
@@ -86,10 +88,11 @@ export default function ProofPackPanel({
   portfolioId,
   mandateId,
   outcomeReviews,
+  rebalanceSnapshot,
   initialProofPack,
   errorMessage,
 }: Props) {
-  const context = deriveProofPackContext(outcomeReviews);
+  const context = deriveProofPackContext(outcomeReviews, rebalanceSnapshot ?? null);
   const [proofPack, setProofPack] = useState<DpmProofPackGatewayResponse | null>(initialProofPack);
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [handoffStatus, setHandoffStatus] = useState<string | null>(null);

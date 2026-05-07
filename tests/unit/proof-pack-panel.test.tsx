@@ -90,6 +90,21 @@ const readyProofPack: DpmProofPackGatewayResponse = {
   },
 };
 
+const rebalanceSnapshot = {
+  status: "READY",
+  last_rebalance_run_id: "run_001",
+  last_run_at_utc: "2026-05-07T01:00:00Z",
+  recent_runs: [
+    {
+      rebalance_run_id: "run_001",
+      status: "READY",
+      created_at_utc: "2026-05-07T01:00:00Z",
+      error_code: null,
+      workflow_state: "REVIEW_READY",
+    },
+  ],
+};
+
 describe("ProofPackPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -101,6 +116,7 @@ describe("ProofPackPanel", () => {
         portfolioId="PB_SG_GLOBAL_BAL_001"
         mandateId="MANDATE_PB_SG_GLOBAL_BAL_001"
         outcomeReviews={outcomeReviews}
+        rebalanceSnapshot={rebalanceSnapshot}
         initialProofPack={readyProofPack}
       />
     );
@@ -115,7 +131,7 @@ describe("ProofPackPanel", () => {
     expect(screen.getByRole("button", { name: "Load Markdown" })).toBeEnabled();
   });
 
-  it("generates a proof pack from the outcome-review rebalance run", async () => {
+  it("generates a proof pack from the Workbench rebalance snapshot run", async () => {
     vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(readyProofPack);
 
     render(
@@ -123,6 +139,7 @@ describe("ProofPackPanel", () => {
         portfolioId="PB_SG_GLOBAL_BAL_001"
         mandateId="MANDATE_PB_SG_GLOBAL_BAL_001"
         outcomeReviews={outcomeReviews}
+        rebalanceSnapshot={rebalanceSnapshot}
         initialProofPack={null}
       />
     );
@@ -130,7 +147,7 @@ describe("ProofPackPanel", () => {
 
     await waitFor(() => {
       expect(generateDpmProofPackFromRun).toHaveBeenCalledWith({
-        rebalanceRunId: "rr_1",
+        rebalanceRunId: "run_001",
         mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
       });
     });
@@ -151,6 +168,7 @@ describe("ProofPackPanel", () => {
       <ProofPackPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         outcomeReviews={outcomeReviews}
+        rebalanceSnapshot={rebalanceSnapshot}
         initialProofPack={readyProofPack}
       />
     );
