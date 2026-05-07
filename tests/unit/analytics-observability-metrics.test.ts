@@ -354,6 +354,31 @@ describe("analytics UI observability metrics", () => {
         "construction-selection",
         "dpm.construction.alternative.select",
       ],
+      [
+        "workbench.dpm-command-center",
+        "proof-pack-generate",
+        "dpm.proof-pack.generate",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "proof-pack-detail",
+        "dpm.proof-pack.get",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "proof-pack-markdown",
+        "dpm.proof-pack.markdown",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "proof-pack-report-input",
+        "dpm.proof-pack.report-input",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "proof-pack-ai-evidence",
+        "dpm.proof-pack.ai-evidence",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],

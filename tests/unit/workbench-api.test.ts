@@ -6,6 +6,7 @@ import {
   createPortfolioReportBatch,
   createSandboxSession,
   generateDpmConstructionAlternatives,
+  generateDpmProofPackFromRun,
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
   getDpmMandateByPortfolio,
@@ -14,6 +15,10 @@ import {
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
   getDpmConstructionAlternativeSet,
+  getDpmProofPack,
+  getDpmProofPackAiEvidenceInput,
+  getDpmProofPackMarkdown,
+  getDpmProofPackReportInput,
   requestDpmOutcomeReviewAiNarrative,
   getArchivedDocumentMetadata,
   getPortfolio360,
@@ -2086,6 +2091,93 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("construction-selection");
     expect(metricEventsJson).not.toContain("cas_1");
     expect(metricEventsJson).not.toContain("alt_1");
+  });
+
+  it("generates and loads DPM proof packs through Gateway endpoints", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc40",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0040",
+              state: "READY",
+              proof_pack_id: "ppack_1",
+              reason_codes: [],
+              section_state_counts: { READY: 3 },
+              content_hash: "sha256:proof-pack",
+              markdown_available: true,
+              report_input_available: true,
+              ai_evidence_input_available: true,
+            },
+            data: { proof_pack_id: "ppack_1", content_hash: "sha256:proof-pack" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await generateDpmProofPackFromRun({
+      rebalanceRunId: "rr_1",
+      mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
+      actorId: "pm_1",
+    });
+    await getDpmProofPack("ppack_1");
+    await getDpmProofPackMarkdown("ppack_1");
+    await getDpmProofPackReportInput("ppack_1");
+    await getDpmProofPackAiEvidenceInput("ppack_1");
+    await getDpmProofPack("ppack_1", "server");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/proof-packs`
+    );
+    expect(fetchMock.mock.calls[0][1].headers["X-Caller-Application"]).toBe(
+      "lotus-workbench"
+    );
+    expect(fetchMock.mock.calls[0][1].headers["X-Actor-Id"]).toBe("pm_1");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      idempotency_key: "workbench-proof-pack-rr_1",
+      body: {
+        source_type: "REBALANCE_RUN",
+        rebalance_run_id: "rr_1",
+        mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+        include_markdown: true,
+        include_report_input: true,
+        include_ai_evidence_input: true,
+        actor_id: "pm_1",
+        reason: "Workbench PM generated proof pack from Gateway-backed rebalance run.",
+      },
+    });
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/proof-packs/ppack_1`
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/proof-packs/ppack_1/summary.md`
+    );
+    expect(fetchMock.mock.calls[3][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/proof-packs/ppack_1/report-input`
+    );
+    expect(fetchMock.mock.calls[4][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/proof-packs/ppack_1/ai-evidence-input`
+    );
+    expect(fetchMock.mock.calls[5][0]).toBe(
+      `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/proof-packs/ppack_1`
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("proof-pack-generate");
+    expect(metricEventsJson).toContain("proof-pack-detail");
+    expect(metricEventsJson).toContain("proof-pack-markdown");
+    expect(metricEventsJson).toContain("proof-pack-report-input");
+    expect(metricEventsJson).toContain("proof-pack-ai-evidence");
+    expect(metricEventsJson).not.toContain("ppack_1");
+    expect(metricEventsJson).not.toContain("sha256:proof-pack");
+    expect(metricEventsJson).not.toContain("rr_1");
   });
 
   it("requests DPM outcome-review AI narrative through the Gateway BFF", async () => {

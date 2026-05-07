@@ -205,6 +205,31 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.construction.alternative.select",
   },
   {
+    route: "workbench.dpm-command-center",
+    panel: "proof-pack-generate",
+    operation: "dpm.proof-pack.generate",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "proof-pack-detail",
+    operation: "dpm.proof-pack.get",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "proof-pack-markdown",
+    operation: "dpm.proof-pack.markdown",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "proof-pack-report-input",
+    operation: "dpm.proof-pack.report-input",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "proof-pack-ai-evidence",
+    operation: "dpm.proof-pack.ai-evidence",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

@@ -24,8 +24,9 @@ This repo does not own:
 
 - gateway-first product client
 - Portfolio and Performance are the active front-office paths
-- `/workbench/{portfolioId}` includes Gateway/manage-backed DPM construction alternatives and
-  post-trade outcome-review panels without direct Workbench calls to manage, report, archive, or AI
+- `/workbench/{portfolioId}` includes Gateway/manage-backed DPM construction alternatives,
+  proof-pack evidence, and post-trade outcome-review panels without direct Workbench calls to
+  manage, report, archive, or AI
 - `/workbench/{portfolioId}` surfaces Gateway-provided manage action-register supportability in the
   rebalance status panel, including source state, freshness, run/operation/decision counts, last-run
   identity, bounded recent runs, workflow posture, run issue count, and explicit unknown/N/A or

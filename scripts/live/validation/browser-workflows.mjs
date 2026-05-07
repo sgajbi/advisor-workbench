@@ -443,3 +443,37 @@ export async function validateDpmCommandCenterPanel(
   );
   await screenshotRegisteredPanel(page, "dpm.command_center");
 }
+
+export async function validateProofPackPanel(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows, screenshotRegisteredPanel }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  const proofPackPanel = page.getByRole("group", { name: "Proof-Pack Evidence" });
+  await expect(proofPackPanel.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(proofPackPanel.getByText(/Markdown (Available|Unavailable)/)).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(proofPackPanel.getByText(/Report Input (Available|Unavailable)/)).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(proofPackPanel.getByText(/AI Evidence (Available|Unavailable)/)).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await assertTableHasRows(
+    tableByExactLabel(page, "Proof-pack sections"),
+    1,
+    "Proof-pack sections"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "Proof-pack source hashes"),
+    1,
+    "Proof-pack source hashes"
+  );
+  await screenshotRegisteredPanel(page, "dpm.proof_pack");
+}

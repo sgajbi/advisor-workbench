@@ -26,6 +26,7 @@ import {
   validatePerformanceSummaryPanel,
   validatePortfolioPanels,
   validateOutcomeReviewPanel,
+  validateProofPackPanel,
   validateRiskPanel,
 } from "./validation/browser-workflows.mjs";
 import { createPanelGovernance } from "./validation/panel-governance.mjs";
@@ -242,6 +243,27 @@ async function run() {
   if (!Array.isArray(outcomeReviewItems) || outcomeReviewItems.length < 1) {
     throw new Error("DPM outcome-review list returned no manage-backed reviews.");
   }
+  const proofPackId = outcomeReviewItems.find((item) => item?.proof_pack_id)?.proof_pack_id;
+  if (!proofPackId) {
+    throw new Error("DPM outcome-review list returned no proof-pack reference.");
+  }
+  const proofPack = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs/${encodeURIComponent(proofPackId)}`,
+    "DPM proof-pack evidence",
+    timeoutMs
+  );
+  const proofPackPayload = proofPack?.data?.proof_pack ?? proofPack?.data ?? proofPack;
+  if (!proofPackPayload?.proof_pack_id) {
+    throw new Error("DPM proof-pack evidence returned no proof-pack identity.");
+  }
+  const proofPackSupportability = proofPack?.supportability;
+  if (
+    proofPackSupportability?.state &&
+    proofPackSupportability.state.toUpperCase() !== "READY"
+  ) {
+    throw new Error(`DPM proof-pack evidence returned non-ready state: ${proofPackSupportability.state}.`);
+  }
 
   const commandCenterParams = new URLSearchParams({
     tenant_id: dpmCommandCenterDefaults.tenantId,
@@ -362,6 +384,10 @@ async function run() {
     route: `/workbench/${portfolioId}`,
     outcomeReviewMinimum: 1,
   });
+  panelGovernance.recordPanelClassification("dpm.proof_pack", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}`,
+    proofPackId,
+  });
   panelGovernance.recordPanelClassification("dpm.command_center", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     source: "Gateway DPM command-center summary",
@@ -450,6 +476,13 @@ async function run() {
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateOutcomeReviewPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateProofPackPanel(page, {
       workbenchBaseUrl,
       portfolioId,
       timeoutMs,

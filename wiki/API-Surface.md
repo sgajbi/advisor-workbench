@@ -66,6 +66,14 @@ promote dormant labels into product ownership just because historical route file
   method statuses, comparison metrics, objective/constraint trace counts, supportability, and
   selected-alternative state, and records PM selection through Gateway. It does not synthesize
   source snapshots, prices, optimizer results, supportability, or selection truth locally.
+- RFC-0098/RFC-0040 proof-pack evidence rendering is implemented on `/workbench/{portfolioId}`
+  through Gateway `/api/v1/dpm/command-center/proof-packs*`. Workbench renders manage-owned
+  proof-pack id, status, content hash, section states, source hashes, Markdown availability,
+  report-input readiness, and AI-evidence readiness. Browser code may trigger Gateway proof-pack
+  generation from a linked rebalance run and load Gateway-provided Markdown/report/AI evidence
+  payload posture, but it does not rebuild proof-pack sections, compute hashes, synthesize
+  Markdown, construct report input, construct AI evidence, construct AI prompts, materialize PDF
+  reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 - RFC-0098/RFC-0041 action-register supportability is rendered on `/workbench/{portfolioId}` from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow
@@ -113,7 +121,7 @@ Data products:
 http://workbench.dev.lotus/data-products
 ```
 
-Workbench construction alternatives and outcome review:
+Workbench construction alternatives, proof-pack evidence, and outcome review:
 
 ```txt
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001

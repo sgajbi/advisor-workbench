@@ -1199,6 +1199,33 @@ export type DpmConstructionGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmProofPackSupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  proof_pack_id?: string | null;
+  reason_codes: string[];
+  section_state_counts?: Record<string, number> | null;
+  content_hash?: string | null;
+  markdown_available: boolean;
+  report_input_available: boolean;
+  ai_evidence_input_available: boolean;
+  remediation_owner?: string | null;
+};
+
+export type DpmProofPackGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmProofPackSupportability;
+  data: Record<string, unknown>;
+};
+
+export type DpmProofPackMarkdownResponse = DpmProofPackGatewayResponse & {
+  markdown?: string;
+};
+
 export type DpmOutcomeReviewNarrativeResponse = {
   correlation_id: string;
   contract_version: string;
