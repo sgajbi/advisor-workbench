@@ -2141,6 +2141,7 @@ describe("workbench api", () => {
       "lotus-workbench"
     );
     expect(fetchMock.mock.calls[0][1].headers["X-Actor-Id"]).toBe("pm_1");
+    expect(fetchMock.mock.calls[0][1].headers["Content-Type"]).toBe("application/json");
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       idempotency_key: "workbench-proof-pack-rr_1",
       body: {
