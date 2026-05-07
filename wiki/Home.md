@@ -16,8 +16,8 @@
 - primary product client for Lotus
 - Portfolio and Performance are the most mature active front-office surfaces
 - `/data-products` provides gateway-backed domain-product discovery and live trust posture
-- `/workbench/{portfolioId}` includes Gateway-backed DPM construction alternatives and
-  outcome-review panels for manage-owned operating evidence
+- `/workbench/{portfolioId}` includes Gateway-backed DPM construction alternatives, proof-pack
+  evidence, and outcome-review panels for manage-owned operating evidence
 - recommendations and proposals remain compatibility routes, not the main supported shell apps
 - shell navigation currently treats `Proposal` and `Advisory` as disabled capability-gated entries
 

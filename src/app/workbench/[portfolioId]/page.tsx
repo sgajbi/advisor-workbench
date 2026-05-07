@@ -4,6 +4,7 @@ import {
   getDpmMandateByPortfolio,
   getDpmMandateHealth,
   getDpmOutcomeReviews,
+  getDpmProofPack,
   getPortfolio360,
   getReportingSnapshot,
   getWorkbenchAnalytics,
@@ -30,6 +31,7 @@ import OverviewCards from "@/features/workbench/components/overview-cards";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
+import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
 import ReportBatchOperationsPanel from "@/features/workbench/components/report-batch-operations-panel";
 import ReportingSnapshotPanel from "@/features/workbench/components/reporting-snapshot-panel";
@@ -87,6 +89,8 @@ export default async function WorkbenchPage({
   let dpmCommandCenterError: string | null = null;
   let outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null = null;
   let outcomeReviewError: string | null = null;
+  let proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null = null;
+  let proofPackError: string | null = null;
   try {
     data = await getPortfolio360(portfolioId, sessionId);
   } catch (error) {
@@ -175,6 +179,18 @@ export default async function WorkbenchPage({
       error instanceof Error ? error.message : "Outcome review endpoint unavailable.";
   }
 
+  const primaryProofPackId = readPrimaryProofPackId(outcomeReviews?.data ?? null);
+  if (primaryProofPackId) {
+    try {
+      proofPack = await getDpmProofPack(primaryProofPackId, "server");
+    } catch (error) {
+      proofPack = null;
+      proofPackError =
+        error instanceof Error ? error.message : "Proof-pack endpoint unavailable.";
+    }
+  }
+
+  const dpmMandateId = readDpmMandateId(dpmMandate?.data ?? null);
   const projectedCoveragePct =
     data.projected_summary &&
     data.projected_summary.total_baseline_positions > 0
@@ -304,6 +320,14 @@ export default async function WorkbenchPage({
 
               <ConstructionAlternativesPanel portfolio={data} />
 
+              <ProofPackPanel
+                portfolioId={data.portfolio.portfolio_id}
+                mandateId={dpmMandateId}
+                outcomeReviews={outcomeReviews}
+                initialProofPack={proofPack}
+                errorMessage={proofPackError}
+              />
+
               <OutcomeReviewPanel
                 portfolioId={data.portfolio.portfolio_id}
                 response={outcomeReviews}
@@ -416,4 +440,37 @@ export default async function WorkbenchPage({
       </WorkbenchPageFrame>
     </main>
   );
+}
+
+function readPrimaryProofPackId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  const items = Array.isArray(data.items) ? data.items : [];
+  for (const item of items) {
+    if (item && typeof item === "object" && !Array.isArray(item)) {
+      const proofPackId = (item as Record<string, unknown>).proof_pack_id;
+      if (typeof proofPackId === "string" && proofPackId.trim().length > 0) {
+        return proofPackId;
+      }
+    }
+  }
+  return typeof data.proof_pack_id === "string" && data.proof_pack_id.trim().length > 0
+    ? data.proof_pack_id
+    : null;
+}
+
+function readDpmMandateId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  if (typeof data.mandate_id === "string" && data.mandate_id.trim().length > 0) {
+    return data.mandate_id;
+  }
+  const mandate = data.mandate;
+  if (mandate && typeof mandate === "object" && !Array.isArray(mandate)) {
+    const mandateId = (mandate as Record<string, unknown>).mandate_id;
+    return typeof mandateId === "string" && mandateId.trim().length > 0 ? mandateId : null;
+  }
+  return null;
 }

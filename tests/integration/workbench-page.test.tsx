@@ -188,6 +188,54 @@ describe("WorkbenchPage", () => {
           } as Response;
         }
 
+        if (url.includes("/api/v1/dpm/command-center/proof-packs/ppack_1")) {
+          return {
+            ok: true,
+            json: async () => ({
+              correlation_id: "corr_rfc40",
+              contract_version: "v1",
+              source_service: "lotus-manage",
+              upstream_status: 200,
+              supportability: {
+                source_service: "lotus-manage",
+                authority: "lotus-manage:RFC-0040",
+                state: "READY",
+                proof_pack_id: "ppack_1",
+                reason_codes: ["PROOF_PACK_READY"],
+                section_state_counts: { READY: 1 },
+                content_hash: "sha256:proof-pack",
+                markdown_available: true,
+                report_input_available: true,
+                ai_evidence_input_available: true,
+              },
+              data: {
+                proof_pack: {
+                  proof_pack_id: "ppack_1",
+                  portfolio_id: "PF_1001",
+                  rebalance_run_id: "run_001",
+                  status: "READY",
+                  content_hash: "sha256:proof-pack",
+                  sections: [
+                    {
+                      section: "investment_policy",
+                      state: "READY",
+                      source_service: "lotus-manage",
+                      content_hash: "sha256:policy",
+                    },
+                  ],
+                  source_hashes: [
+                    {
+                      source_service: "lotus-risk",
+                      source_ref: "risk_snapshot_1",
+                      hash: "sha256:risk",
+                    },
+                  ],
+                },
+              },
+            }),
+          } as Response;
+        }
+
         return { ok: false, json: async () => ({}) } as Response;
       })
     );
@@ -215,6 +263,9 @@ describe("WorkbenchPage", () => {
     expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent(
       "Source Readiness Blocked"
     );
+    expect(screen.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeInTheDocument();
+    expect(screen.getByText("investment_policy")).toBeInTheDocument();
+    expect(screen.getAllByText("sha256:proof-pack").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("ATTENTION")).toBeInTheDocument();
     expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
     expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);

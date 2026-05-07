@@ -59,18 +59,24 @@ Current repository posture:
    dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
    Gateway-backed governed AI narrative requests without client-side outcome calculation or direct
    `lotus-manage`/`lotus-ai` calls,
-9. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
+9. `/workbench/{portfolioId}` renders the RFC-0040 proof-pack evidence panel from Gateway
+   `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
+   section posture, content hash, source hashes, Markdown availability, report-input readiness,
+   and AI-evidence readiness without client-side proof-pack construction, hash generation,
+   Markdown synthesis, report-input synthesis, AI-evidence synthesis, or direct calls to
+   `lotus-manage`, `lotus-report`, or `lotus-ai`,
+10. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
    `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
    manage/core source selector through Gateway, preserves manage-owned alternatives,
    supportability, objective/constraint traces, and selected-alternative state, and must not build
    stateless source bundles, optimizer logic, prices, or selection truth in the browser,
-10. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
+11. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
    supportability and portfolio-level DPM operations posture from the portfolio overview
    `rebalance_snapshot`, including source state, freshness, run count, operation count, workflow
    decision count, last-run identity, bounded recent runs, workflow posture, run issue count, and
    reason posture. Missing Gateway supportability is shown as unknown/N/A rather than as verified
    zero activity.
-11. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+12. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
@@ -181,6 +187,11 @@ Important validation expectations:
     through Gateway only. Workbench may construct the stateful source selector needed to invoke the
     Gateway/manage contract, but it must not synthesize stateless portfolio snapshots, price
     payloads, target weights, optimization outcomes, supportability states, or selection decisions.
+13. DPM proof-pack generation, retrieval, Markdown, report-input, and AI-evidence reads/actions are
+    Workbench gateway-only operations. Observability labels must remain bounded to route, panel,
+    operation, freshness, supportability, status class, and error category; proof-pack ids,
+    rebalance run ids, mandate ids, portfolio ids, content hashes, source hashes, request bodies,
+    response bodies, and screen content must never be emitted as metric labels.
 
 ### Visual Review Gate
 

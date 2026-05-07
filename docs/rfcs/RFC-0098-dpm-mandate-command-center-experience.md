@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; RFC-0038 POPULATED COMMAND-CENTER LIVE PROOF PASSED AFTER WTBD-003 SEED AUTOMATION |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; RFC-0038 POPULATED COMMAND-CENTER LIVE PROOF PASSED AFTER WTBD-003 SEED AUTOMATION |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -308,6 +308,17 @@ Required UI states:
 
 Supported-feature promotion is forbidden until Gateway implementation, Workbench browser proof,
 canonical screenshots, accessibility checks, and live validation pass.
+
+Implementation note as of 2026-05-07: the first RFC-0040 proof-pack review realization is embedded
+in `/workbench/{portfolioId}` using Gateway `/api/v1/dpm/command-center/proof-packs*`.
+Workbench derives the launch context from Gateway outcome-review proof-pack and rebalance-run
+references, can trigger Gateway proof-pack generation for the linked run, and renders
+Gateway/manage proof-pack identity, status, content hash, section states, source hashes, Markdown
+availability, report-input readiness, and AI-evidence readiness. Browser code does not rebuild
+proof-pack sections, compute hashes, synthesize Markdown, construct report input, construct AI
+evidence, construct prompts, materialize reports, or call `lotus-manage`, `lotus-report`, or
+`lotus-ai` directly. The live canonical validator now registers the `dpm.proof_pack` panel against
+the governed Workbench panel registry.
 
 ### 7.0B Rebalance Wave Command Center Addendum
 

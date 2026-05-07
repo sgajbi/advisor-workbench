@@ -54,21 +54,26 @@ Boundary rules that matter:
    `PB_SG_GLOBAL_BAL_001`.
 4. `Data Products` is available at `/data-products` for gateway-backed catalog, dependency, and
    live trust discovery.
-5. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0042 post-trade outcome-review
+5. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0040 proof-pack evidence panel
+   for manage-owned proof-pack identity, section posture, content hash, source hashes, Markdown,
+   report-input posture, and AI-evidence posture. Workbench renders Gateway/manage truth and does
+   not generate proof-pack sections, hashes, report inputs, AI evidence, narratives, or reports
+   locally.
+6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0042 post-trade outcome-review
    panel for manage-owned expected-versus-realized dimensions, source lineage, supportability,
    and report/AI handoff posture. Workbench renders the Gateway contract and does not calculate
    outcome variance, freshness, supportability, or handoff eligibility locally.
-6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0039 construction alternatives
+7. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0039 construction alternatives
    lab. Workbench sends stateful construction requests through Gateway
    `/api/v1/dpm/command-center/construction/alternative-sets*`, renders manage-owned
    alternatives, objective/constraint trace counts, supportability, and selected-alternative
    state, and does not create optimizer logic, source data, prices, or selection truth locally.
-7. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
+8. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
    the primary supported front-office app surfaces.
-8. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
+9. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
    active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
    bootstrap contract.
-9. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
+10. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
    `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
 
 ## Architecture At A Glance
@@ -83,7 +88,7 @@ Current main surfaces:
   `/performance` with performance, risk, advisor-brief, and evidence modes
 - `workbench`
   `/workbench/*` compatibility and portfolio-linked workspace entry, including the Gateway-backed
-  DPM construction alternatives lab and outcome-review panel when Gateway/manage have
+  DPM construction alternatives lab, proof-pack evidence panel, and outcome-review panel when Gateway/manage have
   materialized the relevant DPM evidence
 - `data-products`
   `/data-products` self-serve catalog, dependency, and live trust discovery through gateway
@@ -267,6 +272,11 @@ Important current product and route truths:
    stateful source selector and option overrides through Gateway and must not synthesize
    stateless portfolio snapshots, prices, optimization results, objective scores, supportability,
    or PM selection truth.
+10. RFC-0040 proof-pack evidence rendering on `/workbench/{portfolioId}` is backed by Gateway
+   `/api/v1/dpm/command-center/proof-packs*`; Workbench may render Gateway/manage proof-pack
+   identity, sections, hashes, Markdown, report-input readiness, and AI-evidence readiness, but
+   must not rebuild proof-pack sections, compute hashes, synthesize Markdown, construct report
+   input, construct AI evidence, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

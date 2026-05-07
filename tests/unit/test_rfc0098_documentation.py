@@ -11,11 +11,15 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     integrations = (ROOT / "wiki" / "Integrations.md").read_text(encoding="utf-8")
     roadmap = (ROOT / "wiki" / "Roadmap.md").read_text(encoding="utf-8")
 
-    assert "RFC-0041/0042 WAVE AND OUTCOME EXPERIENCE ALIGNED" in rfc
-    assert "RFC-0041/0042 WAVE AND OUTCOME EXPERIENCE ALIGNED" in index
+    assert "RFC-0040 PROOF-PACK PANEL" in rfc
+    assert "RFC-0040 PROOF-PACK PANEL" in index
     assert "`lotus-manage` RFC-0040" in rfc
     assert "`lotus-manage` RFC-0042" in rfc
     assert "proof_pack_evidence" in rfc
+    assert "first RFC-0040 proof-pack review realization is embedded" in rfc
+    assert "`/api/v1/dpm/command-center/proof-packs*`" in rfc
+    assert "`dpm.proof_pack`" in rfc
+    assert "RFC-0040 PROOF-PACK PANEL" in index
     assert "Post-Trade Outcome Review Workspace Addendum" in rfc
     assert "`GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}`" in rfc
     assert "Dimension Matrix" in rfc
@@ -30,6 +34,8 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "outcome-review search, detail, supportability" in integrations
     assert "must not calculate expected-versus-realized values" in integrations
     assert "proof-pack truth" in integrations
+    assert "proof-pack generation" in integrations
+    assert "proof-pack sections" in integrations
     assert "manage-owned RFC-0040" in roadmap
-    assert "RFC-0042 post-trade\n   outcome-review evidence" in roadmap
-    assert "proof-pack evidence, RFC-0041 rebalance-wave orchestration" in roadmap
+    assert "RFC-0042 outcome-review panel" in roadmap
+    assert "RFC-0040 proof-pack evidence" in roadmap
