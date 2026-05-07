@@ -340,6 +340,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("tableByExactLabel");
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Observation Trail");
+    expect(browserWorkflowModule).toContain('outcomeReviewPanel.getByText("Report Input", { exact: true })');
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
     expect(browserWorkflowModule).toContain("Accept Brief");
     expect(browserWorkflowModule).toContain("hasAcceptedAdvisorBriefReviewPosture");

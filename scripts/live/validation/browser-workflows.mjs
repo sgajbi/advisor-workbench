@@ -402,8 +402,12 @@ export async function validateOutcomeReviewPanel(
     1,
     "Outcome review source lineage"
   );
-  await expect(page.getByText("Report Input")).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByText("AI Evidence")).toBeVisible({ timeout: timeoutMs });
+  await expect(outcomeReviewPanel.getByText("Report Input", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(outcomeReviewPanel.getByText("AI Evidence", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
   await screenshotRegisteredPanel(page, "dpm.outcome_review");
 }
 
