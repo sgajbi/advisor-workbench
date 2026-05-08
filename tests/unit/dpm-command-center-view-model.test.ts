@@ -133,4 +133,24 @@ describe("DPM command-center view model", () => {
     expect(model.supportabilityState).toBe("UNKNOWN");
     expect(model.latestMonitoringRunStatus).toBe("SUCCEEDED");
   });
+
+  it("treats degraded supportability as explicit partial command-center posture", () => {
+    const model = buildDpmCommandCenterPanelModel({
+      commandCenter: {
+        ...commandCenterResponse,
+        supportability: {
+          ...commandCenterResponse.supportability,
+          state: "DEGRADED",
+          data_completeness_state: "COMPLETE",
+          partial_readiness_reasons: ["COMMAND_CENTER_SOURCE_READINESS_DEGRADED"],
+        },
+      },
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.supportabilityState).toBe("DEGRADED");
+    expect(model.partialReadinessReasons).toEqual([
+      "COMMAND_CENTER_SOURCE_READINESS_DEGRADED",
+    ]);
+  });
 });

@@ -342,6 +342,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("DPM portfolio memory returned no manage-owned timeline events.");
     expect(script).toContain('recordPanelClassification("dpm.portfolio_memory"');
     expect(browserWorkflowModule).toContain("DPM Command Center");
+    expect(script).toContain("classifyCommandCenterPanelState");
+    expect(script).toContain("DPM command-center summary did not return canonical populated posture");
+    expect(script).toContain("supportabilityState: readSupportabilityState");
     expect(browserWorkflowModule).toContain("DPM attention queue");
     expect(browserWorkflowModule).toContain("DPM mandate health dimensions");
     expect(script).toContain("Generate DPM proof-pack evidence");

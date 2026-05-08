@@ -339,7 +339,10 @@ script. Browser validation failures must fail the PowerShell command. The Manage
 supportability summary is recorded as source-supportability evidence, including stale state and
 reason when present; DPM panel proof is gated by the command-center, wave, outcome-review, proof-pack,
 and portfolio-memory contracts instead of failing on unrelated historical action-register freshness.
-Do not treat partial screenshot output as successful evidence.
+The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
+populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center
+supportability must not collapse into a false ready panel. Do not treat partial screenshot output
+as successful evidence.
 
 The summary includes `calculationChecks` for canonical performance and risk sanity. These checks
 assert numeric ranges, contribution reconciliation, governed attribution fallback posture, risk

@@ -89,6 +89,31 @@ function readSupportabilityState(supportability) {
   return readString(supportability?.state) || readString(supportability?.supportability_state);
 }
 
+function classifyCommandCenterPanelState(commandCenterPayload) {
+  const supportability = commandCenterPayload?.supportability;
+  const explicitState = readSupportabilityState(supportability)?.toLowerCase();
+  if (explicitState === "ready") {
+    return "ready";
+  }
+  if (explicitState === "partial" || explicitState === "degraded" || explicitState === "blocked") {
+    return "partial";
+  }
+  if (explicitState === "empty") {
+    return "empty";
+  }
+  const completenessState = readString(supportability?.data_completeness_state)?.toLowerCase();
+  if (completenessState === "complete") {
+    return "ready";
+  }
+  if (completenessState === "partial") {
+    return "partial";
+  }
+  if (completenessState === "empty") {
+    return "empty";
+  }
+  return "partial";
+}
+
 function extractGeneratedProofPackId(response) {
   return (
     readString(response?.data?.proof_pack?.proof_pack_id) ||
@@ -455,6 +480,12 @@ async function run() {
   if (!dpmCommandCenterPayload?.supportability) {
     throw new Error("DPM command-center summary returned no manage supportability envelope.");
   }
+  const dpmCommandCenterPanelState = classifyCommandCenterPanelState(dpmCommandCenterPayload);
+  if (!["ready", "partial"].includes(dpmCommandCenterPanelState)) {
+    throw new Error(
+      `DPM command-center summary did not return canonical populated posture; observed ${dpmCommandCenterPanelState}.`
+    );
+  }
 
   const portfolioMemory = await fetchJson(
     summary,
@@ -697,9 +728,12 @@ async function run() {
     sectionCount: proofPackSectionCount,
     sourceHashCount: proofPackSourceHashCount,
   });
-  panelGovernance.recordPanelClassification("dpm.command_center", "ready", "lotus-manage", {
+  panelGovernance.recordPanelClassification("dpm.command_center", dpmCommandCenterPanelState, "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     source: "Gateway DPM command-center summary",
+    supportabilityState: readSupportabilityState(dpmCommandCenterPayload.supportability),
+    dataCompletenessState: dpmCommandCenterPayload.supportability.data_completeness_state,
+    reason: readString(dpmCommandCenterPayload.supportability.reason),
   });
   panelGovernance.recordPanelClassification("dpm.portfolio_memory", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
