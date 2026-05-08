@@ -8,9 +8,11 @@ import {
   getDpmWave,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
+  getDpmWaveReportInput,
   getDpmWaveSupportability,
   handoffDpmWave,
   previewDpmWave,
+  requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
@@ -23,9 +25,11 @@ vi.mock("../../src/features/workbench/api", () => ({
   getDpmWave: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
+  getDpmWaveReportInput: vi.fn(),
   getDpmWaveSupportability: vi.fn(),
   handoffDpmWave: vi.fn(),
   previewDpmWave: vi.fn(),
+  requestDpmWaveAiPmMemo: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),
   stageDpmWave: vi.fn(),
@@ -88,6 +92,9 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByRole("button", { name: "Handoff" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Proof posture" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Supportability" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Report input" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "AI memo" })).toBeEnabled();
+    expect(screen.getAllByText("NOT_REQUESTED").length).toBeGreaterThanOrEqual(2);
   });
 
   it("requests review, workflow, proof, and supportability actions through Gateway helpers", async () => {
@@ -122,6 +129,32 @@ describe("DpmWaveCommandCenterPanel", () => {
     vi.mocked(handoffDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveSupportability).mockResolvedValue(waveResponse);
+    vi.mocked(getDpmWaveReportInput).mockResolvedValue({
+      ...waveResponse,
+      data: {
+        wave_id: "dwv_001",
+        report_input_ref: "report-input:dwv_001",
+        source_refs: ["lotus-manage:wave:dwv_001"],
+      },
+    });
+    vi.mocked(requestDpmWaveAiPmMemo).mockResolvedValue({
+      correlation_id: "corr-wave-ai-memo",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: waveResponse.supportability,
+      wave_report_input: {
+        wave_id: "dwv_001",
+        report_input_ref: "report-input:dwv_001",
+      },
+      memo_request: {
+        requested_outputs: ["wave_pm_memo", "approval_checklist"],
+        audience: ["portfolio_manager", "investment_control"],
+      },
+      data: { run_id: "wf_run_wave_memo_001", status: "REVIEW_REQUIRED" },
+    });
 
     render(
       <DpmWaveCommandCenterPanel
@@ -161,6 +194,14 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Supportability" }));
     await waitFor(() => expect(getDpmWaveSupportability).toHaveBeenCalledWith("dwv_001"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Report input" }));
+    await waitFor(() => expect(getDpmWaveReportInput).toHaveBeenCalledWith("dwv_001"));
+    expect(await screen.findByText("report-input:dwv_001")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "AI memo" }));
+    await waitFor(() => expect(requestDpmWaveAiPmMemo).toHaveBeenCalledWith("dwv_001"));
+    expect(await screen.findByText("wf_run_wave_memo_001")).toBeInTheDocument();
   });
 
   it("creates a wave without direct manage calls", async () => {

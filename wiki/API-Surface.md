@@ -49,10 +49,12 @@ promote dormant labels into product ownership just because historical route file
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/waves*`. Workbench loads
   the explicit portfolio-list wave queue, previews and creates canonical portfolio waves, opens
   wave detail and item posture, and sends source-check, simulation, approval, staging, handoff,
-  proof-posture, and supportability actions through Gateway. It renders manage-owned wave
-  lifecycle, item state, source-readiness state, supportability, proof-pack refs, handoff refs, and
-  `external_execution_claimed` posture without direct `lotus-manage` calls or local readiness
-  calculation. Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, CIO
+  proof-posture, supportability, report-input, and governed AI PM memo actions through Gateway. It
+  renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
+  report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
+  `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local
+  readiness calculation, local report-input construction, prompt construction, or memo narrative
+  generation. Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, CIO
   workflow, and external OMS execution remain future scope until separately implemented and proven.
 - RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center`,

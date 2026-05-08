@@ -300,6 +300,16 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.waves.supportability",
   },
   {
+    route: "workbench.dpm-command-center",
+    panel: "wave-report-input",
+    operation: "dpm.waves.report-input",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-ai-pm-memo",
+    operation: "dpm.waves.ai-pm-memo",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

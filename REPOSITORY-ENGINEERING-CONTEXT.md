@@ -85,11 +85,13 @@ Current repository posture:
 12. `/workbench/{portfolioId}` renders the RFC-0041 DPM rebalance-wave command-center panel
    through Gateway `/api/v1/dpm/command-center/waves*`. Workbench lists explicit portfolio-list
    waves, previews and creates canonical portfolio waves, opens wave detail and item posture, and
-   sends source-check and simulation through Gateway only. It preserves manage-owned wave state,
-   item state, source-readiness state, supportability, aggregate metrics, proof-pack refs,
-   handoff refs, blocked actions, and `external_execution_claimed` posture without calling
-   `lotus-manage` directly, calculating readiness, claiming external execution, or inferring
-   PM-book discovery.
+   sends source-check, simulation, approval, staging, handoff, report-input, and governed AI PM
+   memo requests through Gateway only. It preserves manage-owned wave state, item state,
+   source-readiness state, supportability, aggregate metrics, report-input refs, proof-pack refs,
+   handoff refs, blocked actions, lotus-ai workflow-pack run posture, and
+   `external_execution_claimed` posture without calling `lotus-manage` or `lotus-ai` directly,
+   calculating readiness, constructing report input, constructing AI prompts, generating memo
+   narrative locally, claiming external execution, or inferring PM-book discovery.
 13. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
    supportability and portfolio-level DPM operations posture from the portfolio overview
    `rebalance_snapshot`, including source state, freshness, run count, operation count, workflow
@@ -216,7 +218,8 @@ Important validation expectations:
 14. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
     labels must remain bounded to route, panel, operation, freshness, supportability, status class,
     and error category; wave ids, wave item ids, portfolio ids, proof-pack ids, handoff refs,
-    request bodies, response bodies, and screen content must never be emitted as metric labels.
+    report-input refs, workflow-pack run ids, request bodies, response bodies, and screen content
+    must never be emitted as metric labels.
 15. DPM portfolio-memory reads are Workbench gateway-only operations. Observability labels must
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,

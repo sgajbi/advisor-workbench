@@ -11,10 +11,10 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
 | DPM mandate command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit and monitoring action. |
-| DPM rebalance-wave command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, and supportability through Gateway only; canonical live wave proof pending. |
+| DPM rebalance-wave command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, and governed AI PM memo request through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
 | DPM proof-pack evidence | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
-| DPM portfolio memory | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live memory proof pending. |
+| DPM portfolio memory | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live proof accepts populated ready, partial, degraded, and blocked source truth while still failing empty or unsupported memory. |
 | DPM outcome review | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/outcome-reviews*` | Implemented for review list, dimensions, source lineage, report input, AI evidence, report job, and AI narrative request. |
 
 ## DPM Portfolio Memory
@@ -28,7 +28,7 @@ Implemented:
 2. renders manage-owned supportability, event count, event type counts, source systems, reason
    codes, and content hash,
 3. preserves event order, event type, event time, source refs, artifact refs, and reason codes,
-4. handles empty, partial, unsupported, unavailable, and endpoint error states without implying
+4. handles empty, partial, degraded, unsupported, unavailable, and endpoint error states without implying
    local reconstruction,
 5. emits bounded observability for `dpm.portfolio-memory.get` without portfolio ids, event ids,
    source refs, content hashes, request bodies, response bodies, or screen content as labels.
@@ -52,10 +52,12 @@ Implemented:
 3. opens wave detail and item posture,
 4. source-checks, simulates, approves, stages, and hands off selected waves through Gateway,
 5. renders manage-owned lifecycle state, item state, source-readiness state, supportability,
-   aggregate metrics, proof-pack refs, handoff refs, reason codes, blocked actions, remediation
-   owner, and `external_execution_claimed` posture,
-6. emits bounded Workbench observability labels without portfolio ids, wave ids, request bodies, or
-   response bodies as metric labels.
+   aggregate metrics, report-input refs, proof-pack refs, handoff refs, reason codes, blocked
+   actions, remediation owner, and `external_execution_claimed` posture,
+6. requests a governed `lotus-ai` wave PM memo workflow-pack run through Gateway only and displays
+   review-required workflow-pack posture without constructing prompts or memo text locally,
+7. emits bounded Workbench observability labels without portfolio ids, wave ids, report-input refs,
+   workflow-pack run ids, request bodies, or response bodies as metric labels.
 
 Not yet supported:
 
@@ -65,7 +67,8 @@ Not yet supported:
 4. richer workflow drawers and eligibility explanations beyond manage reason-code rendering,
 5. CIO approval workflow,
 6. external OMS/execution integration,
-7. client-side source-readiness, proof-pack, or handoff calculation.
+7. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative, or handoff
+   calculation.
 
 ## DPM Flow Diagram
 

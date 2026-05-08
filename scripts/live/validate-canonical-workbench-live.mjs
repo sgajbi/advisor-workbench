@@ -98,6 +98,17 @@ function extractGeneratedProofPackId(response) {
   );
 }
 
+function extractDpmWaveId(response) {
+  const payload = response?.data ?? response;
+  return (
+    readString(payload?.wave?.wave_id) ||
+    readString(payload?.wave_id) ||
+    readString(payload?.items?.[0]?.wave_id) ||
+    readString(response?.supportability?.wave_id) ||
+    null
+  );
+}
+
 function extractWorkbenchRebalanceRunId(gatewayOverview) {
   const snapshot = gatewayOverview?.rebalance_snapshot;
   const latestRunId = readString(snapshot?.last_rebalance_run_id);
@@ -144,6 +155,8 @@ function isReviewableProofPackState(state) {
 
 function extractWorkflowPackRunId(payload) {
   return (
+    readString(payload?.run_id) ||
+    readString(payload?.workflow_run_id) ||
     readString(payload?.workflow_pack_run?.run_id) ||
     readString(payload?.execution?.audit?.workflow_pack_run_id) ||
     readString(payload?.audit?.workflow_pack_run_id) ||
@@ -455,7 +468,7 @@ async function run() {
     ? portfolioMemoryPayload.events
     : [];
   const portfolioMemoryState = readSupportabilityState(portfolioMemorySupportability);
-  const supportedPortfolioMemoryStates = new Set(["ready", "partial", "blocked"]);
+  const supportedPortfolioMemoryStates = new Set(["ready", "partial", "degraded", "blocked"]);
   if (!supportedPortfolioMemoryStates.has(portfolioMemoryState?.toLowerCase())) {
     throw new Error(
       `DPM portfolio memory did not return populated manage supportability; observed ${
@@ -526,6 +539,8 @@ async function run() {
   if (!readSupportabilityState(dpmWaveSupportability)) {
     throw new Error("DPM rebalance-wave list returned no manage supportability state.");
   }
+  const dpmWavePayload = dpmWaves?.data ?? dpmWaves;
+  let dpmWaveId = extractDpmWaveId(dpmWavePayload);
   const dpmWavePreview = await postJson(
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
@@ -551,6 +566,77 @@ async function run() {
       }.`
     );
   }
+  if (!dpmWaveId) {
+    const dpmWaveCreate = await postJson(
+      summary,
+      `${gatewayBaseUrl}/api/v1/dpm/command-center/waves`,
+      "DPM rebalance-wave create",
+      timeoutMs,
+      {
+        idempotency_key: [
+          "workbench-live-validation-wave",
+          portfolioId,
+          dpmCommandCenterDefaults.asOfDate,
+        ].join("-"),
+        body: {
+          trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+          trigger_id: `live-validation-wave-${portfolioId}-${dpmCommandCenterDefaults.asOfDate}`,
+          rationale: "Canonical Workbench live validation created an RFC-0041 rebalance wave.",
+          as_of_date: dpmCommandCenterDefaults.asOfDate,
+          actor_id: "workbench-system",
+          portfolios: [{ portfolio_id: portfolioId }],
+        },
+      }
+    );
+    dpmWaveId = extractDpmWaveId(dpmWaveCreate);
+  }
+  if (!dpmWaveId) {
+    throw new Error("DPM rebalance-wave create returned no manage-owned wave id.");
+  }
+  const dpmWaveReportInput = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/${encodeURIComponent(dpmWaveId)}/report-input`,
+    "DPM rebalance-wave report input",
+    timeoutMs
+  );
+  const dpmWaveReportInputPayload = dpmWaveReportInput?.data ?? dpmWaveReportInput;
+  const dpmWaveReportInputRef =
+    readString(dpmWaveReportInputPayload?.report_input_ref) ||
+    readString(dpmWaveReportInputPayload?.evidence_ref?.ref_id);
+  if (!dpmWaveReportInputRef) {
+    throw new Error("DPM rebalance-wave report input returned no report input evidence ref.");
+  }
+  const dpmWaveAiPmMemo = await postJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/${encodeURIComponent(dpmWaveId)}/ai-pm-memo`,
+    "DPM rebalance-wave AI PM memo",
+    timeoutMs,
+    {
+      requested_outputs: ["wave_pm_memo", "approval_checklist", "evidence_gaps"],
+      audience: ["portfolio_manager", "investment_control", "operations"],
+    }
+  );
+  const dpmWaveAiPmMemoPayload = dpmWaveAiPmMemo?.data ?? dpmWaveAiPmMemo;
+  const dpmWaveAiPmMemoSourceService =
+    readString(dpmWaveAiPmMemo?.source_service) ?? readString(dpmWaveAiPmMemo?.sourceService);
+  if (dpmWaveAiPmMemoSourceService !== "lotus-ai") {
+    throw new Error("DPM rebalance-wave AI PM memo did not return lotus-ai source authority.");
+  }
+  const dpmWaveAiPmMemoRunId = extractWorkflowPackRunId(dpmWaveAiPmMemoPayload);
+  if (!dpmWaveAiPmMemoRunId) {
+    throw new Error("DPM rebalance-wave AI PM memo returned no workflow-pack run reference.");
+  }
+  summary.workflowPackChecks.push({
+    description: "DPM rebalance-wave AI PM memo",
+    sourceService: dpmWaveAiPmMemoSourceService,
+    waveId: dpmWaveId,
+    sourceRunId: dpmWaveAiPmMemoRunId,
+    resultReviewState:
+      dpmWaveAiPmMemoPayload?.workflow_pack_run?.review_state ??
+      dpmWaveAiPmMemoPayload?.execution?.review_state ??
+      dpmWaveAiPmMemoPayload?.status ??
+      "UNKNOWN",
+  });
 
   const reportCapabilities = await fetchJson(
     summary,
@@ -623,6 +709,9 @@ async function run() {
   panelGovernance.recordPanelClassification("dpm.wave_command_center", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     source: "Gateway DPM rebalance-wave composition",
+    waveId: dpmWaveId,
+    reportInputRef: dpmWaveReportInputPayload.report_input_ref,
+    aiMemoRunId: dpmWaveAiPmMemoRunId,
   });
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();

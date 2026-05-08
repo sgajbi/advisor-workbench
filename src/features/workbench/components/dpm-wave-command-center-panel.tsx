@@ -16,14 +16,16 @@ import {
   getDpmWave,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
+  getDpmWaveReportInput,
   getDpmWaveSupportability,
   handoffDpmWave,
   previewDpmWave,
+  requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
 } from "@/features/workbench/api";
-import type { DpmWaveGatewayResponse } from "@/features/workbench/types";
+import type { DpmWaveAiPmMemoResponse, DpmWaveGatewayResponse } from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
   type DpmWaveCommandCenterPanelState,
@@ -86,6 +88,9 @@ export default function DpmWaveCommandCenterPanel({
   const [detailResponse, setDetailResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [actionResponse, setActionResponse] = useState<DpmWaveGatewayResponse | null>(null);
+  const [reportInputResponse, setReportInputResponse] =
+    useState<DpmWaveGatewayResponse | null>(null);
+  const [aiMemoResponse, setAiMemoResponse] = useState<DpmWaveAiPmMemoResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -94,6 +99,8 @@ export default function DpmWaveCommandCenterPanel({
     waveDetail: detailResponse,
     waveItems: itemsResponse,
     actionResponse,
+    waveReportInput: reportInputResponse,
+    waveAiMemo: aiMemoResponse,
   });
   const selectedWaveId = model.selectedWaveId;
   const stateCopy = statePanelCopy(model.state, portfolioId);
@@ -115,6 +122,24 @@ export default function DpmWaveCommandCenterPanel({
     try {
       const response = await action();
       setActionResponse(response);
+      setActionMessage(`${label} completed through Gateway.`);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `${label} failed`);
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function runMemoAction(label: string, action: () => Promise<DpmWaveAiPmMemoResponse>) {
+    if (pendingAction) {
+      return;
+    }
+    setPendingAction(label);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const response = await action();
+      setAiMemoResponse(response);
       setActionMessage(`${label} completed through Gateway.`);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : `${label} failed`);
@@ -202,6 +227,24 @@ export default function DpmWaveCommandCenterPanel({
     void runAction("Load supportability", () => getDpmWaveSupportability(selectedWaveId));
   }
 
+  function loadReportInput() {
+    if (!selectedWaveId) {
+      return;
+    }
+    void runAction("Load report input", async () => {
+      const response = await getDpmWaveReportInput(selectedWaveId);
+      setReportInputResponse(response);
+      return response;
+    });
+  }
+
+  function requestAiMemo() {
+    if (!selectedWaveId) {
+      return;
+    }
+    void runMemoAction("Request AI memo", () => requestDpmWaveAiPmMemo(selectedWaveId));
+  }
+
   return (
     <SectionBlock
       title="Rebalance Wave Command Center"
@@ -268,6 +311,12 @@ export default function DpmWaveCommandCenterPanel({
         </ActionButton>
         <ActionButton priority="secondary" onClick={loadSupportability} disabled={!selectedWaveId || Boolean(pendingAction)}>
           Supportability
+        </ActionButton>
+        <ActionButton priority="secondary" onClick={loadReportInput} disabled={!selectedWaveId || Boolean(pendingAction)}>
+          Report input
+        </ActionButton>
+        <ActionButton priority="secondary" onClick={requestAiMemo} disabled={!selectedWaveId || Boolean(pendingAction)}>
+          AI memo
         </ActionButton>
       </div>
 
@@ -361,6 +410,10 @@ export default function DpmWaveCommandCenterPanel({
             <MetricRow label="Handoff Refs" value={model.handoffRows.length.toString()} />
             <MetricRow label="External Execution" value={model.externalExecutionClaimed} />
             <MetricRow label="Remediation Owner" value={model.remediationOwner} />
+            <MetricRow label="Report Input" value={model.reportInputStatus} />
+            <MetricRow label="Report Input Ref" value={model.reportInputRef} />
+            <MetricRow label="AI Memo" value={model.aiMemoStatus} />
+            <MetricRow label="AI Memo Run" value={model.aiMemoRunId} />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import type { DpmWaveGatewayResponse } from "./types";
+import type { DpmWaveAiPmMemoResponse, DpmWaveGatewayResponse } from "./types";
 
 export type DpmWaveCommandCenterPanelState =
   | "ready"
@@ -51,6 +51,10 @@ export type DpmWaveCommandCenterPanelModel = {
   selectedWaveItemCount: string;
   selectedWaveIssueCount: string;
   selectedWaveSupportabilityReason: string;
+  reportInputRef: string;
+  reportInputStatus: string;
+  aiMemoStatus: string;
+  aiMemoRunId: string;
   summaryRows: DpmWaveSummaryRow[];
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
@@ -64,9 +68,15 @@ export function buildDpmWaveCommandCenterModel(params: {
   waveDetail?: DpmWaveGatewayResponse | null;
   waveItems?: DpmWaveGatewayResponse | null;
   actionResponse?: DpmWaveGatewayResponse | null;
+  waveReportInput?: DpmWaveGatewayResponse | null;
+  waveAiMemo?: DpmWaveAiPmMemoResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
-    params.actionResponse ?? params.waveDetail ?? params.waveList ?? params.waveItems;
+    params.actionResponse ??
+    params.waveDetail ??
+    params.waveReportInput ??
+    params.waveList ??
+    params.waveItems;
   const listRows = buildSummaryRows(params.waveList?.data);
   const waveRecord = readWaveRecord(params.actionResponse?.data) || readWaveRecord(params.waveDetail?.data);
   const itemData = params.waveItems?.data ?? params.actionResponse?.data ?? params.waveDetail?.data;
@@ -115,6 +125,12 @@ export function buildDpmWaveCommandCenterModel(params: {
       listRows.find((row) => row.waveId === selectedWaveId)?.supportabilityReason ||
       firstNonEmpty(supportability?.reason_codes) ||
       "N/A",
+    reportInputRef: readReportInputRef(params.waveReportInput?.data, params.waveAiMemo),
+    reportInputStatus: params.waveReportInput
+      ? normalizeState(params.waveReportInput.supportability.state)
+      : "NOT_REQUESTED",
+    aiMemoStatus: readAiMemoStatus(params.waveAiMemo),
+    aiMemoRunId: readAiMemoRunId(params.waveAiMemo),
     summaryRows: listRows,
     metricRows: buildMetricRows(metricSource),
     itemRows,
@@ -124,6 +140,38 @@ export function buildDpmWaveCommandCenterModel(params: {
       readValue(proofPackPosture, "external_execution_claimed")
     ),
   };
+}
+
+function readReportInputRef(
+  reportInput: Record<string, unknown> | undefined,
+  memo: DpmWaveAiPmMemoResponse | null | undefined
+): string {
+  const evidenceRef = readRecord(reportInput?.evidence_ref);
+  return (
+    readString(reportInput ?? {}, "report_input_ref") ||
+    readString(evidenceRef, "ref_id") ||
+    readString(memo?.wave_report_input ?? {}, "report_input_ref") ||
+    "N/A"
+  );
+}
+
+function readAiMemoStatus(memo: DpmWaveAiPmMemoResponse | null | undefined): string {
+  if (!memo) {
+    return "NOT_REQUESTED";
+  }
+  return normalizeState(
+    readString(memo.data, "status") ||
+      readString(memo.data, "review_state") ||
+      readString(readRecord(memo.data.output), "review_state") ||
+      "REVIEW_REQUIRED"
+  );
+}
+
+function readAiMemoRunId(memo: DpmWaveAiPmMemoResponse | null | undefined): string {
+  if (!memo) {
+    return "N/A";
+  }
+  return readString(memo.data, "run_id") || readString(memo.data, "workflow_run_id") || "N/A";
 }
 
 function resolvePanelState(

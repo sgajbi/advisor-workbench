@@ -83,9 +83,10 @@ must travel through Gateway-shaped contracts.
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,
     report-input payloads, and AI-evidence payloads remain manage-owned, while proof-pack PM memo
     execution remains `lotus-ai` owned; both must reach Workbench through Gateway composition.
-    RFC-0041 rebalance-wave preview, create, source-check,
-    simulation, selection, approval, staging, handoff, and supportability also remain
-    manage-owned and must reach Workbench through Gateway wave composition only. RFC-0039
+    RFC-0041 rebalance-wave preview, create, source-check, simulation, selection, approval,
+    staging, handoff, supportability, and report-input also remain manage-owned, while wave PM
+    memo execution remains `lotus-ai` owned; both must reach Workbench through Gateway wave
+    composition only. RFC-0039
     construction alternative generation, retrieval, supportability, and selection are manage-owned
     and must reach Workbench through Gateway construction composition only. RFC-0042
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and
@@ -96,16 +97,17 @@ must travel through Gateway-shaped contracts.
     reach Workbench through Gateway portfolio-memory composition only.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
     contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
-    create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture, and
-    supportability contracts, the implemented proof-pack panel consumes the Gateway proof-pack
+    create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture,
+    supportability, report-input, and AI PM memo contracts, the implemented proof-pack panel consumes the Gateway proof-pack
     generation, detail, Markdown, report-input, AI-evidence, and AI PM memo contracts, and the
     implemented outcome panel consumes the Gateway outcome-review list and AI-narrative contracts.
     The implemented portfolio-memory panel consumes the Gateway portfolio-memory contract and
     preserves manage event order without reconstructing timeline nodes.
     Workbench must not calculate expected-versus-realized values. It must not rebuild proof-pack
-    sections, compute proof-pack hashes, construct prompts, infer PM quality, calculate wave readiness,
-    reconstruct portfolio-memory events, claim external execution, or optimize construction
-    alternatives; proof-pack sections remain manage-owned evidence.
+    sections, compute proof-pack hashes, construct prompts, infer PM quality, calculate wave
+    readiness, construct report input, generate memo narrative locally, reconstruct
+    portfolio-memory events, claim external execution, or optimize construction alternatives;
+    proof-pack sections and wave report input remain manage-owned evidence.
 16. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
     `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`
     contracts. Workbench renders manage-owned health distribution, source readiness,

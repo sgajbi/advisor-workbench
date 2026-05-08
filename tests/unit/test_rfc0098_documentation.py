@@ -41,6 +41,8 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "first RFC-0041 rebalance-wave command-center" in rfc
     assert "`/api/v1/dpm/command-center/waves*`" in rfc
     assert "approval, staging, handoff" in rfc
+    assert "`GET /api/v1/dpm/command-center/waves/{wave_id}/report-input`" in rfc
+    assert "`POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo`" in rfc
     assert "`GET /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}`" in rfc
     assert "Dimension Matrix" in rfc
     assert "AI Evidence Panel" in rfc
@@ -53,8 +55,9 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "AI-evidence ready but AI memo unavailable" in rfc
     assert "outcome-review search, detail, supportability" in integrations
     assert "create, detail, item, source-check, simulation, approval, staging, handoff" in integrations
+    assert "supportability, report-input, and AI PM memo contracts" in integrations
     assert "must not calculate expected-versus-realized values" in integrations
-    assert "calculate wave readiness" in integrations
+    assert "calculate wave\n    readiness" in integrations
     assert "proof-pack truth" in integrations
     assert "proof-pack panel consumes the Gateway proof-pack" in integrations
     assert "proof-pack sections" in integrations
@@ -63,4 +66,5 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "RFC-0040 proof-pack evidence" in roadmap
     assert "DPM rebalance-wave command center" in supported_features
     assert "approval, staging, handoff" in supported_features
+    assert "governed AI PM memo request" in supported_features
     assert "external OMS/execution integration" in supported_features

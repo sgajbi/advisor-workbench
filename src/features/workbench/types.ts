@@ -1281,6 +1281,19 @@ export type DpmWaveGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmWaveAiPmMemoResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  evidence_source_service: string;
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  supportability: DpmWaveSupportability;
+  wave_report_input: Record<string, unknown>;
+  memo_request: Record<string, unknown>;
+  data: Record<string, unknown>;
+};
+
 export type DpmOutcomeReviewNarrativeResponse = {
   correlation_id: string;
   contract_version: string;

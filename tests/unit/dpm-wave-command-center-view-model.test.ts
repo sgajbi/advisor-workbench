@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { buildDpmWaveCommandCenterModel } from "../../src/features/workbench/dpm-wave-command-center-view-model";
-import type { DpmWaveGatewayResponse } from "../../src/features/workbench/types";
+import type {
+  DpmWaveAiPmMemoResponse,
+  DpmWaveGatewayResponse,
+} from "../../src/features/workbench/types";
 
 const waveListResponse: DpmWaveGatewayResponse = {
   correlation_id: "corr-wave-list",
@@ -104,6 +107,50 @@ describe("DPM wave command-center view model", () => {
     expect(model.proofPackRows[0].value).toContain("sha256:proof");
     expect(model.handoffRows[0].label).toBe("dwh_1");
     expect(model.externalExecutionClaimed).toBe("No");
+  });
+
+  it("surfaces report-input and AI PM memo posture without deriving execution truth", () => {
+    const aiMemoResponse: DpmWaveAiPmMemoResponse = {
+      correlation_id: "corr-wave-ai-memo",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: waveListResponse.supportability,
+      wave_report_input: {
+        wave_id: "dwv_001",
+        report_input_ref: "report-input:dwv_001",
+      },
+      memo_request: {
+        requested_outputs: ["wave_pm_memo", "approval_checklist"],
+        audience: ["portfolio_manager", "investment_control"],
+      },
+      data: {
+        run_id: "wf_run_wave_memo_001",
+        status: "REVIEW_REQUIRED",
+      },
+    };
+
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveReportInput: {
+        ...waveListResponse,
+        data: {
+          wave_id: "dwv_001",
+          evidence_ref: {
+            ref_id: "dwv_001:dpm_wave_report_input",
+          },
+        },
+      },
+      waveAiMemo: aiMemoResponse,
+    });
+
+    expect(model.reportInputStatus).toBe("READY");
+    expect(model.reportInputRef).toBe("dwv_001:dpm_wave_report_input");
+    expect(model.aiMemoStatus).toBe("REVIEW_REQUIRED");
+    expect(model.aiMemoRunId).toBe("wf_run_wave_memo_001");
+    expect(model.externalExecutionClaimed).toBe("N/A");
   });
 
   it("does not infer readiness from a present wave when manage supportability is blocked", () => {
