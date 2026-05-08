@@ -401,6 +401,41 @@
   margin-top: 0.75rem;
 }
 
+.portfolio-memory-panel .analytics-table-frame {
+  margin-top: 0.85rem;
+}
+
+.portfolio-memory-badge-row,
+.portfolio-memory-reason-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.portfolio-memory-status-strip,
+.portfolio-memory-summary-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.portfolio-memory-status-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.portfolio-memory-summary-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.portfolio-memory-subsection {
+  min-width: 0;
+}
+
+.portfolio-memory-reason-row {
+  margin-top: 0.75rem;
+}
+
 .dpm-wave-command-center-panel .analytics-table-frame {
   margin-top: 0.85rem;
 }

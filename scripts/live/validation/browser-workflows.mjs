@@ -494,6 +494,37 @@ export async function validateDpmWaveCommandCenterPanel(
   await screenshotRegisteredPanel(page, "dpm.wave_command_center");
 }
 
+export async function validatePortfolioMemoryPanel(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows, screenshotRegisteredPanel }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  const memoryPanel = workbenchPanelByClass(page, "portfolio-memory-panel");
+  await expect(memoryPanel.getByRole("heading", { name: "Portfolio Memory" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(memoryPanel.getByLabel("Status lotus-manage")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(memoryPanel.getByText(/sha256:/)).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await assertTableHasRows(
+    tableByExactLabel(page, "DPM portfolio-memory event type counts"),
+    1,
+    "DPM portfolio-memory event type counts"
+  );
+  await assertTableHasRows(
+    tableByExactLabel(page, "DPM portfolio-memory event timeline"),
+    1,
+    "DPM portfolio-memory event timeline"
+  );
+  await screenshotRegisteredPanel(page, "dpm.portfolio_memory");
+}
+
 export async function validateProofPackPanel(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows, screenshotRegisteredPanel }

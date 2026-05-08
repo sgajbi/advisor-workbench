@@ -18,6 +18,7 @@ import {
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
   DpmOutcomeReviewNarrativeResponse,
+  DpmPortfolioMemoryGatewayResponse,
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
@@ -925,6 +926,24 @@ export async function getDpmMandateHealth(
         "server",
         `/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health`,
         "DPM mandate health"
+      )
+  );
+}
+
+export async function getDpmPortfolioMemory(params: {
+  portfolioId: string;
+  limit?: number;
+}): Promise<DpmPortfolioMemoryGatewayResponse> {
+  const query = new URLSearchParams();
+  query.set("limit", String(params.limit ?? 100));
+  return await observeWorkbenchResource(
+    "dpm.portfolio-memory.get",
+    async () =>
+      await fetchWorkbenchResource<DpmPortfolioMemoryGatewayResponse>(
+        "server",
+        `/dpm/command-center/portfolios/${encodeURIComponent(params.portfolioId)}/memory`,
+        "DPM portfolio memory",
+        query
       )
   );
 }

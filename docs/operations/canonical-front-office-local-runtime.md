@@ -230,7 +230,8 @@ Validation layers:
    - `lotus-report`
    - `lotus-archive`
    - `lotus-render`
-   - `lotus-manage` supportability summary through `GET /api/v1/rebalance/supportability/summary`
+   - `lotus-manage` action-register supportability summary through
+     `GET /api/v1/rebalance/supportability/summary`
 3. Gateway and Workbench route readiness
 4. live Gateway contracts for:
    - foundation workspace
@@ -334,8 +335,11 @@ monolithic validation script.
 
 The validation script runs the browser validator from the `lotus-workbench` repository root so
 these artifact paths are stable even when `lotus-platform` or another orchestrator calls the
-script. Browser validation failures must fail the PowerShell command; do not treat stale summaries
-or partial screenshot output as successful evidence.
+script. Browser validation failures must fail the PowerShell command. The Manage action-register
+supportability summary is recorded as source-supportability evidence, including stale state and
+reason when present; DPM panel proof is gated by the command-center, wave, outcome-review, proof-pack,
+and portfolio-memory contracts instead of failing on unrelated historical action-register freshness.
+Do not treat partial screenshot output as successful evidence.
 
 The summary includes `calculationChecks` for canonical performance and risk sanity. These checks
 assert numeric ranges, contribution reconciliation, governed attribution fallback posture, risk

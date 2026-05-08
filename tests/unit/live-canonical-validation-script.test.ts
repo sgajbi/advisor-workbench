@@ -33,7 +33,8 @@ describe("canonical live validation script", () => {
 
     expect(runbook).toContain("runs the browser validator from the `lotus-workbench` repository root");
     expect(runbook).toContain("Browser validation failures must fail the PowerShell command");
-    expect(runbook).toContain("stale summaries");
+    expect(runbook).toContain("recorded as source-supportability evidence");
+    expect(runbook).toContain("historical action-register freshness");
     expect(runbook).toContain("-CleanCoreState");
     expect(runbook).toContain("1000`-portfolio load scenario");
     expect(runbook).toContain("Docker is the default for every canonical front-office app");
@@ -63,7 +64,16 @@ describe("canonical live validation script", () => {
     }
 
     expect(browserValidator).toContain("readSupportabilityState");
+    expect(browserValidator).toContain("summary.sourceSupportability");
+    expect(browserValidator).toContain(
+      "lotus-manage supportability summary returned no bounded supportability state"
+    );
+    expect(browserValidator).not.toContain(
+      "lotus-manage supportability summary returned non-ready supportability"
+    );
     expect(browserValidator).toContain("DPM rebalance-wave preview did not return ready manage supportability");
+    expect(browserValidator).toContain("supportedPortfolioMemoryStates");
+    expect(browserValidator).toContain("DPM portfolio memory did not return populated manage supportability");
     expect(browserValidator).toContain("gatewayModuleHealth.lotus_manage");
     expect(browserValidator).toContain("/api/v1/dpm/command-center?");
     expect(browserValidator).toContain("DPM command-center summary");
@@ -320,7 +330,16 @@ describe("canonical live validation script", () => {
 
     expect(script).toContain("canonicalAsOfDate");
     expect(script).toContain("createBrowserValidationHelpers");
+    expect(script).toContain("validatePortfolioMemoryPanel");
     expect(browserWorkflowModule).toContain("validateDpmCommandCenterPanel");
+    expect(browserWorkflowModule).toContain("Portfolio Memory");
+    expect(browserWorkflowModule).toContain("DPM portfolio-memory event timeline");
+    expect(browserWorkflowModule).toContain('workbenchPanelByClass(page, "portfolio-memory-panel")');
+    expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.portfolio_memory")');
+    expect(script).toContain("DPM portfolio memory");
+    expect(script).toContain("/memory?limit=100");
+    expect(script).toContain("DPM portfolio memory returned no manage-owned timeline events.");
+    expect(script).toContain('recordPanelClassification("dpm.portfolio_memory"');
     expect(browserWorkflowModule).toContain("DPM Command Center");
     expect(browserWorkflowModule).toContain("DPM attention queue");
     expect(browserWorkflowModule).toContain("DPM mandate health dimensions");
@@ -335,6 +354,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("extractWorkflowPackRunId");
     expect(script).toContain("PENDING_REVIEW");
     expect(script).toContain("DPM proof-pack evidence returned no reviewable proof-pack sections.");
+    expect(script).toContain('normalized === "BLOCKED"');
     expect(script).toContain("DPM proof-pack AI PM memo");
     expect(script).toContain("/ai-pm-memo");
     expect(script).toContain("DPM proof-pack AI PM memo did not return lotus-ai source authority.");

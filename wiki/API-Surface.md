@@ -84,6 +84,14 @@ promote dormant labels into product ownership just because historical route file
   are present. It does not rebuild proof-pack sections, compute hashes, synthesize Markdown,
   construct report input, construct AI evidence, construct PM memo prompts, materialize PDF
   reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
+- RFC40-WTBD-010 portfolio-memory timeline rendering is implemented on
+  `/workbench/{portfolioId}` through Gateway
+  `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`. Workbench renders manage-owned
+  event order, event type counts, event time, source systems, source refs, artifact refs, reason
+  codes, supportability state, and content hash. It does not reconstruct timeline nodes from
+  proof-pack, wave, outcome-review, report, archive, or AI payloads; direct `lotus-manage` calls
+  remain forbidden. Dedicated timeline filters, event drawers, lifecycle export, and retention or
+  audit-policy controls remain future scope until separately implemented and proven.
 - RFC-0098/RFC-0041 action-register supportability is rendered on `/workbench/{portfolioId}` from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow
@@ -131,7 +139,7 @@ Data products:
 http://workbench.dev.lotus/data-products
 ```
 
-Workbench DPM command-center, waves, construction alternatives, proof-pack evidence, and outcome review:
+Workbench DPM command-center, portfolio memory, waves, construction alternatives, proof-pack evidence, and outcome review:
 
 ```txt
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001

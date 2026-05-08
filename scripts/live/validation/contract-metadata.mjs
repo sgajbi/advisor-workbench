@@ -177,6 +177,19 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       ownerFollowUpRfc: "RFC-0098",
     },
+    {
+      panelId: "dpm.portfolio_memory",
+      owningService: "lotus-manage",
+      gatewayEndpoint: "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory",
+      requiredSupportState: "ready",
+      route: "/workbench/{portfolioId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "dpm-portfolio-memory-live.png",
+      knownLimitations: [
+        "embedded /workbench/{portfolioId} timeline is implemented before event filters and detail drawers",
+      ],
+      ownerFollowUpRfc: "RFC-0098",
+    },
   ],
 };
 
