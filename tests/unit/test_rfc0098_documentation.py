@@ -38,6 +38,9 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "must not reconstruct timeline nodes" in rfc
     assert "DPM portfolio memory" in supported_features
     assert "source refs, artifact refs, reason codes" in supported_features
+    assert "source-owned PM-book cohort" in rfc
+    assert "PortfolioManagerBookMembership:v1" in rfc
+    assert "PM-book-backed monitoring action" in supported_features
     assert "first RFC-0041 rebalance-wave command-center" in rfc
     assert "`/api/v1/dpm/command-center/waves*`" in rfc
     assert "approval, staging, handoff" in rfc

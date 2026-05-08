@@ -136,9 +136,7 @@ describe("DpmCommandCenterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run monitoring" }));
 
     await waitFor(() => {
-      expect(runDpmCommandCenterMonitoring).toHaveBeenCalledWith({
-        mandateIds: ["MANDATE_PB_SG_GLOBAL_BAL_001"],
-      });
+      expect(runDpmCommandCenterMonitoring).toHaveBeenCalledWith();
     });
     expect(
       screen.getByText("Monitoring dmr_2 returned SUCCEEDED"),

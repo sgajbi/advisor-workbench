@@ -833,9 +833,7 @@ export async function runDpmCommandCenterMonitoring(params?: {
 }): Promise<DpmCommandCenterGatewayResponse> {
   const dpmContext = resolveDefaultDpmContext();
   const callerContext = resolveDefaultCallerContext();
-  const mandateIds = params?.mandateIds?.length
-    ? params.mandateIds
-    : [dpmContext.mandateId];
+  const mandateIds = params?.mandateIds ?? [];
   const asOfDate = params?.asOfDate ?? dpmContext.commandCenterAsOfDate;
   return await observeWorkbenchMutation(
     "dpm.command-center.monitoring.run-once",

@@ -126,9 +126,7 @@ export default function DpmCommandCenterPanel({
     setRunError(null);
     setRunMessage(null);
     try {
-      const response = await runDpmCommandCenterMonitoring({
-        mandateIds: model.mandateId !== "N/A" ? [model.mandateId] : undefined,
-      });
+      const response = await runDpmCommandCenterMonitoring();
       setRunResponse(response);
       setRunMessage(
         `Monitoring ${response.data.monitoring_run_id ?? "run"} returned ${
