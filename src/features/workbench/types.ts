@@ -1162,6 +1162,26 @@ export type DpmCommandCenterGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmPortfolioMemorySupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  event_count: number;
+  event_type_counts: Record<string, number>;
+  source_systems: string[];
+  reason_codes: string[];
+  content_hash?: string | null;
+};
+
+export type DpmPortfolioMemoryGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmPortfolioMemorySupportability;
+  data: Record<string, unknown>;
+};
+
 export type DpmOutcomeReviewSupportability = {
   source_service: string;
   authority: string;

@@ -4,6 +4,7 @@ import {
   getDpmMandateByPortfolio,
   getDpmMandateHealth,
   getDpmOutcomeReviews,
+  getDpmPortfolioMemory,
   listDpmWaves,
   getPortfolio360,
   getReportingSnapshot,
@@ -32,6 +33,7 @@ import OverviewCards from "@/features/workbench/components/overview-cards";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
 import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
 import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
+import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
 import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
 import RebalanceStatus from "@/features/workbench/components/rebalance-status";
 import ReportBatchOperationsPanel from "@/features/workbench/components/report-batch-operations-panel";
@@ -88,6 +90,8 @@ export default async function WorkbenchPage({
   let dpmMandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null = null;
   let dpmMandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
   let dpmCommandCenterError: string | null = null;
+  let portfolioMemory: Awaited<ReturnType<typeof getDpmPortfolioMemory>> | null = null;
+  let portfolioMemoryError: string | null = null;
   let dpmWaves: Awaited<ReturnType<typeof listDpmWaves>> | null = null;
   let dpmWavesError: string | null = null;
   let outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null = null;
@@ -167,6 +171,17 @@ export default async function WorkbenchPage({
   } catch {
     dpmMandate = null;
     dpmMandateHealth = null;
+  }
+
+  try {
+    portfolioMemory = await getDpmPortfolioMemory({
+      portfolioId: data.portfolio.portfolio_id,
+      limit: 100,
+    });
+  } catch (error) {
+    portfolioMemory = null;
+    portfolioMemoryError =
+      error instanceof Error ? error.message : "Portfolio-memory endpoint unavailable.";
   }
 
   try {
@@ -317,6 +332,11 @@ export default async function WorkbenchPage({
                 mandate={dpmMandate}
                 mandateHealth={dpmMandateHealth}
                 errorMessage={dpmCommandCenterError}
+              />
+
+              <PortfolioMemoryPanel
+                response={portfolioMemory}
+                errorMessage={portfolioMemoryError}
               />
 
               <ConstructionAlternativesPanel portfolio={data} />

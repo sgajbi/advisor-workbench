@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0041 REBALANCE-WAVE PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE PROOF PENDING |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE MEMORY/WAVE PROOF PENDING |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -10,7 +10,7 @@
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
 | **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-manage` RFC-0042, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
-| **Implementation Branch** | `feat/rfc38-wtbd002-dpm-command-center-cockpit` for RFC-0038 command-center cockpit realization |
+| **Implementation Branch** | `wtbd-rfc40-portfolio-memory-workbench` for the RFC40-WTBD-010 portfolio-memory Workbench realization |
 
 RFC-0038 command-center cockpit live proof passed on 2026-05-06 with local Workbench and Gateway:
 `output/rfc38-wtbd002-command-center-cockpit-command-center-validated/live-validation-summary.json`.
@@ -31,6 +31,13 @@ RFC41-WTBD-006 implementation is now in progress on the
 embedded in `/workbench/{portfolioId}` and consumes Gateway
 `/api/v1/dpm/command-center/waves*` routes only. Promotion remains pending focused CI, canonical
 front-office proof, PR merge, wiki publication, and Manage WTBD closure.
+
+RFC40-WTBD-010 portfolio-memory product realization is now implemented locally on
+`wtbd-rfc40-portfolio-memory-workbench`. `/workbench/{portfolioId}` consumes Gateway
+`GET /api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`, renders manage-owned event
+order, event types, source systems, source refs, artifact refs, reason codes, supportability, and
+content hash, and does not reconstruct timeline nodes in the browser. Promotion remains pending
+focused CI, canonical front-office proof, PR merge, wiki publication, and final WTBD closure.
 
 ---
 
@@ -218,6 +225,32 @@ construction module backed by `lotus-manage` RFC-0039. This belongs inside the c
 experience because the portfolio manager reaches construction alternatives from mandate attention,
 rebalance readiness, and action posture. It must not become a separate decorative optimizer page.
 
+### 7.1 Portfolio Memory Timeline Addendum
+
+Workbench RFC-0098 must include a portfolio-memory timeline panel once Gateway exposes the
+manage-owned RFC40-WTBD-010 route. The panel is the product-readable event trail across RFC-0040
+proof packs, RFC-0041 waves and handoffs, and RFC-0042 outcome reviews.
+
+The implemented panel:
+
+1. consumes only Gateway
+   `GET /api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`,
+2. renders manage-owned supportability state, event count, event type counts, source systems,
+   reason codes, and content hash,
+3. preserves upstream event order, event type, event time, source refs, artifact refs, and reason
+   codes,
+4. shows empty, partial, unsupported, unavailable, and error states explicitly,
+5. emits bounded `dpm.portfolio-memory.get` observability without portfolio ids, event ids, content
+   hashes, source refs, request payloads, response payloads, or screen content as metric labels,
+6. must not call `lotus-manage` directly,
+7. must not reconstruct timeline nodes from proof-pack, wave, outcome-review, report, archive, or
+   AI responses.
+
+This panel is intentionally read-only in the current slice. Dedicated timeline filters, event
+detail drawers, retention/audit policy controls, cross-app lifecycle export, and client-demo
+timeline scripts remain follow-up scope until the owning services and Workbench browser proof
+promote them.
+
 Business outcome:
 
 1. PMs compare `do nothing`, explainable rebalance, minimum-turnover, and tax-aware choices before
@@ -309,7 +342,7 @@ Required UI states:
 5. proof pack degraded or pending review,
 6. proof pack blocked,
 7. report-input ready but report output unavailable,
-8. AI-evidence ready but AI PM memo unavailable or waiting for review,
+8. AI-evidence ready but AI memo unavailable, including AI PM memo unavailable or waiting for review,
 9. Gateway or manage unavailable.
 
 Supported-feature promotion is forbidden until Gateway implementation, Workbench browser proof,

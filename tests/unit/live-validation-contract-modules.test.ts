@@ -84,6 +84,13 @@ describe("live validation contract modules", () => {
       expect(shotIndex).toContain(summaryPath);
       expect(shotIndex).toContain("2026-04-10");
       expect(persistedSummary.workflowPackChecks).toEqual([]);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
+            panel.panelId === "dpm.portfolio_memory" &&
+            panel.gatewayEndpoint === "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory"
+        )
+      ).toBe(true);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

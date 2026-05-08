@@ -15,6 +15,7 @@ import {
   getDpmOutcomeReviewAiEvidenceInput,
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
+  getDpmPortfolioMemory,
   getDpmConstructionAlternativeSet,
   getDpmProofPack,
   getDpmProofPackAiEvidenceInput,
@@ -1904,6 +1905,51 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("mandate-command-center-health");
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(metricEventsJson).not.toContain("MANDATE_PB_SG_GLOBAL_BAL_001");
+  });
+
+  it("loads DPM portfolio memory through Gateway without leaking portfolio identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-memory",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0040/RFC-0041/RFC-0042",
+              state: "READY",
+              event_count: 1,
+              event_type_counts: { OUTCOME_REVIEW_CREATED: 1 },
+              source_systems: ["lotus-manage"],
+              reason_codes: ["SOURCE_READY"],
+              content_hash: "sha256:portfolio-memory",
+            },
+            data: {
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              events: [{ event_id: "memory:or_1", event_type: "OUTCOME_REVIEW_CREATED" }],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmPortfolioMemory({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      limit: 100,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/portfolios/PB_SG_GLOBAL_BAL_001/memory?limit=100"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("portfolio-memory");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("sha256:portfolio-memory");
   });
 
   it("loads DPM rebalance waves through Gateway without leaking wave identifiers into metrics", async () => {

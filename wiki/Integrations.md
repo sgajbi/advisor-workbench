@@ -91,15 +91,21 @@ must travel through Gateway-shaped contracts.
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and
     source-refresh posture also remain manage-owned, while AI narrative execution remains
     `lotus-ai` owned; both must reach Workbench through Gateway outcome-review composition only.
+    RFC40-WTBD-010 portfolio-memory timeline events, source refs, artifact refs, event counts,
+    source systems, reason codes, supportability, and content hashes remain manage-owned and must
+    reach Workbench through Gateway portfolio-memory composition only.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
     contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
     create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture, and
     supportability contracts, the implemented proof-pack panel consumes the Gateway proof-pack
     generation, detail, Markdown, report-input, AI-evidence, and AI PM memo contracts, and the
     implemented outcome panel consumes the Gateway outcome-review list and AI-narrative contracts.
+    The implemented portfolio-memory panel consumes the Gateway portfolio-memory contract and
+    preserves manage event order without reconstructing timeline nodes.
     Workbench must not calculate expected-versus-realized values. It must not rebuild proof-pack
-    sections, compute proof-pack hashes, construct prompts, infer PM quality, calculate wave
-    readiness, claim external execution, or optimize construction alternatives.
+    sections, compute proof-pack hashes, construct prompts, infer PM quality, calculate wave readiness,
+    reconstruct portfolio-memory events, claim external execution, or optimize construction
+    alternatives; proof-pack sections remain manage-owned evidence.
 16. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
     `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`
     contracts. Workbench renders manage-owned health distribution, source readiness,
@@ -135,6 +141,7 @@ flowchart TB
   Workbench -->|/api/bff/api/v1/dpm/command-center*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/construction/alternative-sets*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/proof-packs*| Gateway
+  Workbench -->|/api/bff/api/v1/dpm/command-center/portfolios/*/memory| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/waves*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/outcome-reviews*| Gateway
   Workbench -->|AI narrative action via Gateway only| Gateway

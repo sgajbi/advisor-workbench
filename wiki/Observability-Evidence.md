@@ -54,7 +54,8 @@ Use the API samples to show that the UI is backed by live services rather than s
 - performance summary
 - risk summary
 - advisor brief
-- Manage supportability summary through `GET /api/v1/rebalance/supportability/summary`
+- Manage action-register supportability summary through
+  `GET /api/v1/rebalance/supportability/summary`
 - Report integration capabilities
 - Archive and Render readiness
 
@@ -189,7 +190,10 @@ The 2026-05-02 RFC-0108 Workbench gold-pass run produced these local artifacts:
 The canonical validation recorded 24 API checks, 8 UI checks, 7 governed screenshots, 12 panel
 classifications, and 4 advisor-brief workflow-pack checks for `PB_SG_GLOBAL_BAL_001` against
 `BMK_PB_GLOBAL_BALANCED_60_40`. All application API samples in the companion observability pack
-returned HTTP `200`, including Manage readiness and Manage supportability summary.
+returned HTTP `200`, including Manage readiness and Manage action-register supportability summary.
+The canonical Workbench validator records the bounded Manage supportability state and reason as
+source-supportability evidence; stale action-register freshness is not treated as DPM panel failure
+when command-center, wave, outcome-review, proof-pack, and portfolio-memory contracts are ready.
 
 ## Suggested Offline Demo Flow
 

@@ -21,6 +21,7 @@ import {
   createBrowserValidationHelpers,
   validateAdvisorBriefPanel,
   validateDpmCommandCenterPanel,
+  validatePortfolioMemoryPanel,
   validateDpmWaveCommandCenterPanel,
   validateEvidencePanel,
   validatePerformanceAnalysisPanel,
@@ -133,7 +134,12 @@ function sourceEvidenceCount(proofPackPayload) {
 
 function isReviewableProofPackState(state) {
   const normalized = readString(state)?.toUpperCase();
-  return normalized === "READY" || normalized === "PENDING_REVIEW" || normalized === "DEGRADED";
+  return (
+    normalized === "READY" ||
+    normalized === "PENDING_REVIEW" ||
+    normalized === "DEGRADED" ||
+    normalized === "BLOCKED"
+  );
 }
 
 function extractWorkflowPackRunId(payload) {
@@ -295,9 +301,24 @@ async function run() {
     "lotus-manage supportability summary",
     timeoutMs
   );
-  if (manageSupportabilitySummary?.supportability?.state !== "ready") {
-    throw new Error("lotus-manage supportability summary returned non-ready supportability.");
+  const manageSupportabilityState = readSupportabilityState(
+    manageSupportabilitySummary?.supportability
+  );
+  if (!manageSupportabilityState) {
+    throw new Error("lotus-manage supportability summary returned no bounded supportability state.");
   }
+  summary.sourceSupportability = {
+    ...(summary.sourceSupportability ?? {}),
+    lotusManageActionRegister: {
+      state: manageSupportabilityState,
+      reason: readString(manageSupportabilitySummary?.supportability?.reason),
+      freshnessBucket: readString(manageSupportabilitySummary?.supportability?.freshness_bucket),
+      runCount: manageSupportabilitySummary?.supportability?.run_count ?? null,
+      operationCount: manageSupportabilitySummary?.supportability?.operation_count ?? null,
+      workflowDecisionCount:
+        manageSupportabilitySummary?.supportability?.workflow_decision_count ?? null,
+    },
+  };
 
   const outcomeReviews = await fetchJson(
     summary,
@@ -420,6 +441,33 @@ async function run() {
   const dpmCommandCenterPayload = dpmCommandCenter?.data ?? dpmCommandCenter;
   if (!dpmCommandCenterPayload?.supportability) {
     throw new Error("DPM command-center summary returned no manage supportability envelope.");
+  }
+
+  const portfolioMemory = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/portfolios/${encodeURIComponent(portfolioId)}/memory?limit=100`,
+    "DPM portfolio memory",
+    timeoutMs
+  );
+  const portfolioMemorySupportability = portfolioMemory?.supportability;
+  const portfolioMemoryPayload = portfolioMemory?.data ?? portfolioMemory;
+  const portfolioMemoryEvents = Array.isArray(portfolioMemoryPayload?.events)
+    ? portfolioMemoryPayload.events
+    : [];
+  const portfolioMemoryState = readSupportabilityState(portfolioMemorySupportability);
+  const supportedPortfolioMemoryStates = new Set(["ready", "partial", "blocked"]);
+  if (!supportedPortfolioMemoryStates.has(portfolioMemoryState?.toLowerCase())) {
+    throw new Error(
+      `DPM portfolio memory did not return populated manage supportability; observed ${
+        portfolioMemoryState ?? "missing"
+      }.`
+    );
+  }
+  if (portfolioMemoryEvents.length < 1) {
+    throw new Error("DPM portfolio memory returned no manage-owned timeline events.");
+  }
+  if (!readString(portfolioMemorySupportability?.content_hash)) {
+    throw new Error("DPM portfolio memory returned no content hash.");
   }
 
   const dpmExceptions = await fetchJson(
@@ -567,6 +615,11 @@ async function run() {
     route: `/workbench/${portfolioId}`,
     source: "Gateway DPM command-center summary",
   });
+  panelGovernance.recordPanelClassification("dpm.portfolio_memory", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}`,
+    eventCount: portfolioMemoryEvents.length,
+    source: "Gateway DPM portfolio-memory composition",
+  });
   panelGovernance.recordPanelClassification("dpm.wave_command_center", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     source: "Gateway DPM rebalance-wave composition",
@@ -669,6 +722,13 @@ async function run() {
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateDpmCommandCenterPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validatePortfolioMemoryPanel(page, {
       workbenchBaseUrl,
       portfolioId,
       timeoutMs,
