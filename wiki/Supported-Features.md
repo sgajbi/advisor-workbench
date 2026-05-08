@@ -10,7 +10,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Portfolio summary and detail | `/portfolio`, `/portfolio?tab=detailed` | Gateway Workbench portfolio APIs | Supported with canonical live proof. |
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
-| DPM mandate command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit and monitoring action. |
+| DPM mandate command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit and PM-book-backed monitoring action through Gateway/Manage. |
 | DPM rebalance-wave command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, and governed AI PM memo request through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
 | DPM proof-pack evidence | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
@@ -90,6 +90,7 @@ flowchart LR
 ## Demo Guidance
 
 Use `PB_SG_GLOBAL_BAL_001` and the canonical local runtime. Demo claims should say that Workbench
-is Gateway-backed and manage-owned for DPM operating truth. Do not claim external execution,
-automatic PM-book discovery, or autonomous CIO approval until those owning services and Workbench
-proof promote them.
+is Gateway-backed and manage-owned for DPM operating truth. You may claim source-owned PM-book
+resolution for the embedded command-center run-monitoring action after canonical validation passes.
+Do not claim external execution, Workbench-local PM-book inference, dedicated PM-book wave discovery
+screens, or autonomous CIO approval until those owning services and Workbench proof promote them.

@@ -590,6 +590,13 @@ RFC-0038 command-center cockpit support is now implemented as an embedded
 | `GET /api/v1/dpm/command-center/mandates/by-portfolio/{portfolio_id}` | `/workbench/{portfolioId}` mandate binding |
 | `GET /api/v1/dpm/command-center/mandates/{mandate_id}/health` | `/workbench/{portfolioId}` mandate health dimensions |
 
+The embedded run-monitoring action uses the governed DPM context for tenant `default`,
+PM `PM_SG_DPM_001`, book `BOOK_SG_BALANCED_DPM`, and as-of date `2026-05-03`. Workbench sends that
+context through the Gateway BFF with an empty `mandate_ids` list so `lotus-manage` can resolve the
+source-owned PM-book cohort from lotus-core `PortfolioManagerBookMembership:v1`. Workbench must not
+derive PM-book membership, fabricate a cohort from the current page portfolio, or send a hidden
+single-mandate fallback as if it were book-level monitoring.
+
 The Workbench view model must preserve:
 
 1. contract name and version,

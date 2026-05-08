@@ -52,8 +52,11 @@ Current repository posture:
    Gateway `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and
    `/mandates*`. Workbench shows manage-owned book health distribution, source readiness,
    attention queue, recommended actions, latest monitoring-run lineage, active exceptions, and
-   mandate health dimensions without calculating mandate health, inferring PM-book membership,
-   reconstructing source readiness, merging exceptions, or calling `lotus-manage` directly.
+   mandate health dimensions without calculating mandate health, reconstructing source readiness,
+   merging exceptions, or calling `lotus-manage` directly. The command-center run-monitoring
+   action sends the governed PM/book/as-of context through Gateway and lets Manage resolve
+   source-owned PM-book membership from lotus-core rather than sending a browser-selected mandate
+   fallback.
 8. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
    `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
    dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and

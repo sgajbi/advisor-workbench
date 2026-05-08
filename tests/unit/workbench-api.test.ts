@@ -1804,7 +1804,7 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("dmr_1");
   });
 
-  it("runs DPM command-center monitoring through Gateway without reconstructing health", async () => {
+  it("runs DPM command-center monitoring through Gateway PM-book discovery by default", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -1828,7 +1828,6 @@ describe("workbench api", () => {
     );
 
     await runDpmCommandCenterMonitoring({
-      mandateIds: ["MANDATE_PB_SG_GLOBAL_BAL_001"],
       tenantId: "default",
       portfolioManagerId: "PM_SG_DPM_001",
       bookId: "BOOK_SG_BALANCED_DPM",
@@ -1845,7 +1844,7 @@ describe("workbench api", () => {
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       body: {
-        mandate_ids: ["MANDATE_PB_SG_GLOBAL_BAL_001"],
+        mandate_ids: [],
         as_of_date: "2026-05-03",
         tenant_id: "default",
         portfolio_manager_id: "PM_SG_DPM_001",
