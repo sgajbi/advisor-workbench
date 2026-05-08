@@ -20,11 +20,11 @@ UI tables, and recorded the canonical `mandates/by-portfolio/PB_SG_GLOBAL_BAL_00
 
 WTBD-003 populated seed automation was then completed locally on 2026-05-07 through
 `lotus-platform` canonical front-office QA. The governed runtime now refreshes
-`MANDATE_PB_SG_GLOBAL_BAL_001` from core through manage, verifies Gateway mandate lookup, health,
-and command-center summary, classifies `dpm.command_center` as `ready`, and captures the registered
-DPM command-center screenshot under `output/playwright/live-canonical/`. Workbench still preserves
-`seed_gap` for non-populated environments, but the governed canonical portfolio path is no longer
-gap-coded.
+`MANDATE_PB_SG_GLOBAL_BAL_001` from core through manage, runs a Manage monitoring pass, verifies
+Gateway mandate lookup, health, and command-center summary, and classifies `dpm.command_center`
+truthfully from Manage supportability. The current canonical source products now produce a populated
+`READY` command center for the canonical PM/book/as-of filter. Workbench still preserves `seed_gap` for
+non-populated environments, but the governed canonical portfolio path is no longer gap-coded.
 
 RFC41-WTBD-006 implementation is now in progress on the
 `wtbd-rfc41-workbench-wave-command-center` branch. The first Workbench wave command-center panel is

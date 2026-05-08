@@ -188,6 +188,9 @@ function resolvePanelState(
   if (supportabilityState === "PARTIAL" || supportabilityState === "UNKNOWN") {
     return "partial";
   }
+  if (supportabilityState === "DEGRADED") {
+    return "partial";
+  }
   if (
     supportabilityState === "UNSUPPORTED" ||
     supportabilityState === "BLOCKED"
@@ -354,6 +357,8 @@ function formatLabel(value: string): string {
     .replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
-function normalizeState(state: string): string {
-  return state.trim().toUpperCase() || "UNKNOWN";
+function normalizeState(state: string | null | undefined): string {
+  return typeof state === "string" && state.trim().length > 0
+    ? state.trim().toUpperCase()
+    : "UNKNOWN";
 }

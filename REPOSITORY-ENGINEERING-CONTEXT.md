@@ -56,7 +56,10 @@ Current repository posture:
    merging exceptions, or calling `lotus-manage` directly. The command-center run-monitoring
    action sends the governed PM/book/as-of context through Gateway and lets Manage resolve
    source-owned PM-book membership from lotus-core rather than sending a browser-selected mandate
-   fallback.
+   fallback. Workbench maps manage command-center supportability states into explicit panel
+   posture: populated canonical `READY` remains demo-ready, `PARTIAL` plus source-readiness
+   `DEGRADED` or `BLOCKED` are visible partial states, and `EMPTY` remains an explicit empty state instead of
+   being treated as a successful populated cockpit.
 8. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
    `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
    dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
