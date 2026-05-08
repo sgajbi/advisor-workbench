@@ -73,6 +73,7 @@ describe("canonical live validation script", () => {
     );
     expect(browserValidator).toContain("DPM rebalance-wave preview did not return ready manage supportability");
     expect(browserValidator).toContain("supportedPortfolioMemoryStates");
+    expect(browserValidator).toContain('"degraded"');
     expect(browserValidator).toContain("DPM portfolio memory did not return populated manage supportability");
     expect(browserValidator).toContain("gatewayModuleHealth.lotus_manage");
     expect(browserValidator).toContain("/api/v1/dpm/command-center?");
@@ -359,6 +360,13 @@ describe("canonical live validation script", () => {
     expect(script).toContain("/ai-pm-memo");
     expect(script).toContain("DPM proof-pack AI PM memo did not return lotus-ai source authority.");
     expect(script).toContain("DPM proof-pack AI PM memo returned no workflow-pack run reference.");
+    expect(script).toContain("DPM rebalance-wave report input");
+    expect(script).toContain("DPM rebalance-wave report input returned no report input evidence ref.");
+    expect(script).toContain("DPM rebalance-wave AI PM memo");
+    expect(script).toContain("DPM rebalance-wave create");
+    expect(script).toContain("DPM rebalance-wave create returned no manage-owned wave id.");
+    expect(script).toContain("DPM rebalance-wave AI PM memo did not return lotus-ai source authority.");
+    expect(script).toContain("DPM rebalance-wave AI PM memo returned no workflow-pack run reference.");
     expect(script).toContain("Gateway workbench overview returned no manage rebalance-run reference");
     expect(script).toContain("source_type: \"REBALANCE_RUN\"");
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");

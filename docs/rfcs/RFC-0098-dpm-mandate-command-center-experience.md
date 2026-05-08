@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE MEMORY/WAVE PROOF PENDING |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -32,12 +32,14 @@ embedded in `/workbench/{portfolioId}` and consumes Gateway
 `/api/v1/dpm/command-center/waves*` routes only. Promotion remains pending focused CI, canonical
 front-office proof, PR merge, wiki publication, and Manage WTBD closure.
 
-RFC40-WTBD-010 portfolio-memory product realization is now implemented locally on
-`wtbd-rfc40-portfolio-memory-workbench`. `/workbench/{portfolioId}` consumes Gateway
+RFC40-WTBD-010 portfolio-memory product realization is implemented on
+`/workbench/{portfolioId}`. The panel consumes Gateway
 `GET /api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`, renders manage-owned event
 order, event types, source systems, source refs, artifact refs, reason codes, supportability, and
-content hash, and does not reconstruct timeline nodes in the browser. Promotion remains pending
-focused CI, canonical front-office proof, PR merge, wiki publication, and final WTBD closure.
+content hash, and does not reconstruct timeline nodes in the browser. Canonical live validation
+accepts populated `READY`, `PARTIAL`, `DEGRADED`, and `BLOCKED` source truth because the panel is
+responsible for surfacing source-owner readiness gaps; it still fails empty, unsupported,
+unavailable, or content-hash-missing memory.
 
 ---
 
@@ -239,7 +241,7 @@ The implemented panel:
    reason codes, and content hash,
 3. preserves upstream event order, event type, event time, source refs, artifact refs, and reason
    codes,
-4. shows empty, partial, unsupported, unavailable, and error states explicitly,
+4. shows empty, partial, degraded, unsupported, unavailable, and error states explicitly,
 5. emits bounded `dpm.portfolio-memory.get` observability without portfolio ids, event ids, content
    hashes, source refs, request payloads, response payloads, or screen content as metric labels,
 6. must not call `lotus-manage` directly,
@@ -452,19 +454,23 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/approve` | approval action |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/stage` | staging action |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/handoff` | internal operations handoff action |
+| `GET /api/v1/dpm/command-center/waves/{wave_id}/report-input` | report-input evidence drawer |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo` | governed AI PM memo request |
 
-Implementation note as of 2026-05-07: the first RFC-0041 rebalance-wave command-center
+Implementation note as of 2026-05-08: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
 `/api/v1/dpm/command-center/waves*`. Workbench loads the explicit portfolio-list wave queue,
 previews and creates canonical portfolio waves, opens wave detail and item posture, and calls
-source-check, simulation, approval, staging, handoff, proof-posture, and supportability through the
-Workbench BFF/Gateway boundary. The panel renders manage-owned wave id, lifecycle state, item
-count, issue count, supportability reason codes, blocked actions, aggregate metrics, item states,
-source-readiness state, alternative refs, proof-pack refs, handoff refs, and
-`external_execution_claimed` posture without direct `lotus-manage` calls or client-side readiness
-calculation. Item-selection drawers, richer supportability drawers, dedicated `/dpm/waves` routes,
-PM-book discovery, CIO approval workflow, and external OMS execution remain future scope until
-Gateway/Manage and Workbench proof promote them.
+source-check, simulation, approval, staging, handoff, proof-posture, supportability, report-input,
+and governed AI PM memo requests through the Workbench BFF/Gateway boundary. The panel renders
+manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
+blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
+report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
+`external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls,
+client-side readiness calculation, report-input construction, prompt construction, or local memo
+narrative generation. Item-selection drawers, richer supportability drawers, dedicated
+`/dpm/waves` routes, PM-book discovery, CIO approval workflow, and external OMS execution remain
+future scope until Gateway/Manage and Workbench proof promote them.
 
 Supported-feature promotion is forbidden until the Workbench BFF and browser implementation is
 complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual and accessibility

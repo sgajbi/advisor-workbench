@@ -480,6 +480,8 @@ export async function validateDpmWaveCommandCenterPanel(
     "Handoff",
     "Proof posture",
     "Supportability",
+    "Report input",
+    "AI memo",
   ]) {
     await expect(wavePanel.getByRole("button", { name: actionName })).toBeVisible({
       timeout: timeoutMs,
@@ -489,6 +491,24 @@ export async function validateDpmWaveCommandCenterPanel(
     timeout: timeoutMs,
   });
   await expect(wavePanel.getByText("Preview wave completed through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await wavePanel.getByRole("button", { name: "Create wave" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Create wave completed through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await wavePanel.getByRole("button", { name: "Report input" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Load report input completed through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await wavePanel.getByRole("button", { name: "AI memo" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Request AI memo completed through Gateway.")).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.wave_command_center");

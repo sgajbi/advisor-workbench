@@ -22,6 +22,7 @@ import {
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
+  DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
   ReportJobHandleResponse,
   ReportBatchHandleResponse,
@@ -1184,6 +1185,47 @@ export async function getDpmWaveSupportability(
         "client",
         `/dpm/command-center/waves/${encodeURIComponent(waveId)}/supportability`,
         "DPM rebalance wave supportability"
+      )
+  );
+}
+
+export async function getDpmWaveReportInput(waveId: string): Promise<DpmWaveGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.report-input",
+    async () =>
+      await fetchWorkbenchResource<DpmWaveGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/${encodeURIComponent(waveId)}/report-input`,
+        "DPM rebalance wave report input"
+      )
+  );
+}
+
+export async function requestDpmWaveAiPmMemo(waveId: string): Promise<DpmWaveAiPmMemoResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.waves.ai-pm-memo",
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveAiPmMemoResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/${encodeURIComponent(waveId)}/ai-pm-memo`
+        ),
+        "request DPM rebalance wave AI PM memo",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(),
+          body: JSON.stringify({
+            requested_outputs: [
+              "wave_pm_memo",
+              "wave_rationale_summary",
+              "approval_checklist",
+              "risk_caveats",
+              "operations_handoff",
+              "evidence_gaps",
+            ],
+            audience: ["portfolio_manager", "investment_control", "operations"],
+          }),
+        }
       )
   );
 }

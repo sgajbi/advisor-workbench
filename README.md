@@ -64,7 +64,13 @@ Boundary rules that matter:
    run ids as RFC-0040 proof-pack sources. Reviewable Manage states such as `PENDING_REVIEW` are
    displayed truthfully when the proof pack includes identity, sections, hashes/lineage, and handoff
    posture.
-6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0042 post-trade outcome-review
+6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0041 rebalance-wave command
+   center for wave queue, preview, create, detail, items, source-check, simulation, approval,
+   staging, handoff, report-input, and governed AI PM memo request posture. Workbench renders
+   Gateway/manage/lotus-ai workflow-pack truth and does not calculate wave readiness, build report
+   input, construct AI prompts, generate memo narrative locally, claim external execution, or call
+   `lotus-manage` or `lotus-ai` directly.
+7. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0042 post-trade outcome-review
    panel for manage-owned expected-versus-realized dimensions, source lineage, supportability,
    and report/AI handoff posture. Workbench renders the Gateway contract and does not calculate
    outcome variance, freshness, supportability, or handoff eligibility locally.
@@ -283,6 +289,11 @@ Important current product and route truths:
    lotus-ai PM memo workflow-pack posture through Gateway, but must not rebuild proof-pack
    sections, compute hashes, synthesize Markdown, construct report input, construct AI evidence,
    construct PM memo prompts, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
+11. RFC-0041 rebalance-wave rendering on `/workbench/{portfolioId}` is backed by Gateway
+   `/api/v1/dpm/command-center/waves*`; Workbench may render Gateway/manage wave state,
+   report-input readiness, and lotus-ai wave PM memo workflow-pack posture through Gateway, but
+   must not build report input, construct AI prompts, generate memo text locally, score PMs,
+   approve trades independently, contact clients, place orders, or call upstream services directly.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

@@ -409,6 +409,16 @@ describe("analytics UI observability metrics", () => {
         "wave-supportability",
         "dpm.waves.supportability",
       ],
+      [
+        "workbench.dpm-command-center",
+        "wave-report-input",
+        "dpm.waves.report-input",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "wave-ai-pm-memo",
+        "dpm.waves.ai-pm-memo",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],
