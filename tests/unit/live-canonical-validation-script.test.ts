@@ -126,7 +126,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain('DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED = "true"');
     expect(script).toContain('DPM_STATEFUL_CORE_SOURCING_ENABLED = "true"');
     expect(script).toContain('DPM_CORE_BASE_URL = "http://core-control.dev.lotus"');
+    expect(script).toContain('DPM_CORE_QUERY_BASE_URL = "http://core-query.dev.lotus"');
     expect(script).toContain('$dockerManageEnvironment["DPM_CORE_BASE_URL"] = "http://host.docker.internal:8202"');
+    expect(script).toContain('$dockerManageEnvironment["DPM_CORE_QUERY_BASE_URL"] = "http://host.docker.internal:8201"');
     expect(script).toContain("Invoke-WithProcessEnvironment -Environment $localManageEnvironment");
     expect(script).toContain("Invoke-ComposeUp $manageRepo $dockerManageEnvironment");
     expect(script).toContain('Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }');

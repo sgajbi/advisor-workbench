@@ -151,7 +151,8 @@ posture required by the validator:
 
 - `DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED=true`
 - `DPM_STATEFUL_CORE_SOURCING_ENABLED=true`
-- `DPM_CORE_BASE_URL=http://host.docker.internal:8202` for Docker-backed manage
+- `DPM_CORE_BASE_URL=http://host.docker.internal:8202` and
+  `DPM_CORE_QUERY_BASE_URL=http://host.docker.internal:8201` for Docker-backed manage
 
 Local manage overrides use the canonical host URL `http://core-control.dev.lotus` for the same
 source-data authority. This keeps capability truth aligned with the proof target: stateful mode

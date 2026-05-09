@@ -247,9 +247,11 @@ function Start-CanonicalManage {
     DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED = "true"
     DPM_STATEFUL_CORE_SOURCING_ENABLED = "true"
     DPM_CORE_BASE_URL = "http://core-control.dev.lotus"
+    DPM_CORE_QUERY_BASE_URL = "http://core-query.dev.lotus"
   }
   $dockerManageEnvironment = $localManageEnvironment.Clone()
   $dockerManageEnvironment["DPM_CORE_BASE_URL"] = "http://host.docker.internal:8202"
+  $dockerManageEnvironment["DPM_CORE_QUERY_BASE_URL"] = "http://host.docker.internal:8201"
 
   if (Test-LocalApp "manage") {
     Invoke-RepoCommand $manageRepo "docker compose down --remove-orphans"
