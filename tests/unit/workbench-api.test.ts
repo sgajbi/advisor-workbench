@@ -2222,6 +2222,7 @@ describe("workbench api", () => {
     await generateDpmConstructionAlternatives({
       portfolio: constructionPortfolio(),
       methods: ["DO_NOTHING_BASELINE", "MIN_TURNOVER"],
+      idempotencyKey: "workbench-construction-test-idem-1",
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -2232,9 +2233,7 @@ describe("workbench api", () => {
     expect(options.headers["X-Caller-Application"]).toBe("lotus-workbench");
     expect(options.headers["X-Actor-Id"]).toBe("workbench-construction-operator");
     const body = JSON.parse(options.body);
-    expect(body.idempotency_key).toBe(
-      "workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10"
-    );
+    expect(body.idempotency_key).toBe("workbench-construction-test-idem-1");
     expect(body.body.input_mode).toBe("stateful");
     expect(body.body.methods).toEqual([
       "DO_NOTHING_BASELINE",
@@ -2258,6 +2257,59 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("construction-alternatives");
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(metricEventsJson).not.toContain("cas_1");
+  });
+
+  it("uses a fresh DPM construction generation idempotency key for each default request", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-rfc39",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0039",
+              state: "READY",
+              reason_codes: [],
+            },
+            data: { alternative_set_id: "cas_1", alternatives: [] },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await generateDpmConstructionAlternatives({
+      portfolio: constructionPortfolio(),
+    });
+    await generateDpmConstructionAlternatives({
+      portfolio: constructionPortfolio(),
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const firstBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const secondBody = JSON.parse(fetchMock.mock.calls[1][1].body);
+    const firstHeaders = fetchMock.mock.calls[0][1].headers;
+    const secondHeaders = fetchMock.mock.calls[1][1].headers;
+    expect(firstBody.idempotency_key).toMatch(
+      /^workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+    );
+    expect(secondBody.idempotency_key).toMatch(
+      /^workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+    );
+    expect(firstBody.idempotency_key).not.toBe(secondBody.idempotency_key);
+    expect(firstHeaders["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+    );
+    expect(secondHeaders["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+    );
+    expect(firstHeaders["X-Correlation-Id"]).not.toBe(
+      secondHeaders["X-Correlation-Id"]
+    );
   });
 
   it("loads and selects DPM construction alternatives through Gateway endpoints", async () => {

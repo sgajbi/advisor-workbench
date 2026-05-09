@@ -109,6 +109,26 @@ function buildPerformanceWorkspaceQuery(params: {
   return query.toString();
 }
 
+function buildUniqueMutationToken(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function buildConstructionGenerationIdempotencyKey(params: {
+  portfolioId: string;
+  constructionAsOf: string;
+  mutationToken: string;
+}): string {
+  return [
+    "workbench-construction",
+    params.portfolioId,
+    params.constructionAsOf,
+    params.mutationToken,
+  ].join("-");
+}
+
 async function fetchWorkbenchJson<T>(
   url: string,
   errorLabel: string,
@@ -1232,6 +1252,7 @@ export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];
   actorId?: string;
+  idempotencyKey?: string;
 }): Promise<DpmConstructionGatewayResponse> {
   const portfolioId = params.portfolio.portfolio.portfolio_id;
   const actorId = params.actorId ?? "workbench-construction-operator";
@@ -1251,6 +1272,20 @@ export async function generateDpmConstructionAlternatives(params: {
     typeof statefulInput?.as_of === "string"
       ? statefulInput.as_of
       : params.portfolio.as_of_date;
+  const mutationToken = buildUniqueMutationToken();
+  const idempotencyKey =
+    params.idempotencyKey ??
+    buildConstructionGenerationIdempotencyKey({
+      portfolioId,
+      constructionAsOf,
+      mutationToken,
+    });
+  const correlationId = [
+    "corr-workbench-construction",
+    portfolioId,
+    constructionAsOf,
+    mutationToken,
+  ].join("-");
   return await observeWorkbenchMutation(
     "dpm.construction.alternatives.generate",
     async () =>
@@ -1261,10 +1296,10 @@ export async function generateDpmConstructionAlternatives(params: {
           method: "POST",
           headers: buildDpmConstructionCallerHeaders({
             actorId,
-            correlationId: `corr-workbench-construction-${portfolioId}-${constructionAsOf}`,
+            correlationId,
           }),
           body: JSON.stringify({
-            idempotency_key: `workbench-construction-${portfolioId}-${constructionAsOf}`,
+            idempotency_key: idempotencyKey,
             body: requestBody,
           }),
         }
