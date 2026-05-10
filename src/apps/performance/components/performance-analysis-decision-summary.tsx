@@ -16,6 +16,7 @@ import {
   getTopPositionContributionRows,
   hasPositionContributionRanking,
 } from "../view-model";
+import { getAttributionSourcePosture } from "./performance-attribution-presentations";
 
 function getTopDriverLabel(workspace: WorkbenchPerformanceWorkspace): string | null {
   if (hasPositionContributionRanking(workspace)) {
@@ -43,6 +44,7 @@ export default function PerformanceAnalysisDecisionSummary({
   const selectedPerformance =
     detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance;
   const attribution = workspace.attribution;
+  const attributionPosture = getAttributionSourcePosture(attribution);
   const topDriverLabel = getTopDriverLabel(workspace);
   const contributionCoverage = workspace.contribution?.coverage_mv_pct;
   const headline =
@@ -81,11 +83,23 @@ export default function PerformanceAnalysisDecisionSummary({
       ? {
           label: "Residual",
           value: formatPct(attribution.residual_pct),
-          support: attribution.linking
-            ? `${attribution.linking} linking`
-            : "Attribution reconciliation",
+          support:
+            attribution.residual_materiality?.classification != null
+              ? `${attribution.residual_materiality.classification} residual`
+              : attribution.linking
+                ? `${attribution.linking} linking`
+                : "Attribution reconciliation",
           definition:
             "Difference between attributed effects and total active return after applying the selected linking method.",
+        }
+      : null,
+    attributionPosture?.state !== "supported"
+      ? {
+          label: "Attribution Posture",
+          value: attributionPosture?.state === "partial" ? "Partial" : "Unavailable",
+          support: attributionPosture?.reason ?? "Source supportability qualification",
+          definition:
+            "Source-owned attribution status returned by lotus-performance for this selection.",
         }
       : null,
     contributionCoverage != null

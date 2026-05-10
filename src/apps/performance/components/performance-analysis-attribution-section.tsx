@@ -7,7 +7,10 @@ import PerformanceAnalysisAttributionBreakdown from "./performance-analysis-attr
 import PerformanceAnalysisModuleState from "./performance-analysis-module-state";
 import PerformanceAnalysisSegmentToolbar from "./performance-analysis-segment-toolbar";
 import PerformancePanelInfoDrawer from "./performance-panel-info-drawer";
-import { getAttributionDetailClassificationGapBody } from "./performance-attribution-presentations";
+import {
+  getAttributionDetailClassificationGapBody,
+  getAttributionSourcePosture,
+} from "./performance-attribution-presentations";
 import type { PerformanceAnalysisAttributionSectionProps } from "./performance-workspace-types";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getAttributionMethodologyRows } from "./performance-analysis-methodology-rows";
@@ -32,6 +35,7 @@ export default function PerformanceAnalysisAttributionSection({
     partialFailures: workspace.partial_failures,
     attributionDimension,
   });
+  const attributionSourcePosture = getAttributionSourcePosture(workspace.attribution);
   const missingAttributionLevelsBody =
     capabilities.attributionDetail.state !== "unavailable" &&
     (!workspace.attribution || !hasAttributionSummaryLevels)
@@ -48,6 +52,22 @@ export default function PerformanceAnalysisAttributionSection({
         ...capabilities.attributionDetail,
         state: "partial" as const,
         reason: missingAttributionLevelsBody,
+      }
+    : attributionSourcePosture?.state === "partial"
+    ? {
+        ...capabilities.attributionDetail,
+        state: "partial" as const,
+        reason:
+          attributionSourcePosture.reason ??
+          "lotus-performance returned attribution with source supportability qualifications.",
+      }
+    : attributionSourcePosture?.state === "unavailable"
+    ? {
+        ...capabilities.attributionDetail,
+        state: "unavailable" as const,
+        reason:
+          attributionSourcePosture.reason ??
+          "lotus-performance marked attribution unavailable for this selection.",
       }
     : capabilities.attributionDetail;
   const attributionMethodologyRows = getAttributionMethodologyRows(
@@ -92,6 +112,7 @@ export default function PerformanceAnalysisAttributionSection({
         body={
           attributionClassificationGapBody ??
           missingAttributionLevelsBody ??
+          attributionSourcePosture?.reason ??
           effectiveAttributionCapability.reason ??
           "Attribution detail is not available for the current selection."
         }
@@ -100,6 +121,8 @@ export default function PerformanceAnalysisAttributionSection({
             ? "Select a supported segment or use a benchmark with complete classification coverage for this dimension."
             : missingAttributionLevelsBody
             ? "Use the attribution trend and supportability posture while the selected segment detail is incomplete."
+            : attributionSourcePosture?.state === "partial"
+            ? "Review source reason codes, residual materiality, and supportability evidence before using attribution in client-facing commentary."
             : hasAttributionSummaryLevels
             ? "Summary-level attribution remains available even when segment rows are absent."
             : "Benchmark-relative attribution requires a comparable benchmark and source-backed attribution levels."
@@ -107,7 +130,7 @@ export default function PerformanceAnalysisAttributionSection({
         allowPartialContent={hasAttributionSummaryLevels && !attributionClassificationGapBody}
       >
         {workspace.attribution ? (
-          <PerformanceAnalysisAttributionBreakdown levels={workspace.attribution.levels} />
+          <PerformanceAnalysisAttributionBreakdown attribution={workspace.attribution} />
         ) : null}
       </PerformanceAnalysisModuleState>
     </WorkbenchChartShell>
