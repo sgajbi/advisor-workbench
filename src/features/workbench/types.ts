@@ -228,6 +228,25 @@ export type ContributionLevelView = {
   total_portfolio_return_pct?: number | null;
 };
 
+export type ContributionSmoothingEvidenceView = {
+  status: string | null;
+  reason_codes: string[];
+  raw_contribution_pct: number | null;
+  final_contribution_pct: number | null;
+  linked_return_pct: number | null;
+  smoothing_residual_pct: number | null;
+};
+
+export type ContributionSourceEconomicsEvidenceView = {
+  status: string | null;
+  reason_codes: string[];
+  source_contracts: string[];
+  available_economics: string[];
+  unsupported_economics: string[];
+  degraded_economics: string[];
+  source_snapshot_count: number | null;
+};
+
 export type ContributionSummaryView = {
   metric_basis: string;
   weighting_scheme: string | null;
@@ -238,6 +257,8 @@ export type ContributionSummaryView = {
   portfolio_fx_contribution_pct: number | null;
   position_rows: ContributionPositionView[];
   levels: ContributionLevelView[];
+  smoothing_evidence?: ContributionSmoothingEvidenceView | null;
+  source_economics_evidence?: ContributionSourceEconomicsEvidenceView | null;
 };
 
 export type AttributionRowView = {

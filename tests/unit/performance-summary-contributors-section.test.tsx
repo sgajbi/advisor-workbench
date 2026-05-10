@@ -84,7 +84,12 @@ describe("PerformanceSummaryContributorsSection", () => {
       screen.queryByText("Open the full instrument-level contribution breakdown in one ranked table.")
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    const contributionEvidenceNote = screen.getByRole("note");
+    expect(contributionEvidenceNote).toHaveTextContent("Source economics: SOURCE_LIMITED");
+    expect(contributionEvidenceNote).toHaveTextContent("Smoothing: APPLIED");
+    expect(contributionEvidenceNote).toHaveTextContent(
+      "Source reasons: LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+    );
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
 
