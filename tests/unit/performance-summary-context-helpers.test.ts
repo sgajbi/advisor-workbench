@@ -4,6 +4,7 @@ import {
   getPerformanceBenchmarkOptionLabel,
   getPerformanceReturnPathPresentation,
 } from "../../src/apps/performance/components/performance-summary-context-helpers";
+import { buildPerformanceMwrDrilldown as buildMwrDrilldown } from "../../src/apps/performance/components/performance-mwr-drilldown";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
   buildPartialBenchmarkPerformanceScenario,
@@ -270,6 +271,39 @@ describe("performance summary context helpers", () => {
         is_assigned: true,
       })
     ).toBe("Global Balanced 60/40 • USD • Composite");
+  });
+
+  it("builds MWR reason-code drill-down only when supportability signals exist", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    expect(buildMwrDrilldown(scenario.workspace.money_weighted_return)).toBeNull();
+
+    const model = buildMwrDrilldown({
+      ...scenario.workspace.money_weighted_return!,
+      status: "FALLBACK_USED",
+      method: "MODIFIED_DIETZ",
+      reason_codes: ["NO_ROOT_FOUND", "DIETZ_FALLBACK_USED", "NO_ROOT_FOUND"],
+      warnings: ["XIRR solver did not find a unique root."],
+      fallback_from: "XIRR",
+      fallback_reason: "No unique XIRR root was found.",
+      is_approximation: true,
+      holding_period_return_pct: 3.05,
+      notes: ["Modified Dietz fallback used."],
+    });
+
+    expect(model).toMatchObject({
+      summaryLabel: "Fallback Used • Modified Dietz • Approximation",
+      statusLabel: "Fallback Used",
+      methodLabel: "Modified Dietz",
+      inputModeLabel: "Stateful",
+      annualizedLabel: "5.12%",
+      holdingPeriodLabel: "3.05%",
+      approximationLabel: "Approximation",
+      fallbackLabel: "XIRR: No unique XIRR root was found.",
+      reasonCodes: ["NO_ROOT_FOUND", "DIETZ_FALLBACK_USED"],
+      warnings: ["XIRR solver did not find a unique root."],
+      notes: ["Modified Dietz fallback used."],
+    });
   });
 
   it("keeps benchmark context focused on benchmark identity and market metadata", () => {

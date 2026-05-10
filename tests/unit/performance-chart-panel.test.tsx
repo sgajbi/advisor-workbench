@@ -508,6 +508,42 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return decision readout")).not.toHaveTextContent("XIRR");
   });
 
+  it("renders MWR reason-code drill-down from gateway supportability fields", () => {
+    const props = buildChartProps();
+
+    render(
+      <PerformanceChartPanel
+        {...props}
+        moneyWeightedReturn={{
+          ...props.moneyWeightedReturn!,
+          status: "FALLBACK_USED",
+          method: "MODIFIED_DIETZ",
+          reason_codes: ["NO_ROOT_FOUND", "DIETZ_FALLBACK_USED"],
+          warnings: ["XIRR solver did not find one root."],
+          fallback_from: "XIRR",
+          fallback_reason: "No unique XIRR root was found.",
+          is_approximation: true,
+          holding_period_return_pct: 3.05,
+          notes: ["Modified Dietz fallback used."],
+        }}
+      />
+    );
+
+    const drilldown = screen.getByLabelText("MWR reason-code drill-down");
+    expect(drilldown).toHaveTextContent("MWR supportability");
+    expect(drilldown).toHaveTextContent("Fallback Used • Modified Dietz • Approximation");
+
+    fireEvent.click(within(drilldown).getByText("MWR supportability"));
+
+    expect(within(drilldown).getByText("Reason codes")).toBeInTheDocument();
+    expect(within(drilldown).getByText("NO_ROOT_FOUND")).toBeInTheDocument();
+    expect(within(drilldown).getByText("DIETZ_FALLBACK_USED")).toBeInTheDocument();
+    expect(within(drilldown).getByText("Warnings")).toBeInTheDocument();
+    expect(within(drilldown).getByText("XIRR solver did not find one root.")).toBeInTheDocument();
+    expect(within(drilldown).getByText("Fallback")).toBeInTheDocument();
+    expect(within(drilldown).getByText("XIRR: No unique XIRR root was found.")).toBeInTheDocument();
+  });
+
   it("renders a compact unavailable panel instead of the large chart canvas when no series is available", () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
     const returnPath = buildPerformanceReturnPathScenarioData(scenario);
