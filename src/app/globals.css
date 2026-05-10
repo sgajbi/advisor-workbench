@@ -11456,6 +11456,100 @@ a:hover {
   color: #617185;
 }
 
+.performance-mwr-drilldown {
+  border: 1px solid rgba(112, 132, 158, 0.24);
+  border-radius: 8px;
+  background: rgba(248, 251, 253, 0.88);
+  padding: 0;
+}
+
+.performance-mwr-drilldown summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  list-style: none;
+  min-height: 2.75rem;
+  padding: 0.62rem 0.88rem;
+}
+
+.performance-mwr-drilldown summary::-webkit-details-marker {
+  display: none;
+}
+
+.performance-mwr-drilldown summary span {
+  color: rgba(53, 68, 88, 0.78);
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.performance-mwr-drilldown summary strong {
+  color: #21344f;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.performance-mwr-drilldown-body {
+  border-top: 1px solid rgba(112, 132, 158, 0.2);
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem 0.88rem 0.88rem;
+}
+
+.performance-mwr-drilldown-facts {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  margin: 0;
+}
+
+.performance-mwr-drilldown-facts div {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(112, 132, 158, 0.18);
+  border-radius: 8px;
+  padding: 0.5rem 0.62rem;
+}
+
+.performance-mwr-drilldown-facts dt,
+.performance-mwr-reason-group h4 {
+  color: rgba(53, 68, 88, 0.72);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+}
+
+.performance-mwr-drilldown-facts dd {
+  color: #18263a;
+  font-size: 0.82rem;
+  font-weight: 750;
+  margin: 0;
+}
+
+.performance-mwr-reason-group ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.performance-mwr-reason-group li {
+  background: rgba(34, 76, 120, 0.08);
+  border: 1px solid rgba(34, 76, 120, 0.16);
+  border-radius: 999px;
+  color: #21344f;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 0.31rem 0.56rem;
+}
+
 .performance-chart-legend {
   display: flex;
   flex-wrap: wrap;

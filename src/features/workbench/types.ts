@@ -174,8 +174,16 @@ export type PerformanceChartPoint = {
 export type MoneyWeightedReturnSummary = {
   money_weighted_return_pct: number | null;
   annualized_return_pct: number | null;
+  holding_period_return_pct?: number | null;
   input_mode?: string | null;
   method: string | null;
+  status?: string | null;
+  reason_codes?: string[];
+  warnings?: string[];
+  is_annualized_primary?: boolean | null;
+  fallback_from?: string | null;
+  fallback_reason?: string | null;
+  is_approximation?: boolean | null;
   start_date: string | null;
   end_date: string | null;
   begin_market_value?: number | null;

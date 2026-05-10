@@ -129,6 +129,11 @@ Performance:
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001
 ```
 
+The Performance return-path panel consumes Gateway-published MWR supportability fields and exposes
+reason-code drill-downs for non-ordinary MWR posture, including XIRR fallback, approximation, no-root
+and multiple-root solver states. Workbench displays the emitted Gateway contract and does not
+recalculate MWR or infer reason codes client-side.
+
 Performance risk mode:
 
 ```txt

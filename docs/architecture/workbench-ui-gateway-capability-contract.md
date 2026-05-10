@@ -131,6 +131,10 @@ expanding the API surface:
 - Performance money-weighted return
   - `money_weighted_return`
   - shown only when the contract actually provides it
+  - supportability fields `status`, `reason_codes`, `warnings`, `fallback_from`,
+    `fallback_reason`, `is_approximation`, and `holding_period_return_pct` are exposed through
+    the Performance return-path MWR drill-down when Gateway publishes a non-ordinary MWR posture
+    such as XIRR fallback, no-root, multiple-root, or approximation behavior
 - Portfolio reporting freshness
   - `readiness.reporting.generated_at_utc`
   - `readiness.reporting.row_count`

@@ -20,6 +20,9 @@ import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathChartStage from "./performance-return-path-chart-stage";
 import PerformanceReturnPathNotices from "./performance-return-path-notices";
 import PerformanceReturnPathSummary from "./performance-return-path-summary";
+import PerformanceMwrDrilldown, {
+  buildPerformanceMwrDrilldown,
+} from "./performance-mwr-drilldown";
 import {
   buildReturnPathChartOption,
   resolveReportDates,
@@ -125,6 +128,10 @@ export default function PerformanceChartPanel({
     capabilities,
     reportingCurrency,
   });
+  const mwrDrilldown = useMemo(
+    () => buildPerformanceMwrDrilldown(moneyWeightedReturn),
+    [moneyWeightedReturn]
+  );
   const chartTableModel = useMemo(
     () =>
       buildPerformanceReturnPathTableModel({
@@ -298,6 +305,7 @@ export default function PerformanceChartPanel({
               items={outcomeStripItems}
             />
           ) : null}
+          {mwrDrilldown ? <PerformanceMwrDrilldown model={mwrDrilldown} /> : null}
           <PerformanceObservationTrail tableModel={chartTableModel} />
         </>
       ) : null}
