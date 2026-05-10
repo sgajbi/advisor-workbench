@@ -456,6 +456,23 @@ export function buildPerformanceWorkspaceDetails(
       coverage_mv_pct: 98.7,
       portfolio_local_contribution_pct: 4.8,
       portfolio_fx_contribution_pct: 0.62,
+      smoothing_evidence: {
+        status: "APPLIED",
+        reason_codes: ["CARINO_FACTOR_APPLIED"],
+        raw_contribution_pct: 5.31,
+        final_contribution_pct: 5.42,
+        linked_return_pct: 5.42,
+        smoothing_residual_pct: 0,
+      },
+      source_economics_evidence: {
+        status: "SOURCE_LIMITED",
+        reason_codes: ["LOTUS_CORE_ANALYTICS_INPUTS_USED", "COMPONENT_PNL_NOT_SOURCE_AUTHORED"],
+        source_contracts: ["PortfolioTimeseriesInput:v1", "PositionTimeseriesInput:v1"],
+        available_economics: ["portfolio_market_values", "position_market_values"],
+        unsupported_economics: ["income_pnl", "tax_pnl"],
+        degraded_economics: ["unsupported_cash_flow_types"],
+        source_snapshot_count: 2,
+      },
       position_rows: options?.aggregateContributionOnly
         ? []
         : [

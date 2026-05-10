@@ -86,6 +86,9 @@ export default function PerformanceSummaryContributorsSection({
         <div className="performance-contributors-asymmetric-side">
           {renderRankedContributorCard(secondaryGroup)}
         </div>
+        {workspace.contribution ? (
+          <PerformanceContributionContextNote contribution={workspace.contribution} />
+        ) : null}
         {instrumentDetailDisclosure}
       </div>
     ) : (
@@ -93,6 +96,9 @@ export default function PerformanceSummaryContributorsSection({
         <div className="performance-contributors-compare-grid">
           {rankedContributorGroups.map((group) => renderRankedContributorCard(group))}
         </div>
+        {workspace.contribution ? (
+          <PerformanceContributionContextNote contribution={workspace.contribution} />
+        ) : null}
         {instrumentDetailDisclosure}
       </div>
     );

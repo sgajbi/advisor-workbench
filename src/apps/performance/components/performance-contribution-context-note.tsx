@@ -18,6 +18,11 @@ function formatContributionWeightingScheme(weightingScheme?: string | null) {
   }
 }
 
+function formatContributionStatus(label: string, status?: string | null) {
+  const normalized = status?.trim();
+  return normalized ? `${label}: ${normalized}` : null;
+}
+
 export default function PerformanceContributionContextNote({
   contribution,
   className = "performance-contribution-context-note",
@@ -33,10 +38,21 @@ export default function PerformanceContributionContextNote({
   ]
     .filter(Boolean)
     .join(" • ");
+  const evidenceText = [
+    formatContributionStatus("Source economics", contribution.source_economics_evidence?.status),
+    formatContributionStatus("Smoothing", contribution.smoothing_evidence?.status),
+  ]
+    .filter(Boolean)
+    .join(" • ");
+  const sourceReasonText = contribution.source_economics_evidence?.reason_codes.length
+    ? `Source reasons: ${contribution.source_economics_evidence.reason_codes.join(", ")}`
+    : null;
 
   return (
     <div className={className} role="note">
       <strong>{coverageText}</strong>
+      {evidenceText ? <span>{evidenceText}</span> : null}
+      {sourceReasonText ? <span>{sourceReasonText}</span> : null}
       {showReconciliation ? (
         <span>
           {getContributionReconciliationAssessment(contribution) ??

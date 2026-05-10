@@ -473,6 +473,12 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBeTruthy();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByText("Source economics: SOURCE_LIMITED • Smoothing: APPLIED")).toBeInTheDocument();
+    expect(
+      within(contributorsModule as HTMLElement).getByText(
+        "Source reasons: LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+      )
+    ).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByText("Instrument detail")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
