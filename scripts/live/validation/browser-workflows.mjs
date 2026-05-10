@@ -356,6 +356,7 @@ export async function validateEvidencePanel(
     timeout: timeoutMs,
   });
   const evidenceStatusStrip = page.getByLabel("Evidence support status");
+  let screenshotState = "truthfully_degraded";
   if (await evidenceStatusStrip.count()) {
     await expect(evidenceStatusStrip).toBeVisible({ timeout: timeoutMs });
     summary.uiChecks.push({
@@ -363,6 +364,7 @@ export async function validateEvidencePanel(
       kind: "status-strip",
       state: "supported",
     });
+    screenshotState = "demo_ready";
   } else {
     await expect(page.getByText(/Evidence (partially available|unavailable)/)).toBeVisible({
       timeout: timeoutMs,
@@ -374,7 +376,7 @@ export async function validateEvidencePanel(
     });
   }
   await screenshotRegisteredPanel(page, "performance.evidence", {
-    state: "truthfully_degraded",
+    state: screenshotState,
   });
 }
 
