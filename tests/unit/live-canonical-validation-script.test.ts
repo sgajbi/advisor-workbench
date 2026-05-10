@@ -401,7 +401,8 @@ describe("canonical live validation script", () => {
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
     expect(browserWorkflowModule).toContain("panel: panelId");
-    expect(browserWorkflowModule).toContain('state: "truthfully_degraded"');
+    expect(browserWorkflowModule).toContain('screenshotState = "demo_ready"');
+    expect(browserWorkflowModule).toContain("state: screenshotState");
     expect(browserWorkflowModule).toContain("path: target");
     expect(evidenceWriter).toContain("SHOT-INDEX.md");
     expect(script).toContain("writeShotIndex");

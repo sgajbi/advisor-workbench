@@ -31,17 +31,59 @@ function recordCalculationCheck(summary, description, evidence) {
 }
 
 function readSourceSupportabilityItems(...payloads) {
-  return payloads.flatMap((payload) =>
-    Array.isArray(payload?.source_supportability) ? payload.source_supportability : []
-  );
+  return payloads.flatMap((payload) => [
+    ...(Array.isArray(payload?.source_supportability) ? payload.source_supportability : []),
+    ...readContributionSourceEconomicsItems(payload),
+  ]);
+}
+
+function readContributionSourceEconomicsItems(payload) {
+  const sourceEconomicsEvidence = payload?.contribution?.source_economics_evidence;
+  if (!sourceEconomicsEvidence || typeof sourceEconomicsEvidence !== "object") {
+    return [];
+  }
+
+  return [
+    {
+      source_service: deriveContributionSourceEconomicsOwner(sourceEconomicsEvidence),
+      operation: "performance.contribution.source_economics",
+      state: sourceEconomicsEvidence.status,
+      freshness_bucket:
+        typeof sourceEconomicsEvidence.source_snapshot_count === "number" &&
+        sourceEconomicsEvidence.source_snapshot_count > 0
+          ? "fresh"
+          : "unknown",
+    },
+  ];
+}
+
+function deriveContributionSourceEconomicsOwner(sourceEconomicsEvidence) {
+  if (typeof sourceEconomicsEvidence.source_owner === "string" && sourceEconomicsEvidence.source_owner) {
+    return sourceEconomicsEvidence.source_owner;
+  }
+
+  const sourceContracts = Array.isArray(sourceEconomicsEvidence.source_contracts)
+    ? sourceEconomicsEvidence.source_contracts
+    : [];
+  if (
+    sourceContracts.some(
+      (contract) =>
+        typeof contract === "string" &&
+        (contract.includes("PortfolioTimeseriesInput") || contract.includes("PositionTimeseriesInput"))
+    )
+  ) {
+    return "lotus-core";
+  }
+
+  return "lotus-performance";
 }
 
 function normalizeSupportabilityState(value) {
   const normalized = typeof value === "string" ? value.toLowerCase() : "";
-  if (["ready", "supported", "ok", "complete"].includes(normalized)) {
+  if (["ready", "supported", "ok", "complete", "source_backed", "caller_supplied"].includes(normalized)) {
     return "ready";
   }
-  if (["partial", "stale"].includes(normalized)) {
+  if (["partial", "stale", "source_limited"].includes(normalized)) {
     return "partial";
   }
   if (["blocked", "degraded", "unavailable", "unsupported", "action_required"].includes(normalized)) {

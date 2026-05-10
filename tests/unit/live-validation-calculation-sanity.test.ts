@@ -59,6 +59,11 @@ describe("live validation calculation sanity helpers", () => {
       performanceDetails: {
         net_chart: [{}, {}, {}, {}],
         contribution: {
+          source_economics_evidence: {
+            status: "SOURCE_LIMITED",
+            source_contracts: ["PortfolioTimeseriesInput:v1", "PositionTimeseriesInput:v1"],
+            source_snapshot_count: 4,
+          },
           levels: [
             {
               rows: [{}, {}, {}, {}],
@@ -107,10 +112,10 @@ describe("live validation calculation sanity helpers", () => {
         owner: "lotus-gateway",
         source: "gateway.source_supportability",
         state: "partial",
-        itemCount: 2,
+        itemCount: 3,
         staleCount: 1,
-        partialCount: 1,
-        services: ["lotus-performance"],
+        partialCount: 2,
+        services: ["lotus-core", "lotus-performance"],
       }),
     ]);
   });
