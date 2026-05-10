@@ -69,6 +69,8 @@ function createAdvisorBriefPayload({
   runId,
   reviewState = "AWAITING_REVIEW",
   supportabilityStatus,
+  runtimeState = "COMPLETED",
+  allowedReviewActions = ["ACCEPT", "REJECT", "REVISE", "SUPERSEDE", "ABANDON"],
   superseded,
   replacementRunId,
   taskFlowId,
@@ -79,6 +81,8 @@ function createAdvisorBriefPayload({
   runId: string;
   reviewState?: string;
   supportabilityStatus?: string;
+  runtimeState?: string;
+  allowedReviewActions?: string[];
   superseded?: boolean;
   replacementRunId?: unknown;
   taskFlowId: string;
@@ -89,7 +93,9 @@ function createAdvisorBriefPayload({
   return {
     workflow_pack_run: {
       run_id: runId,
+      runtime_state: runtimeState,
       review_state: reviewState,
+      allowed_review_actions: allowedReviewActions,
       ...(supportabilityStatus === undefined
         ? {}
         : { supportability_status: supportabilityStatus }),
@@ -203,7 +209,7 @@ describe("live validation workflow-pack proof", () => {
       },
     });
 
-    expect(getCalls).toHaveLength(4);
+    expect(getCalls).toHaveLength(5);
     expect(postCalls).toEqual([
       expect.objectContaining({
         url: expect.stringContaining("/performance/advisor-brief/review-actions?period=YTD"),
@@ -326,5 +332,60 @@ describe("live validation workflow-pack proof", () => {
         }),
       ])
     );
+  });
+
+  it("records degraded advisor-brief review posture without posting an invalid action", async () => {
+    const summary = createSummary();
+    const getCalls: string[] = [];
+    const postCalls: Array<{ url: string; body: Record<string, unknown> }> = [];
+
+    await validateAdvisorBriefWorkflowPackReviewChain({
+      summary,
+      gatewayBaseUrl: "http://gateway.dev.lotus",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+      canonicalAsOfDate: "2026-04-10",
+      timeoutMs: 1000,
+      fetchJson: async (_summary: unknown, url: string) => {
+        getCalls.push(url);
+        return createAdvisorBriefPayload({
+          runId: "packrun-ytd-net-failed",
+          runtimeState: "FAILED",
+          reviewState: "AWAITING_REVIEW",
+          allowedReviewActions: [],
+          supportabilityStatus: "ACTION_REQUIRED",
+          taskFlowId: "taskflow-ytd-net-failed",
+          taskFlowStatus: "FAILED",
+          taskFlowSupportabilityStatus: "ACTION_REQUIRED",
+        });
+      },
+      postJson: async (
+        _summary: unknown,
+        url: string,
+        _description: string,
+        _timeoutMs: number,
+        body: Record<string, unknown>
+      ) => {
+        postCalls.push({ url, body });
+        throw new Error("postJson should not be called for a non-reviewable run.");
+      },
+    });
+
+    expect(getCalls).toHaveLength(1);
+    expect(postCalls).toEqual([]);
+    expect(summary.workflowPackChecks).toEqual([
+      expect.objectContaining({
+        actionType: "ACCEPT",
+        sourceRunId: "packrun-ytd-net-failed",
+        taskFlowId: "taskflow-ytd-net-failed",
+        taskFlowStatus: "FAILED",
+        taskFlowSupportabilityStatus: "ACTION_REQUIRED",
+        resultReviewState: "AWAITING_REVIEW",
+        resultSupportabilityStatus: "ACTION_REQUIRED",
+        skipped: true,
+        runtimeState: "FAILED",
+        allowedReviewActions: [],
+      }),
+    ]);
   });
 });

@@ -266,6 +266,16 @@ export async function validateAdvisorBriefPanel(
   if (performAcceptReviewActionProof) {
     const reviewRegion = page.getByLabel("Advisor brief review actions");
     const supportabilityRegion = page.getByLabel("Advisor brief supportability");
+    if ((await reviewRegion.count()) === 0) {
+      await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
+      summary.uiChecks.push({
+        description: "Advisor brief ACCEPT review action",
+        kind: "workflow-pack-review-action",
+        actionType: "ACCEPT",
+        state: "not-currently-allowed",
+      });
+      return;
+    }
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await reviewRegion.getByLabel("Reviewed by").fill("live.validator.ui");
     await reviewRegion
