@@ -160,6 +160,40 @@ function assertAcceptedRunPosture(payload) {
   return run;
 }
 
+function isReviewActionAllowed(payload, actionType) {
+  const run = assertWorkflowPackRunPresence(payload, `Advisor brief ${actionType} source run`);
+  const allowedActions = Array.isArray(run.allowed_review_actions)
+    ? run.allowed_review_actions
+    : [];
+  return allowedActions.includes(actionType);
+}
+
+function recordSkippedReviewAction(summary, payload, actionType, route) {
+  const run = assertWorkflowPackRunPresence(payload, `Advisor brief ${actionType} source run`);
+  const taskFlow = assertInitialTaskFlowPosture(
+    payload,
+    run.run_id,
+    `Advisor brief ${actionType} source run`
+  );
+  recordWorkflowPackCheck(summary, {
+    actionType,
+    route,
+    sourceRunId: run.run_id,
+    taskFlowId: taskFlow.task_flow_id,
+    taskFlowStatus: taskFlow.flow_status,
+    taskFlowSupportabilityStatus: taskFlow.supportability_status,
+    resultReviewState: run.review_state,
+    resultSupportabilityStatus: run.supportability_status,
+    skipped: true,
+    skipReason: `Review action ${actionType} is not currently allowed by workflow-pack run posture.`,
+    runtimeState: run.runtime_state,
+    allowedReviewActions: Array.isArray(run.allowed_review_actions)
+      ? run.allowed_review_actions
+      : [],
+  });
+  return { run, taskFlow };
+}
+
 function assertReplacementLineagePosture(payload, expectedReviewState, replacementRunId) {
   const run = assertWorkflowPackRunPresence(
     payload,
@@ -209,9 +243,21 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     detailBasis: "NET",
     benchmarkCode,
   });
+  const acceptRoute = `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${acceptQuery}`;
+  const acceptSourceRoute = `/api/v1/workbench/${portfolioId}/performance/advisor-brief?${acceptQuery}`;
+  const acceptSource = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}${acceptSourceRoute}`,
+    "Advisor brief ACCEPT source run",
+    timeoutMs
+  );
+  if (!isReviewActionAllowed(acceptSource, "ACCEPT")) {
+    recordSkippedReviewAction(summary, acceptSource, "ACCEPT", acceptRoute);
+    return;
+  }
   const acceptedBrief = await postJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${acceptQuery}`,
+    `${gatewayBaseUrl}${acceptRoute}`,
     "Advisor brief ACCEPT review action",
     timeoutMs,
     {
@@ -224,7 +270,7 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
   const acceptedTaskFlow = assertAcceptedTaskFlowPosture(acceptedBrief, acceptedRun.run_id);
   recordWorkflowPackCheck(summary, {
     actionType: "ACCEPT",
-    route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${acceptQuery}`,
+    route: acceptRoute,
     sourceRunId: acceptedRun.run_id,
     taskFlowId: acceptedTaskFlow.task_flow_id,
     taskFlowStatus: acceptedTaskFlow.flow_status,
