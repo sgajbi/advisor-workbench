@@ -30,6 +30,12 @@ describe("performance summary context helpers", () => {
         fees: scenario.workspace.net_performance.fees,
         benchmark_return_source: scenario.workspace.net_performance.benchmark_return_source,
         benchmark_input_mode: scenario.workspace.net_performance.benchmark_input_mode,
+        benchmark_currency_state: scenario.workspace.net_performance.benchmark_currency_state,
+        benchmark_calendar_alignment_state:
+          scenario.workspace.net_performance.benchmark_calendar_alignment_state,
+        benchmark_warning_codes: scenario.workspace.net_performance.benchmark_warning_codes,
+        benchmark_missing_date_count:
+          scenario.workspace.net_performance.benchmark_missing_date_count,
       },
       moneyWeightedReturn: scenario.workspace.money_weighted_return,
       benchmark: scenario.workspace.benchmark_code ?? undefined,
@@ -49,6 +55,12 @@ describe("performance summary context helpers", () => {
       { key: "portfolio-return", label: "Portfolio Return", value: "5.42%", unavailable: false },
       { key: "benchmark-return", label: "Benchmark Return", value: "4.91%", unavailable: false },
       { key: "active-return", label: "Active Return", value: "0.52%", unavailable: false },
+      {
+        key: "benchmark-evidence",
+        label: "Benchmark Evidence",
+        value: "Fx Decomposed • Aligned",
+        unavailable: false,
+      },
       {
         key: "mwrr",
         label: "Money-Weighted Return",

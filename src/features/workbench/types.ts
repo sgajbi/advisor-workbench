@@ -149,6 +149,10 @@ export type PerformanceComparativeSummary = {
   benchmark_id: string | null;
   benchmark_return_source: string | null;
   benchmark_input_mode?: string | null;
+  benchmark_currency_state?: string | null;
+  benchmark_calendar_alignment_state?: string | null;
+  benchmark_warning_codes?: string[];
+  benchmark_missing_date_count?: number | null;
   begin_market_value?: number | null;
   end_market_value?: number | null;
   beginning_cash_flow?: number | null;
