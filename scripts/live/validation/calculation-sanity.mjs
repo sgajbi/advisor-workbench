@@ -205,8 +205,10 @@ export function assertPerformanceCalculationSanity({
       fallbackAvailable: attributionCapability.fallback_available === true,
     }
   );
-  const evidenceState = performanceSummary?.capabilities?.evidence?.state ?? "unavailable";
+  const evidenceCapabilityState = performanceSummary?.capabilities?.evidence?.state ?? "unavailable";
+  const evidenceState = evidenceCapabilityState === "supported" ? "ready" : evidenceCapabilityState;
   recordPanelClassification("performance.evidence", evidenceState, "lotus-gateway", {
+    capabilityState: evidenceCapabilityState,
     reason: performanceSummary?.capabilities?.evidence?.reason ?? null,
   });
 }

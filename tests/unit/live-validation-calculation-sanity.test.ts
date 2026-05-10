@@ -115,6 +115,67 @@ describe("live validation calculation sanity helpers", () => {
     ]);
   });
 
+  it("maps supported performance evidence capability into the panel-ready vocabulary", () => {
+    const summary = createSummary();
+
+    assertPerformanceCalculationSanity({
+      summary,
+      recordPanelClassification: createClassifier(summary),
+      performanceSummary: {
+        net_performance: {
+          portfolio_return_pct: 9.33,
+          benchmark_return_pct: 6.52,
+          active_return_pct: 2.81,
+        },
+        overview: {
+          market_value_base: 1_500_000,
+          cash_weight_pct: 12.4,
+          position_count: 18,
+        },
+        capabilities: {
+          evidence: {
+            state: "supported",
+            reason: "lineage evidence is complete",
+          },
+        },
+      },
+      performanceDetails: {
+        net_chart: [{}, {}, {}, {}],
+        contribution: {
+          levels: [
+            {
+              rows: [{}, {}, {}, {}],
+              total_contribution_pct: 9.33,
+            },
+          ],
+        },
+        capabilities: {
+          attribution_detail: {
+            state: "supported",
+            fallback_available: false,
+          },
+        },
+        attribution: {
+          levels: [
+            {
+              rows: [{}, {}],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(summary.panelClassifications).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          panel: "performance.evidence",
+          state: "ready",
+          capabilityState: "supported",
+        }),
+      ])
+    );
+  });
+
   it("fails performance attribution when governed fallback is missing", () => {
     const summary = createSummary();
 
