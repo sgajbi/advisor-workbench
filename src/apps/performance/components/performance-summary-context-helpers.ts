@@ -59,6 +59,10 @@ export function getPerformanceReturnPathPresentation({
     fees?: number | null;
     benchmark_return_source?: string | null;
     benchmark_input_mode?: string | null;
+    benchmark_currency_state?: string | null;
+    benchmark_calendar_alignment_state?: string | null;
+    benchmark_warning_codes?: string[];
+    benchmark_missing_date_count?: number | null;
   };
   moneyWeightedReturn?: MoneyWeightedReturnSummary | null;
   benchmark?: string;
@@ -190,6 +194,10 @@ function buildPerformanceReturnPathMetrics({
   summary: {
     portfolio_return_pct: number | null;
     benchmark_return_pct: number | null;
+    benchmark_currency_state?: string | null;
+    benchmark_calendar_alignment_state?: string | null;
+    benchmark_warning_codes?: string[];
+    benchmark_missing_date_count?: number | null;
   };
   benchmarkAssigned: boolean;
   portfolioReturnValue: string;
@@ -218,6 +226,18 @@ function buildPerformanceReturnPathMetrics({
       value: activeReturnValue,
       unavailable: activeReturnValue === "Unavailable",
     },
+    ...(benchmarkAssigned
+      ? [
+          {
+            key: "benchmark-evidence",
+            label: "Benchmark Evidence",
+            value: formatBenchmarkEvidenceValue(summary),
+            definition:
+              "Benchmark supportability evidence from lotus-performance, including currency treatment and portfolio-vs-benchmark calendar alignment.",
+            unavailable: !summary.benchmark_currency_state && !summary.benchmark_calendar_alignment_state,
+          } satisfies PerformanceReturnPathMetric,
+        ]
+      : []),
     {
       key: "mwrr",
       label: "Money-Weighted Return",
@@ -287,6 +307,28 @@ function buildPerformanceReturnPathMetrics({
         ]
       : []),
   ];
+}
+
+function formatBenchmarkEvidenceValue(summary: {
+  benchmark_currency_state?: string | null;
+  benchmark_calendar_alignment_state?: string | null;
+  benchmark_warning_codes?: string[];
+  benchmark_missing_date_count?: number | null;
+}): string {
+  const parts = [
+    summary.benchmark_currency_state ? formatLabel(summary.benchmark_currency_state) : null,
+    summary.benchmark_calendar_alignment_state
+      ? formatLabel(summary.benchmark_calendar_alignment_state)
+      : null,
+  ].filter(Boolean);
+  const missingCount = summary.benchmark_missing_date_count ?? 0;
+  if (missingCount > 0) {
+    parts.push(`${missingCount} missing benchmark date${missingCount === 1 ? "" : "s"}`);
+  }
+  if (summary.benchmark_warning_codes?.length) {
+    parts.push(`${summary.benchmark_warning_codes.length} warning code${summary.benchmark_warning_codes.length === 1 ? "" : "s"}`);
+  }
+  return parts.length ? parts.join(" • ") : "Unavailable";
 }
 
 export function getPerformanceBenchmarkOptionLabel(
