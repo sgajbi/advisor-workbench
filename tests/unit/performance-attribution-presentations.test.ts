@@ -4,6 +4,8 @@ import {
   getAttributionDetailClassificationGapBody,
   getAttributionDetailContextItems,
   getAttributionReconciliationText,
+  getAttributionSourcePosture,
+  getAttributionSupportabilityLine,
   getAttributionTrendUnavailableBody,
   getAttributionTrendSummaryItems,
 } from "../../src/apps/performance/components/performance-attribution-presentations";
@@ -56,9 +58,22 @@ describe("performance attribution presentations", () => {
     const scenario = buildSupportedPerformanceScenario();
 
     expect(getAttributionReconciliationText(scenario.workspace.attribution!)).toEqual({
-      headline: "Residual remains after effects",
-      detail: "Active return 0.52% • effects sum 0.50% • residual 0.02%",
+      headline: "Residual immaterial",
+      detail:
+        "Active return 0.52% • effects sum 0.50% • residual 0.02% • treatment No Action",
     });
+  });
+
+  it("preserves source-owned attribution posture and supportability evidence", () => {
+    const scenario = buildPartialAttributionPerformanceScenario();
+
+    expect(getAttributionSourcePosture(scenario.workspace.attribution)).toEqual({
+      state: "partial",
+      reason: "Portfolio-only exposure was found in the attribution set.",
+    });
+    expect(getAttributionSupportabilityLine(scenario.workspace.attribution)).toBe(
+      "1 portfolio-only group"
+    );
   });
 
   it("explains missing benchmark classification when attribution trend is unavailable", () => {

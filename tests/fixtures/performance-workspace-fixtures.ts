@@ -509,6 +509,18 @@ export function buildPerformanceWorkspaceDetails(
     attribution: options?.unavailableAttribution
       ? null
       : {
+          status: options?.summaryOnlyAttribution ? "partial" : "valid",
+          reason_codes: options?.summaryOnlyAttribution ? ["off_benchmark_exposure"] : [],
+          reasons: options?.summaryOnlyAttribution
+            ? [
+                {
+                  code: "off_benchmark_exposure",
+                  severity: "warning",
+                  message: "Portfolio-only exposure was found in the attribution set.",
+                  affected_group_count: 1,
+                },
+              ]
+            : [],
           metric_basis: "NET",
           model: "BF",
           linking: "carino",
@@ -517,6 +529,23 @@ export function buildPerformanceWorkspaceDetails(
           active_return_pct: 0.52,
           sum_of_effects_pct: 0.5,
           residual_pct: 0.02,
+          residual_materiality: {
+            classification: options?.summaryOnlyAttribution ? "watch" : "immaterial",
+            treatment: options?.summaryOnlyAttribution ? "review" : "no_action",
+            absolute_residual_pct: 0.02,
+            warning_threshold_pct: 0.001,
+            material_threshold_pct: 0.01,
+          },
+          supportability_evidence: {
+            portfolio_only_group_count: options?.summaryOnlyAttribution ? 1 : 0,
+            benchmark_only_group_count: 0,
+            unclassified_group_count: 0,
+            missing_benchmark_return_count: 0,
+            negative_weight_count: 0,
+            zero_portfolio_exposure_count: 0,
+            currency_attribution_status: "not_requested",
+            linking_status: "linked",
+          },
           levels: [
             {
               dimension: "asset_class",
@@ -1048,6 +1077,25 @@ export function buildPerformanceAttributionTrend(
         cumulative_total_effect_pct: 0.22,
         active_return_pct: 0.22,
         residual_pct: 0,
+        status: "valid",
+        reason_codes: [],
+        residual_materiality: {
+          classification: "immaterial",
+          treatment: "no_action",
+          absolute_residual_pct: 0,
+          warning_threshold_pct: 0.001,
+          material_threshold_pct: 0.01,
+        },
+        supportability_evidence: {
+          portfolio_only_group_count: 0,
+          benchmark_only_group_count: 0,
+          unclassified_group_count: 0,
+          missing_benchmark_return_count: 0,
+          negative_weight_count: 0,
+          zero_portfolio_exposure_count: 0,
+          currency_attribution_status: "not_requested",
+          linking_status: "linked",
+        },
       },
     ],
     warnings: [],

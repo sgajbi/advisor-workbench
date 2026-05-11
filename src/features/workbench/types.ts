@@ -282,6 +282,32 @@ export type AttributionLevelView = {
   rows: AttributionRowView[];
 };
 
+export type AttributionReasonView = {
+  code: string;
+  severity: string;
+  message: string;
+  affected_group_count: number;
+};
+
+export type AttributionResidualMaterialityView = {
+  classification: string;
+  treatment: string;
+  absolute_residual_pct: number;
+  warning_threshold_pct: number;
+  material_threshold_pct: number;
+};
+
+export type AttributionSupportabilityEvidenceView = {
+  portfolio_only_group_count: number;
+  benchmark_only_group_count: number;
+  unclassified_group_count: number;
+  missing_benchmark_return_count: number;
+  negative_weight_count: number;
+  zero_portfolio_exposure_count: number;
+  currency_attribution_status: string;
+  linking_status: string;
+};
+
 export type PerformanceBenchmarkOptionView = {
   benchmark_code: string;
   benchmark_name: string;
@@ -423,6 +449,10 @@ export type PerformanceAttributionTrendRow = {
   cumulative_total_effect_pct: number | null;
   active_return_pct: number | null;
   residual_pct: number | null;
+  status?: string;
+  reason_codes?: string[];
+  residual_materiality?: AttributionResidualMaterialityView | null;
+  supportability_evidence?: AttributionSupportabilityEvidenceView | null;
 };
 
 export type WorkbenchPerformanceAttributionTrend = {
@@ -445,6 +475,9 @@ export type WorkbenchPerformanceAttributionTrend = {
 };
 
 export type AttributionSummaryView = {
+  status?: string;
+  reason_codes?: string[];
+  reasons?: AttributionReasonView[];
   metric_basis: string;
   model: string | null;
   linking: string | null;
@@ -453,6 +486,8 @@ export type AttributionSummaryView = {
   active_return_pct: number | null;
   sum_of_effects_pct: number | null;
   residual_pct: number | null;
+  residual_materiality?: AttributionResidualMaterialityView | null;
+  supportability_evidence?: AttributionSupportabilityEvidenceView | null;
   levels: AttributionLevelView[];
 };
 

@@ -2,10 +2,14 @@ import { AnalyticsTable } from "@/design-system";
 import type { AttributionSummaryView } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
+import {
+  getAttributionSupportabilityLine,
+} from "./performance-attribution-presentations";
+import PerformanceAttributionReconciliationNote from "./performance-attribution-reconciliation-note";
 import { getAttributionTotals, NOT_ADDITIVE_CELL } from "./performance-workspace-view-helpers";
 
 type PerformanceAnalysisAttributionBreakdownProps = {
-  levels: AttributionSummaryView["levels"];
+  attribution: AttributionSummaryView;
 };
 
 function getDifference(
@@ -127,11 +131,17 @@ function PerformanceAttributionLevelTable({
 }
 
 export default function PerformanceAnalysisAttributionBreakdown({
-  levels,
+  attribution,
 }: PerformanceAnalysisAttributionBreakdownProps) {
+  const supportabilityLine = getAttributionSupportabilityLine(attribution);
+
   return (
     <div className="performance-analysis-detail-stack performance-attribution-breakdown-stack">
-      {levels.map((level) =>
+      <PerformanceAttributionReconciliationNote attribution={attribution} />
+      {supportabilityLine ? (
+        <p className="performance-analysis-summary-fallback-copy">{supportabilityLine}</p>
+      ) : null}
+      {attribution.levels.map((level) =>
         level.rows.length > 0 ? (
           <PerformanceAttributionLevelTable key={level.dimension} level={level} />
         ) : (

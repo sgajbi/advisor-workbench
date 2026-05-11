@@ -11,8 +11,26 @@ import {
 } from "./performance-summary-context-helpers";
 
 function getAttributionResidualAssessment(
-  residualPct: number | null | undefined
+  attribution:
+    | AttributionSummaryView
+    | {
+        residual_pct: number | null | undefined;
+        residual_materiality?: AttributionSummaryView["residual_materiality"];
+      }
 ): string | null {
+  const materiality = attribution.residual_materiality;
+  if (materiality?.classification) {
+    if (materiality.classification === "immaterial") {
+      return "Residual immaterial";
+    }
+    if (materiality.classification === "watch") {
+      return "Residual under review";
+    }
+    if (materiality.classification === "material") {
+      return "Material residual";
+    }
+  }
+  const residualPct = attribution.residual_pct;
   if (residualPct == null) {
     return null;
   }
@@ -30,6 +48,7 @@ export function getAttributionReconciliationText(
         sum_of_effects_pct?: number | null | undefined;
         total_effect_pct?: number | null | undefined;
         residual_pct: number | null | undefined;
+        residual_materiality?: AttributionSummaryView["residual_materiality"];
       }
 ) {
   const effectsPct =
@@ -39,7 +58,7 @@ export function getAttributionReconciliationText(
 
   return {
     headline:
-      getAttributionResidualAssessment(attribution.residual_pct) ??
+      getAttributionResidualAssessment(attribution) ??
       "Attribution reconciliation unavailable",
     detail: [
       attribution.active_return_pct != null
@@ -47,10 +66,64 @@ export function getAttributionReconciliationText(
         : null,
       effectsPct != null ? `effects sum ${formatPct(effectsPct)}` : null,
       attribution.residual_pct != null ? `residual ${formatPct(attribution.residual_pct)}` : null,
+      attribution.residual_materiality?.treatment
+        ? `treatment ${formatLabel(attribution.residual_materiality.treatment)}`
+        : null,
     ]
       .filter(Boolean)
       .join(" • "),
   };
+}
+
+export function getAttributionSourcePosture(
+  attribution: AttributionSummaryView | null | undefined
+): { state: "supported" | "partial" | "unavailable"; reason: string | null } | null {
+  if (!attribution) {
+    return null;
+  }
+  const status = attribution.status?.toLowerCase();
+  const firstReason = attribution.reasons?.[0]?.message;
+  const reasonCode = attribution.reason_codes?.[0];
+  const reason = firstReason ?? (reasonCode ? formatLabel(reasonCode) : null);
+
+  if (status === "partial" || status === "warning") {
+    return { state: "partial", reason };
+  }
+  if (status === "unavailable" || status === "invalid") {
+    return { state: "unavailable", reason };
+  }
+  return { state: "supported", reason };
+}
+
+export function getAttributionSupportabilityLine(
+  attribution: AttributionSummaryView | null | undefined
+): string | null {
+  if (!attribution?.supportability_evidence) {
+    return null;
+  }
+  const evidence = attribution.supportability_evidence;
+  const counts = [
+    evidence.portfolio_only_group_count
+      ? `${evidence.portfolio_only_group_count} portfolio-only group`
+      : null,
+    evidence.benchmark_only_group_count
+      ? `${evidence.benchmark_only_group_count} benchmark-only group`
+      : null,
+    evidence.unclassified_group_count
+      ? `${evidence.unclassified_group_count} unclassified group`
+      : null,
+    evidence.missing_benchmark_return_count
+      ? `${evidence.missing_benchmark_return_count} missing benchmark return`
+      : null,
+    evidence.negative_weight_count ? `${evidence.negative_weight_count} negative weight` : null,
+  ].filter(Boolean);
+
+  if (counts.length) {
+    return counts.join(" • ");
+  }
+  return `Linking ${formatLabel(evidence.linking_status)} • currency ${formatLabel(
+    evidence.currency_attribution_status
+  )}`;
 }
 
 export function getAttributionDetailContextItems(

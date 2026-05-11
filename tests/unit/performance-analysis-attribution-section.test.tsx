@@ -41,7 +41,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.getByText("View Details")).toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("Residual immaterial");
     expect(document.querySelector(".performance-analysis-drilldown-workspace")).toBeFalsy();
     expect(document.querySelectorAll(".performance-analysis-drilldown-pane")).toHaveLength(0);
     expect(screen.queryByLabelText("Top Effects panel")).not.toBeInTheDocument();
@@ -103,14 +103,15 @@ describe("PerformanceAnalysisAttributionSection", () => {
 
     expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Benchmark-relative attribution is available only at summary level for the current selection."
-      )
+      screen.getByText("Portfolio-only exposure was found in the attribution set.")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Summary-level attribution remains available even when segment rows are absent.")
+      screen.getByText(
+        "Review source reason codes, residual materiality, and supportability evidence before using attribution in client-facing commentary."
+      )
     ).toBeInTheDocument();
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("Residual under review");
+    expect(screen.getByText("1 portfolio-only group")).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
