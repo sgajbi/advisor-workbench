@@ -224,7 +224,7 @@ async function run() {
 
   const performanceSummary = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     "Performance summary",
     timeoutMs
   );
@@ -234,7 +234,7 @@ async function run() {
 
   const performanceDetails = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/details?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/details?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     "Performance details",
     timeoutMs
   );
@@ -244,7 +244,7 @@ async function run() {
 
   const riskSummary = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/summary?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/summary?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}`,
     "Risk summary",
     timeoutMs
   );
@@ -254,25 +254,25 @@ async function run() {
 
   const riskConcentration = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/concentration?period=YTD&benchmark_code=${benchmarkCode}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/concentration?period=YTD&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}`,
     "Risk concentration",
     timeoutMs
   );
   const riskDrawdown = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&include_underwater_series=true`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&include_underwater_series=true`,
     "Risk drawdown",
     timeoutMs
   );
   const riskRolling = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&include_time_series=true`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&include_time_series=true`,
     "Risk rolling",
     timeoutMs
   );
   const riskAttribution = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/attribution?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&attribution_type=total_risk&grouping_dimension=sector`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/attribution?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&attribution_type=total_risk&grouping_dimension=sector`,
     "Risk attribution",
     timeoutMs
   );
@@ -304,7 +304,7 @@ async function run() {
 
   const advisorBrief = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     "Advisor brief",
     timeoutMs
   );
@@ -316,7 +316,7 @@ async function run() {
   }
   summary.workflowPackChecks.push({
     actionType: "INITIAL_VISIBLE",
-    route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}`,
+    route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     sourceRunId: advisorBrief.workflow_pack_run.run_id,
     resultReviewState: advisorBrief.workflow_pack_run.review_state,
     resultSupportabilityStatus: advisorBrief.workflow_pack_run.supportability_status,
@@ -793,6 +793,8 @@ async function run() {
     await validatePerformanceSummaryPanel(page, {
       workbenchBaseUrl,
       portfolioId,
+      benchmarkCode,
+      canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
@@ -801,6 +803,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
@@ -810,6 +813,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalAsOfDate,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
       performAcceptReviewActionProof: true,
@@ -818,6 +822,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
@@ -827,6 +832,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalAsOfDate,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });

@@ -1,6 +1,7 @@
 param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [string]$AsOfDate = "2026-04-10",
   [string]$WorkbenchBaseUrl = "http://workbench.dev.lotus",
   [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
   [string]$ScreenshotDirectory = ""
@@ -97,9 +98,9 @@ Test-Endpoint "http://report.dev.lotus/integration/capabilities?consumerSystem=l
 Test-Endpoint "$GatewayBaseUrl/api/v1/foundation/portfolios/$PortfolioId/workspace" "Gateway foundation workspace" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/platform/capabilities" "Gateway platform capabilities" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/overview" "Gateway workbench overview" -Headers $canonicalCallerContextHeaders
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway performance summary" -Headers $canonicalCallerContextHeaders
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_end_date=$AsOfDate" "Gateway performance summary" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode&as_of_date=$AsOfDate" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_end_date=$AsOfDate" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
 
 Push-Location $repoRoot
 try {
@@ -109,6 +110,8 @@ try {
     $PortfolioId,
     "--benchmark-code",
     $BenchmarkCode,
+    "--as-of-date",
+    $AsOfDate,
     "--workbench-base-url",
     $WorkbenchBaseUrl,
     "--gateway-base-url",

@@ -1,6 +1,7 @@
 param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [string]$AsOfDate = "2026-04-10",
   [string]$OutputDirectory = "",
   [int]$LogTail = 200,
   [string[]]$ForbiddenEvidencePatterns = @("DEMO_ADV_USD_001"),
@@ -195,9 +196,9 @@ $apiChecks += Write-HttpArtifact "archive-ready" "http://archive.dev.lotus/healt
 $apiChecks += Write-HttpArtifact "render-ready" "http://render.dev.lotus/health/ready" "api\render-ready.json"
 $apiChecks += Write-HttpArtifact "gateway-platform-capabilities" "http://gateway.dev.lotus/api/v1/platform/capabilities" "api\gateway-platform-capabilities.json" -Headers $canonicalCallerContextHeaders
 $apiChecks += Write-HttpArtifact "gateway-workbench-overview" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/overview" "api\gateway-workbench-overview.json" -Headers $canonicalCallerContextHeaders
-$apiChecks += Write-HttpArtifact "gateway-performance-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "api\gateway-performance-summary.json" -Headers $canonicalCallerContextHeaders
-$apiChecks += Write-HttpArtifact "gateway-risk-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode" "api\gateway-risk-summary.json" -Headers $canonicalCallerContextHeaders
-$apiChecks += Write-HttpArtifact "gateway-advisor-brief" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode" "api\gateway-advisor-brief.json" -Headers $canonicalCallerContextHeaders
+$apiChecks += Write-HttpArtifact "gateway-performance-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_end_date=$AsOfDate" "api\gateway-performance-summary.json" -Headers $canonicalCallerContextHeaders
+$apiChecks += Write-HttpArtifact "gateway-risk-summary" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode&as_of_date=$AsOfDate" "api\gateway-risk-summary.json" -Headers $canonicalCallerContextHeaders
+$apiChecks += Write-HttpArtifact "gateway-advisor-brief" "http://gateway.dev.lotus/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_end_date=$AsOfDate" "api\gateway-advisor-brief.json" -Headers $canonicalCallerContextHeaders
 $apiChecks += Write-HttpArtifact "manage-supportability-summary" "http://manage.dev.lotus/api/v1/rebalance/supportability/summary" "api\manage-supportability-summary.json"
 $apiChecks += Write-HttpArtifact "report-integration-capabilities" "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "api\report-integration-capabilities.json"
 
