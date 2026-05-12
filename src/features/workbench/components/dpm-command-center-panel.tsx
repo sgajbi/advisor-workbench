@@ -10,8 +10,14 @@ import {
   SemanticBadge,
   Text,
 } from "@/design-system";
-import { runDpmCommandCenterMonitoring } from "@/features/workbench/api";
-import type { DpmCommandCenterGatewayResponse } from "@/features/workbench/types";
+import {
+  requestDpmExceptionSummary,
+  runDpmCommandCenterMonitoring,
+} from "@/features/workbench/api";
+import type {
+  DpmCommandCenterGatewayResponse,
+  DpmExceptionSummaryResponse,
+} from "@/features/workbench/types";
 import {
   buildDpmCommandCenterPanelModel,
   type DpmCommandCenterPanelState,
@@ -89,9 +95,13 @@ export default function DpmCommandCenterPanel({
 }: Props) {
   const [runResponse, setRunResponse] =
     useState<DpmCommandCenterGatewayResponse | null>(null);
-  const [runPending, setRunPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "monitoring" | "exception-summary" | null
+  >(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [runMessage, setRunMessage] = useState<string | null>(null);
+  const [exceptionSummary, setExceptionSummary] =
+    useState<DpmExceptionSummaryResponse | null>(null);
   const model = buildDpmCommandCenterPanelModel({
     commandCenter,
     exceptions,
@@ -117,12 +127,15 @@ export default function DpmCommandCenterPanel({
     model.state === "unsupported" ||
     model.state === "unavailable";
   const stateCopy = statePanelCopy(model.state);
+  const exceptionSummaryStatus = readWorkflowPackStatus(exceptionSummary?.data);
+  const exceptionSummaryRunId = readWorkflowPackRunId(exceptionSummary?.data);
+  const runPending = pendingAction !== null;
 
   async function runMonitoring() {
     if (runPending) {
       return;
     }
-    setRunPending(true);
+    setPendingAction("exception-summary");
     setRunError(null);
     setRunMessage(null);
     try {
@@ -140,7 +153,37 @@ export default function DpmCommandCenterPanel({
           : "DPM command-center monitoring failed",
       );
     } finally {
-      setRunPending(false);
+      setPendingAction(null);
+    }
+  }
+
+  async function requestExceptionSummary() {
+    if (runPending || !model.selectedExceptionId) {
+      return;
+    }
+    setPendingAction("monitoring");
+    setRunError(null);
+    setRunMessage(null);
+    try {
+      const response = await requestDpmExceptionSummary({
+        exceptionId: model.selectedExceptionId,
+        mandateId: model.mandateId !== "N/A" ? model.mandateId : undefined,
+        state: "ACTIVE",
+      });
+      setExceptionSummary(response);
+      setRunMessage(
+        `Exception summary ${readWorkflowPackStatus(response.data)} (${readWorkflowPackRunId(
+          response.data,
+        )})`,
+      );
+    } catch (error) {
+      setRunError(
+        error instanceof Error
+          ? error.message
+          : "DPM exception summary request failed",
+      );
+    } finally {
+      setPendingAction(null);
     }
   }
 
@@ -187,7 +230,14 @@ export default function DpmCommandCenterPanel({
           onClick={runMonitoring}
           disabled={runPending}
         >
-          {runPending ? "Running monitoring" : "Run monitoring"}
+          {pendingAction === "monitoring" ? "Running monitoring" : "Run monitoring"}
+        </ActionButton>
+        <ActionButton
+          priority="secondary"
+          onClick={requestExceptionSummary}
+          disabled={runPending || !model.selectedExceptionId}
+        >
+          {pendingAction === "exception-summary" ? "Requesting summary" : "Exception summary"}
         </ActionButton>
         <div>
           {runMessage ? (
@@ -277,6 +327,8 @@ export default function DpmCommandCenterPanel({
         />
         <MetricRow label="Mandate" value={model.mandateId} />
         <MetricRow label="Mandate Health" value={model.mandateHealthState} />
+        <MetricRow label="Exception Summary" value={exceptionSummaryStatus} />
+        <MetricRow label="Exception Summary Run" value={exceptionSummaryRunId} />
       </div>
 
       <AnalyticsTable
@@ -407,4 +459,45 @@ export default function DpmCommandCenterPanel({
       </Text>
     </SectionBlock>
   );
+}
+
+function readWorkflowPackStatus(data: Record<string, unknown> | undefined): string {
+  if (!data) {
+    return "NOT_REQUESTED";
+  }
+  const workflowPackRun = readRecord(data.workflow_pack_run);
+  const output = readRecord(data.output);
+  return (
+    readString(data.status) ??
+    readString(data.review_state) ??
+    readString(workflowPackRun.review_state) ??
+    readString(output.review_state) ??
+    "REVIEW_REQUIRED"
+  );
+}
+
+function readWorkflowPackRunId(data: Record<string, unknown> | undefined): string {
+  if (!data) {
+    return "N/A";
+  }
+  const workflowPackRun = readRecord(data.workflow_pack_run);
+  const execution = readRecord(data.execution);
+  const audit = readRecord(execution.audit);
+  return (
+    readString(data.run_id) ??
+    readString(data.workflow_run_id) ??
+    readString(workflowPackRun.run_id) ??
+    readString(audit.workflow_pack_run_id) ??
+    "N/A"
+  );
+}
+
+function readRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }

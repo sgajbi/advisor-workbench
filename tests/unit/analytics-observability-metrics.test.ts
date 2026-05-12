@@ -306,6 +306,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.dpm-command-center",
+        "mandate-command-center-exception-ai-summary",
+        "dpm.command-center.exceptions.ai-summary",
+      ],
+      [
+        "workbench.dpm-command-center",
         "mandate-command-center-mandate",
         "dpm.command-center.mandate.by-portfolio",
       ],
@@ -418,6 +423,11 @@ describe("analytics UI observability metrics", () => {
         "workbench.dpm-command-center",
         "wave-ai-pm-memo",
         "dpm.waves.ai-pm-memo",
+      ],
+      [
+        "workbench.dpm-command-center",
+        "wave-operations-handoff-summary",
+        "dpm.waves.operations-handoff-summary",
       ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],

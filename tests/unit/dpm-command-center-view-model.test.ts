@@ -104,6 +104,7 @@ describe("DPM command-center view model", () => {
       recommendedAction: "REPAIR_SOURCE_DATA",
     });
     expect(model.exceptionRows[0].exceptionId).toBe("me_1");
+    expect(model.selectedExceptionId).toBe("me_1");
     expect(model.mandateHealthScore).toBe("97");
     expect(model.mandateHealthDimensions[0].reasons).toBe(
       "TAX_LOT_SOURCE_PARTIAL",

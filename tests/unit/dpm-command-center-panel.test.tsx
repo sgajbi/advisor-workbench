@@ -2,10 +2,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import DpmCommandCenterPanel from "../../src/features/workbench/components/dpm-command-center-panel";
-import { runDpmCommandCenterMonitoring } from "../../src/features/workbench/api";
+import {
+  requestDpmExceptionSummary,
+  runDpmCommandCenterMonitoring,
+} from "../../src/features/workbench/api";
 import type { DpmCommandCenterGatewayResponse } from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/api", () => ({
+  requestDpmExceptionSummary: vi.fn(),
   runDpmCommandCenterMonitoring: vi.fn(),
 }));
 
@@ -112,6 +116,10 @@ describe("DpmCommandCenterPanel", () => {
     expect(
       screen.getByRole("button", { name: "Run monitoring" }),
     ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Exception summary" }),
+    ).toBeEnabled();
+    expect(screen.getAllByText("NOT_REQUESTED").length).toBeGreaterThan(0);
   });
 
   it("requests monitoring through Gateway only", async () => {
@@ -141,6 +149,68 @@ describe("DpmCommandCenterPanel", () => {
     expect(
       screen.getByText("Monitoring dmr_2 returned SUCCEEDED"),
     ).toBeInTheDocument();
+  });
+
+  it("requests exception summary through Gateway only and preserves workflow-pack posture", async () => {
+    vi.mocked(requestDpmExceptionSummary).mockResolvedValue({
+      correlation_id: "corr-exception-summary",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: readyResponse.supportability,
+      exception_summary_input: {
+        exception_id: "me_1",
+        source_refs: ["lotus-manage:monitoring-exception:me_1"],
+      },
+      exception_summary_request: {
+        requested_outputs: ["exception_summary", "recommended_triage"],
+        audience: ["portfolio_manager", "operations"],
+      },
+      data: {
+        workflow_pack_run: {
+          run_id: "wf_run_exception_summary_001",
+          review_state: "REVIEW_REQUIRED",
+        },
+      },
+    });
+
+    render(
+      <DpmCommandCenterPanel
+        commandCenter={readyResponse}
+        exceptions={{
+          ...readyResponse,
+          data: {
+            items: [
+              {
+                exception_id: "me_1",
+                mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+                severity: "HIGH",
+                reason_code: "TAX_LOT_SOURCE_PARTIAL",
+                recommended_action: "REPAIR_SOURCE_DATA",
+                state: "ACTIVE",
+              },
+            ],
+          },
+        }}
+        mandate={{
+          ...readyResponse,
+          data: { mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001" },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Exception summary" }));
+
+    await waitFor(() => {
+      expect(requestDpmExceptionSummary).toHaveBeenCalledWith({
+        exceptionId: "me_1",
+        mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
+        state: "ACTIVE",
+      });
+    });
+    expect(await screen.findByText("wf_run_exception_summary_001")).toBeInTheDocument();
   });
 
   it("renders empty command-center state without claiming failure", () => {

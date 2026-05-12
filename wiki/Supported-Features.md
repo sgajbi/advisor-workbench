@@ -10,8 +10,8 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Portfolio summary and detail | `/portfolio`, `/portfolio?tab=detailed` | Gateway Workbench portfolio APIs | Supported with canonical live proof. |
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
-| DPM mandate command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit and PM-book-backed monitoring action through Gateway/Manage. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
-| DPM rebalance-wave command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, and governed AI PM memo request through Gateway only. |
+| DPM mandate command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
+| DPM rebalance-wave command center | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, and governed operations-handoff summary requests through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
 | DPM proof-pack evidence | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
 | DPM portfolio memory | `/workbench/{portfolioId}` | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live proof accepts populated ready, partial, degraded, and blocked source truth while still failing empty or unsupported memory. |
@@ -54,8 +54,9 @@ Implemented:
 5. renders manage-owned lifecycle state, item state, source-readiness state, supportability,
    aggregate metrics, report-input refs, proof-pack refs, handoff refs, reason codes, blocked
    actions, remediation owner, and `external_execution_claimed` posture,
-6. requests a governed `lotus-ai` wave PM memo workflow-pack run through Gateway only and displays
-   review-required workflow-pack posture without constructing prompts or memo text locally,
+6. requests governed `lotus-ai` wave PM memo and operations-handoff summary workflow-pack runs
+   through Gateway only and displays review-required workflow-pack posture without constructing
+   prompts, memo text, handoff summaries, execution instructions, or client messages locally,
 7. emits bounded Workbench observability labels without portfolio ids, wave ids, report-input refs,
    workflow-pack run ids, request bodies, or response bodies as metric labels.
 
@@ -67,8 +68,8 @@ Not yet supported:
 4. richer workflow drawers and eligibility explanations beyond manage reason-code rendering,
 5. CIO approval workflow,
 6. external OMS/execution integration,
-7. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative, or handoff
-   calculation.
+7. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative,
+   operations-handoff summary, exception-summary narrative, or handoff calculation.
 
 ## DPM Flow Diagram
 

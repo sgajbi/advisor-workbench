@@ -58,7 +58,10 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "AI-evidence ready but AI memo unavailable" in rfc
     assert "outcome-review search, detail, supportability" in integrations
     assert "create, detail, item, source-check, simulation, approval, staging, handoff" in integrations
-    assert "supportability, report-input, and AI PM memo contracts" in integrations
+    assert "supportability, report-input, AI PM memo, and operations-handoff summary contracts" in integrations
+    assert "Gateway exception-summary contract" in integrations
+    assert "`POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary`" in rfc
+    assert "`POST /api/v1/dpm/command-center/exceptions/{exception_id}/ai-summary`" in rfc
     assert "must not calculate expected-versus-realized values" in integrations
     assert "calculate wave\n    readiness" in integrations
     assert "proof-pack truth" in integrations
@@ -69,5 +72,6 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "RFC-0040 proof-pack evidence" in roadmap
     assert "DPM rebalance-wave command center" in supported_features
     assert "approval, staging, handoff" in supported_features
-    assert "governed AI PM memo request" in supported_features
+    assert "governed AI PM memo, and governed operations-handoff summary requests" in supported_features
+    assert "governed exception-summary request" in supported_features
     assert "external OMS/execution integration" in supported_features

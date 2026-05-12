@@ -49,12 +49,14 @@ promote dormant labels into product ownership just because historical route file
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/waves*`. Workbench loads
   the explicit portfolio-list wave queue, previews and creates canonical portfolio waves, opens
   wave detail and item posture, and sends source-check, simulation, approval, staging, handoff,
-  proof-posture, supportability, report-input, and governed AI PM memo actions through Gateway. It
+  proof-posture, supportability, report-input, governed AI PM memo, and governed operations
+  handoff summary actions through Gateway. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local
-  readiness calculation, local report-input construction, prompt construction, or memo narrative
-  generation. Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, CIO
+  readiness calculation, local report-input construction, prompt construction, memo narrative
+  generation, or operations handoff-summary generation. Item-selection drawers, dedicated
+  `/dpm/waves` routes, PM-book discovery, CIO
   workflow, and external OMS execution remain future scope until separately implemented and proven.
 - RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on
   `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center`,
@@ -62,9 +64,10 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/dpm/command-center/exceptions`, and
   `/api/v1/dpm/command-center/mandates*`. Workbench renders manage-owned book health
   distribution, source readiness, attention queue, recommended actions, latest monitoring-run
-  lineage, active exceptions, and mandate health dimensions. It does not calculate mandate health,
-  infer PM-book membership, reconstruct source readiness, merge exceptions, resolve exceptions
-  locally, or call `lotus-manage` directly. Demo promotion still requires the canonical
+  lineage, active exceptions, governed exception-summary workflow-pack posture, and mandate health
+  dimensions. It does not calculate mandate health, infer PM-book membership, reconstruct source
+  readiness, merge exceptions, resolve exceptions locally, generate exception-summary narrative,
+  or call `lotus-manage` or `lotus-ai` directly. Demo promotion still requires the canonical
   `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review.
 - RFC-0098/RFC-0039 construction alternatives rendering is implemented on
   `/workbench/{portfolioId}` through Gateway

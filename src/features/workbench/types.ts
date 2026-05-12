@@ -1362,6 +1362,32 @@ export type DpmWaveAiPmMemoResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmOperationsHandoffSummaryResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  evidence_source_service: string;
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  supportability: DpmWaveSupportability;
+  wave_report_input: Record<string, unknown>;
+  handoff_summary_request: Record<string, unknown>;
+  data: Record<string, unknown>;
+};
+
+export type DpmExceptionSummaryResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  evidence_source_service: string;
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  supportability: DpmCommandCenterSupportability;
+  exception_summary_input: Record<string, unknown>;
+  exception_summary_request: Record<string, unknown>;
+  data: Record<string, unknown>;
+};
+
 export type DpmOutcomeReviewNarrativeResponse = {
   correlation_id: string;
   contract_version: string;

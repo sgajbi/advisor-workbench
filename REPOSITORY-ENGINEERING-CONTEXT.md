@@ -51,9 +51,11 @@ Current repository posture:
 7. `/workbench/{portfolioId}` renders the RFC-0038 DPM mandate command-center cockpit from
    Gateway `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and
    `/mandates*`. Workbench shows manage-owned book health distribution, source readiness,
-   attention queue, recommended actions, latest monitoring-run lineage, active exceptions, and
-   mandate health dimensions without calculating mandate health, reconstructing source readiness,
-   merging exceptions, or calling `lotus-manage` directly. The command-center run-monitoring
+   attention queue, recommended actions, latest monitoring-run lineage, active exceptions,
+   governed exception-summary workflow-pack posture, and mandate health dimensions without
+   calculating mandate health, reconstructing source readiness, merging exceptions, generating
+   exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai` directly. The
+   command-center run-monitoring
    action sends the governed PM/book/as-of context through Gateway and lets Manage resolve
    source-owned PM-book membership from lotus-core rather than sending a browser-selected mandate
    fallback. Workbench maps manage command-center supportability states into explicit panel
@@ -91,13 +93,13 @@ Current repository posture:
 12. `/workbench/{portfolioId}` renders the RFC-0041 DPM rebalance-wave command-center panel
    through Gateway `/api/v1/dpm/command-center/waves*`. Workbench lists explicit portfolio-list
    waves, previews and creates canonical portfolio waves, opens wave detail and item posture, and
-   sends source-check, simulation, approval, staging, handoff, report-input, and governed AI PM
-   memo requests through Gateway only. It preserves manage-owned wave state, item state,
+   sends source-check, simulation, approval, staging, handoff, report-input, governed AI PM memo,
+   and governed operations-handoff summary requests through Gateway only. It preserves manage-owned wave state, item state,
    source-readiness state, supportability, aggregate metrics, report-input refs, proof-pack refs,
    handoff refs, blocked actions, lotus-ai workflow-pack run posture, and
    `external_execution_claimed` posture without calling `lotus-manage` or `lotus-ai` directly,
-   calculating readiness, constructing report input, constructing AI prompts, generating memo
-   narrative locally, claiming external execution, or inferring PM-book discovery.
+   calculating readiness, constructing report input, constructing AI prompts, generating memo or
+   handoff-summary narrative locally, claiming external execution, or inferring PM-book discovery.
 13. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
    supportability and portfolio-level DPM operations posture from the portfolio overview
    `rebalance_snapshot`, including source state, freshness, run count, operation count, workflow

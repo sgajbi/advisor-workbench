@@ -456,19 +456,21 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/handoff` | internal operations handoff action |
 | `GET /api/v1/dpm/command-center/waves/{wave_id}/report-input` | report-input evidence drawer |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo` | governed AI PM memo request |
+| `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
 
 Implementation note as of 2026-05-08: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
 `/api/v1/dpm/command-center/waves*`. Workbench loads the explicit portfolio-list wave queue,
 previews and creates canonical portfolio waves, opens wave detail and item posture, and calls
 source-check, simulation, approval, staging, handoff, proof-posture, supportability, report-input,
-and governed AI PM memo requests through the Workbench BFF/Gateway boundary. The panel renders
+governed AI PM memo, and governed operations-handoff summary requests through the Workbench
+BFF/Gateway boundary. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
 `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls,
-client-side readiness calculation, report-input construction, prompt construction, or local memo
-narrative generation. Item-selection drawers, richer supportability drawers, dedicated
+client-side readiness calculation, report-input construction, prompt construction, local memo
+narrative generation, or local operations handoff-summary generation. Item-selection drawers, richer supportability drawers, dedicated
 `/dpm/waves` routes, PM-book discovery, CIO approval workflow, and external OMS execution remain
 future scope until Gateway/Manage and Workbench proof promote them.
 
@@ -587,6 +589,7 @@ RFC-0038 command-center cockpit support is now implemented as an embedded
 | `GET /api/v1/dpm/command-center` | `/workbench/{portfolioId}` DPM command-center cockpit |
 | `POST /api/v1/dpm/command-center/monitoring/run-once` | `/workbench/{portfolioId}` run-monitoring action |
 | `GET /api/v1/dpm/command-center/exceptions` | `/workbench/{portfolioId}` active exception queue |
+| `POST /api/v1/dpm/command-center/exceptions/{exception_id}/ai-summary` | `/workbench/{portfolioId}` governed exception-summary action |
 | `GET /api/v1/dpm/command-center/mandates/by-portfolio/{portfolio_id}` | `/workbench/{portfolioId}` mandate binding |
 | `GET /api/v1/dpm/command-center/mandates/{mandate_id}/health` | `/workbench/{portfolioId}` mandate health dimensions |
 
@@ -596,6 +599,12 @@ context through the Gateway BFF with an empty `mandate_ids` list so `lotus-manag
 source-owned PM-book cohort from lotus-core `PortfolioManagerBookMembership:v1`. Workbench must not
 derive PM-book membership, fabricate a cohort from the current page portfolio, or send a hidden
 single-mandate fallback as if it were book-level monitoring.
+
+The embedded exception-summary action is support-only. Workbench sends the selected manage
+exception id to Gateway, optionally preserves the mandate/state filters already visible in the
+panel, and displays the returned lotus-ai workflow-pack run posture. Browser code must not produce
+exception narrative, client messages, PM scoring, routing instructions, approvals, or execution
+claims.
 
 The Workbench view model must preserve:
 

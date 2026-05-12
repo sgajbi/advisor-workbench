@@ -29,6 +29,8 @@ import {
   handoffDpmWave,
   listDpmWaves,
   previewDpmWave,
+  requestDpmExceptionSummary,
+  requestDpmOperationsHandoffSummary,
   requestDpmOutcomeReviewAiNarrative,
   requestDpmProofPackAiPmMemo,
   requestDpmWaveAiPmMemo,
@@ -2039,6 +2041,12 @@ describe("workbench api", () => {
     await getDpmWaveSupportability("dwv_001");
     await getDpmWaveReportInput("dwv_001");
     await requestDpmWaveAiPmMemo("dwv_001");
+    await requestDpmOperationsHandoffSummary("dwv_001");
+    await requestDpmExceptionSummary({
+      exceptionId: "me_1",
+      mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
+      state: "ACTIVE",
+    });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock.mock.calls[0][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/preview`);
@@ -2054,6 +2062,12 @@ describe("workbench api", () => {
     expect(fetchMock.mock.calls[10][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/supportability`);
     expect(fetchMock.mock.calls[11][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/report-input`);
     expect(fetchMock.mock.calls[12][0]).toBe(`${expectedBaseUrl}/dpm/command-center/waves/dwv_001/ai-pm-memo`);
+    expect(fetchMock.mock.calls[13][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/waves/dwv_001/operations-handoff-summary`
+    );
+    expect(fetchMock.mock.calls[14][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/exceptions/me_1/ai-summary`
+    );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       body: {
         trigger_type: "EXPLICIT_PORTFOLIO_LIST",
@@ -2097,6 +2111,28 @@ describe("workbench api", () => {
       ],
       audience: ["portfolio_manager", "investment_control", "operations"],
     });
+    expect(JSON.parse(fetchMock.mock.calls[13][1].body)).toMatchObject({
+      requested_outputs: [
+        "operations_summary",
+        "execution_prerequisites",
+        "blocking_conditions",
+        "support_references",
+        "evidence_gaps",
+      ],
+      audience: ["operations", "portfolio_manager", "investment_control"],
+    });
+    expect(JSON.parse(fetchMock.mock.calls[14][1].body)).toMatchObject({
+      mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+      state: "ACTIVE",
+      requested_outputs: [
+        "exception_summary",
+        "severity_summary",
+        "recommended_triage",
+        "support_references",
+        "evidence_gaps",
+      ],
+      audience: ["portfolio_manager", "investment_control", "operations"],
+    });
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-preview");
     expect(metricEventsJson).toContain("wave-create");
@@ -2111,6 +2147,8 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-supportability");
     expect(metricEventsJson).toContain("wave-report-input");
     expect(metricEventsJson).toContain("wave-ai-pm-memo");
+    expect(metricEventsJson).toContain("wave-operations-handoff-summary");
+    expect(metricEventsJson).toContain("mandate-command-center-exception-ai-summary");
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(metricEventsJson).not.toContain("dwv_001");
   });

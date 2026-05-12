@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildDpmWaveCommandCenterModel } from "../../src/features/workbench/dpm-wave-command-center-view-model";
 import type {
+  DpmOperationsHandoffSummaryResponse,
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
@@ -151,6 +152,41 @@ describe("DPM wave command-center view model", () => {
     expect(model.aiMemoStatus).toBe("REVIEW_REQUIRED");
     expect(model.aiMemoRunId).toBe("wf_run_wave_memo_001");
     expect(model.externalExecutionClaimed).toBe("N/A");
+  });
+
+  it("surfaces operations handoff summary posture as support-only workflow-pack truth", () => {
+    const operationsSummary: DpmOperationsHandoffSummaryResponse = {
+      correlation_id: "corr-ops-summary",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: waveListResponse.supportability,
+      wave_report_input: {
+        wave_id: "dwv_001",
+        report_input_ref: "report-input:dwv_001",
+      },
+      handoff_summary_request: {
+        requested_outputs: ["operations_summary", "blocking_conditions"],
+        audience: ["operations", "portfolio_manager"],
+      },
+      data: {
+        workflow_pack_run: {
+          run_id: "wf_run_ops_summary_001",
+          review_state: "REVIEW_REQUIRED",
+        },
+      },
+    };
+
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      operationsHandoffSummary: operationsSummary,
+    });
+
+    expect(model.operationsHandoffSummaryStatus).toBe("REVIEW_REQUIRED");
+    expect(model.operationsHandoffSummaryRunId).toBe("wf_run_ops_summary_001");
+    expect(model.aiMemoStatus).toBe("NOT_REQUESTED");
   });
 
   it("does not infer readiness from a present wave when manage supportability is blocked", () => {

@@ -20,12 +20,17 @@ import {
   getDpmWaveSupportability,
   handoffDpmWave,
   previewDpmWave,
+  requestDpmOperationsHandoffSummary,
   requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
 } from "@/features/workbench/api";
-import type { DpmWaveAiPmMemoResponse, DpmWaveGatewayResponse } from "@/features/workbench/types";
+import type {
+  DpmOperationsHandoffSummaryResponse,
+  DpmWaveAiPmMemoResponse,
+  DpmWaveGatewayResponse,
+} from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
   type DpmWaveCommandCenterPanelState,
@@ -91,6 +96,8 @@ export default function DpmWaveCommandCenterPanel({
   const [reportInputResponse, setReportInputResponse] =
     useState<DpmWaveGatewayResponse | null>(null);
   const [aiMemoResponse, setAiMemoResponse] = useState<DpmWaveAiPmMemoResponse | null>(null);
+  const [operationsHandoffSummaryResponse, setOperationsHandoffSummaryResponse] =
+    useState<DpmOperationsHandoffSummaryResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -101,6 +108,7 @@ export default function DpmWaveCommandCenterPanel({
     actionResponse,
     waveReportInput: reportInputResponse,
     waveAiMemo: aiMemoResponse,
+    operationsHandoffSummary: operationsHandoffSummaryResponse,
   });
   const selectedWaveId = model.selectedWaveId;
   const stateCopy = statePanelCopy(model.state, portfolioId);
@@ -140,6 +148,27 @@ export default function DpmWaveCommandCenterPanel({
     try {
       const response = await action();
       setAiMemoResponse(response);
+      setActionMessage(`${label} completed through Gateway.`);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `${label} failed`);
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function runOperationsSummaryAction(
+    label: string,
+    action: () => Promise<DpmOperationsHandoffSummaryResponse>
+  ) {
+    if (pendingAction) {
+      return;
+    }
+    setPendingAction(label);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const response = await action();
+      setOperationsHandoffSummaryResponse(response);
       setActionMessage(`${label} completed through Gateway.`);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : `${label} failed`);
@@ -245,6 +274,15 @@ export default function DpmWaveCommandCenterPanel({
     void runMemoAction("Request AI memo", () => requestDpmWaveAiPmMemo(selectedWaveId));
   }
 
+  function requestOperationsHandoffSummary() {
+    if (!selectedWaveId) {
+      return;
+    }
+    void runOperationsSummaryAction("Request operations summary", () =>
+      requestDpmOperationsHandoffSummary(selectedWaveId)
+    );
+  }
+
   return (
     <SectionBlock
       title="Rebalance Wave Command Center"
@@ -317,6 +355,13 @@ export default function DpmWaveCommandCenterPanel({
         </ActionButton>
         <ActionButton priority="secondary" onClick={requestAiMemo} disabled={!selectedWaveId || Boolean(pendingAction)}>
           AI memo
+        </ActionButton>
+        <ActionButton
+          priority="secondary"
+          onClick={requestOperationsHandoffSummary}
+          disabled={!selectedWaveId || Boolean(pendingAction)}
+        >
+          {pendingAction === "Request operations summary" ? "Requesting summary" : "Ops summary"}
         </ActionButton>
       </div>
 
@@ -414,6 +459,8 @@ export default function DpmWaveCommandCenterPanel({
             <MetricRow label="Report Input Ref" value={model.reportInputRef} />
             <MetricRow label="AI Memo" value={model.aiMemoStatus} />
             <MetricRow label="AI Memo Run" value={model.aiMemoRunId} />
+            <MetricRow label="Ops Summary" value={model.operationsHandoffSummaryStatus} />
+            <MetricRow label="Ops Summary Run" value={model.operationsHandoffSummaryRunId} />
           </div>
         </div>
       </div>

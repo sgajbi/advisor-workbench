@@ -12,6 +12,7 @@ import {
   getDpmWaveSupportability,
   handoffDpmWave,
   previewDpmWave,
+  requestDpmOperationsHandoffSummary,
   requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
@@ -29,6 +30,7 @@ vi.mock("../../src/features/workbench/api", () => ({
   getDpmWaveSupportability: vi.fn(),
   handoffDpmWave: vi.fn(),
   previewDpmWave: vi.fn(),
+  requestDpmOperationsHandoffSummary: vi.fn(),
   requestDpmWaveAiPmMemo: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),
@@ -94,7 +96,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByRole("button", { name: "Supportability" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Report input" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "AI memo" })).toBeEnabled();
-    expect(screen.getAllByText("NOT_REQUESTED").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("button", { name: "Ops summary" })).toBeEnabled();
+    expect(screen.getAllByText("NOT_REQUESTED").length).toBeGreaterThanOrEqual(3);
   });
 
   it("requests review, workflow, proof, and supportability actions through Gateway helpers", async () => {
@@ -155,6 +158,29 @@ describe("DpmWaveCommandCenterPanel", () => {
       },
       data: { run_id: "wf_run_wave_memo_001", status: "REVIEW_REQUIRED" },
     });
+    vi.mocked(requestDpmOperationsHandoffSummary).mockResolvedValue({
+      correlation_id: "corr-ops-summary",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: waveResponse.supportability,
+      wave_report_input: {
+        wave_id: "dwv_001",
+        report_input_ref: "report-input:dwv_001",
+      },
+      handoff_summary_request: {
+        requested_outputs: ["operations_summary", "blocking_conditions"],
+        audience: ["operations", "portfolio_manager"],
+      },
+      data: {
+        workflow_pack_run: {
+          run_id: "wf_run_ops_summary_001",
+          review_state: "REVIEW_REQUIRED",
+        },
+      },
+    });
 
     render(
       <DpmWaveCommandCenterPanel
@@ -202,6 +228,12 @@ describe("DpmWaveCommandCenterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "AI memo" }));
     await waitFor(() => expect(requestDpmWaveAiPmMemo).toHaveBeenCalledWith("dwv_001"));
     expect(await screen.findByText("wf_run_wave_memo_001")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Ops summary" }));
+    await waitFor(() =>
+      expect(requestDpmOperationsHandoffSummary).toHaveBeenCalledWith("dwv_001"),
+    );
+    expect(await screen.findByText("wf_run_ops_summary_001")).toBeInTheDocument();
   });
 
   it("creates a wave without direct manage calls", async () => {
