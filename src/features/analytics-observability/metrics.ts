@@ -95,6 +95,16 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "performance.workspace.advisor-brief.review-action",
   },
   {
+    route: "workbench.performance",
+    panel: "performance-composite-twr",
+    operation: "performance.composites.twr",
+  },
+  {
+    route: "workbench.performance",
+    panel: "performance-composite-inspection",
+    operation: "performance.composites.inspect",
+  },
+  {
     route: "workbench.risk",
     panel: "risk-summary",
     operation: "risk.summary",

@@ -140,6 +140,28 @@ export type WorkbenchAnalytics = {
   partial_failures: WorkbenchOverview["partial_failures"];
 };
 
+export type CompositePerformanceTwrRequest = {
+  calculation_id?: string;
+  composite_id: string;
+  period_start: string;
+  period_end: string;
+};
+
+export type CompositePerformanceInspectionRequest = {
+  inspection_id?: string;
+  composite_id: string;
+  period_start: string;
+  period_end: string;
+};
+
+export type CompositePerformanceGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: "lotus-performance";
+  upstream_status: number;
+  data: Record<string, unknown>;
+};
+
 export type PerformanceComparativeSummary = {
   metric_basis: string;
   portfolio_return_pct: number | null;
