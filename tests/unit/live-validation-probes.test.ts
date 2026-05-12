@@ -1,6 +1,6 @@
 import * as probeHelpers from "../../scripts/live/validation/probes.mjs";
 
-const { checkDns, fetchJson, fetchText, postJson } = probeHelpers as {
+const { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson } = probeHelpers as {
   checkDns: (
     summary: { dns: unknown[]; apiChecks: unknown[] },
     hostname: string,
@@ -15,6 +15,19 @@ const { checkDns, fetchJson, fetchText, postJson } = probeHelpers as {
     description: string,
     timeoutMs: number,
     fetchImpl?: typeof fetch
+  ) => Promise<T>;
+  fetchJsonUntil: <T = unknown>(
+    summary: { dns: unknown[]; apiChecks: unknown[] },
+    url: string,
+    description: string,
+    timeoutMs: number,
+    predicate: (payload: T) => true | string | false,
+    options?: {
+      attempts?: number;
+      delayMs?: number;
+      fetchImpl?: typeof fetch;
+      sleep?: (milliseconds: number) => Promise<void>;
+    }
   ) => Promise<T>;
   fetchText: (
     summary: { dns: unknown[]; apiChecks: unknown[] },
@@ -39,6 +52,14 @@ function createSummary() {
     apiChecks: [],
   };
 }
+
+type EvidenceReadinessPayload = {
+  capabilities: {
+    evidence: {
+      state: string;
+    };
+  };
+};
 
 describe("live validation probe helpers", () => {
   it("records optional DNS failures without aborting validation", async () => {
@@ -159,6 +180,81 @@ describe("live validation probe helpers", () => {
         method: "POST",
       },
     ]);
+  });
+
+  it("polls JSON probes until live readiness evidence is available", async () => {
+    const summary = createSummary();
+    const responses = [
+      { capabilities: { evidence: { state: "partial" } } },
+      { capabilities: { evidence: { state: "supported" } } },
+    ];
+
+    const payload = await fetchJsonUntil<EvidenceReadinessPayload>(
+      summary,
+      "http://gateway.dev.lotus/api/v1/workbench/PB_1/performance/summary",
+      "Performance summary evidence readiness",
+      1000,
+      (candidate) =>
+        candidate.capabilities.evidence.state === "supported"
+          ? true
+          : `evidence state is ${candidate.capabilities.evidence.state}`,
+      {
+        attempts: 3,
+        delayMs: 1,
+        sleep: async () => undefined,
+        fetchImpl: async () =>
+          new Response(JSON.stringify(responses.shift()), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          }),
+      }
+    );
+
+    expect(payload.capabilities.evidence.state).toBe("supported");
+    expect(summary.apiChecks).toEqual([
+      expect.objectContaining({
+        description: "Performance summary evidence readiness attempt 1",
+        kind: "json",
+      }),
+      expect.objectContaining({
+        description: "Performance summary evidence readiness attempt 2",
+        kind: "json",
+      }),
+      {
+        description: "Performance summary evidence readiness",
+        url: "http://gateway.dev.lotus/api/v1/workbench/PB_1/performance/summary",
+        status: "ready",
+        kind: "json-readiness",
+        method: "GET",
+        attempts: 2,
+      },
+    ]);
+  });
+
+  it("fails JSON readiness probes with the last observed reason", async () => {
+    const summary = createSummary();
+
+    await expect(
+      fetchJsonUntil<EvidenceReadinessPayload>(
+        summary,
+        "http://gateway.dev.lotus/api/v1/workbench/PB_1/performance/summary",
+        "Performance summary evidence readiness",
+        1000,
+        (candidate) => `evidence state is ${candidate.capabilities.evidence.state}`,
+        {
+          attempts: 2,
+          delayMs: 1,
+          sleep: async () => undefined,
+          fetchImpl: async () =>
+            new Response(JSON.stringify({ capabilities: { evidence: { state: "partial" } } }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            }),
+        }
+      )
+    ).rejects.toThrow(
+      "Performance summary evidence readiness did not reach ready state after 2 attempts"
+    );
   });
 
   it("fails non-JSON gateway responses with a high-signal error", async () => {

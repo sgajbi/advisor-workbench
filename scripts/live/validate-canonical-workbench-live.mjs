@@ -12,7 +12,7 @@ import {
   writeShotIndex,
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
-import { checkDns, fetchJson, fetchText, postJson } from "./validation/probes.mjs";
+import { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson } from "./validation/probes.mjs";
 import {
   assertPerformanceCalculationSanity,
   assertRiskCalculationSanity,
@@ -222,11 +222,16 @@ async function run() {
     throw new Error(`Foundation workspace did not resolve ${portfolioId}.`);
   }
 
-  const performanceSummary = await fetchJson(
+  const performanceSummaryUrl = `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`;
+  const performanceSummary = await fetchJsonUntil(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
-    "Performance summary",
-    timeoutMs
+    performanceSummaryUrl,
+    "Performance summary evidence readiness",
+    timeoutMs,
+    (payload) =>
+      payload?.capabilities?.evidence?.state === "supported"
+        ? true
+        : `evidence state is ${payload?.capabilities?.evidence?.state ?? "missing"}`
   );
   if (!performanceSummary?.portfolio_id) {
     throw new Error("Performance summary returned no portfolio payload.");

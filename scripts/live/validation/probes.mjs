@@ -43,6 +43,43 @@ export async function fetchJson(
   });
 }
 
+export async function fetchJsonUntil(
+  summary,
+  url,
+  description,
+  timeoutMs,
+  predicate,
+  {
+    attempts = 12,
+    delayMs = 5000,
+    fetchImpl = globalThis.fetch,
+    sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  } = {}
+) {
+  let lastPayload;
+  let lastReason = "predicate returned false";
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    lastPayload = await fetchJson(summary, url, `${description} attempt ${attempt}`, timeoutMs, fetchImpl);
+    const result = predicate(lastPayload);
+    if (result === true) {
+      summary.apiChecks.push({
+        description,
+        url,
+        status: "ready",
+        kind: "json-readiness",
+        method: "GET",
+        attempts: attempt,
+      });
+      return lastPayload;
+    }
+    lastReason = typeof result === "string" && result.trim() ? result : lastReason;
+    if (attempt < attempts) {
+      await sleep(delayMs);
+    }
+  }
+  throw new Error(`${description} did not reach ready state after ${attempts} attempts at ${url}: ${lastReason}`);
+}
+
 export async function postJson(
   summary,
   url,
