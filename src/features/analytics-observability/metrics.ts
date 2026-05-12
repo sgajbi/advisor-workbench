@@ -156,6 +156,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.dpm-command-center",
+    panel: "mandate-command-center-exception-ai-summary",
+    operation: "dpm.command-center.exceptions.ai-summary",
+  },
+  {
+    route: "workbench.dpm-command-center",
     panel: "mandate-command-center-mandate",
     operation: "dpm.command-center.mandate.by-portfolio",
   },
@@ -308,6 +313,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     route: "workbench.dpm-command-center",
     panel: "wave-ai-pm-memo",
     operation: "dpm.waves.ai-pm-memo",
+  },
+  {
+    route: "workbench.dpm-command-center",
+    panel: "wave-operations-handoff-summary",
+    operation: "dpm.waves.operations-handoff-summary",
   },
   {
     route: "workbench.legacy-advisor",

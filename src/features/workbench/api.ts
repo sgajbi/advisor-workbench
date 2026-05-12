@@ -15,9 +15,11 @@ import {
   WorkbenchPortfolio360,
   DpmCommandCenterGatewayResponse,
   DpmConstructionGatewayResponse,
+  DpmExceptionSummaryResponse,
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
   DpmOutcomeReviewNarrativeResponse,
+  DpmOperationsHandoffSummaryResponse,
   DpmPortfolioMemoryGatewayResponse,
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
@@ -921,6 +923,50 @@ export async function getDpmCommandCenterExceptions(params?: {
   );
 }
 
+export async function requestDpmExceptionSummary(params: {
+  exceptionId: string;
+  portfolioId?: string;
+  mandateId?: string;
+  state?: string;
+}): Promise<DpmExceptionSummaryResponse> {
+  const body: Record<string, unknown> = {
+    requested_outputs: [
+      "exception_summary",
+      "severity_summary",
+      "recommended_triage",
+      "support_references",
+      "evidence_gaps",
+    ],
+    audience: ["portfolio_manager", "investment_control", "operations"],
+  };
+  if (params.portfolioId) {
+    body.portfolio_id = params.portfolioId;
+  }
+  if (params.mandateId) {
+    body.mandate_id = params.mandateId;
+  }
+  if (params.state) {
+    body.state = params.state;
+  }
+
+  return await observeWorkbenchMutation(
+    "dpm.command-center.exceptions.ai-summary",
+    async () =>
+      await fetchWorkbenchMutation<DpmExceptionSummaryResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/exceptions/${encodeURIComponent(params.exceptionId)}/ai-summary`
+        ),
+        "request DPM exception AI summary",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(),
+          body: JSON.stringify(body),
+        }
+      )
+  );
+}
+
 export async function getDpmMandateByPortfolio(
   portfolioId: string
 ): Promise<DpmCommandCenterGatewayResponse> {
@@ -1242,6 +1288,36 @@ export async function requestDpmWaveAiPmMemo(waveId: string): Promise<DpmWaveAiP
               "evidence_gaps",
             ],
             audience: ["portfolio_manager", "investment_control", "operations"],
+          }),
+        }
+      )
+  );
+}
+
+export async function requestDpmOperationsHandoffSummary(
+  waveId: string
+): Promise<DpmOperationsHandoffSummaryResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.waves.operations-handoff-summary",
+    async () =>
+      await fetchWorkbenchMutation<DpmOperationsHandoffSummaryResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/${encodeURIComponent(waveId)}/operations-handoff-summary`
+        ),
+        "request DPM operations handoff AI summary",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(),
+          body: JSON.stringify({
+            requested_outputs: [
+              "operations_summary",
+              "execution_prerequisites",
+              "blocking_conditions",
+              "support_references",
+              "evidence_gaps",
+            ],
+            audience: ["operations", "portfolio_manager", "investment_control"],
           }),
         }
       )

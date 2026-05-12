@@ -66,6 +66,7 @@ export type DpmCommandCenterPanelModel = {
   attentionRows: DpmCommandCenterAttentionRow[];
   recommendedActions: DpmCommandCenterActionRow[];
   exceptionRows: DpmCommandCenterExceptionRow[];
+  selectedExceptionId: string | null;
   mandateId: string;
   mandateHealthScore: string;
   mandateHealthState: string;
@@ -100,6 +101,7 @@ export function buildDpmCommandCenterPanelModel(params: {
       attentionRows: [],
       recommendedActions: [],
       exceptionRows: [],
+      selectedExceptionId: null,
       mandateId: "N/A",
       mandateHealthScore: "N/A",
       mandateHealthState: "N/A",
@@ -121,6 +123,8 @@ export function buildDpmCommandCenterPanelModel(params: {
   const latestMonitoringRun = readRecord(
     commandData.latest_monitoring_run || commandData.monitoring_run,
   );
+
+  const exceptionRows = buildExceptionRows(params.exceptions?.data);
 
   return {
     state: resolvePanelState(supportabilityState),
@@ -160,7 +164,9 @@ export function buildDpmCommandCenterPanelModel(params: {
     recommendedActions: buildRecommendedActionRows(
       commandData.recommended_actions,
     ),
-    exceptionRows: buildExceptionRows(params.exceptions?.data),
+    exceptionRows,
+    selectedExceptionId:
+      exceptionRows.find((row) => row.exceptionId !== "N/A")?.exceptionId ?? null,
     mandateId,
     mandateHealthScore: formatValue(
       readValue(mandateHealthData, "health_score"),

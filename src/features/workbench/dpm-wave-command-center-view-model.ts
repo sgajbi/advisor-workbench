@@ -1,4 +1,8 @@
-import type { DpmWaveAiPmMemoResponse, DpmWaveGatewayResponse } from "./types";
+import type {
+  DpmOperationsHandoffSummaryResponse,
+  DpmWaveAiPmMemoResponse,
+  DpmWaveGatewayResponse,
+} from "./types";
 
 export type DpmWaveCommandCenterPanelState =
   | "ready"
@@ -55,6 +59,8 @@ export type DpmWaveCommandCenterPanelModel = {
   reportInputStatus: string;
   aiMemoStatus: string;
   aiMemoRunId: string;
+  operationsHandoffSummaryStatus: string;
+  operationsHandoffSummaryRunId: string;
   summaryRows: DpmWaveSummaryRow[];
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
@@ -70,6 +76,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   actionResponse?: DpmWaveGatewayResponse | null;
   waveReportInput?: DpmWaveGatewayResponse | null;
   waveAiMemo?: DpmWaveAiPmMemoResponse | null;
+  operationsHandoffSummary?: DpmOperationsHandoffSummaryResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
     params.actionResponse ??
@@ -131,6 +138,8 @@ export function buildDpmWaveCommandCenterModel(params: {
       : "NOT_REQUESTED",
     aiMemoStatus: readAiMemoStatus(params.waveAiMemo),
     aiMemoRunId: readAiMemoRunId(params.waveAiMemo),
+    operationsHandoffSummaryStatus: readWorkflowPackStatus(params.operationsHandoffSummary),
+    operationsHandoffSummaryRunId: readWorkflowPackRunId(params.operationsHandoffSummary),
     summaryRows: listRows,
     metricRows: buildMetricRows(metricSource),
     itemRows,
@@ -140,6 +149,45 @@ export function buildDpmWaveCommandCenterModel(params: {
       readValue(proofPackPosture, "external_execution_claimed")
     ),
   };
+}
+
+function readWorkflowPackStatus(
+  response:
+    | { data: Record<string, unknown> }
+    | null
+    | undefined
+): string {
+  if (!response) {
+    return "NOT_REQUESTED";
+  }
+  return normalizeState(
+    readString(response.data, "status") ||
+      readString(response.data, "review_state") ||
+      readString(readRecord(response.data.workflow_pack_run), "review_state") ||
+      readString(readRecord(response.data.output), "review_state") ||
+      "REVIEW_REQUIRED"
+  );
+}
+
+function readWorkflowPackRunId(
+  response:
+    | { data: Record<string, unknown> }
+    | null
+    | undefined
+): string {
+  if (!response) {
+    return "N/A";
+  }
+  const workflowPackRun = readRecord(response.data.workflow_pack_run);
+  const execution = readRecord(response.data.execution);
+  const audit = readRecord(execution.audit);
+  return (
+    readString(response.data, "run_id") ||
+    readString(response.data, "workflow_run_id") ||
+    readString(workflowPackRun, "run_id") ||
+    readString(audit, "workflow_pack_run_id") ||
+    "N/A"
+  );
 }
 
 function readReportInputRef(
