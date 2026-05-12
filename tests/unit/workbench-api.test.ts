@@ -4,6 +4,7 @@ import {
   approveDpmWave,
   applySandboxChanges,
   buildArchivedDocumentDownloadUrl,
+  calculateCompositePerformanceTwrClient,
   createPortfolioReportBatch,
   createSandboxSession,
   generateDpmConstructionAlternatives,
@@ -52,6 +53,7 @@ import {
   getWorkbenchPerformanceWorkspaceDetails,
   getWorkbenchPerformanceWorkspaceSummaryClient,
   getWorkbenchPerformanceWorkspaceSummary,
+  inspectCompositePerformanceClient,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
   runReportBatchOnce,
   runDpmCommandCenterMonitoring,
@@ -75,6 +77,134 @@ describe("workbench api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     resetAnalyticsUiMetricEvents();
+  });
+
+  it("calls gateway composite performance endpoints through the Workbench BFF", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          correlation_id: "corr-composite",
+          contract_version: "composite-performance-gateway.v1",
+          source_service: "lotus-performance",
+          upstream_status: 200,
+          data: {
+            composite_id: "PB_GLOBAL_BALANCED_USD",
+            status: "READY",
+            methodology: "persisted_member_return_asset_weighted_twr_v1",
+            periods: [],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await calculateCompositePerformanceTwrClient({
+      calculation_id: "calc-1",
+      composite_id: "PB_GLOBAL_BALANCED_USD",
+      period_start: "2026-01-01",
+      period_end: "2026-03-31",
+    });
+
+    expect(response.source_service).toBe("lotus-performance");
+    const [requestedUrl, requestInit] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    const requestHeaders = requestInit.headers as Record<string, string>;
+    expect(requestedUrl).toBe(`${expectedBaseUrl}/performance/composites/twr`);
+    expect(JSON.parse(requestInit.body as string)).toEqual({
+      calculation_id: "calc-1",
+      composite_id: "PB_GLOBAL_BALANCED_USD",
+      period_start: "2026-01-01",
+      period_end: "2026-03-31",
+    });
+    expect(requestHeaders["Content-Type"]).toBe("application/json");
+    expect(getAnalyticsUiMetricEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_api_request_duration_seconds",
+          labels: expect.objectContaining({
+            route: "workbench.performance",
+            panel: "performance-composite-twr",
+            operation: "performance.composites.twr",
+            status_class: "2xx",
+          }),
+        }),
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_state_total",
+          labels: expect.objectContaining({
+            route: "workbench.performance",
+            panel: "performance-composite-twr",
+            operation: "performance.composites.twr",
+            state: "ready",
+          }),
+        }),
+      ])
+    );
+    expect(getAnalyticsUiMetricEvents()).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metric_name: "lotus_workbench_panel_hydration_duration_seconds",
+          labels: expect.objectContaining({
+            operation: "performance.composites.twr",
+          }),
+        }),
+      ])
+    );
+  });
+
+  it("calls gateway composite inspection endpoint through the Workbench BFF", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          correlation_id: "corr-composite",
+          contract_version: "composite-performance-gateway.v1",
+          source_service: "lotus-performance",
+          upstream_status: 200,
+          data: {
+            composite_id: "PB_GLOBAL_BALANCED_USD",
+            verdict: "supportable_with_warnings",
+            artifacts: [{ artifact_name: "member_inputs.csv" }],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await inspectCompositePerformanceClient({
+      inspection_id: "insp-1",
+      composite_id: "PB_GLOBAL_BALANCED_USD",
+      period_start: "2026-01-01",
+      period_end: "2026-03-31",
+    });
+
+    expect(response.data.verdict).toBe("supportable_with_warnings");
+    const [requestedUrl, requestInit] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(requestedUrl).toBe(
+      `${expectedBaseUrl}/performance/composites/inspect`
+    );
+    expect(JSON.parse(requestInit.body as string)).toEqual({
+      inspection_id: "insp-1",
+      composite_id: "PB_GLOBAL_BALANCED_USD",
+      period_start: "2026-01-01",
+      period_end: "2026-03-31",
+    });
+    expect(getAnalyticsUiMetricEvents()[0]).toEqual(
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          route: "workbench.performance",
+          panel: "performance-composite-inspection",
+          operation: "performance.composites.inspect",
+          status_class: "2xx",
+        }),
+      })
+    );
   });
 
   it("calls sandbox session create endpoint", async () => {

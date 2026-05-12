@@ -272,6 +272,16 @@ describe("analytics UI observability metrics", () => {
         "performance-advisor-brief-review-action",
         "performance.workspace.advisor-brief.review-action",
       ],
+      [
+        "workbench.performance",
+        "performance-composite-twr",
+        "performance.composites.twr",
+      ],
+      [
+        "workbench.performance",
+        "performance-composite-inspection",
+        "performance.composites.inspect",
+      ],
       ["workbench.risk", "risk-summary", "risk.summary"],
       ["workbench.risk", "risk-concentration", "risk.concentration"],
       ["workbench.risk", "risk-drawdown", "risk.drawdown"],

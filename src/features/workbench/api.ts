@@ -1,4 +1,7 @@
 import {
+  CompositePerformanceGatewayResponse,
+  CompositePerformanceInspectionRequest,
+  CompositePerformanceTwrRequest,
   WorkbenchAnalytics,
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
   WorkbenchPerformanceAdvisorBrief,
@@ -542,6 +545,42 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
         `/workbench/${portfolioId}/performance/attribution-trend`,
         "performance attribution trend",
         query
+      )
+  );
+}
+
+export async function calculateCompositePerformanceTwrClient(
+  payload: CompositePerformanceTwrRequest
+): Promise<CompositePerformanceGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "performance.composites.twr",
+    async () =>
+      await fetchWorkbenchMutation<CompositePerformanceGatewayResponse>(
+        `${BFF_PROXY_BASE}/performance/composites/twr`,
+        "composite performance TWR",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      )
+  );
+}
+
+export async function inspectCompositePerformanceClient(
+  payload: CompositePerformanceInspectionRequest
+): Promise<CompositePerformanceGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "performance.composites.inspect",
+    async () =>
+      await fetchWorkbenchMutation<CompositePerformanceGatewayResponse>(
+        `${BFF_PROXY_BASE}/performance/composites/inspect`,
+        "composite performance inspection",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
       )
   );
 }
