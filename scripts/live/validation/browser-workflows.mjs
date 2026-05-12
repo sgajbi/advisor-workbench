@@ -153,12 +153,14 @@ export async function validatePerformanceSummaryPanel(
   {
     workbenchBaseUrl,
     portfolioId,
+    benchmarkCode,
+    canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
     screenshotRegisteredPanel,
   }
 ) {
-  await page.goto(`${workbenchBaseUrl}/performance?portfolioId=${portfolioId}`, {
+  await page.goto(`${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`, {
     waitUntil: "networkidle",
     timeout: timeoutMs,
   });
@@ -172,7 +174,7 @@ export async function validatePerformanceSummaryPanel(
   await expect(page.getByRole("heading", { name: "Performance Drivers" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText("Observation Trail")).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText(/Observation trail/i)).toBeVisible({ timeout: timeoutMs });
   await expect(page.getByText(/\d+\s+periods?/i)).toBeVisible({ timeout: timeoutMs });
   await assertTableHasRows(
     tableByExactLabel(page, "Return path observation table"),
@@ -189,13 +191,14 @@ export async function validatePerformanceAnalysisPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
     screenshotRegisteredPanel,
   }
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
   await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
@@ -228,13 +231,14 @@ export async function validateAdvisorBriefPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalAsOfDate,
     timeoutMs,
     screenshotRegisteredPanel,
     performAcceptReviewActionProof = false,
   }
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
   await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
@@ -303,13 +307,14 @@ export async function validateRiskPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
     screenshotRegisteredPanel,
   }
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
   await assertRailModeActive(page, /^Risk Review/, timeoutMs);
@@ -343,12 +348,13 @@ export async function validateEvidencePanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalAsOfDate,
     timeoutMs,
     screenshotRegisteredPanel,
   }
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs }
   );
   await assertRailModeActive(page, /^Evidence/, timeoutMs);
