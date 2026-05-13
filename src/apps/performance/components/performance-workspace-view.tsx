@@ -20,6 +20,8 @@ import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import PerformanceWorkspaceRail from "./performance-workspace-rail";
 import PerformanceWorkspaceSidePanel from "./performance-workspace-side-panel";
+import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
+import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import type {
   PerformanceWorkspaceControls,
   PerformanceWorkspaceViewProps,
@@ -49,6 +51,8 @@ export default function PerformanceWorkspaceView({
   const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
   const workspaceTitle = modeDefinition.workspaceTitle;
   const unavailableCopy = getWorkspaceUnavailableCopy(loadIssue, workspaceTitle, modeDefinition.label);
+  const railPortfolioId = workspace?.portfolio.portfolio_id ?? "Portfolio pending";
+  const activeWorkbenchScreen = getActiveWorkbenchScreen(mode);
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -121,16 +125,22 @@ export default function PerformanceWorkspaceView({
       sideClassName="performance-side performance-side-wide"
       sideDensity="comfortable"
       rail={
-        <PerformanceWorkspaceRail
-          workspace={workspace}
-          mode={mode}
-          period={period}
-          isDetailsPending={isDetailsPending}
-          capabilities={capabilities}
-          selectedBenchmarkLabel={selectedBenchmarkLabel}
-          onModeChange={onModeChange}
-          onRequestChange={onRequestChange}
-        />
+        <div className="performance-workbench-rail-stack">
+          <PortfolioScreenRail
+            portfolioId={railPortfolioId}
+            activeScreen={activeWorkbenchScreen}
+          />
+          <PerformanceWorkspaceRail
+            workspace={workspace}
+            mode={mode}
+            period={period}
+            isDetailsPending={isDetailsPending}
+            capabilities={capabilities}
+            selectedBenchmarkLabel={selectedBenchmarkLabel}
+            onModeChange={onModeChange}
+            onRequestChange={onRequestChange}
+          />
+        </div>
       }
       main={
         !workspace ? (
@@ -198,6 +208,18 @@ export default function PerformanceWorkspaceView({
       }
     />
   );
+}
+
+function getActiveWorkbenchScreen(
+  mode: PerformanceWorkspaceViewProps["mode"]
+): PortfolioScreenNavigationKey {
+  if (mode === "risk") {
+    return "risk";
+  }
+  if (mode === "advisor") {
+    return "advisory";
+  }
+  return "performance";
 }
 
 function getWorkspaceUnavailableCopy(

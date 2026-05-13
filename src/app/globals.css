@@ -6797,6 +6797,11 @@ a:hover {
   max-width: none;
 }
 
+.performance-workbench-rail-stack {
+  display: grid;
+  gap: 12px;
+}
+
 .performance-main {
   gap: 1rem;
   width: 100%;

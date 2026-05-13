@@ -168,7 +168,16 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByText("Quick Views")).toBeInTheDocument();
+    expect(screen.getByText("Workbench Screens")).toBeInTheDocument();
     expect(screen.getByText("Client Context")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Positions/i })).toHaveAttribute(
+      "href",
+      "/positions?portfolioId=PF_1001"
+    );
+    expect(screen.getByRole("link", { name: /Performance/i })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
     const railSections = Array.from(
       document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
     ).map((node) => node.textContent?.trim());
@@ -221,6 +230,7 @@ describe("PerformanceWorkspaceView", () => {
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
+    expect(screen.getByRole("link", { name: /Risk/i })).toHaveAttribute("aria-current", "page");
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(riskModeMock).toHaveBeenCalled();
