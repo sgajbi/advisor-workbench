@@ -1,7 +1,6 @@
 import {
   MainWithSideRailLayout,
   Panel,
-  SemanticBadge,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
@@ -17,6 +16,7 @@ import {
 } from "../capabilities";
 import {
   getPerformanceWorkspaceModeDefinition,
+  type PerformanceWorkspaceMode,
 } from "../performance-workspace-modes";
 import {
   getPerformanceWorkspacePresentation,
@@ -29,6 +29,7 @@ import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
 import PerformanceWorkspaceSidePanel from "./performance-workspace-side-panel";
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
+import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import type {
   PerformanceWorkspaceControls,
@@ -70,6 +71,12 @@ export default function PerformanceWorkspaceView({
   const controlNormalizationNotice = workspace
     ? getPerformanceControlNormalizationNotice(workspace)
     : null;
+  const performanceRailModeItems = buildPerformanceRailModeItems({
+    mode,
+    capabilities,
+    isDetailsPending,
+    onModeChange,
+  });
   const controls: PerformanceWorkspaceControls = {
     period,
     detailBasis,
@@ -127,7 +134,7 @@ export default function PerformanceWorkspaceView({
 
   return (
     <MainWithSideRailLayout
-      className="performance-layout"
+      className="performance-layout portfolio-page"
       railClassName="portfolio-screen-rail-shell performance-rail-shell"
       mainClassName="performance-main"
       sideClassName="performance-side performance-side-wide"
@@ -136,6 +143,7 @@ export default function PerformanceWorkspaceView({
         <PortfolioScreenRail
           portfolioId={railPortfolioId}
           activeScreen={activeWorkbenchScreen}
+          modeItems={performanceRailModeItems}
         />
       }
       main={
@@ -146,12 +154,6 @@ export default function PerformanceWorkspaceView({
             title={workspaceTitle}
           >
             <WorkbenchSectionStack className="performance-page-sections">
-              <PerformanceSurfaceSwitcher
-                mode={mode}
-                capabilities={capabilities}
-                isDetailsPending={isDetailsPending}
-                onModeChange={onModeChange}
-              />
               <Panel className="performance-page-unavailable-shell">
                 <PerformanceAnalyticalUnavailableState
                   ariaLabel={unavailableCopy.ariaLabel}
@@ -177,12 +179,6 @@ export default function PerformanceWorkspaceView({
             title={workspaceTitle}
           >
             <WorkbenchSectionStack className="performance-page-sections">
-              <PerformanceSurfaceSwitcher
-                mode={mode}
-                capabilities={capabilities}
-                isDetailsPending={isDetailsPending}
-                onModeChange={onModeChange}
-              />
               {controlNormalizationNotice ? (
                 <div
                   className="performance-control-normalization-note"
@@ -219,18 +215,29 @@ export default function PerformanceWorkspaceView({
 }
 
 const PERFORMANCE_SURFACE_ITEMS: Array<{
-  mode: PerformanceWorkspaceViewProps["mode"];
+  mode: PerformanceWorkspaceMode;
   label: string;
+  detail: string;
   capabilityKey?: keyof PerformanceWorkspaceCapabilities;
 }> = [
-  { mode: "summary", label: "Performance Overview" },
-  { mode: "analysis", label: "Performance Analysis", capabilityKey: "attributionDetail" },
-  { mode: "advisor", label: "Advisor Brief" },
-  { mode: "risk", label: "Risk Review", capabilityKey: "returnPath" },
-  { mode: "evidence", label: "Evidence", capabilityKey: "evidence" },
+  { mode: "summary", label: "Performance Overview", detail: "Return path summary" },
+  {
+    mode: "analysis",
+    label: "Performance Analysis",
+    detail: "Attribution and diagnostics",
+    capabilityKey: "attributionDetail",
+  },
+  { mode: "advisor", label: "Advisor Brief", detail: "Client-ready narrative" },
+  {
+    mode: "risk",
+    label: "Risk Review",
+    detail: "Drawdown and concentration",
+    capabilityKey: "returnPath",
+  },
+  { mode: "evidence", label: "Evidence", detail: "Lineage and calculations", capabilityKey: "evidence" },
 ];
 
-function PerformanceSurfaceSwitcher({
+function buildPerformanceRailModeItems({
   mode,
   capabilities,
   isDetailsPending,
@@ -240,76 +247,37 @@ function PerformanceSurfaceSwitcher({
   capabilities: PerformanceWorkspaceCapabilities | null;
   isDetailsPending: boolean;
   onModeChange: PerformanceWorkspaceViewProps["onModeChange"];
-}) {
-  return (
-    <div className="performance-surface-switcher" aria-label="Performance surface navigation">
-      <div className="performance-surface-switcher-copy">
-        <span>Performance Surface</span>
-        <strong>{getPerformanceWorkspaceModeDefinition(mode).label}</strong>
-      </div>
-      <div className="performance-surface-switcher-actions">
-        {PERFORMANCE_SURFACE_ITEMS.map((item) => {
-          const capability = item.capabilityKey ? capabilities?.[item.capabilityKey] : null;
-          const isPendingAnalysisAvailability =
-            item.mode === "analysis" &&
-            isDetailsPending &&
-            capability?.state === "unavailable";
-          const disabled =
-            capability && !isPendingAnalysisAvailability
-              ? !isInteractiveCapability(capability)
-              : false;
-          const active = mode === item.mode;
+}): PortfolioScreenRailModeItem[] {
+  return PERFORMANCE_SURFACE_ITEMS.map((item) => {
+    const capability = item.capabilityKey ? capabilities?.[item.capabilityKey] : null;
+    const isPendingAnalysisAvailability =
+      item.mode === "analysis" && isDetailsPending && capability?.state === "unavailable";
+    const disabled =
+      capability && !isPendingAnalysisAvailability ? !isInteractiveCapability(capability) : false;
 
-          return (
-            <button
-              key={item.mode}
-              type="button"
-              className={[
-                "performance-surface-switcher-button",
-                active ? "performance-surface-switcher-button-active" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              disabled={disabled}
-              aria-current={active ? "page" : undefined}
-              aria-pressed={active}
-              title={
-                isPendingAnalysisAvailability
-                  ? "Analysis availability is loading."
-                  : disabled
-                    ? capability?.reason
-                    : getPerformanceWorkspaceModeDefinition(item.mode).intro?.description
-              }
-              onClick={() => onModeChange(item.mode)}
-            >
-              <span>{item.label}</span>
-              {isPendingAnalysisAvailability ? (
-                <SemanticBadge tone="default">Loading</SemanticBadge>
-              ) : capability ? (
-                <SemanticBadge tone={getCapabilityTone(capability)}>
-                  {getCapabilityLabel(capability)}
-                </SemanticBadge>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+    return {
+      key: item.mode,
+      label: item.label,
+      detail: item.detail,
+      active: mode === item.mode,
+      disabled,
+      status: isPendingAnalysisAvailability
+        ? "Loading"
+        : capability
+          ? getCapabilityLabel(capability)
+          : undefined,
+      title: isPendingAnalysisAvailability
+        ? "Analysis availability is loading."
+        : disabled
+          ? capability?.reason
+          : getPerformanceWorkspaceModeDefinition(item.mode).intro?.description,
+      onSelect: () => onModeChange(item.mode),
+    };
+  });
 }
 
 function isInteractiveCapability(capability: WorkspaceCapability) {
   return isSupportedCapability(capability) || isPartialCapability(capability);
-}
-
-function getCapabilityTone(capability: WorkspaceCapability) {
-  if (capability.state === "supported") {
-    return "success" as const;
-  }
-  if (capability.state === "partial") {
-    return "warn" as const;
-  }
-  return "danger" as const;
 }
 
 function getCapabilityLabel(capability: WorkspaceCapability) {

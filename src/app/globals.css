@@ -3195,9 +3195,37 @@ a:hover {
   white-space: nowrap;
 }
 
+.portfolio-screen-rail-link small em {
+  margin-left: 4px;
+  color: inherit;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .portfolio-screen-rail-link:hover {
   border-color: #d8dde5;
   background: #f8fafc;
+}
+
+.portfolio-screen-rail-subnav {
+  display: grid;
+  gap: 0;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #d8dde5;
+}
+
+.portfolio-screen-rail-subnav-link {
+  width: 100%;
+  appearance: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.portfolio-screen-rail-subnav-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
 }
 
 .portfolio-screen-rail-link-active {
@@ -6834,82 +6862,6 @@ a:hover {
 .performance-card-header {
   display: grid;
   gap: 0.28rem;
-}
-
-.performance-surface-switcher {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px;
-  border: 1px solid #c6c6cd;
-  border-radius: 6px;
-  background: #ffffff;
-}
-
-.performance-surface-switcher-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 184px;
-}
-
-.performance-surface-switcher-copy span {
-  color: #76777d;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.performance-surface-switcher-copy strong {
-  color: #191c1e;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-}
-
-.performance-surface-switcher-actions {
-  display: flex;
-  flex: 1 1 auto;
-  justify-content: flex-end;
-  gap: 4px;
-  min-width: 0;
-}
-
-.performance-surface-switcher-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 5px 10px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: #45464d;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.performance-surface-switcher-button:hover:not(:disabled) {
-  border-color: #c6c6cd;
-  background: #f2f4f6;
-  color: #191c1e;
-}
-
-.performance-surface-switcher-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.performance-surface-switcher-button-active {
-  border-color: rgba(114, 91, 38, 0.42);
-  background: rgba(252, 220, 154, 0.26);
-  color: #594410;
 }
 
 .performance-side-card-title {
@@ -15303,6 +15255,20 @@ a:hover {
 .portfolio-page .portfolio-screen-rail-link:focus-visible {
   border-color: rgba(252, 220, 154, 0.28);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.portfolio-page .portfolio-screen-rail-subnav {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.portfolio-page .portfolio-screen-rail-subnav-link {
+  background: transparent;
+}
+
+.portfolio-page .portfolio-screen-rail-subnav-link:disabled:hover,
+.portfolio-page .portfolio-screen-rail-subnav-link:disabled:focus-visible {
+  border-color: transparent;
+  background: transparent;
 }
 
 .portfolio-page .portfolio-screen-rail-link-active {

@@ -59,7 +59,7 @@ async function openPerformanceWorkbench(
 
   await expect(workbenchHeading).toBeVisible({ timeout: 30000 });
   await expect(
-    page.locator('.performance-surface-switcher').getByRole('button', { name: /^Performance Overview$/i })
+    page.getByLabel('Performance surface navigation').getByRole('button', { name: /^Performance Overview$/i })
   ).toBeVisible({ timeout: 30000 });
   return { portfolioId, available: true };
 }
@@ -162,12 +162,12 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
 
-    const workspaceRail = page.locator('.performance-surface-switcher');
+    const workspaceRail = page.getByLabel('Performance surface navigation');
     const analysisTab = workspaceRail.getByRole('button', { name: /^Performance Analysis/i });
     const evidenceTab = workspaceRail.getByRole('button', { name: /^Evidence/i });
     await expect(
       workspaceRail.getByRole('button', { name: /^Performance Overview$/i })
-    ).toHaveAttribute('aria-pressed', 'true');
+    ).toHaveAttribute('aria-current', 'page');
     await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
 
     await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
@@ -247,7 +247,7 @@ test.describe('Performance workbench smoke', () => {
     expect(chartMetrics.width).toBeGreaterThan(900);
 
     await analysisTab.click();
-    await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
     await expect(page.locator('.performance-analysis-stage')).toBeVisible({ timeout: 15000 });
     await expect(
       page.getByRole('heading', { name: /^Attribution Detail$/i })
@@ -277,10 +277,10 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const analysisTab = page
-      .locator('.performance-surface-switcher')
+      .getByLabel('Performance surface navigation')
       .getByRole('button', { name: /^Performance Analysis/i });
     await analysisTab.click();
-    await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
 
     const analysisStage = page.locator('.performance-analysis-stage');
     await expect(analysisStage).toBeVisible({ timeout: 15000 });
@@ -352,11 +352,11 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const analysisTab = page
-      .locator('.performance-surface-switcher')
+      .getByLabel('Performance surface navigation')
       .getByRole('button', { name: /^Performance Analysis/i });
     await expect(analysisTab).toBeVisible();
     await analysisTab.click();
-    await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
 
     const contributionModule = page.locator('#performance-drivers');
     await expect(contributionModule).toBeVisible({ timeout: 15000 });
@@ -447,11 +447,11 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const evidenceTab = page
-      .locator('.performance-surface-switcher')
+      .getByLabel('Performance surface navigation')
       .getByRole('button', { name: /^Evidence/i });
     await expect(evidenceTab).toBeEnabled();
     await evidenceTab.click();
-    await expect(evidenceTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(evidenceTab).toHaveAttribute('aria-current', 'page');
     await expect(page.locator('.performance-evidence-module')).toBeVisible({ timeout: 15000 });
     await expect(
       page.getByRole('heading', { name: /^Evidence and Calculation Context$/i })

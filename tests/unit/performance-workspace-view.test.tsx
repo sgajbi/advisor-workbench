@@ -69,8 +69,8 @@ describe("PerformanceWorkspaceView", () => {
     renderWorkspaceView({ workspace: scenario.workspace });
 
     expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
+      "aria-current",
+      "page"
     );
 
     await waitFor(() => {
@@ -168,7 +168,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByText("Workbench Screens")).toBeInTheDocument();
-    expect(screen.getByText("Performance Surface")).toBeInTheDocument();
+    expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Positions/i })).toHaveAttribute(
       "href",
       "/positions?portfolioId=PF_1001"
@@ -177,7 +177,7 @@ describe("PerformanceWorkspaceView", () => {
       "aria-current",
       "page"
     );
-    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(1);
+    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
     expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -197,8 +197,8 @@ describe("PerformanceWorkspaceView", () => {
       .toBeFalsy();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
+      "aria-current",
+      "page"
     );
     await waitFor(() => {
       expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();

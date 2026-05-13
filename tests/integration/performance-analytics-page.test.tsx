@@ -149,9 +149,12 @@ describe("PerformanceAnalyticsPage", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByText("Performance Surface")).toBeInTheDocument();
     expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
-    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(1);
+    expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
+    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
+    expect(
+      within(workbenchScreenNav).getByRole("button", { name: /^Performance Analysis/i })
+    ).toBeInTheDocument();
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
@@ -746,8 +749,8 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     expect(await screen.findByRole("button", { name: /^Risk Review/i })).toHaveAttribute(
-      "aria-pressed",
-      "true"
+      "aria-current",
+      "page"
     );
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();

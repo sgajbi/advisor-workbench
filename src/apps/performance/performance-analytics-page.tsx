@@ -134,7 +134,7 @@ export default async function PerformanceAnalyticsPage({
   }
 
   return (
-    <AppPageShell pageKey="performance" className="performance-page">
+    <AppPageShell pageKey="performance" className="performance-page portfolio-page">
       <PerformanceWorkspaceEntry
         initialSummary={workspaceSummary}
         initialDetails={workspaceDetails}
