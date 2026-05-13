@@ -7903,23 +7903,27 @@ a:hover {
 
 .performance-analysis-summary-band {
   display: grid;
-  grid-template-columns: minmax(13rem, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(16rem, 1.05fr) minmax(0, 3.2fr);
   grid-template-areas: "copy metrics";
-  align-items: start;
-  gap: var(--space-2);
-  padding: 0.72rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-panel);
-  background: var(--surface-primary);
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .performance-analysis-summary-band-copy {
   grid-area: copy;
   display: grid;
-  gap: 0.16rem;
-  align-content: start;
+  gap: 0.25rem;
+  align-content: center;
   min-width: 0;
-  padding: 0.2rem 0.2rem 0.2rem 0;
+  padding: 0.9rem 1rem;
+  border-right: 1px solid #c6c6cd;
+  background: #ffffff;
 }
 
 .performance-analysis-summary-band-copy-list {
@@ -7962,26 +7966,34 @@ a:hover {
 }
 
 .performance-analysis-summary-band-lead {
-  max-width: 24ch;
+  max-width: 42ch;
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .performance-analysis-summary-band-grid {
   grid-area: metrics;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0;
   align-content: stretch;
 }
 
 .performance-analysis-summary-card {
   display: grid;
   gap: 0.18rem;
-  min-height: 0;
-  padding: 0.7rem 0.75rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: var(--radius-tile);
-  background: var(--surface-secondary);
+  min-height: 5.25rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-right: 1px solid #c6c6cd;
+  border-radius: 0;
+  background: #ffffff;
   align-content: start;
+}
+
+.performance-analysis-summary-card:last-child {
+  border-right: 0;
 }
 
 .performance-analysis-summary-card .workbench-summary-metric-label {
@@ -7989,8 +8001,9 @@ a:hover {
 }
 
 .performance-analysis-summary-card .workbench-summary-metric-value {
-  font-size: var(--type-metric-m-size);
-  line-height: var(--type-metric-m-line-height);
+  font-size: 20px;
+  line-height: 26px;
+  color: #191c1e;
 }
 
 .performance-analysis-summary-card .workbench-summary-metric-support {
@@ -10866,8 +10879,10 @@ a:hover {
 
 .performance-analysis-module {
   height: 100%;
-  border-color: rgba(23, 32, 43, 0.08);
-  background: linear-gradient(180deg, rgba(249, 251, 253, 0.94) 0%, #ffffff 16%);
+  border-color: #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .performance-analysis-module .workbench-summary-card-header {
@@ -10975,19 +10990,19 @@ a:hover {
 }
 
 .performance-analysis-shell-action {
-  color: var(--text-muted);
-  font-size: var(--workbench-analytic-label-size);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: #45464d;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: capitalize;
   align-self: start;
   display: inline-flex;
   min-height: 2rem;
   align-items: center;
-  padding: 0.18rem 0.5rem;
-  border: 1px solid rgba(34, 44, 59, 0.08);
-  border-radius: 999px;
-  background: #f8fafc;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid #c6c6cd;
+  border-radius: 4px;
+  background: #f2f4f6;
 }
 
 .performance-analysis-metric-strip {
@@ -11055,7 +11070,7 @@ a:hover {
 
 .performance-analysis-stage {
   display: grid;
-  gap: 0.72rem;
+  gap: 1rem;
 }
 
 .performance-chart-panel,
@@ -11080,23 +11095,24 @@ a:hover {
 
 .analytics-table-variant-analysis.analytics-table-frame,
 .performance-analysis-table {
-  border-radius: 12px;
-  border-color: rgba(32, 44, 61, 0.08);
-  background: #fbfcfd;
+  border-radius: 6px;
+  border-color: #c6c6cd;
+  background: #ffffff;
 }
 
 .analytics-table-variant-analysis.analytics-table-frame.analytics-table-frame-dense,
 .performance-analysis-table.analytics-table-frame-dense {
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .analytics-table-variant-analysis.analytics-table-frame .MuiTableHead-root .MuiTableCell-root,
 .performance-analysis-table.analytics-table-frame .MuiTableHead-root .MuiTableCell-root {
-  background: #f5f7fa;
-  color: #4f5d70;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  background: #f2f4f6;
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
 }
 
 .analytics-table-variant-analysis.analytics-table-frame .MuiTableBody-root .MuiTableCell-root,
@@ -11105,25 +11121,25 @@ a:hover {
 .performance-analysis-table.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root {
   padding-top: 0.9rem;
   padding-bottom: 0.9rem;
-  border-bottom-color: rgba(221, 226, 232, 0.58);
-  color: #1f2937;
+  border-bottom-color: #e0e3e5;
+  color: #191c1e;
   font-variant-numeric: tabular-nums;
 }
 
 .analytics-table-variant-analysis.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even),
 .performance-analysis-table.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
-  background: rgba(247, 249, 251, 0.82);
+  background: #f7f9fb;
 }
 
 .analytics-table-variant-analysis.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root,
 .performance-analysis-table.analytics-table-frame .MuiTableFooter-root .MuiTableCell-root {
-  background: #f5f7fa;
-  color: #172234;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  background: #f2f4f6;
+  color: #191c1e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  border-top: 1px solid rgba(190, 198, 209, 0.84);
+  border-top: 1px solid #c6c6cd;
 }
 
 .performance-analysis-drilldown-workspace {

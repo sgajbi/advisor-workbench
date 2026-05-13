@@ -37,7 +37,7 @@ export const PERFORMANCE_WORKSPACE_MODE_DEFINITIONS: PerformanceWorkspaceModeDef
   {
     key: "analysis",
     label: "Analysis",
-    workspaceTitle: "Performance",
+    workspaceTitle: "Performance Analysis",
     workspaceSubtitle: "Benchmark-aware return, attribution, contribution, and evidence review.",
     intro: {
       ariaLabel: "Performance analysis mode intro",
