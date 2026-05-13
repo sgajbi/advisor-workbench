@@ -2,23 +2,20 @@
 
 import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from "react";
 
-import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
+import type { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { SectionHeader } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
-import {
-  PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
-  shouldPinPortfolioGridLeadColumns,
-} from "./portfolio-grid-helpers";
+import { shouldPinPortfolioGridLeadColumns } from "./portfolio-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
 
 import "ag-grid-community/styles/ag-grid.css";
@@ -32,6 +29,7 @@ type HoldingsColumnKey =
   | "quantity"
   | "price"
   | "marketValue"
+  | "costBasis"
   | "weight"
   | "upl"
   | "currency"
@@ -57,6 +55,7 @@ export type HoldingsRow = {
   quantity: number;
   price: number | null;
   marketValue: number | null;
+  costBasis: number | null;
   weight: number | null;
   upl: number | null;
   currency: string;
@@ -72,6 +71,7 @@ const DEFAULT_COLUMN_VISIBILITY: Record<HoldingsColumnKey, boolean> = {
   quantity: true,
   price: true,
   marketValue: true,
+  costBasis: true,
   weight: true,
   upl: true,
   currency: true,
@@ -92,6 +92,7 @@ export default function PortfolioHoldingsGrid({
 }: HoldingsGridProps) {
   const gridApiRef = useRef<GridApi<HoldingsRow> | null>(null);
   const [chooserAnchor, setChooserAnchor] = useState<HTMLElement | null>(null);
+  const [quickSearch, setQuickSearch] = useState("");
   const [columnVisibility, setColumnVisibility] = useState<Record<HoldingsColumnKey, boolean>>(() =>
     columnMode === "essential"
       ? { ...DEFAULT_COLUMN_VISIBILITY, sector: false, heldSince: false, isin: false }
@@ -108,6 +109,7 @@ export default function PortfolioHoldingsGrid({
         quantity: position.quantity,
         price: position.market_price ?? null,
         marketValue: position.market_value_base ?? null,
+        costBasis: position.cost_basis_base ?? null,
         weight: position.weight_pct ?? null,
         upl: position.unrealized_gain_loss_base ?? null,
         currency: position.currency ?? baseCurrency,
@@ -130,8 +132,9 @@ export default function PortfolioHoldingsGrid({
         field: "instrument",
         pinned: pinImportantColumns ? "left" : null,
         hide: !columnVisibility.instrument,
-        minWidth: 190,
+        minWidth: 230,
         flex: 2,
+        cellRenderer: holdingsInstrumentCellRenderer,
       }),
       buildHoldingsColumn({
         key: "assetClass",
@@ -171,6 +174,15 @@ export default function PortfolioHoldingsGrid({
         valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
       }),
       buildHoldingsColumn({
+        key: "costBasis",
+        headerName: "Cost Basis",
+        field: "costBasis",
+        type: "numericColumn",
+        hide: !columnVisibility.costBasis,
+        minWidth: 132,
+        valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
+      }),
+      buildHoldingsColumn({
         key: "weight",
         headerName: "Weight",
         field: "weight",
@@ -187,6 +199,8 @@ export default function PortfolioHoldingsGrid({
         hide: !columnVisibility.upl,
         minWidth: 138,
         valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
+        cellClass: ({ value }) =>
+          `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getAmountToneClass(value)}`,
       }),
       buildHoldingsColumn({
         key: "currency",
@@ -222,57 +236,73 @@ export default function PortfolioHoldingsGrid({
   );
 
   return (
-    <div className="portfolio-grid-module">
-      <SectionHeader
-        title="Holdings"
-        subtitle={`As of ${formatDate(asOfDate)} in ${baseCurrency}`}
-        actions={
-          <>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-haspopup="menu"
-              aria-expanded={Boolean(chooserAnchor)}
-              aria-label="Choose holdings columns"
-              onClick={(event) => setChooserAnchor(event.currentTarget)}
-            >
-              Columns
-            </Button>
-            <Button
-              size="small"
-              variant={filterLabel ? "contained" : "outlined"}
-              aria-label={filterLabel ? `Filter active: ${filterLabel}` : "Filter holdings"}
-              onClick={onClearFilter}
-              disabled={!filterLabel || !onClearFilter}
-            >
-              Filter
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label="Export holdings"
-              onClick={() => exportHoldingsXlsx(rowData, columnVisibility, baseCurrency)}
-            >
-              Export
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label="Show expanded holdings columns"
-              onClick={() =>
-                setColumnVisibility({
-                  ...DEFAULT_COLUMN_VISIBILITY,
-                  sector: true,
-                  heldSince: true,
-                  isin: true,
-                })
-              }
-            >
-              Expand
-            </Button>
-          </>
-        }
-      />
+    <div className="portfolio-grid-module portfolio-record-grid-module">
+      <div className="portfolio-record-grid-heading">
+        <div>
+          <span className="portfolio-record-grid-kicker">Positions</span>
+          <h3>Holdings</h3>
+          <p>As of {formatDate(asOfDate)} in {baseCurrency}</p>
+        </div>
+        <div className="portfolio-record-grid-summary">
+          <span>{formatCount(rowData.length, "position")}</span>
+          <strong>{formatCurrency(sumMarketValue(rowData), baseCurrency)}</strong>
+        </div>
+      </div>
+
+      <div className="portfolio-record-utility-bar">
+        <TextField
+          size="small"
+          value={quickSearch}
+          onChange={(event) => setQuickSearch(event.target.value)}
+          placeholder="Search ticker or description"
+          inputProps={{ "aria-label": "Search holdings" }}
+          className="portfolio-record-search"
+        />
+        <div className="portfolio-record-actions">
+          <Button
+            size="small"
+            variant="outlined"
+            aria-haspopup="menu"
+            aria-expanded={Boolean(chooserAnchor)}
+            aria-label="Choose holdings columns"
+            onClick={(event) => setChooserAnchor(event.currentTarget)}
+          >
+            Columns
+          </Button>
+          <Button
+            size="small"
+            variant={filterLabel ? "contained" : "outlined"}
+            aria-label={filterLabel ? `Filter active: ${filterLabel}` : "Filter holdings"}
+            onClick={onClearFilter}
+            disabled={!filterLabel || !onClearFilter}
+          >
+            Filter
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            aria-label="Export holdings"
+            onClick={() => exportHoldingsXlsx(rowData, columnVisibility, baseCurrency)}
+          >
+            Export
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            aria-label="Show expanded holdings columns"
+            onClick={() =>
+              setColumnVisibility({
+                ...DEFAULT_COLUMN_VISIBILITY,
+                sector: true,
+                heldSince: true,
+                isin: true,
+              })
+            }
+          >
+            Expand
+          </Button>
+        </div>
+      </div>
 
       {filterLabel ? (
         <div className="portfolio-grid-toolbar">
@@ -299,32 +329,38 @@ export default function PortfolioHoldingsGrid({
               hint="The visible book is usable, but market value and P&L are incomplete for some positions."
             />
           ) : null}
-        <div
-          className={`ag-theme-quartz portfolio-data-grid ${columnMode === "expanded" ? "portfolio-data-grid-dense" : ""}`}
-          aria-label="Portfolio holdings grid"
-        >
-          <AgGridReact<HoldingsRow>
-            rowData={rowData}
-            columnDefs={columnDefs}
-            theme="legacy"
-            autoSizeStrategy={PORTFOLIO_GRID_AUTO_SIZE_STRATEGY}
-            defaultColDef={DEFAULT_GRID_COLUMN_DEF}
-            animateRows={false}
-            domLayout="autoHeight"
-            headerHeight={columnMode === "expanded" ? 36 : 38}
-            rowHeight={columnMode === "expanded" ? 38 : 42}
-            ensureDomOrder
-            suppressCellFocus={false}
-            onGridReady={(event: GridReadyEvent<HoldingsRow>) => {
-              gridApiRef.current = event.api;
-            }}
-            onRowClicked={({ data }) => {
-              if (data) {
-                onRowSelect?.(data);
-              }
-            }}
-          />
-        </div>
+          <div
+            className={`ag-theme-quartz portfolio-data-grid ${columnMode === "expanded" ? "portfolio-data-grid-dense" : ""}`}
+            aria-label="Portfolio holdings grid"
+          >
+            <AgGridReact<HoldingsRow>
+              rowData={rowData}
+              columnDefs={columnDefs}
+              theme="legacy"
+              quickFilterText={quickSearch}
+              defaultColDef={DEFAULT_GRID_COLUMN_DEF}
+              animateRows={false}
+              domLayout="autoHeight"
+              headerHeight={32}
+              rowHeight={columnMode === "expanded" ? 34 : 36}
+              ensureDomOrder
+              rowSelection={{
+                mode: "multiRow",
+                checkboxes: true,
+                headerCheckbox: true,
+                enableClickSelection: true,
+              }}
+              suppressCellFocus={false}
+              onGridReady={(event: GridReadyEvent<HoldingsRow>) => {
+                gridApiRef.current = event.api;
+              }}
+              onRowClicked={({ data }) => {
+                if (data) {
+                  onRowSelect?.(data);
+                }
+              }}
+            />
+          </div>
         </>
       ) : (
         <PortfolioModuleState
@@ -367,6 +403,7 @@ const HOLDINGS_COLUMN_LABELS: Record<HoldingsColumnKey, string> = {
   quantity: "Quantity",
   price: "Price",
   marketValue: "Market Value",
+  costBasis: "Cost Basis",
   weight: "Weight",
   upl: "Unrealized P&L",
   currency: "Currency",
@@ -392,14 +429,45 @@ function buildHoldingsColumn(
   delete (columnConfig as { key?: HoldingsColumnKey }).key;
   return {
     ...columnConfig,
-    cellClass: isNumericColumn
+    cellClass: columnConfig.cellClass ?? (isNumericColumn
       ? "portfolio-data-grid-cell portfolio-data-grid-cell-numeric"
-      : "portfolio-data-grid-cell",
+      : "portfolio-data-grid-cell"),
     headerClass: isNumericColumn
       ? "portfolio-data-grid-header-cell portfolio-data-grid-header-cell-numeric"
       : "portfolio-data-grid-header-cell",
     tooltipValueGetter: (params) => String(params.value ?? ""),
   };
+}
+
+function holdingsInstrumentCellRenderer(params: ICellRendererParams<HoldingsRow, string>) {
+  const row = params.data;
+  if (!row) {
+    return params.value ?? "";
+  }
+
+  return (
+    <div className="portfolio-instrument-cell">
+      <strong>{row.instrument}</strong>
+      <span>{row.securityId}{row.isin ? ` / ${row.isin}` : ""}</span>
+    </div>
+  );
+}
+
+function getAmountToneClass(value: unknown) {
+  if (typeof value !== "number") {
+    return "";
+  }
+  if (value > 0) {
+    return "portfolio-data-grid-cell-positive";
+  }
+  if (value < 0) {
+    return "portfolio-data-grid-cell-negative";
+  }
+  return "";
+}
+
+function sumMarketValue(rows: HoldingsRow[]) {
+  return rows.reduce((total, row) => total + (row.marketValue ?? 0), 0);
 }
 
 function toggleHoldingsColumn(
@@ -435,6 +503,9 @@ function exportHoldingsXlsx(
           break;
         case "marketValue":
           output[`Market Value (${baseCurrency})`] = row.marketValue ?? "";
+          break;
+        case "costBasis":
+          output[`Cost Basis (${baseCurrency})`] = row.costBasis ?? "";
           break;
         case "weight":
           output["Weight %"] = row.weight ?? "";

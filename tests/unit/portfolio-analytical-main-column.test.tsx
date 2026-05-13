@@ -13,7 +13,6 @@ describe("PortfolioAnalyticalMainColumn", () => {
         insights={<section aria-label="Insights">Insights</section>}
         health={<section aria-label="Health">Health</section>}
         changes={<section aria-label="Changes">Changes</section>}
-        drilldown={<section aria-label="Drilldown">Drilldown</section>}
       />
     );
 
@@ -29,6 +28,5 @@ describe("PortfolioAnalyticalMainColumn", () => {
     expect(summaryCluster).toContainElement(screen.getByLabelText("Insights"));
     expect(detailedCluster).toContainElement(screen.getByLabelText("Health"));
     expect(detailedCluster).toContainElement(screen.getByLabelText("Changes"));
-    expect(detailedCluster).toContainElement(screen.getByLabelText("Drilldown"));
   });
 });

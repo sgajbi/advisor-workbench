@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
@@ -12,20 +12,14 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import {
-  SectionHeader,
-  WorkbenchInlineRefreshNote,
-} from "@/design-system";
+import { WorkbenchInlineRefreshNote } from "@/design-system";
 import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
-import {
-  PORTFOLIO_GRID_AUTO_SIZE_STRATEGY,
-  shouldPinPortfolioGridLeadColumns,
-} from "./portfolio-grid-helpers";
+import { shouldPinPortfolioGridLeadColumns } from "./portfolio-grid-helpers";
 import {
   buildTransactionFilterOptions,
   shouldReuseInitialTransactions,
@@ -56,11 +50,14 @@ export type TransactionRow = {
   settleDate: string | null;
   type: string;
   instrument: string;
+  securityId: string;
   quantity: number;
+  price: number | null;
   amount: number | null;
   currency: string;
   status: string;
   componentType: string | null;
+  sourceSystem: string | null;
   raw: PortfolioTransactionView;
 };
 
@@ -85,6 +82,7 @@ export default function PortfolioTransactionsGrid({
   const [loadError, setLoadError] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [showExpandedColumns, setShowExpandedColumns] = useState(false);
+  const [quickSearch, setQuickSearch] = useState("");
   const gridDensity = showExpandedColumns ? "expanded" : "essential";
 
   useEffect(() => {
@@ -205,11 +203,14 @@ export default function PortfolioTransactionsGrid({
         settleDate: transaction.settlement_date ?? null,
         type: formatStatus(transaction.transaction_type),
         instrument: transaction.instrument_id,
+        securityId: transaction.security_id,
         quantity: transaction.quantity,
+        price: transaction.price ?? null,
         amount: transaction.net_cost_base ?? transaction.gross_amount ?? null,
         currency: transaction.currency ?? baseCurrency,
         status: formatStatus(transaction.settlement_status),
         componentType: transaction.component_type ? formatStatus(transaction.component_type) : null,
+        sourceSystem: transaction.source_system ? formatStatus(transaction.source_system) : null,
         raw: transaction,
       })),
     [baseCurrency, filteredTransactions]
@@ -238,8 +239,9 @@ export default function PortfolioTransactionsGrid({
       buildTransactionColumn({
         field: "instrument",
         headerName: "Instrument",
-        minWidth: 126,
-        flex: 1.2,
+        minWidth: 190,
+        flex: 1.5,
+        cellRenderer: transactionInstrumentCellRenderer,
       }),
       buildTransactionColumn({
         field: "quantity",
@@ -249,11 +251,21 @@ export default function PortfolioTransactionsGrid({
         valueFormatter: ({ value }) => formatQuantity(value),
       }),
       buildTransactionColumn({
+        field: "price",
+        headerName: "Price",
+        minWidth: 108,
+        type: "numericColumn",
+        valueFormatter: ({ value, data }) =>
+          value === null || value === undefined ? "—" : formatCurrency(value, data?.currency ?? baseCurrency),
+      }),
+      buildTransactionColumn({
         field: "amount",
         headerName: "Amount",
         minWidth: 126,
         type: "numericColumn",
         valueFormatter: ({ value, data }) => formatCurrency(value, data?.currency ?? baseCurrency),
+        cellClass: ({ value }) =>
+          `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getAmountToneClass(value)}`,
       }),
       buildTransactionColumn({
         field: "currency",
@@ -272,6 +284,12 @@ export default function PortfolioTransactionsGrid({
         hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
+        field: "sourceSystem",
+        headerName: "Source",
+        minWidth: 116,
+        hide: !showExpandedColumns,
+      }),
+      buildTransactionColumn({
         field: "transactionId",
         headerName: "Transaction ID",
         minWidth: 146,
@@ -282,34 +300,52 @@ export default function PortfolioTransactionsGrid({
   );
 
   return (
-    <div className="portfolio-grid-module">
-      <SectionHeader
-        title="Transactions"
-        subtitle={`Activity since ${formatDate(defaultStartDate)}`}
-        actions={
-          <>
-            <Button size="small" variant={showFilters ? "contained" : "outlined"} onClick={() => setShowFilters((current) => !current)}>
-              Filter
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label="Export transactions"
-              onClick={() => exportTransactionsXlsx(rowData, baseCurrency)}
-            >
-              Export
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label={showExpandedColumns ? "Show essential transaction columns" : "Show expanded transaction columns"}
-              onClick={() => setShowExpandedColumns((current) => !current)}
-            >
-              Expand
-            </Button>
-          </>
-        }
-      />
+    <div className="portfolio-grid-module portfolio-record-grid-module">
+      <div className="portfolio-record-grid-heading">
+        <div>
+          <span className="portfolio-record-grid-kicker">Transactions</span>
+          <h3>Ledger</h3>
+          <p>
+            Activity from {formatDate(defaultStartDate)} to {formatDate(defaultEndDate)}
+          </p>
+        </div>
+        <div className="portfolio-record-grid-summary">
+          <span>{rowData.length} events</span>
+          <strong>{formatCurrency(sumTransactionAmount(rowData), baseCurrency)}</strong>
+        </div>
+      </div>
+
+      <div className="portfolio-record-utility-bar">
+        <TextField
+          size="small"
+          value={quickSearch}
+          onChange={(event) => setQuickSearch(event.target.value)}
+          placeholder="Search transaction, instrument, or status"
+          inputProps={{ "aria-label": "Search transactions" }}
+          className="portfolio-record-search"
+        />
+        <div className="portfolio-record-actions">
+          <Button size="small" variant={showFilters ? "contained" : "outlined"} onClick={() => setShowFilters((current) => !current)}>
+            Filter
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            aria-label="Export transactions"
+            onClick={() => exportTransactionsXlsx(rowData, baseCurrency)}
+          >
+            Export
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            aria-label={showExpandedColumns ? "Show essential transaction columns" : "Show expanded transaction columns"}
+            onClick={() => setShowExpandedColumns((current) => !current)}
+          >
+            Expand
+          </Button>
+        </div>
+      </div>
 
       {showFilters ? (
         <div className="portfolio-grid-toolbar portfolio-grid-toolbar-stacked">
@@ -401,12 +437,12 @@ export default function PortfolioTransactionsGrid({
             rowData={rowData}
             columnDefs={columnDefs}
             theme="legacy"
-            autoSizeStrategy={PORTFOLIO_GRID_AUTO_SIZE_STRATEGY}
+            quickFilterText={quickSearch}
             defaultColDef={DEFAULT_GRID_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"
-            headerHeight={showExpandedColumns ? 36 : 38}
-            rowHeight={showExpandedColumns ? 38 : 42}
+            headerHeight={32}
+            rowHeight={showExpandedColumns ? 34 : 36}
             ensureDomOrder
             suppressCellFocus={false}
             onRowClicked={({ data }) => {
@@ -470,14 +506,45 @@ function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<Transact
   const isNumericColumn = config.type === "numericColumn";
   return {
     ...config,
-    cellClass: isNumericColumn
+    cellClass: config.cellClass ?? (isNumericColumn
       ? "portfolio-data-grid-cell portfolio-data-grid-cell-numeric"
-      : "portfolio-data-grid-cell",
+      : "portfolio-data-grid-cell"),
     headerClass: isNumericColumn
       ? "portfolio-data-grid-header-cell portfolio-data-grid-header-cell-numeric"
       : "portfolio-data-grid-header-cell",
     tooltipValueGetter: (params) => String(params.value ?? ""),
   };
+}
+
+function transactionInstrumentCellRenderer(params: ICellRendererParams<TransactionRow, string>) {
+  const row = params.data;
+  if (!row) {
+    return params.value ?? "";
+  }
+
+  return (
+    <div className="portfolio-instrument-cell">
+      <strong>{row.instrument}</strong>
+      <span>{row.securityId || row.transactionId}</span>
+    </div>
+  );
+}
+
+function getAmountToneClass(value: unknown) {
+  if (typeof value !== "number") {
+    return "";
+  }
+  if (value > 0) {
+    return "portfolio-data-grid-cell-positive";
+  }
+  if (value < 0) {
+    return "portfolio-data-grid-cell-negative";
+  }
+  return "";
+}
+
+function sumTransactionAmount(rows: TransactionRow[]) {
+  return rows.reduce((total, row) => total + (row.amount ?? 0), 0);
 }
 
 function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
@@ -487,9 +554,12 @@ function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
     Type: row.type,
     Instrument: row.instrument,
     Quantity: row.quantity,
+    Price: row.price ?? "",
     [`Amount (${baseCurrency})`]: row.amount ?? "",
     Currency: row.currency,
     Status: row.status,
+    Component: row.componentType ?? "",
+    Source: row.sourceSystem ?? "",
   }));
   const worksheet = XLSX.utils.json_to_sheet(exportRows);
   const workbook = XLSX.utils.book_new();

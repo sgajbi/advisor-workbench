@@ -557,10 +557,10 @@ describe("portfolio view model", () => {
     expect(getBookReadinessSupport(workspace)).toBe("Generated 24 Feb 2026 • 14 report rows");
     expect(getBookReadinessTone(workspace)).toBe("success");
 
-    expect(buildPortfolioReadinessIndicators(workspace, "summary")).toEqual([
-      { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
+    expect(buildPortfolioReadinessIndicators(workspace)).toEqual([
+      { key: "holdings", label: "Holdings", status: "Ready", href: `/positions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "pricing", label: "Pricing", status: "Ready", href: "#portfolio-attention" },
-      { key: "transactions", label: "Transactions", status: "Ready", href: "#portfolio-insights" },
+      { key: "transactions", label: "Transactions", status: "Ready", href: `/transactions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
     ]);
 
@@ -583,10 +583,10 @@ describe("portfolio view model", () => {
     workspace.cash_balances = [];
     workspace.recent_transactions = [];
 
-    expect(buildPortfolioReadinessIndicators(workspace, "summary")).toEqual([
-      { key: "holdings", label: "Holdings", status: "Ready", href: "#portfolio-insights" },
+    expect(buildPortfolioReadinessIndicators(workspace)).toEqual([
+      { key: "holdings", label: "Holdings", status: "Ready", href: `/positions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "pricing", label: "Pricing", status: "Ready", href: "#portfolio-attention" },
-      { key: "transactions", label: "Transactions", status: "Ready", href: "#portfolio-insights" },
+      { key: "transactions", label: "Transactions", status: "Ready", href: `/transactions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
     ]);
   });
@@ -604,7 +604,7 @@ describe("portfolio view model", () => {
     workspace.readiness.reporting.row_count = 0;
 
     expect(getOrderedWorkflowCues(workspace)).toEqual([]);
-    expect(buildPortfolioReadinessIndicators(workspace, "summary").map((indicator) => indicator.status)).toEqual([
+    expect(buildPortfolioReadinessIndicators(workspace).map((indicator) => indicator.status)).toEqual([
       "Missing",
       "Missing",
       "Missing",

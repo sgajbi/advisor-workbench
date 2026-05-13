@@ -76,9 +76,7 @@ export function buildHoldingDrawer(
         content: relatedTransactionsTab,
       },
     ],
-    fullPageHref: `/portfolio?portfolioId=${encodeURIComponent(
-      portfolioId
-    )}#portfolio-drilldown`,
+    fullPageHref: `/positions?portfolioId=${encodeURIComponent(portfolioId)}`,
     fullPageLabel: "Open holdings",
   };
 }
@@ -122,7 +120,7 @@ export function buildTransactionDrilldownDrawer(
             ]),
       },
     ],
-    fullPageHref: "#portfolio-drilldown",
+    fullPageHref: `/transactions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
     fullPageLabel: "Open transactions",
   };
 }
@@ -277,9 +275,7 @@ export function buildTransactionDrawer(
         ]),
       },
     ],
-    fullPageHref: `/portfolio?portfolioId=${encodeURIComponent(
-      portfolioId
-    )}#portfolio-drilldown`,
+    fullPageHref: `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
     fullPageLabel: "Open transactions",
   };
 }

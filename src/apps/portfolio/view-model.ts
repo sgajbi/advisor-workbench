@@ -587,16 +587,13 @@ export function getNetFlowTone(workspace: PortfolioWorkspace): PortfolioUiTone {
   return "neutral";
 }
 
-export function buildPortfolioReadinessIndicators(
-  workspace: PortfolioWorkspace,
-  viewMode: PortfolioViewMode
-): PortfolioReadinessIndicator[] {
+export function buildPortfolioReadinessIndicators(workspace: PortfolioWorkspace): PortfolioReadinessIndicator[] {
   return [
     {
       key: "holdings",
       label: "Holdings",
       status: getHoldingsReadinessStatus(workspace),
-      href: viewMode === "detailed" ? "#portfolio-drilldown" : "#portfolio-insights",
+      href: `/positions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
     },
     {
       key: "pricing",
@@ -608,7 +605,7 @@ export function buildPortfolioReadinessIndicators(
       key: "transactions",
       label: "Transactions",
       status: getTransactionsReadinessStatus(workspace),
-      href: viewMode === "detailed" ? "#portfolio-drilldown" : "#portfolio-insights",
+      href: `/transactions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
     },
     {
       key: "reporting",

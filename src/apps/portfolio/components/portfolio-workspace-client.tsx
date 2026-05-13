@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  WorkbenchLoadingState,
   WorkbenchToolbarPlaceholder,
 } from "@/design-system";
 
@@ -333,12 +332,6 @@ export default function PortfolioWorkspaceClient({
                     { key: "view", label: "View", width: "wide" },
                     { key: "period", label: "Period", width: "period" },
                   ]}
-                />
-                <WorkbenchLoadingState
-                  title="Loading portfolio briefing"
-                  message="Portfolio modules are loading for the selected book."
-                  chart
-                  rows={6}
                 />
               </div>
             ) : (
