@@ -26,7 +26,7 @@ describe("portfolio record screen view model", () => {
       "PB_SG_GLOBAL_BAL_001 · Holdings, valuation, cost basis, portfolio weights, and unrealized P&L."
     );
     expect(buildPortfolioRecordHeaderMeta(workspace)).toBe(
-      "Discretionary mandate · USD · As of 12 May 2026"
+      "Discretionary mandate · USD · As of 12 May 2026 · CIF_SG_000184"
     );
     expect(buildPortfolioRecordHeaderKpis(workspace)).toEqual([
       { label: "Total Market Value", value: "1,000,000 USD" },

@@ -50,9 +50,13 @@ export function buildPortfolioRecordScreenSubtitle(
 }
 
 export function buildPortfolioRecordHeaderMeta(workspace: PortfolioWorkspace): string {
-  return `${formatStatus(workspace.profile.portfolio_type)} mandate · ${
-    workspace.portfolio.base_currency
-  } · As of ${formatDate(workspace.as_of_date)}`;
+  const parts = [
+    `${formatStatus(workspace.profile.portfolio_type)} mandate`,
+    workspace.portfolio.base_currency,
+    `As of ${formatDate(workspace.as_of_date)}`,
+    workspace.portfolio.client_id,
+  ].filter(Boolean);
+  return parts.join(" · ");
 }
 
 export function buildPortfolioRecordHeaderKpis(

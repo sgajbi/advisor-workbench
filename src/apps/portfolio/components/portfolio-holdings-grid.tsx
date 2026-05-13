@@ -33,6 +33,7 @@ type HoldingsColumnKey =
   | "weight"
   | "upl"
   | "currency"
+  | "status"
   | "sector"
   | "heldSince"
   | "isin";
@@ -59,6 +60,7 @@ export type HoldingsRow = {
   weight: number | null;
   upl: number | null;
   currency: string;
+  status?: string | null;
   sector: string;
   heldSince: string | null;
   isin: string | null;
@@ -75,6 +77,7 @@ const DEFAULT_COLUMN_VISIBILITY: Record<HoldingsColumnKey, boolean> = {
   weight: true,
   upl: true,
   currency: true,
+  status: true,
   sector: false,
   heldSince: false,
   isin: false,
@@ -113,6 +116,7 @@ export default function PortfolioHoldingsGrid({
         weight: position.weight_pct ?? null,
         upl: position.unrealized_gain_loss_base ?? null,
         currency: position.currency ?? baseCurrency,
+        status: position.reprocessing_status ?? null,
         sector: formatStatus(position.sector),
         heldSince: position.held_since_date ?? null,
         isin: position.isin ?? null,
@@ -208,6 +212,14 @@ export default function PortfolioHoldingsGrid({
         field: "currency",
         hide: !columnVisibility.currency,
         minWidth: 92,
+      }),
+      buildHoldingsColumn({
+        key: "status",
+        headerName: "Status",
+        field: "status",
+        hide: !columnVisibility.status,
+        minWidth: 112,
+        cellRenderer: holdingsStatusCellRenderer,
       }),
       buildHoldingsColumn({
         key: "sector",
@@ -407,6 +419,7 @@ const HOLDINGS_COLUMN_LABELS: Record<HoldingsColumnKey, string> = {
   weight: "Weight",
   upl: "Unrealized P&L",
   currency: "Currency",
+  status: "Status",
   sector: "Sector",
   heldSince: "Held Since",
   isin: "ISIN",
@@ -450,6 +463,24 @@ function holdingsInstrumentCellRenderer(params: ICellRendererParams<HoldingsRow,
       <strong>{row.instrument}</strong>
       <span>{row.securityId}{row.isin ? ` / ${row.isin}` : ""}</span>
     </div>
+  );
+}
+
+function holdingsStatusCellRenderer(params: ICellRendererParams<HoldingsRow, string | null>) {
+  const value = params.value;
+  if (!value) {
+    return <span className="portfolio-position-status portfolio-position-status-clear">Current</span>;
+  }
+  const normalized = value.toLowerCase();
+  const tone = normalized.includes("fail")
+    ? "danger"
+    : normalized.includes("stale") || normalized.includes("pending")
+      ? "warn"
+      : "neutral";
+  return (
+    <span className={`portfolio-position-status portfolio-position-status-${tone}`}>
+      {formatStatus(value)}
+    </span>
   );
 }
 
@@ -515,6 +546,9 @@ function exportHoldingsXlsx(
           break;
         case "currency":
           output["Currency"] = row.currency;
+          break;
+        case "status":
+          output["Status"] = row.status ? formatStatus(row.status) : "Current";
           break;
         case "sector":
           output["Sector"] = row.sector;

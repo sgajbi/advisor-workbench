@@ -12,6 +12,7 @@ import {
 import type { PortfolioWorkspace } from "../types";
 import { buildInitialPortfolioControls, buildPortfolioWorkspaceContext } from "../view-model";
 import PortfolioPageLayout from "./portfolio-page-layout";
+import PortfolioRecordEvidenceRail from "./portfolio-record-evidence-rail";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
 import PortfolioTransactionsGrid from "./portfolio-transactions-grid";
@@ -56,6 +57,8 @@ export default function PortfolioRecordScreenClient({
         railClassName="portfolio-screen-rail-shell"
         mainClassName="portfolio-main portfolio-record-screen-main"
         rail={<PortfolioScreenRail portfolioId={resolvedPortfolioId} activeScreen={screen} />}
+        side={workspace ? <PortfolioRecordEvidenceRail screen={screen} workspace={workspace} /> : undefined}
+        sideClassName="portfolio-record-evidence-shell"
         main={
           <WorkbenchPageFrame
             className="portfolio-page-frame portfolio-record-page-frame"
@@ -72,6 +75,10 @@ export default function PortfolioRecordScreenClient({
                 </DegradedStatePanel>
               ) : (
                 <>
+                  <div className="portfolio-record-context-bar">
+                    <span>{workspace.portfolio.portfolio_id}</span>
+                    <span>{copy.subtitle}</span>
+                  </div>
                   <section className="portfolio-record-standalone-header">
                     <div>
                       <span>{copy.kicker}</span>
