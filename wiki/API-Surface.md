@@ -45,8 +45,9 @@ promote dormant labels into product ownership just because historical route file
   Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations. The
   coverage registry is code-backed and tested so active product surfaces cannot silently drift
   outside bounded route/panel/operation metrics.
-- RFC-0098/RFC-0041 rebalance-wave command-center rendering is implemented on
-  `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/waves*`. Workbench loads
+- RFC-0098/RFC-0041 rebalance-wave command-center rendering is implemented on the Manage
+  workspace at `/workbench/{portfolioId}?mode=waves` through Gateway
+  `/api/v1/dpm/command-center/waves*`. Workbench loads
   the explicit portfolio-list wave queue, previews and creates canonical portfolio waves, opens
   wave detail and item posture, and sends source-check, simulation, approval, staging, handoff,
   proof-posture, supportability, report-input, governed AI PM memo, and governed operations
@@ -58,8 +59,9 @@ promote dormant labels into product ownership just because historical route file
   generation, or operations handoff-summary generation. Item-selection drawers, dedicated
   `/dpm/waves` routes, PM-book discovery, CIO
   workflow, and external OMS execution remain future scope until separately implemented and proven.
-- RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on
-  `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center`,
+- RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on the Manage
+  workspace overview and `/workbench/{portfolioId}?mode=mandate` through Gateway
+  `/api/v1/dpm/command-center`,
   `/api/v1/dpm/command-center/monitoring/run-once`,
   `/api/v1/dpm/command-center/exceptions`, and
   `/api/v1/dpm/command-center/mandates*`. Workbench renders manage-owned book health
@@ -70,13 +72,13 @@ promote dormant labels into product ownership just because historical route file
   or call `lotus-manage` or `lotus-ai` directly. Demo promotion still requires the canonical
   `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review.
 - RFC-0098/RFC-0039 construction alternatives rendering is implemented on
-  `/workbench/{portfolioId}` through Gateway
+  `/workbench/{portfolioId}?mode=construction` through Gateway
   `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
   manage/core source selector through Gateway, renders manage-owned alternative ids, methods,
   method statuses, comparison metrics, objective/constraint trace counts, supportability, and
   selected-alternative state, and records PM selection through Gateway. It does not synthesize
   source snapshots, prices, optimizer results, supportability, or selection truth locally.
-- RFC-0098/RFC-0040 proof-pack evidence rendering is implemented on `/workbench/{portfolioId}`
+- RFC-0098/RFC-0040 proof-pack evidence rendering is implemented on `/workbench/{portfolioId}?mode=proof`
   through Gateway `/api/v1/dpm/command-center/proof-packs*`. Workbench renders manage-owned
   proof-pack id, status, content hash, section states, source hashes, Markdown availability,
   report-input readiness, AI-evidence readiness, and Gateway/lotus-ai PM memo workflow-pack
@@ -90,14 +92,14 @@ promote dormant labels into product ownership just because historical route file
   construct report input, construct AI evidence, construct PM memo prompts, materialize PDF
   reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 - RFC40-WTBD-010 portfolio-memory timeline rendering is implemented on
-  `/workbench/{portfolioId}` through Gateway
+  `/workbench/{portfolioId}?mode=memory` through Gateway
   `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`. Workbench renders manage-owned
   event order, event type counts, event time, source systems, source refs, artifact refs, reason
   codes, supportability state, and content hash. It does not reconstruct timeline nodes from
   proof-pack, wave, outcome-review, report, archive, or AI payloads; direct `lotus-manage` calls
   remain forbidden. Dedicated timeline filters, event drawers, lifecycle export, and retention or
   audit-policy controls remain future scope until separately implemented and proven.
-- RFC-0098/RFC-0041 action-register supportability is rendered on `/workbench/{portfolioId}` from
+- RFC-0098/RFC-0041 action-register supportability is rendered on the Manage workspace from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow
   decision count, last-run identity, bounded recent runs, workflow posture, run issue count, and
@@ -105,7 +107,7 @@ promote dormant labels into product ownership just because historical route file
   renders unknown/N/A or an explicit empty run state instead of implying verified zero activity or
   calculating supportability locally.
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
-  `/workbench/{portfolioId}` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
+  `/workbench/{portfolioId}?mode=reviews` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
   Workbench renders manage-owned review state, expected-versus-realized dimensions, hashes,
   source lineage, supportability, report-input posture, and AI-evidence posture without
   calculating those values client-side. The panel can request a governed outcome-review PDF job by
@@ -149,10 +151,21 @@ Data products:
 http://workbench.dev.lotus/data-products
 ```
 
-Workbench DPM command-center, portfolio memory, waves, construction alternatives, proof-pack evidence, and outcome review:
+Workbench Manage overview:
 
 ```txt
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001
+```
+
+Workbench Manage focused sub-surfaces:
+
+```txt
+http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001?mode=mandate
+http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001?mode=waves
+http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001?mode=construction
+http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001?mode=memory
+http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001?mode=reviews
+http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001?mode=proof
 ```
 
 Capability-gated navigation truth:
