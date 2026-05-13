@@ -30,7 +30,14 @@ describe("WorkbenchPage", () => {
 
     expect(screen.getByRole("heading", { name: "Manage Overview" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Manage Operating Posture" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "DPM Command Center" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
+    expect(screen.getByText("Manage module readiness")).toBeInTheDocument();
+    expect(screen.getAllByText("Active Exceptions").length).toBeGreaterThan(0);
+    expect(screen.getByText("Missing benchmark constituent mapping")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Open Rebalance Waves/i })[0]).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?mode=waves"
+    );
 
     const screenNav = screen.getByRole("navigation", { name: "Workbench screen navigation" });
     expect(within(screenNav).getByRole("link", { name: /Portfolio/i })).toHaveAttribute(
@@ -232,8 +239,8 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
         data: {
           summary: {
             evaluated_mandates: 1,
-            active_exception_count: 0,
-            data_completeness_state: "READY",
+            active_exception_count: 3,
+            data_completeness_state: "PARTIAL",
             source_run_id: "run_001",
           },
           latest_monitoring_run: {
@@ -258,10 +265,33 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           source_service: "lotus-manage",
           authority: "lotus-manage:exceptions",
           state: "SUPPORTED",
-          reason_codes: ["NO_ACTIVE_EXCEPTIONS"],
+          reason_codes: ["ACTIVE_EXCEPTIONS"],
           blocked_actions: [],
         },
-        data: { items: [] },
+        data: {
+          items: [
+            {
+              exception_id: "exc_001",
+              severity: "HIGH",
+              title: "Missing benchmark constituent mapping",
+              source_system: "lotus-performance",
+              owner: "PM Ops",
+              age_hours: 48,
+              state: "ACTIVE",
+              next_action: "Review benchmark mapping",
+            },
+            {
+              exception_id: "exc_002",
+              severity: "MEDIUM",
+              title: "Stale price for fixed income instrument",
+              source_system: "lotus-pricing",
+              owner: "Data Ops",
+              age_hours: 24,
+              state: "ACTIVE",
+              next_action: "Request refresh",
+            },
+          ],
+        },
       });
     }
 
@@ -275,10 +305,14 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           source_service: "lotus-manage",
           authority: "lotus-manage:portfolio-memory",
           state: "SUPPORTED",
+          event_count: 42,
+          event_type_counts: { MONITORING_RUN: 1 },
+          source_systems: ["lotus-manage"],
           reason_codes: ["MEMORY_READY"],
+          content_hash: "sha256:memory",
           blocked_actions: [],
         },
-        data: { items: [] },
+        data: { events: [] },
       });
     }
 

@@ -15885,6 +15885,200 @@ a:hover {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.manage-page .manage-readiness-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.manage-page .manage-readiness-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #c6c6cd;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.manage-page .manage-readiness-item > span:first-child {
+  color: #45464d;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.manage-page .manage-overview-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manage-page .manage-overview-card,
+.manage-page .manage-overview-table-card,
+.manage-page .manage-overview-activity {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manage-page .manage-overview-card-header,
+.manage-page .manage-module-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-page .manage-overview-card-header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.manage-page .manage-overview-card-header strong,
+.manage-page .manage-module-card-header strong {
+  color: #191c1e;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.manage-page .manage-overview-card-header > a,
+.manage-page .manage-overview-table a,
+.manage-page .manage-module-action {
+  color: #725b26;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-decoration: none;
+}
+
+.manage-page .manage-overview-card-header > a:hover,
+.manage-page .manage-overview-table a:hover,
+.manage-page .manage-module-card:hover .manage-module-action {
+  text-decoration: underline;
+}
+
+.manage-page .manage-wave-stepper {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e0e3e5;
+}
+
+.manage-page .manage-wave-stepper span {
+  color: #76777d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.manage-page .manage-wave-stepper .manage-wave-step-active {
+  color: #725b26;
+  border-bottom: 2px solid #e2c383;
+}
+
+.manage-page .manage-module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manage-page .manage-overview-grid-label {
+  grid-column: 1 / -1;
+}
+
+.manage-page .manage-module-card {
+  display: grid;
+  gap: 8px;
+  min-height: 126px;
+  padding: 14px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.manage-page .manage-module-card:hover {
+  border-color: #725b26;
+  background: #f7f9fb;
+}
+
+.manage-page .manage-module-metric {
+  color: #191c1e;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.manage-page .manage-module-detail {
+  color: #45464d;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.manage-page .manage-overview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.manage-page .manage-overview-table th {
+  padding: 8px;
+  border-bottom: 1px solid #c6c6cd;
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.manage-page .manage-overview-table td {
+  height: 32px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e0e3e5;
+  color: #191c1e;
+}
+
+.manage-page .manage-overview-table tr:hover td {
+  background: #f7f9fb;
+}
+
+.manage-page .manage-activity-list {
+  display: grid;
+}
+
+.manage-page .manage-activity-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 140px 160px;
+  gap: 12px;
+  min-height: 32px;
+  align-items: center;
+  border-top: 1px solid #e0e3e5;
+  color: #45464d;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.manage-page .manage-activity-row:first-child {
+  border-top: 0;
+}
+
+.manage-page .manage-activity-row strong {
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 18px;
+}
+
 .manage-page .manage-context-rail {
   display: grid;
   gap: 12px;
@@ -15906,6 +16100,34 @@ a:hover {
 
 .manage-page .manage-context-rail .workbench-definition-list {
   margin-top: 10px;
+}
+
+.manage-page .manage-rail-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.manage-page .manage-rail-actions a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid #c6c6cd;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #191c1e;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-decoration: none;
+}
+
+.manage-page .manage-rail-actions a:hover {
+  border-color: #725b26;
+  background: #f7f9fb;
+  color: #725b26;
 }
 
 .manage-page .dpm-command-center-panel,
