@@ -396,6 +396,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     const mainShell = document.querySelector(".workstation-shell-main");
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(mainShell).toBeTruthy();
     await waitFor(() => {
       expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
@@ -414,6 +415,16 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.queryByLabelText("Horizon comparison context")).not.toBeInTheDocument();
+      expect(
+        fetchMock.mock.calls.some(([input]) => {
+          const url = input.toString();
+          return (
+            url.includes("/performance/horizon-comparison") &&
+            url.includes("report_start_date=2026-01-01") &&
+            url.includes("report_end_date=2026-02-24")
+          );
+        })
+      ).toBe(true);
     });
     fireEvent.click(screen.getByText("Detailed table"));
     expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
