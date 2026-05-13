@@ -55,4 +55,50 @@ describe("PortfolioRecordEvidenceRail", () => {
       "/workbench/PB_SG_GLOBAL_BAL_001"
     );
   });
+
+  it("renders transaction ledger provenance from booked activity", () => {
+    render(
+      <PortfolioRecordEvidenceRail
+        screen="transactions"
+        workspace={buildPortfolioWorkspace({
+          recent_transactions: [
+            {
+              transaction_id: "TX_1",
+              transaction_date: "2026-04-30T00:00:00Z",
+              settlement_date: "2026-05-16",
+              transaction_type: "WITHDRAWAL",
+              component_type: "CASH_MOVEMENT",
+              security_id: "CASH_USD",
+              instrument_id: "USD-CASH",
+              quantity: 12000,
+              net_cost_base: -12000,
+              currency: "USD",
+              settlement_status: "PENDING",
+              source_system: "CORE_BANKING",
+            },
+            {
+              transaction_id: "TX_2",
+              transaction_date: "2026-04-17T00:00:00Z",
+              settlement_date: "2026-04-20",
+              transaction_type: "WITHDRAWAL",
+              component_type: "CASH_MOVEMENT",
+              security_id: "CASH_USD",
+              instrument_id: "USD-CASH",
+              quantity: 18000,
+              net_cost_base: -18000,
+              currency: "USD",
+              settlement_status: "SETTLED",
+              source_system: "CORE_BANKING",
+            },
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Core Banking")).toBeInTheDocument();
+    expect(screen.getByText("2 events loaded for PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.getByText("1 settled event of 2 events")).toBeInTheDocument();
+    expect(screen.getByText("1 component type represented in the current window")).toBeInTheDocument();
+    expect(screen.getByText("Review")).toBeInTheDocument();
+  });
 });

@@ -276,6 +276,7 @@ export default function PortfolioTransactionsGrid({
         field: "status",
         headerName: "Status",
         minWidth: 106,
+        cellRenderer: transactionStatusCellRenderer,
       }),
       buildTransactionColumn({
         field: "componentType",
@@ -527,6 +528,23 @@ function transactionInstrumentCellRenderer(params: ICellRendererParams<Transacti
       <strong>{row.instrument}</strong>
       <span>{row.securityId || row.transactionId}</span>
     </div>
+  );
+}
+
+function transactionStatusCellRenderer(params: ICellRendererParams<TransactionRow, string>) {
+  const value = params.value;
+  const normalized = value?.toLowerCase() ?? "";
+  const tone = normalized.includes("fail") || normalized.includes("cancel")
+    ? "danger"
+    : normalized.includes("pending") || normalized.includes("unsettled")
+      ? "warn"
+      : normalized && normalized !== "n/a"
+        ? "clear"
+        : "neutral";
+  return (
+    <span className={`portfolio-position-status portfolio-position-status-${tone}`}>
+      {value || "N/A"}
+    </span>
   );
 }
 
