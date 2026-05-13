@@ -1,5 +1,10 @@
-import { redirect } from "next/navigation";
+import ProposalListView from "@/features/proposals/components/proposal-list-view";
 
-export default function ProposalsPage() {
-  redirect("/portfolio");
+export default async function ProposalsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ portfolioId?: string }>;
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  return <ProposalListView initialPortfolioId={resolvedSearchParams.portfolioId} />;
 }

@@ -140,7 +140,7 @@ describe("app route entrypoints", () => {
   it("routes recommendations into performance when portfolio context exists", async () => {
     await expect(
       RecommendationsAppPage({ searchParams: Promise.resolve({ portfolioId: "PORT_1001" }) })
-    ).rejects.toThrowError("REDIRECT:/performance?portfolioId=PORT_1001");
+    ).rejects.toThrowError("REDIRECT:/performance?portfolioId=PORT_1001&mode=advisor");
   });
 
   it("routes recommendations into portfolio when no portfolio is selected", async () => {
