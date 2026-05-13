@@ -133,11 +133,13 @@ export function buildDpmCommandCenterPanelModel(params: {
       supportability.data_completeness_state ||
       readString(commandData, "data_completeness_state") ||
       "UNKNOWN",
-    partialReadinessReasons: supportability.partial_readiness_reasons,
+    partialReadinessReasons: extractStringArray(
+      supportability.partial_readiness_reasons,
+    ),
     sourceService:
-      supportability.source_service || commandCenter.source_service,
-    authority: supportability.authority,
-    correlationId: commandCenter.correlation_id,
+      supportability.source_service || commandCenter.source_service || "lotus-manage",
+    authority: supportability.authority || "lotus-manage:RFC-0038",
+    correlationId: commandCenter.correlation_id || "N/A",
     sourceRunId:
       supportability.source_run_id ||
       readString(commandData, "source_run_id") ||

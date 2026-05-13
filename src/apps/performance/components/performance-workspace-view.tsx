@@ -144,6 +144,7 @@ export default function PerformanceWorkspaceView({
           portfolioId={railPortfolioId}
           activeScreen={activeWorkbenchScreen}
           modeItems={performanceRailModeItems}
+          modeNavigationLabel="Performance surface navigation"
         />
       }
       main={

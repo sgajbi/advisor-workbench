@@ -15866,4 +15866,64 @@ a:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.manage-page .workbench-page-container {
+  padding: 24px;
+}
+
+.manage-page .manage-layout {
+  --workstation-rail-width: 280px;
+  --workbench-rail-width: 320px;
+  align-items: start;
+}
+
+.manage-page .manage-page-frame-body,
+.manage-page .manage-page-sections {
+  gap: 12px;
+}
+
+.manage-page .manage-overview-panel .workbench-summary-metric-strip {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.manage-page .manage-context-rail {
+  display: grid;
+  gap: 12px;
+}
+
+.manage-page .manage-context-rail-header {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #c6c6cd;
+}
+
+.manage-page .manage-context-rail-header strong {
+  color: #191c1e;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.manage-page .manage-context-rail .workbench-definition-list {
+  margin-top: 10px;
+}
+
+.manage-page .dpm-command-center-panel,
+.manage-page .dpm-wave-command-center-panel,
+.manage-page .portfolio-memory-panel,
+.manage-page .construction-alternatives-panel,
+.manage-page .outcome-review-panel,
+.manage-page .proof-pack-panel,
+.manage-page .manage-overview-panel {
+  border-color: #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.manage-page .dpm-command-center-action-row,
+.manage-page .dpm-wave-command-center-action-row {
+  align-items: center;
+}
+
 

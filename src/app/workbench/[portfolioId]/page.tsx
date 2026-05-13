@@ -1,3 +1,29 @@
+import type { ReactNode } from "react";
+
+import PortfolioScreenRail, {
+  type PortfolioScreenRailModeItem,
+} from "@/apps/portfolio/components/portfolio-screen-rail";
+import {
+  AppPageShell,
+  DefinitionList,
+  DegradedStatePanel,
+  MainWithSideRailLayout,
+  ScreenStatePanel,
+  SectionBlock,
+  SemanticBadge,
+  Text,
+  WorkbenchPageContainer,
+  WorkbenchPageFrame,
+  WorkbenchRailCard,
+  WorkbenchSectionStack,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
+import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
+import DpmCommandCenterPanel from "@/features/workbench/components/dpm-command-center-panel";
+import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
+import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
+import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
+import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
 import {
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
@@ -5,40 +31,485 @@ import {
   getDpmMandateHealth,
   getDpmOutcomeReviews,
   getDpmPortfolioMemory,
-  listDpmWaves,
   getPortfolio360,
-  getReportingSnapshot,
-  getWorkbenchAnalytics,
+  listDpmWaves,
 } from "@/features/workbench/api";
-import {
-  AnalyticsTable,
-  DegradedStatePanel,
-  ScreenStatePanel,
-  SectionBlock,
-  SemanticBadge,
-  WorkbenchPageFrame,
-  WorkbenchSectionStack,
-  WorkbenchSummaryMetricStrip,
-} from "@/design-system";
-import AnalyticsControls from "@/features/workbench/components/analytics-controls";
-import AdvisorSummaryCard from "@/features/workbench/components/advisor-summary-card";
-import BenchmarkKpiStrip from "@/features/workbench/components/benchmark-kpi-strip";
-import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
-import DeltaAnalyticsPanel from "@/features/workbench/components/delta-analytics-panel";
-import DecisionReadinessPanel from "@/features/workbench/components/decision-readiness-panel";
-import DpmCommandCenterPanel from "@/features/workbench/components/dpm-command-center-panel";
-import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
-import ExceptionQueue from "@/features/workbench/components/exception-queue";
-import OverviewCards from "@/features/workbench/components/overview-cards";
-import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
-import PartialFailureBanner from "@/features/workbench/components/partial-failure-banner";
-import PerformanceSnapshot from "@/features/workbench/components/performance-snapshot";
-import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
-import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
-import RebalanceStatus from "@/features/workbench/components/rebalance-status";
-import ReportBatchOperationsPanel from "@/features/workbench/components/report-batch-operations-panel";
-import ReportingSnapshotPanel from "@/features/workbench/components/reporting-snapshot-panel";
-import SandboxControls from "@/features/workbench/components/sandbox-controls";
+
+type ManageMode =
+  | "overview"
+  | "mandate"
+  | "waves"
+  | "construction"
+  | "memory"
+  | "reviews"
+  | "proof";
+
+type ManageData = {
+  portfolio: Awaited<ReturnType<typeof getPortfolio360>>;
+  commandCenter: Awaited<ReturnType<typeof getDpmCommandCenter>> | null;
+  commandCenterExceptions: Awaited<ReturnType<typeof getDpmCommandCenterExceptions>> | null;
+  mandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null;
+  mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null;
+  commandCenterError: string | null;
+  portfolioMemory: Awaited<ReturnType<typeof getDpmPortfolioMemory>> | null;
+  portfolioMemoryError: string | null;
+  waves: Awaited<ReturnType<typeof listDpmWaves>> | null;
+  wavesError: string | null;
+  outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null;
+  outcomeReviewError: string | null;
+};
+
+const MANAGE_MODE_DEFINITIONS: Array<{
+  key: ManageMode;
+  label: string;
+  detail: string;
+  title: string;
+  description: string;
+}> = [
+  {
+    key: "overview",
+    label: "Overview",
+    detail: "Mandate posture",
+    title: "Manage Overview",
+    description: "DPM mandate state, operating readiness, and current portfolio context.",
+  },
+  {
+    key: "mandate",
+    label: "Mandate",
+    detail: "Health and exceptions",
+    title: "Mandate Health",
+    description: "Manage-owned mandate health, source readiness, exceptions, and recommended actions.",
+  },
+  {
+    key: "waves",
+    label: "Waves",
+    detail: "Rebalance lifecycle",
+    title: "Rebalance Waves",
+    description: "Explicit portfolio-list wave state, source checks, simulation, approval, staging, and handoff.",
+  },
+  {
+    key: "construction",
+    label: "Construction",
+    detail: "Alternatives",
+    title: "Construction Alternatives",
+    description: "Supported construction alternatives for advisor and PM review.",
+  },
+  {
+    key: "memory",
+    label: "Memory",
+    detail: "Portfolio memory",
+    title: "Portfolio Memory",
+    description: "Manage-published portfolio memory and institutional context.",
+  },
+  {
+    key: "reviews",
+    label: "Reviews",
+    detail: "Outcome review",
+    title: "Outcome Reviews",
+    description: "Post-trade outcome review evidence and realized-versus-expected variance.",
+  },
+  {
+    key: "proof",
+    label: "Proof Packs",
+    detail: "Evidence handoff",
+    title: "Proof Packs",
+    description: "Proof-pack generation, report inputs, and evidence handoff state.",
+  },
+];
+
+export default async function WorkbenchPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ portfolioId: string }>;
+  searchParams: Promise<{
+    sessionId?: string;
+    mode?: string;
+    period?: string;
+    groupBy?: string;
+    benchmark?: string;
+    preset?: string;
+    asOfDate?: string;
+  }>;
+}) {
+  const { portfolioId } = await params;
+  const resolvedSearch = await searchParams;
+  const sessionId = resolvedSearch.sessionId?.trim() || undefined;
+  const mode = normalizeManageMode(resolvedSearch.mode);
+
+  let portfolio: Awaited<ReturnType<typeof getPortfolio360>>;
+  try {
+    portfolio = await getPortfolio360(portfolioId, sessionId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    return (
+      <main className="page-container">
+        <WorkbenchPageFrame
+          title="Manage Workspace"
+          subtitle={`Manage context is temporarily unavailable for ${portfolioId}.`}
+        >
+          <DegradedStatePanel
+            label="Operational status"
+            title={`Unable to load portfolio context for ${portfolioId}.`}
+            tone="danger"
+            status="Unavailable"
+            actions={[
+              { href: `/performance?portfolioId=${encodeURIComponent(portfolioId)}`, label: "Open Performance Workspace" },
+              { href: "/portfolio", label: "Return To Portfolio" },
+            ]}
+          >
+            {detail}
+          </DegradedStatePanel>
+        </WorkbenchPageFrame>
+      </main>
+    );
+  }
+
+  const manageData = await loadManageData(portfolio);
+  const modeDefinition = getManageModeDefinition(mode);
+  const dpmMandateId = readDpmMandateId(manageData.mandate?.data ?? null);
+
+  return (
+    <AppPageShell pageKey="manage" className="portfolio-page manage-page">
+      <WorkbenchPageContainer className="portfolio-page-container manage-page-container">
+        <MainWithSideRailLayout
+          className="manage-layout portfolio-page"
+          railClassName="portfolio-screen-rail-shell manage-rail-shell"
+          mainClassName="manage-main"
+          sideClassName="manage-side"
+          sideDensity="comfortable"
+          rail={
+            <PortfolioScreenRail
+              portfolioId={portfolio.portfolio.portfolio_id}
+              activeScreen="manage"
+              modeItems={buildManageModeItems(portfolio.portfolio.portfolio_id, mode)}
+              modeNavigationLabel="Manage workspace navigation"
+            />
+          }
+          main={
+            <WorkbenchPageFrame
+              className={`manage-page-frame manage-page-frame-${mode}`}
+              bodyClassName="manage-page-frame-body"
+              title={modeDefinition.title}
+              subtitle={`${portfolio.portfolio.portfolio_id} | ${modeDefinition.description}`}
+              actions={
+                <>
+                  <SemanticBadge tone={manageData.commandCenterError ? "warn" : "success"}>
+                    {manageData.commandCenterError ? "Partial" : "Gateway backed"}
+                  </SemanticBadge>
+                  <SemanticBadge>{portfolio.portfolio.base_currency}</SemanticBadge>
+                </>
+              }
+            >
+              <WorkbenchSectionStack className="manage-page-sections">
+                {renderManageMode(mode, manageData, dpmMandateId)}
+              </WorkbenchSectionStack>
+            </WorkbenchPageFrame>
+          }
+          side={<ManageContextRail data={manageData} activeMode={mode} />}
+        />
+      </WorkbenchPageContainer>
+    </AppPageShell>
+  );
+}
+
+async function loadManageData(
+  portfolio: Awaited<ReturnType<typeof getPortfolio360>>
+): Promise<ManageData> {
+  const portfolioId = portfolio.portfolio.portfolio_id;
+  const [
+    commandCenterResult,
+    exceptionsResult,
+    mandateResult,
+    memoryResult,
+    wavesResult,
+    reviewsResult,
+  ] = await Promise.allSettled([
+    getDpmCommandCenter({ limit: 25 }),
+    getDpmCommandCenterExceptions({ state: "ACTIVE", limit: 25 }),
+    getDpmMandateByPortfolio(portfolioId),
+    getDpmPortfolioMemory({ portfolioId, limit: 100 }),
+    listDpmWaves({ triggerType: "EXPLICIT_PORTFOLIO_LIST", limit: 10 }),
+    getDpmOutcomeReviews({ portfolioId, limit: 10 }),
+  ]);
+
+  const mandate = readSettledValue(mandateResult);
+  const mandateId = readDpmMandateId(mandate?.data ?? null);
+  let mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
+  if (mandateId) {
+    try {
+      mandateHealth = await getDpmMandateHealth(mandateId);
+    } catch {
+      mandateHealth = null;
+    }
+  }
+
+  return {
+    portfolio,
+    commandCenter: readSettledValue(commandCenterResult),
+    commandCenterExceptions: readSettledValue(exceptionsResult),
+    mandate,
+    mandateHealth,
+    commandCenterError: readSettledError(
+      commandCenterResult,
+      "DPM command-center endpoint unavailable."
+    ),
+    portfolioMemory: readSettledValue(memoryResult),
+    portfolioMemoryError: readSettledError(
+      memoryResult,
+      "Portfolio-memory endpoint unavailable."
+    ),
+    waves: readSettledValue(wavesResult),
+    wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
+    outcomeReviews: readSettledValue(reviewsResult),
+    outcomeReviewError: readSettledError(
+      reviewsResult,
+      "Outcome review endpoint unavailable."
+    ),
+  };
+}
+
+function renderManageMode(
+  mode: ManageMode,
+  data: ManageData,
+  mandateId: string | null
+): ReactNode {
+  switch (mode) {
+    case "mandate":
+      return (
+        <DpmCommandCenterPanel
+          commandCenter={data.commandCenter}
+          exceptions={data.commandCenterExceptions}
+          mandate={data.mandate}
+          mandateHealth={data.mandateHealth}
+          errorMessage={data.commandCenterError}
+        />
+      );
+    case "waves":
+      return (
+        <>
+          <DpmWaveCommandCenterPanel
+            portfolioId={data.portfolio.portfolio.portfolio_id}
+            waveList={data.waves}
+            errorMessage={data.wavesError}
+          />
+          <ProofPackPanel
+            portfolioId={data.portfolio.portfolio.portfolio_id}
+            mandateId={mandateId}
+            outcomeReviews={data.outcomeReviews}
+            rebalanceSnapshot={data.portfolio.rebalance_snapshot}
+            initialProofPack={null}
+            errorMessage={null}
+          />
+        </>
+      );
+    case "construction":
+      return <ConstructionAlternativesPanel portfolio={data.portfolio} />;
+    case "memory":
+      return (
+        <PortfolioMemoryPanel
+          response={data.portfolioMemory}
+          errorMessage={data.portfolioMemoryError}
+        />
+      );
+    case "reviews":
+      return (
+        <OutcomeReviewPanel
+          portfolioId={data.portfolio.portfolio.portfolio_id}
+          response={data.outcomeReviews}
+          errorMessage={data.outcomeReviewError}
+        />
+      );
+    case "proof":
+      return (
+        <ProofPackPanel
+          portfolioId={data.portfolio.portfolio.portfolio_id}
+          mandateId={mandateId}
+          outcomeReviews={data.outcomeReviews}
+          rebalanceSnapshot={data.portfolio.rebalance_snapshot}
+          initialProofPack={null}
+          errorMessage={null}
+        />
+      );
+    case "overview":
+    default:
+      return (
+        <>
+          <ManageOverview data={data} mandateId={mandateId} />
+          <DpmCommandCenterPanel
+            commandCenter={data.commandCenter}
+            exceptions={data.commandCenterExceptions}
+            mandate={data.mandate}
+            mandateHealth={data.mandateHealth}
+            errorMessage={data.commandCenterError}
+          />
+        </>
+      );
+  }
+}
+
+function ManageOverview({ data, mandateId }: { data: ManageData; mandateId: string | null }) {
+  const portfolio = data.portfolio;
+  const blockedSurfaces = [
+    data.commandCenterError ? "Mandate command center" : null,
+    data.wavesError ? "Rebalance waves" : null,
+    data.portfolioMemoryError ? "Portfolio memory" : null,
+    data.outcomeReviewError ? "Outcome reviews" : null,
+  ].filter(Boolean);
+
+  return (
+    <SectionBlock
+      title="Manage Operating Posture"
+      subtitle="Focused DPM control surface backed by lotus-manage through Gateway."
+      className="manage-overview-panel"
+      actions={<SemanticBadge tone={blockedSurfaces.length ? "warn" : "success"}>{blockedSurfaces.length ? "Partial" : "Ready"}</SemanticBadge>}
+    >
+      <WorkbenchSummaryMetricStrip
+        ariaLabel="Manage operating summary"
+        items={[
+          {
+            key: "market-value",
+            label: "Total Assets",
+            value: formatCurrency(
+              portfolio.overview.market_value_base,
+              portfolio.portfolio.base_currency
+            ),
+          },
+          {
+            key: "positions",
+            label: "Positions",
+            value: portfolio.overview.position_count,
+          },
+          {
+            key: "cash-weight",
+            label: "Cash Weight",
+            value: formatPct(portfolio.overview.cash_weight_pct),
+          },
+          {
+            key: "mandate",
+            label: "Mandate",
+            value: mandateId ?? "N/A",
+          },
+          {
+            key: "waves",
+            label: "Wave Surface",
+            value: data.wavesError ? "Partial" : "Ready",
+          },
+          {
+            key: "reviews",
+            label: "Outcome Reviews",
+            value: data.outcomeReviewError ? "Partial" : "Ready",
+          },
+        ]}
+      />
+      {blockedSurfaces.length ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="Some manage surfaces are degraded"
+          body={`Unavailable surfaces: ${blockedSurfaces.join(", ")}.`}
+        />
+      ) : (
+        <Text variant="secondary" className="muted">
+          Manage data is being rendered from supported Gateway endpoints. Use the left
+          rail to move into mandate, waves, construction, memory, outcome review, and
+          proof-pack workspaces.
+        </Text>
+      )}
+    </SectionBlock>
+  );
+}
+
+function ManageContextRail({ data, activeMode }: { data: ManageData; activeMode: ManageMode }) {
+  const portfolio = data.portfolio.portfolio;
+  const modeDefinition = getManageModeDefinition(activeMode);
+  const mandateId = readDpmMandateId(data.mandate?.data ?? null);
+
+  return (
+    <div className="manage-context-rail">
+      <WorkbenchRailCard>
+        <div className="manage-context-rail-header">
+          <Text variant="label">Active Surface</Text>
+          <strong>{modeDefinition.title}</strong>
+        </div>
+        <DefinitionList
+          ariaLabel="Manage portfolio context"
+          items={[
+            { label: "Portfolio", value: portfolio.portfolio_id },
+            { label: "Client", value: portfolio.client_id },
+            { label: "Booking", value: portfolio.booking_center_code },
+            { label: "Base", value: portfolio.base_currency },
+            { label: "As Of", value: data.portfolio.as_of_date },
+            { label: "Mandate", value: mandateId ?? "N/A" },
+          ]}
+        />
+      </WorkbenchRailCard>
+
+      <WorkbenchRailCard>
+        <div className="manage-context-rail-header">
+          <Text variant="label">Supportability</Text>
+          <strong>Gateway Evidence</strong>
+        </div>
+        <DefinitionList
+          ariaLabel="Manage supportability context"
+          items={[
+            {
+              label: "Command Center",
+              value: data.commandCenterError ? "Partial" : "Ready",
+            },
+            { label: "Waves", value: data.wavesError ? "Partial" : "Ready" },
+            {
+              label: "Memory",
+              value: data.portfolioMemoryError ? "Partial" : "Ready",
+            },
+            {
+              label: "Reviews",
+              value: data.outcomeReviewError ? "Partial" : "Ready",
+            },
+          ]}
+        />
+      </WorkbenchRailCard>
+    </div>
+  );
+}
+
+function buildManageModeItems(portfolioId: string, activeMode: ManageMode): PortfolioScreenRailModeItem[] {
+  return MANAGE_MODE_DEFINITIONS.map((mode) => ({
+    key: mode.key,
+    label: mode.label,
+    detail: mode.detail,
+    active: activeMode === mode.key,
+    href: buildManageModeHref(portfolioId, mode.key),
+    title: mode.description,
+  }));
+}
+
+function buildManageModeHref(portfolioId: string, mode: ManageMode) {
+  const encoded = encodeURIComponent(portfolioId);
+  return mode === "overview" ? `/workbench/${encoded}` : `/workbench/${encoded}?mode=${mode}`;
+}
+
+function normalizeManageMode(value: string | undefined): ManageMode {
+  const requested = value?.trim().toLowerCase();
+  return MANAGE_MODE_DEFINITIONS.some((mode) => mode.key === requested)
+    ? (requested as ManageMode)
+    : "overview";
+}
+
+function getManageModeDefinition(mode: ManageMode) {
+  return MANAGE_MODE_DEFINITIONS.find((definition) => definition.key === mode) ?? MANAGE_MODE_DEFINITIONS[0];
+}
+
+function readSettledValue<T>(result: PromiseSettledResult<T>): T | null {
+  return result.status === "fulfilled" ? result.value : null;
+}
+
+function readSettledError<T>(result: PromiseSettledResult<T>, fallback: string): string | null {
+  if (result.status === "fulfilled") {
+    return null;
+  }
+  return result.reason instanceof Error ? result.reason.message : fallback;
+}
 
 function formatCurrency(value: number | null | undefined, currency: string): string {
   if (value === null || value === undefined) {
@@ -56,418 +527,6 @@ function formatPct(value: number | null | undefined): string {
     return "N/A";
   }
   return `${value.toFixed(2)}%`;
-}
-
-export default async function WorkbenchPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ portfolioId: string }>;
-  searchParams: Promise<{
-    sessionId?: string;
-    period?: string;
-    groupBy?: string;
-    benchmark?: string;
-    preset?: string;
-    asOfDate?: string;
-  }>;
-}) {
-  const { portfolioId } = await params;
-  const resolvedSearch = await searchParams;
-  const sessionId = resolvedSearch.sessionId?.trim() || undefined;
-  const period = resolvedSearch.period?.trim() || "YTD";
-  const benchmark = resolvedSearch.benchmark?.trim() || "MODEL_60_40";
-  const preset = resolvedSearch.preset?.trim() || "EXEC_SUMMARY";
-  const requestedAsOfDate = resolvedSearch.asOfDate?.trim() || undefined;
-  const groupBy =
-    resolvedSearch.groupBy?.trim() === "SECURITY" ? "SECURITY" : "ASSET_CLASS";
-
-  let data: Awaited<ReturnType<typeof getPortfolio360>>;
-  let analytics: Awaited<ReturnType<typeof getWorkbenchAnalytics>> | null = null;
-  let reportingSnapshot: Awaited<ReturnType<typeof getReportingSnapshot>> | null = null;
-  let dpmCommandCenter: Awaited<ReturnType<typeof getDpmCommandCenter>> | null = null;
-  let dpmCommandCenterExceptions: Awaited<ReturnType<typeof getDpmCommandCenterExceptions>> | null = null;
-  let dpmMandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null = null;
-  let dpmMandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
-  let dpmCommandCenterError: string | null = null;
-  let portfolioMemory: Awaited<ReturnType<typeof getDpmPortfolioMemory>> | null = null;
-  let portfolioMemoryError: string | null = null;
-  let dpmWaves: Awaited<ReturnType<typeof listDpmWaves>> | null = null;
-  let dpmWavesError: string | null = null;
-  let outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null = null;
-  let outcomeReviewError: string | null = null;
-  try {
-    data = await getPortfolio360(portfolioId, sessionId);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : "Unknown error";
-    return (
-      <main className="page-container">
-        <WorkbenchPageFrame
-          title="Advisor Workbench"
-          subtitle={`Decision context is temporarily unavailable for ${portfolioId}.`}
-        >
-          <DegradedStatePanel
-            label="Operational status"
-            title={`Unable to load workbench overview for ${portfolioId}.`}
-            tone="danger"
-            status="Unavailable"
-            actions={[
-              { href: `/performance?portfolioId=${encodeURIComponent(portfolioId)}`, label: "Open Performance Workspace" },
-              { href: "/intake", label: "Open Portfolio Intake" },
-              { href: "/suite", label: "Return To Command Center" },
-            ]}
-          >
-            {detail}
-          </DegradedStatePanel>
-        </WorkbenchPageFrame>
-      </main>
-    );
-  }
-
-  try {
-    analytics = await getWorkbenchAnalytics(portfolioId, {
-      period,
-      groupBy,
-      benchmark,
-      sessionId,
-    });
-  } catch {
-    analytics = null;
-  }
-
-  try {
-    reportingSnapshot = await getReportingSnapshot(
-      portfolioId,
-      requestedAsOfDate ?? data.as_of_date
-    );
-  } catch {
-    reportingSnapshot = null;
-  }
-
-  try {
-    dpmCommandCenter = await getDpmCommandCenter({ limit: 25 });
-  } catch (error) {
-    dpmCommandCenter = null;
-    dpmCommandCenterError =
-      error instanceof Error ? error.message : "DPM command-center endpoint unavailable.";
-  }
-
-  try {
-    dpmCommandCenterExceptions = await getDpmCommandCenterExceptions({
-      state: "ACTIVE",
-      limit: 25,
-    });
-  } catch {
-    dpmCommandCenterExceptions = null;
-  }
-
-  try {
-    dpmMandate = await getDpmMandateByPortfolio(data.portfolio.portfolio_id);
-    const mandateId =
-      typeof dpmMandate.data.mandate_id === "string"
-        ? dpmMandate.data.mandate_id
-        : null;
-    dpmMandateHealth = mandateId ? await getDpmMandateHealth(mandateId) : null;
-  } catch {
-    dpmMandate = null;
-    dpmMandateHealth = null;
-  }
-
-  try {
-    portfolioMemory = await getDpmPortfolioMemory({
-      portfolioId: data.portfolio.portfolio_id,
-      limit: 100,
-    });
-  } catch (error) {
-    portfolioMemory = null;
-    portfolioMemoryError =
-      error instanceof Error ? error.message : "Portfolio-memory endpoint unavailable.";
-  }
-
-  try {
-    dpmWaves = await listDpmWaves({
-      triggerType: "EXPLICIT_PORTFOLIO_LIST",
-      limit: 10,
-    });
-  } catch (error) {
-    dpmWaves = null;
-    dpmWavesError =
-      error instanceof Error ? error.message : "DPM wave endpoint unavailable.";
-  }
-
-  try {
-    outcomeReviews = await getDpmOutcomeReviews({
-      portfolioId: data.portfolio.portfolio_id,
-      limit: 10,
-    });
-  } catch (error) {
-    outcomeReviews = null;
-    outcomeReviewError =
-      error instanceof Error ? error.message : "Outcome review endpoint unavailable.";
-  }
-
-  const dpmMandateId = readDpmMandateId(dpmMandate?.data ?? null);
-  const projectedCoveragePct =
-    data.projected_summary &&
-    data.projected_summary.total_baseline_positions > 0
-      ? (data.projected_summary.total_proposed_positions /
-          data.projected_summary.total_baseline_positions) *
-        100
-      : 0;
-  const hasValuationData =
-    data.overview.market_value_base > 0 ||
-    data.current_positions.some((row) => row.market_value_base !== null);
-  const hasAnalytics = analytics !== null;
-  const hasReporting = reportingSnapshot !== null;
-  const warnings = [...data.warnings, ...(analytics?.warnings ?? [])];
-  const partialFailures = [
-    ...data.partial_failures,
-    ...(analytics?.partial_failures ?? []),
-  ];
-  const reportingAsOfDate = requestedAsOfDate ?? data.as_of_date;
-  const pageSubtitle =
-    reportingAsOfDate === data.as_of_date
-      ? `As of: ${data.as_of_date}`
-      : `Portfolio data as of: ${data.as_of_date} | Report date: ${reportingAsOfDate}`;
-
-  return (
-    <main className="page-container">
-      <WorkbenchPageFrame
-        title={`Advisor Workbench: ${data.portfolio.portfolio_id}`}
-        subtitle={pageSubtitle}
-        actions={
-          <>
-            <SemanticBadge tone={partialFailures.length > 0 ? "warn" : "success"}>
-              {partialFailures.length > 0 ? "Partial upstream coverage" : "Operationally ready"}
-            </SemanticBadge>
-            <SemanticBadge>{data.active_session_id ? "Sandbox active" : "Sandbox idle"}</SemanticBadge>
-          </>
-        }
-      >
-        <WorkbenchSectionStack>
-          <PartialFailureBanner items={partialFailures} />
-
-          <OverviewCards
-            marketValueBase={data.overview.market_value_base}
-            cashWeightPct={data.overview.cash_weight_pct}
-            positionCount={data.overview.position_count}
-            baseCurrency={data.portfolio.base_currency}
-          />
-          {!hasValuationData ? (
-            <ScreenStatePanel
-              kind="empty"
-              title="Valuation is not available for this portfolio yet"
-              body="Load market prices and rerun lotus-core valuation to unlock position-level values and weights."
-            />
-          ) : null}
-
-          <AnalyticsControls
-            sessionId={data.active_session_id}
-            period={period}
-            groupBy={groupBy}
-            benchmark={benchmark}
-            preset={preset}
-          />
-
-          <BenchmarkKpiStrip
-            returnPct={analytics?.portfolio_return_pct ?? null}
-            benchmarkReturnPct={analytics?.benchmark_return_pct ?? null}
-            activeReturnPct={analytics?.active_return_pct ?? null}
-            projectedCoveragePct={projectedCoveragePct}
-          />
-          {analytics === null ? (
-            <ScreenStatePanel
-              kind="partial"
-              title="Backend analytics endpoint is unavailable"
-              body="Portfolio analytics panels will populate once the API is online."
-            />
-          ) : null}
-
-          <section className="workbench-split">
-            <div className="workbench-col">
-              <SectionBlock title="Portfolio 360 Baseline Positions">
-                <AnalyticsTable
-                  ariaLabel="Portfolio 360 baseline positions"
-                  variant="portfolio"
-                  density="comfortable"
-                  columns={[
-                    { key: "security", label: "Security" },
-                    { key: "instrument", label: "Instrument" },
-                    { key: "asset-class", label: "Asset Class" },
-                    { key: "quantity", label: "Quantity", align: "right" },
-                    { key: "market-value", label: "Market Value", align: "right" },
-                    { key: "weight", label: "Weight", align: "right" },
-                  ]}
-                  rows={data.current_positions.map((row) => ({
-                    key: row.security_id,
-                    cells: [
-                      row.security_id,
-                      row.instrument_name,
-                      row.asset_class ?? "N/A",
-                      row.quantity.toFixed(4),
-                      formatCurrency(row.market_value_base, data.portfolio.base_currency),
-                      formatPct(row.weight_pct),
-                    ],
-                  }))}
-                  emptyState={{
-                    title: "No current positions available",
-                    body: "No current positions are available in the latest portfolio snapshot.",
-                  }}
-                />
-              </SectionBlock>
-
-              <PerformanceSnapshot
-                period={data.performance_snapshot?.period ?? "YTD"}
-                returnPct={data.performance_snapshot?.return_pct ?? null}
-                benchmarkReturnPct={data.performance_snapshot?.benchmark_return_pct ?? null}
-              />
-
-              <RebalanceStatus
-                snapshot={data.rebalance_snapshot}
-              />
-
-              <DpmCommandCenterPanel
-                commandCenter={dpmCommandCenter}
-                exceptions={dpmCommandCenterExceptions}
-                mandate={dpmMandate}
-                mandateHealth={dpmMandateHealth}
-                errorMessage={dpmCommandCenterError}
-              />
-
-              <PortfolioMemoryPanel
-                response={portfolioMemory}
-                errorMessage={portfolioMemoryError}
-              />
-
-              <ConstructionAlternativesPanel portfolio={data} />
-
-              <DpmWaveCommandCenterPanel
-                portfolioId={data.portfolio.portfolio_id}
-                waveList={dpmWaves}
-                errorMessage={dpmWavesError}
-              />
-
-              <ProofPackPanel
-                portfolioId={data.portfolio.portfolio_id}
-                mandateId={dpmMandateId}
-                outcomeReviews={outcomeReviews}
-                rebalanceSnapshot={data.rebalance_snapshot}
-                initialProofPack={null}
-                errorMessage={null}
-              />
-
-              <OutcomeReviewPanel
-                portfolioId={data.portfolio.portfolio_id}
-                response={outcomeReviews}
-                errorMessage={outcomeReviewError}
-              />
-
-              {reportingSnapshot ? (
-                <ReportingSnapshotPanel
-                  asOfDate={reportingSnapshot.asOfDate}
-                  sourceService={reportingSnapshot.sourceService}
-                  rows={reportingSnapshot.rows}
-                />
-              ) : (
-                <ScreenStatePanel
-                  kind="partial"
-                  title="Reporting service is unavailable"
-                  body="This panel will populate when reporting aggregation is online."
-                />
-              )}
-
-              <ReportBatchOperationsPanel
-                portfolioId={data.portfolio.portfolio_id}
-                asOfDate={reportingAsOfDate}
-                reportingCurrency={data.portfolio.base_currency}
-                bookingCenterCode={data.portfolio.booking_center_code}
-                benchmarkCode={benchmark}
-              />
-            </div>
-
-            <div className="workbench-col">
-              <SandboxControls
-                portfolioId={data.portfolio.portfolio_id}
-                sessionId={data.active_session_id}
-                warnings={warnings}
-              />
-
-              {data.projected_summary ? (
-                <SectionBlock title="Projected Summary">
-                  <WorkbenchSummaryMetricStrip
-                    ariaLabel="Projected summary"
-                    items={[
-                      { key: "baseline", label: "Baseline Positions", value: data.projected_summary.total_baseline_positions },
-                      { key: "proposed", label: "Proposed Positions", value: data.projected_summary.total_proposed_positions },
-                      { key: "net-delta", label: "Net Delta Quantity", value: data.projected_summary.net_delta_quantity.toFixed(4) },
-                    ]}
-                  />
-                </SectionBlock>
-              ) : null}
-
-              <SectionBlock title="Live Sandbox Projected Positions">
-                <AnalyticsTable
-                  ariaLabel="Live sandbox projected positions"
-                  variant="analysis"
-                  density="comfortable"
-                  columns={[
-                    { key: "security", label: "Security" },
-                    { key: "instrument", label: "Instrument" },
-                    { key: "baseline", label: "Baseline", align: "right" },
-                    { key: "proposed", label: "Proposed", align: "right" },
-                    { key: "delta", label: "Delta", align: "right" },
-                  ]}
-                  rows={data.projected_positions.map((row) => ({
-                    key: row.security_id,
-                    cells: [
-                      row.security_id,
-                      row.instrument_name,
-                      row.baseline_quantity.toFixed(4),
-                      row.proposed_quantity.toFixed(4),
-                      row.delta_quantity.toFixed(4),
-                    ],
-                  }))}
-                  emptyState={{
-                    title: "No projected holdings yet",
-                    body: "Create and update a sandbox session to see projected holdings.",
-                  }}
-                />
-              </SectionBlock>
-
-              <DeltaAnalyticsPanel
-                buckets={analytics?.allocation_buckets ?? []}
-                groupBy={groupBy}
-              />
-
-              <ExceptionQueue
-                warnings={warnings}
-                partialFailures={partialFailures}
-              />
-
-              <DecisionReadinessPanel
-                hasValuationData={hasValuationData}
-                hasAnalytics={hasAnalytics}
-                hasReporting={hasReporting}
-                hasActiveSandbox={Boolean(data.active_session_id)}
-                warningCount={warnings.length}
-                failureCount={partialFailures.length}
-                riskWorkspaceHref={`/performance?portfolioId=${encodeURIComponent(
-                  data.portfolio.portfolio_id
-                )}&mode=risk`}
-              />
-
-              <AdvisorSummaryCard
-                portfolioId={data.portfolio.portfolio_id}
-                warningCount={warnings.length}
-                failureCount={partialFailures.length}
-                netDeltaQuantity={data.projected_summary?.net_delta_quantity ?? 0}
-              />
-            </div>
-          </section>
-        </WorkbenchSectionStack>
-      </WorkbenchPageFrame>
-    </main>
-  );
 }
 
 function readDpmMandateId(data: Record<string, unknown> | null): string | null {

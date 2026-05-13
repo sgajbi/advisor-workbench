@@ -1,10 +1,11 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import WorkbenchPage from "../../src/app/workbench/[portfolioId]/page";
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/workbench/PF_1001",
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -17,228 +18,8 @@ describe("WorkbenchPage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders backend-driven workbench context and decision readiness signals", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string | URL) => {
-        const url = input.toString();
-        if (url.includes("/api/v1/workbench/PF_1001/portfolio-360")) {
-          return {
-            ok: true,
-            json: async () => ({
-              correlation_id: "corr_1",
-              contract_version: "v1",
-              as_of_date: "2026-02-24",
-              portfolio: {
-                portfolio_id: "PF_1001",
-                client_id: "CL_1001",
-                base_currency: "USD",
-                booking_center_code: "SG",
-              },
-              overview: {
-                market_value_base: 1250000,
-                cash_weight_pct: 0.0842,
-                position_count: 12,
-              },
-              performance_snapshot: {
-                period: "YTD",
-                return_pct: 4.12,
-                benchmark_return_pct: 3.87,
-              },
-              rebalance_snapshot: {
-                status: "READY",
-                last_rebalance_run_id: "run_001",
-                last_run_at_utc: "2026-02-24T00:00:00Z",
-                supportability: {
-                  feature_key: "manage.observability.action_register_supportability",
-                  state: "healthy",
-                  reason: "action_register_current",
-                  freshness_bucket: "fresh",
-                  run_count: 2,
-                  operation_count: 4,
-                  workflow_decision_count: 1,
-                },
-                recent_runs: [
-                  {
-                    rebalance_run_id: "run_001",
-                    status: "PENDING_REVIEW",
-                    created_at_utc: "2026-02-24T00:00:00Z",
-                    error_code: null,
-                    workflow_state: "PM_REVIEW_REQUIRED",
-                  },
-                  {
-                    rebalance_run_id: "run_000",
-                    status: "FAILED",
-                    created_at_utc: "2026-02-23T00:00:00Z",
-                    error_code: "SOURCE_READINESS_BLOCKED",
-                    workflow_state: null,
-                  },
-                ],
-              },
-              current_positions: [
-                {
-                  security_id: "AAPL.US",
-                  instrument_name: "Apple Inc",
-                  asset_class: "EQUITY",
-                  quantity: 120,
-                  market_value_base: 250000,
-                  weight_pct: 20,
-                },
-              ],
-              projected_positions: [],
-              projected_summary: {
-                total_baseline_positions: 12,
-                total_proposed_positions: 12,
-                net_delta_quantity: 0,
-              },
-              active_session_id: "sess_001",
-              warnings: ["market data lagging"],
-              partial_failures: [
-                {
-                  source_service: "performance-analytics",
-                  error_code: "UPSTREAM_TIMEOUT",
-                  detail: "timeout",
-                },
-              ],
-            }),
-          } as Response;
-        }
-
-        if (url.includes("/api/v1/workbench/PF_1001/analytics?")) {
-          return {
-            ok: true,
-            json: async () => ({
-              correlation_id: "corr_2",
-              contract_version: "v1",
-              portfolio_id: "PF_1001",
-              session_id: "sess_001",
-              period: "YTD",
-              group_by: "ASSET_CLASS",
-              benchmark_code: "MODEL_60_40",
-              portfolio_return_pct: 4.12,
-              benchmark_return_pct: 3.87,
-              active_return_pct: 0.25,
-              allocation_buckets: [],
-              top_changes: [],
-              warnings: ["RISK_BFF_PENDING"],
-              partial_failures: [
-                {
-                  source_service: "risk",
-                  error_code: "RISK_BFF_NOT_IMPLEMENTED",
-                  detail: "Stateful concentration risk will be restored through the Risk BFF.",
-                },
-              ],
-            }),
-          } as Response;
-        }
-
-        if (url.includes("/api/v1/reports/PF_1001/snapshot?asOfDate=2026-02-24")) {
-          return {
-            ok: true,
-            json: async () => ({
-              correlationId: "corr_3",
-              contractVersion: "v1",
-              sourceService: "lotus-report",
-              portfolioId: "PF_1001",
-              asOfDate: "2026-02-24",
-              generatedAt: "2026-02-24T00:00:00Z",
-              rows: [{ bucket: "TOTAL", metric: "return_ytd_pct", value: 4.3 }],
-            }),
-          } as Response;
-        }
-
-        if (url.includes("/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PF_1001")) {
-          return {
-            ok: true,
-            json: async () => ({
-              correlation_id: "corr_rfc42",
-              contract_version: "v1",
-              source_service: "lotus-manage",
-              upstream_status: 200,
-              supportability: {
-                source_service: "lotus-manage",
-                authority: "lotus-manage:RFC-0042",
-                state: "SUPPORTED",
-                reason_codes: ["READY_FOR_REPORT_INPUT"],
-                blocked_actions: [],
-              },
-              data: {
-                items: [
-                  {
-                    outcome_review_id: "or_1",
-                    state: "READY",
-                    portfolio_id: "PF_1001",
-                    rebalance_run_id: "run_001",
-                    proof_pack_id: "dpp_rfc0042_1",
-                    expected_snapshot_hash: "sha256:expected",
-                    realized_snapshot_hash: "sha256:realized",
-                    dimension_results: [
-                      {
-                        dimension: "cash_weight",
-                        expected: { value: "0.0340", unit: "ratio" },
-                        realized: { value: "0.0342", unit: "ratio" },
-                        variance: { value: "0.0002", unit: "ratio" },
-                        state: "WITHIN_TOLERANCE",
-                      },
-                    ],
-                  },
-                ],
-              },
-            }),
-          } as Response;
-        }
-
-        if (url.includes("/api/v1/dpm/command-center/proof-packs/ppack_1")) {
-          return {
-            ok: true,
-            json: async () => ({
-              correlation_id: "corr_rfc40",
-              contract_version: "v1",
-              source_service: "lotus-manage",
-              upstream_status: 200,
-              supportability: {
-                source_service: "lotus-manage",
-                authority: "lotus-manage:RFC-0040",
-                state: "READY",
-                proof_pack_id: "ppack_1",
-                reason_codes: ["PROOF_PACK_READY"],
-                section_state_counts: { READY: 1 },
-                content_hash: "sha256:proof-pack",
-                markdown_available: true,
-                report_input_available: true,
-                ai_evidence_input_available: true,
-              },
-              data: {
-                proof_pack: {
-                  proof_pack_id: "ppack_1",
-                  portfolio_id: "PF_1001",
-                  rebalance_run_id: "run_001",
-                  status: "READY",
-                  content_hash: "sha256:proof-pack",
-                  sections: [
-                    {
-                      section: "investment_policy",
-                      state: "READY",
-                      source_service: "lotus-manage",
-                      content_hash: "sha256:policy",
-                    },
-                  ],
-                  source_hashes: [
-                    {
-                      source_service: "lotus-risk",
-                      source_ref: "risk_snapshot_1",
-                      hash: "sha256:risk",
-                    },
-                  ],
-                },
-              },
-            }),
-          } as Response;
-        }
-
-        return { ok: false, json: async () => ({}) } as Response;
-      })
-    );
+  it("renders a focused manage overview with shared Workbench navigation", async () => {
+    vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_1001" })));
 
     render(
       await WorkbenchPage({
@@ -247,38 +28,37 @@ describe("WorkbenchPage", () => {
       })
     );
 
-    expect(screen.getByRole("heading", { name: /Advisor Workbench: PF_1001/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Decision Readiness/i })).toBeInTheDocument();
-    expect(screen.getByText("Risk Workspace")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Risk" })).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: "Manage Overview" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Manage Operating Posture" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "DPM Command Center" })).toBeInTheDocument();
+
+    const screenNav = screen.getByRole("navigation", { name: "Workbench screen navigation" });
+    expect(within(screenNav).getByRole("link", { name: /Portfolio/i })).toHaveAttribute(
       "href",
-      "/performance?portfolioId=PF_1001&mode=risk"
+      "/portfolio?portfolioId=PF_1001"
     );
-    expect(screen.getAllByText(/RISK_BFF_NOT_IMPLEMENTED/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Data Integrity")).toBeInTheDocument();
-    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("Recent runs");
-    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("Run issues");
-    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("run_001");
-    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent("PM Review Required");
-    expect(screen.getByLabelText("DPM operations dashboard")).toHaveTextContent(
-      "Source Readiness Blocked"
+    expect(within(screenNav).getByRole("link", { name: /Manage/i })).toHaveAttribute(
+      "aria-current",
+      "page"
     );
-    expect(screen.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeInTheDocument();
-    expect(screen.getByText("Proof-pack evidence is unavailable")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Generate proof pack" })).toBeEnabled();
-    expect(screen.getByText("ATTENTION")).toBeInTheDocument();
-    expect(screen.getByText("Partial Data Warning")).toBeInTheDocument();
-    expect(screen.getAllByText(/UPSTREAM_TIMEOUT/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("heading", { name: "Construction Alternatives" })).toBeInTheDocument();
-    expect(
-      screen.getByText("Construction alternatives have not been generated")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Post-Trade Outcome Review" })).toBeInTheDocument();
-    expect(screen.getByText("or_1")).toBeInTheDocument();
-    expect(screen.getByText("cash_weight")).toBeInTheDocument();
+
+    const manageNav = screen.getByLabelText("Manage workspace navigation");
+    expect(within(manageNav).getByRole("link", { name: "Overview" })).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001"
+    );
+    expect(within(manageNav).getByRole("link", { name: "Mandate" })).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?mode=mandate"
+    );
+    expect(within(manageNav).getByRole("link", { name: "Waves" })).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?mode=waves"
+    );
+    expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
   });
 
-  it("falls back to the degraded route shell when the portfolio overview cannot be loaded", async () => {
+  it("falls back to the degraded manage shell when portfolio context cannot be loaded", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
@@ -293,154 +73,280 @@ describe("WorkbenchPage", () => {
       })
     );
 
-    expect(screen.getByRole("heading", { name: "Advisor Workbench" })).toBeInTheDocument();
-    expect(screen.getByText(/Unable to load workbench overview for PF_404/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Manage Workspace" })).toBeInTheDocument();
+    expect(screen.getByText(/Unable to load portfolio context for PF_404/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Performance Workspace" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PF_404"
     );
-    expect(screen.getByRole("link", { name: "Open Portfolio Intake" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Return To Portfolio" })).toHaveAttribute(
       "href",
-      "/intake"
+      "/portfolio"
     );
   });
 
-  it("shows degraded analytics and reporting messaging when secondary services are unavailable", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string | URL) => {
-        const url = input.toString();
-        if (url.includes("/api/v1/workbench/PF_2001/portfolio-360")) {
-          return {
-            ok: true,
-            json: async () => ({
-              correlation_id: "corr_1",
-              contract_version: "v1",
-              as_of_date: "2026-02-24",
-              portfolio: {
-                portfolio_id: "PF_2001",
-                client_id: "CL_2001",
-                base_currency: "USD",
-                booking_center_code: "SG",
-              },
-              overview: {
-                market_value_base: 0,
-                cash_weight_pct: 0,
-                position_count: 0,
-              },
-              performance_snapshot: null,
-              rebalance_snapshot: null,
-              current_positions: [],
-              projected_positions: [],
-              projected_summary: null,
-              active_session_id: null,
-              warnings: [],
-              partial_failures: [],
-            }),
-          } as Response;
-        }
-
-        if (url.includes("/api/v1/workbench/PF_2001/analytics?")) {
-          throw new Error("analytics unavailable");
-        }
-
-        if (url.includes("/api/v1/reports/PF_2001/snapshot?asOfDate=2026-02-24")) {
-          throw new Error("reporting unavailable");
-        }
-
-        return { ok: false, json: async () => ({}) } as Response;
-      })
-    );
+  it("renders construction as its own manage surface instead of the full operations stack", async () => {
+    vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_2001" })));
 
     render(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_2001" }),
-        searchParams: Promise.resolve({
-          period: "QTD",
-          groupBy: "SECURITY",
-          benchmark: "BMK_QTD",
-          preset: "ANALYTICS",
-        }),
+        searchParams: Promise.resolve({ mode: "construction" }),
       })
     );
 
-    expect(screen.getByText(/Valuation is not available for this portfolio yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/Backend analytics endpoint is unavailable/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Portfolio analytics panels will populate once the API is online\./i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Reporting service is unavailable/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/This panel will populate when reporting aggregation is online\./i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/No current positions available/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/No current positions are available in the latest portfolio snapshot\./i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Create and update a sandbox session to see projected holdings\./i)).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Construction Alternatives" })).toHaveLength(2);
+    expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Portfolio Memory" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Post-Trade Outcome Review" })).not.toBeInTheDocument();
   });
 
-  it("uses an explicit route as-of date for reporting batch operations", async () => {
-    const fetchMock = vi.fn(async (input: string | URL) => {
-      const url = input.toString();
-      if (url.includes("/api/v1/workbench/PF_3001/portfolio-360")) {
-        return {
-          ok: true,
-          json: async () => ({
-            correlation_id: "corr_1",
-            contract_version: "v1",
-            as_of_date: "2026-04-27",
-            portfolio: {
-              portfolio_id: "PF_3001",
-              client_id: "CL_3001",
-              base_currency: "USD",
-              booking_center_code: "SG",
-            },
-            overview: {
-              market_value_base: 100,
-              cash_weight_pct: 0,
-              position_count: 1,
-            },
-            performance_snapshot: null,
-            rebalance_snapshot: null,
-            current_positions: [],
-            projected_positions: [],
-            projected_summary: null,
-            active_session_id: null,
-            warnings: [],
-            partial_failures: [],
-          }),
-        } as Response;
-      }
-
-      if (url.includes("/api/v1/workbench/PF_3001/analytics?")) {
-        throw new Error("analytics unavailable");
-      }
-
-      if (url.includes("/api/v1/reports/PF_3001/snapshot?asOfDate=2026-04-10")) {
-        throw new Error("reporting unavailable");
-      }
-
-      return { ok: false, json: async () => ({}) } as Response;
-    });
+  it("renders wave lifecycle and proof-pack evidence as a dedicated manage surface", async () => {
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_3001" }));
     vi.stubGlobal("fetch", fetchMock);
 
     render(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_3001" }),
-        searchParams: Promise.resolve({ asOfDate: "2026-04-10" }),
+        searchParams: Promise.resolve({ mode: "waves" }),
       })
     );
 
-    expect(
-      screen.getByText("Portfolio data as of: 2026-04-27 | Report date: 2026-04-10")
-    ).toBeInTheDocument();
-    expect(screen.getByText("PDF portfolio review batch for 2026-04-10")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Rebalance Waves" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Rebalance Wave Command Center" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([input]) =>
-        input.toString().includes("/api/v1/reports/PF_3001/snapshot?asOfDate=2026-04-10")
+        input.toString().includes("/api/v1/dpm/command-center/waves?")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PF_3001")
       )
     ).toBe(true);
   });
 });
 
+function createManageFetch({ portfolioId }: { portfolioId: string }) {
+  return async (input: string | URL) => {
+    const url = input.toString();
+    if (url.includes(`/api/v1/workbench/${portfolioId}/portfolio-360`)) {
+      return jsonResponse({
+        correlation_id: "corr_1",
+        contract_version: "v1",
+        as_of_date: "2026-05-13",
+        portfolio: {
+          portfolio_id: portfolioId,
+          client_id: "CL_1001",
+          base_currency: "USD",
+          booking_center_code: "SG",
+        },
+        overview: {
+          market_value_base: 1250000,
+          cash_weight_pct: 8.42,
+          position_count: 12,
+        },
+        performance_snapshot: null,
+        rebalance_snapshot: {
+          status: "READY",
+          last_rebalance_run_id: "run_001",
+          last_run_at_utc: "2026-05-13T00:00:00Z",
+          supportability: null,
+          recent_runs: [],
+        },
+        current_positions: [
+          {
+            security_id: "AAPL.US",
+            instrument_name: "Apple Inc",
+            asset_class: "EQUITY",
+            quantity: 120,
+            market_value_base: 250000,
+            weight_pct: 20,
+          },
+        ],
+        projected_positions: [],
+        projected_summary: null,
+        active_session_id: null,
+        warnings: [],
+        partial_failures: [],
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/mandates/by-portfolio/")) {
+      return jsonResponse({
+        correlation_id: "corr_mandate",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:mandate",
+          state: "SUPPORTED",
+          reason_codes: ["MANDATE_READY"],
+          blocked_actions: [],
+        },
+        data: {
+          mandate_id: "mandate_001",
+          portfolio_id: portfolioId,
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/mandates/mandate_001/health")) {
+      return jsonResponse({
+        correlation_id: "corr_health",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:mandate-health",
+          state: "SUPPORTED",
+          reason_codes: ["HEALTH_READY"],
+          blocked_actions: [],
+        },
+        data: {
+          mandate_id: "mandate_001",
+          health_state: "READY",
+          health_score: 98,
+          dimensions: [],
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center?")) {
+      return jsonResponse({
+        correlation_id: "corr_command",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:command-center",
+          state: "SUPPORTED",
+          reason_codes: ["COMMAND_CENTER_READY"],
+          blocked_actions: [],
+        },
+        data: {
+          summary: {
+            evaluated_mandates: 1,
+            active_exception_count: 0,
+            data_completeness_state: "READY",
+            source_run_id: "run_001",
+          },
+          latest_monitoring_run: {
+            monitoring_run_id: "run_001",
+            status: "READY",
+          },
+          health_distribution: [{ state: "READY", count: 1 }],
+          attention_buckets: [],
+          recommended_actions: [],
+          source_readiness: [],
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/exceptions?")) {
+      return jsonResponse({
+        correlation_id: "corr_exceptions",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:exceptions",
+          state: "SUPPORTED",
+          reason_codes: ["NO_ACTIVE_EXCEPTIONS"],
+          blocked_actions: [],
+        },
+        data: { items: [] },
+      });
+    }
+
+    if (url.includes(`/api/v1/dpm/command-center/portfolios/${portfolioId}/memory`)) {
+      return jsonResponse({
+        correlation_id: "corr_memory",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:portfolio-memory",
+          state: "SUPPORTED",
+          reason_codes: ["MEMORY_READY"],
+          blocked_actions: [],
+        },
+        data: { items: [] },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/waves?")) {
+      return jsonResponse({
+        correlation_id: "corr_waves",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:waves",
+          state: "SUPPORTED",
+          reason_codes: ["WAVE_READY"],
+          blocked_actions: [],
+        },
+        data: {
+          items: [
+            {
+              wave_id: "wave_001",
+              state: "READY",
+              trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+              as_of_date: "2026-05-13",
+              item_count: 1,
+              issue_count: 0,
+            },
+          ],
+        },
+      });
+    }
+
+    if (url.includes(`/api/v1/dpm/command-center/outcome-reviews?portfolio_id=${portfolioId}`)) {
+      return jsonResponse({
+        correlation_id: "corr_reviews",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:outcome-reviews",
+          state: "SUPPORTED",
+          reason_codes: ["READY_FOR_REPORT_INPUT"],
+          blocked_actions: [],
+        },
+        data: {
+          items: [
+            {
+              outcome_review_id: "or_1",
+              state: "READY",
+              portfolio_id: portfolioId,
+              rebalance_run_id: "run_001",
+              proof_pack_id: "ppack_1",
+              expected_snapshot_hash: "sha256:expected",
+              realized_snapshot_hash: "sha256:realized",
+              dimension_results: [],
+            },
+          ],
+        },
+      });
+    }
+
+    return jsonResponse({}, false);
+  };
+}
+
+function jsonResponse(payload: unknown, ok = true) {
+  return {
+    ok,
+    json: async () => payload,
+  } as Response;
+}
