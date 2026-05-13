@@ -72,8 +72,8 @@ export function buildMetricDrawer(
             ]),
           },
         ],
-        fullPageHref: "#portfolio-health",
-        fullPageLabel: "Open health snapshot",
+        fullPageHref: `/workbench/${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
+        fullPageLabel: "Open operating workbench",
       };
     case "invested_assets":
       return {
@@ -121,7 +121,7 @@ export function buildMetricDrawer(
             ]),
           },
         ],
-        fullPageHref: "#portfolio-insights",
+        fullPageHref: `/positions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
         fullPageLabel: "Open allocation",
       };
     case "available_cash":
@@ -166,7 +166,7 @@ export function buildMetricDrawer(
             ),
           },
         ],
-        fullPageHref: "#portfolio-insights",
+        fullPageHref: `/cashflow?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
         fullPageLabel: "Open liquidity",
       };
   }

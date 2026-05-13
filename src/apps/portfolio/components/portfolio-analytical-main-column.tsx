@@ -12,11 +12,13 @@ export default function PortfolioAnalyticalMainColumn({
 }: {
   summaryHeader: ReactNode;
   toolbar?: ReactNode;
-  exceptions: ReactNode;
+  exceptions?: ReactNode;
   insights: ReactNode;
-  health: ReactNode;
-  changes: ReactNode;
+  health?: ReactNode;
+  changes?: ReactNode;
 }) {
+  const hasDetailedContent = Boolean(health || changes);
+
   return (
     <>
       <section className="portfolio-summary-cluster" aria-label="Portfolio analytical overview">
@@ -26,8 +28,8 @@ export default function PortfolioAnalyticalMainColumn({
         {exceptions}
       </section>
 
-      <section className="portfolio-detailed-cluster" aria-label="Portfolio analytical detail">
-        {(health || changes) ? (
+      {hasDetailedContent ? (
+        <section className="portfolio-detailed-cluster" aria-label="Portfolio analytical detail">
           <div className="portfolio-detailed-primary-shell">
             <div className="portfolio-analytical-shell-header portfolio-analytical-shell-header-quiet">
               <span>Decision review</span>
@@ -38,8 +40,8 @@ export default function PortfolioAnalyticalMainColumn({
               {changes}
             </div>
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </>
   );
 }
