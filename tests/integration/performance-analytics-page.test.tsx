@@ -151,7 +151,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(screen.getByText("Performance Surface")).toBeInTheDocument();
     expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
-    expect(document.querySelector(".performance-workspace-rail")).toBeFalsy();
+    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(1);
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."

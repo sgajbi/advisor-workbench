@@ -86,6 +86,16 @@ export function usePerformanceRiskContract({
   const [isRollingDetailLoading, setIsRollingDetailLoading] = useState(false);
   const [selectedAttributionType, setSelectedAttributionType] = useState("TOTAL_RISK");
   const [selectedGroupingDimension, setSelectedGroupingDimension] = useState("SECTOR");
+  const riskWindowParams = useMemo(
+    () =>
+      period === "EXPLICIT"
+        ? {
+            reportStartDate: workspace.report_start_date,
+            reportEndDate: workspace.report_end_date,
+          }
+        : {},
+    [period, workspace.report_end_date, workspace.report_start_date]
+  );
 
   useEffect(() => {
     workspaceRef.current = workspace;
@@ -98,12 +108,14 @@ export function usePerformanceRiskContract({
         period,
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
       }),
     [
       detailBasis,
       period,
+      riskWindowParams,
       workspace.as_of_date,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
@@ -117,11 +129,13 @@ export function usePerformanceRiskContract({
         portfolioId: workspace.portfolio.portfolio_id,
         period,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
       }),
     [
       period,
+      riskWindowParams,
       workspace.as_of_date,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
@@ -136,6 +150,7 @@ export function usePerformanceRiskContract({
         period,
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
         includeUnderwaterSeries: false,
@@ -143,6 +158,7 @@ export function usePerformanceRiskContract({
     [
       detailBasis,
       period,
+      riskWindowParams,
       workspace.as_of_date,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
@@ -157,6 +173,7 @@ export function usePerformanceRiskContract({
         period,
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
         includeUnderwaterSeries: true,
@@ -164,6 +181,7 @@ export function usePerformanceRiskContract({
     [
       detailBasis,
       period,
+      riskWindowParams,
       workspace.as_of_date,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
@@ -178,6 +196,7 @@ export function usePerformanceRiskContract({
         period,
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
         includeTimeSeries: false,
@@ -185,6 +204,7 @@ export function usePerformanceRiskContract({
     [
       detailBasis,
       period,
+      riskWindowParams,
       workspace.as_of_date,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
@@ -199,6 +219,7 @@ export function usePerformanceRiskContract({
         period,
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
         includeTimeSeries: true,
@@ -206,6 +227,7 @@ export function usePerformanceRiskContract({
     [
       detailBasis,
       period,
+      riskWindowParams,
       workspace.as_of_date,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
@@ -259,6 +281,7 @@ export function usePerformanceRiskContract({
           period,
           detailBasis,
           benchmark: workspace.benchmark_code ?? undefined,
+          ...riskWindowParams,
           asOfDate: workspace.as_of_date,
           reportingCurrency: workspace.portfolio.base_currency,
         }).catch((error: unknown) =>
@@ -276,6 +299,7 @@ export function usePerformanceRiskContract({
       ? getWorkbenchRiskConcentrationClient(workspace.portfolio.portfolio_id, {
           period,
           benchmark: workspace.benchmark_code ?? undefined,
+          ...riskWindowParams,
           asOfDate: workspace.as_of_date,
           reportingCurrency: workspace.portfolio.base_currency,
         }).catch((error: unknown) =>
@@ -293,6 +317,7 @@ export function usePerformanceRiskContract({
           period,
           detailBasis,
           benchmark: workspace.benchmark_code ?? undefined,
+          ...riskWindowParams,
           asOfDate: workspace.as_of_date,
           reportingCurrency: workspace.portfolio.base_currency,
           includeUnderwaterSeries: false,
@@ -313,6 +338,7 @@ export function usePerformanceRiskContract({
           period,
           detailBasis,
           benchmark: workspace.benchmark_code ?? undefined,
+          ...riskWindowParams,
           asOfDate: workspace.as_of_date,
           reportingCurrency: workspace.portfolio.base_currency,
           includeTimeSeries: false,
@@ -359,6 +385,7 @@ export function usePerformanceRiskContract({
     drawdownKey,
     isDetailsPending,
     period,
+    riskWindowParams,
     rollingDetailKey,
     rollingKey,
     summaryKey,
@@ -375,6 +402,7 @@ export function usePerformanceRiskContract({
         period,
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
+        ...riskWindowParams,
         asOfDate: workspace.as_of_date,
         reportingCurrency: workspace.portfolio.base_currency,
         attributionType: selectedAttributionType,
@@ -383,6 +411,7 @@ export function usePerformanceRiskContract({
     [
       detailBasis,
       period,
+      riskWindowParams,
       selectedAttributionType,
       selectedGroupingDimension,
       workspace.as_of_date,
@@ -424,6 +453,7 @@ export function usePerformanceRiskContract({
       period,
       detailBasis,
       benchmark: workspace.benchmark_code ?? undefined,
+      ...riskWindowParams,
       asOfDate: workspace.as_of_date,
       reportingCurrency: workspace.portfolio.base_currency,
       attributionType: selectedAttributionType,
@@ -455,6 +485,7 @@ export function usePerformanceRiskContract({
     detailBasis,
     isDetailsPending,
     period,
+    riskWindowParams,
     selectedAttributionType,
     selectedGroupingDimension,
     workspace.as_of_date,
@@ -479,6 +510,7 @@ export function usePerformanceRiskContract({
       period,
       detailBasis,
       benchmark: workspaceRef.current.benchmark_code ?? undefined,
+      ...getRiskWindowParams(workspaceRef.current, period),
       asOfDate: workspaceRef.current.as_of_date,
       reportingCurrency: workspaceRef.current.portfolio.base_currency,
       includeUnderwaterSeries: true,
@@ -519,6 +551,7 @@ export function usePerformanceRiskContract({
       period,
       detailBasis,
       benchmark: workspaceRef.current.benchmark_code ?? undefined,
+      ...getRiskWindowParams(workspaceRef.current, period),
       asOfDate: workspaceRef.current.as_of_date,
       reportingCurrency: workspaceRef.current.portfolio.base_currency,
       includeTimeSeries: true,
@@ -559,6 +592,15 @@ export function usePerformanceRiskContract({
     requestDrawdownDetail,
     requestRollingDetail,
   };
+}
+
+function getRiskWindowParams(workspace: WorkbenchPerformanceWorkspace, period: string) {
+  return period === "EXPLICIT"
+    ? {
+        reportStartDate: workspace.report_start_date,
+        reportEndDate: workspace.report_end_date,
+      }
+    : {};
 }
 
 function buildRiskFetchFailureDetail(error: unknown, label: string): string {

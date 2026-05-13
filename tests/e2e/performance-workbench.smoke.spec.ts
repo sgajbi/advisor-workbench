@@ -59,7 +59,7 @@ async function openPerformanceWorkbench(
 
   await expect(workbenchHeading).toBeVisible({ timeout: 30000 });
   await expect(
-    page.locator('.performance-workspace-rail').getByRole('button', { name: /^Performance Overview$/i })
+    page.locator('.performance-surface-switcher').getByRole('button', { name: /^Performance Overview$/i })
   ).toBeVisible({ timeout: 30000 });
   return { portfolioId, available: true };
 }
@@ -162,7 +162,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
 
-    const workspaceRail = page.locator('.performance-workspace-rail');
+    const workspaceRail = page.locator('.performance-surface-switcher');
     const analysisTab = workspaceRail.getByRole('button', { name: /^Performance Analysis/i });
     const evidenceTab = workspaceRail.getByRole('button', { name: /^Evidence/i });
     await expect(
@@ -277,7 +277,7 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const analysisTab = page
-      .locator('.performance-workspace-rail')
+      .locator('.performance-surface-switcher')
       .getByRole('button', { name: /^Performance Analysis/i });
     await analysisTab.click();
     await expect(analysisTab).toHaveAttribute('aria-pressed', 'true');
@@ -352,7 +352,7 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const analysisTab = page
-      .locator('.performance-workspace-rail')
+      .locator('.performance-surface-switcher')
       .getByRole('button', { name: /^Performance Analysis/i });
     await expect(analysisTab).toBeVisible();
     await analysisTab.click();
@@ -447,7 +447,7 @@ test.describe('Performance workbench smoke', () => {
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
     const evidenceTab = page
-      .locator('.performance-workspace-rail')
+      .locator('.performance-surface-switcher')
       .getByRole('button', { name: /^Evidence/i });
     await expect(evidenceTab).toBeEnabled();
     await evidenceTab.click();

@@ -177,7 +177,7 @@ describe("PerformanceWorkspaceView", () => {
       "aria-current",
       "page"
     );
-    expect(document.querySelector(".performance-workspace-rail")).toBeFalsy();
+    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(1);
     expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
     expect(
       screen.queryByText(

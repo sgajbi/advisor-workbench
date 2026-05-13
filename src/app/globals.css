@@ -6820,7 +6820,6 @@ a:hover {
   max-width: none;
 }
 
-.performance-workspace-rail,
 .performance-side-panel {
   display: grid;
   gap: 0.85rem;
@@ -15867,7 +15866,6 @@ a:hover {
   --ag-row-hover-color: #f7f9fb;
 }
 
-.app-page-shell .performance-workspace-rail,
 .app-page-shell .portfolio-screen-rail {
   border-color: #131b2e;
   border-radius: 6px;
@@ -15876,14 +15874,10 @@ a:hover {
   box-shadow: none;
 }
 
-.app-page-shell .performance-workspace-rail a,
-.app-page-shell .performance-workspace-rail button,
 .app-page-shell .portfolio-screen-rail-link {
   border-radius: 4px;
 }
 
-.app-page-shell .performance-workspace-rail a[aria-current="page"],
-.app-page-shell .performance-workspace-rail button[aria-current="page"],
 .app-page-shell .portfolio-screen-rail-link-active {
   border-left: 2px solid #fcdc9a;
   color: #fcdc9a;
