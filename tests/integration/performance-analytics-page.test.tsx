@@ -149,12 +149,9 @@ describe("PerformanceAnalyticsPage", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByText("Quick Views")).toBeInTheDocument();
-    expect(screen.getByText("Client Context")).toBeInTheDocument();
-    const railSections = Array.from(
-      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
-    ).map((node) => node.textContent?.trim());
-    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(screen.getByText("Performance Surface")).toBeInTheDocument();
+    expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
+    expect(document.querySelector(".performance-workspace-rail")).toBeFalsy();
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."

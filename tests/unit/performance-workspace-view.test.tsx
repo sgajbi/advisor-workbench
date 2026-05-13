@@ -167,9 +167,8 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(screen.getByText("Quick Views")).toBeInTheDocument();
     expect(screen.getByText("Workbench Screens")).toBeInTheDocument();
-    expect(screen.getByText("Client Context")).toBeInTheDocument();
+    expect(screen.getByText("Performance Surface")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Positions/i })).toHaveAttribute(
       "href",
       "/positions?portfolioId=PF_1001"
@@ -178,10 +177,8 @@ describe("PerformanceWorkspaceView", () => {
       "aria-current",
       "page"
     );
-    const railSections = Array.from(
-      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
-    ).map((node) => node.textContent?.trim());
-    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(document.querySelector(".performance-workspace-rail")).toBeFalsy();
+    expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
