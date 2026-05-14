@@ -9,7 +9,6 @@ import type {
 import {
   generateDpmProofPackFromRun,
   getDpmProofPack,
-  getDpmProofPackAiEvidenceInput,
   getDpmProofPackMarkdown,
   getDpmProofPackReportInput,
   requestDpmProofPackAiPmMemo,
@@ -73,14 +72,30 @@ const readyProofPack: DpmProofPackGatewayResponse = {
       rebalance_run_id: "rr_1",
       status: "READY",
       content_hash: "sha256:proof-pack",
+      decision_summary: {
+        approval_state: "SIGNATURE_PENDING",
+        business_rationale: "Portfolio positioning remains within the mandate corridor.",
+      },
       sections: [
         {
-          section: "investment_policy",
+          section_type: "mandate_alignment",
+          title: "Mandate Alignment",
+          summary: "Ready for advisor review",
           state: "READY",
           source_service: "lotus-manage",
           content_hash: "sha256:policy",
         },
+        {
+          section_type: "risk_disclosure",
+          title: "Risk Disclosure",
+          summary: "Within approved profile",
+          state: "READY",
+          source_service: "lotus-risk",
+          content_hash: "sha256:risk-section",
+        },
       ],
+      markdown_summary_ref: { ref_type: "mandate_alignment_report", ref_id: "doc_1" },
+      report_input_ref: { ref_type: "client_report", ref_id: "doc_2" },
       source_hashes: {
         risk_snapshot_1: "sha256:risk",
       },
@@ -119,14 +134,21 @@ describe("ProofPackPanel", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Evidence Packs" })).toBeInTheDocument();
-    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("ppack_1")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Evidence Pack" })).toBeInTheDocument();
+    expect(screen.getByText("Evidence Status")).toBeInTheDocument();
+    expect(screen.getByText("Approval Readiness")).toBeInTheDocument();
+    expect(screen.getByText("Signature Pending")).toBeInTheDocument();
+    expect(screen.getByText("Mandate Coverage")).toBeInTheDocument();
+    expect(screen.getAllByText("Mandate Alignment").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ready for advisor review").length).toBeGreaterThan(0);
+    expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
-    expect(screen.getByText("Investment Policy")).toBeInTheDocument();
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
+    expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Load Markdown" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Load summary" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Generate client report" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Open advisor memo" })).toBeEnabled();
   });
 
   it("prepares an evidence pack from the rebalance snapshot run", async () => {
@@ -150,7 +172,7 @@ describe("ProofPackPanel", () => {
       });
     });
     expect(screen.getByText("Evidence pack prepared.")).toBeInTheDocument();
-    expect(screen.getByText("ppack_1")).toBeInTheDocument();
+    expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
   });
 
   it("loads evidence detail and handoff payloads", async () => {
@@ -160,7 +182,6 @@ describe("ProofPackPanel", () => {
       data: { markdown: "# Proof Pack\n\nReady." },
     });
     vi.mocked(getDpmProofPackReportInput).mockResolvedValue(readyProofPack);
-    vi.mocked(getDpmProofPackAiEvidenceInput).mockResolvedValue(readyProofPack);
     vi.mocked(requestDpmProofPackAiPmMemo).mockResolvedValue({
       correlation_id: "corr-rfc40-ai-memo",
       contract_version: "v1",
@@ -190,20 +211,18 @@ describe("ProofPackPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Load evidence" }));
     await waitFor(() => expect(getDpmProofPack).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "Load Markdown" }));
+    fireEvent.click(screen.getByRole("button", { name: "Load summary" }));
     await waitFor(() => expect(getDpmProofPackMarkdown).toHaveBeenCalledWith("ppack_1"));
     expect(await screen.findByLabelText("Evidence pack summary preview")).toHaveTextContent(
       "Ready."
     );
-    fireEvent.click(screen.getByRole("button", { name: "Report Input" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate client report" }));
     await waitFor(() => expect(getDpmProofPackReportInput).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "Evidence Input" }));
-    await waitFor(() => expect(getDpmProofPackAiEvidenceInput).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "PM memo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open advisor memo" }));
     await waitFor(() =>
       expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" })
     );
-    expect(screen.getByText("PM memo Awaiting Review.")).toBeInTheDocument();
+    expect(screen.getByText("Advisor memo Awaiting Review.")).toBeInTheDocument();
   });
 
   it("renders unavailable state without claiming generated proof", () => {

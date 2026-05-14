@@ -47,6 +47,7 @@ import {
   getDpmMandateHealth,
   getDpmOutcomeReviews,
   getDpmPortfolioMemory,
+  getDpmProofPack,
   getPortfolio360,
   listDpmWaves,
 } from "@/features/workbench/api";
@@ -74,6 +75,8 @@ export type ManageWorkspaceData = {
   wavesError: string | null;
   outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null;
   outcomeReviewError: string | null;
+  proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null;
+  proofPackError: string | null;
 };
 
 export const MANAGE_MODE_DEFINITIONS: Array<{
@@ -129,8 +132,8 @@ export const MANAGE_MODE_DEFINITIONS: Array<{
     key: "proof",
     label: "Evidence",
     detail: "Decision evidence",
-    title: "Evidence Packs",
-    description: "Decision evidence prepared for review and audit.",
+    title: "Evidence Pack",
+    description: "Mandate evidence, approval readiness, and client handoff support.",
   },
 ];
 
@@ -156,12 +159,23 @@ export async function loadManageWorkspaceData(
 
   const mandate = readSettledValue(mandateResult);
   const mandateId = readDpmMandateId(mandate?.data ?? null);
+  const outcomeReviews = readSettledValue(reviewsResult);
   let mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
   if (mandateId) {
     try {
       mandateHealth = await getDpmMandateHealth(mandateId);
     } catch {
       mandateHealth = null;
+    }
+  }
+  let proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null = null;
+  let proofPackError: string | null = null;
+  const proofPackId = readDpmProofPackId(outcomeReviews?.data ?? null);
+  if (proofPackId) {
+    try {
+      proofPack = await getDpmProofPack(proofPackId);
+    } catch (error) {
+      proofPackError = error instanceof Error ? error.message : "Evidence pack endpoint unavailable.";
     }
   }
 
@@ -182,11 +196,13 @@ export async function loadManageWorkspaceData(
     ),
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
-    outcomeReviews: readSettledValue(reviewsResult),
+    outcomeReviews,
     outcomeReviewError: readSettledError(
       reviewsResult,
       "Outcome review endpoint unavailable."
     ),
+    proofPack,
+    proofPackError,
   };
 }
 
@@ -299,8 +315,8 @@ function renderManageMode(
             mandateId={mandateId}
             outcomeReviews={data.outcomeReviews}
             rebalanceSnapshot={data.portfolio.rebalance_snapshot}
-            initialProofPack={null}
-            errorMessage={null}
+            initialProofPack={data.proofPack}
+            errorMessage={data.proofPackError}
           />
         </>
       );
@@ -328,8 +344,8 @@ function renderManageMode(
           mandateId={mandateId}
           outcomeReviews={data.outcomeReviews}
           rebalanceSnapshot={data.portfolio.rebalance_snapshot}
-          initialProofPack={null}
-          errorMessage={null}
+          initialProofPack={data.proofPack}
+          errorMessage={data.proofPackError}
         />
       );
     case "overview":
@@ -688,7 +704,7 @@ function ManageContextRail({
           ["Open Construction", buildManageModeHref(portfolio.portfolio_id, "construction")],
           ["Open Portfolio Memory", buildManageModeHref(portfolio.portfolio_id, "memory")],
           ["Open Outcome Reviews", buildManageModeHref(portfolio.portfolio_id, "reviews")],
-          ["Open Evidence Packs", buildManageModeHref(portfolio.portfolio_id, "proof")],
+          ["Open Evidence Pack", buildManageModeHref(portfolio.portfolio_id, "proof")],
         ];
 
   return (
@@ -865,6 +881,26 @@ export function readDpmMandateId(data: Record<string, unknown> | null): string |
   if (mandate && typeof mandate === "object" && !Array.isArray(mandate)) {
     const mandateId = (mandate as Record<string, unknown>).mandate_id;
     return typeof mandateId === "string" && mandateId.trim().length > 0 ? mandateId : null;
+  }
+  return null;
+}
+
+export function readDpmProofPackId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  if (typeof data.proof_pack_id === "string" && data.proof_pack_id.trim().length > 0) {
+    return data.proof_pack_id;
+  }
+  const items = Array.isArray(data.items) ? data.items : [];
+  for (const item of items) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+    const proofPackId = (item as Record<string, unknown>).proof_pack_id;
+    if (typeof proofPackId === "string" && proofPackId.trim().length > 0) {
+      return proofPackId;
+    }
   }
   return null;
 }

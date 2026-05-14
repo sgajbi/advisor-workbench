@@ -181,6 +181,31 @@ describe("WorkbenchPage", () => {
       )
     ).toBe(true);
   });
+
+  it("renders the evidence pack from the linked Gateway proof pack", async () => {
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_5001" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_5001" }),
+        searchParams: Promise.resolve({ mode: "proof" }),
+      })
+    );
+
+    expect(screen.getAllByRole("heading", { name: "Evidence Pack" }).length).toBeGreaterThan(0);
+    expect(screen.getByText("Evidence Areas")).toBeInTheDocument();
+    expect(screen.getAllByText("Mandate Alignment").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ready for advisor review").length).toBeGreaterThan(0);
+    expect(screen.getByText("Signature Pending")).toBeInTheDocument();
+    expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
+    expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/proof-packs/ppack_1")
+      )
+    ).toBe(true);
+  });
 });
 
 function createManageFetch({ portfolioId }: { portfolioId: string }) {
@@ -494,6 +519,59 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
               ],
             },
           ],
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/proof-packs/ppack_1")) {
+      return jsonResponse({
+        correlation_id: "corr_proof",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:proof-pack",
+          state: "READY",
+          proof_pack_id: "ppack_1",
+          reason_codes: ["PROOF_PACK_READY"],
+          section_state_counts: { READY: 2 },
+          content_hash: "sha256:proof-pack",
+          markdown_available: true,
+          report_input_available: true,
+          ai_evidence_input_available: true,
+        },
+        data: {
+          proof_pack: {
+            proof_pack_id: "ppack_1",
+            portfolio_id: portfolioId,
+            mandate_id: "mandate_001",
+            rebalance_run_id: "run_001",
+            status: "READY",
+            content_hash: "sha256:proof-pack",
+            decision_summary: {
+              approval_state: "SIGNATURE_PENDING",
+              business_rationale: "Current positioning remains within the mandate corridor.",
+            },
+            sections: [
+              {
+                section_type: "mandate_alignment",
+                title: "Mandate Alignment",
+                summary: "Ready for advisor review",
+                state: "READY",
+                content_hash: "sha256:policy",
+              },
+              {
+                section_type: "risk_disclosure",
+                title: "Risk Disclosure",
+                summary: "Within approved profile",
+                state: "READY",
+                content_hash: "sha256:risk",
+              },
+            ],
+            markdown_summary_ref: { ref_type: "mandate_alignment_report", ref_id: "doc_1" },
+            report_input_ref: { ref_type: "client_report", ref_id: "doc_2" },
+          },
         },
       });
     }

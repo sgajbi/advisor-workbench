@@ -38,14 +38,31 @@ const proofPackResponse: DpmProofPackGatewayResponse = {
       status: "READY",
       as_of_date: "2026-05-03",
       content_hash: "sha256:proof-pack",
+      decision_summary: {
+        approval_state: "SIGNATURE_PENDING",
+        business_rationale: "Portfolio positioning remains within the mandate corridor.",
+        expected_benefit: "Improves client handoff readiness.",
+      },
       sections: [
         {
-          section: "investment_policy",
+          section_type: "mandate_alignment",
+          title: "Mandate Alignment",
+          summary: "Ready for advisor review",
           state: "READY",
           source_service: "lotus-manage",
           content_hash: "sha256:policy",
         },
+        {
+          section_type: "risk_disclosure",
+          title: "Risk Disclosure",
+          summary: "Within approved profile",
+          state: "READY",
+          source_service: "lotus-risk",
+          content_hash: "sha256:risk-section",
+        },
       ],
+      markdown_summary_ref: { ref_type: "mandate_alignment_report", ref_id: "doc_1" },
+      report_input_ref: { ref_type: "client_report", ref_id: "doc_2" },
       source_hashes: {
         risk_snapshot_1: "sha256:risk",
       },
@@ -64,14 +81,39 @@ describe("proof pack view model", () => {
     expect(model.rebalanceRunId).toBe("rr_1");
     expect(model.contentHash).toBe("sha256:proof-pack");
     expect(model.sectionStateSummary).toBe("READY: 2");
+    expect(model.evidenceStatusLabel).toBe("Available");
+    expect(model.approvalReadinessLabel).toBe("Signature Pending");
+    expect(model.mandateCoverageLabel).toBe("Complete");
+    expect(model.reportReadinessLabel).toBe("Ready");
+    expect(model.selectedEvidenceTitle).toBe("Mandate Alignment");
+    expect(model.selectedEvidenceSummary).toBe("Ready for advisor review");
+    expect(model.advisorRationale).toBe("Portfolio positioning remains within the mandate corridor.");
     expect(model.sections).toEqual([
       {
-        key: "investment_policy-0",
-        section: "investment_policy",
+        key: "section_1-0",
+        section: "section_1",
         state: "READY",
         source: "lotus-manage",
         hash: "sha256:policy",
       },
+      {
+        key: "section_2-1",
+        section: "section_2",
+        state: "READY",
+        source: "lotus-risk",
+        hash: "sha256:risk-section",
+      },
+    ]);
+    expect(model.evidenceRows[0]).toEqual({
+      key: "mandate_alignment-0",
+      area: "Mandate Alignment",
+      status: "READY",
+      finding: "Ready for advisor review",
+      action: "View details",
+    });
+    expect(model.documents.map((document) => document.label)).toEqual([
+      "Mandate Alignment Report",
+      "Client Report",
     ]);
     expect(model.sourceHashes).toEqual([
       {
@@ -126,7 +168,7 @@ describe("proof pack view model", () => {
     };
 
     expect(deriveProofPackContext(outcomeReviews, rebalanceSnapshot)).toEqual({
-      proofPackId: null,
+      proofPackId: "dpp_rfc0042_1",
       rebalanceRunId: "run_001",
       mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
     });
@@ -158,7 +200,7 @@ describe("proof pack view model", () => {
     };
 
     expect(deriveProofPackContext(outcomeReviews)).toEqual({
-      proofPackId: null,
+      proofPackId: "dpp_rfc0042_1",
       rebalanceRunId: null,
       mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
     });
