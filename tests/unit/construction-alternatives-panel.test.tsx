@@ -161,6 +161,12 @@ describe("ConstructionAlternativesPanel", () => {
     expect(screen.getAllByText("4.8%").length).toBeGreaterThan(0);
     expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Apply Selection" })).toBeEnabled();
+    expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
+      "href",
+      "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof",
+    );
+    expect(screen.queryByText("PDF Export")).not.toBeInTheDocument();
   });
 
   it("selects an alternative through Gateway without client-side decision logic", async () => {
