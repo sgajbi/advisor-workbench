@@ -225,6 +225,13 @@ export default function PmOperatingQualityPanel({
             </div>
           </div>
           {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
+          <div className="pm-quality-operation-evidence" aria-label="PM operating quality Gateway operation evidence">
+            <MetricRow label="Operation" value={model.operationEvidence.operation} />
+            <MetricRow label="Correlation" value={model.operationEvidence.correlationId} />
+            <MetricRow label="Contract" value={model.operationEvidence.contractVersion} />
+            <MetricRow label="Source Service" value={model.operationEvidence.sourceService} />
+            <MetricRow label="Upstream Status" value={model.operationEvidence.upstreamStatus} />
+          </div>
           <AnalyticsTable
             ariaLabel="PM operating quality score runs"
             variant="analysis"

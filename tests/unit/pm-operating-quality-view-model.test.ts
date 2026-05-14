@@ -172,6 +172,13 @@ describe("PM operating quality view model", () => {
     expect(model.scoreRunRows[0].score).toBe("90.00");
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
     expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");
+    expect(model.operationEvidence).toEqual({
+      operation: "Score-run evidence load",
+      correlationId: "corr-score",
+      contractVersion: "v1",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
     expect(model.fairnessSegmentRequests.map((segment) => segment.segment_id)).toEqual([
       "mandate_balanced",
       "mandate_income",
@@ -211,6 +218,13 @@ describe("PM operating quality view model", () => {
       })
     );
     expect(model.fairnessDetail.forbiddenUses).toContain("protected class inference");
+    expect(model.operationEvidence).toEqual({
+      operation: "Fairness analysis preview",
+      correlationId: "corr-fairness",
+      contractVersion: "v1",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
     expect(model.blockedActions).toEqual(["CREATE_SCORE_RUN"]);
     expect(model.fairnessSegmentRows.map((row) => row.segment)).toEqual([
       "Balanced DPM Mandates",
