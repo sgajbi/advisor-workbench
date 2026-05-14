@@ -107,12 +107,39 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("heading", { name: "PM Operating Quality" })).toBeInTheDocument();
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
+    expect(screen.getByText("Ready: 2 source-defined segments from Manage")).toBeInTheDocument();
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
     expect(screen.getByText("lotus-core:MandateTypeSegment:balanced")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();
+  });
+
+  it("explains when fairness preview is blocked by missing source-defined segments", () => {
+    render(
+      <PmOperatingQualityPanel
+        policies={policies}
+        scoreRuns={{
+          ...scoreRuns,
+          data: {
+            ...scoreRuns.data,
+            fairness_segments: [
+              {
+                segment_id: "mandate_balanced",
+                segment_type: "MANDATE_TYPE",
+                display_name: "Balanced DPM Mandates",
+                score_run_ids: ["pmq_run_001"],
+              },
+            ],
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText("Blocked: 1 source-defined segment returned")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
+    expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 
   it("previews fairness analysis through Gateway with source-defined segments only", async () => {

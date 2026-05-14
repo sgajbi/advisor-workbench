@@ -96,6 +96,8 @@ export type PmOperatingQualityPanelModel = {
   fairnessState: string;
   fairnessSpread: string;
   fairnessDetail: PmOperatingQualityFairnessDetail;
+  fairnessPreviewReadinessState: string;
+  fairnessPreviewReadiness: string;
 };
 
 export function buildPmOperatingQualityPanelModel(params: {
@@ -122,21 +124,29 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...fairnessSegmentRows.flatMap((row) => splitList(row.reasonCodes)),
   ].filter(uniqueString);
   const blockedActions = supportability?.blocked_actions ?? [];
+  const policyId = firstNonEmpty(
+    supportability?.policy_id,
+    selectedScoreRun?.policy.split(" / ")[0],
+    policyRows[0]?.policyId,
+  );
+  const policyVersion = firstNonEmpty(
+    supportability?.policy_version,
+    selectedScoreRun?.policy.split(" / ")[1],
+    policyRows[0]?.policyVersion,
+  );
+  const fairnessPreviewReadiness = resolveFairnessPreviewReadiness({
+    policyId,
+    policyVersion,
+    segmentCount: fairnessSegmentRequests.length,
+    blockedActions,
+  });
 
   return {
     state: resolvePanelState(supportabilityState, policyRows.length, scoreRunRows.length, Boolean(primary)),
     supportabilityState,
     authority: supportability?.authority ?? "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
-    policyId: firstNonEmpty(
-      supportability?.policy_id,
-      selectedScoreRun?.policy.split(" / ")[0],
-      policyRows[0]?.policyId,
-    ),
-    policyVersion: firstNonEmpty(
-      supportability?.policy_version,
-      selectedScoreRun?.policy.split(" / ")[1],
-      policyRows[0]?.policyVersion,
-    ),
+    policyId,
+    policyVersion,
     scoreRunId: firstNonEmpty(supportability?.score_run_id, selectedScoreRun?.scoreRunId),
     fairnessAnalysisId: firstNonEmpty(
       supportability?.fairness_analysis_id,
@@ -156,6 +166,8 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessState: normalizeState(readString(fairnessAnalysis, "state")),
     fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
     fairnessDetail: buildFairnessDetail(fairnessAnalysis),
+    fairnessPreviewReadinessState: fairnessPreviewReadiness.state,
+    fairnessPreviewReadiness: fairnessPreviewReadiness.detail,
   };
 }
 
@@ -322,6 +334,42 @@ function buildFairnessDetail(
     forbiddenUses: formatForbiddenUses(fairnessAnalysis.forbidden_uses),
     reasonCodes: formatList(fairnessAnalysis.reason_codes),
   };
+}
+
+function resolveFairnessPreviewReadiness(params: {
+  policyId: string;
+  policyVersion: string;
+  segmentCount: number;
+  blockedActions: string[];
+}): { state: string; detail: string } {
+  if (params.blockedActions.includes("PREVIEW_FAIRNESS_ANALYSIS")) {
+    return {
+      state: "BLOCKED",
+      detail: "Blocked by Manage action register",
+    };
+  }
+  if (params.policyId === "N/A" || params.policyVersion === "N/A") {
+    return {
+      state: "BLOCKED",
+      detail: "Blocked until Manage returns policy id and version",
+    };
+  }
+  if (params.segmentCount < 2) {
+    return {
+      state: "BLOCKED",
+      detail: `Blocked: ${params.segmentCount} source-defined ${formatSegmentCountNoun(
+        params.segmentCount
+      )} returned`,
+    };
+  }
+  return {
+    state: "READY",
+    detail: `Ready: ${params.segmentCount} source-defined segments from Manage`,
+  };
+}
+
+function formatSegmentCountNoun(count: number): string {
+  return count === 1 ? "segment" : "segments";
 }
 
 function resolvePanelState(

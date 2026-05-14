@@ -114,7 +114,11 @@ export default function PmOperatingQualityPanel({
   }
 
   async function previewFairnessAnalysis() {
-    if (pendingFairnessAction || model.fairnessSegmentRequests.length < 2) {
+    if (pendingFairnessAction) {
+      return;
+    }
+    if (model.fairnessPreviewReadinessState !== "READY") {
+      setActionError(model.fairnessPreviewReadiness);
       return;
     }
     if (model.policyId === "N/A" || model.policyVersion === "N/A") {
@@ -209,8 +213,7 @@ export default function PmOperatingQualityPanel({
                 onClick={previewFairnessAnalysis}
                 disabled={
                   pendingFairnessAction ||
-                  model.blockedActions.includes("PREVIEW_FAIRNESS_ANALYSIS") ||
-                  model.fairnessSegmentRequests.length < 2
+                  model.fairnessPreviewReadinessState !== "READY"
                 }
               >
                 {pendingFairnessAction ? "Checking" : "Preview Fairness"}
@@ -256,6 +259,7 @@ export default function PmOperatingQualityPanel({
           </Text>
           <div className="pm-quality-governance-stack">
             <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
+            <MetricRow label="Preview Readiness" value={model.fairnessPreviewReadiness} />
             <MetricRow label="Source Segments" value={String(model.fairnessSegmentRequests.length)} />
             <MetricRow label="Fairness Spread" value={model.fairnessSpread} />
             <MetricRow

@@ -174,6 +174,8 @@ describe("PM operating quality view model", () => {
       "mandate_balanced",
       "mandate_income",
     ]);
+    expect(model.fairnessPreviewReadinessState).toBe("READY");
+    expect(model.fairnessPreviewReadiness).toBe("Ready: 2 source-defined segments from Manage");
     expect(model.sourceSegmentRows[0]).toEqual(
       expect.objectContaining({
         segment: "Balanced DPM Mandates",
@@ -221,5 +223,30 @@ describe("PM operating quality view model", () => {
     expect(model.fairnessSegmentRows[0].minimumScore).toBe("89.00");
     expect(model.fairnessSegmentRows[0].maximumScore).toBe("91.00");
     expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
+  });
+
+  it("blocks fairness preview readiness when Manage returns too few source-defined segments", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns: {
+        ...scoreRuns,
+        data: {
+          ...scoreRuns.data,
+          fairness_segments: [
+            {
+              segment_id: "mandate_balanced",
+              segment_type: "MANDATE_TYPE",
+              display_name: "Balanced DPM Mandates",
+              score_run_ids: ["pmq_run_001"],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.fairnessPreviewReadinessState).toBe("BLOCKED");
+    expect(model.fairnessPreviewReadiness).toBe(
+      "Blocked: 1 source-defined segment returned"
+    );
   });
 });
