@@ -17,6 +17,8 @@ import {
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
   getDpmPortfolioMemory,
+  listDpmPmOperatingQualityPolicies,
+  listDpmPmOperatingQualityScoreRuns,
   getDpmConstructionAlternativeSet,
   getDpmProofPack,
   getDpmProofPackAiEvidenceInput,
@@ -31,6 +33,8 @@ import {
   listDpmCampaignDefinitions,
   listDpmWaves,
   previewDpmWave,
+  previewDpmPmOperatingQualityFairnessAnalysis,
+  previewDpmPmOperatingQualityScoreRun,
   requestDpmExceptionSummary,
   requestDpmOperationsHandoffSummary,
   requestDpmOutcomeReviewAiNarrative,
@@ -2626,6 +2630,85 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("construction-selection");
     expect(metricEventsJson).not.toContain("cas_1");
     expect(metricEventsJson).not.toContain("alt_1");
+  });
+
+  it("uses Gateway PM operating quality routes including fairness preview", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-pmq",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+              state: "READY",
+              reason_codes: ["PM_QUALITY_READY"],
+              blocked_actions: [],
+              policy_id: "pmq_sg_dpm",
+              policy_version: "2026.05",
+              score_run_id: "pmq_run_001",
+              fairness_analysis_id: "pmq_fair_001",
+            },
+            data: { ok: true },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await listDpmPmOperatingQualityPolicies({ policyId: "pmq_sg_dpm", limit: 3 });
+    await listDpmPmOperatingQualityScoreRuns({ bookId: "BOOK_SG_BALANCED_DPM", limit: 4 });
+    await previewDpmPmOperatingQualityScoreRun({
+      pmId: "PM_SG_DPM_001",
+      policyId: "pmq_sg_dpm",
+      policyVersion: "2026.05",
+    });
+    await previewDpmPmOperatingQualityFairnessAnalysis({
+      policyId: "pmq_sg_dpm",
+      policyVersion: "2026.05",
+      segments: [
+        {
+          segment_id: "mandate_balanced",
+          segment_type: "MANDATE_TYPE",
+          display_name: "Balanced DPM Mandates",
+          score_run_ids: ["pmq_run_001"],
+        },
+        {
+          segment_id: "mandate_income",
+          segment_type: "MANDATE_TYPE",
+          display_name: "Income DPM Mandates",
+          score_run_ids: ["pmq_run_002"],
+        },
+      ],
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+      "/dpm/command-center/pm-operating-quality/policies?limit=3&offset=0&policy_id=pmq_sg_dpm"
+    );
+    expect(fetchMock.mock.calls[1][0].toString()).toContain(
+      "/dpm/command-center/pm-operating-quality/score-runs?book_id=BOOK_SG_BALANCED_DPM"
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/preview`
+    );
+    expect(fetchMock.mock.calls[3][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
+    );
+    expect(fetchMock.mock.calls[3][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const fairnessBody = JSON.parse(fetchMock.mock.calls[3][1].body);
+    expect(fairnessBody.body.policy_id).toBe("pmq_sg_dpm");
+    expect(fairnessBody.body.segments).toHaveLength(2);
+    expect(fairnessBody.body.minimum_segment_score_run_count).toBeUndefined();
+    expect(fairnessBody.body.maximum_average_score_spread).toBeUndefined();
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("pm-operating-quality-fairness-preview");
+    expect(metricEventsJson).not.toContain("pmq_run_001");
+    expect(metricEventsJson).not.toContain("pmq_fair_001");
   });
 
   it("generates and loads DPM proof packs through Gateway endpoints", async () => {

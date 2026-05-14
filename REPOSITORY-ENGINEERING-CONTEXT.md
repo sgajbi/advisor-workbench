@@ -51,7 +51,7 @@ Current repository posture:
 7. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
    Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
-   reviews, and proof. The route file remains orchestration-only; Manage workspace composition,
+   reviews, proof, and quality. The route file remains orchestration-only; Manage workspace composition,
    mode navigation, and data fan-out live under `src/features/workbench/manage-workspace.tsx`.
 8. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
    Mandate Health surface from the RFC-0038 DPM command-center contracts exposed through Gateway
@@ -89,7 +89,15 @@ Current repository posture:
     prompt construction. Manage surfaces also preserve Gateway-provided action-register
     supportability from the portfolio overview `rebalance_snapshot`; missing supportability is
     shown as unknown/N/A rather than as verified zero activity.
-14. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+14. Manage `mode=quality` renders the PM operating quality governance surface from Gateway
+    `/api/v1/dpm/command-center/pm-operating-quality/policies*`,
+    `/score-runs*`, and `/fairness-analyses/preview`. Workbench renders Manage-owned policy,
+    score-run, source-defined segment, fairness-analysis preview, source refs, reason-code,
+    supportability, and forbidden-use posture without calculating PM scores, discovering segments,
+    calculating segment averages or governed spreads, inferring protected classes, ranking PMs,
+    creating HR/compensation/conduct decisions, approving trades, contacting clients, routing
+    orders, or claiming OMS/execution truth.
+15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
 
@@ -215,6 +223,12 @@ Important validation expectations:
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,
     response bodies, and screen content must never be emitted as metric labels.
+16. DPM PM operating quality policy, score-run, score-run preview, create, and fairness-analysis
+    preview operations are Workbench gateway-only operations. Observability labels must remain
+    bounded to route, panel, operation, freshness, supportability, status class, and error category;
+    policy ids, policy versions, score-run ids, fairness-analysis ids, segment ids, PM ids, book ids,
+    source refs, content hashes, request bodies, response bodies, score values, and screen content
+    must never be emitted as metric labels.
 
 ### Visual Review Gate
 

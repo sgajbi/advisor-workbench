@@ -22,6 +22,7 @@ import ManageMandateHealth from "@/features/workbench/components/manage-mandate-
 import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
 import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
+import PmOperatingQualityPanel from "@/features/workbench/components/pm-operating-quality-panel";
 import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
@@ -49,6 +50,8 @@ import {
   getDpmPortfolioMemory,
   getDpmProofPack,
   getPortfolio360,
+  listDpmPmOperatingQualityPolicies,
+  listDpmPmOperatingQualityScoreRuns,
   listDpmCampaignDefinitions,
   listDpmWaves,
 } from "@/features/workbench/api";
@@ -60,6 +63,7 @@ export type ManageMode =
   | "waves"
   | "construction"
   | "memory"
+  | "quality"
   | "reviews"
   | "proof";
 
@@ -72,6 +76,10 @@ export type ManageWorkspaceData = {
   commandCenterError: string | null;
   portfolioMemory: Awaited<ReturnType<typeof getDpmPortfolioMemory>> | null;
   portfolioMemoryError: string | null;
+  pmOperatingQualityPolicies: Awaited<ReturnType<typeof listDpmPmOperatingQualityPolicies>> | null;
+  pmOperatingQualityPoliciesError: string | null;
+  pmOperatingQualityScoreRuns: Awaited<ReturnType<typeof listDpmPmOperatingQualityScoreRuns>> | null;
+  pmOperatingQualityScoreRunsError: string | null;
   waves: Awaited<ReturnType<typeof listDpmWaves>> | null;
   wavesError: string | null;
   campaignDefinitions: Awaited<ReturnType<typeof listDpmCampaignDefinitions>> | null;
@@ -125,6 +133,13 @@ export const MANAGE_MODE_DEFINITIONS: Array<{
     description: "Portfolio decision memory and operating history.",
   },
   {
+    key: "quality",
+    label: "PM Quality",
+    detail: "Operating quality",
+    title: "PM Operating Quality",
+    description: "Governance review of Manage-owned PM quality policy and evidence.",
+  },
+  {
     key: "reviews",
     label: "Reviews",
     detail: "Outcome review",
@@ -151,6 +166,8 @@ export async function loadManageWorkspaceData(
     memoryResult,
     wavesResult,
     campaignDefinitionsResult,
+    pmQualityPoliciesResult,
+    pmQualityScoreRunsResult,
     reviewsResult,
   ] = await Promise.allSettled([
     getDpmCommandCenter({ limit: 25 }),
@@ -159,6 +176,8 @@ export async function loadManageWorkspaceData(
     getDpmPortfolioMemory({ portfolioId, limit: 100 }),
     listDpmWaves({ triggerType: "EXPLICIT_PORTFOLIO_LIST", limit: 10 }),
     listDpmCampaignDefinitions({ campaignStatus: "ACTIVE", limit: 10 }),
+    listDpmPmOperatingQualityPolicies({ limit: 10 }),
+    listDpmPmOperatingQualityScoreRuns({ limit: 10 }),
     getDpmOutcomeReviews({ portfolioId, limit: 10 }),
   ]);
 
@@ -198,6 +217,16 @@ export async function loadManageWorkspaceData(
     portfolioMemoryError: readSettledError(
       memoryResult,
       "Portfolio-memory endpoint unavailable."
+    ),
+    pmOperatingQualityPolicies: readSettledValue(pmQualityPoliciesResult),
+    pmOperatingQualityPoliciesError: readSettledError(
+      pmQualityPoliciesResult,
+      "PM operating quality policy endpoint unavailable."
+    ),
+    pmOperatingQualityScoreRuns: readSettledValue(pmQualityScoreRunsResult),
+    pmOperatingQualityScoreRunsError: readSettledError(
+      pmQualityScoreRunsResult,
+      "PM operating quality score-run endpoint unavailable."
     ),
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
@@ -341,6 +370,15 @@ function renderManageMode(
           errorMessage={data.portfolioMemoryError}
         />
       );
+    case "quality":
+      return (
+        <PmOperatingQualityPanel
+          policies={data.pmOperatingQualityPolicies}
+          scoreRuns={data.pmOperatingQualityScoreRuns}
+          policiesError={data.pmOperatingQualityPoliciesError}
+          scoreRunsError={data.pmOperatingQualityScoreRunsError}
+        />
+      );
     case "reviews":
       return (
         <OutcomeReviewPanel
@@ -377,6 +415,8 @@ function ManageOverview({ data }: { data: ManageWorkspaceData }) {
   });
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
+  const pmQualityPolicyCount = data.pmOperatingQualityPolicies?.supportability.count ?? 0;
+  const pmQualityScoreRunCount = data.pmOperatingQualityScoreRuns?.supportability.count ?? 0;
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
   const activeExceptionCount = parseCount(commandModel.activeExceptionCount);
@@ -390,6 +430,7 @@ function ManageOverview({ data }: { data: ManageWorkspaceData }) {
     data.commandCenterError ? "Mandate readiness" : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
+    data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError ? "PM operating quality" : null,
     data.outcomeReviewError ? "Outcome reviews" : null,
   ].filter((surface): surface is string => Boolean(surface));
   const mandateReadiness =
@@ -493,6 +534,17 @@ function ManageOverview({ data }: { data: ManageWorkspaceData }) {
       detail: "Recent decisions and operating events are captured.",
       href: buildManageModeHref(portfolioId, "memory"),
       action: "Open Portfolio Memory",
+    },
+    {
+      key: "quality",
+      title: "PM Operating Quality",
+      icon: "manage_accounts",
+      state: data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError ? "Needs attention" : "Available",
+      tone: data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError ? ("warn" as const) : ("success" as const),
+      metric: `${pmQualityScoreRunCount || pmQualityPolicyCount} evidence rows`,
+      detail: "Review Manage-owned PM quality policy, score-run, and fairness preview posture.",
+      href: buildManageModeHref(portfolioId, "quality"),
+      action: "Open PM Quality",
     },
     {
       key: "reviews",
@@ -715,6 +767,7 @@ function ManageContextRail({
           ["Open Rebalance", buildManageModeHref(portfolio.portfolio_id, "waves")],
           ["Open Construction", buildManageModeHref(portfolio.portfolio_id, "construction")],
           ["Open Portfolio Memory", buildManageModeHref(portfolio.portfolio_id, "memory")],
+          ["Open PM Quality", buildManageModeHref(portfolio.portfolio_id, "quality")],
           ["Open Outcome Reviews", buildManageModeHref(portfolio.portfolio_id, "reviews")],
           ["Open Evidence Pack", buildManageModeHref(portfolio.portfolio_id, "proof")],
         ];
