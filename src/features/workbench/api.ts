@@ -1591,6 +1591,55 @@ export async function createDpmPmOperatingQualityScoreRun(params: {
   );
 }
 
+export type DpmPmOperatingQualityFairnessSegmentRequest = {
+  segment_id: string;
+  segment_type: string;
+  display_name: string;
+  score_run_ids: string[];
+  source_refs?: Array<Record<string, unknown>>;
+};
+
+export async function previewDpmPmOperatingQualityFairnessAnalysis(params: {
+  policyId: string;
+  policyVersion: string;
+  asOfDate?: string;
+  actorId?: string;
+  segments: DpmPmOperatingQualityFairnessSegmentRequest[];
+  minimumSegmentScoreRunCount?: number;
+  maximumAverageScoreSpread?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const body: Record<string, unknown> = {
+    policy_id: params.policyId,
+    policy_version: params.policyVersion,
+    as_of_date: params.asOfDate ?? dpmContext.commandCenterAsOfDate,
+    actor_id: params.actorId ?? "workbench-pm-operating-quality-operator",
+    segments: params.segments,
+  };
+  if (typeof params.minimumSegmentScoreRunCount === "number") {
+    body.minimum_segment_score_run_count = params.minimumSegmentScoreRunCount;
+  }
+  if (params.maximumAverageScoreSpread) {
+    body.maximum_average_score_spread = params.maximumAverageScoreSpread;
+  }
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.fairness-analyses.preview",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          "/dpm/command-center/pm-operating-quality/fairness-analyses/preview"
+        ),
+        "preview DPM PM operating quality fairness analysis",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
+          body: JSON.stringify({ body }),
+        }
+      )
+  );
+}
+
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];

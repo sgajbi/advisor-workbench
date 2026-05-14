@@ -31,6 +31,24 @@ export type PmOperatingQualityScoreRunRow = {
   contentHash: string;
 };
 
+export type PmOperatingQualityFairnessSegmentRequest = {
+  segment_id: string;
+  segment_type: string;
+  display_name: string;
+  score_run_ids: string[];
+  source_refs?: Array<Record<string, unknown>>;
+};
+
+export type PmOperatingQualityFairnessSegmentRow = {
+  key: string;
+  segment: string;
+  segmentType: string;
+  state: string;
+  scoreRunCount: string;
+  averageScore: string;
+  reasonCodes: string;
+};
+
 export type PmOperatingQualityPanelModel = {
   state: PmOperatingQualityPanelState;
   supportabilityState: string;
@@ -38,21 +56,28 @@ export type PmOperatingQualityPanelModel = {
   policyId: string;
   policyVersion: string;
   scoreRunId: string;
+  fairnessAnalysisId: string;
   count: string;
   reasonCodes: string[];
   blockedActions: string[];
   policyRows: PmOperatingQualityPolicyRow[];
   scoreRunRows: PmOperatingQualityScoreRunRow[];
+  fairnessSegmentRequests: PmOperatingQualityFairnessSegmentRequest[];
+  fairnessSegmentRows: PmOperatingQualityFairnessSegmentRow[];
   selectedScoreRun: PmOperatingQualityScoreRunRow | null;
+  fairnessAsOfDate: string;
   forbiddenUsePosture: string;
+  fairnessState: string;
+  fairnessSpread: string;
 };
 
 export function buildPmOperatingQualityPanelModel(params: {
   policies: DpmPmOperatingQualityGatewayResponse | null;
   scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
 }): PmOperatingQualityPanelModel {
-  const primary = params.preview ?? params.scoreRuns ?? params.policies;
+  const primary = params.fairnessPreview ?? params.preview ?? params.scoreRuns ?? params.policies;
   const supportability = primary?.supportability;
   const supportabilityState = normalizeState(supportability?.state);
   const policyRows = buildPolicyRows(params.policies);
@@ -60,10 +85,13 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...buildScoreRunRows(params.preview),
     ...buildScoreRunRows(params.scoreRuns),
   ].filter(uniqueByScoreRunId);
+  const fairnessAnalysis = readFairnessAnalysis(params.fairnessPreview);
+  const fairnessSegmentRows = buildFairnessSegmentRows(fairnessAnalysis);
   const selectedScoreRun = scoreRunRows[0] ?? null;
   const reasonCodes = [
     ...(supportability?.reason_codes ?? []),
     ...scoreRunRows.flatMap((row) => splitList(row.reasonCodes)),
+    ...fairnessSegmentRows.flatMap((row) => splitList(row.reasonCodes)),
   ].filter(uniqueString);
   const blockedActions = supportability?.blocked_actions ?? [];
 
@@ -82,13 +110,22 @@ export function buildPmOperatingQualityPanelModel(params: {
       policyRows[0]?.policyVersion,
     ),
     scoreRunId: firstNonEmpty(supportability?.score_run_id, selectedScoreRun?.scoreRunId),
+    fairnessAnalysisId: firstNonEmpty(
+      supportability?.fairness_analysis_id,
+      readString(fairnessAnalysis, "fairness_analysis_id"),
+    ),
     count: formatCount(supportability?.count, scoreRunRows.length),
     reasonCodes,
     blockedActions,
     policyRows,
     scoreRunRows,
+    fairnessSegmentRequests: extractFairnessSegmentRequests(params.scoreRuns),
+    fairnessSegmentRows,
     selectedScoreRun,
+    fairnessAsOfDate: firstNonEmpty(selectedScoreRun?.asOfDate),
     forbiddenUsePosture: summarizeForbiddenUses(scoreRunRows),
+    fairnessState: normalizeState(readString(fairnessAnalysis, "state")),
+    fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
   };
 }
 
@@ -164,6 +201,58 @@ function buildScoreRunRows(
   });
 }
 
+function extractFairnessSegmentRequests(
+  response: DpmPmOperatingQualityGatewayResponse | null
+): PmOperatingQualityFairnessSegmentRequest[] {
+  if (!response) {
+    return [];
+  }
+  const data = asRecord(response.data);
+  const records = [
+    ...extractRecords(data.fairness_segments),
+    ...extractRecords(data.segments),
+    ...extractRecords(asRecord(data.score_run).fairness_segments),
+  ];
+  return records.map((record) => {
+    const sourceRefs = extractRecords(record.source_refs);
+    return {
+      segment_id: readString(record, "segment_id"),
+      segment_type: readString(record, "segment_type"),
+      display_name: readString(record, "display_name"),
+      score_run_ids: extractStringArray(record.score_run_ids),
+      ...(sourceRefs.length > 0 ? { source_refs: sourceRefs } : {}),
+    };
+  }).filter((segment) =>
+    segment.segment_id &&
+    segment.segment_type &&
+    segment.display_name &&
+    segment.score_run_ids.length > 0
+  );
+}
+
+function readFairnessAnalysis(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined
+): Record<string, unknown> {
+  return asRecord(asRecord(response?.data).fairness_analysis);
+}
+
+function buildFairnessSegmentRows(
+  fairnessAnalysis: Record<string, unknown>
+): PmOperatingQualityFairnessSegmentRow[] {
+  return extractRecords(fairnessAnalysis.segment_results).map((record, index) => {
+    const segmentId = readString(record, "segment_id") || `segment-${index + 1}`;
+    return {
+      key: `${segmentId}-${index}`,
+      segment: readString(record, "display_name") || segmentId,
+      segmentType: readString(record, "segment_type") || "N/A",
+      state: readString(record, "state") || "UNKNOWN",
+      scoreRunCount: readString(record, "score_run_count") || "0",
+      averageScore: readString(record, "average_score") || "N/A",
+      reasonCodes: formatList(record.reason_codes),
+    };
+  });
+}
+
 function resolvePanelState(
   supportabilityState: string,
   policyCount: number,
@@ -177,7 +266,14 @@ function resolvePanelState(
   if (normalized.includes("BLOCKED") || normalized.includes("UNSUPPORTED")) {
     return "blocked";
   }
-  if (normalized.includes("PARTIAL") || normalized.includes("DEGRADED") || normalized.includes("WATCH")) {
+  if (
+    normalized.includes("PARTIAL") ||
+    normalized.includes("DEGRADED") ||
+    normalized.includes("WATCH") ||
+    normalized.includes("PENDING") ||
+    normalized.includes("REVIEW") ||
+    normalized.includes("BREACH")
+  ) {
     return "partial";
   }
   if (normalized.includes("EMPTY") || (policyCount === 0 && scoreRunCount === 0)) {

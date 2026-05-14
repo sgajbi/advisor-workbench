@@ -11,7 +11,10 @@ import {
   SemanticBadge,
   Text,
 } from "@/design-system";
-import { previewDpmPmOperatingQualityScoreRun } from "@/features/workbench/api";
+import {
+  previewDpmPmOperatingQualityFairnessAnalysis,
+  previewDpmPmOperatingQualityScoreRun,
+} from "@/features/workbench/api";
 import {
   buildPmOperatingQualityPanelModel,
   type PmOperatingQualityPanelState,
@@ -67,13 +70,17 @@ export default function PmOperatingQualityPanel({
 }: Props) {
   const [previewResponse, setPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [fairnessPreviewResponse, setFairnessPreviewResponse] =
+    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
+  const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const model = buildPmOperatingQualityPanelModel({
     policies,
     scoreRuns,
     preview: previewResponse,
+    fairnessPreview: fairnessPreviewResponse,
   });
   const stateCopy = statePanelCopy(model.state);
   const loadError = policiesError || scoreRunsError;
@@ -106,6 +113,35 @@ export default function PmOperatingQualityPanel({
     }
   }
 
+  async function previewFairnessAnalysis() {
+    if (pendingFairnessAction || model.fairnessSegmentRequests.length < 2) {
+      return;
+    }
+    if (model.policyId === "N/A" || model.policyVersion === "N/A") {
+      setActionError("PM operating quality policy id/version is required for fairness preview.");
+      return;
+    }
+    setPendingFairnessAction(true);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const response = await previewDpmPmOperatingQualityFairnessAnalysis({
+        policyId: model.policyId,
+        policyVersion: model.policyVersion,
+        asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
+        segments: model.fairnessSegmentRequests,
+      });
+      setFairnessPreviewResponse(response);
+      setActionMessage("Fairness preview returned Manage segment evidence.");
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "PM operating quality fairness preview failed"
+      );
+    } finally {
+      setPendingFairnessAction(false);
+    }
+  }
+
   return (
     <SectionBlock
       title="PM Operating Quality"
@@ -117,6 +153,11 @@ export default function PmOperatingQualityPanel({
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
           <SemanticBadge>Manage authority</SemanticBadge>
+          {model.fairnessAnalysisId !== "N/A" ? (
+            <SemanticBadge tone={toneForState(model.fairnessState)}>
+              Fairness {businessStateLabel(model.fairnessState)}
+            </SemanticBadge>
+          ) : null}
         </div>
       }
     >
@@ -132,6 +173,7 @@ export default function PmOperatingQualityPanel({
       <div className="portfolio-memory-status-strip">
         <MetricRow label="Policy" value={`${model.policyId} / ${model.policyVersion}`} />
         <MetricRow label="Latest Score Run" value={model.scoreRunId} />
+        <MetricRow label="Fairness Preview" value={model.fairnessAnalysisId} />
         <MetricRow label="Returned Rows" value={model.count} />
         <MetricRow label="Authority" value={model.authority} />
       </div>
@@ -161,6 +203,17 @@ export default function PmOperatingQualityPanel({
             >
               {pendingAction ? "Previewing" : "Preview"}
             </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={previewFairnessAnalysis}
+              disabled={
+                pendingFairnessAction ||
+                model.blockedActions.includes("PREVIEW_FAIRNESS_ANALYSIS") ||
+                model.fairnessSegmentRequests.length < 2
+              }
+            >
+              {pendingFairnessAction ? "Checking" : "Preview Fairness"}
+            </ActionButton>
           </div>
           {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
           <AnalyticsTable
@@ -173,7 +226,7 @@ export default function PmOperatingQualityPanel({
               { key: "policy", label: "Policy" },
               { key: "state", label: "State" },
               { key: "score", label: "Score" },
-              { key: "evidence", label: "Evidence" },
+              { key: "reason", label: "Reason" },
             ]}
             rows={model.scoreRunRows.map((row) => ({
               key: row.key,
@@ -185,7 +238,7 @@ export default function PmOperatingQualityPanel({
                   {businessStateLabel(row.state)}
                 </SemanticBadge>,
                 row.score,
-                row.contentHash,
+                row.reasonCodes,
               ],
             }))}
             emptyState={{
@@ -201,6 +254,8 @@ export default function PmOperatingQualityPanel({
           </Text>
           <div className="portfolio-memory-action-stack">
             <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
+            <MetricRow label="Source Segments" value={String(model.fairnessSegmentRequests.length)} />
+            <MetricRow label="Fairness Spread" value={model.fairnessSpread} />
             <MetricRow
               label="Blocked Actions"
               value={model.blockedActions.length ? model.blockedActions.join(", ") : "None"}
@@ -213,6 +268,40 @@ export default function PmOperatingQualityPanel({
           </div>
         </aside>
       </div>
+
+      <AnalyticsTable
+        ariaLabel="PM operating quality fairness segments"
+        variant="analysis"
+        density="compact"
+        columns={[
+          { key: "segment", label: "Segment" },
+          { key: "type", label: "Type" },
+          { key: "state", label: "State" },
+          { key: "count", label: "Score Runs" },
+          { key: "average", label: "Average Score" },
+          { key: "reason", label: "Reason" },
+        ]}
+        rows={model.fairnessSegmentRows.map((row) => ({
+          key: row.key,
+          cells: [
+            <strong key={`${row.key}-segment`}>{row.segment}</strong>,
+            row.segmentType,
+            <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
+              {businessStateLabel(row.state)}
+            </SemanticBadge>,
+            row.scoreRunCount,
+            row.averageScore,
+            row.reasonCodes,
+          ],
+        }))}
+        emptyState={{
+          title: "No fairness segment preview returned",
+          body:
+            model.fairnessSegmentRequests.length >= 2
+              ? "Run a Manage fairness preview to inspect source-defined segment posture."
+              : "Manage has not returned source-defined segment assignments for a fairness preview.",
+        }}
+      />
 
       <AnalyticsTable
         ariaLabel="PM operating quality policies"

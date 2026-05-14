@@ -370,6 +370,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.pm-operating-quality.score-runs.create",
   },
   {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-fairness-preview",
+    operation: "dpm.pm-operating-quality.fairness-analyses.preview",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

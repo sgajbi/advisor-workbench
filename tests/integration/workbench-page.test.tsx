@@ -130,6 +130,35 @@ describe("WorkbenchPage", () => {
     expect(screen.queryByRole("heading", { name: "Post-Trade Outcome Review" })).not.toBeInTheDocument();
   });
 
+  it("renders PM operating quality as a Gateway-backed manage surface", async () => {
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_2501" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_2501" }),
+        searchParams: Promise.resolve({ mode: "quality" }),
+      })
+    );
+
+    expect(screen.getAllByRole("heading", { name: "PM Operating Quality" }).length).toBeGreaterThan(0);
+    expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
+    expect(screen.getByText("Governance Posture")).toBeInTheDocument();
+    expect(screen.getByLabelText("PM operating quality fairness segments")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
+    expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/pm-operating-quality/policies?")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/pm-operating-quality/score-runs?")
+      )
+    ).toBe(true);
+  });
+
   it("renders wave lifecycle and proof-pack evidence as a dedicated manage surface", async () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_3001" }));
     vi.stubGlobal("fetch", fetchMock);
@@ -446,6 +475,102 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           blocked_actions: [],
         },
         data: { events: [] },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/pm-operating-quality/policies?")) {
+      return jsonResponse({
+        correlation_id: "corr_pmq_policy",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+          state: "READY",
+          reason_codes: ["PM_QUALITY_POLICY_APPROVED"],
+          blocked_actions: [],
+          policy_id: "pmq_sg_dpm",
+          policy_version: "2026.05",
+          count: 1,
+        },
+        data: {
+          policies: [
+            {
+              policy_id: "pmq_sg_dpm",
+              policy_version: "2026.05",
+              enabled: true,
+              as_of_date: "2026-05-13",
+              state: "READY",
+              reason_codes: ["PM_QUALITY_POLICY_APPROVED"],
+            },
+          ],
+          count: 1,
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/pm-operating-quality/score-runs?")) {
+      return jsonResponse({
+        correlation_id: "corr_pmq_scores",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+          state: "READY",
+          reason_codes: ["PM_QUALITY_READY"],
+          blocked_actions: [],
+          policy_id: "pmq_sg_dpm",
+          policy_version: "2026.05",
+          count: 2,
+        },
+        data: {
+          score_runs: [
+            {
+              score_run_id: "pmq_run_001",
+              pm_id: "PM_SG_001",
+              book_id: "PM_BOOK_SG_BALANCED",
+              policy_id: "pmq_sg_dpm",
+              policy_version: "2026.05",
+              state: "READY",
+              score: "90.00",
+              content_hash: "sha256:pm-quality",
+              forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+              reason_codes: ["PM_QUALITY_READY"],
+            },
+            {
+              score_run_id: "pmq_run_002",
+              pm_id: "PM_SG_002",
+              book_id: "PM_BOOK_SG_BALANCED",
+              policy_id: "pmq_sg_dpm",
+              policy_version: "2026.05",
+              state: "READY",
+              score: "59.00",
+              content_hash: "sha256:pm-quality-2",
+              forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+              reason_codes: ["PM_QUALITY_READY"],
+            },
+          ],
+          fairness_segments: [
+            {
+              segment_id: "mandate_balanced",
+              segment_type: "MANDATE_TYPE",
+              display_name: "Balanced DPM Mandates",
+              score_run_ids: ["pmq_run_001"],
+              source_refs: [{ source_system: "lotus-core", source_type: "MandateTypeSegment", source_id: "balanced" }],
+            },
+            {
+              segment_id: "mandate_income",
+              segment_type: "MANDATE_TYPE",
+              display_name: "Income DPM Mandates",
+              score_run_ids: ["pmq_run_002"],
+              source_refs: [{ source_system: "lotus-core", source_type: "MandateTypeSegment", source_id: "income" }],
+            },
+          ],
+          count: 2,
+        },
       });
     }
 
