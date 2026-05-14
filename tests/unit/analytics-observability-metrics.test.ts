@@ -444,6 +444,46 @@ describe("analytics UI observability metrics", () => {
         "wave-operations-handoff-summary",
         "dpm.waves.operations-handoff-summary",
       ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-policy-list",
+        "dpm.pm-operating-quality.policies.list",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-policy-detail",
+        "dpm.pm-operating-quality.policies.get",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-policy-upsert",
+        "dpm.pm-operating-quality.policies.put",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-score-run-list",
+        "dpm.pm-operating-quality.score-runs.list",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-score-run-detail",
+        "dpm.pm-operating-quality.score-runs.get",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-score-run-preview",
+        "dpm.pm-operating-quality.score-runs.preview",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-score-run-create",
+        "dpm.pm-operating-quality.score-runs.create",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-fairness-preview",
+        "dpm.pm-operating-quality.fairness-analyses.preview",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],
