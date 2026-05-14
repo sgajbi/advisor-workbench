@@ -156,6 +156,31 @@ describe("WorkbenchPage", () => {
       )
     ).toBe(true);
   });
+
+  it("renders outcome reviews from Gateway-backed manage data", async () => {
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_4001" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_4001" }),
+        searchParams: Promise.resolve({ mode: "reviews" }),
+      })
+    );
+
+    expect(screen.getAllByRole("heading", { name: "Outcome Reviews" }).length).toBeGreaterThan(0);
+    expect(screen.getByText("Review Timeline")).toBeInTheDocument();
+    expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
+    expect(screen.getAllByText("Within Mandate").length).toBeGreaterThan(0);
+    expect(screen.getByText("72.4%")).toBeInTheDocument();
+    expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
+    expect(screen.queryByText("or_1")).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PF_4001")
+      )
+    ).toBe(true);
+  });
 });
 
 function createManageFetch({ portfolioId }: { portfolioId: string }) {
@@ -438,12 +463,35 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
             {
               outcome_review_id: "or_1",
               state: "READY",
+              overall_outcome: "READY_WITHIN_TOLERANCE",
               portfolio_id: portfolioId,
               rebalance_run_id: "run_001",
               proof_pack_id: "ppack_1",
               expected_snapshot_hash: "sha256:expected",
               realized_snapshot_hash: "sha256:realized",
-              dimension_results: [],
+              created_at: "2026-05-13T09:35:00Z",
+              review_window: { start: "2026-05-01", end: "2026-05-13" },
+              variance_summary: { drift_improvement_pct: 72.4 },
+              supportability: {
+                explanation: "Outcome remains within mandate tolerance for advisor handoff.",
+              },
+              dimension_results: [
+                {
+                  dimension: "DRIFT_REDUCTION",
+                  expected: { value: 0.042, unit: "ratio" },
+                  realized: { value: 0.012, unit: "ratio" },
+                  variance: { value: -0.03, unit: "ratio" },
+                  state: "READY",
+                  explanation: "Drift reduction achieved within tolerance.",
+                },
+              ],
+              source_lineage: [
+                {
+                  source_system: "lotus-manage",
+                  source_id: "selected-alternative-1",
+                  content_hash: "sha256:selected",
+                },
+              ],
             },
           ],
         },

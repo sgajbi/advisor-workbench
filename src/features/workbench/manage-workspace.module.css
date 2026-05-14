@@ -1233,6 +1233,256 @@
   box-shadow: 0 1px 2px rgba(19, 27, 46, 0.03);
 }
 
+.manageScope :global(.outcome-review-panel > .section-block-header) {
+  margin: -18px -18px 0;
+  padding: 18px;
+  border-bottom: 1px solid #c6c6cd;
+  background: linear-gradient(180deg, #ffffff, #f7f9fb);
+}
+
+.manageScope :global(.outcome-review-panel > .section-block-header h2) {
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: 0;
+}
+
+.manageScope :global(.outcome-review-badge-row),
+.manageScope :global(.outcome-review-reason-row),
+.manageScope :global(.outcome-review-detail-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.manageScope :global(.outcome-review-status-strip) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.outcome-review-status-strip .suite-row) {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 88px;
+  padding: 14px 16px;
+  border-right: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.outcome-review-status-strip .suite-row:last-child) {
+  border-right: 0;
+}
+
+.manageScope :global(.outcome-review-status-strip .suite-row span) {
+  color: #45464d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.outcome-review-status-strip .suite-row strong) {
+  color: #131b2e;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.manageScope :global(.outcome-review-reason-row) {
+  margin-top: 10px;
+}
+
+.manageScope :global(.outcome-review-workspace-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 0.95fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.manageScope :global(.outcome-review-card),
+.manageScope :global(.outcome-review-detail-panel) {
+  overflow: hidden;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.outcome-review-card-header),
+.manageScope :global(.outcome-review-detail-header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #c6c6cd;
+  background: #f7f9fb;
+}
+
+.manageScope :global(.outcome-review-card-header h3),
+.manageScope :global(.outcome-review-detail-header h3) {
+  margin: 0;
+  color: #191c1e;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.manageScope :global(.outcome-review-card-header span),
+.manageScope :global(.outcome-review-detail-header span) {
+  color: #725b26;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.outcome-review-card .analytics-table-frame) {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.manageScope :global(.outcome-review-action-stack) {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.manageScope :global(.outcome-review-action-stack button) {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #c6c6cd;
+  border-left: 3px solid #725b26;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #191c1e;
+  cursor: pointer;
+  text-align: left;
+}
+
+.manageScope :global(.outcome-review-action-stack button:hover) {
+  background: #f7f9fb;
+  border-color: #725b26;
+}
+
+.manageScope :global(.outcome-review-action-stack strong) {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.manageScope :global(.outcome-review-action-stack span) {
+  color: #45464d;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.manageScope :global(.outcome-review-detail-panel) {
+  margin-top: 14px;
+}
+
+.manageScope :global(.outcome-review-detail-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+  padding: 16px;
+}
+
+.manageScope :global(.outcome-review-detail-grid section) {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.manageScope :global(.outcome-review-detail-grid h4) {
+  margin: 0;
+  color: #725b26;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.outcome-review-detail-grid p) {
+  margin: 0;
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.manageScope :global(.outcome-review-detail-grid .analytics-table-frame) {
+  margin: 2px 0 0;
+  border-color: #c6c6cd;
+  border-radius: 4px;
+}
+
+.manageScope :global(.outcome-review-rationale) {
+  padding: 13px 14px;
+  border-left: 3px solid #725b26;
+  border-radius: 4px;
+  background: #f2f4f6;
+}
+
+.manageScope :global(.outcome-review-evidence-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.manageScope :global(.outcome-review-evidence-grid span) {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px solid #e0e3e5;
+  border-radius: 4px;
+  color: #45464d;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.manageScope :global(.outcome-review-evidence-grid .is-available) {
+  border-color: #ceead6;
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.manageScope :global(.outcome-review-evidence-grid .is-muted) {
+  background: #f2f4f6;
+}
+
+.manageScope :global(.outcome-review-handoff-messages) {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+@media (max-width: 1180px) {
+  .manageScope :global(.outcome-review-status-strip),
+  .manageScope :global(.outcome-review-workspace-grid),
+  .manageScope :global(.outcome-review-detail-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .manageScope :global(.outcome-review-status-strip .suite-row) {
+    border-right: 0;
+    border-bottom: 1px solid #e0e3e5;
+  }
+
+  .manageScope :global(.outcome-review-status-strip .suite-row:last-child) {
+    border-bottom: 0;
+  }
+}
+
 .manageScope :global(.dpm-wave-command-center-hero) {
   display: grid;
   gap: 12px;

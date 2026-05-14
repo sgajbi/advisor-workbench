@@ -285,7 +285,7 @@ function renderManageMode(
 ): ReactNode {
   switch (mode) {
     case "mandate":
-      return <ManageMandateHealth data={data} mandateId={mandateId} />;
+      return <ManageMandateHealth data={data} />;
     case "waves":
       return (
         <>
@@ -334,17 +334,11 @@ function renderManageMode(
       );
     case "overview":
     default:
-      return <ManageOverview data={data} mandateId={mandateId} />;
+      return <ManageOverview data={data} />;
   }
 }
 
-function ManageOverview({
-  data,
-  mandateId,
-}: {
-  data: ManageWorkspaceData;
-  mandateId: string | null;
-}) {
+function ManageOverview({ data }: { data: ManageWorkspaceData }) {
   const portfolio = data.portfolio;
   const portfolioId = portfolio.portfolio.portfolio_id;
   const commandModel = buildDpmCommandCenterPanelModel({

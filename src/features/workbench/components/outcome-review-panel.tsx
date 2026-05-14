@@ -23,7 +23,6 @@ import {
 import {
   businessStateLabel,
   formatBusinessReason,
-  formatBusinessSource,
 } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
@@ -75,20 +74,6 @@ function statePanelCopy(state: OutcomeReviewPanelState, portfolioId: string) {
   };
 }
 
-function handoffLabel(blocked: boolean | undefined): string {
-  if (blocked === undefined) {
-    return "N/A";
-  }
-  return blocked ? "Blocked" : "Available";
-}
-
-function handoffTone(blocked: boolean | undefined): "default" | "success" | "danger" {
-  if (blocked === undefined) {
-    return "default";
-  }
-  return blocked ? "danger" : "success";
-}
-
 export default function OutcomeReviewPanel({ portfolioId, response, errorMessage }: Props) {
   const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
   const [reportJobError, setReportJobError] = useState<string | null>(null);
@@ -108,6 +93,15 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     reportJobError ?? reportJobStatus,
     aiNarrativeError ?? aiNarrativeStatus,
   ].filter((message): message is string => Boolean(message));
+  const readyEvidenceCount = primaryReview
+    ? [
+        primaryReview.expectedSnapshotHash,
+        primaryReview.realizedSnapshotHash,
+        primaryReview.proofPackId,
+        primaryReview.lineage.length > 0 ? "available" : "",
+      ].filter((value) => value && value !== "N/A").length
+    : 0;
+  const evidencePackStatus = primaryReview?.proofPackId !== "N/A" ? "Available" : "Not available";
 
   async function requestOutcomeReportJob() {
     if (!primaryReview || primaryReview.reportInputBlocked || reportJobPending) {
@@ -173,162 +167,178 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       ) : null}
 
       <div className="outcome-review-status-strip">
-        <MetricRow label="Reviews" value={model.items.length.toString()} />
-        <MetricRow
-          label="Report Input"
-          value={
-            <SemanticBadge tone={handoffTone(primaryReview?.reportInputBlocked)}>
-              {handoffLabel(primaryReview?.reportInputBlocked)}
-            </SemanticBadge>
-          }
-        />
-        <MetricRow
-          label="Memo Evidence"
-          value={
-            <SemanticBadge tone={handoffTone(primaryReview?.aiEvidenceBlocked)}>
-              {handoffLabel(primaryReview?.aiEvidenceBlocked)}
-            </SemanticBadge>
-          }
-        />
-        <MetricRow label="Remediation Owner" value={model.remediationOwner} />
+        <MetricRow label="Latest Review" value={primaryReview?.reviewPostureLabel ?? "N/A"} />
+        <MetricRow label="Outcome Status" value={primaryReview?.outcomeStatusLabel ?? "N/A"} />
+        <MetricRow label="Drift Improvement" value={primaryReview?.driftImprovementLabel ?? "N/A"} />
+        <MetricRow label="Evidence Pack" value={evidencePackStatus} />
       </div>
 
-      {primaryReview ? (
-        <div className="outcome-review-report-actions">
-          <ActionButton
-            priority="secondary"
-            onClick={requestOutcomeReportJob}
-            disabled={!reportJobAvailable || reportJobPending}
-          >
-            {reportJobPending ? "Requesting report" : "Request report"}
-          </ActionButton>
-          <ActionButton
-            priority="secondary"
-            onClick={requestOutcomeAiNarrative}
-            disabled={!aiNarrativeAvailable || aiNarrativePending}
-          >
-            {aiNarrativePending ? "Requesting AI review" : "Request AI review"}
-          </ActionButton>
-          {handoffStatusMessages.length > 0 ? (
-            handoffStatusMessages.map((message) => (
-              <Text key={message} variant="secondary" className="muted">
-                {message}
-              </Text>
-            ))
-          ) : (
-            <Text variant="secondary" className="muted">
-              Prepares advisor review, report input, and memo handoffs from available evidence.
-            </Text>
-          )}
-        </div>
-      ) : null}
-
-      {model.supportabilityReasons.length > 0 || model.blockedActions.length > 0 ? (
+      {model.supportabilityReasons.length > 0 || model.blockedActions.length > 0 || model.remediationOwner !== "N/A" ? (
         <div className="outcome-review-reason-row">
-          {[...model.supportabilityReasons, ...model.blockedActions].map((reason) => (
+          {[
+            ...model.supportabilityReasons,
+            ...model.blockedActions,
+            ...(model.remediationOwner !== "N/A" ? [`Owner: ${model.remediationOwner}`] : []),
+          ].map((reason) => (
             <SemanticBadge key={reason} tone={reason.startsWith("CREATE") || reason.startsWith("REQUEST") ? "danger" : "warn"}>
-              {formatBusinessReason(reason)}
+              {reason.startsWith("Owner: ") ? reason : formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
         </div>
       ) : null}
 
-      <AnalyticsTable
-        ariaLabel="Outcome reviews"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "review", label: "Review" },
-          { key: "state", label: "State" },
-          { key: "run", label: "Rebalance" },
-          { key: "proof-pack", label: "Evidence" },
-          { key: "updated", label: "Updated" },
-        ]}
-        rows={model.items.map((item) => ({
-          key: item.outcomeReviewId,
-          cells: [
-            item.outcomeReviewId,
-            <SemanticBadge key={`${item.outcomeReviewId}-state`} tone={badgeTone(item.state)}>
-              {businessStateLabel(item.state)}
-            </SemanticBadge>,
-            item.rebalanceRunId !== "N/A" ? "Available" : "Not available",
-            item.proofPackId !== "N/A" ? "Available" : "Not available",
-            item.updatedAt,
-          ],
-        }))}
-        emptyState={{
-          title: "No outcome reviews returned",
-          body: "No outcome review rows are currently available for this portfolio.",
-        }}
-      />
-
       {primaryReview && hasItems ? (
         <>
-          <div className="outcome-review-hash-strip">
-            <span>Expected Snapshot {availabilityLabel(primaryReview.expectedSnapshotHash)}</span>
-            <span>Realized Snapshot {availabilityLabel(primaryReview.realizedSnapshotHash)}</span>
-            <span>Retention {primaryReview.retentionUntil}</span>
+          <div className="outcome-review-workspace-grid">
+            <div className="outcome-review-card outcome-review-timeline-card">
+              <div className="outcome-review-card-header">
+                <h3>Review Timeline</h3>
+                <span>{model.items.length} returned</span>
+              </div>
+              <AnalyticsTable
+                ariaLabel="Outcome reviews"
+                variant="portfolio"
+                density="compact"
+                columns={[
+                  { key: "review", label: "Review" },
+                  { key: "window", label: "Window" },
+                  { key: "outcome", label: "Outcome" },
+                  { key: "state", label: "Status" },
+                  { key: "evidence", label: "Evidence" },
+                ]}
+                rows={model.items.map((item) => ({
+                  key: item.outcomeReviewId,
+                  cells: [
+                    item.reviewLabel,
+                    item.reviewWindow,
+                    item.outcomeStatusLabel,
+                    <SemanticBadge key={`${item.outcomeReviewId}-state`} tone={badgeTone(item.state)}>
+                      {businessStateLabel(item.state)}
+                    </SemanticBadge>,
+                    item.proofPackId !== "N/A" ? "Available" : "Not available",
+                  ],
+                }))}
+                emptyState={{
+                  title: "No outcome reviews returned",
+                  body: "No outcome review rows are currently available for this portfolio.",
+                }}
+              />
+            </div>
+
+            <div className="outcome-review-card outcome-review-actions-card">
+              <div className="outcome-review-card-header">
+                <h3>Recommended Actions</h3>
+              </div>
+              <div className="outcome-review-action-stack">
+                <button type="button">
+                  <strong>Review client impact</strong>
+                  <span>Assess outcome dimensions against the mandate objective.</span>
+                </button>
+                <button type="button">
+                  <strong>Open evidence pack</strong>
+                  <span>{evidencePackStatus === "Available" ? "Review the available mandate evidence." : "Evidence pack has not been returned."}</span>
+                </button>
+                <button type="button">
+                  <strong>Record advisor note</strong>
+                  <span>Capture the business rationale before closing the review.</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <AnalyticsTable
-            ariaLabel="Outcome review dimensions"
-            variant="analysis"
-            density="compact"
-            columns={[
-              { key: "dimension", label: "Dimension" },
-              { key: "expected", label: "Expected", align: "right" },
-              { key: "realized", label: "Realized", align: "right" },
-              { key: "variance", label: "Variance", align: "right" },
-              { key: "state", label: "State" },
-            ]}
-            rows={primaryReview.dimensions.map((row) => ({
-              key: row.key,
-              cells: [
-                businessStateLabel(row.dimension),
-                row.expected,
-                row.realized,
-                row.variance,
-                <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
-                  {businessStateLabel(row.state)}
-                </SemanticBadge>,
-              ],
-            }))}
-            emptyState={{
-              title: "No dimension results returned",
-              body: "The review exists, but no expected-versus-realized dimension rows are available.",
-            }}
-          />
+          <div className="outcome-review-detail-panel">
+            <div className="outcome-review-detail-header">
+              <div>
+                <h3>Selected Review Detail</h3>
+                <span>{primaryReview.reviewLabel}</span>
+              </div>
+              <div className="outcome-review-detail-actions">
+                <ActionButton
+                  priority="secondary"
+                  onClick={requestOutcomeReportJob}
+                  disabled={!reportJobAvailable || reportJobPending}
+                >
+                  {reportJobPending ? "Requesting report" : "Request report"}
+                </ActionButton>
+                <ActionButton
+                  priority="secondary"
+                  onClick={requestOutcomeAiNarrative}
+                  disabled={!aiNarrativeAvailable || aiNarrativePending}
+                >
+                  {aiNarrativePending ? "Requesting memo" : "Request advisor memo"}
+                </ActionButton>
+              </div>
+            </div>
 
-          <AnalyticsTable
-            ariaLabel="Outcome review evidence references"
-            variant="observation"
-            density="compact"
-            columns={[
-              { key: "source", label: "Business Area" },
-              { key: "reference", label: "Reference" },
-              { key: "freshness", label: "Freshness" },
-              { key: "hash", label: "Audit" },
-            ]}
-            rows={primaryReview.lineage.map((row) => ({
-              key: row.key,
-              cells: [
-                formatBusinessSource(row.source),
-                row.reference !== "N/A" ? "Reference available" : "Reference not available",
-                businessStateLabel(row.freshness),
-                availabilityLabel(row.hash),
-              ],
-            }))}
-            emptyState={{
-              title: "No evidence references returned",
-              body: "The review is available without detailed evidence-reference rows.",
-            }}
-          />
+            <div className="outcome-review-detail-grid">
+              <section>
+                <h4>Mandate Impact</h4>
+                <p>{primaryReview.mandateImpact}</p>
+                <AnalyticsTable
+                  ariaLabel="Outcome review dimensions"
+                  variant="analysis"
+                  density="compact"
+                  columns={[
+                    { key: "dimension", label: "Dimension" },
+                    { key: "expected", label: "Expected", align: "right" },
+                    { key: "realized", label: "Realized", align: "right" },
+                    { key: "variance", label: "Variance", align: "right" },
+                    { key: "state", label: "State" },
+                  ]}
+                  rows={primaryReview.dimensions.map((row) => ({
+                    key: row.key,
+                    cells: [
+                      businessStateLabel(row.dimension),
+                      row.expected,
+                      row.realized,
+                      row.variance,
+                      <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
+                        {businessStateLabel(row.state)}
+                      </SemanticBadge>,
+                    ],
+                  }))}
+                  emptyState={{
+                    title: "No dimension results returned",
+                    body: "The review exists, but no expected-versus-realized dimension rows are available.",
+                  }}
+                />
+              </section>
+
+              <section>
+                <h4>Client-Facing Rationale</h4>
+                <div className="outcome-review-rationale">
+                  <p>{primaryReview.clientRationale}</p>
+                </div>
+                <h4>Evidence Availability</h4>
+                <div className="outcome-review-evidence-grid">
+                  <span className={availabilityClass(primaryReview.expectedSnapshotHash)}>
+                    Expected outcome {availabilityLabel(primaryReview.expectedSnapshotHash)}
+                  </span>
+                  <span className={availabilityClass(primaryReview.realizedSnapshotHash)}>
+                    Realized outcome {availabilityLabel(primaryReview.realizedSnapshotHash)}
+                  </span>
+                  <span className={availabilityClass(primaryReview.proofPackId)}>
+                    Evidence pack {availabilityLabel(primaryReview.proofPackId)}
+                  </span>
+                  <span className={readyEvidenceCount >= 3 ? "is-available" : "is-muted"}>
+                    Source evidence {readyEvidenceCount >= 3 ? "Available" : "Partial"}
+                  </span>
+                </div>
+              </section>
+            </div>
+          </div>
         </>
       ) : null}
 
-      <Text variant="secondary" className="muted">
-        Review handoff availability reflects the current advisor approval and evidence posture.
-      </Text>
+      {handoffStatusMessages.length > 0 ? (
+        <div className="outcome-review-handoff-messages">
+          {handoffStatusMessages.map((message) => (
+            <Text key={message} variant="secondary" className="muted">
+              {message}
+            </Text>
+          ))}
+        </div>
+      ) : null}
     </SectionBlock>
   );
 }
@@ -343,6 +353,10 @@ function describeNarrativeRun(data: Record<string, unknown>): string {
 
 function availabilityLabel(value: string): string {
   return value && value !== "N/A" ? "Available" : "Not available";
+}
+
+function availabilityClass(value: string): string {
+  return value && value !== "N/A" ? "is-available" : "is-muted";
 }
 
 function readRecord(value: unknown): Record<string, unknown> {

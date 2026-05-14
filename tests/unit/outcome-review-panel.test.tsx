@@ -33,18 +33,26 @@ const readyResponse: DpmOutcomeReviewGatewayResponse = {
       {
         outcome_review_id: "or_1",
         state: "READY",
+        overall_outcome: "READY_WITHIN_TOLERANCE",
         portfolio_id: "PB_SG_GLOBAL_BAL_001",
         rebalance_run_id: "rr_1",
         proof_pack_id: "ppack_1",
         expected_snapshot_hash: "sha256:expected",
         realized_snapshot_hash: "sha256:realized",
+        created_at: "2026-05-13T09:35:00Z",
+        review_window: { start: "2026-05-01", end: "2026-05-13" },
+        variance_summary: { drift_improvement_pct: 72.4 },
+        supportability: {
+          explanation: "Outcome remains within mandate tolerance for advisor handoff.",
+        },
         dimension_results: [
           {
-            dimension: "tracking_error",
+            dimension: "DRIFT_REDUCTION",
             expected: { value: 0.012, unit: "ratio" },
             realized: { value: 0.011, unit: "ratio" },
             variance: { value: -0.001, unit: "ratio" },
-            state: "WITHIN_TOLERANCE",
+            state: "READY",
+            explanation: "Drift reduction achieved within tolerance.",
           },
         ],
         source_lineage: [
@@ -70,13 +78,19 @@ describe("OutcomeReviewPanel", () => {
 
     expect(screen.getByRole("heading", { name: "Outcome Reviews" })).toBeInTheDocument();
     expect(screen.getByText("Supported")).toBeInTheDocument();
-    expect(screen.getByText("or_1")).toBeInTheDocument();
+    expect(screen.getByText("Review Timeline")).toBeInTheDocument();
+    expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
+    expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
+    expect(screen.getByText("Ready for Advisor Review")).toBeInTheDocument();
+    expect(screen.getAllByText("Within Mandate").length).toBeGreaterThan(0);
+    expect(screen.getByText("72.4%")).toBeInTheDocument();
+    expect(screen.queryByText("or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("rr_1")).not.toBeInTheDocument();
-    expect(screen.getByText("Tracking Error")).toBeInTheDocument();
+    expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Request AI review" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeEnabled();
   });
 
   it("requests an outcome-review report job from available report input", async () => {
@@ -129,7 +143,7 @@ describe("OutcomeReviewPanel", () => {
     });
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
-    fireEvent.click(screen.getByRole("button", { name: "Request AI review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
 
     await waitFor(() => {
       expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledWith({
@@ -172,7 +186,7 @@ describe("OutcomeReviewPanel", () => {
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Request AI review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
 
     expect(await screen.findByText("Report request Accepted.")).toBeInTheDocument();
     expect(screen.getByText("Review request Completed.")).toBeInTheDocument();
@@ -195,9 +209,9 @@ describe("OutcomeReviewPanel", () => {
     );
 
     expect(screen.getByText("Outcome review handoff is blocked")).toBeInTheDocument();
-    expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Portfolio Operations")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Request AI review" })).toBeDisabled();
+    expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Portfolio Operations/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeDisabled();
   });
 
   it("renders unavailable state without claiming support", () => {

@@ -24,10 +24,9 @@ import type { ManageWorkspaceData } from "../manage-workspace";
 
 type Props = {
   data: ManageWorkspaceData;
-  mandateId: string | null;
 };
 
-export default function ManageMandateHealth({ data, mandateId }: Props) {
+export default function ManageMandateHealth({ data }: Props) {
   const commandModel = buildDpmCommandCenterPanelModel({
     commandCenter: data.commandCenter,
     exceptions: data.commandCenterExceptions,
