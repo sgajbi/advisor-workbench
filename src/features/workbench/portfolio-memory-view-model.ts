@@ -12,9 +12,12 @@ export type PortfolioMemoryEventRow = {
   eventId: string;
   eventType: string;
   eventTime: string;
+  summary: string;
+  status: string;
   sourceSystems: string;
   sourceRefs: string;
   artifactRefs: string;
+  contentHash: string;
   reasonCodes: string;
 };
 
@@ -32,11 +35,14 @@ export type PortfolioMemoryPanelModel = {
   correlationId: string;
   portfolioId: string;
   eventCount: string;
+  latestEventTime: string;
   contentHash: string;
   sourceSystems: string;
+  artifactRefCount: string;
   reasonCodes: string[];
   eventTypeRows: PortfolioMemoryCountRow[];
   events: PortfolioMemoryEventRow[];
+  selectedEvent: PortfolioMemoryEventRow | null;
 };
 
 export function buildPortfolioMemoryPanelModel(
@@ -51,18 +57,24 @@ export function buildPortfolioMemoryPanelModel(
       correlationId: "N/A",
       portfolioId: "N/A",
       eventCount: "N/A",
+      latestEventTime: "N/A",
       contentHash: "N/A",
       sourceSystems: "N/A",
+      artifactRefCount: "N/A",
       reasonCodes: ["GATEWAY_PORTFOLIO_MEMORY_UNAVAILABLE"],
       eventTypeRows: [],
       events: [],
+      selectedEvent: null,
     };
   }
 
   const supportability = response.supportability;
   const supportabilityState = normalizeState(supportability.state);
   const data = response.data;
-  const events = extractRecordArray(data.events);
+  const eventRecords = extractRecordArray(data.events);
+  const events = eventRecords.map((record, index) =>
+    buildEventRow(record, index, supportabilityState),
+  );
   return {
     state: resolvePanelState(supportabilityState, supportability.event_count, events.length),
     supportabilityState,
@@ -71,11 +83,26 @@ export function buildPortfolioMemoryPanelModel(
     correlationId: response.correlation_id,
     portfolioId: readString(data, "portfolio_id") || "N/A",
     eventCount: formatValue(supportability.event_count),
+    latestEventTime:
+      readString(readRecord(data.summary), "latest_event_at") ||
+      readString(data, "latest_event_at") ||
+      events[0]?.eventTime ||
+      "N/A",
     contentHash:
       supportability.content_hash ||
+      readString(readRecord(data.summary), "content_hash") ||
       readString(data, "content_hash") ||
       "N/A",
     sourceSystems: supportability.source_systems.join(", ") || "N/A",
+    artifactRefCount:
+      formatOptionalNumber(readRecord(data.summary).artifact_ref_count) ||
+      formatOptionalNumber(data.artifact_ref_count) ||
+      formatValue(
+        eventRecords.reduce(
+          (count, record) => count + extractRecordArray(record.artifact_refs).length,
+          0,
+        ),
+      ),
     reasonCodes: supportability.reason_codes,
     eventTypeRows: Object.entries(supportability.event_type_counts).map(
       ([eventType, count]) => ({
@@ -84,7 +111,8 @@ export function buildPortfolioMemoryPanelModel(
         count: formatValue(count),
       }),
     ),
-    events: events.map(buildEventRow),
+    events,
+    selectedEvent: events[0] ?? null,
   };
 }
 
@@ -110,7 +138,11 @@ function resolvePanelState(
   return "complete";
 }
 
-function buildEventRow(record: Record<string, unknown>, index: number): PortfolioMemoryEventRow {
+function buildEventRow(
+  record: Record<string, unknown>,
+  index: number,
+  fallbackState: string,
+): PortfolioMemoryEventRow {
   const eventId = readString(record, "event_id") || `portfolio-memory-event-${index + 1}`;
   return {
     key: eventId,
@@ -121,9 +153,25 @@ function buildEventRow(record: Record<string, unknown>, index: number): Portfoli
       readString(record, "occurred_at") ||
       readString(record, "created_at") ||
       "N/A",
+    summary:
+      readString(record, "title") ||
+      readString(record, "summary") ||
+      readString(record, "description") ||
+      "No summary available.",
+    status:
+      normalizeState(
+        readString(record, "supportability_state") ||
+          readString(record, "state") ||
+          readString(record, "status") ||
+          fallbackState,
+      ),
     sourceSystems: extractSourceSystems(record).join(", ") || "N/A",
     sourceRefs: formatRefs(record.source_refs),
     artifactRefs: formatRefs(record.artifact_refs),
+    contentHash:
+      readString(record, "content_hash") ||
+      readString(record, "hash") ||
+      "N/A",
     reasonCodes: extractStringArray(record.reason_codes).join(", ") || "N/A",
   };
 }
@@ -177,6 +225,10 @@ function extractStringArray(value: unknown): string[] {
   );
 }
 
+function readRecord(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -190,6 +242,13 @@ function readString(record: Record<string, unknown>, key: string): string {
     return String(value);
   }
   return "";
+}
+
+function formatOptionalNumber(value: unknown): string {
+  if (value === undefined || value === null || value === "") {
+    return "";
+  }
+  return formatValue(value);
 }
 
 function formatValue(value: unknown): string {

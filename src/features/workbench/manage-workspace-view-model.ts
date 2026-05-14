@@ -324,6 +324,12 @@ export function formatBusinessReason(value: string | null | undefined): string {
   if (normalized.includes("PRICE_STALE")) {
     return "Stale price";
   }
+  if (normalized.includes("SOURCE_READY")) {
+    return "Ready";
+  }
+  if (normalized.includes("UNAVAILABLE")) {
+    return "Unavailable";
+  }
   if (normalized.includes("MAPPING")) {
     return "Mapping review";
   }

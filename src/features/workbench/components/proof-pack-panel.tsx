@@ -28,6 +28,11 @@ import {
   deriveProofPackContext,
   type ProofPackPanelState,
 } from "@/features/workbench/proof-pack-view-model";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+  formatBusinessSource,
+} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolioId: string;
@@ -56,33 +61,46 @@ function statePanelCopy(state: ProofPackPanelState, portfolioId: string) {
   if (state === "empty") {
     return {
       kind: "empty" as const,
-      title: "No proof pack linked to this portfolio",
-      body: `Gateway did not return a manage proof-pack reference for ${portfolioId}.`,
+      title: "No evidence pack linked to this portfolio",
+      body: `No evidence pack is currently linked to ${portfolioId}.`,
     };
   }
   if (state === "blocked") {
     return {
       kind: "permission_blocked" as const,
-      title: "Proof-pack handoff is blocked",
-      body: "Manage has blocked proof-pack evidence actions for this rebalance run.",
+      title: "Evidence handoff is blocked",
+      body: "Resolve the open rebalance items before preparing decision evidence.",
     };
   }
   if (state === "unsupported") {
     return {
       kind: "unavailable" as const,
-      title: "Proof-pack evidence is not supported",
-      body: "The authoritative manage supportability state says this proof-pack path is unsupported.",
+      title: "Evidence pack is not supported",
+      body: "Evidence preparation is not available for the current rebalance state.",
     };
   }
   return {
     kind: "partial" as const,
-    title: "Proof-pack evidence is unavailable",
-    body: "Gateway did not return a usable manage proof-pack payload for this portfolio.",
+    title: "Evidence pack is unavailable",
+    body: "Evidence details are temporarily unavailable for this portfolio.",
   };
 }
 
 function availabilityLabel(available: boolean): string {
   return available ? "Available" : "Unavailable";
+}
+
+function formatSectionSummary(summary: string): string {
+  if (summary === "N/A") {
+    return summary;
+  }
+  return summary
+    .split(",")
+    .map((part) => {
+      const [state, count] = part.split(":").map((value) => value.trim());
+      return state && count ? `${businessStateLabel(state)}: ${count}` : part.trim();
+    })
+    .join(", ");
 }
 
 export default function ProofPackPanel({
@@ -134,7 +152,7 @@ export default function ProofPackPanel({
     }
     void runAction("Load proof pack", async () => {
       setProofPack(await getDpmProofPack(proofPackId));
-      setHandoffStatus("Proof-pack payload loaded from Gateway.");
+      setHandoffStatus("Evidence pack loaded.");
     });
   }
 
@@ -148,7 +166,7 @@ export default function ProofPackPanel({
         mandateId: resolvedMandateId,
       });
       setProofPack(generated);
-      setHandoffStatus("Proof-pack generation completed through Gateway.");
+      setHandoffStatus("Evidence pack prepared.");
     });
   }
 
@@ -159,7 +177,7 @@ export default function ProofPackPanel({
     void runAction("Load Markdown", async () => {
       const response = await getDpmProofPackMarkdown(proofPackId);
       setMarkdown(readMarkdown(response));
-      setHandoffStatus("Markdown summary loaded from Gateway.");
+      setHandoffStatus("Summary loaded.");
     });
   }
 
@@ -191,21 +209,21 @@ export default function ProofPackPanel({
     }
     void runAction("Request AI PM Memo", async () => {
       const response = await requestDpmProofPackAiPmMemo({ proofPackId });
-      setHandoffStatus(`PM memo ${readAiWorkflowPackStatus(response.data)}.`);
+      setHandoffStatus(`PM memo ${readAiWorkflowPackStatus(response.data)}`);
     });
   }
 
   return (
     <SectionBlock
-      title="Proof-Pack Evidence"
-      subtitle={`Manage authority: ${model.authority}. Correlation: ${model.correlationId}`}
+      title="Evidence Packs"
+      subtitle="Decision evidence prepared for advisor review and audit."
       className="proof-pack-panel"
       actions={
         <div className="proof-pack-badge-row">
           <SemanticBadge tone={badgeTone(model.supportabilityState)}>
-            {model.supportabilityState}
+            {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
-          <SemanticBadge>{model.sourceService}</SemanticBadge>
+          <SemanticBadge>Audit trail available</SemanticBadge>
         </div>
       }
     >
@@ -213,27 +231,27 @@ export default function ProofPackPanel({
         <ScreenStatePanel
           kind={errorMessage ? "partial" : stateCopy.kind}
           surface="portfolio"
-          title={errorMessage ? "Proof-pack endpoint is unavailable" : stateCopy.title}
+          title={errorMessage ? "Evidence pack is unavailable" : stateCopy.title}
           body={errorMessage ?? stateCopy.body}
         />
       ) : null}
 
       <div className="proof-pack-status-strip">
-        <MetricRow label="Proof Pack" value={model.proofPackId} />
+        <MetricRow label="Evidence Pack" value={model.proofPackId} />
         <MetricRow
           label="Status"
-          value={<SemanticBadge tone={badgeTone(model.status)}>{model.status}</SemanticBadge>}
+          value={<SemanticBadge tone={badgeTone(model.status)}>{businessStateLabel(model.status)}</SemanticBadge>}
         />
-        <MetricRow label="Sections" value={model.sectionStateSummary} />
-        <MetricRow label="Content Hash" value={model.contentHash} />
+        <MetricRow label="Sections" value={formatSectionSummary(model.sectionStateSummary)} />
+        <MetricRow label="Audit Trail" value={model.contentHash !== "N/A" ? "Available" : "Not available"} />
       </div>
 
-      <div className="proof-pack-action-row" aria-label="Proof-pack actions">
+      <div className="proof-pack-action-row" aria-label="Evidence pack actions">
         <ActionButton priority="secondary" onClick={generateProofPack} disabled={!rebalanceRunId || Boolean(pendingAction)}>
-          {pendingAction === "Generate proof pack" ? "Generating" : "Generate proof pack"}
+          {pendingAction === "Generate proof pack" ? "Preparing" : "Prepare evidence"}
         </ActionButton>
         <ActionButton priority="secondary" onClick={loadProofPack} disabled={!proofPackId || Boolean(pendingAction)}>
-          {pendingAction === "Load proof pack" ? "Loading" : "Load proof pack"}
+          {pendingAction === "Load proof pack" ? "Loading" : "Load evidence"}
         </ActionButton>
         <ActionButton
           priority="secondary"
@@ -254,14 +272,14 @@ export default function ProofPackPanel({
           onClick={loadAiEvidence}
           disabled={!proofPackId || !model.aiEvidenceInputAvailable || Boolean(pendingAction)}
         >
-          AI Evidence
+          Evidence Input
         </ActionButton>
         <ActionButton
           priority="secondary"
           onClick={requestAiPmMemo}
           disabled={!proofPackId || !model.aiEvidenceInputAvailable || Boolean(pendingAction)}
         >
-          {pendingAction === "Request AI PM Memo" ? "Requesting memo" : "AI PM Memo"}
+          {pendingAction === "Request AI PM Memo" ? "Requesting memo" : "PM memo"}
         </ActionButton>
       </div>
 
@@ -271,7 +289,7 @@ export default function ProofPackPanel({
         </Text>
       ) : (
         <Text variant="secondary" className="muted">
-          Shows Gateway-composed proof-pack identity, sections, hashes, Markdown, report-input, AI-evidence, and AI memo posture.
+          Shows decision evidence, report inputs, memo readiness, and audit posture for the selected rebalance.
         </Text>
       )}
 
@@ -279,59 +297,63 @@ export default function ProofPackPanel({
         <div className="proof-pack-reason-row">
           {model.supportabilityReasons.map((reason) => (
             <SemanticBadge key={reason} tone={badgeTone(reason)}>
-              {reason}
+              {formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
         </div>
       ) : null}
 
       <AnalyticsTable
-        ariaLabel="Proof-pack sections"
+        ariaLabel="Evidence pack sections"
         variant="analysis"
         density="compact"
         columns={[
           { key: "section", label: "Section" },
           { key: "state", label: "State" },
-          { key: "source", label: "Source" },
-          { key: "hash", label: "Hash" },
+          { key: "source", label: "Business Area" },
+          { key: "hash", label: "Audit" },
         ]}
         rows={model.sections.map((section) => ({
           key: section.key,
           cells: [
-            section.section,
+            businessStateLabel(section.section),
             <SemanticBadge key={`${section.key}-state`} tone={badgeTone(section.state)}>
-              {section.state}
+              {businessStateLabel(section.state)}
             </SemanticBadge>,
-            section.source,
-            section.hash,
+            formatBusinessSource(section.source),
+            section.hash !== "N/A" ? "Available" : "Not available",
           ],
         }))}
         emptyState={{
-          title: "No proof-pack sections returned",
-          body: "Gateway did not return section posture for this manage proof pack.",
+          title: "No evidence sections available",
+          body: "Evidence section posture is not available yet.",
         }}
       />
 
       <AnalyticsTable
-        ariaLabel="Proof-pack source hashes"
+        ariaLabel="Evidence pack audit references"
         variant="observation"
         density="compact"
         columns={[
-          { key: "source", label: "Source" },
+          { key: "source", label: "Business Area" },
           { key: "reference", label: "Reference" },
-          { key: "hash", label: "Hash" },
+          { key: "hash", label: "Audit" },
         ]}
         rows={model.sourceHashes.map((source) => ({
           key: source.key,
-          cells: [source.source, source.reference, source.hash],
+          cells: [
+            formatBusinessSource(source.source),
+            source.reference !== "N/A" ? "Reference available" : "Reference not available",
+            source.hash !== "N/A" ? "Available" : "Not available",
+          ],
         }))}
         emptyState={{
-          title: "No source hashes returned",
-          body: "Manage returned the proof pack without source-hash lineage rows.",
+          title: "No audit references available",
+          body: "Audit references are not available yet.",
         }}
       />
 
-      <div className="proof-pack-handoff-row" aria-label="Proof-pack handoff posture">
+      <div className="proof-pack-handoff-row" aria-label="Evidence pack handoff posture">
         <SemanticBadge tone={model.markdownAvailable ? "success" : "default"}>
           Markdown {availabilityLabel(model.markdownAvailable)}
         </SemanticBadge>
@@ -339,12 +361,12 @@ export default function ProofPackPanel({
           Report Input {availabilityLabel(model.reportInputAvailable)}
         </SemanticBadge>
         <SemanticBadge tone={model.aiEvidenceInputAvailable ? "success" : "default"}>
-          AI Evidence {availabilityLabel(model.aiEvidenceInputAvailable)}
+          Evidence Input {availabilityLabel(model.aiEvidenceInputAvailable)}
         </SemanticBadge>
       </div>
 
       {markdown ? (
-        <pre className="proof-pack-markdown-preview" aria-label="Proof-pack Markdown preview">
+        <pre className="proof-pack-markdown-preview" aria-label="Evidence pack summary preview">
           {markdown}
         </pre>
       ) : null}
@@ -362,24 +384,17 @@ function readMarkdown(response: DpmProofPackGatewayResponse & { markdown?: unkno
   if (typeof response.data.content === "string") {
     return response.data.content;
   }
-  return "Gateway returned no Markdown content for this proof pack.";
+  return "No summary content is available for this evidence pack.";
 }
 
 function readAiWorkflowPackStatus(data: Record<string, unknown>): string {
   const workflowPackRun = readRecord(data.workflow_pack_run);
-  const runId = readString(workflowPackRun.run_id);
   const reviewState = readString(workflowPackRun.review_state);
-  if (runId && reviewState) {
-    return `${reviewState} (${runId})`;
-  }
-  if (runId) {
-    return `requested (${runId})`;
+  if (reviewState) {
+    return `${businessStateLabel(reviewState)}.`;
   }
 
-  const execution = readRecord(data.execution);
-  const audit = readRecord(execution.audit);
-  const auditRunId = readString(audit.workflow_pack_run_id);
-  return auditRunId ? `requested (${auditRunId})` : "request submitted through Gateway";
+  return "request submitted.";
 }
 
 function readRecord(value: unknown): Record<string, unknown> {

@@ -13,7 +13,7 @@ describe("resolveShellApp", () => {
     expect(resolveShellApp("/performance").id).toBe("performance");
     expect(resolveShellApp("/performance", new URLSearchParams("mode=risk")).id).toBe("risk");
     expect(resolveShellApp("/performance", new URLSearchParams("mode=advisor")).id).toBe("advisory");
-    expect(resolveShellApp("/workbench/PORT001").id).toBe("home");
+    expect(resolveShellApp("/workbench/PORT001").id).toBe("portfolio");
     expect(resolveShellApp("/suite").id).toBe("home");
     expect(resolveShellApp("/recommendations").id).toBe("advisory");
     expect(resolveShellApp("/proposals/simulate").id).toBe("proposal");

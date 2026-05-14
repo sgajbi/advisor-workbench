@@ -22,6 +22,11 @@ import {
   buildConstructionPanelModel,
   type ConstructionPanelState,
 } from "@/features/workbench/construction-alternatives-view-model";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+  formatBusinessSource,
+} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolio: WorkbenchPortfolio360;
@@ -58,27 +63,27 @@ function statePanelCopy(state: ConstructionPanelState, portfolioId: string) {
     return {
       kind: "empty" as const,
       title: "Construction alternatives have not been generated",
-      body: `Request manage-owned alternatives for ${portfolioId} when source readiness is sufficient for comparison.`,
+      body: `Request alternatives for ${portfolioId} when data readiness is sufficient for comparison.`,
     };
   }
   if (state === "blocked") {
     return {
       kind: "permission_blocked" as const,
       title: "Construction alternatives are blocked",
-      body: "Manage returned a blocked construction posture. Selection remains disabled until the source issue is remediated.",
+      body: "Selection remains disabled until the blocking data issue is resolved.",
     };
   }
   if (state === "unsupported") {
     return {
       kind: "unavailable" as const,
       title: "Construction alternatives are unsupported",
-      body: "The authoritative manage supportability state says this construction path is unsupported.",
+      body: "Construction alternatives are not available for the current mandate state.",
     };
   }
   return {
     kind: "partial" as const,
     title: "Construction alternatives are unavailable",
-    body: "Gateway did not return a usable manage construction alternative set.",
+    body: "Construction alternatives are temporarily unavailable for this portfolio.",
   };
 }
 
@@ -160,14 +165,14 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   return (
     <SectionBlock
       title="Construction Alternatives"
-      subtitle={`Manage authority: ${model.authority}. Correlation: ${model.correlationId}`}
+      subtitle="Compare mandate-fit alternatives before selecting a rebalance construction."
       className="construction-alternatives-panel"
       actions={
         <div className="construction-alternatives-badge-row">
           <SemanticBadge tone={badgeTone(model.supportabilityState)}>
-            {model.supportabilityState}
+            {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
-          <SemanticBadge>{model.sourceService}</SemanticBadge>
+          <SemanticBadge>Decision evidence available</SemanticBadge>
         </div>
       }
     >
@@ -184,27 +189,20 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
         />
       ) : null}
 
-      <div className="construction-alternatives-status-strip">
-        <MetricRow label="Alternative Set" value={model.alternativeSetId} />
+      <div className="construction-alternatives-summary">
+        <MetricRow label="Alternative Set ID" value={model.alternativeSetId} />
+        <MetricRow label="Objective" value={model.objective} />
         <MetricRow
-          label="Alternatives"
-          value={model.alternatives.length.toString()}
-        />
-        <MetricRow
-          label="Selected"
+          label="State"
           value={
-            model.selectedAlternativeId ? (
-              <SemanticBadge tone="success">
-                {model.selectedAlternativeId}
-              </SemanticBadge>
-            ) : (
-              "N/A"
-            )
+            <SemanticBadge tone={badgeTone(model.alternativeSetState)}>
+              {model.alternativeSetState}
+            </SemanticBadge>
           }
         />
       </div>
 
-      <div className="construction-alternatives-action-row">
+      <div className="construction-alternatives-action-row" aria-label="Construction actions">
         <ActionButton
           priority="secondary"
           onClick={generateAlternatives}
@@ -237,61 +235,147 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
         </div>
       ) : null}
 
-      <AnalyticsTable
-        ariaLabel="Construction alternatives"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "method", label: "Method" },
-          { key: "status", label: "Status" },
-          { key: "metrics", label: "Metrics" },
-          { key: "evidence", label: "Evidence" },
-          { key: "action", label: "Action" },
-        ]}
-        rows={model.alternatives.map((alternative) => {
-          const selected =
-            model.selectedAlternativeId === alternative.alternativeId;
-          const selectable =
-            !selected &&
-            model.state !== "blocked" &&
-            model.state !== "unsupported";
-          return {
-            key: alternative.alternativeId,
-            cells: [
-              `${alternative.method} / ${alternative.alternativeId}`,
-              <SemanticBadge
-                key={`${alternative.alternativeId}-status`}
-                tone={badgeTone(alternative.status)}
-              >
-                {alternative.status}
-              </SemanticBadge>,
-              alternative.metrics.length > 0
-                ? alternative.metrics
-                    .slice(0, 3)
-                    .map((metric) => `${metric.label}: ${metric.value}`)
-                    .join(" | ")
-                : "N/A",
-              `${alternative.objectiveTraceCount} objective / ${alternative.constraintTraceCount} constraint`,
-              <ActionButton
-                key={`${alternative.alternativeId}-select`}
-                priority="secondary"
-                onClick={() => selectAlternative(alternative.alternativeId)}
-                disabled={!selectable || Boolean(selectionPendingId)}
-              >
-                {selected
-                  ? "Selected"
-                  : selectionPendingId === alternative.alternativeId
-                    ? "Selecting"
-                    : "Select"}
-              </ActionButton>,
-            ],
-          };
-        })}
-        emptyState={{
-          title: "No construction alternatives returned",
-          body: "Generate a manage-owned alternative set to compare construction choices.",
-        }}
-      />
+      <div className="construction-alternatives-grid">
+        <div className="construction-alternatives-primary">
+          <AnalyticsTable
+            ariaLabel="Ranked construction alternatives"
+            variant="analysis"
+            density="compact"
+            columns={[
+              { key: "id", label: "ID" },
+              { key: "turnover", label: "Turnover %", align: "right" },
+              { key: "cash", label: "Cash After %", align: "right" },
+              { key: "risk", label: "Risk Delta", align: "right" },
+              { key: "te", label: "TE Delta (bps)", align: "right" },
+              { key: "status", label: "Status" },
+            ]}
+            rows={model.alternatives.map((alternative) => {
+              const selected =
+                model.selectedAlternativeId === alternative.alternativeId;
+              const selectable =
+                !selected &&
+                model.state !== "blocked" &&
+                model.state !== "unsupported";
+              return {
+                key: alternative.alternativeId,
+                cells: [
+                  <span className="construction-alternative-id" key={`${alternative.alternativeId}-id`}>
+                    {alternative.alternativeId}
+                    {selected ? <SemanticBadge tone="success">Selected</SemanticBadge> : null}
+                  </span>,
+                  alternative.turnoverPct,
+                  alternative.cashAfterPct,
+                  alternative.riskDelta,
+                  alternative.trackingErrorDeltaBps,
+                  <span className="construction-alternative-status-cell" key={`${alternative.alternativeId}-status`}>
+                    <SemanticBadge tone={badgeTone(alternative.status)}>
+                      {alternative.status}
+                    </SemanticBadge>
+                    <ActionButton
+                      priority="secondary"
+                      onClick={() => selectAlternative(alternative.alternativeId)}
+                      disabled={!selectable || Boolean(selectionPendingId)}
+                    >
+                      {selected
+                        ? "Selected"
+                        : selectionPendingId === alternative.alternativeId
+                          ? "Selecting"
+                          : "Select"}
+                    </ActionButton>
+                  </span>,
+                ],
+              };
+            })}
+            emptyState={{
+              title: "No construction alternatives returned",
+              body: "Generate an alternative set to compare construction choices.",
+            }}
+          />
+
+          <div className="construction-alternatives-detail-grid">
+            <div className="construction-alternatives-detail-card">
+              <Text as="h3" variant="subsectionTitle">
+                Detail: {model.selectedAlternative?.alternativeId ?? "N/A"}
+              </Text>
+              <dl>
+                <div>
+                  <dt>Rationale</dt>
+                  <dd>{model.selectedAlternative?.rationale ?? "N/A"}</dd>
+                </div>
+                <div>
+                  <dt>Trade Count</dt>
+                  <dd>{model.selectedAlternative?.tradeCount ?? "N/A"}</dd>
+                </div>
+                <div>
+                  <dt>Evidence</dt>
+                  <dd>
+                    {model.selectedAlternative
+                      ? `${model.selectedAlternative.objectiveTraceCount} objective / ${model.selectedAlternative.constraintTraceCount} constraint`
+                      : "N/A"}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="construction-alternatives-detail-card">
+              <Text as="h3" variant="subsectionTitle">
+                Constraint Fit
+              </Text>
+              {model.constraints.length > 0 ? (
+                <div className="construction-constraint-list">
+                  {model.constraints.map((constraint) => (
+                    <div key={constraint.key}>
+                      <strong>{constraint.name}</strong>
+                      <span>{constraint.current}</span>
+                      <span>{constraint.after}</span>
+                      <SemanticBadge tone={badgeTone(constraint.state)}>
+                        {constraint.state}
+                      </SemanticBadge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ScreenStatePanel
+                  kind="empty"
+                  surface="portfolio"
+                  title="No constraint matrix returned"
+                  body="Constraint rows are not available for the selected alternative."
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="construction-source-readiness-card">
+          <Text as="h3" variant="subsectionTitle">
+            Data Readiness
+          </Text>
+          {model.sourceReadiness.length > 0 ? (
+            <div className="construction-source-readiness-list">
+              {model.sourceReadiness.map((source) => (
+                <div key={source.key}>
+                  <div>
+                    <strong>{formatBusinessSource(source.source)}</strong>
+                    <span>
+                      {source.reasonCode !== "-"
+                        ? formatBusinessReason(source.reasonCode)
+                        : source.lastUpdated}
+                    </span>
+                  </div>
+                  <SemanticBadge tone={badgeTone(source.state)}>{source.state}</SemanticBadge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ScreenStatePanel
+              kind="empty"
+              surface="portfolio"
+              title="No data readiness returned"
+              body="Generate alternatives to retrieve data readiness for this mandate."
+            />
+          )}
+        </div>
+      </div>
     </SectionBlock>
   );
 }

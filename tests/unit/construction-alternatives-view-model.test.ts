@@ -18,6 +18,22 @@ const readyResponse: DpmConstructionGatewayResponse = {
   data: {
     alternative_set_id: "cas_1",
     status: "READY",
+    objective: "Reduce cash drift while preserving balanced mandate bands",
+    source_readiness: {
+      "lotus-core": { state: "READY", last_updated: "2026-05-13T08:30:00Z" },
+      "lotus-pricing": {
+        state: "PARTIAL",
+        reason_codes: ["PRICE_STALE"],
+      },
+    },
+    constraints: [
+      {
+        name: "Balanced band",
+        current: "Breach",
+        after: "Pass",
+        state: "PASS",
+      },
+    ],
     alternatives: [
       {
         alternative_id: "alt_min_turnover",
@@ -44,12 +60,23 @@ describe("construction alternatives view model", () => {
 
     expect(model.state).toBe("ready");
     expect(model.alternativeSetId).toBe("cas_1");
+    expect(model.alternativeSetState).toBe("READY");
+    expect(model.objective).toBe(
+      "Reduce cash drift while preserving balanced mandate bands",
+    );
     expect(model.supportabilityState).toBe("READY");
     expect(model.supportabilityReasons).toEqual(["REGIME_SCENARIO_PACK_READY"]);
     expect(model.alternatives[0]).toEqual({
       alternativeId: "alt_min_turnover",
       method: "MIN_TURNOVER",
       status: "READY",
+      label: "alt_min_turnover",
+      rationale: "No rationale available.",
+      turnoverPct: "0.045",
+      cashAfterPct: "0.08",
+      riskDelta: "N/A",
+      trackingErrorDeltaBps: "N/A",
+      tradeCount: "N/A",
       metrics: [
         { key: "turnover_weight", label: "turnover weight", value: "0.045" },
         { key: "cash_weight", label: "cash weight", value: "0.08" },
@@ -61,6 +88,32 @@ describe("construction alternatives view model", () => {
       objectiveTraceCount: 1,
       constraintTraceCount: 1,
     });
+    expect(model.selectedAlternative?.alternativeId).toBe("alt_min_turnover");
+    expect(model.constraints).toEqual([
+      {
+        key: "Balanced band-0",
+        name: "Balanced band",
+        state: "PASS",
+        current: "Breach",
+        after: "Pass",
+      },
+    ]);
+    expect(model.sourceReadiness).toEqual([
+      {
+        key: "lotus-core-0",
+        source: "lotus-core",
+        state: "READY",
+        lastUpdated: "2026-05-13T08:30:00Z",
+        reasonCode: "-",
+      },
+      {
+        key: "lotus-pricing-1",
+        source: "lotus-pricing",
+        state: "PARTIAL",
+        lastUpdated: "N/A",
+        reasonCode: "PRICE_STALE",
+      },
+    ]);
   });
 
   it("uses an idle state before Gateway returns an alternative set", () => {

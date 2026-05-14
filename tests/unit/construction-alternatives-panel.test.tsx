@@ -103,10 +103,10 @@ describe("ConstructionAlternativesPanel", () => {
     expect(
       screen.getByRole("button", { name: "Generate alternatives" }),
     ).toBeEnabled();
-    expect(screen.getByText("NOT_GENERATED")).toBeInTheDocument();
+    expect(screen.getAllByText("NOT_GENERATED").length).toBeGreaterThan(0);
   });
 
-  it("generates alternatives through Gateway and renders manage-owned methods", async () => {
+  it("generates alternatives and renders backed construction methods", async () => {
     vi.mocked(generateDpmConstructionAlternatives).mockResolvedValue(
       readyResponse,
     );
@@ -122,10 +122,10 @@ describe("ConstructionAlternativesPanel", () => {
       });
     });
     expect(screen.getByText("cas_1")).toBeInTheDocument();
-    expect(
-      screen.getByText("MIN_TURNOVER / alt_min_turnover"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("turnover weight: 0.045")).toBeInTheDocument();
+    expect(screen.getAllByText("alt_min_turnover").length).toBeGreaterThan(0);
+    expect(screen.getByRole("columnheader", { name: "Turnover %" })).toBeInTheDocument();
+    expect(screen.getByText("0.045")).toBeInTheDocument();
+    expect(screen.getByText("Constraint Fit")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Select" })).toBeEnabled();
   });
 
@@ -145,7 +145,7 @@ describe("ConstructionAlternativesPanel", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Generate alternatives" }),
     );
-    await screen.findByText("MIN_TURNOVER / alt_min_turnover");
+    await screen.findByText("alt_min_turnover");
     fireEvent.click(screen.getByRole("button", { name: "Select" }));
 
     await waitFor(() => {

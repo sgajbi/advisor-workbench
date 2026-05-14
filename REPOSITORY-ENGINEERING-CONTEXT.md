@@ -53,13 +53,14 @@ Current repository posture:
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
    reviews, and proof. The route file remains orchestration-only; Manage workspace composition,
    mode navigation, and data fan-out live under `src/features/workbench/manage-workspace.tsx`.
-8. Manage overview and `mode=mandate` render the RFC-0038 DPM mandate command-center cockpit from
-   Gateway `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and
-   `/mandates*`. Workbench shows manage-owned book health distribution, source readiness,
-   attention queue, recommended actions, latest monitoring-run lineage, active exceptions,
-   governed exception-summary workflow-pack posture, and mandate health dimensions without
-   calculating mandate health, reconstructing source readiness, merging exceptions, generating
-   exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai` directly.
+8. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
+   Mandate Health surface from the RFC-0038 DPM command-center contracts exposed through Gateway
+   `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`.
+   Workbench shows manage-owned source readiness, recommended actions, latest monitoring-run
+   lineage, active exceptions, governed exception-summary workflow-pack posture, and mandate health
+   dimensions without calculating mandate health, reconstructing source readiness, merging
+   exceptions, generating exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai`
+   directly.
 9. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
    Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,

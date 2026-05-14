@@ -22,6 +22,11 @@ import {
   buildDpmCommandCenterPanelModel,
   type DpmCommandCenterPanelState,
 } from "@/features/workbench/dpm-command-center-view-model";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+  formatBusinessSource,
+} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   commandCenter: DpmCommandCenterGatewayResponse | null;
@@ -62,27 +67,27 @@ function statePanelCopy(state: DpmCommandCenterPanelState) {
     return {
       kind: "empty" as const,
       title: "No monitoring run for this PM book",
-      body: "Gateway returned an empty manage command-center state. Run monitoring to request a fresh manage-owned assessment.",
+      body: "Run monitoring to request a fresh mandate assessment.",
     };
   }
   if (state === "partial") {
     return {
       kind: "partial" as const,
-      title: "Command-center readiness is partial",
-      body: "Gateway is preserving a partial manage supportability state. Source readiness, book discovery, or latest-run lineage may need remediation.",
+      title: "Mandate readiness is partial",
+      body: "Some data readiness or mandate-review inputs need attention.",
     };
   }
   if (state === "unsupported") {
     return {
       kind: "unavailable" as const,
       title: "Command center is not supported",
-      body: "The authoritative manage supportability state says this command-center path is not available for this context.",
+      body: "Mandate health is not available for this context.",
     };
   }
   return {
     kind: "partial" as const,
-    title: "Command center is unavailable",
-    body: "Gateway did not return a usable manage command-center payload.",
+    title: "Mandate health is unavailable",
+    body: "Mandate health is temporarily unavailable.",
   };
 }
 
@@ -128,23 +133,20 @@ export default function DpmCommandCenterPanel({
     model.state === "unavailable";
   const stateCopy = statePanelCopy(model.state);
   const exceptionSummaryStatus = readWorkflowPackStatus(exceptionSummary?.data);
-  const exceptionSummaryRunId = readWorkflowPackRunId(exceptionSummary?.data);
   const runPending = pendingAction !== null;
 
   async function runMonitoring() {
     if (runPending) {
       return;
     }
-    setPendingAction("exception-summary");
+    setPendingAction("monitoring");
     setRunError(null);
     setRunMessage(null);
     try {
       const response = await runDpmCommandCenterMonitoring();
       setRunResponse(response);
       setRunMessage(
-        `Monitoring ${response.data.monitoring_run_id ?? "run"} returned ${
-          response.data.status ?? "UNKNOWN"
-        }`,
+        `Monitoring completed with ${businessStateLabel(String(response.data.status ?? "UNKNOWN"))}.`,
       );
     } catch (error) {
       setRunError(
@@ -161,7 +163,7 @@ export default function DpmCommandCenterPanel({
     if (runPending || !model.selectedExceptionId) {
       return;
     }
-    setPendingAction("monitoring");
+    setPendingAction("exception-summary");
     setRunError(null);
     setRunMessage(null);
     try {
@@ -171,11 +173,7 @@ export default function DpmCommandCenterPanel({
         state: "ACTIVE",
       });
       setExceptionSummary(response);
-      setRunMessage(
-        `Exception summary ${readWorkflowPackStatus(response.data)} (${readWorkflowPackRunId(
-          response.data,
-        )})`,
-      );
+      setRunMessage(`Exception summary ${businessStateLabel(readWorkflowPackStatus(response.data))}.`);
     } catch (error) {
       setRunError(
         error instanceof Error
@@ -189,15 +187,15 @@ export default function DpmCommandCenterPanel({
 
   return (
     <SectionBlock
-      title="DPM Command Center"
-      subtitle={`Manage authority: ${model.authority}. Correlation: ${model.correlationId}`}
+      title="Mandate Health"
+      subtitle="Mandate readiness, attention items, and advisor actions."
       className="dpm-command-center-panel"
       actions={
         <div className="dpm-command-center-badge-row">
           <SemanticBadge tone={badgeTone(model.supportabilityState)}>
-            {model.supportabilityState}
+            {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
-          <SemanticBadge>{model.sourceService}</SemanticBadge>
+          <SemanticBadge>Decision support available</SemanticBadge>
         </div>
       }
     >
@@ -207,7 +205,7 @@ export default function DpmCommandCenterPanel({
           surface="portfolio"
           title={
             errorMessage || runError
-              ? "Command-center endpoint is unavailable"
+              ? "Mandate health is unavailable"
               : stateCopy.title
           }
           body={errorMessage ?? runError ?? stateCopy.body}
@@ -220,8 +218,8 @@ export default function DpmCommandCenterPanel({
           label="Active Exceptions"
           value={model.activeExceptionCount}
         />
-        <MetricRow label="Completeness" value={model.dataCompletenessState} />
-        <MetricRow label="Source Run" value={model.sourceRunId} />
+        <MetricRow label="Completeness" value={businessStateLabel(model.dataCompletenessState)} />
+        <MetricRow label="Latest Check" value={model.sourceRunId !== "N/A" ? "Available" : "Not available"} />
       </div>
 
       <div className="dpm-command-center-action-row">
@@ -246,8 +244,7 @@ export default function DpmCommandCenterPanel({
             </Text>
           ) : null}
           <Text variant="secondary" className="muted">
-            Workbench calls Gateway only; manage owns monitoring, mandate
-            health, source readiness, exceptions, and recommended actions.
+            Monitoring and exception summaries use approved workflow actions.
           </Text>
         </div>
       </div>
@@ -289,26 +286,26 @@ export default function DpmCommandCenterPanel({
             }))}
             emptyState={{
               title: "No health distribution returned",
-              body: "Gateway preserved the manage payload, but no distribution rows were present.",
+              body: "No health distribution rows are currently available.",
             }}
           />
         </div>
 
         <div className="dpm-command-center-subsection">
           <Text as="h3" variant="subsectionTitle">
-            Source Readiness
+            Data Readiness
           </Text>
           <div className="dpm-command-center-metric-grid">
             {model.sourceReadiness.length > 0 ? (
               model.sourceReadiness.map((row) => (
-                <MetricRow key={row.key} label={row.label} value={row.value} />
+                <MetricRow key={row.key} label={formatBusinessSource(row.label)} value={businessStateLabel(row.value)} />
               ))
             ) : (
               <ScreenStatePanel
                 kind="empty"
                 surface="portfolio"
                 title="No source readiness summary"
-                body="Manage did not publish source-readiness summary rows for this view."
+                body="No data readiness summary is currently available."
               />
             )}
           </div>
@@ -316,19 +313,18 @@ export default function DpmCommandCenterPanel({
       </div>
 
       <div className="dpm-command-center-status-strip">
-        <MetricRow label="Latest Run" value={latestRunId} />
+        <MetricRow label="Latest Check" value={latestRunId !== "N/A" ? "Available" : "Not available"} />
         <MetricRow
           label="Run Status"
           value={
             <SemanticBadge tone={badgeTone(latestRunStatus)}>
-              {latestRunStatus}
+              {businessStateLabel(latestRunStatus)}
             </SemanticBadge>
           }
         />
         <MetricRow label="Mandate" value={model.mandateId} />
-        <MetricRow label="Mandate Health" value={model.mandateHealthState} />
-        <MetricRow label="Exception Summary" value={exceptionSummaryStatus} />
-        <MetricRow label="Exception Summary Run" value={exceptionSummaryRunId} />
+        <MetricRow label="Mandate Health" value={businessStateLabel(model.mandateHealthState)} />
+        <MetricRow label="Exception Summary" value={businessStateLabel(exceptionSummaryStatus)} />
       </div>
 
       <AnalyticsTable
@@ -352,14 +348,14 @@ export default function DpmCommandCenterPanel({
             >
               {row.severity}
             </SemanticBadge>,
-            row.reasonCode,
+            formatBusinessReason(row.reasonCode),
             row.recommendedAction,
             row.count,
           ],
         }))}
         emptyState={{
           title: "No attention buckets returned",
-          body: "The Gateway command-center payload did not include manage attention buckets.",
+          body: "No attention buckets are currently available.",
         }}
       />
 
@@ -380,14 +376,14 @@ export default function DpmCommandCenterPanel({
               key={`${row.key}-severity`}
               tone={badgeTone(row.severity)}
             >
-              {row.severity}
+              {businessStateLabel(row.severity)}
             </SemanticBadge>,
             row.count,
           ],
         }))}
         emptyState={{
           title: "No recommended actions returned",
-          body: "Manage did not publish command-center recommended actions for this context.",
+          body: "No recommended actions are currently available.",
         }}
       />
 
@@ -414,14 +410,14 @@ export default function DpmCommandCenterPanel({
             >
               {row.severity}
             </SemanticBadge>,
-            row.reasonCode,
+            formatBusinessReason(row.reasonCode),
             row.recommendedAction,
-            row.state,
+            businessStateLabel(row.state),
           ],
         }))}
         emptyState={{
           title: "No active exceptions returned",
-          body: "Gateway returned no manage exception rows for the selected PM book.",
+          body: "No active exception rows are currently available for the selected book.",
         }}
       />
 
@@ -441,14 +437,14 @@ export default function DpmCommandCenterPanel({
             row.dimension,
             row.score,
             <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
-              {row.state}
+              {businessStateLabel(row.state)}
             </SemanticBadge>,
-            row.reasons,
+            formatBusinessReason(row.reasons),
           ],
         }))}
         emptyState={{
           title: "No mandate dimensions returned",
-          body: "Mandate drill-down is available only when manage publishes health dimension rows.",
+          body: "Mandate drill-down is available when health dimension rows are present.",
         }}
       />
 
@@ -473,22 +469,6 @@ function readWorkflowPackStatus(data: Record<string, unknown> | undefined): stri
     readString(workflowPackRun.review_state) ??
     readString(output.review_state) ??
     "REVIEW_REQUIRED"
-  );
-}
-
-function readWorkflowPackRunId(data: Record<string, unknown> | undefined): string {
-  if (!data) {
-    return "N/A";
-  }
-  const workflowPackRun = readRecord(data.workflow_pack_run);
-  const execution = readRecord(data.execution);
-  const audit = readRecord(execution.audit);
-  return (
-    readString(data.run_id) ??
-    readString(data.workflow_run_id) ??
-    readString(workflowPackRun.run_id) ??
-    readString(audit.workflow_pack_run_id) ??
-    "N/A"
   );
 }
 

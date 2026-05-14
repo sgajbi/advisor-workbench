@@ -108,7 +108,7 @@ describe("ProofPackPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders manage-backed proof-pack evidence posture", () => {
+  it("renders decision evidence posture", () => {
     render(
       <ProofPackPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -119,17 +119,17 @@ describe("ProofPackPanel", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeInTheDocument();
-    expect(screen.getAllByText("READY").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("heading", { name: "Evidence Packs" })).toBeInTheDocument();
+    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("ppack_1")).toBeInTheDocument();
-    expect(screen.getAllByText("sha256:proof-pack").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("investment_policy")).toBeInTheDocument();
-    expect(screen.getByText("sha256:risk")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Generate proof pack" })).toBeEnabled();
+    expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
+    expect(screen.getByText("Investment Policy")).toBeInTheDocument();
+    expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Load Markdown" })).toBeEnabled();
   });
 
-  it("generates a proof pack from the Workbench rebalance snapshot run", async () => {
+  it("prepares an evidence pack from the rebalance snapshot run", async () => {
     vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(readyProofPack);
 
     render(
@@ -141,7 +141,7 @@ describe("ProofPackPanel", () => {
         initialProofPack={null}
       />
     );
-    fireEvent.click(screen.getByRole("button", { name: "Generate proof pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare evidence" }));
 
     await waitFor(() => {
       expect(generateDpmProofPackFromRun).toHaveBeenCalledWith({
@@ -149,11 +149,11 @@ describe("ProofPackPanel", () => {
         mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
       });
     });
-    expect(screen.getByText("Proof-pack generation completed through Gateway.")).toBeInTheDocument();
+    expect(screen.getByText("Evidence pack prepared.")).toBeInTheDocument();
     expect(screen.getByText("ppack_1")).toBeInTheDocument();
   });
 
-  it("loads proof-pack detail and handoff payloads through Gateway", async () => {
+  it("loads evidence detail and handoff payloads", async () => {
     vi.mocked(getDpmProofPack).mockResolvedValue(readyProofPack);
     vi.mocked(getDpmProofPackMarkdown).mockResolvedValue({
       ...readyProofPack,
@@ -188,22 +188,22 @@ describe("ProofPackPanel", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Load proof pack" }));
+    fireEvent.click(screen.getByRole("button", { name: "Load evidence" }));
     await waitFor(() => expect(getDpmProofPack).toHaveBeenCalledWith("ppack_1"));
     fireEvent.click(screen.getByRole("button", { name: "Load Markdown" }));
     await waitFor(() => expect(getDpmProofPackMarkdown).toHaveBeenCalledWith("ppack_1"));
-    expect(await screen.findByLabelText("Proof-pack Markdown preview")).toHaveTextContent(
+    expect(await screen.findByLabelText("Evidence pack summary preview")).toHaveTextContent(
       "Ready."
     );
     fireEvent.click(screen.getByRole("button", { name: "Report Input" }));
     await waitFor(() => expect(getDpmProofPackReportInput).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "AI Evidence" }));
+    fireEvent.click(screen.getByRole("button", { name: "Evidence Input" }));
     await waitFor(() => expect(getDpmProofPackAiEvidenceInput).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "AI PM Memo" }));
+    fireEvent.click(screen.getByRole("button", { name: "PM memo" }));
     await waitFor(() =>
       expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" })
     );
-    expect(screen.getByText("PM memo AWAITING_REVIEW (packrun_ppack_1).")).toBeInTheDocument();
+    expect(screen.getByText("PM memo Awaiting Review.")).toBeInTheDocument();
   });
 
   it("renders unavailable state without claiming generated proof", () => {
@@ -216,8 +216,8 @@ describe("ProofPackPanel", () => {
       />
     );
 
-    expect(screen.getByText("Proof-pack endpoint is unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Evidence pack is unavailable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch DPM proof pack (503)")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Generate proof pack" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeDisabled();
   });
 });

@@ -52,6 +52,8 @@ describe("portfolio-memory view model", () => {
     expect(model.supportabilityState).toBe("READY");
     expect(model.portfolioId).toBe("PB_SG_GLOBAL_BAL_001");
     expect(model.eventCount).toBe("2");
+    expect(model.latestEventTime).toBe("2026-05-07T10:00:00Z");
+    expect(model.artifactRefCount).toBe("2");
     expect(model.contentHash).toBe("sha256:portfolio-memory");
     expect(model.eventTypeRows.map((row) => row.eventType)).toEqual([
       "PROOF_PACK_CREATED",
@@ -62,10 +64,14 @@ describe("portfolio-memory view model", () => {
       "memory:outcome-review:or_1",
     ]);
     expect(model.events[0]).toMatchObject({
+      summary: "No summary available.",
+      status: "READY",
       sourceRefs: "lotus-manage:ppack_1",
       artifactRefs: "proof_pack:ppack_1",
+      contentHash: "N/A",
       reasonCodes: "PROOF_READY",
     });
+    expect(model.selectedEvent?.eventId).toBe("memory:proof-pack:ppack_1");
   });
 
   it("does not infer readiness from populated events when manage supportability is partial", () => {

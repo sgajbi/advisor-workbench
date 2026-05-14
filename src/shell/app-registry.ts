@@ -7,8 +7,8 @@ export type ShellAppId =
   | "advisory";
 
 const SHELL_APP_MATCHERS: Record<ShellAppId, string[]> = {
-  home: ["/", "/suite", "/workbench"],
-  portfolio: ["/portfolio", "/portfolios", "/positions", "/transactions", "/cashflow", "/manage", "/intake"],
+  home: ["/", "/suite"],
+  portfolio: ["/portfolio", "/portfolios", "/positions", "/transactions", "/cashflow", "/manage", "/workbench", "/intake"],
   performance: ["/performance"],
   risk: ["/performance"],
   proposal: ["/proposals"],
