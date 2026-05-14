@@ -16,10 +16,9 @@ import {
   WorkbenchPageFrame,
   WorkbenchRailCard,
   WorkbenchSectionStack,
-  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
-import DpmCommandCenterPanel from "@/features/workbench/components/dpm-command-center-panel";
+import ManageMandateHealth from "@/features/workbench/components/manage-mandate-health";
 import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
 import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
@@ -28,6 +27,19 @@ import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-comman
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-review-view-model";
 import { buildPortfolioMemoryPanelModel } from "@/features/workbench/portfolio-memory-view-model";
+import {
+  businessLastReviewed,
+  businessStateLabel,
+  buildManageExceptionRows,
+  formatBusinessBook,
+  formatBusinessExceptionTitle,
+  formatBusinessMandateType,
+  formatBusinessOwner,
+  formatBusinessTrigger,
+  firstNonEmpty,
+  readStringFromResponse,
+  toneForState,
+} from "@/features/workbench/manage-workspace-view-model";
 import {
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
@@ -38,8 +50,7 @@ import {
   getPortfolio360,
   listDpmWaves,
 } from "@/features/workbench/api";
-
-type BadgeTone = "default" | "success" | "warn" | "danger";
+import styles from "./manage-workspace.module.css";
 
 export type ManageMode =
   | "overview"
@@ -77,21 +88,21 @@ export const MANAGE_MODE_DEFINITIONS: Array<{
     label: "Overview",
     detail: "Mandate posture",
     title: "Manage Overview",
-    description: "DPM mandate state, operating readiness, and current portfolio context.",
+    description: "Discretionary mandate readiness and rebalance posture.",
   },
   {
     key: "mandate",
     label: "Mandate",
     detail: "Health and exceptions",
     title: "Mandate Health",
-    description: "Manage-owned mandate health, source readiness, exceptions, and recommended actions.",
+    description: "Mandate readiness, attention items, and recommended actions.",
   },
   {
     key: "waves",
-    label: "Waves",
+    label: "Rebalance",
     detail: "Rebalance lifecycle",
     title: "Rebalance Waves",
-    description: "Explicit portfolio-list wave state, source checks, simulation, approval, staging, and handoff.",
+    description: "Rebalance simulation, approval readiness, and execution handoff.",
   },
   {
     key: "construction",
@@ -105,21 +116,21 @@ export const MANAGE_MODE_DEFINITIONS: Array<{
     label: "Memory",
     detail: "Portfolio memory",
     title: "Portfolio Memory",
-    description: "Manage-published portfolio memory and institutional context.",
+    description: "Portfolio decision memory and operating history.",
   },
   {
     key: "reviews",
     label: "Reviews",
     detail: "Outcome review",
     title: "Outcome Reviews",
-    description: "Post-trade outcome review evidence and realized-versus-expected variance.",
+    description: "Post-trade review and realized-versus-expected variance.",
   },
   {
     key: "proof",
-    label: "Proof Packs",
-    detail: "Evidence handoff",
-    title: "Proof Packs",
-    description: "Proof-pack generation, report inputs, and evidence handoff state.",
+    label: "Evidence",
+    detail: "Decision evidence",
+    title: "Evidence Packs",
+    description: "Decision evidence prepared for review and audit.",
   },
 ];
 
@@ -162,7 +173,7 @@ export async function loadManageWorkspaceData(
     mandateHealth,
     commandCenterError: readSettledError(
       commandCenterResult,
-      "DPM command-center endpoint unavailable."
+      "Mandate readiness is temporarily unavailable."
     ),
     portfolioMemory: readSettledValue(memoryResult),
     portfolioMemoryError: readSettledError(
@@ -191,7 +202,7 @@ export function ManageWorkspace({
   const dpmMandateId = readDpmMandateId(data.mandate?.data ?? null);
 
   return (
-    <AppPageShell pageKey="manage" className="portfolio-page manage-page">
+    <AppPageShell pageKey="manage" className={`portfolio-page manage-page ${styles.manageScope}`}>
       <WorkbenchPageContainer className="portfolio-page-container manage-page-container">
         <MainWithSideRailLayout
           className="manage-layout portfolio-page"
@@ -212,11 +223,11 @@ export function ManageWorkspace({
               className={`manage-page-frame manage-page-frame-${mode}`}
               bodyClassName="manage-page-frame-body"
               title={modeDefinition.title}
-              subtitle={`${portfolio.portfolio_id} | ${modeDefinition.description}`}
+              subtitle={modeDefinition.description}
               actions={
                 <>
                   <SemanticBadge tone={data.commandCenterError ? "warn" : "success"}>
-                    {data.commandCenterError ? "Partial" : "Gateway backed"}
+                    {data.commandCenterError ? "Needs attention" : "Evidence available"}
                   </SemanticBadge>
                   <SemanticBadge>{portfolio.base_currency}</SemanticBadge>
                 </>
@@ -274,15 +285,7 @@ function renderManageMode(
 ): ReactNode {
   switch (mode) {
     case "mandate":
-      return (
-        <DpmCommandCenterPanel
-          commandCenter={data.commandCenter}
-          exceptions={data.commandCenterExceptions}
-          mandate={data.mandate}
-          mandateHealth={data.mandateHealth}
-          errorMessage={data.commandCenterError}
-        />
-      );
+      return <ManageMandateHealth data={data} mandateId={mandateId} />;
     case "waves":
       return (
         <>
@@ -353,296 +356,289 @@ function ManageOverview({
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
-  const exceptionRows = buildOverviewExceptionRows(data.commandCenterExceptions);
+  const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
+  const activeExceptionCount = parseCount(commandModel.activeExceptionCount);
+  const selectedWaveIssueCount = parseCount(waveModel.selectedWaveIssueCount);
   const latestActivities = buildManageActivityRows(commandModel, waveModel, reviewModel);
   const latestProofPackId = firstNonEmpty(
     reviewModel.items.find((item) => item.proofPackId !== "N/A")?.proofPackId,
     "N/A"
   );
   const blockedSurfaces = [
-    data.commandCenterError ? "Mandate command center" : null,
+    data.commandCenterError ? "Mandate readiness" : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
     data.outcomeReviewError ? "Outcome reviews" : null,
   ].filter((surface): surface is string => Boolean(surface));
+  const mandateReadiness =
+    activeExceptionCount > 0
+      ? "Needs Attention"
+      : businessStateLabel(
+          commandModel.mandateHealthState !== "N/A"
+            ? commandModel.mandateHealthState
+            : commandModel.supportabilityState
+        );
+  const dataReadiness = businessStateLabel(commandModel.dataCompletenessState);
+  const rebalanceStatus = businessStateLabel(waveModel.selectedWaveState);
+  const mandateTone = toneForState(
+    commandModel.mandateHealthState !== "N/A"
+      ? commandModel.mandateHealthState
+      : commandModel.supportabilityState
+  );
+  const dataTone = toneForState(commandModel.dataCompletenessState);
+  const rebalanceTone = toneForState(waveModel.selectedWaveState);
+  const approvalReadiness =
+    activeExceptionCount > 0 || selectedWaveIssueCount > 0
+      ? "Blocked"
+      : "Ready";
+  const readinessCards = [
+    {
+      key: "mandate",
+      label: "Mandate Readiness",
+      value: mandateReadiness,
+      icon: activeExceptionCount > 0 ? "warning" : mandateTone === "success" ? "verified" : "pending",
+      tone: activeExceptionCount > 0 ? "danger" : mandateTone,
+      progress: activeExceptionCount > 0 ? 75 : mandateTone === "success" ? 100 : 50,
+    },
+    {
+      key: "data",
+      label: "Data Readiness",
+      value: dataReadiness,
+      icon: dataTone === "success" ? "check_circle" : "pending",
+      tone: dataTone === "danger" ? "danger" : dataTone === "success" ? "success" : "warn",
+      progress: dataTone === "success" ? 100 : 50,
+    },
+    {
+      key: "rebalance",
+      label: "Rebalance Status",
+      value: rebalanceStatus,
+      icon: rebalanceTone === "success" ? "check_circle" : "pending",
+      tone: rebalanceTone === "danger" ? "danger" : rebalanceTone === "success" ? "success" : "warn",
+      progress: rebalanceTone === "success" ? 100 : 50,
+    },
+    {
+      key: "approval",
+      label: "Approval Readiness",
+      value: approvalReadiness,
+      icon: approvalReadiness === "Ready" ? "check_circle" : "block",
+      tone: approvalReadiness === "Ready" ? "success" : "danger",
+      progress: approvalReadiness === "Ready" ? 100 : 25,
+    },
+  ];
   const moduleItems = [
     {
       key: "mandate",
       title: "Mandate Health",
-      state: commandModel.mandateHealthState !== "N/A" ? commandModel.mandateHealthState : commandModel.supportabilityState,
+      icon: "health_and_safety",
+      state: businessStateLabel(commandModel.mandateHealthState !== "N/A" ? commandModel.mandateHealthState : commandModel.supportabilityState),
       tone: toneForState(commandModel.mandateHealthState !== "N/A" ? commandModel.mandateHealthState : commandModel.supportabilityState),
-      metric: `${commandModel.activeExceptionCount} active exceptions`,
-      detail: commandModel.latestMonitoringRunId !== "N/A"
-        ? `Last run ${commandModel.latestMonitoringRunId}`
-        : "Monitoring posture from Gateway",
+      metric: `${activeExceptionCount} attention items`,
+      detail: activeExceptionCount
+        ? "Review mandate readiness and resolve open items."
+        : "Mandate settings are ready for advisor review.",
       href: buildManageModeHref(portfolioId, "mandate"),
       action: "Open Mandate Health",
     },
     {
       key: "waves",
-      title: "Rebalance Waves",
-      state: waveModel.supportabilityState,
+      title: "Rebalance",
+      icon: "refresh",
+      state: businessStateLabel(waveModel.supportabilityState),
       tone: toneForState(waveModel.supportabilityState),
-      metric: waveModel.selectedWaveId ?? "No active wave",
-      detail: `${waveModel.selectedWaveState} | ${waveModel.selectedWaveItemCount} items`,
+      metric: businessStateLabel(waveModel.selectedWaveState),
+      detail: `${waveModel.selectedWaveItemCount} proposed changes, ${selectedWaveIssueCount} issues.`,
       href: buildManageModeHref(portfolioId, "waves"),
       action: "Open Rebalance Waves",
     },
     {
       key: "construction",
       title: "Construction",
-      state: "AVAILABLE",
+      icon: "architecture",
+      state: "Available",
       tone: "default" as const,
-      metric: "Gateway action available",
-      detail: "Generate and compare alternatives in the construction workspace",
+      metric: "Alternatives available",
+      detail: "Compare suitable implementation paths for the mandate.",
       href: buildManageModeHref(portfolioId, "construction"),
       action: "Open Construction",
     },
     {
       key: "memory",
       title: "Portfolio Memory",
-      state: memoryModel.supportabilityState,
+      icon: "memory",
+      state: businessStateLabel(memoryModel.supportabilityState),
       tone: toneForState(memoryModel.supportabilityState),
       metric: `${memoryModel.eventCount} events`,
-      detail: memoryModel.contentHash !== "N/A" ? memoryModel.contentHash : "Manage timeline posture",
+      detail: "Recent decisions and operating events are captured.",
       href: buildManageModeHref(portfolioId, "memory"),
       action: "Open Portfolio Memory",
     },
     {
       key: "reviews",
       title: "Outcome Reviews",
-      state: reviewModel.supportabilityState,
+      icon: "rate_review",
+      state: businessStateLabel(reviewModel.supportabilityState),
       tone: toneForState(reviewModel.supportabilityState),
       metric: `${reviewModel.items.length} reviews`,
-      detail: reviewModel.items[0]?.state ?? "Review posture from Gateway",
+      detail: reviewModel.items[0]?.state ? businessStateLabel(reviewModel.items[0].state) : "No pending review.",
       href: buildManageModeHref(portfolioId, "reviews"),
       action: "Open Outcome Reviews",
     },
     {
       key: "proof",
-      title: "Proof Packs",
-      state: latestProofPackId !== "N/A" ? "AVAILABLE" : "NOT_REQUESTED",
+      title: "Evidence Pack",
+      icon: "description",
+      state: latestProofPackId !== "N/A" ? "Available" : "Not requested",
       tone: latestProofPackId !== "N/A" ? ("success" as const) : ("default" as const),
-      metric: latestProofPackId,
-      detail: "Evidence handoff for latest rebalance context",
+      metric: latestProofPackId !== "N/A" ? "Evidence available" : "Not requested",
+      detail: "Decision evidence prepared for advisor and audit review.",
       href: buildManageModeHref(portfolioId, "proof"),
-      action: "Open Proof Packs",
+      action: "Open Evidence Pack",
     },
   ];
 
   return (
     <SectionBlock
-      title="Manage Operating Posture"
-      subtitle="Focused DPM control surface backed by lotus-manage through Gateway."
+      title="Mandate Operating Posture"
+      subtitle="Advisor-facing view of mandate readiness, rebalance status, and items needing attention."
       className="manage-overview-panel"
       actions={
         <SemanticBadge tone={blockedSurfaces.length ? "warn" : "success"}>
-          {blockedSurfaces.length ? "Partial" : "Ready"}
+          {blockedSurfaces.length ? "Needs attention" : "Evidence Available"}
         </SemanticBadge>
       }
       >
-      <WorkbenchSummaryMetricStrip
-        ariaLabel="Manage operating summary"
-        items={[
-          {
-            key: "market-value",
-            label: "Total Assets",
-            value: formatCurrency(
-              portfolio.overview.market_value_base,
-              portfolio.portfolio.base_currency
-            ),
-          },
-          {
-            key: "positions",
-            label: "Positions",
-            value: portfolio.overview.position_count,
-          },
-          {
-            key: "cash-weight",
-            label: "Cash Weight",
-            value: formatPct(portfolio.overview.cash_weight_pct),
-          },
-          {
-            key: "mandate",
-            label: "Mandate",
-            value: mandateId ?? "N/A",
-          },
-          {
-            key: "waves",
-            label: "Wave Surface",
-            value: data.wavesError ? "Partial" : "Ready",
-          },
-          {
-            key: "reviews",
-            label: "Outcome Reviews",
-            value: data.outcomeReviewError ? "Partial" : "Ready",
-          },
-        ]}
-      />
-      <div className="manage-readiness-strip" aria-label="Manage operating readiness">
-        {[
-          {
-            label: "Mandate Health",
-            value: commandModel.mandateHealthState !== "N/A" ? commandModel.mandateHealthState : commandModel.supportabilityState,
-          },
-          {
-            label: "Source Readiness",
-            value: commandModel.dataCompletenessState,
-          },
-          {
-            label: "Active Exceptions",
-            value: `${commandModel.activeExceptionCount} Open`,
-          },
-          {
-            label: "Wave",
-            value: waveModel.supportabilityState,
-          },
-          {
-            label: "Construction",
-            value: "AVAILABLE",
-          },
-          {
-            label: "Memory",
-            value: memoryModel.supportabilityState,
-          },
-          {
-            label: "Proof Pack",
-            value: latestProofPackId !== "N/A" ? "AVAILABLE" : "NOT_REQUESTED",
-          },
-        ].map((item) => (
-          <div className="manage-readiness-item" key={item.label}>
-            <span>{item.label}</span>
-            <SemanticBadge tone={toneForState(item.value)}>{item.value}</SemanticBadge>
+      <div className="manage-decision-readiness-grid" aria-label="Decision readiness">
+        {readinessCards.map((item) => (
+          <div className={`manage-decision-readiness-card is-${item.tone}`} key={item.key}>
+            <div>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+            <span className="manage-status-icon" data-icon={item.icon} aria-hidden="true" />
+            <div className="manage-readiness-meter" aria-hidden="true">
+              <i style={{ width: `${item.progress}%` }} />
+            </div>
           </div>
         ))}
       </div>
-      <div className="manage-overview-focus-grid">
-        <div className="manage-overview-card">
-          <div className="manage-overview-card-header">
-            <div>
-              <Text variant="label">Mandate Health Snapshot</Text>
-              <strong>{mandateId ?? commandModel.mandateId}</strong>
-            </div>
-            <SemanticBadge tone={toneForState(commandModel.mandateHealthState)}>
-              {commandModel.mandateHealthState}
-            </SemanticBadge>
-          </div>
-          <DefinitionList
-            ariaLabel="Manage mandate health snapshot"
-            items={[
-              { label: "Type", value: readStringFromResponse(data.mandate, "mandate_type") ?? "Discretionary Balanced" },
-              { label: "Risk Profile", value: readStringFromResponse(data.mandate, "risk_profile") ?? "Balanced" },
-              { label: "PM Book", value: readStringFromResponse(data.mandate, "pm_book_id") ?? "N/A" },
-              { label: "Benchmark", value: readStringFromResponse(data.mandate, "benchmark_id") ?? "N/A" },
-              { label: "Last Run", value: commandModel.latestMonitoringRunId },
-              { label: "Source State", value: commandModel.dataCompletenessState },
-            ]}
-          />
+
+      <div className="manage-portfolio-value-band" aria-label="Portfolio operating summary">
+        <div>
+          <span>Portfolio Value ({portfolio.portfolio.base_currency})</span>
+          <strong>{formatAmount(portfolio.overview.market_value_base)}</strong>
         </div>
-        <div className="manage-overview-card">
+        <dl>
+          <div>
+            <dt>Positions</dt>
+            <dd>{portfolio.overview.position_count}</dd>
+          </div>
+          <div>
+            <dt>Cash Weight</dt>
+            <dd>{formatPct(portfolio.overview.cash_weight_pct)}</dd>
+          </div>
+          <div>
+            <dt>Risk Profile</dt>
+            <dd>{readStringFromResponse(data.mandate, "risk_profile") ?? "Balanced"}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="manage-overview-focus-grid">
+        <div className="manage-overview-table-card manage-attention-card">
+          <div className="manage-overview-card-header">
+            <h3>Attention Required</h3>
+            <span>{exceptionRows.length} items pending</span>
+          </div>
+          <table className="manage-overview-table">
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th>Observation</th>
+                <th>Source</th>
+                <th>Age</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {exceptionRows.length ? (
+                exceptionRows.slice(0, 4).map((row) => (
+                  <tr key={row.key}>
+                    <td><SemanticBadge tone={toneForState(row.severity)}>{businessStateLabel(row.severity)}</SemanticBadge></td>
+                    <td>{formatBusinessExceptionTitle(row.title)}</td>
+                    <td>{formatBusinessOwner(row.owner, row.source)}</td>
+                    <td>{row.age}</td>
+                    <td><a href={buildManageModeHref(portfolioId, "mandate")}>{row.nextAction}</a></td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5}>No active attention items.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="manage-overview-card manage-active-rebalance-card">
           <div className="manage-overview-card-header">
             <div>
-              <Text variant="label">Active Rebalance Wave</Text>
-              <strong>{waveModel.selectedWaveId ?? "No active wave"}</strong>
+              <h3>Active Rebalance</h3>
+              <span>Wave: {formatBusinessTrigger(waveModel.summaryRows[0]?.triggerType)}</span>
             </div>
             <SemanticBadge tone={toneForState(waveModel.selectedWaveState)}>
-              {waveModel.selectedWaveState}
+              Stage: {businessStateLabel(waveModel.selectedWaveState)}
             </SemanticBadge>
           </div>
-          <DefinitionList
-            ariaLabel="Manage rebalance wave snapshot"
-            items={[
-              { label: "Trigger", value: waveModel.summaryRows[0]?.triggerType ?? "N/A" },
-              { label: "Items", value: waveModel.selectedWaveItemCount },
-              { label: "Issues", value: waveModel.selectedWaveIssueCount },
-              { label: "Proof Packs", value: waveModel.proofPackRows.length.toString() },
-            ]}
-          />
           <div className="manage-wave-stepper" aria-label="Rebalance wave lifecycle">
-            {["Preview", "Source Check", "Simulation", "Approval", "Staging", "Handoff"].map((step) => (
-              <span
-                key={step}
-                className={step.toUpperCase().includes("SIMULATION") || waveModel.selectedWaveState.includes(step.toUpperCase().replace(" ", "_"))
-                  ? "manage-wave-step-active"
-                  : ""}
-              >
-                {step}
-              </span>
-            ))}
+            {["Preview", "Source", "Simulation", "Approval", "Staging"].map((step, index) => {
+              const isComplete = index < 2;
+              const isActive = step === "Simulation" || waveModel.selectedWaveState.includes(step.toUpperCase());
+              return (
+                <span
+                  key={step}
+                  className={[
+                    isComplete ? "manage-wave-step-complete" : "",
+                    isActive ? "manage-wave-step-active" : "",
+                  ].filter(Boolean).join(" ")}
+                >
+                  {step}
+                </span>
+              );
+            })}
+          </div>
+          <div className="manage-rebalance-blocker">
+            <span className="manage-status-icon" data-icon="info" aria-hidden="true" />
+            <p>
+              {approvalReadiness === "Blocked"
+                ? "Blocker: approval pending exception resolution."
+                : "Ready for approval review."}
+            </p>
           </div>
         </div>
       </div>
-      <div className="manage-module-grid" aria-label="Manage module readiness">
-        <div className="manage-overview-grid-label">
-          <Text variant="label">Manage module readiness</Text>
-        </div>
+
+      <div className="manage-module-grid" aria-label="Manage work areas">
         {moduleItems.map((item) => (
           <a className="manage-module-card" href={item.href} key={item.key}>
-            <div className="manage-module-card-header">
-              <strong>{item.title}</strong>
-              <SemanticBadge tone={item.tone}>{item.state}</SemanticBadge>
-            </div>
+            <span className="manage-module-icon" data-icon={item.icon} aria-hidden="true" />
+            <strong>{item.title}</strong>
             <span className="manage-module-metric">{item.metric}</span>
-            <span className="manage-module-detail">{item.detail}</span>
-            <span className="manage-module-action">{item.action}</span>
           </a>
         ))}
       </div>
-      <div className="manage-overview-table-card">
-        <div className="manage-overview-card-header">
-          <div>
-            <Text variant="label">Active Exceptions</Text>
-            <strong>{exceptionRows.length} requiring attention</strong>
-          </div>
-          <a href={buildManageModeHref(portfolioId, "mandate")}>Open exceptions</a>
-        </div>
-        <table className="manage-overview-table">
-          <thead>
-            <tr>
-              <th>Severity</th>
-              <th>Exception</th>
-              <th>Source</th>
-              <th>Owner</th>
-              <th>Age</th>
-              <th>State</th>
-              <th>Next Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {exceptionRows.length ? (
-              exceptionRows.slice(0, 4).map((row) => (
-                <tr key={row.key}>
-                  <td><SemanticBadge tone={toneForState(row.severity)}>{row.severity}</SemanticBadge></td>
-                  <td>{row.title}</td>
-                  <td>{row.source}</td>
-                  <td>{row.owner}</td>
-                  <td>{row.age}</td>
-                  <td>{row.state}</td>
-                  <td><a href={buildManageModeHref(portfolioId, "mandate")}>{row.nextAction}</a></td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7}>No active exceptions returned by Gateway.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+
       <div className="manage-overview-activity">
         <div className="manage-overview-card-header">
-          <div>
-            <Text variant="label">Recent Operating Activity</Text>
-            <strong>Gateway-backed operating trail</strong>
-          </div>
+          <h3>Audit Log &amp; Timeline</h3>
         </div>
-        <div className="manage-activity-list" role="list">
+        <div className="manage-activity-timeline" role="list">
           {latestActivities.map((activity) => (
             <div className="manage-activity-row" role="listitem" key={activity.key}>
-              <span>{activity.time}</span>
-              <strong>{activity.event}</strong>
-              <span>{activity.source}</span>
-              <span>{activity.evidenceRef}</span>
+              <i aria-hidden="true" />
+              <div>
+                <strong>{activity.event}</strong>
+                <span>{activity.time}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -651,13 +647,13 @@ function ManageOverview({
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
-          title="Some manage surfaces are degraded"
-          body={`Unavailable surfaces: ${blockedSurfaces.join(", ")}.`}
+          title="Some manage views need attention"
+          body={`Areas to review: ${blockedSurfaces.join(", ")}.`}
         />
       ) : (
         <Text variant="secondary" className="muted">
-          Manage overview is a routing surface. Detailed mandate, wave, construction, memory,
-          outcome review, and proof-pack operations remain in their dedicated Manage modes.
+          Detailed mandate, rebalance, construction, memory, review, and evidence views are
+          available from the Manage navigation.
         </Text>
       )}
     </SectionBlock>
@@ -673,88 +669,67 @@ function ManageContextRail({
 }) {
   const portfolio = data.portfolio.portfolio;
   const modeDefinition = getManageModeDefinition(activeMode);
-  const mandateId = readDpmMandateId(data.mandate?.data ?? null);
   const commandModel = buildDpmCommandCenterPanelModel({
     commandCenter: data.commandCenter,
     exceptions: data.commandCenterExceptions,
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
+  const attentionRows = buildManageExceptionRows(data.commandCenterExceptions);
+  const attentionCount = attentionRows.length || commandModel.activeExceptionCount;
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
-  const sourceServices = Array.from(
-    new Set(
-      [
-        "lotus-gateway",
-        data.commandCenter?.source_service,
-        data.waves?.source_service,
-        data.portfolioMemory?.source_service,
-        data.outcomeReviews?.source_service,
-      ].filter((service): service is string => Boolean(service))
-    )
-  ).join(", ");
+  const hasEvidence = reviewModel.items.some((item) => item.proofPackId !== "N/A");
+  const nextActions =
+    activeMode === "mandate"
+      ? [
+          ["Review Recommended Actions", "#mandate-recommended-actions"],
+          ["Review Attention Items", buildManageModeHref(portfolio.portfolio_id, "mandate")],
+          ["Open Rebalance", buildManageModeHref(portfolio.portfolio_id, "waves")],
+          ["Return to Manage Overview", buildManageModeHref(portfolio.portfolio_id, "overview")],
+        ]
+      : [
+          ["Open Mandate Health", buildManageModeHref(portfolio.portfolio_id, "mandate")],
+          ["Open Rebalance", buildManageModeHref(portfolio.portfolio_id, "waves")],
+          ["Open Construction", buildManageModeHref(portfolio.portfolio_id, "construction")],
+          ["Open Portfolio Memory", buildManageModeHref(portfolio.portfolio_id, "memory")],
+          ["Open Outcome Reviews", buildManageModeHref(portfolio.portfolio_id, "reviews")],
+          ["Open Evidence Packs", buildManageModeHref(portfolio.portfolio_id, "proof")],
+        ];
 
   return (
     <div className="manage-context-rail">
       <WorkbenchRailCard>
         <div className="manage-context-rail-header">
-          <Text variant="label">Active Surface</Text>
+          <Text variant="label">Decision Support</Text>
           <strong>{modeDefinition.title}</strong>
         </div>
         <DefinitionList
           ariaLabel="Manage portfolio context"
           items={[
-            { label: "Portfolio", value: portfolio.portfolio_id },
             { label: "Client", value: portfolio.client_id },
-            { label: "Booking", value: portfolio.booking_center_code },
-            { label: "Base", value: portfolio.base_currency },
+            { label: "Booking Centre", value: portfolio.booking_center_code },
+            { label: "Mandate Type", value: formatBusinessMandateType(readStringFromResponse(data.mandate, "mandate_type")) },
+            { label: "Portfolio Manager Book", value: formatBusinessBook(readStringFromResponse(data.mandate, "pm_book_id")) },
             { label: "As Of", value: data.portfolio.as_of_date },
-            { label: "Mandate", value: mandateId ?? "N/A" },
-            { label: "PM Book", value: readStringFromResponse(data.mandate, "pm_book_id") ?? "N/A" },
           ]}
         />
       </WorkbenchRailCard>
 
       <WorkbenchRailCard>
         <div className="manage-context-rail-header">
-          <Text variant="label">Supportability</Text>
-          <strong>Gateway Evidence</strong>
+          <Text variant="label">Review Posture</Text>
+          <strong>{attentionCount ? "Needs advisor attention" : "Ready for review"}</strong>
         </div>
         <DefinitionList
-          ariaLabel="Manage supportability context"
+          ariaLabel="Manage review posture"
           items={[
-            {
-              label: "Command Center",
-              value: data.commandCenterError ? "Partial" : "Ready",
-            },
-            { label: "Waves", value: data.wavesError ? "Partial" : "Ready" },
-            { label: "Construction", value: "Available" },
-            {
-              label: "Memory",
-              value: data.portfolioMemoryError ? "Partial" : "Ready",
-            },
-            {
-              label: "Reviews",
-              value: data.outcomeReviewError ? "Partial" : "Ready",
-            },
-            { label: "Proof Packs", value: reviewModel.items.some((item) => item.proofPackId !== "N/A") ? "Available" : "Not requested" },
-          ]}
-        />
-      </WorkbenchRailCard>
-
-      <WorkbenchRailCard>
-        <div className="manage-context-rail-header">
-          <Text variant="label">Lineage</Text>
-          <strong>Gateway Contract</strong>
-        </div>
-        <DefinitionList
-          ariaLabel="Manage lineage context"
-          items={[
-            { label: "Correlation", value: commandModel.correlationId },
-            { label: "Contract", value: data.commandCenter?.contract_version ?? "manage-workspace.v1" },
-            { label: "Last Refresh", value: commandModel.latestMonitoringRunStatus },
-            { label: "Wave Ref", value: waveModel.selectedWaveId ?? "N/A" },
-            { label: "Sources", value: sourceServices },
+            { label: "Attention Items", value: `${attentionCount} open` },
+            { label: "Data Readiness", value: businessStateLabel(commandModel.dataCompletenessState) },
+            { label: "Rebalance", value: businessStateLabel(waveModel.selectedWaveState) },
+            { label: "Evidence", value: hasEvidence ? "Available" : "Not requested" },
+            { label: "Audit Trail", value: "Available" },
+            { label: "Last Refreshed", value: businessLastReviewed(commandModel.latestMonitoringRunStatus) },
           ]}
         />
       </WorkbenchRailCard>
@@ -762,18 +737,11 @@ function ManageContextRail({
       <WorkbenchRailCard>
         <div className="manage-context-rail-header">
           <Text variant="label">Next Actions</Text>
-          <strong>Supported Navigation</strong>
+          <strong>Advisor workflow</strong>
         </div>
         <div className="manage-rail-actions">
-          {[
-            ["Open Mandate Health", "mandate"],
-            ["Open Rebalance Waves", "waves"],
-            ["Open Construction", "construction"],
-            ["Open Portfolio Memory", "memory"],
-            ["Open Outcome Reviews", "reviews"],
-            ["Open Proof Packs", "proof"],
-          ].map(([label, mode]) => (
-            <a href={buildManageModeHref(portfolio.portfolio_id, mode as ManageMode)} key={mode}>
+          {nextActions.map(([label, href]) => (
+            <a href={href} key={label}>
               {label}
             </a>
           ))}
@@ -786,53 +754,6 @@ function ManageContextRail({
   );
 }
 
-type OverviewExceptionRow = {
-  key: string;
-  severity: string;
-  title: string;
-  source: string;
-  owner: string;
-  age: string;
-  state: string;
-  nextAction: string;
-};
-
-function buildOverviewExceptionRows(
-  exceptions: ManageWorkspaceData["commandCenterExceptions"]
-): OverviewExceptionRow[] {
-  const records = extractRecords(asRecord(exceptions?.data).items ?? asRecord(exceptions?.data).exceptions);
-  return records.map((record, index) => {
-    const exceptionId =
-      readString(record, "exception_id") ||
-      readString(record, "monitoring_exception_id") ||
-      `exception-${index + 1}`;
-    return {
-      key: exceptionId,
-      severity: readString(record, "severity") || "UNKNOWN",
-      title:
-        readString(record, "title") ||
-        readString(record, "description") ||
-        readString(record, "reason_code") ||
-        "Manage exception",
-      source:
-        readString(record, "source_system") ||
-        readString(record, "source_service") ||
-        exceptions?.source_service ||
-        "lotus-manage",
-      owner:
-        readString(record, "owner") ||
-        readString(record, "remediation_owner") ||
-        "PM Ops",
-      age: formatAge(record.age_hours ?? record.age_days),
-      state: readString(record, "state") || readString(record, "status") || "ACTIVE",
-      nextAction:
-        readString(record, "next_action") ||
-        readString(record, "recommended_action") ||
-        "Review",
-    };
-  });
-}
-
 function buildManageActivityRows(
   commandModel: ReturnType<typeof buildDpmCommandCenterPanelModel>,
   waveModel: ReturnType<typeof buildDpmWaveCommandCenterModel>,
@@ -842,28 +763,22 @@ function buildManageActivityRows(
     commandModel.latestMonitoringRunId !== "N/A"
       ? {
           key: "monitoring",
-          time: commandModel.latestMonitoringRunStatus,
-          event: "Monitoring Run",
-          source: commandModel.sourceService,
-          evidenceRef: commandModel.latestMonitoringRunId,
+          time: businessLastReviewed(commandModel.latestMonitoringRunStatus),
+          event: `Daily mandate review completed with ${commandModel.activeExceptionCount} attention items.`,
         }
       : null,
     waveModel.selectedWaveId
       ? {
           key: "wave",
-          time: waveModel.selectedWaveState,
-          event: "Wave Posture",
-          source: waveModel.sourceService,
-          evidenceRef: waveModel.selectedWaveId,
+          time: businessStateLabel(waveModel.selectedWaveState),
+          event: `${waveModel.selectedWaveItemCount} proposed rebalance changes prepared for review.`,
         }
       : null,
     reviewModel.items[0]
       ? {
           key: "review",
-          time: reviewModel.items[0].state,
-          event: "Outcome Review",
-          source: reviewModel.sourceService,
-          evidenceRef: reviewModel.items[0].outcomeReviewId,
+          time: businessStateLabel(reviewModel.items[0].state),
+          event: "Outcome review evidence available for advisor review.",
         }
       : null,
   ].filter((row): row is NonNullable<typeof row> => Boolean(row));
@@ -874,86 +789,9 @@ function buildManageActivityRows(
         {
           key: "empty",
           time: "N/A",
-          event: "No recent operating activity",
-          source: "lotus-gateway",
-          evidenceRef: "N/A",
+          event: "No recent operating activity.",
         },
       ];
-}
-
-function readStringFromResponse(
-  response: ManageWorkspaceData["mandate"],
-  key: string
-): string | null {
-  const data = asRecord(response?.data);
-  const nestedMandate = asRecord(data.mandate);
-  return readString(data, key) || readString(nestedMandate, key);
-}
-
-function toneForState(value: string): BadgeTone {
-  const normalized = value.toUpperCase();
-  if (
-    normalized.includes("READY") ||
-    normalized.includes("SUPPORTED") ||
-    normalized === "AVAILABLE" ||
-    normalized === "COMPLETE" ||
-    normalized === "SUCCEEDED"
-  ) {
-    return "success";
-  }
-  if (
-    normalized.includes("PARTIAL") ||
-    normalized.includes("DEGRADED") ||
-    normalized.includes("REVIEW") ||
-    normalized.includes("PENDING") ||
-    normalized.includes("MEDIUM")
-  ) {
-    return "warn";
-  }
-  if (
-    normalized.includes("ERROR") ||
-    normalized.includes("FAILED") ||
-    normalized.includes("BLOCKED") ||
-    normalized.includes("HIGH") ||
-    normalized.includes("UNSUPPORTED")
-  ) {
-    return "danger";
-  }
-  return "default";
-}
-
-function firstNonEmpty(...values: Array<string | null | undefined>): string {
-  return values.find((value) => value && value.trim().length > 0) ?? "N/A";
-}
-
-function formatAge(value: unknown): string {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    if (value >= 24) {
-      return `${Math.round(value / 24)}d`;
-    }
-    return `${Math.round(value)}h`;
-  }
-  if (typeof value === "string" && value.trim().length > 0) {
-    return value;
-  }
-  return "N/A";
-}
-
-function extractRecords(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? value.filter(isRecord) : [];
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value : {};
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function readString(record: Record<string, unknown>, key: string): string | null {
-  const value = record[key];
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function buildManageModeItems(portfolioId: string, activeMode: ManageMode): PortfolioScreenRailModeItem[] {
@@ -994,13 +832,12 @@ function readSettledError<T>(result: PromiseSettledResult<T>, fallback: string):
   return result.reason instanceof Error ? result.reason.message : fallback;
 }
 
-function formatCurrency(value: number | null | undefined, currency: string): string {
+function formatAmount(value: number | null | undefined): string {
   if (value === null || value === undefined) {
     return "N/A";
   }
   return value.toLocaleString(undefined, {
-    style: "currency",
-    currency,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
@@ -1010,6 +847,17 @@ function formatPct(value: number | null | undefined): string {
     return "N/A";
   }
   return `${value.toFixed(2)}%`;
+}
+
+function parseCount(value: number | string | null | undefined): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value !== "string") {
+    return 0;
+  }
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export function readDpmMandateId(data: Record<string, unknown> | null): string | null {

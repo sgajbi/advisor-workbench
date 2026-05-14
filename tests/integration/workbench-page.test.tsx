@@ -29,12 +29,12 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Manage Overview" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Manage Operating Posture" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
-    expect(screen.getByText("Manage module readiness")).toBeInTheDocument();
-    expect(screen.getAllByText("Active Exceptions").length).toBeGreaterThan(0);
-    expect(screen.getByText("Missing benchmark constituent mapping")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /Open Rebalance Waves/i })[0]).toHaveAttribute(
+    expect(screen.getByLabelText("Decision readiness")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
+    expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Rebalance Ready/i })).toHaveAttribute(
       "href",
       "/workbench/PF_1001?mode=waves"
     );
@@ -58,7 +58,7 @@ describe("WorkbenchPage", () => {
       "href",
       "/workbench/PF_1001?mode=mandate"
     );
-    expect(within(manageNav).getByRole("link", { name: "Waves" })).toHaveAttribute(
+    expect(within(manageNav).getByRole("link", { name: "Rebalance" })).toHaveAttribute(
       "href",
       "/workbench/PF_1001?mode=waves"
     );
@@ -92,6 +92,28 @@ describe("WorkbenchPage", () => {
     );
   });
 
+  it("renders mandate health as a focused manage surface", async () => {
+    vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_1101" })));
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_1101" }),
+        searchParams: Promise.resolve({ mode: "mandate" }),
+      })
+    );
+
+    expect(screen.getAllByRole("heading", { name: "Mandate Health" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Data Readiness").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Recommended Actions").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Attention Required").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Health Dimensions Breakdown").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Latest Review").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Market Data/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Stale price/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Execute Trade")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
+  });
+
   it("renders construction as its own manage surface instead of the full operations stack", async () => {
     vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_2001" })));
 
@@ -119,9 +141,9 @@ describe("WorkbenchPage", () => {
       })
     );
 
-    expect(screen.getByRole("heading", { name: "Rebalance Waves" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Rebalance Wave Command Center" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Proof-Pack Evidence" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Rebalance" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Proposed Changes" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([input]) =>
@@ -197,6 +219,10 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
         data: {
           mandate_id: "mandate_001",
           portfolio_id: portfolioId,
+          mandate_type: "Discretionary Balanced",
+          risk_profile: "Balanced",
+          benchmark_id: "PB_GLOBAL_BALANCED_60_40",
+          pm_book_id: "PM_BOOK_SG_BALANCED",
         },
       });
     }
@@ -216,9 +242,29 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
         },
         data: {
           mandate_id: "mandate_001",
-          health_state: "READY",
-          health_score: 98,
-          dimensions: [],
+          health_state: "PARTIAL",
+          health_score: 82,
+          recommended_action: "Request source refresh",
+          dimension_scores: [
+            {
+              dimension: "Source Readiness",
+              score: 75,
+              state: "PARTIAL",
+              reason_codes: ["PRICE_STALE"],
+            },
+            {
+              dimension: "Benchmark Mapping",
+              score: 98,
+              state: "READY",
+              reason_codes: [],
+            },
+            {
+              dimension: "Mandate Constraints",
+              score: 100,
+              state: "READY",
+              reason_codes: [],
+            },
+          ],
         },
       });
     }
@@ -249,8 +295,38 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           },
           health_distribution: [{ state: "READY", count: 1 }],
           attention_buckets: [],
-          recommended_actions: [],
-          source_readiness: [],
+          recommended_actions: [
+            {
+              recommended_action: "Request source refresh",
+              severity: "HIGH",
+              count: 1,
+            },
+            {
+              recommended_action: "Review benchmark evidence",
+              severity: "MEDIUM",
+              count: 1,
+            },
+          ],
+          source_readiness: [
+            {
+              source_service: "lotus-pricing",
+              state: "READY",
+              last_updated: "2026-05-13T08:30:00Z",
+              reason_code: "-",
+            },
+            {
+              source_service: "lotus-performance",
+              state: "PARTIAL",
+              last_updated: "2026-05-12T17:00:00Z",
+              reason_code: "PRICE_STALE",
+            },
+            {
+              source_service: "lotus-core",
+              state: "READY",
+              last_updated: "2026-05-13T08:30:00Z",
+              reason_code: "-",
+            },
+          ],
         },
       });
     }

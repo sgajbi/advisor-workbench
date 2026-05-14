@@ -89,6 +89,18 @@ describe("DPM wave command-center view model", () => {
               proof_pack_id: "ppack_1",
               handoff_ref_id: "dwh_1",
               reason_codes: ["READY_FOR_HANDOFF"],
+              diagnostics: {
+                proposed_changes: [
+                  {
+                    security_id: "EQ_1",
+                    action: "Buy",
+                    estimated_value: "2000.0",
+                    currency: "SGD",
+                    reason: "Align",
+                    reason_code: "DRIFT_REBALANCE",
+                  },
+                ],
+              },
             },
           ],
         },
@@ -102,6 +114,11 @@ describe("DPM wave command-center view model", () => {
     expect(model.itemRows[0]).toMatchObject({
       waveItemId: "dwi_1",
       portfolioId: "PB_SG_GLOBAL_BAL_001",
+      security: "EQ_1",
+      proposedAction: "Buy",
+      estimatedValue: "2000.0",
+      reason: "Align",
+      reasonCodes: "DRIFT_REBALANCE",
       proofPackId: "ppack_1",
       handoffRef: "dwh_1",
     });

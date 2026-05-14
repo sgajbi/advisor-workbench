@@ -286,7 +286,10 @@ function buildHealthDimensionRow(
     dimension,
     score: formatValue(readValue(record, "score")),
     state: readString(record, "state") || "N/A",
-    reasons: extractStringArray(record.reason_codes).join(", ") || "N/A",
+    reasons:
+      extractStringArray(record.reason_codes).join(", ") ||
+      readString(record, "reason_code") ||
+      "N/A",
   };
 }
 

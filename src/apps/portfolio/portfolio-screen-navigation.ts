@@ -43,7 +43,7 @@ export function buildPortfolioScreenNavigationItems(
     {
       key: "manage",
       label: "Manage",
-      detail: "DPM operations and mandates",
+      detail: "Mandates and advisor workflow",
       href: `/workbench/${encodeURIComponent(portfolioId)}`,
     },
   ];

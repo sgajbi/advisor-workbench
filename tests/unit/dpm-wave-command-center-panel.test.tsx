@@ -1,19 +1,14 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/dpm-wave-command-center-panel";
 import {
   approveDpmWave,
   createDpmWave,
-  getDpmWave,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
-  getDpmWaveReportInput,
-  getDpmWaveSupportability,
   handoffDpmWave,
   previewDpmWave,
-  requestDpmOperationsHandoffSummary,
-  requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
@@ -23,15 +18,10 @@ import type { DpmWaveGatewayResponse } from "../../src/features/workbench/types"
 vi.mock("../../src/features/workbench/api", () => ({
   approveDpmWave: vi.fn(),
   createDpmWave: vi.fn(),
-  getDpmWave: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
-  getDpmWaveReportInput: vi.fn(),
-  getDpmWaveSupportability: vi.fn(),
   handoffDpmWave: vi.fn(),
   previewDpmWave: vi.fn(),
-  requestDpmOperationsHandoffSummary: vi.fn(),
-  requestDpmWaveAiPmMemo: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),
   stageDpmWave: vi.fn(),
@@ -46,11 +36,11 @@ const waveResponse: DpmWaveGatewayResponse = {
     source_service: "lotus-manage",
     authority: "lotus-manage:RFC-0041",
     state: "ready",
-    reason_codes: ["wave_supportability_ready"],
+    reason_codes: [],
     blocked_actions: [],
     wave_id: "dwv_001",
-    wave_state: "SOURCE_CHECKED",
-    item_count: 1,
+    wave_state: "SIMULATION_READY",
+    item_count: 2,
     issue_count: 0,
     remediation_owner: "Portfolio Operations",
   },
@@ -58,23 +48,66 @@ const waveResponse: DpmWaveGatewayResponse = {
     items: [
       {
         wave_id: "dwv_001",
-        state: "SOURCE_CHECKED",
+        state: "SIMULATION_READY",
         trigger_type: "EXPLICIT_PORTFOLIO_LIST",
         as_of_date: "2026-05-03",
-        item_count: 1,
+        item_count: 2,
         supportability_state: "ready",
         supportability_reason: "wave_supportability_ready",
+        aggregate_metrics: {
+          turnover_pct: "4.8%",
+          cash_after_pct: "2.1%",
+          drift_improvement_pct: "72.4%",
+        },
+      },
+    ],
+  },
+};
+
+const itemResponse: DpmWaveGatewayResponse = {
+  ...waveResponse,
+  data: {
+    items: [
+      {
+        wave_item_id: "dwi_1",
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        state: "SIMULATION_READY",
+        source_readiness_state: "READY",
+        diagnostics: {
+          proposed_changes: [
+            {
+              security_id: "AAPL US",
+              action: "Trim",
+              estimated_value: "7,420.00",
+              reason: "Equity overweight",
+              mandate_impact: "Improves equity band",
+              status: "READY",
+            },
+            {
+              security_id: "MSFT US",
+              action: "Buy",
+              estimated_value: "3,840.50",
+              reason: "Target allocation",
+              mandate_impact: "Improves benchmark alignment",
+              status: "READY",
+            },
+          ],
+        },
       },
     ],
   },
 };
 
 describe("DpmWaveCommandCenterPanel", () => {
+  beforeEach(() => {
+    vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders the Gateway-backed wave queue and bounded action controls", () => {
+  it("renders the business-facing rebalance workspace with implementation-backed proposed changes", async () => {
     render(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -82,105 +115,31 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Rebalance Wave Command Center" })).toBeInTheDocument();
-    expect(screen.getAllByText("dwv_001").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("SOURCE_CHECKED").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Preview wave" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Create wave" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Source-check" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Simulate" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Stage" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Handoff" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Proof posture" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Supportability" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Report input" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "AI memo" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Ops summary" })).toBeEnabled();
-    expect(screen.getAllByText("NOT_REQUESTED").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByRole("heading", { name: "Rebalance" })).toBeInTheDocument();
+    expect(screen.getByText("Proposed rebalance, advisor review, and approval readiness.")).toBeInTheDocument();
+    expect(screen.getAllByText("Simulation ready").length).toBeGreaterThan(0);
+    expect(screen.getByText("72.4%")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
+
+    const table = screen.getByRole("table", { name: "Proposed rebalance changes" });
+    expect(await within(table).findByText("AAPL US")).toBeInTheDocument();
+    expect(within(table).getByText("Trim")).toBeInTheDocument();
+    expect(within(table).getByText("Equity overweight")).toBeInTheDocument();
+    expect(within(table).getByText("MSFT US")).toBeInTheDocument();
+    expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
+    expect(screen.queryByText("corr-wave")).not.toBeInTheDocument();
   });
 
-  it("requests review, workflow, proof, and supportability actions through Gateway helpers", async () => {
+  it("routes bounded workflow actions through Gateway helpers", async () => {
     vi.mocked(previewDpmWave).mockResolvedValue(waveResponse);
-    vi.mocked(getDpmWave).mockResolvedValue({
-      ...waveResponse,
-      data: {
-        wave: {
-          wave_id: "dwv_001",
-          state: "SOURCE_CHECKED",
-          aggregate_metrics: { item_count: 1 },
-        },
-      },
-    });
-    vi.mocked(getDpmWaveItems).mockResolvedValue({
-      ...waveResponse,
-      data: {
-        items: [
-          {
-            wave_item_id: "dwi_1",
-            portfolio_id: "PB_SG_GLOBAL_BAL_001",
-            state: "SOURCE_CHECKED",
-            source_readiness_state: "READY",
-          },
-        ],
-      },
-    });
+    vi.mocked(createDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(sourceCheckDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(simulateDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(stageDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(handoffDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(waveResponse);
-    vi.mocked(getDpmWaveSupportability).mockResolvedValue(waveResponse);
-    vi.mocked(getDpmWaveReportInput).mockResolvedValue({
-      ...waveResponse,
-      data: {
-        wave_id: "dwv_001",
-        report_input_ref: "report-input:dwv_001",
-        source_refs: ["lotus-manage:wave:dwv_001"],
-      },
-    });
-    vi.mocked(requestDpmWaveAiPmMemo).mockResolvedValue({
-      correlation_id: "corr-wave-ai-memo",
-      contract_version: "v1",
-      source_service: "lotus-ai",
-      evidence_source_service: "lotus-manage",
-      manage_upstream_status: 200,
-      ai_upstream_status: 200,
-      supportability: waveResponse.supportability,
-      wave_report_input: {
-        wave_id: "dwv_001",
-        report_input_ref: "report-input:dwv_001",
-      },
-      memo_request: {
-        requested_outputs: ["wave_pm_memo", "approval_checklist"],
-        audience: ["portfolio_manager", "investment_control"],
-      },
-      data: { run_id: "wf_run_wave_memo_001", status: "REVIEW_REQUIRED" },
-    });
-    vi.mocked(requestDpmOperationsHandoffSummary).mockResolvedValue({
-      correlation_id: "corr-ops-summary",
-      contract_version: "v1",
-      source_service: "lotus-ai",
-      evidence_source_service: "lotus-manage",
-      manage_upstream_status: 200,
-      ai_upstream_status: 200,
-      supportability: waveResponse.supportability,
-      wave_report_input: {
-        wave_id: "dwv_001",
-        report_input_ref: "report-input:dwv_001",
-      },
-      handoff_summary_request: {
-        requested_outputs: ["operations_summary", "blocking_conditions"],
-        audience: ["operations", "portfolio_manager"],
-      },
-      data: {
-        workflow_pack_run: {
-          run_id: "wf_run_ops_summary_001",
-          review_state: "REVIEW_REQUIRED",
-        },
-      },
-    });
 
     render(
       <DpmWaveCommandCenterPanel
@@ -189,69 +148,58 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Preview wave" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     await waitFor(() =>
       expect(previewDpmWave).toHaveBeenCalledWith({ portfolioId: "PB_SG_GLOBAL_BAL_001" }),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Load detail" }));
-    await waitFor(() => expect(getDpmWave).toHaveBeenCalledWith("dwv_001"));
+    fireEvent.click(screen.getByRole("button", { name: "Create Rebalance" }));
+    await waitFor(() =>
+      expect(createDpmWave).toHaveBeenCalledWith({ portfolioId: "PB_SG_GLOBAL_BAL_001" }),
+    );
 
-    fireEvent.click(screen.getByRole("button", { name: "Load items" }));
+    fireEvent.click(screen.getByRole("button", { name: "Load Changes" }));
     await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_001"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Source-check" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Data" }));
     await waitFor(() => expect(sourceCheckDpmWave).toHaveBeenCalledWith("dwv_001"));
 
     fireEvent.click(screen.getByRole("button", { name: "Simulate" }));
     await waitFor(() => expect(simulateDpmWave).toHaveBeenCalledWith("dwv_001"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request Approval" }));
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
 
     fireEvent.click(screen.getByRole("button", { name: "Stage" }));
     await waitFor(() => expect(stageDpmWave).toHaveBeenCalledWith("dwv_001"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Handoff" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare Handoff" }));
     await waitFor(() => expect(handoffDpmWave).toHaveBeenCalledWith("dwv_001"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Proof posture" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open Evidence Pack" }));
     await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
-
-    fireEvent.click(screen.getByRole("button", { name: "Supportability" }));
-    await waitFor(() => expect(getDpmWaveSupportability).toHaveBeenCalledWith("dwv_001"));
-
-    fireEvent.click(screen.getByRole("button", { name: "Report input" }));
-    await waitFor(() => expect(getDpmWaveReportInput).toHaveBeenCalledWith("dwv_001"));
-    expect(await screen.findByText("report-input:dwv_001")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "AI memo" }));
-    await waitFor(() => expect(requestDpmWaveAiPmMemo).toHaveBeenCalledWith("dwv_001"));
-    expect(await screen.findByText("wf_run_wave_memo_001")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Ops summary" }));
-    await waitFor(() =>
-      expect(requestDpmOperationsHandoffSummary).toHaveBeenCalledWith("dwv_001"),
-    );
-    expect(await screen.findByText("wf_run_ops_summary_001")).toBeInTheDocument();
   });
 
-  it("creates a wave without direct manage calls", async () => {
-    vi.mocked(createDpmWave).mockResolvedValue(waveResponse);
-
+  it("does not enable approval when mandate attention items block the workflow", async () => {
     render(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
-        waveList={waveResponse}
+        waveList={{
+          ...waveResponse,
+          supportability: {
+            ...waveResponse.supportability,
+            state: "blocked",
+            reason_codes: ["MANDATE_ATTENTION_REQUIRED"],
+            blocked_actions: ["approve"],
+            issue_count: 1,
+          },
+        }}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Create wave" }));
 
-    await waitFor(() =>
-      expect(createDpmWave).toHaveBeenCalledWith({ portfolioId: "PB_SG_GLOBAL_BAL_001" }),
-    );
-    expect(
-      await screen.findByText("Create wave completed through Gateway."),
-    ).toBeInTheDocument();
+    await screen.findByText("AAPL US");
+
+    expect(screen.getByRole("button", { name: "Request Approval" })).toBeDisabled();
+    expect(screen.getByText("Resolve mandate attention items before approval.")).toBeInTheDocument();
   });
 });
