@@ -40,15 +40,19 @@ describe("PortfolioMemoryPanel", () => {
 
     expect(screen.getByRole("heading", { name: "Portfolio Memory" })).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
-    expect(screen.getByText("Mandate Desk, Risk")).toBeInTheDocument();
+    expect(screen.getByText("Latest Memory Event")).toBeInTheDocument();
+    expect(screen.getByText("Memory Coverage")).toBeInTheDocument();
     expect(screen.getAllByText("Outcome Review Created").length).toBeGreaterThan(1);
-    expect(screen.getByText("Outcome Review Ready")).toBeInTheDocument();
+    expect(screen.getAllByText("Outcome Review Ready").length).toBeGreaterThan(0);
+    expect(screen.getByText("Historical Event Log")).toBeInTheDocument();
+    expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBeGreaterThan(0);
     expect(screen.queryByText("lotus-manage:or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:portfolio-memory")).not.toBeInTheDocument();
+    expect(screen.queryByText("memory:outcome-review:or_1")).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Selected Event: memory:outcome-review:or_1",
+        name: "Details: Outcome Review Created",
       }),
     ).toBeInTheDocument();
   });

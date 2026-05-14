@@ -409,15 +409,16 @@ export async function validateOutcomeReviewPanel(
     1,
     "Outcome review dimensions"
   );
-  await assertTableHasRows(
-    tableByExactLabel(page, "Outcome review evidence references"),
-    1,
-    "Outcome review evidence references"
-  );
-  await expect(outcomeReviewPanel.getByText("Report Input", { exact: true })).toBeVisible({
+  await expect(outcomeReviewPanel.getByText("Selected Review Detail")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(outcomeReviewPanel.getByText("Memo Evidence", { exact: true })).toBeVisible({
+  await expect(outcomeReviewPanel.getByText("Evidence Availability")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(outcomeReviewPanel.getByRole("button", { name: "Request report" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(outcomeReviewPanel.getByRole("button", { name: "Request advisor memo" })).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.outcome_review");
@@ -434,12 +435,13 @@ export async function validateDpmCommandCenterPanel(
   await expect(page.getByRole("heading", { name: "Mandate Health" }).first()).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("button", { name: "Run monitoring" })).toBeVisible({
+  await expect(page.getByText("Mandate Readiness").first()).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("Data Readiness").first()).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("Attention Required").first()).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("Recommended Actions").first()).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("Health Dimensions Breakdown").first()).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText("Data Readiness").first()).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByText("Active Exceptions").first()).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByText("Health Dimensions").first()).toBeVisible({ timeout: timeoutMs });
   await screenshotRegisteredPanel(page, "dpm.command_center");
 }
 
@@ -452,54 +454,56 @@ export async function validateDpmWaveCommandCenterPanel(
     timeout: timeoutMs,
   });
   const wavePanel = workbenchPanelByClass(page, "dpm-wave-command-center-panel");
-  await expect(
-    wavePanel.getByRole("heading", { name: "Rebalance Waves" })
-  ).toBeVisible({
+  await expect(wavePanel.getByRole("heading", { name: "Rebalance", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByRole("button", { name: "Preview wave" })).toBeVisible({
+  const readinessStrip = wavePanel.getByLabel("Rebalance readiness");
+  await expect(readinessStrip.getByText("Rebalance Status")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByRole("button", { name: "Create wave" })).toBeVisible({
+  await expect(readinessStrip.getByText("Approval Readiness")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Active Rebalance")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Recommended Actions")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(wavePanel.getByText("Proposed Changes")).toBeVisible({
     timeout: timeoutMs,
   });
   for (const actionName of [
-    "Check data",
+    "Preview",
+    "Create Rebalance",
+    "Review Data",
     "Simulate",
-    "Approve",
+    "Request Approval",
     "Stage",
-    "Handoff",
-    "Evidence posture",
-    "Readiness",
-    "Report input",
-    "PM memo",
+    "Prepare Handoff",
+    "Open Evidence Pack",
+    "Load Changes",
   ]) {
     await expect(wavePanel.getByRole("button", { name: actionName })).toBeVisible({
       timeout: timeoutMs,
     });
   }
-  await wavePanel.getByRole("button", { name: "Preview wave" }).click({
+  await wavePanel.getByRole("button", { name: "Preview" }).click({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByText("Preview wave completed.")).toBeVisible({
+  await expect(wavePanel.getByText("Preview completed.")).toBeVisible({
     timeout: timeoutMs,
   });
-  await wavePanel.getByRole("button", { name: "Create wave" }).click({
+  await wavePanel.getByRole("button", { name: "Create Rebalance" }).click({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByText("Create wave completed.")).toBeVisible({
+  await expect(wavePanel.getByText("Create rebalance completed.")).toBeVisible({
     timeout: timeoutMs,
   });
-  await wavePanel.getByRole("button", { name: "Report input" }).click({
+  await wavePanel.getByRole("button", { name: "Load Changes" }).click({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByText("Load report input completed.")).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await wavePanel.getByRole("button", { name: "PM memo" }).click({
-    timeout: timeoutMs,
-  });
-  await expect(wavePanel.getByText("Request AI memo completed.")).toBeVisible({
+  await expect(wavePanel.getByText("Load proposed changes completed.")).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.wave_command_center");
@@ -520,18 +524,19 @@ export async function validatePortfolioMemoryPanel(
   await expect(memoryPanel.getByText("Audit trail available")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(memoryPanel.getByText(/Audit reference available|Audit reference not available/).first()).toBeVisible({
+  await expect(memoryPanel.getByText("Historical Event Log")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(memoryPanel.getByText("Recommended Actions")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(memoryPanel.getByText("Support Snapshot")).toBeVisible({
     timeout: timeoutMs,
   });
   await assertTableHasRows(
-    tableByExactLabel(page, "DPM portfolio-memory event type counts"),
+    tableByExactLabel(page, "Portfolio memory event timeline"),
     1,
-    "DPM portfolio-memory event type counts"
-  );
-  await assertTableHasRows(
-    tableByExactLabel(page, "DPM portfolio-memory event timeline"),
-    1,
-    "DPM portfolio-memory event timeline"
+    "Portfolio memory event timeline"
   );
   await screenshotRegisteredPanel(page, "dpm.portfolio_memory");
 }
@@ -545,19 +550,19 @@ export async function validateProofPackPanel(
     timeout: timeoutMs,
   });
   const proofPackPanel = workbenchPanelByClass(page, "proof-pack-panel");
-  await expect(proofPackPanel.getByRole("heading", { name: "Evidence Packs" })).toBeVisible({
+  await expect(proofPackPanel.getByRole("heading", { name: "Evidence Pack" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(proofPackPanel.getByText(/Markdown (Available|Unavailable)/)).toBeVisible({
+  await expect(proofPackPanel.getByText(/Summary (Available|Unavailable)/)).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(proofPackPanel.getByText(/Report Input (Available|Unavailable)/)).toBeVisible({
+  await expect(proofPackPanel.getByText(/Report (Available|Unavailable)/)).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(proofPackPanel.getByText(/Evidence Input (Available|Unavailable)/)).toBeVisible({
+  await expect(proofPackPanel.getByText(/Memo (Available|Unavailable)/)).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(proofPackPanel.getByRole("button", { name: "PM memo" })).toBeVisible({
+  await expect(proofPackPanel.getByRole("button", { name: "Open advisor memo" }).first()).toBeVisible({
     timeout: timeoutMs,
   });
   await proofPackPanel.getByRole("button", { name: "Prepare evidence" }).click({
@@ -566,21 +571,16 @@ export async function validateProofPackPanel(
   await expect(proofPackPanel.getByText("Evidence pack prepared.")).toBeVisible({
     timeout: timeoutMs,
   });
-  await proofPackPanel.getByRole("button", { name: "PM memo" }).click({
+  await proofPackPanel.getByRole("button", { name: "Open advisor memo" }).first().click({
     timeout: timeoutMs,
   });
-  await expect(proofPackPanel.getByText(/^PM memo /)).toBeVisible({
+  await expect(proofPackPanel.getByText(/^Advisor memo /)).toBeVisible({
     timeout: timeoutMs,
   });
   await assertTableHasRows(
-    tableByExactLabel(page, "Evidence pack sections"),
+    tableByExactLabel(page, "Evidence areas"),
     1,
-    "Evidence pack sections"
-  );
-  await assertTableHasRows(
-    tableByExactLabel(page, "Evidence pack audit references"),
-    1,
-    "Evidence pack audit references"
+    "Evidence areas"
   );
   await screenshotRegisteredPanel(page, "dpm.proof_pack");
 }

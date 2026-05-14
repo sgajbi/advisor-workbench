@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import {
+  ActionButton,
   AnalyticsTable,
   MetricRow,
   ScreenStatePanel,
@@ -19,7 +20,6 @@ import {
 import {
   businessStateLabel,
   formatBusinessReason,
-  formatBusinessSource,
 } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
@@ -117,19 +117,10 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
       ) : null}
 
       <div className="portfolio-memory-status-strip">
-        <MetricRow label="Portfolio" value={model.portfolioId} />
-        <MetricRow label="Events" value={model.eventCount} />
-        <MetricRow label="Latest Event" value={model.latestEventTime} />
-        <MetricRow label="Business Areas" value={formatSourceList(model.sourceSystems)} />
-        <MetricRow label="Evidence Items" value={model.artifactRefCount} />
-        <MetricRow
-          label="State"
-          value={
-            <SemanticBadge tone={badgeTone(model.supportabilityState)}>
-              {businessStateLabel(model.supportabilityState)}
-            </SemanticBadge>
-          }
-        />
+        <MetricRow label="Latest Memory Event" value={model.latestMemoryEvent} />
+        <MetricRow label="Memory Coverage" value={model.memoryCoverage} />
+        <MetricRow label="Open Follow-ups" value={model.openFollowUps} />
+        <MetricRow label="Evidence Links" value={model.evidenceLinks} />
       </div>
 
       {model.reasonCodes.length > 0 ? (
@@ -167,85 +158,132 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
         ))}
       </div>
 
-      <AnalyticsTable
-        ariaLabel="Portfolio memory event timeline"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "id", label: "Event ID" },
-          { key: "type", label: "Event Type" },
-          { key: "time", label: "Timestamp" },
-          { key: "summary", label: "Summary" },
-          { key: "status", label: "Status" },
-          { key: "artifact-refs", label: "Artifact" },
-        ]}
-        rows={filteredEvents.map((row) => ({
-          key: row.key,
-          className: selectedEvent?.eventId === row.eventId ? "portfolio-memory-selected-row" : undefined,
-          ariaLabel: `Portfolio memory event ${row.eventId}`,
-          onClick: () => setSelectedEventId(row.eventId),
-          cells: [
-            <strong key={`${row.key}-id`} className="portfolio-memory-event-id">
-              {row.eventId}
-            </strong>,
-            <SemanticBadge key={`${row.key}-type`}>{businessStateLabel(row.eventType)}</SemanticBadge>,
-            row.eventTime,
-            row.summary,
-            <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
-              {businessStateLabel(row.status)}
-            </SemanticBadge>,
-            evidenceAvailability(row.artifactRefs),
-          ],
-        }))}
-        emptyState={{
-          title: "No memory events returned",
-          body:
-            activeEventType === "ALL"
-              ? "No timeline rows are currently available."
-              : "No events are available for this event type.",
-        }}
-      />
+      <div className="portfolio-memory-workspace">
+        <div className="portfolio-memory-timeline-card">
+          <div className="portfolio-memory-card-header">
+            <Text as="h3" variant="subsectionTitle">
+              Historical Event Log
+            </Text>
+            <span>{model.eventCount} events</span>
+          </div>
+          <AnalyticsTable
+            ariaLabel="Portfolio memory event timeline"
+            variant="analysis"
+            density="compact"
+            columns={[
+              { key: "time", label: "Date/Time" },
+              { key: "event", label: "Event" },
+              { key: "category", label: "Category" },
+              { key: "impact", label: "Business Impact" },
+              { key: "evidence", label: "Evidence" },
+              { key: "action", label: "Action", align: "right" },
+            ]}
+            rows={filteredEvents.map((row) => ({
+              key: row.key,
+              className: selectedEvent?.eventId === row.eventId ? "portfolio-memory-selected-row" : undefined,
+              ariaLabel: row.displayId,
+              onClick: () => setSelectedEventId(row.eventId),
+              cells: [
+                row.eventTime,
+                <strong key={`${row.key}-event`} className="portfolio-memory-event-title">
+                  {row.eventLabel}
+                </strong>,
+                row.category,
+                row.businessImpact,
+                <SemanticBadge key={`${row.key}-evidence`} tone={row.artifactRefCount > 0 ? "success" : "default"}>
+                  {evidenceAvailability(row.artifactRefs)}
+                </SemanticBadge>,
+                <ActionButton
+                  key={`${row.key}-action`}
+                  priority="quiet"
+                  onClick={() => setSelectedEventId(row.eventId)}
+                >
+                  {row.actionLabel}
+                </ActionButton>,
+              ],
+            }))}
+            emptyState={{
+              title: "No memory events returned",
+              body:
+                activeEventType === "ALL"
+                  ? "No timeline rows are currently available."
+                  : "No events are available for this event type.",
+            }}
+          />
+        </div>
 
-      <SelectedEventDetail event={selectedEvent} contentHash={model.contentHash} />
+        <aside className="portfolio-memory-actions-card">
+          <Text as="h3" variant="subsectionTitle">
+            Recommended Actions
+          </Text>
+          <div className="portfolio-memory-action-stack">
+            {model.recommendedActions.map((action) => (
+              <button type="button" key={action.key}>
+                <span className="material-symbols-outlined" aria-hidden="true">{action.icon}</span>
+                <strong>{action.title}</strong>
+                <small>{action.body}</small>
+              </button>
+            ))}
+          </div>
+        </aside>
+      </div>
+
+      <SelectedEventDetail event={selectedEvent} />
     </SectionBlock>
   );
 }
 
 function SelectedEventDetail({
   event,
-  contentHash,
 }: {
   event: PortfolioMemoryEventRow | null;
-  contentHash: string;
 }) {
   return (
     <div className="portfolio-memory-detail-panel">
       <div className="portfolio-memory-detail-header">
         <Text as="h3" variant="subsectionTitle">
-          Selected Event: {event?.eventId ?? "N/A"}
+          Details: {event?.eventLabel ?? "No event selected"}
         </Text>
+        <SemanticBadge tone={badgeTone(event?.status ?? "N/A")}>
+          {businessStateLabel(event?.status ?? "N/A")}
+        </SemanticBadge>
       </div>
       <div className="portfolio-memory-detail-grid">
-        <DetailCell
-          label="Summary"
-          value={event?.summary ?? "N/A"}
-          detail={formatBusinessReason(event?.reasonCodes ?? "N/A")}
-        />
-        <DetailCell
-          label="Evidence"
-          value={evidenceAvailability(event?.artifactRefs ?? "N/A")}
-          detail={auditAvailability(event?.contentHash ?? contentHash)}
-        />
-        <DetailCell
-          label="Business Area"
-          value={formatSourceList(event?.sourceSystems ?? "N/A")}
-          detail={event?.sourceRefs !== "N/A" ? "Reference available" : "Reference not available"}
-        />
-        <DetailCell
-          label="Audit Verification"
-          value={businessStateLabel(event?.status ?? "N/A")}
-          detail={auditAvailability(contentHash)}
-        />
+        <div className="portfolio-memory-detail-narrative">
+          <Text as="h4" variant="dataLabel">
+            Business Context
+          </Text>
+          <p>{event?.summary ?? "No memory event selected."}</p>
+          <div className="portfolio-memory-artifact-grid">
+            <ArtifactPill label="Mandate health check" enabled={Boolean(event)} />
+            <ArtifactPill label="Rebalance simulation" enabled={event?.category === "Rebalance"} />
+            <ArtifactPill label="Evidence pack" enabled={(event?.artifactRefCount ?? 0) > 0} />
+            <ArtifactPill label="Outcome review" enabled={event?.category === "Outcome Review"} />
+          </div>
+          <label className="portfolio-memory-note-box">
+            <span>Decision Notes</span>
+            <textarea placeholder="Add advisor rationale here..." />
+          </label>
+        </div>
+        <div className="portfolio-memory-detail-snapshot">
+          <Text as="h4" variant="dataLabel">
+            Support Snapshot
+          </Text>
+          <div>
+            {(event?.metadataRows.length ? event.metadataRows : fallbackSnapshotRows(event)).map((row) => (
+              <DetailCell key={row.key} label={row.label} value={row.value} />
+            ))}
+          </div>
+          <div className="portfolio-memory-readiness-callout">
+            <strong>Review Posture</strong>
+            <span>{reviewPosture(event?.status ?? "N/A")}</span>
+            <small>
+              {event?.reasonCodes !== "N/A"
+                ? formatBusinessReason(event?.reasonCodes ?? "N/A")
+                : "No additional reason code returned."}
+            </small>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -254,34 +292,43 @@ function SelectedEventDetail({
 function DetailCell({
   label,
   value,
-  detail,
 }: {
   label: string;
   value: string;
-  detail: string;
 }) {
   return (
     <div className="portfolio-memory-detail-cell">
       <span>{label}</span>
       <strong>{value}</strong>
-      <small>{detail}</small>
     </div>
   );
 }
 
-function formatSourceList(value: string): string {
-  if (!value || value === "N/A") {
-    return "Operations";
-  }
-  return value
-    .split(",")
-    .map((source) => formatBusinessSource(source.trim()))
-    .filter(Boolean)
-    .join(", ");
+function ArtifactPill({ label, enabled }: { label: string; enabled: boolean }) {
+  return (
+    <span className={enabled ? "is-enabled" : undefined}>
+      {label}
+    </span>
+  );
 }
 
-function auditAvailability(value: string): string {
-  return value && value !== "N/A" ? "Audit reference available" : "Audit reference not available";
+function fallbackSnapshotRows(event: PortfolioMemoryEventRow | null) {
+  return [
+    { key: "status", label: "Status", value: businessStateLabel(event?.status ?? "N/A") },
+    { key: "category", label: "Category", value: event?.category ?? "N/A" },
+    { key: "evidence", label: "Evidence Items", value: String(event?.artifactRefCount ?? 0) },
+  ];
+}
+
+function reviewPosture(status: string): string {
+  const normalized = status.toUpperCase();
+  if (normalized === "READY" || normalized === "COMPLETE") {
+    return "Ready for advisor review";
+  }
+  if (normalized === "PENDING_REVIEW" || normalized === "BLOCKED" || normalized === "DEGRADED") {
+    return "Needs advisor attention";
+  }
+  return businessStateLabel(status);
 }
 
 function evidenceAvailability(value: string): string {
