@@ -170,6 +170,8 @@ describe("PM operating quality view model", () => {
     expect(model.policyRows).toHaveLength(1);
     expect(model.scoreRunRows).toHaveLength(1);
     expect(model.scoreRunRows[0].score).toBe("90.00");
+    expect(model.scoreRunPreviewReadinessState).toBe("READY");
+    expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");
     expect(model.fairnessSegmentRequests.map((segment) => segment.segment_id)).toEqual([
       "mandate_balanced",
       "mandate_income",
@@ -247,6 +249,34 @@ describe("PM operating quality view model", () => {
     expect(model.fairnessPreviewReadinessState).toBe("BLOCKED");
     expect(model.fairnessPreviewReadiness).toBe(
       "Blocked: 1 source-defined segment returned"
+    );
+  });
+
+  it("blocks score-run preview readiness when Manage does not return policy context", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies: {
+        ...policies,
+        supportability: {
+          ...policies.supportability,
+          policy_id: null,
+          policy_version: null,
+        },
+        data: { policies: [] },
+      },
+      scoreRuns: {
+        ...scoreRuns,
+        supportability: {
+          ...scoreRuns.supportability,
+          policy_id: null,
+          policy_version: null,
+        },
+        data: { score_runs: [] },
+      },
+    });
+
+    expect(model.scoreRunPreviewReadinessState).toBe("BLOCKED");
+    expect(model.scoreRunPreviewReadiness).toBe(
+      "Blocked until Manage returns policy id and version"
     );
   });
 });

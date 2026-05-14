@@ -107,6 +107,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("heading", { name: "PM Operating Quality" })).toBeInTheDocument();
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
+    expect(screen.getByText("Ready for policy pmq_sg_dpm / 2026.05")).toBeInTheDocument();
     expect(screen.getByText("Ready: 2 source-defined segments from Manage")).toBeInTheDocument();
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
@@ -114,6 +115,37 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();
+  });
+
+  it("explains when score-run preview is blocked by missing policy context", () => {
+    render(
+      <PmOperatingQualityPanel
+        policies={{
+          ...policies,
+          supportability: {
+            ...policies.supportability,
+            policy_id: null,
+            policy_version: null,
+          },
+          data: { policies: [] },
+        }}
+        scoreRuns={{
+          ...scoreRuns,
+          supportability: {
+            ...scoreRuns.supportability,
+            policy_id: null,
+            policy_version: null,
+          },
+          data: { score_runs: [] },
+        }}
+      />
+    );
+
+    expect(
+      screen.getAllByText("Blocked until Manage returns policy id and version").length
+    ).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Preview Score Run" })).toBeDisabled();
+    expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
   });
 
   it("explains when fairness preview is blocked by missing source-defined segments", () => {
