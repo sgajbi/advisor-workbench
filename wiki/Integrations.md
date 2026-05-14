@@ -86,7 +86,11 @@ must travel through Gateway-shaped contracts.
     RFC-0041 rebalance-wave preview, create, source-check, simulation, selection, approval,
     staging, handoff, supportability, and report-input also remain manage-owned, while wave PM
     memo and operations-handoff summary execution remain `lotus-ai` owned; both must reach
-    Workbench through Gateway wave composition only. RFC-0039
+    Workbench through Gateway wave composition only. Manage-owned `BulkReviewCampaignDefinition:v1`
+    campaign definitions also reach Workbench only through Gateway
+    `/api/v1/dpm/command-center/waves/campaign-definitions`; Workbench renders the bounded
+    campaign-definition list but does not discover campaigns, recalculate membership, render
+    content hashes, or operate a campaign-definition upsert workflow locally. RFC-0039
     construction alternative generation, retrieval, supportability, and selection are manage-owned
     and must reach Workbench through Gateway construction composition only. RFC-0042
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and
@@ -100,7 +104,8 @@ must travel through Gateway-shaped contracts.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
     contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
     create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture,
-    supportability, report-input, AI PM memo, and operations-handoff summary contracts, the
+    supportability, report-input, AI PM memo, operations-handoff summary, and campaign-definition
+    list contracts, the
     implemented proof-pack panel consumes the Gateway proof-pack
     generation, detail, Markdown, report-input, AI-evidence, and AI PM memo contracts, and the
     implemented outcome panel consumes the Gateway outcome-review list and AI-narrative contracts.

@@ -28,6 +28,7 @@ import {
   getDpmWaveReportInput,
   getDpmWaveSupportability,
   handoffDpmWave,
+  listDpmCampaignDefinitions,
   listDpmWaves,
   previewDpmWave,
   requestDpmExceptionSummary,
@@ -2175,6 +2176,51 @@ describe("workbench api", () => {
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-list");
     expect(metricEventsJson).not.toContain("dwv_001");
+  });
+
+  it("loads DPM campaign definitions through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              items: [
+                {
+                  campaign_id: "campaign-holdings-202605",
+                  campaign_version: "2026.05",
+                  product_name: "BulkReviewCampaignDefinition",
+                  status: "ACTIVE",
+                },
+              ],
+              limit: 10,
+              offset: 0,
+              count: 1,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await listDpmCampaignDefinitions({
+      campaignStatus: "ACTIVE",
+      limit: 10,
+      offset: 0,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions?limit=10&offset=0&campaign_status=ACTIVE"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-definitions");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign");
   });
 
   it("previews, creates, reviews, actions, and inspects DPM waves through Gateway BFF", async () => {

@@ -405,6 +405,11 @@ describe("analytics UI observability metrics", () => {
         "dpm.proof-pack.ai-pm-memo",
       ],
       ["workbench.manage", "wave-list", "dpm.waves.list"],
+      [
+        "workbench.manage",
+        "wave-campaign-definitions",
+        "dpm.waves.campaign-definitions.list",
+      ],
       ["workbench.manage", "wave-preview", "dpm.waves.preview"],
       ["workbench.manage", "wave-create", "dpm.waves.create"],
       ["workbench.manage", "wave-detail", "dpm.waves.get"],

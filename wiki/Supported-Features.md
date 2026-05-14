@@ -11,7 +11,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
 | DPM mandate command center | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
-| DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, and governed operations-handoff summary requests through Gateway only. |
+| DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, and active Manage-owned campaign-definition list rendering through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}?mode=construction` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
 | DPM proof-pack evidence | `/workbench/{portfolioId}?mode=proof` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
 | DPM portfolio memory | `/workbench/{portfolioId}?mode=memory` | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live proof accepts populated ready, partial, degraded, and blocked source truth while still failing empty or unsupported memory. |
@@ -57,7 +57,12 @@ Implemented:
 6. requests governed `lotus-ai` wave PM memo and operations-handoff summary workflow-pack runs
    through Gateway only and displays review-required workflow-pack posture without constructing
    prompts, memo text, handoff summaries, execution instructions, or client messages locally,
-7. emits bounded Workbench observability labels without portfolio ids, wave ids, report-input refs,
+7. lists active Manage-owned `BulkReviewCampaignDefinition:v1` definitions through Gateway and
+   renders campaign name, version, status, as-of date, candidate count, eligible portfolio type,
+   governance posture, and source-backed posture without rendering content hashes or recalculating
+   membership,
+8. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
+   report-input refs,
    workflow-pack run ids, request bodies, or response bodies as metric labels.
 
 Not yet supported:
@@ -66,9 +71,10 @@ Not yet supported:
 2. PM-book discovery or automatic affected-portfolio discovery,
 3. item selection drawer,
 4. richer workflow drawers and eligibility explanations beyond manage reason-code rendering,
-5. CIO approval workflow,
-6. external OMS/execution integration,
-7. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative,
+5. global campaign discovery or campaign-definition upsert UX,
+6. CIO approval workflow,
+7. external OMS/execution integration,
+8. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative,
    operations-handoff summary, exception-summary narrative, or handoff calculation.
 
 ## DPM Flow Diagram

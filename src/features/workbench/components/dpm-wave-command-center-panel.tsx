@@ -19,9 +19,13 @@ import {
   sourceCheckDpmWave,
   stageDpmWave,
 } from "@/features/workbench/api";
-import type { DpmWaveGatewayResponse } from "@/features/workbench/types";
+import type {
+  DpmCampaignDefinitionGatewayResponse,
+  DpmWaveGatewayResponse,
+} from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
+  type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
   type DpmWaveItemRow,
   type DpmWaveMetricRow,
@@ -34,6 +38,8 @@ import {
 type Props = {
   portfolioId: string;
   waveList: DpmWaveGatewayResponse | null;
+  campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignDefinitionsError?: string | null;
   errorMessage?: string | null;
 };
 
@@ -108,6 +114,8 @@ function statePanelCopy(state: DpmWaveCommandCenterPanelState, portfolioId: stri
 export default function DpmWaveCommandCenterPanel({
   portfolioId,
   waveList,
+  campaignDefinitions = null,
+  campaignDefinitionsError = null,
   errorMessage = null,
 }: Props) {
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
@@ -123,6 +131,7 @@ export default function DpmWaveCommandCenterPanel({
     waveDetail: proofPackResponse,
     waveItems: itemsResponse,
     actionResponse,
+    campaignDefinitions,
   });
   const selectedWaveId = model.selectedWaveId;
   const lifecycleIndex = resolveLifecycleIndex(model.selectedWaveState);
@@ -288,6 +297,11 @@ export default function DpmWaveCommandCenterPanel({
           tone="success"
         />
       </div>
+
+      <CampaignDefinitionsSection
+        rows={model.campaignRows}
+        errorMessage={campaignDefinitionsError}
+      />
 
       <div className="rebalance-main-grid">
         <section className="rebalance-active-card" aria-labelledby="rebalance-active-title">
@@ -462,6 +476,70 @@ export default function DpmWaveCommandCenterPanel({
         />
       </section>
     </SectionBlock>
+  );
+}
+
+function CampaignDefinitionsSection({
+  rows,
+  errorMessage,
+}: {
+  rows: DpmCampaignDefinitionRow[];
+  errorMessage?: string | null;
+}) {
+  return (
+    <section className="rebalance-proposed-card" aria-labelledby="campaign-definitions-title">
+      <div className="rebalance-table-heading">
+        <div>
+          <h3 id="campaign-definitions-title">Campaign Definitions</h3>
+          <p>Manage-owned bulk-review campaigns backed by source-supplied candidate sets.</p>
+        </div>
+        <SemanticBadge tone={errorMessage ? "warn" : rows.length ? "success" : "default"}>
+          {errorMessage ? "Needs attention" : rows.length ? "Available" : "No active campaign"}
+        </SemanticBadge>
+      </div>
+      {errorMessage ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="Campaign definitions need attention"
+          body={errorMessage}
+        />
+      ) : null}
+      <AnalyticsTable
+        ariaLabel="DPM campaign definitions"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "campaign", label: "Campaign" },
+          { key: "version", label: "Version" },
+          { key: "status", label: "Status" },
+          { key: "asOf", label: "As Of" },
+          { key: "candidates", label: "Candidates", align: "right" },
+          { key: "portfolioTypes", label: "Eligible Types" },
+          { key: "governance", label: "Governance" },
+          { key: "source", label: "Source Posture" },
+        ]}
+        rows={rows.map((row) => ({
+          key: row.key,
+          cells: [
+            row.displayName,
+            row.campaignVersion,
+            <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+              {businessStateLabel(row.status)}
+            </SemanticBadge>,
+            row.asOfDate,
+            row.candidateCount,
+            row.eligiblePortfolioTypes,
+            businessStateLabel(row.governanceState),
+            row.sourcePosture,
+          ],
+        }))}
+        emptyState={{
+          title: "No active campaign definitions",
+          body: "Persist a Manage campaign definition before using bulk-review campaign waves.",
+        }}
+      />
+    </section>
   );
 }
 

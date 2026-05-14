@@ -13,7 +13,10 @@ import {
   sourceCheckDpmWave,
   stageDpmWave,
 } from "../../src/features/workbench/api";
-import type { DpmWaveGatewayResponse } from "../../src/features/workbench/types";
+import type {
+  DpmCampaignDefinitionGatewayResponse,
+  DpmWaveGatewayResponse,
+} from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/api", () => ({
   approveDpmWave: vi.fn(),
@@ -98,6 +101,46 @@ const itemResponse: DpmWaveGatewayResponse = {
   },
 };
 
+const campaignDefinitionsResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    items: [
+      {
+        campaign_id: "campaign-holdings-202605",
+        campaign_version: "2026.05",
+        display_name: "Apple and Tesla holdings review",
+        status: "ACTIVE",
+        as_of_date: "2026-05-10",
+        eligible_portfolio_types: ["DISCRETIONARY"],
+        candidates: [
+          {
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            portfolio_type: "DISCRETIONARY",
+            source_refs: [{ source_type: "PortfolioManagerBookMembership", source_id: "book-1" }],
+          },
+          {
+            portfolio_id: "PB_SG_GLOBAL_INC_002",
+            portfolio_type: "DISCRETIONARY",
+            source_refs: [{ source_type: "RiskEventAffectedCohort", source_id: "risk-1" }],
+          },
+        ],
+        governance: {
+          approval_ref: "BRC-APPROVAL-2026-05",
+          approved_by: "cio_ops_committee",
+        },
+        source_refs: [{ source_type: "BulkReviewCampaignDefinition", source_id: "campaign-plan" }],
+        content_hash: "sha256:campaign-definition",
+      },
+    ],
+    limit: 10,
+    offset: 0,
+    count: 1,
+  },
+};
+
 describe("DpmWaveCommandCenterPanel", () => {
   beforeEach(() => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
@@ -112,6 +155,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
+        campaignDefinitions={campaignDefinitionsResponse}
       />,
     );
 
@@ -120,6 +164,9 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getAllByText("Simulation ready").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
+    expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
+    expect(screen.getByText("Source-backed")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
 
     const table = screen.getByRole("table", { name: "Proposed rebalance changes" });
@@ -129,6 +176,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(within(table).getByText("MSFT US")).toBeInTheDocument();
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
     expect(screen.queryByText("corr-wave")).not.toBeInTheDocument();
+    expect(screen.queryByText("sha256:campaign-definition")).not.toBeInTheDocument();
   });
 
   it("routes bounded workflow actions through Gateway helpers", async () => {

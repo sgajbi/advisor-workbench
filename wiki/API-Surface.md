@@ -51,13 +51,18 @@ promote dormant labels into product ownership just because historical route file
   the explicit portfolio-list wave queue, previews and creates canonical portfolio waves, opens
   wave detail and item posture, and sends source-check, simulation, approval, staging, handoff,
   proof-posture, supportability, report-input, governed AI PM memo, and governed operations
-  handoff summary actions through Gateway. It
+  handoff summary actions through Gateway. It also loads active Manage-owned
+  `BulkReviewCampaignDefinition:v1` campaign definitions from
+  `/api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
+  status, as-of date, candidate count, eligible portfolio type, governance posture, and
+  source-backed posture without rendering content hashes or recalculating membership. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local
   readiness calculation, local report-input construction, prompt construction, memo narrative
-  generation, or operations handoff-summary generation. Item-selection drawers, dedicated
-  `/dpm/waves` routes, PM-book discovery, CIO
+  generation, operations handoff-summary generation, campaign discovery, or campaign membership
+  calculation. Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, global
+  campaign discovery, campaign-definition upsert UX, CIO
   workflow, and external OMS execution remain future scope until separately implemented and proven.
 - RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on the Manage
   workspace overview and `/workbench/{portfolioId}?mode=mandate` through Gateway

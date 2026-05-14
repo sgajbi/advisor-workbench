@@ -17,6 +17,7 @@ import {
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPortfolio360,
   DpmCommandCenterGatewayResponse,
+  DpmCampaignDefinitionGatewayResponse,
   DpmConstructionGatewayResponse,
   DpmExceptionSummaryResponse,
   DpmOutcomeReviewGatewayResponse,
@@ -1132,6 +1133,33 @@ export async function listDpmWaves(params?: {
         "server",
         "/dpm/command-center/waves",
         "DPM rebalance waves",
+        query
+      )
+  );
+}
+
+export async function listDpmCampaignDefinitions(params?: {
+  campaignId?: string;
+  campaignStatus?: "ACTIVE" | "RETIRED";
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  const query = new URLSearchParams();
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.campaignId) {
+    query.set("campaign_id", params.campaignId);
+  }
+  if (params?.campaignStatus) {
+    query.set("campaign_status", params.campaignStatus);
+  }
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-definitions.list",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        "server",
+        "/dpm/command-center/waves/campaign-definitions",
+        "DPM campaign definitions",
         query
       )
   );

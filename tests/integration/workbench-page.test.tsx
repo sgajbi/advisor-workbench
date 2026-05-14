@@ -143,11 +143,18 @@ describe("WorkbenchPage", () => {
 
     expect(screen.getAllByRole("heading", { name: "Rebalance" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
+    expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Proposed Changes" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([input]) =>
         input.toString().includes("/api/v1/dpm/command-center/waves?")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/waves/campaign-definitions")
       )
     ).toBe(true);
     expect(
@@ -466,6 +473,43 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
               issue_count: 0,
             },
           ],
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/waves/campaign-definitions")) {
+      return jsonResponse({
+        correlation_id: "corr_campaign_definitions",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              campaign_id: "campaign-holdings-202605",
+              campaign_version: "2026.05",
+              display_name: "Apple and Tesla holdings review",
+              status: "ACTIVE",
+              as_of_date: "2026-05-10",
+              eligible_portfolio_types: ["DISCRETIONARY"],
+              candidates: [
+                {
+                  portfolio_id: portfolioId,
+                  portfolio_type: "DISCRETIONARY",
+                  source_refs: [{ source_type: "PortfolioManagerBookMembership", source_id: "book-1" }],
+                },
+              ],
+              source_refs: [{ source_type: "BulkReviewCampaignDefinition", source_id: "campaign-plan" }],
+              governance: {
+                approval_ref: "BRC-APPROVAL-2026-05",
+                approved_by: "cio_ops_committee",
+              },
+              content_hash: "sha256:campaign-definition",
+            },
+          ],
+          limit: 10,
+          offset: 0,
+          count: 1,
         },
       });
     }

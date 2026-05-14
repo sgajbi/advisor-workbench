@@ -1,4 +1,5 @@
 import type {
+  DpmCampaignDefinitionGatewayResponse,
   DpmOperationsHandoffSummaryResponse,
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
@@ -47,6 +48,19 @@ export type DpmWaveItemRow = {
   reasonCodes: string;
 };
 
+export type DpmCampaignDefinitionRow = {
+  key: string;
+  campaignId: string;
+  campaignVersion: string;
+  displayName: string;
+  status: string;
+  asOfDate: string;
+  candidateCount: string;
+  eligiblePortfolioTypes: string;
+  governanceState: string;
+  sourcePosture: string;
+};
+
 export type DpmWaveCommandCenterPanelModel = {
   state: DpmWaveCommandCenterPanelState;
   sourceService: string;
@@ -68,6 +82,7 @@ export type DpmWaveCommandCenterPanelModel = {
   operationsHandoffSummaryStatus: string;
   operationsHandoffSummaryRunId: string;
   summaryRows: DpmWaveSummaryRow[];
+  campaignRows: DpmCampaignDefinitionRow[];
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
   proofPackRows: DpmWaveMetricRow[];
@@ -83,6 +98,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   waveReportInput?: DpmWaveGatewayResponse | null;
   waveAiMemo?: DpmWaveAiPmMemoResponse | null;
   operationsHandoffSummary?: DpmOperationsHandoffSummaryResponse | null;
+  campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
     params.actionResponse ??
@@ -149,6 +165,7 @@ export function buildDpmWaveCommandCenterModel(params: {
     operationsHandoffSummaryStatus: readWorkflowPackStatus(params.operationsHandoffSummary),
     operationsHandoffSummaryRunId: readWorkflowPackRunId(params.operationsHandoffSummary),
     summaryRows: listRows,
+    campaignRows: buildCampaignDefinitionRows(params.campaignDefinitions?.data),
     metricRows: buildMetricRows(metricSource),
     itemRows,
     proofPackRows: buildProofPackRows(proofPackPosture, itemRows),
@@ -266,6 +283,51 @@ function buildSummaryRows(data: Record<string, unknown> | undefined): DpmWaveSum
       itemCount: formatValue(readValue(record, "item_count") ?? readValue(aggregate, "item_count")),
       supportabilityState: normalizeState(readString(record, "supportability_state")),
       supportabilityReason: readString(record, "supportability_reason") || "N/A",
+    };
+  });
+}
+
+function buildCampaignDefinitionRows(
+  data: Record<string, unknown> | undefined
+): DpmCampaignDefinitionRow[] {
+  return extractRecordArray(data?.items ?? data?.campaign_definitions).map((record, index) => {
+    const governance = readRecord(record.governance);
+    const candidates = extractRecordArray(record.candidates);
+    const candidateSourceRefCount = candidates.reduce(
+      (count, candidate) => count + extractRecordArray(candidate.source_refs).length,
+      0
+    );
+    const candidateCount =
+      readValue(record, "candidate_count") ??
+      readValue(record, "eligible_candidate_count") ??
+      candidates.length;
+    const governanceState =
+      readString(record, "governance_state") ||
+      (governance.approval_ref || governance.approved_by ? "GOVERNED" : "NOT_PROVIDED");
+    return {
+      key:
+        [
+          readString(record, "campaign_id") || `campaign-${index + 1}`,
+          readString(record, "campaign_version") || "version",
+        ].join(":"),
+      campaignId: readString(record, "campaign_id") || "N/A",
+      campaignVersion: readString(record, "campaign_version") || "N/A",
+      displayName:
+        readString(record, "display_name") ||
+        readString(record, "name") ||
+        readString(record, "campaign_id") ||
+        `Campaign ${index + 1}`,
+      status: normalizeState(readString(record, "status") || "UNKNOWN"),
+      asOfDate: readString(record, "as_of_date") || "N/A",
+      candidateCount: formatValue(candidateCount),
+      eligiblePortfolioTypes: extractStringArray(record.eligible_portfolio_types).join(", ") || "N/A",
+      governanceState,
+      sourcePosture:
+        extractRecordArray(record.source_refs).length > 0 ||
+        extractRecordArray(governance.source_refs).length > 0 ||
+        candidateSourceRefCount > 0
+          ? "Source-backed"
+          : "Review source refs",
     };
   });
 }

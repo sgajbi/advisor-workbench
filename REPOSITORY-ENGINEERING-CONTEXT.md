@@ -64,7 +64,10 @@ Current repository posture:
 9. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
    Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
-   blocked actions, lotus-ai workflow-pack run posture, and `external_execution_claimed` posture.
+   blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
+   list posture, and `external_execution_claimed` posture. Workbench must not discover campaigns,
+   calculate campaign membership, render campaign content hashes, or operate campaign-definition
+   upsert locally.
 10. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
     manage/core source selector through Gateway, preserves manage-owned alternatives,
@@ -206,8 +209,8 @@ Important validation expectations:
 14. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
     labels must remain bounded to route, panel, operation, freshness, supportability, status class,
     and error category; wave ids, wave item ids, portfolio ids, proof-pack ids, handoff refs,
-    report-input refs, workflow-pack run ids, request bodies, response bodies, and screen content
-    must never be emitted as metric labels.
+    campaign ids, report-input refs, workflow-pack run ids, request bodies, response bodies, and
+    screen content must never be emitted as metric labels.
 15. DPM portfolio-memory reads are Workbench gateway-only operations. Observability labels must
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,

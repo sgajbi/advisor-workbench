@@ -49,6 +49,7 @@ import {
   getDpmPortfolioMemory,
   getDpmProofPack,
   getPortfolio360,
+  listDpmCampaignDefinitions,
   listDpmWaves,
 } from "@/features/workbench/api";
 import styles from "./manage-workspace.module.css";
@@ -73,6 +74,8 @@ export type ManageWorkspaceData = {
   portfolioMemoryError: string | null;
   waves: Awaited<ReturnType<typeof listDpmWaves>> | null;
   wavesError: string | null;
+  campaignDefinitions: Awaited<ReturnType<typeof listDpmCampaignDefinitions>> | null;
+  campaignDefinitionsError: string | null;
   outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null;
   outcomeReviewError: string | null;
   proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null;
@@ -147,6 +150,7 @@ export async function loadManageWorkspaceData(
     mandateResult,
     memoryResult,
     wavesResult,
+    campaignDefinitionsResult,
     reviewsResult,
   ] = await Promise.allSettled([
     getDpmCommandCenter({ limit: 25 }),
@@ -154,6 +158,7 @@ export async function loadManageWorkspaceData(
     getDpmMandateByPortfolio(portfolioId),
     getDpmPortfolioMemory({ portfolioId, limit: 100 }),
     listDpmWaves({ triggerType: "EXPLICIT_PORTFOLIO_LIST", limit: 10 }),
+    listDpmCampaignDefinitions({ campaignStatus: "ACTIVE", limit: 10 }),
     getDpmOutcomeReviews({ portfolioId, limit: 10 }),
   ]);
 
@@ -196,6 +201,11 @@ export async function loadManageWorkspaceData(
     ),
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
+    campaignDefinitions: readSettledValue(campaignDefinitionsResult),
+    campaignDefinitionsError: readSettledError(
+      campaignDefinitionsResult,
+      "DPM campaign-definition endpoint unavailable."
+    ),
     outcomeReviews,
     outcomeReviewError: readSettledError(
       reviewsResult,
@@ -308,6 +318,8 @@ function renderManageMode(
           <DpmWaveCommandCenterPanel
             portfolioId={data.portfolio.portfolio.portfolio_id}
             waveList={data.waves}
+            campaignDefinitions={data.campaignDefinitions}
+            campaignDefinitionsError={data.campaignDefinitionsError}
             errorMessage={data.wavesError}
           />
           <ProofPackPanel

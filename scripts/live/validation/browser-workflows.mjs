@@ -470,7 +470,7 @@ export async function validateDpmWaveCommandCenterPanel(
   await expect(wavePanel.getByText("Recommended Actions")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByText("Proposed Changes")).toBeVisible({
+  await expect(wavePanel.getByRole("heading", { name: "Proposed Changes" })).toBeVisible({
     timeout: timeoutMs,
   });
   for (const actionName of [
