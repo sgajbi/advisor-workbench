@@ -30,8 +30,8 @@ describe("PortfolioRail", () => {
 
     const selector = screen.getByRole("navigation", { name: "Portfolio selector" });
     expect(selector).toBeInTheDocument();
-    expect(within(selector).getByText("Portfolio")).toHaveClass("portfolio-selector-kicker");
-    expect(within(selector).getByRole("heading", { name: "Client Portfolios" })).toBeInTheDocument();
+    expect(within(selector).getByText("Book selector")).toHaveClass("portfolio-selector-kicker");
+    expect(within(selector).getByRole("heading", { name: "Portfolios" })).toBeInTheDocument();
     expect(selector.querySelector(".portfolio-selector-list")).toBeTruthy();
     expect(selector.querySelectorAll(".portfolio-selector-list-item")).toHaveLength(2);
 

@@ -168,14 +168,6 @@ async function loadPlatformCapabilitiesSnapshot(): Promise<PlatformCapabilitiesS
 }
 
 function getInitialResult(): UsePlatformCapabilitiesResult {
-  const cached = getCachedSnapshot();
-  if (cached) {
-    return {
-      loading: false,
-      ...cached,
-    };
-  }
-
   return {
     loading: true,
     normalized: fallbackNormalizedCapabilities(),

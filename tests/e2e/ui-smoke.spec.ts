@@ -71,7 +71,7 @@ test.describe('UI smoke checks', () => {
     test.setTimeout(90000);
     await page.goto('/workbench/DEMO_ADV_USD_001', { waitUntil: 'commit', timeout: 60000 });
     await expect(
-      page.getByRole('heading', { name: /^Advisor Workbench(?:: .+)?$/i })
+      page.getByRole('heading', { name: /^Manage Overview$|^Manage Workspace$/i })
     ).toBeVisible({ timeout: 60000 });
   });
 

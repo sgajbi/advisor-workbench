@@ -73,6 +73,7 @@ describe("portfolio data grids", () => {
             currency: "USD",
             sector: "Technology",
             held_since_date: "2026-03-10",
+            reprocessing_status: "STALE_PRICE",
           },
         ]}
         baseCurrency="USD"
@@ -96,6 +97,7 @@ describe("portfolio data grids", () => {
     expect(screen.getByText("Market Value")).toBeInTheDocument();
     expect(screen.getByText("Weight")).toBeInTheDocument();
     expect(screen.getByText("Unrealized P&L")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByTestId("marketValue-header-class")).toHaveTextContent(
       "portfolio-data-grid-header-cell-numeric"
     );
@@ -167,8 +169,8 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Transactions" })).toBeInTheDocument();
-    expect(screen.getByText("Activity since 01 Mar 2026")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ledger" })).toBeInTheDocument();
+    expect(screen.getByText("Activity from 01 Mar 2026 to 28 Mar 2026")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export transactions" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show expanded transaction columns" })).toBeInTheDocument();
@@ -771,7 +773,7 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Transactions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ledger" })).toBeInTheDocument();
     expect(screen.getByText("Loading transactions")).toBeInTheDocument();
     expect(
       screen.getByText("Transaction ledger detail is loading for the selected window.")

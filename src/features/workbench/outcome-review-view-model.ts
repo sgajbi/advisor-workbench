@@ -15,6 +15,7 @@ export type OutcomeReviewDimensionRow = {
   realized: string;
   variance: string;
   state: string;
+  explanation: string;
 };
 
 export type OutcomeReviewLineageRow = {
@@ -27,7 +28,15 @@ export type OutcomeReviewLineageRow = {
 
 export type OutcomeReviewListItem = {
   outcomeReviewId: string;
+  reviewLabel: string;
   state: string;
+  overallOutcome: string;
+  reviewWindow: string;
+  outcomeStatusLabel: string;
+  reviewPostureLabel: string;
+  driftImprovementLabel: string;
+  mandateImpact: string;
+  clientRationale: string;
   portfolioId: string;
   rebalanceRunId: string;
   waveId: string;
@@ -134,9 +143,24 @@ function buildOutcomeReviewListItem(
   fallbackIndex: number
 ): OutcomeReviewListItem {
   const outcomeReviewId = readString(record, "outcome_review_id") || `outcome-review-${fallbackIndex + 1}`;
+  const state = readString(record, "state") || "UNKNOWN";
+  const overallOutcome = readString(record, "overall_outcome") || state;
+  const reviewWindow = formatReviewWindow(readRecord(record, "review_window"));
+  const dimensions = extractRecordArray(record.dimension_results).map((dimension, index) =>
+    buildDimensionRow(dimension, index)
+  );
+  const varianceSummary = readRecord(record, "variance_summary");
   return {
     outcomeReviewId,
-    state: readString(record, "state") || "UNKNOWN",
+    reviewLabel: buildReviewLabel(record, fallbackIndex),
+    state,
+    overallOutcome,
+    reviewWindow,
+    outcomeStatusLabel: outcomeStatusLabel(overallOutcome, state),
+    reviewPostureLabel: reviewPostureLabel(state, blockedActions),
+    driftImprovementLabel: driftImprovementLabel(varianceSummary, dimensions),
+    mandateImpact: mandateImpactCopy(overallOutcome, dimensions),
+    clientRationale: clientRationaleCopy(record, overallOutcome, dimensions),
     portfolioId: readString(record, "portfolio_id") || "N/A",
     rebalanceRunId: readString(record, "rebalance_run_id") || "N/A",
     waveId: readString(record, "wave_id") || "N/A",
@@ -147,9 +171,7 @@ function buildOutcomeReviewListItem(
     updatedAt: readString(record, "updated_at") || readString(record, "created_at") || "N/A",
     reportInputBlocked: blockedActions.includes("CREATE_REPORT_INPUT"),
     aiEvidenceBlocked: blockedActions.includes("REQUEST_AI_NARRATIVE"),
-    dimensions: extractRecordArray(record.dimension_results).map((dimension, index) =>
-      buildDimensionRow(dimension, index)
-    ),
+    dimensions,
     lineage: [
       ...extractRecordArray(record.source_lineage),
       ...extractRecordArray(record.lineage),
@@ -170,6 +192,7 @@ function buildDimensionRow(
     realized: formatOutcomeValue(record.realized),
     variance: formatOutcomeValue(record.variance),
     state: readString(record, "state") || readString(record, "status") || "UNKNOWN",
+    explanation: readString(record, "explanation") || "No dimension explanation returned.",
   };
 }
 
@@ -208,6 +231,11 @@ function extractOutcomeReviewRecords(data: Record<string, unknown>): Record<stri
     return items;
   }
   return typeof data.outcome_review_id === "string" ? [data] : [];
+}
+
+function readRecord(record: Record<string, unknown>, key: string): Record<string, unknown> {
+  const value = record[key];
+  return isRecord(value) ? value : {};
 }
 
 function extractRecordArray(value: unknown): Record<string, unknown>[] {
@@ -253,4 +281,143 @@ function formatOutcomeValue(value: unknown): string {
 
 function normalizeState(state: string): string {
   return state.trim().toUpperCase() || "UNKNOWN";
+}
+
+function buildReviewLabel(record: Record<string, unknown>, fallbackIndex: number): string {
+  const createdAt = readString(record, "created_at") || readString(record, "updated_at");
+  const window = readRecord(record, "review_window");
+  const windowEnd = readString(window, "end") || readString(window, "end_date");
+  const dateLabel = formatDateLabel(windowEnd || createdAt);
+  return dateLabel ? `${dateLabel} review` : `Review ${fallbackIndex + 1}`;
+}
+
+function formatReviewWindow(window: Record<string, unknown>): string {
+  const start = formatDateLabel(readString(window, "start") || readString(window, "start_date"));
+  const end = formatDateLabel(readString(window, "end") || readString(window, "end_date"));
+  if (start && end) {
+    return `${start} - ${end}`;
+  }
+  return end || start || "N/A";
+}
+
+function formatDateLabel(value: string): string {
+  if (!value) {
+    return "";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function outcomeStatusLabel(overallOutcome: string, state: string): string {
+  const normalized = normalizeState(overallOutcome || state);
+  if (normalized.includes("WITHIN_TOLERANCE") || normalized === "READY") {
+    return "Within Mandate";
+  }
+  if (normalized.includes("PENDING") || normalized.includes("REVIEW")) {
+    return "Advisor Review";
+  }
+  if (normalized.includes("BREACH")) {
+    return "Outside Mandate";
+  }
+  if (normalized.includes("BLOCK")) {
+    return "Blocked";
+  }
+  return "Review Required";
+}
+
+function reviewPostureLabel(state: string, blockedActions: string[]): string {
+  const normalized = normalizeState(state);
+  if (blockedActions.length > 0 || normalized === "BLOCKED") {
+    return "Attention Required";
+  }
+  if (normalized === "READY") {
+    return "Ready for Advisor Review";
+  }
+  if (normalized === "PENDING_REVIEW") {
+    return "Pending Advisor Review";
+  }
+  if (normalized === "BREACHED") {
+    return "Escalation Required";
+  }
+  return "Review Required";
+}
+
+function driftImprovementLabel(
+  varianceSummary: Record<string, unknown>,
+  dimensions: OutcomeReviewDimensionRow[]
+): string {
+  const directValue =
+    readNumber(varianceSummary, "drift_improvement_pct") ??
+    readNumber(varianceSummary, "drift_improvement") ??
+    readNumber(varianceSummary, "DRIFT_REDUCTION");
+  if (directValue !== null) {
+    return formatPercent(directValue);
+  }
+  const driftDimension = dimensions.find((dimension) =>
+    normalizeState(dimension.dimension).includes("DRIFT")
+  );
+  if (!driftDimension) {
+    return "N/A";
+  }
+  return driftDimension.realized !== "N/A" ? driftDimension.realized : driftDimension.variance;
+}
+
+function mandateImpactCopy(
+  overallOutcome: string,
+  dimensions: OutcomeReviewDimensionRow[]
+): string {
+  const topDimension = dimensions[0];
+  const topExplanation =
+    topDimension?.explanation && topDimension.explanation !== "No dimension explanation returned."
+      ? topDimension.explanation
+      : "";
+  const status = outcomeStatusLabel(overallOutcome, overallOutcome).toLowerCase();
+  if (topExplanation) {
+    return `${topExplanation} Overall outcome is ${status}.`;
+  }
+  return `Outcome review is ${status} based on the returned expected-versus-realized mandate dimensions.`;
+}
+
+function clientRationaleCopy(
+  record: Record<string, unknown>,
+  overallOutcome: string,
+  dimensions: OutcomeReviewDimensionRow[]
+): string {
+  const supportability = readRecord(record, "supportability");
+  const explanation = readString(supportability, "explanation");
+  if (explanation) {
+    return explanation;
+  }
+  const pendingDimension = dimensions.find((dimension) => normalizeState(dimension.state).includes("REVIEW"));
+  if (pendingDimension) {
+    return `${pendingDimension.dimension} needs advisor review before the outcome can be closed.`;
+  }
+  return `The review outcome is ${outcomeStatusLabel(overallOutcome, overallOutcome).toLowerCase()} against the mandate evidence available for this period.`;
+}
+
+function readNumber(record: Record<string, unknown>, key: string): number | null {
+  const value = record[key];
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function formatPercent(value: number): string {
+  const percent = Math.abs(value) <= 1 ? value * 100 : value;
+  return `${percent.toLocaleString(undefined, {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: percent % 1 === 0 ? 0 : 1,
+  })}%`;
 }

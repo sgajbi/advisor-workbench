@@ -1,6 +1,10 @@
 "use client";
 
 import { MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+} from "@/features/workbench/manage-workspace-view-model";
 import type { WorkbenchOverview } from "@/features/workbench/types";
 
 type Props = {
@@ -13,7 +17,6 @@ export default function RebalanceStatus(props: Props) {
   const supportabilityState = supportability?.state ?? "unknown";
   const supportabilityFreshness = supportability?.freshness_bucket ?? "unknown";
   const supportabilityReason = supportability?.reason ?? null;
-  const lastRunId = props.snapshot?.last_rebalance_run_id ?? null;
   const lastRunAt = props.snapshot?.last_run_at_utc ?? null;
   const recentRuns = props.snapshot?.recent_runs ?? [];
   const failedRunCount = recentRuns.filter((run) => isFailureStatus(run.status)).length;
@@ -25,13 +28,13 @@ export default function RebalanceStatus(props: Props) {
     <SectionBlock title="Rebalance Status" className="rebalance-status-panel">
       <MetricRow
         label="Status"
-        value={<SemanticBadge tone={tone}>{formatToken(status)}</SemanticBadge>}
+        value={<SemanticBadge tone={tone}>{businessStateLabel(status)}</SemanticBadge>}
       />
       <MetricRow
-        label="Source Support"
+        label="Decision Support"
         value={
           <SemanticBadge tone={badgeTone(supportabilityState)}>
-            {formatToken(supportabilityState)}
+            {businessStateLabel(supportabilityState)}
           </SemanticBadge>
         }
       />
@@ -39,11 +42,11 @@ export default function RebalanceStatus(props: Props) {
         label="Freshness"
         value={
           <SemanticBadge tone={freshnessTone(supportabilityFreshness)}>
-            {formatToken(supportabilityFreshness)}
+            {businessStateLabel(supportabilityFreshness)}
           </SemanticBadge>
         }
       />
-      <div className="rebalance-status-detail-grid" aria-label="Rebalance execution evidence">
+      <div className="rebalance-status-detail-grid" aria-label="Rebalance decision evidence">
         <span>
           <strong>{supportability?.run_count ?? missingEvidenceValue}</strong>
           <Text as="span" variant="bodySmall" className="muted">
@@ -63,7 +66,7 @@ export default function RebalanceStatus(props: Props) {
           </Text>
         </span>
       </div>
-      <div className="rebalance-operations-dashboard" aria-label="DPM operations dashboard">
+      <div className="rebalance-operations-dashboard" aria-label="Rebalance review activity">
         <div className="rebalance-operations-dashboard-summary">
           <span>
             <strong>{recentRuns.length}</strong>
@@ -87,21 +90,21 @@ export default function RebalanceStatus(props: Props) {
               >
                 <div>
                   <Text as="span" variant="bodySmall" className="rebalance-operations-run-id">
-                    {run.rebalance_run_id ?? "N/A"}
+                    Review {index + 1}
                   </Text>
                   <Text as="span" variant="bodySmall" className="muted">
                     {run.created_at_utc ?? "Timestamp N/A"}
                   </Text>
                 </div>
                 <div className="rebalance-operations-run-state">
-                  <SemanticBadge tone={badgeTone(run.status)}>{formatToken(run.status)}</SemanticBadge>
+                  <SemanticBadge tone={badgeTone(run.status)}>{businessStateLabel(run.status)}</SemanticBadge>
                   {run.workflow_state ? (
                     <SemanticBadge tone={badgeTone(run.workflow_state)}>
-                      {formatToken(run.workflow_state)}
+                      {businessStateLabel(run.workflow_state)}
                     </SemanticBadge>
                   ) : null}
                   {run.error_code ? (
-                    <SemanticBadge tone="danger">{formatToken(run.error_code)}</SemanticBadge>
+                    <SemanticBadge tone="danger">{formatBusinessReason(run.error_code)}</SemanticBadge>
                   ) : null}
                 </div>
               </div>
@@ -109,18 +112,17 @@ export default function RebalanceStatus(props: Props) {
           </div>
         ) : (
           <Text variant="secondary" className="muted">
-            No recent manage rebalance runs were returned by Gateway for this portfolio.
+            No recent rebalance review activity is available for this portfolio.
           </Text>
         )}
       </div>
       <Text variant="secondary" className="muted">
-        Last run: {lastRunId ?? "N/A"}
-        {lastRunAt ? ` - ${lastRunAt}` : ""}
+        Latest assessment: {lastRunAt ?? "Not available"}
       </Text>
       <Text variant="secondary" className="muted">
         {hasSourceContext
-          ? supportabilityReason ?? "Gateway is preserving manage-owned action-register posture."
-          : "Gateway did not return manage action-register supportability for this portfolio."}
+          ? formatBusinessReason(supportabilityReason ?? "READY")
+          : "Decision support is not available for this portfolio."}
       </Text>
     </SectionBlock>
   );
@@ -151,7 +153,6 @@ function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
   }
   return "default";
 }
-
 function freshnessTone(state: string): "default" | "success" | "warn" | "danger" {
   const normalized = state.toLowerCase();
   if (["fresh", "current"].includes(normalized)) {
@@ -164,18 +165,4 @@ function freshnessTone(state: string): "default" | "success" | "warn" | "danger"
     return "warn";
   }
   return "default";
-}
-
-function formatToken(value: string): string {
-  return value
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((segment) => {
-      const upper = segment.toUpperCase();
-      if (["DPM", "PM", "CIO", "SLA", "SLO", "ID", "API"].includes(upper)) {
-        return upper;
-      }
-      return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
-    })
-    .join(" ");
 }

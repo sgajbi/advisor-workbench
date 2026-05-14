@@ -28,6 +28,7 @@ import {
   getDpmWaveReportInput,
   getDpmWaveSupportability,
   handoffDpmWave,
+  listDpmCampaignDefinitions,
   listDpmWaves,
   previewDpmWave,
   requestDpmExceptionSummary,
@@ -978,6 +979,53 @@ describe("workbench api", () => {
     expect(requestedUrl).toContain("/api/bff/api/v1/workbench/PF_1001/risk/summary?");
     expect(requestedUrl).toContain("period=3Y");
     expect(requestedUrl).not.toContain("THREE_YEAR");
+  });
+
+  it("passes explicit risk review windows to gateway-backed risk modules", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            state: "ready",
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    const explicitParams = {
+      period: "EXPLICIT",
+      detailBasis: "NET",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-04-10",
+      asOfDate: "2026-05-13",
+      reportingCurrency: "USD",
+    };
+
+    await getWorkbenchRiskSummaryClient("PF_1001", explicitParams);
+    await getWorkbenchRiskDrawdownClient("PF_1001", explicitParams);
+    await getWorkbenchRiskRollingClient("PF_1001", explicitParams);
+    await getWorkbenchRiskAttributionClient("PF_1001", {
+      ...explicitParams,
+      attributionType: "TOTAL_RISK",
+      groupingDimension: "SECTOR",
+    });
+
+    const requestedUrls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
+      ([url]) => url.toString()
+    );
+    expect(requestedUrls).toEqual([
+      "/api/bff/api/v1/workbench/PF_1001/risk/summary?period=EXPLICIT&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-04-10&as_of_date=2026-05-13&reporting_currency=USD",
+      "/api/bff/api/v1/workbench/PF_1001/risk/drawdown?period=EXPLICIT&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-04-10&as_of_date=2026-05-13&reporting_currency=USD",
+      "/api/bff/api/v1/workbench/PF_1001/risk/rolling?period=EXPLICIT&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-04-10&as_of_date=2026-05-13&reporting_currency=USD",
+      "/api/bff/api/v1/workbench/PF_1001/risk/attribution?period=EXPLICIT&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-04-10&as_of_date=2026-05-13&reporting_currency=USD&attribution_type=TOTAL_RISK&grouping_dimension=SECTOR",
+    ]);
   });
 
   it("omits optional benchmark context from the client-side risk summary request when none is selected", async () => {
@@ -2128,6 +2176,51 @@ describe("workbench api", () => {
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-list");
     expect(metricEventsJson).not.toContain("dwv_001");
+  });
+
+  it("loads DPM campaign definitions through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              items: [
+                {
+                  campaign_id: "campaign-holdings-202605",
+                  campaign_version: "2026.05",
+                  product_name: "BulkReviewCampaignDefinition",
+                  status: "ACTIVE",
+                },
+              ],
+              limit: 10,
+              offset: 0,
+              count: 1,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await listDpmCampaignDefinitions({
+      campaignStatus: "ACTIVE",
+      limit: 10,
+      offset: 0,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions?limit=10&offset=0&campaign_status=ACTIVE"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-definitions");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign");
   });
 
   it("previews, creates, reviews, actions, and inspects DPM waves through Gateway BFF", async () => {

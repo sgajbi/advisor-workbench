@@ -1371,6 +1371,14 @@ export type DpmWaveGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  data: Record<string, unknown>;
+};
+
 export type DpmWaveAiPmMemoResponse = {
   correlation_id: string;
   contract_version: string;

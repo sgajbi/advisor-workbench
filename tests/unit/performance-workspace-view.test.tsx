@@ -69,8 +69,8 @@ describe("PerformanceWorkspaceView", () => {
     renderWorkspaceView({ workspace: scenario.workspace });
 
     expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
+      "aria-current",
+      "page"
     );
 
     await waitFor(() => {
@@ -167,12 +167,18 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(screen.getByText("Quick Views")).toBeInTheDocument();
-    expect(screen.getByText("Client Context")).toBeInTheDocument();
-    const railSections = Array.from(
-      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
-    ).map((node) => node.textContent?.trim());
-    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(screen.getByText("Workbench Screens")).toBeInTheDocument();
+    expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Positions/i })).toHaveAttribute(
+      "href",
+      "/positions?portfolioId=PF_1001"
+    );
+    expect(screen.getByRole("link", { name: /Performance/i })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
+    expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
@@ -191,8 +197,8 @@ describe("PerformanceWorkspaceView", () => {
       .toBeFalsy();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
+      "aria-current",
+      "page"
     );
     await waitFor(() => {
       expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
@@ -221,6 +227,7 @@ describe("PerformanceWorkspaceView", () => {
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
+    expect(screen.getByRole("link", { name: /Risk/i })).toHaveAttribute("aria-current", "page");
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(riskModeMock).toHaveBeenCalled();

@@ -1,4 +1,5 @@
 import type {
+  DpmCampaignDefinitionGatewayResponse,
   DpmOperationsHandoffSummaryResponse,
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
@@ -32,6 +33,12 @@ export type DpmWaveItemRow = {
   key: string;
   waveItemId: string;
   portfolioId: string;
+  security: string;
+  proposedAction: string;
+  estimatedValue: string;
+  reason: string;
+  mandateImpact: string;
+  status: string;
   state: string;
   sourceReadinessState: string;
   alternativeSetId: string;
@@ -39,6 +46,19 @@ export type DpmWaveItemRow = {
   proofPackId: string;
   handoffRef: string;
   reasonCodes: string;
+};
+
+export type DpmCampaignDefinitionRow = {
+  key: string;
+  campaignId: string;
+  campaignVersion: string;
+  displayName: string;
+  status: string;
+  asOfDate: string;
+  candidateCount: string;
+  eligiblePortfolioTypes: string;
+  governanceState: string;
+  sourcePosture: string;
 };
 
 export type DpmWaveCommandCenterPanelModel = {
@@ -62,6 +82,7 @@ export type DpmWaveCommandCenterPanelModel = {
   operationsHandoffSummaryStatus: string;
   operationsHandoffSummaryRunId: string;
   summaryRows: DpmWaveSummaryRow[];
+  campaignRows: DpmCampaignDefinitionRow[];
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
   proofPackRows: DpmWaveMetricRow[];
@@ -77,6 +98,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   waveReportInput?: DpmWaveGatewayResponse | null;
   waveAiMemo?: DpmWaveAiPmMemoResponse | null;
   operationsHandoffSummary?: DpmOperationsHandoffSummaryResponse | null;
+  campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
     params.actionResponse ??
@@ -107,10 +129,12 @@ export function buildDpmWaveCommandCenterModel(params: {
     supportability?.wave_state ||
     listRows[0]?.state ||
     "N/A";
+  const selectedListRecord = findSelectedWaveListRecord(params.waveList?.data, selectedWaveId);
   const metricSource = firstRecord(
     waveRecord?.aggregate_metrics,
     params.actionResponse?.data.aggregate_metrics,
-    params.waveItems?.data.aggregate_metrics
+    params.waveItems?.data.aggregate_metrics,
+    selectedListRecord?.aggregate_metrics
   );
 
   return {
@@ -141,6 +165,7 @@ export function buildDpmWaveCommandCenterModel(params: {
     operationsHandoffSummaryStatus: readWorkflowPackStatus(params.operationsHandoffSummary),
     operationsHandoffSummaryRunId: readWorkflowPackRunId(params.operationsHandoffSummary),
     summaryRows: listRows,
+    campaignRows: buildCampaignDefinitionRows(params.campaignDefinitions?.data),
     metricRows: buildMetricRows(metricSource),
     itemRows,
     proofPackRows: buildProofPackRows(proofPackPosture, itemRows),
@@ -262,6 +287,68 @@ function buildSummaryRows(data: Record<string, unknown> | undefined): DpmWaveSum
   });
 }
 
+function buildCampaignDefinitionRows(
+  data: Record<string, unknown> | undefined
+): DpmCampaignDefinitionRow[] {
+  return extractRecordArray(data?.items ?? data?.campaign_definitions).map((record, index) => {
+    const governance = readRecord(record.governance);
+    const candidates = extractRecordArray(record.candidates);
+    const candidateSourceRefCount = candidates.reduce(
+      (count, candidate) => count + extractRecordArray(candidate.source_refs).length,
+      0
+    );
+    const candidateCount =
+      readValue(record, "candidate_count") ??
+      readValue(record, "eligible_candidate_count") ??
+      candidates.length;
+    const governanceState =
+      readString(record, "governance_state") ||
+      (governance.approval_ref || governance.approved_by ? "GOVERNED" : "NOT_PROVIDED");
+    return {
+      key:
+        [
+          readString(record, "campaign_id") || `campaign-${index + 1}`,
+          readString(record, "campaign_version") || "version",
+        ].join(":"),
+      campaignId: readString(record, "campaign_id") || "N/A",
+      campaignVersion: readString(record, "campaign_version") || "N/A",
+      displayName:
+        readString(record, "display_name") ||
+        readString(record, "name") ||
+        readString(record, "campaign_id") ||
+        `Campaign ${index + 1}`,
+      status: normalizeState(readString(record, "status") || "UNKNOWN"),
+      asOfDate: readString(record, "as_of_date") || "N/A",
+      candidateCount: formatValue(candidateCount),
+      eligiblePortfolioTypes: extractStringArray(record.eligible_portfolio_types).join(", ") || "N/A",
+      governanceState,
+      sourcePosture:
+        extractRecordArray(record.source_refs).length > 0 ||
+        extractRecordArray(governance.source_refs).length > 0 ||
+        candidateSourceRefCount > 0
+          ? "Source-backed"
+          : "Review source refs",
+    };
+  });
+}
+
+function findSelectedWaveListRecord(
+  data: Record<string, unknown> | undefined,
+  selectedWaveId: string | null
+): Record<string, unknown> | undefined {
+  const records = extractRecordArray(data?.items ?? data?.waves);
+  if (records.length === 0) {
+    return undefined;
+  }
+  if (!selectedWaveId) {
+    return records[0];
+  }
+  return (
+    records.find((record) => readString(record, "wave_id") === selectedWaveId) ??
+    records[0]
+  );
+}
+
 function buildMetricRows(record: Record<string, unknown>): DpmWaveMetricRow[] {
   return Object.entries(record).map(([key, value]) => ({
     key,
@@ -272,25 +359,129 @@ function buildMetricRows(record: Record<string, unknown>): DpmWaveMetricRow[] {
 
 function buildItemRows(data: Record<string, unknown> | undefined): DpmWaveItemRow[] {
   const records = extractRecordArray(data?.items ?? readWaveRecord(data)?.items);
-  return records.map((record, index) => {
+  return records.flatMap((record, index) => {
     const diagnostics = readRecord(record.diagnostics);
-    return {
-      key: readString(record, "wave_item_id") || `wave-item-${index + 1}`,
-      waveItemId: readString(record, "wave_item_id") || "N/A",
-      portfolioId: readString(record, "portfolio_id") || "N/A",
-      state: readString(record, "state") || "N/A",
-      sourceReadinessState:
-        readString(record, "source_readiness_state") ||
-        readString(diagnostics, "source_readiness_state") ||
-        "N/A",
-      alternativeSetId: readString(record, "alternative_set_id") || "N/A",
-      selectedAlternativeId: readString(record, "selected_alternative_id") || "N/A",
-      proofPackId: readString(record, "proof_pack_id") || "N/A",
-      handoffRef: readString(record, "handoff_ref_id") || readString(diagnostics, "handoff_ref_id") || "N/A",
-      reasonCodes:
-        extractStringArray(record.reason_codes ?? diagnostics.reason_codes).join(", ") || "N/A",
-    };
+    const proposedChanges = extractRecordArray(diagnostics.proposed_changes);
+    if (proposedChanges.length > 0) {
+      return proposedChanges.map((change, changeIndex) =>
+        buildItemRow(record, index, change, changeIndex),
+      );
+    }
+    return [buildItemRow(record, index)];
   });
+}
+
+function buildItemRow(
+  record: Record<string, unknown>,
+  index: number,
+  proposedChange?: Record<string, unknown>,
+  changeIndex?: number
+): DpmWaveItemRow {
+  const diagnostics = readRecord(record.diagnostics);
+  const trade = firstRecord(
+    proposedChange?.trade,
+    proposedChange?.proposed_trade,
+    record.trade,
+    record.proposed_trade,
+    record.rebalance_action,
+  );
+  const instrument = firstRecord(
+    proposedChange?.instrument,
+    proposedChange?.security,
+    record.instrument,
+    record.security,
+    record.asset,
+    trade.instrument,
+  );
+  const rationale = firstRecord(
+    proposedChange?.rationale,
+    proposedChange?.reason,
+    record.rationale,
+    record.reason,
+    trade.rationale,
+  );
+  const estimatedValue =
+    readValue(proposedChange ?? {}, "estimated_value") ??
+    readValue(proposedChange ?? {}, "trade_value") ??
+    readValue(record, "estimated_value") ??
+    readValue(record, "trade_value") ??
+    readValue(record, "estimated_trade_value") ??
+    readValue(trade, "estimated_value") ??
+    readValue(trade, "trade_value");
+  const baseKey = readString(record, "wave_item_id") || `wave-item-${index + 1}`;
+  return {
+    key: changeIndex === undefined ? baseKey : `${baseKey}-change-${changeIndex + 1}`,
+    waveItemId: readString(record, "wave_item_id") || "N/A",
+    portfolioId: readString(record, "portfolio_id") || "N/A",
+    security:
+      readString(proposedChange ?? {}, "security") ||
+      readString(proposedChange ?? {}, "security_id") ||
+      readString(proposedChange ?? {}, "instrument_id") ||
+      readString(proposedChange ?? {}, "ticker") ||
+      readString(proposedChange ?? {}, "symbol") ||
+      readString(record, "security") ||
+      readString(record, "security_id") ||
+      readString(record, "instrument_id") ||
+      readString(record, "ticker") ||
+      readString(record, "symbol") ||
+      readString(record, "asset_name") ||
+      readString(instrument, "security_id") ||
+      readString(instrument, "instrument_id") ||
+      readString(instrument, "ticker") ||
+      readString(instrument, "symbol") ||
+      readString(instrument, "name") ||
+      "N/A",
+    proposedAction:
+      readString(proposedChange ?? {}, "action") ||
+      readString(proposedChange ?? {}, "trade_action") ||
+      readString(proposedChange ?? {}, "side") ||
+      readString(record, "action") ||
+      readString(record, "trade_action") ||
+      readString(record, "side") ||
+      readString(record, "instruction") ||
+      readString(trade, "action") ||
+      readString(trade, "side") ||
+      "N/A",
+    estimatedValue: formatValue(estimatedValue),
+    reason:
+      readString(proposedChange ?? {}, "reason") ||
+      readString(proposedChange ?? {}, "rationale") ||
+      readString(record, "reason") ||
+      readString(record, "rationale") ||
+      readString(rationale, "summary") ||
+      readString(rationale, "reason") ||
+      "N/A",
+    mandateImpact:
+      readString(proposedChange ?? {}, "mandate_impact") ||
+      readString(proposedChange ?? {}, "impact") ||
+      readString(record, "mandate_impact") ||
+      readString(record, "impact") ||
+      readString(record, "expected_impact") ||
+      readString(rationale, "mandate_impact") ||
+      "N/A",
+    status:
+      readString(proposedChange ?? {}, "status") ||
+      readString(record, "status") ||
+      readString(record, "approval_status") ||
+      "N/A",
+    state: readString(record, "state") || "N/A",
+    sourceReadinessState:
+      readString(record, "source_readiness_state") ||
+      readString(diagnostics, "source_readiness_state") ||
+      "N/A",
+    alternativeSetId: readString(record, "alternative_set_id") || "N/A",
+    selectedAlternativeId: readString(record, "selected_alternative_id") || "N/A",
+    proofPackId: readString(record, "proof_pack_id") || "N/A",
+    handoffRef:
+      readString(record, "handoff_ref_id") || readString(diagnostics, "handoff_ref_id") || "N/A",
+    reasonCodes:
+      extractStringArray(
+        proposedChange?.reason_codes ??
+          proposedChange?.reason_code ??
+          record.reason_codes ??
+          diagnostics.reason_codes,
+      ).join(", ") || "N/A",
+  };
 }
 
 function buildProofPackRows(
@@ -357,6 +548,9 @@ function extractRecordArray(value: unknown): Record<string, unknown>[] {
 }
 
 function extractStringArray(value: unknown): string[] {
+  if (typeof value === "string" && value.length > 0) {
+    return [value];
+  }
   if (!Array.isArray(value)) {
     return [];
   }

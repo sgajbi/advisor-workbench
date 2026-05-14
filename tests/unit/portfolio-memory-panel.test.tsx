@@ -35,16 +35,26 @@ const readyResponse: DpmPortfolioMemoryGatewayResponse = {
 };
 
 describe("PortfolioMemoryPanel", () => {
-  it("renders Gateway-backed portfolio-memory supportability and timeline", () => {
+  it("renders business-facing portfolio memory supportability and timeline", () => {
     render(<PortfolioMemoryPanel response={readyResponse} />);
 
     expect(screen.getByRole("heading", { name: "Portfolio Memory" })).toBeInTheDocument();
-    expect(screen.getAllByText("READY").length).toBeGreaterThan(0);
-    expect(screen.getByText("sha256:portfolio-memory")).toBeInTheDocument();
-    expect(screen.getAllByText("OUTCOME_REVIEW_CREATED").length).toBeGreaterThan(1);
-    expect(screen.getByText("lotus-manage:or_1")).toBeInTheDocument();
-    expect(screen.getByText("outcome_review:or_1")).toBeInTheDocument();
-    expect(screen.getByText("OUTCOME_REVIEW_READY")).toBeInTheDocument();
+    expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
+    expect(screen.getByText("Latest Memory Event")).toBeInTheDocument();
+    expect(screen.getByText("Memory Coverage")).toBeInTheDocument();
+    expect(screen.getAllByText("Outcome Review Created").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Outcome Review Ready").length).toBeGreaterThan(0);
+    expect(screen.getByText("Historical Event Log")).toBeInTheDocument();
+    expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
+    expect(screen.getAllByText("Available").length).toBeGreaterThan(0);
+    expect(screen.queryByText("lotus-manage:or_1")).not.toBeInTheDocument();
+    expect(screen.queryByText("sha256:portfolio-memory")).not.toBeInTheDocument();
+    expect(screen.queryByText("memory:outcome-review:or_1")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Details: Outcome Review Created",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("renders endpoint errors without claiming local reconstruction", () => {
@@ -55,10 +65,10 @@ describe("PortfolioMemoryPanel", () => {
       />,
     );
 
-    expect(screen.getByText("Portfolio-memory endpoint is unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio memory is unavailable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch DPM portfolio memory (503)")).toBeInTheDocument();
     expect(
-      screen.getByText("Workbench does not reconstruct portfolio-memory timeline rows locally."),
+      screen.getByText("No timeline rows are currently available."),
     ).toBeInTheDocument();
   });
 });

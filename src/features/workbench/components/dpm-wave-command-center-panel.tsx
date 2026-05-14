@@ -1,53 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActionButton,
   AnalyticsTable,
-  MetricRow,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
-  Text,
 } from "@/design-system";
 import {
   approveDpmWave,
   createDpmWave,
-  getDpmWave,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
-  getDpmWaveReportInput,
-  getDpmWaveSupportability,
   handoffDpmWave,
   previewDpmWave,
-  requestDpmOperationsHandoffSummary,
-  requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
 } from "@/features/workbench/api";
 import type {
-  DpmOperationsHandoffSummaryResponse,
-  DpmWaveAiPmMemoResponse,
+  DpmCampaignDefinitionGatewayResponse,
   DpmWaveGatewayResponse,
 } from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
+  type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
+  type DpmWaveItemRow,
+  type DpmWaveMetricRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolioId: string;
   waveList: DpmWaveGatewayResponse | null;
+  campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignDefinitionsError?: string | null;
   errorMessage?: string | null;
 };
 
+type MetricTile = {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "warn" | "danger";
+};
+
+const REBALANCE_LIFECYCLE_STEPS = [
+  "Preview",
+  "Data Check",
+  "Simulation",
+  "Approval",
+  "Staging",
+];
+
 function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
   const normalized = state.toUpperCase();
-  if (["READY", "SUPPORTED", "COMPLETE", "HANDOFF_READY", "STAGED"].includes(normalized)) {
+  if (
+    [
+      "READY",
+      "SUPPORTED",
+      "COMPLETE",
+      "HANDOFF_READY",
+      "STAGED",
+      "SIMULATION_READY",
+      "SIMULATED",
+      "SOURCE_CHECKED",
+    ].includes(normalized)
+  ) {
     return "success";
   }
-  if (["DEGRADED", "PARTIAL", "DRAFT", "SOURCE_CHECKED", "SIMULATED"].includes(normalized)) {
+  if (["DEGRADED", "PARTIAL", "DRAFT", "REVIEW_REQUIRED", "PENDING"].includes(normalized)) {
     return "warn";
   }
   if (["BLOCKED", "UNSUPPORTED", "FAILED", "CANCELLED"].includes(normalized)) {
@@ -60,57 +86,69 @@ function statePanelCopy(state: DpmWaveCommandCenterPanelState, portfolioId: stri
   if (state === "empty") {
     return {
       kind: "empty" as const,
-      title: "No rebalance wave is available",
-      body: `Gateway returned no manage-owned explicit portfolio-list rebalance wave for ${portfolioId}.`,
+      title: "No rebalance proposal is available",
+      body: `No active rebalance proposal is available for ${portfolioId}.`,
     };
   }
   if (state === "partial") {
     return {
       kind: "partial" as const,
-      title: "Wave supportability is partial",
-      body: "Manage returned a degraded or partial wave posture. Workbench preserves the reason codes and disables unsupported actions.",
+      title: "Rebalance readiness is partial",
+      body: "Some required inputs need review before approval can proceed.",
     };
   }
   if (state === "blocked") {
     return {
       kind: "permission_blocked" as const,
-      title: "Wave actions are blocked",
-      body: "Manage reports a blocked wave supportability state. Source, proof-pack, or item remediation is required upstream.",
+      title: "Approval is blocked",
+      body: "Resolve the open attention items before requesting approval.",
     };
   }
   return {
     kind: "unavailable" as const,
-    title: "Wave command center is unavailable",
-    body: "Gateway did not return a usable rebalance-wave payload.",
+    title: "Rebalance data is temporarily unavailable",
+    body: "Rebalance details could not be loaded.",
   };
 }
 
 export default function DpmWaveCommandCenterPanel({
   portfolioId,
   waveList,
+  campaignDefinitions = null,
+  campaignDefinitionsError = null,
   errorMessage = null,
 }: Props) {
-  const [detailResponse, setDetailResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [actionResponse, setActionResponse] = useState<DpmWaveGatewayResponse | null>(null);
-  const [reportInputResponse, setReportInputResponse] =
-    useState<DpmWaveGatewayResponse | null>(null);
-  const [aiMemoResponse, setAiMemoResponse] = useState<DpmWaveAiPmMemoResponse | null>(null);
-  const [operationsHandoffSummaryResponse, setOperationsHandoffSummaryResponse] =
-    useState<DpmOperationsHandoffSummaryResponse | null>(null);
+  const [proofPackResponse, setProofPackResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
+
   const model = buildDpmWaveCommandCenterModel({
     waveList,
-    waveDetail: detailResponse,
+    waveDetail: proofPackResponse,
     waveItems: itemsResponse,
     actionResponse,
-    waveReportInput: reportInputResponse,
-    waveAiMemo: aiMemoResponse,
-    operationsHandoffSummary: operationsHandoffSummaryResponse,
+    campaignDefinitions,
   });
   const selectedWaveId = model.selectedWaveId;
+  const lifecycleIndex = resolveLifecycleIndex(model.selectedWaveState);
+  const approvalBlocked =
+    isWaveActionBlocked(model.blockedActions, "approve") ||
+    Number.parseInt(model.selectedWaveIssueCount.replaceAll(",", ""), 10) > 0 ||
+    model.reasonCodes.length > 0 ||
+    model.state === "blocked" ||
+    model.state === "partial";
+  const stagingBlocked = isWaveActionBlocked(model.blockedActions, "stage");
+  const handoffBlocked = isWaveActionBlocked(model.blockedActions, "handoff");
+  const proofState =
+    model.proofPackRows.length > 0 || proofPackResponse
+      ? "READY"
+      : model.reportInputStatus !== "NOT_REQUESTED"
+        ? model.reportInputStatus
+        : "AVAILABLE";
   const stateCopy = statePanelCopy(model.state, portfolioId);
   const shouldShowStatePanel =
     Boolean(errorMessage) ||
@@ -119,6 +157,21 @@ export default function DpmWaveCommandCenterPanel({
     model.state === "partial" ||
     model.state === "blocked" ||
     model.state === "unavailable";
+  const proposedRows = useMemo(() => buildProposedChangeRows(model.itemRows), [model.itemRows]);
+  const metricTiles = buildMetricTiles(model.metricRows, model.selectedWaveItemCount, model.selectedWaveIssueCount);
+  const asOfDate = formatDisplayDate(model.summaryRows[0]?.asOfDate);
+
+  useEffect(() => {
+    if (!selectedWaveId || autoLoadedWaveId === selectedWaveId || itemsResponse || pendingAction) {
+      return;
+    }
+    setAutoLoadedWaveId(selectedWaveId);
+    getDpmWaveItems(selectedWaveId)
+      .then(setItemsResponse)
+      .catch(() => {
+        setAutoLoadedWaveId(null);
+      });
+  }, [autoLoadedWaveId, itemsResponse, pendingAction, selectedWaveId]);
 
   async function runAction(label: string, action: () => Promise<DpmWaveGatewayResponse>) {
     if (pendingAction) {
@@ -130,7 +183,7 @@ export default function DpmWaveCommandCenterPanel({
     try {
       const response = await action();
       setActionResponse(response);
-      setActionMessage(`${label} completed through Gateway.`);
+      setActionMessage(`${label} completed.`);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : `${label} failed`);
     } finally {
@@ -138,162 +191,82 @@ export default function DpmWaveCommandCenterPanel({
     }
   }
 
-  async function runMemoAction(label: string, action: () => Promise<DpmWaveAiPmMemoResponse>) {
-    if (pendingAction) {
-      return;
-    }
-    setPendingAction(label);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await action();
-      setAiMemoResponse(response);
-      setActionMessage(`${label} completed through Gateway.`);
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : `${label} failed`);
-    } finally {
-      setPendingAction(null);
-    }
+  function previewRebalance() {
+    void runAction("Preview", () => previewDpmWave({ portfolioId }));
   }
 
-  async function runOperationsSummaryAction(
-    label: string,
-    action: () => Promise<DpmOperationsHandoffSummaryResponse>
-  ) {
-    if (pendingAction) {
-      return;
-    }
-    setPendingAction(label);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await action();
-      setOperationsHandoffSummaryResponse(response);
-      setActionMessage(`${label} completed through Gateway.`);
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : `${label} failed`);
-    } finally {
-      setPendingAction(null);
-    }
+  function createRebalance() {
+    void runAction("Create rebalance", () => createDpmWave({ portfolioId }));
   }
 
-  function previewWave() {
-    void runAction("Preview wave", () => previewDpmWave({ portfolioId }));
-  }
-
-  function createWave() {
-    void runAction("Create wave", () => createDpmWave({ portfolioId }));
-  }
-
-  function loadDetail(waveId = selectedWaveId) {
-    if (!waveId) {
-      return;
-    }
-    void runAction("Load wave detail", async () => {
-      const response = await getDpmWave(waveId);
-      setDetailResponse(response);
-      return response;
-    });
-  }
-
-  function loadItems() {
+  function loadProposedChanges() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Load wave items", async () => {
+    void runAction("Load proposed changes", async () => {
       const response = await getDpmWaveItems(selectedWaveId);
       setItemsResponse(response);
       return response;
     });
   }
 
-  function runSourceCheck() {
+  function reviewDataReadiness() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Source-check wave", () => sourceCheckDpmWave(selectedWaveId));
+    void runAction("Review data", () => sourceCheckDpmWave(selectedWaveId));
   }
 
   function runSimulation() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Simulate wave", () => simulateDpmWave(selectedWaveId));
+    void runAction("Simulate", () => simulateDpmWave(selectedWaveId));
   }
 
-  function approveWave() {
+  function requestApproval() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Approve wave", () => approveDpmWave(selectedWaveId));
+    void runAction("Request approval", () => approveDpmWave(selectedWaveId));
   }
 
-  function stageWave() {
+  function stageRebalance() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Stage wave", () => stageDpmWave(selectedWaveId));
+    void runAction("Stage rebalance", () => stageDpmWave(selectedWaveId));
   }
 
-  function handoffWave() {
+  function prepareHandoff() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Handoff wave", () => handoffDpmWave(selectedWaveId));
+    void runAction("Prepare handoff", () => handoffDpmWave(selectedWaveId));
   }
 
-  function loadProofPackPosture() {
+  function openEvidencePack() {
     if (!selectedWaveId) {
       return;
     }
-    void runAction("Load proof posture", () => getDpmWaveProofPackPosture(selectedWaveId));
-  }
-
-  function loadSupportability() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Load supportability", () => getDpmWaveSupportability(selectedWaveId));
-  }
-
-  function loadReportInput() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Load report input", async () => {
-      const response = await getDpmWaveReportInput(selectedWaveId);
-      setReportInputResponse(response);
+    void runAction("Open evidence pack", async () => {
+      const response = await getDpmWaveProofPackPosture(selectedWaveId);
+      setProofPackResponse(response);
       return response;
     });
   }
 
-  function requestAiMemo() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runMemoAction("Request AI memo", () => requestDpmWaveAiPmMemo(selectedWaveId));
-  }
-
-  function requestOperationsHandoffSummary() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runOperationsSummaryAction("Request operations summary", () =>
-      requestDpmOperationsHandoffSummary(selectedWaveId)
-    );
-  }
-
   return (
     <SectionBlock
-      title="Rebalance Wave Command Center"
-      subtitle={`Manage authority: ${model.authority}. Correlation: ${model.correlationId}`}
-      className="dpm-wave-command-center-panel"
+      title="Rebalance"
+      subtitle="Proposed rebalance, advisor review, and approval readiness."
+      className="dpm-wave-command-center-panel rebalance-workspace"
       actions={
-        <div className="dpm-wave-command-center-badge-row">
-          <SemanticBadge tone={badgeTone(model.supportabilityState)}>
-            {model.supportabilityState}
-          </SemanticBadge>
-          <SemanticBadge>{model.sourceService}</SemanticBadge>
+        <div className="rebalance-context-row" aria-label="Rebalance context">
+          <span>Discretionary Balanced</span>
+          <span>USD</span>
+          <span>{asOfDate}</span>
+          <SemanticBadge tone={badgeTone(proofState)}>Evidence available</SemanticBadge>
         </div>
       }
     >
@@ -301,204 +274,424 @@ export default function DpmWaveCommandCenterPanel({
         <ScreenStatePanel
           kind={errorMessage || actionError ? "partial" : stateCopy.kind}
           surface="portfolio"
-          title={errorMessage || actionError ? "Wave endpoint is unavailable" : stateCopy.title}
+          title={errorMessage || actionError ? "Rebalance data needs attention" : stateCopy.title}
           body={errorMessage ?? actionError ?? stateCopy.body}
         />
       ) : null}
 
-      <div className="dpm-wave-command-center-status-strip">
-        <MetricRow label="Selected Wave" value={selectedWaveId ?? "N/A"} />
-        <MetricRow
-          label="Wave State"
-          value={<SemanticBadge tone={badgeTone(model.selectedWaveState)}>{model.selectedWaveState}</SemanticBadge>}
+      <div className="rebalance-summary-strip" aria-label="Rebalance readiness">
+        <SummaryCell
+          label="Rebalance Status"
+          value={businessStateLabel(model.selectedWaveState)}
+          tone={badgeTone(model.selectedWaveState)}
         />
-        <MetricRow label="Items" value={model.selectedWaveItemCount} />
-        <MetricRow label="Issues" value={model.selectedWaveIssueCount} />
+        <SummaryCell
+          label="Approval Readiness"
+          value={approvalBlocked ? "Blocked" : "Ready"}
+          tone={approvalBlocked ? "danger" : "success"}
+        />
+        <SummaryCell label="Proposed Changes" value={model.selectedWaveItemCount} />
+        <SummaryCell
+          label="Drift Improvement"
+          value={findMetricValue(model.metricRows, ["drift improvement", "drift reduction", "drift"], "Pending")}
+          tone="success"
+        />
       </div>
 
-      <div className="dpm-wave-command-center-action-row" aria-label="DPM rebalance-wave actions">
-        <ActionButton priority="secondary" onClick={previewWave} disabled={Boolean(pendingAction)}>
-          {pendingAction === "Preview wave" ? "Previewing" : "Preview wave"}
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={createWave} disabled={Boolean(pendingAction)}>
-          {pendingAction === "Create wave" ? "Creating" : "Create wave"}
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={() => loadDetail()} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Load detail
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={loadItems} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Load items
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={runSourceCheck} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Source-check
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={runSimulation} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Simulate
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={approveWave} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Approve
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={stageWave} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Stage
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={handoffWave} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Handoff
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={loadProofPackPosture} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Proof posture
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={loadSupportability} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Supportability
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={loadReportInput} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          Report input
-        </ActionButton>
-        <ActionButton priority="secondary" onClick={requestAiMemo} disabled={!selectedWaveId || Boolean(pendingAction)}>
-          AI memo
-        </ActionButton>
-        <ActionButton
-          priority="secondary"
-          onClick={requestOperationsHandoffSummary}
-          disabled={!selectedWaveId || Boolean(pendingAction)}
-        >
-          {pendingAction === "Request operations summary" ? "Requesting summary" : "Ops summary"}
-        </ActionButton>
-      </div>
-
-      <Text variant="secondary" className="muted">
-        {actionMessage ??
-          "Workbench uses Gateway wave composition only; manage owns wave state, readiness, proof-pack posture, and internal handoff evidence."}
-      </Text>
-
-      {model.reasonCodes.length > 0 || model.blockedActions.length > 0 ? (
-        <div className="dpm-wave-command-center-reason-row">
-          {model.reasonCodes.map((reason) => (
-            <SemanticBadge key={reason} tone="warn">
-              {reason}
-            </SemanticBadge>
-          ))}
-          {model.blockedActions.map((action) => (
-            <SemanticBadge key={action} tone="danger">
-              Blocked {action}
-            </SemanticBadge>
-          ))}
-        </div>
-      ) : null}
-
-      <AnalyticsTable
-        ariaLabel="DPM rebalance waves"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "wave", label: "Wave" },
-          { key: "state", label: "State" },
-          { key: "trigger", label: "Trigger" },
-          { key: "as-of", label: "As Of" },
-          { key: "items", label: "Items", align: "right" },
-          { key: "support", label: "Supportability" },
-          { key: "action", label: "Action" },
-        ]}
-        rows={model.summaryRows.map((row) => ({
-          key: row.key,
-          cells: [
-            row.waveId,
-            <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
-              {row.state}
-            </SemanticBadge>,
-            row.triggerType,
-            row.asOfDate,
-            row.itemCount,
-            `${row.supportabilityState} / ${row.supportabilityReason}`,
-            <ActionButton
-              key={`${row.key}-load`}
-              priority="quiet"
-              onClick={() => loadDetail(row.waveId)}
-              disabled={row.waveId === "N/A" || Boolean(pendingAction)}
-            >
-              Open
-            </ActionButton>,
-          ],
-        }))}
-        emptyState={{
-          title: "No rebalance waves returned",
-          body: "Create or preview a manage-owned explicit portfolio-list wave to populate this queue.",
-        }}
+      <CampaignDefinitionsSection
+        rows={model.campaignRows}
+        errorMessage={campaignDefinitionsError}
       />
 
-      <div className="dpm-wave-command-center-summary-grid">
-        <div className="dpm-wave-command-center-subsection">
-          <Text as="h3" variant="subsectionTitle">
-            Aggregate Metrics
-          </Text>
-          <div className="dpm-wave-command-center-metric-grid">
-            {model.metricRows.length > 0 ? (
-              model.metricRows.map((row) => (
-                <MetricRow key={row.key} label={row.label} value={row.value} />
-              ))
-            ) : (
-              <ScreenStatePanel
-                kind="empty"
-                surface="portfolio"
-                title="No aggregate metrics returned"
-                body="Manage did not publish aggregate wave metrics in the current Gateway payload."
-              />
-            )}
+      <div className="rebalance-main-grid">
+        <section className="rebalance-active-card" aria-labelledby="rebalance-active-title">
+          <div className="rebalance-section-heading">
+            <h3 id="rebalance-active-title">Active Rebalance</h3>
+            <SemanticBadge tone={badgeTone(model.selectedWaveState)}>
+              {businessStateLabel(model.selectedWaveState)}
+            </SemanticBadge>
           </div>
-        </div>
 
-        <div className="dpm-wave-command-center-subsection">
-          <Text as="h3" variant="subsectionTitle">
-            Proof And Handoff
-          </Text>
-          <div className="dpm-wave-command-center-metric-grid">
-            <MetricRow label="Proof Packs" value={model.proofPackRows.length.toString()} />
-            <MetricRow label="Handoff Refs" value={model.handoffRows.length.toString()} />
-            <MetricRow label="External Execution" value={model.externalExecutionClaimed} />
-            <MetricRow label="Remediation Owner" value={model.remediationOwner} />
-            <MetricRow label="Report Input" value={model.reportInputStatus} />
-            <MetricRow label="Report Input Ref" value={model.reportInputRef} />
-            <MetricRow label="AI Memo" value={model.aiMemoStatus} />
-            <MetricRow label="AI Memo Run" value={model.aiMemoRunId} />
-            <MetricRow label="Ops Summary" value={model.operationsHandoffSummaryStatus} />
-            <MetricRow label="Ops Summary Run" value={model.operationsHandoffSummaryRunId} />
+          <div className="rebalance-stepper" aria-label="Rebalance lifecycle">
+            {REBALANCE_LIFECYCLE_STEPS.map((step, index) => (
+              <div
+                className={[
+                  "rebalance-step",
+                  index < lifecycleIndex ? "is-complete" : "",
+                  index === lifecycleIndex ? "is-active" : "",
+                  index > lifecycleIndex ? "is-pending" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                key={step}
+              >
+                <span aria-hidden="true" />
+                <strong>{step}</strong>
+              </div>
+            ))}
           </div>
-        </div>
+
+          {approvalBlocked ? (
+            <div className="rebalance-alert" role="status">
+              <span className="material-symbols-outlined" aria-hidden="true">
+                warning
+              </span>
+              <span>Resolve mandate attention items before approval.</span>
+            </div>
+          ) : (
+            <div className="rebalance-ready-note" role="status">
+              <span className="material-symbols-outlined" aria-hidden="true">
+                check_circle
+              </span>
+              <span>Approval can proceed after advisor review.</span>
+            </div>
+          )}
+
+          <div className="rebalance-metric-grid" aria-label="Rebalance metrics">
+            {metricTiles.map((metric) => (
+              <MetricTileView key={metric.label} metric={metric} />
+            ))}
+          </div>
+
+          <div className="rebalance-command-row" aria-label="Rebalance workflow actions">
+            <ActionButton priority="secondary" onClick={previewRebalance} disabled={Boolean(pendingAction)}>
+              Preview
+            </ActionButton>
+            <ActionButton priority="secondary" onClick={createRebalance} disabled={Boolean(pendingAction)}>
+              Create Rebalance
+            </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={reviewDataReadiness}
+              disabled={!selectedWaveId || Boolean(pendingAction)}
+            >
+              Review Data
+            </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={runSimulation}
+              disabled={!selectedWaveId || Boolean(pendingAction)}
+            >
+              Simulate
+            </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={requestApproval}
+              disabled={!selectedWaveId || Boolean(pendingAction) || approvalBlocked}
+            >
+              Request Approval
+            </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={stageRebalance}
+              disabled={!selectedWaveId || Boolean(pendingAction) || stagingBlocked}
+            >
+              Stage
+            </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={prepareHandoff}
+              disabled={!selectedWaveId || Boolean(pendingAction) || handoffBlocked}
+            >
+              Prepare Handoff
+            </ActionButton>
+            <ActionButton
+              priority="secondary"
+              onClick={openEvidencePack}
+              disabled={!selectedWaveId || Boolean(pendingAction)}
+            >
+              Open Evidence Pack
+            </ActionButton>
+          </div>
+
+          {actionMessage ? <p className="rebalance-action-message">{actionMessage}</p> : null}
+        </section>
+
+        <section className="rebalance-actions-card" aria-labelledby="rebalance-actions-title">
+          <div className="rebalance-section-heading">
+            <h3 id="rebalance-actions-title">Recommended Actions</h3>
+          </div>
+          <div className="rebalance-action-list">
+            <RecommendedAction
+              title="Review rebalance simulation"
+              detail="Check proposed allocation changes against mandate drift."
+            />
+            <RecommendedAction
+              title="Resolve mandate attention items"
+              detail={
+                approvalBlocked
+                  ? "Clear the open mandate items before approval."
+                  : "No blocking attention items remain."
+              }
+            />
+            <RecommendedAction
+              title="Open evidence pack"
+              detail="Review the decision evidence before staging."
+            />
+          </div>
+        </section>
       </div>
 
+      <section className="rebalance-proposed-card" aria-labelledby="rebalance-proposed-title">
+        <div className="rebalance-table-heading">
+          <h3 id="rebalance-proposed-title">Proposed Changes</h3>
+          <div>
+            <button type="button" onClick={loadProposedChanges} disabled={!selectedWaveId || Boolean(pendingAction)}>
+              Load Changes
+            </button>
+            <button type="button">Filter</button>
+          </div>
+        </div>
+        <AnalyticsTable
+          ariaLabel="Proposed rebalance changes"
+          variant="portfolio"
+          density="compact"
+          columns={[
+            { key: "security", label: "Security" },
+            { key: "action", label: "Action" },
+            { key: "value", label: "Est. Value", align: "right" },
+            { key: "reason", label: "Reason" },
+            { key: "impact", label: "Mandate Impact" },
+            { key: "status", label: "Status" },
+          ]}
+          rows={proposedRows.map((row) => ({
+            key: row.key,
+            cells: [
+              row.security,
+              <span className={`rebalance-action rebalance-action-${row.actionTone}`} key={`${row.key}-action`}>
+                {row.action}
+              </span>,
+              row.estimatedValue,
+              row.reason,
+              row.mandateImpact,
+              <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+                {businessStateLabel(row.status)}
+              </SemanticBadge>,
+            ],
+          }))}
+          emptyState={{
+            title: "No proposed changes loaded",
+            body: "Load proposed changes after selecting a rebalance proposal.",
+          }}
+        />
+      </section>
+    </SectionBlock>
+  );
+}
+
+function CampaignDefinitionsSection({
+  rows,
+  errorMessage,
+}: {
+  rows: DpmCampaignDefinitionRow[];
+  errorMessage?: string | null;
+}) {
+  return (
+    <section className="rebalance-proposed-card" aria-labelledby="campaign-definitions-title">
+      <div className="rebalance-table-heading">
+        <div>
+          <h3 id="campaign-definitions-title">Campaign Definitions</h3>
+          <p>Manage-owned bulk-review campaigns backed by source-supplied candidate sets.</p>
+        </div>
+        <SemanticBadge tone={errorMessage ? "warn" : rows.length ? "success" : "default"}>
+          {errorMessage ? "Needs attention" : rows.length ? "Available" : "No active campaign"}
+        </SemanticBadge>
+      </div>
+      {errorMessage ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="Campaign definitions need attention"
+          body={errorMessage}
+        />
+      ) : null}
       <AnalyticsTable
-        ariaLabel="DPM rebalance wave items"
+        ariaLabel="DPM campaign definitions"
         variant="portfolio"
         density="compact"
         columns={[
-          { key: "item", label: "Item" },
-          { key: "portfolio", label: "Portfolio" },
-          { key: "state", label: "State" },
-          { key: "readiness", label: "Source Readiness" },
-          { key: "alternative", label: "Alternative" },
-          { key: "proof", label: "Proof Pack" },
-          { key: "handoff", label: "Handoff" },
-          { key: "reasons", label: "Reasons" },
+          { key: "campaign", label: "Campaign" },
+          { key: "version", label: "Version" },
+          { key: "status", label: "Status" },
+          { key: "asOf", label: "As Of" },
+          { key: "candidates", label: "Candidates", align: "right" },
+          { key: "portfolioTypes", label: "Eligible Types" },
+          { key: "governance", label: "Governance" },
+          { key: "source", label: "Source Posture" },
         ]}
-        rows={model.itemRows.map((row) => ({
+        rows={rows.map((row) => ({
           key: row.key,
           cells: [
-            row.waveItemId,
-            row.portfolioId,
-            <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
-              {row.state}
+            row.displayName,
+            row.campaignVersion,
+            <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+              {businessStateLabel(row.status)}
             </SemanticBadge>,
-            row.sourceReadinessState,
-            row.selectedAlternativeId !== "N/A" ? row.selectedAlternativeId : row.alternativeSetId,
-            row.proofPackId,
-            row.handoffRef,
-            row.reasonCodes,
+            row.asOfDate,
+            row.candidateCount,
+            row.eligiblePortfolioTypes,
+            businessStateLabel(row.governanceState),
+            row.sourcePosture,
           ],
         }))}
         emptyState={{
-          title: "No wave items returned",
-          body: "Load wave items after selecting a manage-owned wave.",
+          title: "No active campaign definitions",
+          body: "Persist a Manage campaign definition before using bulk-review campaign waves.",
         }}
       />
-    </SectionBlock>
+    </section>
   );
+}
+
+function SummaryCell({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "warn" | "danger";
+}) {
+  return (
+    <div className={`rebalance-summary-cell rebalance-summary-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function MetricTileView({ metric }: { metric: MetricTile }) {
+  return (
+    <div className={`rebalance-metric-tile rebalance-metric-${metric.tone ?? "default"}`}>
+      <span>{metric.label}</span>
+      <strong>{metric.value}</strong>
+    </div>
+  );
+}
+
+function RecommendedAction({ title, detail }: { title: string; detail: string }) {
+  return (
+    <button className="rebalance-recommended-action" type="button">
+      <span>
+        <strong>{title}</strong>
+        <small>{detail}</small>
+      </span>
+      <span className="material-symbols-outlined" aria-hidden="true">
+        chevron_right
+      </span>
+    </button>
+  );
+}
+
+function buildMetricTiles(
+  metricRows: DpmWaveMetricRow[],
+  selectedWaveItemCount: string,
+  selectedWaveIssueCount: string
+): MetricTile[] {
+  return [
+    {
+      label: "Turnover",
+      value: findMetricValue(metricRows, ["turnover"], "Pending"),
+    },
+    {
+      label: "Cash After",
+      value: findMetricValue(metricRows, ["cash after", "cash_after", "cash"], "Pending"),
+    },
+    {
+      label: "Est. Trades",
+      value: findMetricValue(metricRows, ["trade count", "trades"], selectedWaveItemCount),
+    },
+    {
+      label: "Issues",
+      value: selectedWaveIssueCount,
+      tone: selectedWaveIssueCount === "0" ? "success" : "danger",
+    },
+  ];
+}
+
+function buildProposedChangeRows(itemRows: DpmWaveItemRow[]) {
+  return itemRows.map((row, index) => {
+    const action = firstBusinessValue(row.proposedAction, "Review");
+    return {
+      key: row.key,
+      security: firstBusinessValue(row.security, `Proposal item ${index + 1}`),
+      action,
+      actionTone: actionTone(action),
+      estimatedValue: firstBusinessValue(row.estimatedValue, "Pending"),
+      reason: firstBusinessValue(row.reason, formatBusinessReason(row.reasonCodes), "Requires review"),
+      mandateImpact: firstBusinessValue(row.mandateImpact, "Review against mandate"),
+      status: firstBusinessValue(row.status, row.state, "PENDING"),
+    };
+  });
+}
+
+function firstBusinessValue(...values: Array<string | null | undefined>): string {
+  return (
+    values.find((value) => {
+      const normalized = value?.trim();
+      return normalized && !["N/A", "UNKNOWN", "NOT_REQUESTED"].includes(normalized.toUpperCase());
+    }) ?? "Pending"
+  );
+}
+
+function actionTone(action: string): "buy" | "sell" | "trim" | "default" {
+  const normalized = action.toLowerCase();
+  if (normalized.includes("buy")) {
+    return "buy";
+  }
+  if (normalized.includes("sell")) {
+    return "sell";
+  }
+  if (normalized.includes("trim") || normalized.includes("reduce")) {
+    return "trim";
+  }
+  return "default";
+}
+
+function findMetricValue(rows: DpmWaveMetricRow[], needles: string[], fallback: string): string {
+  const normalizedNeedles = needles.map((needle) => needle.toLowerCase());
+  const row = rows.find((candidate) => {
+    const key = `${candidate.key} ${candidate.label}`.replaceAll("_", " ").toLowerCase();
+    return normalizedNeedles.some((needle) => key.includes(needle));
+  });
+  return firstBusinessValue(row?.value, fallback);
+}
+
+function resolveLifecycleIndex(state: string): number {
+  const normalized = state.toUpperCase();
+  if (normalized.includes("STAG") || normalized.includes("HANDOFF")) {
+    return 4;
+  }
+  if (normalized.includes("APPROV")) {
+    return 3;
+  }
+  if (normalized.includes("SIMUL")) {
+    return 2;
+  }
+  if (normalized.includes("SOURCE") || normalized.includes("DATA")) {
+    return 1;
+  }
+  return 0;
+}
+
+function isWaveActionBlocked(blockedActions: string[], action: string): boolean {
+  return blockedActions.some((blockedAction) =>
+    blockedAction.toLowerCase().includes(action.toLowerCase())
+  );
+}
+
+function formatDisplayDate(value: string | undefined): string {
+  if (!value || value === "N/A") {
+    return "As of 03 May 2026";
+  }
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return `As of ${value}`;
+  }
+  return `As of ${date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  })}`;
 }

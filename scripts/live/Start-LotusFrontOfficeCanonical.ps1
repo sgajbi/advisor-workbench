@@ -97,6 +97,10 @@ function Stop-HostProcessOnPort {
     }
 
     $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+    if (-not $process) {
+      Write-Host "Skipping stale $Description listener on :$Port (PID $processId) because the process already exited."
+      continue
+    }
     if ($process -and $process.ProcessName -match "^(com\.docker|docker|vpnkit)") {
       Write-Host "Leaving Docker-owned $Description listener on :$Port (PID $processId) in place."
       continue

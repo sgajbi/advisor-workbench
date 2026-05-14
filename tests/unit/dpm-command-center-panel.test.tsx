@@ -104,11 +104,11 @@ describe("DpmCommandCenterPanel", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "DPM Command Center" }),
+      screen.getByRole("heading", { name: "Mandate Health" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("COMPLETE").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Complete").length).toBeGreaterThan(0);
     expect(screen.getByText("Book Health Strip")).toBeInTheDocument();
-    expect(screen.getByText("Source Readiness")).toBeInTheDocument();
+    expect(screen.getByText("Data Readiness")).toBeInTheDocument();
     expect(screen.getAllByText("REPAIR_SOURCE_DATA").length).toBeGreaterThan(0);
     expect(screen.getByText("SIMULATE_REBALANCE")).toBeInTheDocument();
     expect(screen.getByText("me_1")).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe("DpmCommandCenterPanel", () => {
     expect(
       screen.getByRole("button", { name: "Exception summary" }),
     ).toBeEnabled();
-    expect(screen.getAllByText("NOT_REQUESTED").length).toBeGreaterThan(0);
+    expect(screen.getByText("Exception Summary")).toBeInTheDocument();
   });
 
   it("requests monitoring through Gateway only", async () => {
@@ -147,7 +147,7 @@ describe("DpmCommandCenterPanel", () => {
       expect(runDpmCommandCenterMonitoring).toHaveBeenCalledWith();
     });
     expect(
-      screen.getByText("Monitoring dmr_2 returned SUCCEEDED"),
+      screen.getByText("Monitoring completed with Succeeded."),
     ).toBeInTheDocument();
   });
 
@@ -210,7 +210,7 @@ describe("DpmCommandCenterPanel", () => {
         state: "ACTIVE",
       });
     });
-    expect(await screen.findByText("wf_run_exception_summary_001")).toBeInTheDocument();
+    expect(await screen.findByText("Exception summary Review Required.")).toBeInTheDocument();
   });
 
   it("renders empty command-center state without claiming failure", () => {
@@ -246,7 +246,7 @@ describe("DpmCommandCenterPanel", () => {
     );
 
     expect(
-      screen.getByText("Command-center endpoint is unavailable"),
+      screen.getByText("Mandate health is unavailable"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Failed to fetch DPM command center (503)"),

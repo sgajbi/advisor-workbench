@@ -30,6 +30,7 @@ import {
 const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/performance",
   useRouter: () => ({
     replace: replaceMock,
   }),
@@ -136,12 +137,24 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeFalsy();
-    expect(screen.getByText("Quick Views")).toBeInTheDocument();
-    expect(screen.getByText("Client Context")).toBeInTheDocument();
-    const railSections = Array.from(
-      document.querySelectorAll(".performance-workspace-rail .performance-rail-section-label")
-    ).map((node) => node.textContent?.trim());
-    expect(railSections.slice(0, 3)).toEqual(["Client Context", "Performance", "Quick Views"]);
+    expect(screen.getByText("Workbench Screens")).toBeInTheDocument();
+    const workbenchScreenNav = screen.getByRole("navigation", {
+      name: "Workbench screen navigation",
+    });
+    expect(within(workbenchScreenNav).getByRole("link", { name: /Portfolio/i })).toHaveAttribute(
+      "href",
+      "/portfolio?portfolioId=DEMO_ADV_USD_001"
+    );
+    expect(within(workbenchScreenNav).getByRole("link", { name: /Performance/i })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
+    expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
+    expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
+    expect(
+      within(workbenchScreenNav).getByRole("button", { name: /^Performance Analysis/i })
+    ).toBeInTheDocument();
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
@@ -250,6 +263,15 @@ describe("PerformanceAnalyticsPage", () => {
         )
       ).toBe(true);
     });
+    const summaryCall = fetchMock.mock.calls.find(([input]) =>
+      input.toString().includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
+    );
+    expect(summaryCall?.[0].toString()).toContain("period=EXPLICIT");
+    expect(summaryCall?.[0].toString()).toContain("report_start_date=2026-01-01");
+    expect(summaryCall?.[0].toString()).toContain("report_end_date=2026-04-10");
+    expect(summaryCall?.[0].toString()).toContain(
+      "benchmark_code=BMK_PB_GLOBAL_BALANCED_60_40"
+    );
     expect(
       fetchMock.mock.calls.some(([input]) =>
         isServerDetailsCall(input.toString(), "PB_SG_GLOBAL_BAL_001")
@@ -374,6 +396,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     const mainShell = document.querySelector(".workstation-shell-main");
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(mainShell).toBeTruthy();
     await waitFor(() => {
       expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
@@ -392,6 +415,16 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.queryByLabelText("Horizon comparison context")).not.toBeInTheDocument();
+      expect(
+        fetchMock.mock.calls.some(([input]) => {
+          const url = input.toString();
+          return (
+            url.includes("/performance/horizon-comparison") &&
+            url.includes("report_start_date=2026-01-01") &&
+            url.includes("report_end_date=2026-02-24")
+          );
+        })
+      ).toBe(true);
     });
     fireEvent.click(screen.getByText("Detailed table"));
     expect(screen.getByLabelText("Multi-horizon return table")).toBeInTheDocument();
@@ -727,8 +760,8 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     expect(await screen.findByRole("button", { name: /^Risk Review/i })).toHaveAttribute(
-      "aria-pressed",
-      "true"
+      "aria-current",
+      "page"
     );
     expect(screen.getAllByRole("heading", { name: "Risk" }).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();

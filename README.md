@@ -54,42 +54,22 @@ Boundary rules that matter:
    `PB_SG_GLOBAL_BAL_001`.
 4. `Data Products` is available at `/data-products` for gateway-backed catalog, dependency, and
    live trust discovery.
-5. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0040 proof-pack evidence panel
-   for manage-owned proof-pack identity, section posture, content hash, source hashes, Markdown,
-   report-input posture, AI-evidence posture, and governed PM memo request posture. Workbench
-   renders Gateway/manage/lotus-ai workflow-pack truth and does not generate proof-pack sections,
-   hashes, report inputs, AI evidence, PM memos, narratives, or reports locally. It generates
-   RFC-0040 proof packs from the Gateway Workbench rebalance snapshot's
-   manage run id and does not treat RFC-0042 outcome-review `dpp_*` proof ids or expected-snapshot
-   run ids as RFC-0040 proof-pack sources. Reviewable Manage states such as `PENDING_REVIEW` are
-   displayed truthfully when the proof pack includes identity, sections, hashes/lineage, and handoff
-   posture.
-6. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0041 rebalance-wave command
-   center for wave queue, preview, create, detail, items, source-check, simulation, approval,
-   staging, handoff, report-input, governed AI PM memo, and operations-handoff summary request
-   posture. Workbench renders Gateway/manage/lotus-ai workflow-pack truth and does not calculate
-   wave readiness, build report input, construct AI prompts, generate memo or handoff-summary
-   narrative locally, claim external execution, or call `lotus-manage` or `lotus-ai` directly.
-7. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0042 post-trade outcome-review
-   panel for manage-owned expected-versus-realized dimensions, source lineage, supportability,
-   and report/AI handoff posture. Workbench renders the Gateway contract and does not calculate
-   outcome variance, freshness, supportability, or handoff eligibility locally.
-8. `/workbench/{portfolioId}` now includes a governed RFC-0043 exception-summary action on the
-   DPM command-center active-exception queue. The action calls Gateway
-   `/api/v1/dpm/command-center/exceptions/{exception_id}/ai-summary`, displays review-required
-   lotus-ai workflow-pack posture, and does not generate exception narrative, client messages,
-   routing instructions, approvals, PM scoring, or execution claims in browser code.
-8. `/workbench/{portfolioId}` now includes a Gateway-backed RFC-0039 construction alternatives
-   lab. Workbench sends stateful construction requests through Gateway
-   `/api/v1/dpm/command-center/construction/alternative-sets*`, renders manage-owned
-   alternatives, objective/constraint trace counts, supportability, and selected-alternative
-   state, and does not create optimizer logic, source data, prices, or selection truth locally.
-9. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
+5. `/workbench/{portfolioId}` is the Manage workspace. It uses the shared Workbench left rail and
+   focused `mode` sub-surfaces instead of stacking every Manage/DPM panel into one long page:
+   overview, `mode=mandate`, `mode=waves`, `mode=construction`, `mode=memory`, `mode=reviews`,
+   and `mode=proof`.
+6. Manage surfaces are Gateway-backed and cover RFC-0038 mandate command center, RFC-0041
+   rebalance waves, RFC-0039 construction alternatives, RFC40-WTBD-010 portfolio memory,
+   RFC-0042 outcome reviews, RFC-0040 proof-pack evidence, RFC-0043 exception-summary requests,
+   and rebalance action-register supportability. Workbench renders Gateway/manage/lotus-ai truth
+   and does not calculate mandate health, wave readiness, optimizer output, outcome variance,
+   proof-pack hashes, report inputs, AI prompts, PM memos, narratives, or execution claims locally.
+7. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
    the primary supported front-office app surfaces.
-10. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
+8. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
    active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
    bootstrap contract.
-11. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
+9. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
    `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
 
 ## Architecture At A Glance
@@ -103,9 +83,9 @@ Current main surfaces:
 - `performance`
   `/performance` with performance, risk, advisor-brief, and evidence modes
 - `workbench`
-  `/workbench/*` compatibility and portfolio-linked workspace entry, including the Gateway-backed
-  DPM construction alternatives lab, proof-pack evidence panel, and outcome-review panel when Gateway/manage have
-  materialized the relevant DPM evidence
+  `/workbench/*` compatibility and portfolio-linked Manage workspace entry, including
+  Gateway-backed DPM mandate, waves, construction, memory, reviews, proof-pack, and action-register
+  supportability sub-surfaces when Gateway/manage have materialized the relevant evidence
 - `data-products`
   `/data-products` self-serve catalog, dependency, and live trust discovery through gateway
 - `api/bff`
@@ -279,22 +259,22 @@ Important current product and route truths:
    `Advisory` items rather than live product routes
 7. evidence-oriented performance views must be documented truthfully as runtime-governed product
    behavior, not as a promise of separate unsupported backend ownership inside Workbench
-8. RFC-0042 outcome-review rendering on `/workbench/{portfolioId}` is backed by Gateway
+8. RFC-0042 outcome-review rendering on `/workbench/{portfolioId}?mode=reviews` is backed by Gateway
    `/api/v1/dpm/command-center/outcome-reviews*`; Workbench may normalize presentation shape but
    must not derive expected, realized, variance, lineage, source freshness, supportability, report
    input, or AI evidence eligibility outside the Gateway/manage contract.
-9. RFC-0039 construction alternatives rendering on `/workbench/{portfolioId}` is backed by
+9. RFC-0039 construction alternatives rendering on `/workbench/{portfolioId}?mode=construction` is backed by
    Gateway `/api/v1/dpm/command-center/construction/alternative-sets*`; Workbench sends a
    stateful source selector and option overrides through Gateway and must not synthesize
    stateless portfolio snapshots, prices, optimization results, objective scores, supportability,
    or PM selection truth.
-10. RFC-0040 proof-pack evidence rendering on `/workbench/{portfolioId}` is backed by Gateway
+10. RFC-0040 proof-pack evidence rendering on `/workbench/{portfolioId}?mode=proof` is backed by Gateway
    `/api/v1/dpm/command-center/proof-packs*`; Workbench may render Gateway/manage proof-pack
    identity, sections, hashes, Markdown, report-input readiness, AI-evidence readiness, and
    lotus-ai PM memo workflow-pack posture through Gateway, but must not rebuild proof-pack
    sections, compute hashes, synthesize Markdown, construct report input, construct AI evidence,
    construct PM memo prompts, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
-11. RFC-0041 rebalance-wave rendering on `/workbench/{portfolioId}` is backed by Gateway
+11. RFC-0041 rebalance-wave rendering on `/workbench/{portfolioId}?mode=waves` is backed by Gateway
    `/api/v1/dpm/command-center/waves*`; Workbench may render Gateway/manage wave state,
    report-input readiness, lotus-ai wave PM memo workflow-pack posture, and lotus-ai
    operations-handoff summary posture through Gateway, but

@@ -7,8 +7,8 @@ export type ShellAppId =
   | "advisory";
 
 const SHELL_APP_MATCHERS: Record<ShellAppId, string[]> = {
-  home: ["/", "/suite", "/workbench"],
-  portfolio: ["/portfolio", "/portfolios", "/intake"],
+  home: ["/", "/suite"],
+  portfolio: ["/portfolio", "/portfolios", "/positions", "/transactions", "/cashflow", "/manage", "/workbench", "/intake"],
   performance: ["/performance"],
   risk: ["/performance"],
   proposal: ["/proposals"],
@@ -22,6 +22,9 @@ export function resolveShellApp(
   const normalizedPath = pathname?.trim() || "/";
 
   if (normalizedPath.startsWith("/performance")) {
+    if (searchParams?.get("mode") === "advisor") {
+      return { id: "advisory" };
+    }
     return {
       id: searchParams?.get("mode") === "risk" ? "risk" : "performance",
     };

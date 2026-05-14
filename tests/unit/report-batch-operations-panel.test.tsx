@@ -115,9 +115,9 @@ describe("ReportBatchOperationsPanel", () => {
       });
     });
     expect(getReportBatchStatusMock).toHaveBeenCalledWith("rbch_1", { bookingCenterCode: "SG" });
-    expect(await screen.findByText("rbch_1")).toBeInTheDocument();
-    expect(screen.getByText("succeeded: 1")).toBeInTheDocument();
-    expect(screen.getByText("rjob_1")).toBeInTheDocument();
+    expect(await screen.findByText("Report batch available")).toBeInTheDocument();
+    expect(screen.getByText("Succeeded: 1")).toBeInTheDocument();
+    expect(screen.getByText("Available")).toBeInTheDocument();
   });
 
   it("runs a bounded worker pass for the current batch", async () => {
@@ -154,7 +154,7 @@ describe("ReportBatchOperationsPanel", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Create Batch" }));
-    await screen.findByText("rbch_1");
+    await screen.findByText("Report batch available");
     fireEvent.click(screen.getByRole("button", { name: "Run Once" }));
 
     await waitFor(() => {
@@ -201,13 +201,13 @@ describe("ReportBatchOperationsPanel", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Create Batch" }));
-    await screen.findByText("rbch_1");
+    await screen.findByText("Report batch available");
     fireEvent.click(screen.getByRole("button", { name: "Run Once" }));
 
-    expect(await screen.findByText("Back pressure max_active_items_reached")).toBeInTheDocument();
+    expect(await screen.findByText("Back pressure Max Active Items Reached")).toBeInTheDocument();
   });
 
-  it("retrieves archived document metadata through the gateway-backed archive surface", async () => {
+  it("retrieves archived document metadata through the archive surface", async () => {
     getArchivedDocumentMetadataMock.mockResolvedValue({
       correlationId: "corr-archive-document-1",
       contractVersion: "v1",
@@ -261,7 +261,7 @@ describe("ReportBatchOperationsPanel", () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText("Archived document ID"), {
+    fireEvent.change(screen.getByLabelText("Archived document reference"), {
       target: { value: "doc_1" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Load Document" }));
@@ -272,8 +272,8 @@ describe("ReportBatchOperationsPanel", () => {
         bookingCenterCode: "SG",
       });
     });
-    expect(await screen.findByText("PORTFOLIO_REVIEW")).toBeInTheDocument();
-    expect(screen.getByText("retention-7y")).toBeInTheDocument();
+    expect(await screen.findByText("Portfolio Review")).toBeInTheDocument();
+    expect(screen.getByText("Retention policy available")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Download" })).toHaveAttribute(
       "href",
       "/api/bff/api/v1/documents/doc_1/download"
@@ -299,7 +299,7 @@ describe("ReportBatchOperationsPanel", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Create Batch" }));
-    await screen.findByText("succeeded: 1");
+    await screen.findByText("Succeeded: 1");
 
     expect(screen.getByRole("button", { name: "Run Once" })).toBeDisabled();
   });

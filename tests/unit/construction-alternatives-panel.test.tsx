@@ -75,13 +75,46 @@ const readyResponse: DpmConstructionGatewayResponse = {
     status: "READY",
     alternatives: [
       {
-        alternative_id: "alt_min_turnover",
-        method: "MIN_TURNOVER",
+        alternative_id: "alt_balanced_transition",
+        label: "Balanced Transition",
+        objective: "Restore model weights with moderate turnover",
+        mandate_fit: "Within Range",
+        recommended: true,
+        method: "BALANCED_TRANSITION",
         method_status: "READY",
-        comparison_metrics: { turnover_weight: "0.045" },
+        rationale: "Balances drift reduction, cash deployment, transaction cost, and mandate fit.",
+        comparison_metrics: {
+          turnover_weight: "0.048",
+          cash_weight: "0.021",
+          drift_improvement_pct: "0.724",
+          trade_count: 8,
+        },
         objective_trace: [{ term: "turnover" }],
         constraint_trace: [{ constraint: "cash_band" }],
       },
+      {
+        alternative_id: "alt_low_turnover",
+        label: "Low Turnover Path",
+        objective: "Minimize trading while reducing cash drag",
+        mandate_fit: "Acceptable",
+        method: "MIN_TURNOVER",
+        method_status: "READY",
+        comparison_metrics: {
+          turnover_weight: "0.021",
+          cash_weight: "0.045",
+          drift_improvement_pct: "0.48",
+        },
+      },
+    ],
+    trade_impact: {
+      trade_count: 8,
+      buy_count: 4,
+      trim_count: 3,
+      cash_reduction_count: 1,
+    },
+    constraints: [
+      { name: "Asset allocation range", state: "PASS" },
+      { name: "Cash range", state: "PASS" },
     ],
   },
 };
@@ -103,10 +136,10 @@ describe("ConstructionAlternativesPanel", () => {
     expect(
       screen.getByRole("button", { name: "Generate alternatives" }),
     ).toBeEnabled();
-    expect(screen.getByText("NOT_GENERATED")).toBeInTheDocument();
+    expect(screen.getAllByText("Not Generated").length).toBeGreaterThan(0);
   });
 
-  it("generates alternatives through Gateway and renders manage-owned methods", async () => {
+  it("generates alternatives and renders backed construction methods", async () => {
     vi.mocked(generateDpmConstructionAlternatives).mockResolvedValue(
       readyResponse,
     );
@@ -121,12 +154,13 @@ describe("ConstructionAlternativesPanel", () => {
         portfolio,
       });
     });
-    expect(screen.getByText("cas_1")).toBeInTheDocument();
-    expect(
-      screen.getByText("MIN_TURNOVER / alt_min_turnover"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("turnover weight: 0.045")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Select" })).toBeEnabled();
+    expect(screen.queryByText("cas_1")).not.toBeInTheDocument();
+    expect(screen.queryByText("alt_balanced_transition")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Balanced Transition").length).toBeGreaterThan(0);
+    expect(screen.getByRole("columnheader", { name: "Turnover" })).toBeInTheDocument();
+    expect(screen.getAllByText("4.8%").length).toBeGreaterThan(0);
+    expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
   });
 
   it("selects an alternative through Gateway without client-side decision logic", async () => {
@@ -137,7 +171,7 @@ describe("ConstructionAlternativesPanel", () => {
       ...readyResponse,
       supportability: {
         ...readyResponse.supportability,
-        selected_alternative_id: "alt_min_turnover",
+        selected_alternative_id: "alt_balanced_transition",
       },
     });
 
@@ -145,16 +179,18 @@ describe("ConstructionAlternativesPanel", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Generate alternatives" }),
     );
-    await screen.findByText("MIN_TURNOVER / alt_min_turnover");
-    fireEvent.click(screen.getByRole("button", { name: "Select" }));
+    await waitFor(() => {
+      expect(screen.getAllByText("Balanced Transition").length).toBeGreaterThan(0);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Review" }));
 
     await waitFor(() => {
       expect(selectDpmConstructionAlternative).toHaveBeenCalledWith({
         alternativeSetId: "cas_1",
-        alternativeId: "alt_min_turnover",
+        alternativeId: "alt_balanced_transition",
       });
     });
-    expect(screen.getAllByText("alt_min_turnover").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Balanced Transition").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Selected" })).toBeDisabled();
   });
 });

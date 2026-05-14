@@ -17,6 +17,7 @@ import {
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPortfolio360,
   DpmCommandCenterGatewayResponse,
+  DpmCampaignDefinitionGatewayResponse,
   DpmConstructionGatewayResponse,
   DpmExceptionSummaryResponse,
   DpmOutcomeReviewGatewayResponse,
@@ -647,6 +648,8 @@ function buildRiskWorkspaceQuery(params: {
   period: string;
   detailBasis?: string;
   benchmark?: string;
+  reportStartDate?: string;
+  reportEndDate?: string;
   asOfDate?: string;
   reportingCurrency?: string;
 }): string {
@@ -657,6 +660,12 @@ function buildRiskWorkspaceQuery(params: {
   }
   if (params.benchmark) {
     query.set("benchmark_code", params.benchmark);
+  }
+  if (params.reportStartDate) {
+    query.set("report_start_date", params.reportStartDate);
+  }
+  if (params.reportEndDate) {
+    query.set("report_end_date", params.reportEndDate);
   }
   if (params.asOfDate) {
     query.set("as_of_date", params.asOfDate);
@@ -678,6 +687,8 @@ function buildRiskWorkspaceUrl(
     period: string;
     detailBasis?: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
     asOfDate?: string;
     reportingCurrency?: string;
   },
@@ -696,6 +707,8 @@ export async function getWorkbenchRiskSummaryClient(
     period: string;
     detailBasis: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
     asOfDate?: string;
     reportingCurrency?: string;
   }
@@ -716,6 +729,8 @@ export async function getWorkbenchRiskConcentrationClient(
   params: {
     period: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
     asOfDate?: string;
     reportingCurrency?: string;
   }
@@ -737,6 +752,8 @@ export async function getWorkbenchRiskDrawdownClient(
     period: string;
     detailBasis: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
     asOfDate?: string;
     reportingCurrency?: string;
     includeUnderwaterSeries?: boolean;
@@ -747,6 +764,8 @@ export async function getWorkbenchRiskDrawdownClient(
       period: params.period,
       detailBasis: params.detailBasis,
       benchmark: params.benchmark,
+      reportStartDate: params.reportStartDate,
+      reportEndDate: params.reportEndDate,
       asOfDate: params.asOfDate,
       reportingCurrency: params.reportingCurrency,
     })
@@ -771,6 +790,8 @@ export async function getWorkbenchRiskRollingClient(
     period: string;
     detailBasis: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
     asOfDate?: string;
     reportingCurrency?: string;
     includeTimeSeries?: boolean;
@@ -781,6 +802,8 @@ export async function getWorkbenchRiskRollingClient(
       period: params.period,
       detailBasis: params.detailBasis,
       benchmark: params.benchmark,
+      reportStartDate: params.reportStartDate,
+      reportEndDate: params.reportEndDate,
       asOfDate: params.asOfDate,
       reportingCurrency: params.reportingCurrency,
     })
@@ -805,6 +828,8 @@ export async function getWorkbenchRiskAttributionClient(
     period: string;
     detailBasis: string;
     benchmark?: string;
+    reportStartDate?: string;
+    reportEndDate?: string;
     asOfDate?: string;
     reportingCurrency?: string;
     attributionType: string;
@@ -816,6 +841,8 @@ export async function getWorkbenchRiskAttributionClient(
       period: params.period,
       detailBasis: params.detailBasis,
       benchmark: params.benchmark,
+      reportStartDate: params.reportStartDate,
+      reportEndDate: params.reportEndDate,
       asOfDate: params.asOfDate,
       reportingCurrency: params.reportingCurrency,
     })
@@ -1106,6 +1133,33 @@ export async function listDpmWaves(params?: {
         "server",
         "/dpm/command-center/waves",
         "DPM rebalance waves",
+        query
+      )
+  );
+}
+
+export async function listDpmCampaignDefinitions(params?: {
+  campaignId?: string;
+  campaignStatus?: "ACTIVE" | "RETIRED";
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  const query = new URLSearchParams();
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.campaignId) {
+    query.set("campaign_id", params.campaignId);
+  }
+  if (params?.campaignStatus) {
+    query.set("campaign_status", params.campaignStatus);
+  }
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-definitions.list",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        "server",
+        "/dpm/command-center/waves/campaign-definitions",
+        "DPM campaign definitions",
         query
       )
   );

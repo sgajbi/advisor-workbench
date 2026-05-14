@@ -33,8 +33,8 @@ describe("app route wrappers", () => {
     expect(typeof PerformanceRoute).toBe("function");
   });
 
-  it("redirects the proposal list route back to portfolio", () => {
-    expect(() => ProposalsPage()).toThrowError("REDIRECT:/portfolio");
+  it("exposes the proposal list route", async () => {
+    await expect(ProposalsPage({ searchParams: Promise.resolve({}) })).resolves.toBeTruthy();
   });
 
   it("redirects the proposal detail route back to portfolio", async () => {

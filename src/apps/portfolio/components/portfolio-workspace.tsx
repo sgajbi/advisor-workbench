@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
   ActionLink,
@@ -10,7 +10,6 @@ import {
   DegradedStatePanel,
   MainWithSideRailLayout,
   MetricRow,
-  Panel,
   SectionHeader,
   SemanticBadge,
   Text,
@@ -21,24 +20,16 @@ import {
 } from "@/design-system";
 
 import {
-  formatBookingCenter,
   formatBooleanFlag,
-  formatCount,
-  formatCurrency,
   formatDate,
-  formatPct,
   formatStatus,
 } from "../formatters";
-import { getPortfolioTransactionLedger } from "../api";
 import type {
   PortfolioHoldingsDrilldownFilter,
   PortfolioTransactionDrilldownFilter,
   PortfolioWorkspace,
 } from "../types";
-import {
-  getCoverageWarningLabel,
-  getEvidenceServiceLabel,
-} from "../workspace-config";
+import { getCoverageWarningLabel } from "../workspace-config";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import {
   buildPortfolioReadinessIndicators,
@@ -50,38 +41,35 @@ import {
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
   getActivityDisplayCurrency,
-  getBookReadinessSupport,
   getIncomeDisplayCurrency,
-  getInvestedAssetWeight,
   getOrderedWorkflowCues,
-  getRequestedWindowActivityCount,
 } from "../view-model";
 import PortfolioAnalyticalMainColumn from "./portfolio-analytical-main-column";
+import PortfolioExecutiveSummary from "./portfolio-executive-summary";
+import PortfolioExceptionsSection from "./portfolio-exceptions-section";
 import {
   getDefaultSectionExpanded,
   getPortfolioSectionStorageKey,
   PORTFOLIO_COLLAPSIBLE_SECTION_KEYS,
   PortfolioChangesSection,
   type PortfolioCollapsibleSectionKey,
-  PortfolioDrilldownSection,
   PortfolioInsightsSection,
 } from "./portfolio-analytical-sections";
 import {
   buildExceptionDrawer,
-  buildHoldingDrawer,
   buildMetricDrawer,
-  buildTransactionDrawer,
   buildTransactionDrilldownDrawer,
   type PortfolioDetailDrawerState,
-  type PortfolioMetricDrawerKey,
 } from "./portfolio-detail-drawer-builders";
+import {
+  PortfolioDecisionBand,
+  PortfolioEvidenceModule,
+} from "./portfolio-decision-posture";
 import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
-import type { HoldingsRow } from "./portfolio-holdings-grid";
-import PortfolioRail from "./portfolio-rail";
+import PortfolioScreenRail from "./portfolio-screen-rail";
+import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
 import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
 import PortfolioContextModule from "../modules/portfolio-context/portfolio-context-module";
-import PortfolioHealthStrip from "../modules/portfolio-health/portfolio-health-strip";
-import PortfolioInsightsStrip from "../modules/portfolio-insights/portfolio-insights-strip";
 import PortfolioReadinessModule from "../modules/portfolio-readiness/portfolio-readiness-module";
 import {
   getPortfolioWorkspaceCapabilities,
@@ -114,46 +102,12 @@ const DeferredPortfolioTopHoldingsPanel = dynamic(
   }
 );
 
-const DeferredPortfolioHoldingsGrid = dynamic(() => import("./portfolio-holdings-grid"), {
-  ssr: false,
-  loading: () => (
-    <DeferredModulePlaceholder
-      title="Loading holdings"
-      message="Holdings drill-down loads when the section is opened."
-    />
-  ),
-});
-
-const DeferredPortfolioTransactionsGrid = dynamic(() => import("./portfolio-transactions-grid"), {
-  ssr: false,
-  loading: () => (
-    <DeferredModulePlaceholder
-      title="Loading transactions"
-      message="Transaction drill-down loads when the section is opened."
-    />
-  ),
-});
-
-const DeferredPortfolioProjectedCashflowModule = dynamic(
-  () => import("./portfolio-projected-cashflow-module"),
-  {
-    ssr: false,
-    loading: () => (
-      <DeferredModulePlaceholder
-        title="Loading projected cashflow"
-        message="Projected liquidity is loading when the section is opened."
-      />
-    ),
-  }
-);
-
 const DeferredPortfolioDetailDrawer = dynamic(() => import("./portfolio-detail-drawer"), {
   ssr: false,
 });
 
 export default function PortfolioWorkspaceView({
   portfolios,
-  selectedPortfolioId,
   workspace,
   context,
   detailsLoading,
@@ -178,12 +132,11 @@ export default function PortfolioWorkspaceView({
     useState<PortfolioTransactionDrilldownFilter | null>(null);
   const [copiedContextField, setCopiedContextField] = useState<string | null>(null);
   const [detailDrawer, setDetailDrawer] = useState<PortfolioDetailDrawerState | null>(null);
-  const holdingDrawerRequestIdRef = useRef(0);
   const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
   const setupActions = workspace?.workflow_actions ?? [];
   const primaryWorkflowCue = orderedWorkflowCues.find((cue) => cue.key === "performance") ?? orderedWorkflowCues[0];
   const readinessIndicators = workspace
-    ? workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace, context.viewMode)
+    ? workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace)
     : [];
   const exceptionSummaries = workspace?.exception_summaries ?? [];
   const insights = workspace?.insights ?? [];
@@ -194,9 +147,9 @@ export default function PortfolioWorkspaceView({
   const showAttentionOnly = context.focusExceptions && Boolean(workspace?.partial_failures.length);
   const showInsights = !showAttentionOnly;
   const showChanges = isDetailedView && !showAttentionOnly;
-  const showDrilldown = isDetailedView && !showAttentionOnly;
   const showReadinessDetailGroup = isDetailedView;
   const showLiquidityModule = isDetailedView;
+  const showDetailedAnalyticalSections = isDetailedView && !showAttentionOnly;
   const capabilities = workspace
     ? getPortfolioWorkspaceCapabilities(workspace, {
         viewMode: context.viewMode,
@@ -226,7 +179,6 @@ export default function PortfolioWorkspaceView({
     () => (workspace ? filterPositionsByDrilldown(workspace.positions, holdingsDrilldown) : []),
     [holdingsDrilldown, workspace]
   );
-  const holdingsFilterCopy = holdingsDrilldown?.label ?? null;
   const visibleInsights = insights.filter((insight) => !dismissedInsightKeys.includes(insight.key));
   const priorityReadinessIndicators = readinessIndicators.filter(
     (indicator) => indicator.status !== "Ready"
@@ -268,47 +220,6 @@ export default function PortfolioWorkspaceView({
     }
   };
 
-  const openHoldingDrawer = async (row: HoldingsRow) => {
-    if (!workspace) {
-      return;
-    }
-
-    holdingDrawerRequestIdRef.current += 1;
-    const requestId = holdingDrawerRequestIdRef.current;
-
-    setDetailDrawer(
-      buildHoldingDrawer(row, workspace.portfolio.portfolio_id, workspace.portfolio.base_currency, {
-        state: "loading",
-      })
-    );
-
-    const payload = await getPortfolioTransactionLedger(workspace.portfolio.portfolio_id, {
-      asOfDate: context.selectedAsOfDate,
-      securityId: row.securityId,
-      limit: 20,
-    });
-
-    if (holdingDrawerRequestIdRef.current !== requestId) {
-      return;
-    }
-
-    if (payload) {
-      setDetailDrawer(
-        buildHoldingDrawer(row, workspace.portfolio.portfolio_id, workspace.portfolio.base_currency, {
-          state: "ready",
-          transactions: payload.transactions ?? [],
-        })
-      );
-      return;
-    }
-
-    setDetailDrawer(
-      buildHoldingDrawer(row, workspace.portfolio.portfolio_id, workspace.portfolio.base_currency, {
-        state: "error",
-      })
-    );
-  };
-
   const getSectionExpanded = (sectionKey: PortfolioCollapsibleSectionKey) =>
     sectionPreferences[sectionKey] ?? getDefaultSectionExpanded(sectionKey, context.viewMode);
 
@@ -325,34 +236,10 @@ export default function PortfolioWorkspaceView({
     });
   };
 
-  const clearHoldingsDrilldown = () => setHoldingsDrilldown(null);
   const clearTransactionDrilldown = () => setTransactionDrilldown(null);
-
-  const scrollToSection = (sectionId: string) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.requestAnimationFrame(() => {
-      const element = document.getElementById(sectionId);
-      if (element && typeof element.scrollIntoView === "function") {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
-  };
 
   const openTransactionDrilldown = (filter: PortfolioTransactionDrilldownFilter) => {
     setTransactionDrilldown(filter);
-    if (context.viewMode === "detailed") {
-      setSectionPreferences((current) => {
-        const next = { ...current, transactions: true };
-        window.localStorage.setItem(getPortfolioSectionStorageKey("transactions"), "true");
-        return next;
-      });
-      scrollToSection("portfolio-drilldown");
-      return;
-    }
-
     if (!workspace) {
       return;
     }
@@ -382,16 +269,6 @@ export default function PortfolioWorkspaceView({
       status: "Unpriced",
       label: buildHoldingsStatusDrilldownLabel("Unpriced"),
     });
-
-    if (context.viewMode === "detailed") {
-      setSectionPreferences((current) => {
-        const next = { ...current, holdings: true };
-        window.localStorage.setItem(getPortfolioSectionStorageKey("holdings"), "true");
-        return next;
-      });
-      scrollToSection("portfolio-drilldown");
-      return;
-    }
 
     const pricingException = exceptionSummaries.find((item) => item.key === "pricing");
     if (pricingException) {
@@ -424,14 +301,22 @@ export default function PortfolioWorkspaceView({
         railClassName="portfolio-rail-shell"
         mainClassName="portfolio-main"
         sideClassName="portfolio-side portfolio-side-wide"
-        rail={<PortfolioRail portfolios={portfolios} selectedPortfolioId={selectedPortfolioId} />}
+        rail={
+          workspace ? (
+            <PortfolioScreenRail portfolioId={workspace.portfolio.portfolio_id} activeScreen="portfolio" />
+          ) : null
+        }
         main={
           <>
             <WorkbenchPageFrame
               className="portfolio-page-frame"
               bodyClassName="portfolio-page-frame-body"
-              title="Portfolio"
-              subtitle="Front-office portfolio context, readiness, and decision support"
+              title="Portfolio Summary"
+              subtitle={
+                workspace
+                  ? `${workspace.portfolio.portfolio_id} · ${workspace.profile.portfolio_type ?? "Global Balanced"} · ${workspace.portfolio.base_currency}`
+                  : "Front-office portfolio context, readiness, and decision support"
+              }
               actions={
                 <PortfolioPageHeaderStatus
                   label={portfolios.length ? "Catalog live" : "Catalog unavailable"}
@@ -440,7 +325,6 @@ export default function PortfolioWorkspaceView({
               }
             >
               <WorkbenchSectionStack className="portfolio-page-sections">
-                {toolbar}
                 {!workspace ? (
                     <DegradedStatePanel
                     title="Portfolio context unavailable"
@@ -467,182 +351,115 @@ export default function PortfolioWorkspaceView({
                           }
                         />
                       }
+                      toolbar={toolbar}
                       exceptions={<PortfolioExceptionsSection workspace={workspace} />}
                       insights={
-                        <PortfolioInsightsSection
-                          workspace={workspace}
-                          context={context}
-                          capabilities={capabilities!}
-                          detailsLoading={detailsLoading}
-                          showInsights={showInsights}
-                          showLiquidityModule={showLiquidityModule}
-                          showChangeHighlights={showChangeHighlights}
-                          incomeDisplayCurrency={incomeDisplayCurrency}
-                          activityDisplayCurrency={activityDisplayCurrency}
-                          visibleInsights={visibleInsights}
-                          holdingsDrilldown={holdingsDrilldown}
-                          filteredPositions={filteredPositions}
-                          transactionDrilldown={transactionDrilldown}
-                          onDismissInsight={(key) =>
-                            setDismissedInsightKeys((current) => [...current, key])
-                          }
-                          onSelectAllocation={(selection) => {
-                            setTransactionDrilldown(null);
-                            setHoldingsDrilldown(
-                              selection
-                                ? {
-                                    kind: "allocation",
-                                    selection,
-                                    label: `Filtered by ${buildAllocationDrilldownLabel(
-                                      selection.dimension,
-                                      selection.bucket
-                                    )}`,
-                                  }
-                                : null
-                            );
-                          }}
-                          onSelectTopHolding={(securityId) => {
-                            setTransactionDrilldown(null);
-                            setHoldingsDrilldown(
-                              securityId
-                                ? {
-                                    kind: "security",
-                                    security_id: securityId,
-                                    label: buildSecurityDrilldownLabel(
-                                      workspace.top_positions.find((position) => position.security_id === securityId)
-                                        ?.instrument_name ?? "Selected holding",
-                                      "holdings"
-                                    ),
-                                  }
-                                : null
-                            );
-                          }}
-                          onSelectActivityBucket={(bucket) => {
-                            if (!bucket) {
-                              clearTransactionDrilldown();
-                              return;
-                            }
-                            openTransactionDrilldown({
-                              kind: "activity",
-                              bucket,
-                              label: buildActivityDrilldownLabel(bucket),
-                            });
-                          }}
-                          getSectionExpanded={getSectionExpanded}
-                          toggleSection={toggleSection}
-                          DeferredPortfolioAllocationPanel={DeferredPortfolioAllocationPanel}
-                          DeferredPortfolioTopHoldingsPanel={DeferredPortfolioTopHoldingsPanel}
-                        />
+                        <>
+                          <PortfolioDecisionBand workspace={workspace} context={context} />
+                          <PortfolioExecutiveSummary workspace={workspace} context={context} />
+                          {showDetailedAnalyticalSections ? (
+                            <PortfolioInsightsSection
+                              workspace={workspace}
+                              context={context}
+                              capabilities={capabilities!}
+                              detailsLoading={detailsLoading}
+                              showInsights={showInsights}
+                              showLiquidityModule={showLiquidityModule}
+                              showChangeHighlights={showChangeHighlights}
+                              incomeDisplayCurrency={incomeDisplayCurrency}
+                              activityDisplayCurrency={activityDisplayCurrency}
+                              visibleInsights={visibleInsights}
+                              holdingsDrilldown={holdingsDrilldown}
+                              filteredPositions={filteredPositions}
+                              transactionDrilldown={transactionDrilldown}
+                              onDismissInsight={(key) =>
+                                setDismissedInsightKeys((current) => [...current, key])
+                              }
+                              onSelectAllocation={(selection) => {
+                                setTransactionDrilldown(null);
+                                setHoldingsDrilldown(
+                                  selection
+                                    ? {
+                                        kind: "allocation",
+                                        selection,
+                                        label: `Filtered by ${buildAllocationDrilldownLabel(
+                                          selection.dimension,
+                                          selection.bucket
+                                        )}`,
+                                      }
+                                    : null
+                                );
+                              }}
+                              onSelectTopHolding={(securityId) => {
+                                setTransactionDrilldown(null);
+                                setHoldingsDrilldown(
+                                  securityId
+                                    ? {
+                                        kind: "security",
+                                        security_id: securityId,
+                                        label: buildSecurityDrilldownLabel(
+                                          workspace.top_positions.find((position) => position.security_id === securityId)
+                                            ?.instrument_name ?? "Selected holding",
+                                          "holdings"
+                                        ),
+                                      }
+                                    : null
+                                );
+                              }}
+                              onSelectActivityBucket={(bucket) => {
+                                if (!bucket) {
+                                  clearTransactionDrilldown();
+                                  return;
+                                }
+                                openTransactionDrilldown({
+                                  kind: "activity",
+                                  bucket,
+                                  label: buildActivityDrilldownLabel(bucket),
+                                });
+                              }}
+                              getSectionExpanded={getSectionExpanded}
+                              toggleSection={toggleSection}
+                              DeferredPortfolioAllocationPanel={DeferredPortfolioAllocationPanel}
+                              DeferredPortfolioTopHoldingsPanel={DeferredPortfolioTopHoldingsPanel}
+                            />
+                          ) : null}
+                        </>
                       }
                       health={
-                        <PortfolioHealthSection
-                          workspace={workspace}
-                          context={context}
-                          showHealthSection={showHealthSection}
-                        />
+                        showDetailedAnalyticalSections ? (
+                          <PortfolioHealthSection
+                            workspace={workspace}
+                            context={context}
+                            showHealthSection={showHealthSection}
+                          />
+                        ) : null
                       }
                       changes={
-                        <PortfolioChangesSection
-                          workspace={workspace}
-                          context={context}
-                          capabilities={capabilities!}
-                          showChanges={showChanges}
-                          incomeDisplayCurrency={incomeDisplayCurrency}
-                          activityDisplayCurrency={activityDisplayCurrency}
-                          transactionDrilldown={transactionDrilldown}
-                          isDetailedView={isDetailedView}
-                          onSelectActivityBucket={(bucket) => {
-                            if (!bucket) {
-                              clearTransactionDrilldown();
-                              return;
-                            }
-                            openTransactionDrilldown({
-                              kind: "activity",
-                              bucket,
-                              label: buildActivityDrilldownLabel(bucket),
-                            });
-                          }}
-                          getSectionExpanded={getSectionExpanded}
-                          toggleSection={toggleSection}
-                        />
-                      }
-                      drilldown={
-                        <PortfolioDrilldownSection
-                          workspace={workspace}
-                          context={context}
-                          capabilities={capabilities!}
-                          detailsLoading={detailsLoading}
-                          showDrilldown={showDrilldown}
-                          isDetailedView={isDetailedView}
-                          filteredPositions={filteredPositions}
-                          holdingsFilterCopy={holdingsFilterCopy}
-                          transactionDrilldown={transactionDrilldown}
-                          onClearHoldingsDrilldown={clearHoldingsDrilldown}
-                          onClearTransactionDrilldown={clearTransactionDrilldown}
-                          onSelectHoldingRow={(row) => {
-                            void openHoldingDrawer(row);
-                          }}
-                          onSelectTransactionRow={(row) =>
-                            setDetailDrawer(
-                              buildTransactionDrawer(
-                                row,
-                                workspace.portfolio.portfolio_id,
-                                workspace.portfolio.base_currency,
-                                {
-                                  onOpenLinkedTransactionGroup: row.raw
-                                    .linked_transaction_group_id
-                                    ? () =>
-                                        openTransactionDrilldown({
-                                          kind: "linked_group",
-                                          linked_transaction_group_id:
-                                            row.raw.linked_transaction_group_id!,
-                                          label: `Filtered by transaction group: ${row.raw.linked_transaction_group_id}`,
-                                        })
-                                    : null,
-                                  onOpenFxContract: row.raw.fx_contract_id
-                                    ? () =>
-                                        openTransactionDrilldown({
-                                          kind: "fx_contract",
-                                          fx_contract_id: row.raw.fx_contract_id!,
-                                          label: `Filtered by FX contract: ${row.raw.fx_contract_id}`,
-                                        })
-                                    : null,
-                                  onOpenSwapEvent: row.raw.swap_event_id
-                                    ? () =>
-                                        openTransactionDrilldown({
-                                          kind: "swap_event",
-                                          swap_event_id: row.raw.swap_event_id!,
-                                          label: `Filtered by swap event: ${row.raw.swap_event_id}`,
-                                        })
-                                    : null,
-                                  onOpenNearLegGroup: row.raw.near_leg_group_id
-                                    ? () =>
-                                        openTransactionDrilldown({
-                                          kind: "near_leg_group",
-                                          near_leg_group_id: row.raw.near_leg_group_id!,
-                                          label: `Filtered by near-leg group: ${row.raw.near_leg_group_id}`,
-                                        })
-                                    : null,
-                                  onOpenFarLegGroup: row.raw.far_leg_group_id
-                                    ? () =>
-                                        openTransactionDrilldown({
-                                          kind: "far_leg_group",
-                                          far_leg_group_id: row.raw.far_leg_group_id!,
-                                          label: `Filtered by far-leg group: ${row.raw.far_leg_group_id}`,
-                                        })
-                                    : null,
-                                }
-                              )
-                            )
-                          }
-                          getSectionExpanded={getSectionExpanded}
-                          setSectionPreferences={setSectionPreferences}
-                          DeferredPortfolioHoldingsGrid={DeferredPortfolioHoldingsGrid}
-                          DeferredPortfolioTransactionsGrid={DeferredPortfolioTransactionsGrid}
-                          DeferredPortfolioProjectedCashflowModule={
-                            DeferredPortfolioProjectedCashflowModule
-                          }
-                        />
+                        showDetailedAnalyticalSections ? (
+                          <PortfolioChangesSection
+                            workspace={workspace}
+                            context={context}
+                            capabilities={capabilities!}
+                            showChanges={showChanges}
+                            incomeDisplayCurrency={incomeDisplayCurrency}
+                            activityDisplayCurrency={activityDisplayCurrency}
+                            transactionDrilldown={transactionDrilldown}
+                            isDetailedView={isDetailedView}
+                            onSelectActivityBucket={(bucket) => {
+                              if (!bucket) {
+                                clearTransactionDrilldown();
+                                return;
+                              }
+                              openTransactionDrilldown({
+                                kind: "activity",
+                                bucket,
+                                label: buildActivityDrilldownLabel(bucket),
+                              });
+                            }}
+                            getSectionExpanded={getSectionExpanded}
+                            toggleSection={toggleSection}
+                          />
+                        ) : null
                       }
                     />
                   </>
@@ -654,6 +471,8 @@ export default function PortfolioWorkspaceView({
         side={
           workspace ? (
             <>
+              <PortfolioEvidenceModule workspace={workspace} context={context} />
+
               <PortfolioContextModule
                 workspace={workspace}
                 context={context}
@@ -690,171 +509,10 @@ export default function PortfolioWorkspaceView({
       <PortfolioDetailDrawerController
         detailDrawer={detailDrawer}
         onClose={() => {
-          holdingDrawerRequestIdRef.current += 1;
           setDetailDrawer(null);
         }}
       />
     </>
-  );
-}
-
-function PortfolioSummaryHeaderSection({
-  workspace,
-  context,
-  orderedWorkflowCues,
-  primaryWorkflowCueKey,
-  readinessIndicators,
-  onOpenMetricDrawer,
-}: {
-  workspace: PortfolioWorkspace;
-  context: PortfolioWorkspaceContext;
-  orderedWorkflowCues: Array<{ key: string; label: string; href: string }>;
-  primaryWorkflowCueKey: string | null;
-  readinessIndicators: ReturnType<typeof buildPortfolioReadinessIndicators>;
-  onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
-}) {
-  return (
-    <section
-      id="portfolio-summary"
-      className="portfolio-workspace-section portfolio-summary-cluster-section portfolio-summary-cluster-hero"
-    >
-      <Panel className="portfolio-hero portfolio-book-hero">
-        <div className="portfolio-hero-header">
-          <div className="portfolio-hero-content">
-            <Text variant="label" className="portfolio-hero-label">
-              Portfolio
-            </Text>
-            <h2>{workspace.portfolio.display_name}</h2>
-            <div className="portfolio-hero-meta">
-              <span>{workspace.portfolio.base_currency}</span>
-              {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
-              {workspace.portfolio.booking_center_code ? (
-                <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
-              ) : null}
-              {workspace.profile.status ? (
-                <SemanticBadge className="portfolio-hero-status">
-                  {formatStatus(workspace.profile.status)}
-                </SemanticBadge>
-              ) : null}
-            </div>
-          </div>
-          <div className="portfolio-hero-actions portfolio-hero-toolbar">
-            {orderedWorkflowCues.map((cue) => (
-              <ActionLink
-                key={cue.key}
-                href={cue.href}
-                className={
-                  cue.key === primaryWorkflowCueKey
-                    ? "portfolio-action-link portfolio-action-link-primary"
-                    : "portfolio-action-link portfolio-action-link-secondary"
-                }
-              >
-                {cue.label}
-              </ActionLink>
-            ))}
-          </div>
-        </div>
-
-        <PortfolioHealthStrip
-          tiles={[
-            {
-              key: "aum",
-              label: "AUM",
-              value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
-              definition:
-                "Total portfolio market value in the portfolio base currency as of the selected date.",
-              support: `As of ${formatDate(context.selectedAsOfDate)}`,
-              onClick: () => onOpenMetricDrawer("aum"),
-            },
-            {
-              key: "invested_assets",
-              label: "Invested Assets",
-              value: formatCurrency(
-                workspace.summary.invested_market_value_base,
-                workspace.portfolio.base_currency
-              ),
-              definition:
-                "Market value currently invested in funded holdings, excluding operational cash inventory.",
-              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
-              onClick: () => onOpenMetricDrawer("invested_assets"),
-            },
-            {
-              key: "available_cash",
-              label: "Cash",
-              value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
-              definition:
-                "Available cash inventory in the portfolio base currency across published cash balances.",
-              support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,
-              onClick: () => onOpenMetricDrawer("available_cash"),
-            },
-            {
-              key: "cash_accounts",
-              label: "Cash Accounts",
-              value: workspace.summary.cash_balance_count ?? 0,
-              definition: "Number of published cash balance accounts in the current portfolio book.",
-              support: formatCount(workspace.summary.cash_balance_count ?? 0, "cash account"),
-            },
-          ]}
-        />
-        <Text variant="metadata" className="portfolio-hero-support">
-          {getBookReadinessSupport(workspace)}
-        </Text>
-        <Text variant="metadata" className="portfolio-hero-support">
-          {getRequestedWindowActivityCount(workspace)} booked events
-        </Text>
-      </Panel>
-
-      <PortfolioInsightsStrip
-        insights={[]}
-        readinessIndicators={readinessIndicators}
-        onDismissInsight={() => undefined}
-      />
-    </section>
-  );
-}
-
-function PortfolioExceptionsSection({ workspace }: { workspace: PortfolioWorkspace }) {
-  return (
-    <section
-      id="portfolio-attention"
-      className="portfolio-workspace-section portfolio-summary-cluster-section"
-    >
-      <SectionHeader
-        title={workspace.partial_failures.length ? "Critical Exceptions and Blockers" : "Exceptions"}
-        subtitle={
-          workspace.partial_failures.length
-            ? "Unresolved issues affecting reporting, valuation, or operations."
-            : "Current reporting and operational exception status."
-        }
-      />
-      {workspace.partial_failures.length ? (
-        <AnalyticsModule
-          title="Data Coverage"
-          subtitle="Source exceptions affecting operational completeness."
-        >
-          <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
-          <div className="portfolio-guidance-list">
-            {workspace.partial_failures.map((failure) => (
-              <div
-                key={`${failure.source_service}-${failure.error_code}`}
-                className="portfolio-guidance-item"
-              >
-                <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
-                <span className="portfolio-evidence-meta">{failure.error_code}</span>
-                <p className="portfolio-evidence-copy">{failure.detail}</p>
-              </div>
-            ))}
-          </div>
-        </AnalyticsModule>
-      ) : (
-        <Panel>
-          <div className="portfolio-empty-state">
-            <strong>No active exceptions</strong>
-            <p className="muted">Reporting and operational checks are currently clear.</p>
-          </div>
-        </Panel>
-      )}
-    </section>
   );
 }
 

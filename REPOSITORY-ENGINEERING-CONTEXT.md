@@ -48,64 +48,47 @@ Current repository posture:
    honors route-level report date and backend benchmark controls for proof while still avoiding
    direct `lotus-report` calls, and it now retrieves archived report metadata/downloads through
    Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
-7. `/workbench/{portfolioId}` renders the RFC-0038 DPM mandate command-center cockpit from
-   Gateway `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and
-   `/mandates*`. Workbench shows manage-owned book health distribution, source readiness,
-   attention queue, recommended actions, latest monitoring-run lineage, active exceptions,
-   governed exception-summary workflow-pack posture, and mandate health dimensions without
-   calculating mandate health, reconstructing source readiness, merging exceptions, generating
-   exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai` directly. The
-   command-center run-monitoring
-   action sends the governed PM/book/as-of context through Gateway and lets Manage resolve
-   source-owned PM-book membership from lotus-core rather than sending a browser-selected mandate
-   fallback. Workbench maps manage command-center supportability states into explicit panel
-   posture: populated canonical `READY` remains demo-ready, `PARTIAL` plus source-readiness
-   `DEGRADED` or `BLOCKED` are visible partial states, and `EMPTY` remains an explicit empty state instead of
-   being treated as a successful populated cockpit.
-8. `/workbench/{portfolioId}` renders the RFC-0042 DPM outcome-review panel from Gateway
-   `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
-   dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
-   Gateway-backed governed AI narrative requests without client-side outcome calculation or direct
-   `lotus-manage`/`lotus-ai` calls,
-9. `/workbench/{portfolioId}` renders the RFC-0040 proof-pack evidence panel from Gateway
-   `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
-   section posture, content hash, source hashes, Markdown availability, report-input readiness,
-   AI-evidence readiness, and governed PM memo workflow-pack posture after Gateway generates or
-   returns an RFC-0040 proof pack for a manage rebalance run surfaced by the Gateway Workbench
-   rebalance snapshot. Workbench does not
-   treat RFC-0042 outcome-review `dpp_*` proof ids or expected-snapshot run ids as RFC-0040
-   proof-pack ids or proof-pack generation sources, and it avoids client-side proof-pack construction,
-   hash generation, Markdown synthesis, report-input synthesis, AI-evidence synthesis, PM memo
-   prompt construction, or direct calls to `lotus-manage`, `lotus-report`, or `lotus-ai`,
-   while preserving reviewable Manage business states such as `PENDING_REVIEW` when sections,
-   hashes/lineage, and handoff posture are present,
-10. `/workbench/{portfolioId}` renders the RFC-0039 DPM construction alternatives lab from Gateway
-   `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
-   manage/core source selector through Gateway, preserves manage-owned alternatives,
-   supportability, objective/constraint traces, and selected-alternative state, and must not build
-   stateless source bundles, optimizer logic, prices, or selection truth in the browser,
-11. `/workbench/{portfolioId}` renders the RFC40-WTBD-010 portfolio-memory panel through Gateway
-   `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`. Workbench preserves
-   manage-owned timeline order, event type counts, source systems, source refs, artifact refs,
-   reason codes, supportability state, and content hash without reconstructing timeline nodes from
-   proof-pack, wave, outcome-review, report, archive, or AI payloads and without direct
-   `lotus-manage` calls.
-12. `/workbench/{portfolioId}` renders the RFC-0041 DPM rebalance-wave command-center panel
-   through Gateway `/api/v1/dpm/command-center/waves*`. Workbench lists explicit portfolio-list
-   waves, previews and creates canonical portfolio waves, opens wave detail and item posture, and
-   sends source-check, simulation, approval, staging, handoff, report-input, governed AI PM memo,
-   and governed operations-handoff summary requests through Gateway only. It preserves manage-owned wave state, item state,
-   source-readiness state, supportability, aggregate metrics, report-input refs, proof-pack refs,
-   handoff refs, blocked actions, lotus-ai workflow-pack run posture, and
-   `external_execution_claimed` posture without calling `lotus-manage` or `lotus-ai` directly,
-   calculating readiness, constructing report input, constructing AI prompts, generating memo or
-   handoff-summary narrative locally, claiming external execution, or inferring PM-book discovery.
-13. `/workbench/{portfolioId}` also renders Gateway-provided rebalance action-register
-   supportability and portfolio-level DPM operations posture from the portfolio overview
-   `rebalance_snapshot`, including source state, freshness, run count, operation count, workflow
-   decision count, last-run identity, bounded recent runs, workflow posture, run issue count, and
-   reason posture. Missing Gateway supportability is shown as unknown/N/A rather than as verified
-   zero activity.
+7. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
+   Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
+   Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
+   reviews, and proof. The route file remains orchestration-only; Manage workspace composition,
+   mode navigation, and data fan-out live under `src/features/workbench/manage-workspace.tsx`.
+8. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
+   Mandate Health surface from the RFC-0038 DPM command-center contracts exposed through Gateway
+   `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`.
+   Workbench shows manage-owned source readiness, recommended actions, latest monitoring-run
+   lineage, active exceptions, governed exception-summary workflow-pack posture, and mandate health
+   dimensions without calculating mandate health, reconstructing source readiness, merging
+   exceptions, generating exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai`
+   directly.
+9. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
+   Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
+   state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
+   blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
+   list posture, and `external_execution_claimed` posture. Workbench must not discover campaigns,
+   calculate campaign membership, render campaign content hashes, or operate campaign-definition
+   upsert locally.
+10. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
+    `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
+    manage/core source selector through Gateway, preserves manage-owned alternatives,
+    supportability, objective/constraint traces, and selected-alternative state, and must not build
+    stateless source bundles, optimizer logic, prices, or selection truth in the browser.
+11. Manage `mode=memory` renders the RFC40-WTBD-010 portfolio-memory panel through Gateway
+    `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`, preserving manage-owned
+    timeline order, event type counts, source systems, source refs, artifact refs, reason codes,
+    supportability state, and content hash without reconstructing timeline nodes locally.
+12. Manage `mode=reviews` renders the RFC-0042 DPM outcome-review panel from Gateway
+    `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
+    dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
+    Gateway-backed governed AI narrative requests without client-side outcome calculation.
+13. Manage `mode=proof` renders the RFC-0040 proof-pack evidence panel from Gateway
+    `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
+    section posture, content hash, source hashes, Markdown availability, report-input readiness,
+    AI-evidence readiness, and governed PM memo workflow-pack posture without client-side
+    proof-pack construction, hash generation, Markdown synthesis, report-input synthesis, or
+    prompt construction. Manage surfaces also preserve Gateway-provided action-register
+    supportability from the portfolio overview `rebalance_snapshot`; missing supportability is
+    shown as unknown/N/A rather than as verified zero activity.
 14. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
@@ -226,8 +209,8 @@ Important validation expectations:
 14. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
     labels must remain bounded to route, panel, operation, freshness, supportability, status class,
     and error category; wave ids, wave item ids, portfolio ids, proof-pack ids, handoff refs,
-    report-input refs, workflow-pack run ids, request bodies, response bodies, and screen content
-    must never be emitted as metric labels.
+    campaign ids, report-input refs, workflow-pack run ids, request bodies, response bodies, and
+    screen content must never be emitted as metric labels.
 15. DPM portfolio-memory reads are Workbench gateway-only operations. Observability labels must
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,

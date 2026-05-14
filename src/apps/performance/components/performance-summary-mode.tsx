@@ -67,6 +67,8 @@ export default function PerformanceSummaryMode({
             detailBasis={detailBasis}
             benchmark={workspace.benchmark_code ?? benchmark}
             chartFrequency={chartFrequency}
+            reportStartDate={workspace.report_start_date}
+            reportEndDate={workspace.report_end_date}
             benchmarkOptions={workspace.benchmark_options ?? []}
             onRequestChange={onRequestChange}
           />

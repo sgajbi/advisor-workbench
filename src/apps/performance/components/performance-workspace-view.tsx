@@ -4,10 +4,19 @@ import {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
+import {
+  isPartialCapability,
+  isSupportedCapability,
+  type WorkspaceCapability,
+} from "@/shell/workspace-capabilities";
 
-import { getPerformanceWorkspaceCapabilities } from "../capabilities";
+import {
+  getPerformanceWorkspaceCapabilities,
+  type PerformanceWorkspaceCapabilities,
+} from "../capabilities";
 import {
   getPerformanceWorkspaceModeDefinition,
+  type PerformanceWorkspaceMode,
 } from "../performance-workspace-modes";
 import {
   getPerformanceWorkspacePresentation,
@@ -18,8 +27,10 @@ import PerformanceAnalyticalUnavailableState from "./performance-analytical-unav
 import PerformanceEvidenceMode from "./performance-evidence-mode";
 import PerformanceRiskMode from "./performance-risk-mode";
 import PerformanceSummaryMode from "./performance-summary-mode";
-import PerformanceWorkspaceRail from "./performance-workspace-rail";
 import PerformanceWorkspaceSidePanel from "./performance-workspace-side-panel";
+import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
+import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
+import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import type {
   PerformanceWorkspaceControls,
   PerformanceWorkspaceViewProps,
@@ -49,6 +60,8 @@ export default function PerformanceWorkspaceView({
   const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
   const workspaceTitle = modeDefinition.workspaceTitle;
   const unavailableCopy = getWorkspaceUnavailableCopy(loadIssue, workspaceTitle, modeDefinition.label);
+  const railPortfolioId = workspace?.portfolio.portfolio_id ?? "Portfolio pending";
+  const activeWorkbenchScreen = getActiveWorkbenchScreen(mode);
   const selectedBenchmarkCode = workspace?.benchmark_code ?? benchmark ?? undefined;
   const selectedBenchmarkLabel = workspace
     ? getBenchmarkLabel(workspace, selectedBenchmarkCode)
@@ -58,6 +71,12 @@ export default function PerformanceWorkspaceView({
   const controlNormalizationNotice = workspace
     ? getPerformanceControlNormalizationNotice(workspace)
     : null;
+  const performanceRailModeItems = buildPerformanceRailModeItems({
+    mode,
+    capabilities,
+    isDetailsPending,
+    onModeChange,
+  });
   const controls: PerformanceWorkspaceControls = {
     period,
     detailBasis,
@@ -115,21 +134,17 @@ export default function PerformanceWorkspaceView({
 
   return (
     <MainWithSideRailLayout
-      className="performance-layout"
-      railClassName="performance-rail-shell"
+      className="performance-layout portfolio-page"
+      railClassName="portfolio-screen-rail-shell performance-rail-shell"
       mainClassName="performance-main"
       sideClassName="performance-side performance-side-wide"
       sideDensity="comfortable"
       rail={
-        <PerformanceWorkspaceRail
-          workspace={workspace}
-          mode={mode}
-          period={period}
-          isDetailsPending={isDetailsPending}
-          capabilities={capabilities}
-          selectedBenchmarkLabel={selectedBenchmarkLabel}
-          onModeChange={onModeChange}
-          onRequestChange={onRequestChange}
+        <PortfolioScreenRail
+          portfolioId={railPortfolioId}
+          activeScreen={activeWorkbenchScreen}
+          modeItems={performanceRailModeItems}
+          modeNavigationLabel="Performance surface navigation"
         />
       }
       main={
@@ -198,6 +213,94 @@ export default function PerformanceWorkspaceView({
       }
     />
   );
+}
+
+const PERFORMANCE_SURFACE_ITEMS: Array<{
+  mode: PerformanceWorkspaceMode;
+  label: string;
+  detail: string;
+  capabilityKey?: keyof PerformanceWorkspaceCapabilities;
+}> = [
+  { mode: "summary", label: "Performance Overview", detail: "Return path summary" },
+  {
+    mode: "analysis",
+    label: "Performance Analysis",
+    detail: "Attribution and diagnostics",
+    capabilityKey: "attributionDetail",
+  },
+  { mode: "advisor", label: "Advisor Brief", detail: "Client-ready narrative" },
+  {
+    mode: "risk",
+    label: "Risk Review",
+    detail: "Drawdown and concentration",
+    capabilityKey: "returnPath",
+  },
+  { mode: "evidence", label: "Evidence", detail: "Lineage and calculations", capabilityKey: "evidence" },
+];
+
+function buildPerformanceRailModeItems({
+  mode,
+  capabilities,
+  isDetailsPending,
+  onModeChange,
+}: {
+  mode: PerformanceWorkspaceViewProps["mode"];
+  capabilities: PerformanceWorkspaceCapabilities | null;
+  isDetailsPending: boolean;
+  onModeChange: PerformanceWorkspaceViewProps["onModeChange"];
+}): PortfolioScreenRailModeItem[] {
+  return PERFORMANCE_SURFACE_ITEMS.map((item) => {
+    const capability = item.capabilityKey ? capabilities?.[item.capabilityKey] : null;
+    const isPendingAnalysisAvailability =
+      item.mode === "analysis" && isDetailsPending && capability?.state === "unavailable";
+    const disabled =
+      capability && !isPendingAnalysisAvailability ? !isInteractiveCapability(capability) : false;
+
+    return {
+      key: item.mode,
+      label: item.label,
+      detail: item.detail,
+      active: mode === item.mode,
+      disabled,
+      status: isPendingAnalysisAvailability
+        ? "Loading"
+        : capability
+          ? getCapabilityLabel(capability)
+          : undefined,
+      title: isPendingAnalysisAvailability
+        ? "Analysis availability is loading."
+        : disabled
+          ? capability?.reason
+          : getPerformanceWorkspaceModeDefinition(item.mode).intro?.description,
+      onSelect: () => onModeChange(item.mode),
+    };
+  });
+}
+
+function isInteractiveCapability(capability: WorkspaceCapability) {
+  return isSupportedCapability(capability) || isPartialCapability(capability);
+}
+
+function getCapabilityLabel(capability: WorkspaceCapability) {
+  if (capability.state === "supported") {
+    return "Ready";
+  }
+  if (capability.state === "partial") {
+    return "Partial";
+  }
+  return "Unavailable";
+}
+
+function getActiveWorkbenchScreen(
+  mode: PerformanceWorkspaceViewProps["mode"]
+): PortfolioScreenNavigationKey {
+  if (mode === "risk") {
+    return "risk";
+  }
+  if (mode === "advisor") {
+    return "advisory";
+  }
+  return "performance";
 }
 
 function getWorkspaceUnavailableCopy(

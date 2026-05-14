@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST RENDERING, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -457,22 +457,29 @@ Workbench must consume these Gateway wave routes when implemented:
 | `GET /api/v1/dpm/command-center/waves/{wave_id}/report-input` | report-input evidence drawer |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo` | governed AI PM memo request |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
 
-Implementation note as of 2026-05-08: the first RFC-0041 rebalance-wave command-center
+Implementation note as of 2026-05-14: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
 `/api/v1/dpm/command-center/waves*`. Workbench loads the explicit portfolio-list wave queue,
 previews and creates canonical portfolio waves, opens wave detail and item posture, and calls
 source-check, simulation, approval, staging, handoff, proof-posture, supportability, report-input,
 governed AI PM memo, and governed operations-handoff summary requests through the Workbench
-BFF/Gateway boundary. The panel renders
+BFF/Gateway boundary. It also loads active Manage-owned `BulkReviewCampaignDefinition:v1`
+campaign definitions through Gateway
+`GET /api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
+status, as-of date, candidate count, eligible portfolio type, governance posture, and source-backed
+posture without rendering campaign content hashes or recalculating membership. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
 `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls,
 client-side readiness calculation, report-input construction, prompt construction, local memo
-narrative generation, or local operations handoff-summary generation. Item-selection drawers, richer supportability drawers, dedicated
-`/dpm/waves` routes, PM-book discovery, CIO approval workflow, and external OMS execution remain
-future scope until Gateway/Manage and Workbench proof promote them.
+narrative generation, local operations handoff-summary generation, campaign discovery, or
+membership calculation. Item-selection drawers, richer supportability drawers, dedicated
+`/dpm/waves` routes, PM-book discovery, global campaign discovery, campaign-definition upsert UX,
+CIO approval workflow, and external OMS execution remain future scope until Gateway/Manage and
+Workbench proof promote them.
 
 Supported-feature promotion is forbidden until the Workbench BFF and browser implementation is
 complete, canonical `PB_SG_GLOBAL_BAL_001` live validation passes, visual and accessibility
