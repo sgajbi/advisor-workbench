@@ -96,9 +96,31 @@ const fairnessPreview: DpmPmOperatingQualityGatewayResponse = {
   },
   data: {
     fairness_analysis: {
+      product_name: "PmOperatingQualityFairnessAnalysis",
+      product_version: "v1",
       fairness_analysis_id: "pmq_fair_001",
       state: "PENDING_REVIEW",
+      as_of_date: "2026-05-13",
+      minimum_segment_score_run_count: 2,
+      maximum_average_score_spread: "15.00",
       observed_average_score_spread: "31.00",
+      generated_at: "2026-05-13T09:40:00Z",
+      generated_by: "lotus-manage",
+      forbidden_uses: [
+        "protected_class_inference",
+        "compensation_decision",
+        "hr_decision",
+        "conduct_enforcement",
+        "autonomous_pm_ranking",
+      ],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityScoreRun",
+          source_id: "pmq_run_001",
+        },
+      ],
+      reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
       segment_results: [
         {
           segment_id: "mandate_balanced",
@@ -107,6 +129,15 @@ const fairnessPreview: DpmPmOperatingQualityGatewayResponse = {
           state: "READY",
           score_run_count: 2,
           average_score: "90.00",
+          minimum_score: "89.00",
+          maximum_score: "91.00",
+          score_run_refs: [
+            {
+              source_system: "lotus-manage",
+              source_product: "PmOperatingQualityScoreRun",
+              source_id: "pmq_run_001",
+            },
+          ],
           source_refs: [
             {
               source_system: "lotus-manage",
@@ -164,6 +195,18 @@ describe("PM operating quality view model", () => {
     expect(model.fairnessAnalysisId).toBe("pmq_fair_001");
     expect(model.fairnessState).toBe("PENDING_REVIEW");
     expect(model.fairnessSpread).toBe("31.00");
+    expect(model.fairnessDetail).toEqual(
+      expect.objectContaining({
+        product: "PmOperatingQualityFairnessAnalysis / v1",
+        asOfDate: "2026-05-13",
+        minimumSegmentScoreRunCount: "2",
+        maximumAverageScoreSpread: "15.00",
+        observedAverageScoreSpread: "31.00",
+        generatedBy: "lotus-manage",
+        sourceRefs: "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001",
+      })
+    );
+    expect(model.fairnessDetail.forbiddenUses).toContain("protected class inference");
     expect(model.blockedActions).toEqual(["CREATE_SCORE_RUN"]);
     expect(model.fairnessSegmentRows.map((row) => row.segment)).toEqual([
       "Balanced DPM Mandates",
@@ -172,6 +215,11 @@ describe("PM operating quality view model", () => {
     expect(model.fairnessSegmentRows[0].sourceRefs).toBe(
       "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001"
     );
+    expect(model.fairnessSegmentRows[0].scoreRunRefs).toBe(
+      "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001"
+    );
+    expect(model.fairnessSegmentRows[0].minimumScore).toBe("89.00");
+    expect(model.fairnessSegmentRows[0].maximumScore).toBe("91.00");
     expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
   });
 });

@@ -1200,6 +1200,71 @@
   margin-top: 14px;
 }
 
+.manageScope :global(.pm-quality-fairness-detail) {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.pm-quality-detail-grid) {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-bottom: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.pm-quality-detail-grid .suite-row) {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 82px;
+  padding: 12px 14px;
+  border-top: 0;
+  border-right: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.pm-quality-detail-grid .suite-row:last-child) {
+  border-right: 0;
+}
+
+.manageScope :global(.pm-quality-detail-stack) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.manageScope :global(.pm-quality-detail-stack .suite-row) {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 86px;
+  padding: 12px 14px;
+  border-top: 0;
+  border-right: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.pm-quality-detail-stack .suite-row:last-child) {
+  border-right: 0;
+}
+
+.manageScope :global(.pm-quality-detail-grid .suite-row span),
+.manageScope :global(.pm-quality-detail-stack .suite-row span) {
+  color: #45464d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.pm-quality-detail-grid .suite-row strong),
+.manageScope :global(.pm-quality-detail-stack .suite-row strong) {
+  color: #131b2e;
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
 .manageScope :global(.portfolio-memory-panel > .section-block-header h2) {
   font-size: 20px;
   line-height: 26px;
@@ -3232,6 +3297,8 @@
   .manageScope :global(.pm-quality-status-strip),
   .manageScope :global(.pm-quality-workspace),
   .manageScope :global(.pm-quality-evidence-grid),
+  .manageScope :global(.pm-quality-detail-grid),
+  .manageScope :global(.pm-quality-detail-stack),
   .manageScope :global(.construction-alternatives-summary),
   .manageScope :global(.construction-alternatives-grid),
   .manageScope :global(.construction-alternatives-detail-grid) {
