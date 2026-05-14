@@ -74,6 +74,14 @@ export type PmOperatingQualityFairnessDetail = {
   reasonCodes: string;
 };
 
+export type PmOperatingQualityOperationEvidence = {
+  operation: string;
+  correlationId: string;
+  contractVersion: string;
+  sourceService: string;
+  upstreamStatus: string;
+};
+
 export type PmOperatingQualityPanelModel = {
   state: PmOperatingQualityPanelState;
   supportabilityState: string;
@@ -96,6 +104,7 @@ export type PmOperatingQualityPanelModel = {
   fairnessState: string;
   fairnessSpread: string;
   fairnessDetail: PmOperatingQualityFairnessDetail;
+  operationEvidence: PmOperatingQualityOperationEvidence;
   scoreRunPreviewReadinessState: string;
   scoreRunPreviewReadiness: string;
   fairnessPreviewReadinessState: string;
@@ -173,10 +182,43 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessState: normalizeState(readString(fairnessAnalysis, "state")),
     fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
     fairnessDetail: buildFairnessDetail(fairnessAnalysis),
+    operationEvidence: buildOperationEvidence({
+      policies: params.policies,
+      scoreRuns: params.scoreRuns,
+      preview: params.preview,
+      fairnessPreview: params.fairnessPreview,
+    }),
     scoreRunPreviewReadinessState: scoreRunPreviewReadiness.state,
     scoreRunPreviewReadiness: scoreRunPreviewReadiness.detail,
     fairnessPreviewReadinessState: fairnessPreviewReadiness.state,
     fairnessPreviewReadiness: fairnessPreviewReadiness.detail,
+  };
+}
+
+function buildOperationEvidence(params: {
+  policies: DpmPmOperatingQualityGatewayResponse | null;
+  scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
+  preview?: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
+}): PmOperatingQualityOperationEvidence {
+  const operation =
+    params.fairnessPreview
+      ? "Fairness analysis preview"
+      : params.preview
+        ? "Score-run preview"
+        : params.scoreRuns
+          ? "Score-run evidence load"
+          : params.policies
+            ? "Policy evidence load"
+            : "No Gateway operation";
+  const response = params.fairnessPreview ?? params.preview ?? params.scoreRuns ?? params.policies;
+  return {
+    operation,
+    correlationId: response?.correlation_id ?? "N/A",
+    contractVersion: response?.contract_version ?? "N/A",
+    sourceService: response?.source_service ?? "N/A",
+    upstreamStatus:
+      typeof response?.upstream_status === "number" ? String(response.upstream_status) : "N/A",
   };
 }
 

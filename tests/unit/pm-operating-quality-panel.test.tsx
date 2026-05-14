@@ -107,6 +107,11 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("heading", { name: "PM Operating Quality" })).toBeInTheDocument();
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality Gateway operation evidence")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Score-run evidence load")).toBeInTheDocument();
+    expect(screen.getByText("corr-score")).toBeInTheDocument();
     expect(screen.getByText("Ready for policy pmq_sg_dpm / 2026.05")).toBeInTheDocument();
     expect(screen.getByText("Ready: 2 source-defined segments from Manage")).toBeInTheDocument();
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
@@ -177,6 +182,7 @@ describe("PmOperatingQualityPanel", () => {
   it("previews fairness analysis through Gateway with source-defined segments only", async () => {
     vi.mocked(previewDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue({
       ...scoreRuns,
+      correlation_id: "corr-pmq-fairness",
       supportability: {
         ...scoreRuns.supportability,
         state: "PENDING_REVIEW",
@@ -268,6 +274,8 @@ describe("PmOperatingQualityPanel", () => {
     });
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
     expect(screen.getByText("Fairness preview returned Manage segment evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Fairness analysis preview")).toBeInTheDocument();
+    expect(screen.getByText("corr-pmq-fairness")).toBeInTheDocument();
     expect(screen.getByText("Fairness Preview Detail")).toBeInTheDocument();
     expect(screen.getByText("PmOperatingQualityFairnessAnalysis / v1")).toBeInTheDocument();
     expect(screen.getByText("15.00")).toBeInTheDocument();
