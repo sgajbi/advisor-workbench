@@ -126,9 +126,25 @@ describe("PmOperatingQualityPanel", () => {
       },
       data: {
         fairness_analysis: {
+          product_name: "PmOperatingQualityFairnessAnalysis",
+          product_version: "v1",
           fairness_analysis_id: "pmq_fair_001",
           state: "PENDING_REVIEW",
+          as_of_date: "2026-05-13",
+          minimum_segment_score_run_count: 2,
+          maximum_average_score_spread: "15.00",
           observed_average_score_spread: "31.00",
+          generated_at: "2026-05-13T09:40:00Z",
+          generated_by: "lotus-manage",
+          forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+          source_refs: [
+            {
+              source_system: "lotus-manage",
+              source_product: "PmOperatingQualityScoreRun",
+              source_id: "pmq_run_001",
+            },
+          ],
+          reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
           segment_results: [
             {
               segment_id: "mandate_balanced",
@@ -137,6 +153,22 @@ describe("PmOperatingQualityPanel", () => {
               state: "READY",
               score_run_count: 1,
               average_score: "90.00",
+              minimum_score: "90.00",
+              maximum_score: "90.00",
+              score_run_refs: [
+                {
+                  source_system: "lotus-manage",
+                  source_product: "PmOperatingQualityScoreRun",
+                  source_id: "pmq_run_001",
+                },
+              ],
+              source_refs: [
+                {
+                  source_system: "lotus-core",
+                  source_type: "MandateTypeSegment",
+                  source_id: "balanced",
+                },
+              ],
               reason_codes: ["PM_QUALITY_SEGMENT_READY"],
             },
           ],
@@ -177,6 +209,11 @@ describe("PmOperatingQualityPanel", () => {
     });
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
     expect(screen.getByText("Fairness preview returned Manage segment evidence.")).toBeInTheDocument();
-    expect(screen.getByText("31.00")).toBeInTheDocument();
+    expect(screen.getByText("Fairness Preview Detail")).toBeInTheDocument();
+    expect(screen.getByText("PmOperatingQualityFairnessAnalysis / v1")).toBeInTheDocument();
+    expect(screen.getByText("15.00")).toBeInTheDocument();
+    expect(screen.getAllByText("31.00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("lotus-manage:PmOperatingQualityScoreRun:pmq_run_001").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/protected class inference/i).length).toBeGreaterThan(0);
   });
 });

@@ -54,7 +54,23 @@ export type PmOperatingQualityFairnessSegmentRow = {
   state: string;
   scoreRunCount: string;
   averageScore: string;
+  minimumScore: string;
+  maximumScore: string;
+  scoreRunRefs: string;
   sourceRefs: string;
+  reasonCodes: string;
+};
+
+export type PmOperatingQualityFairnessDetail = {
+  product: string;
+  asOfDate: string;
+  minimumSegmentScoreRunCount: string;
+  maximumAverageScoreSpread: string;
+  observedAverageScoreSpread: string;
+  generatedAt: string;
+  generatedBy: string;
+  sourceRefs: string;
+  forbiddenUses: string;
   reasonCodes: string;
 };
 
@@ -79,6 +95,7 @@ export type PmOperatingQualityPanelModel = {
   forbiddenUsePosture: string;
   fairnessState: string;
   fairnessSpread: string;
+  fairnessDetail: PmOperatingQualityFairnessDetail;
 };
 
 export function buildPmOperatingQualityPanelModel(params: {
@@ -138,6 +155,7 @@ export function buildPmOperatingQualityPanelModel(params: {
     forbiddenUsePosture: summarizeForbiddenUses(scoreRunRows),
     fairnessState: normalizeState(readString(fairnessAnalysis, "state")),
     fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
+    fairnessDetail: buildFairnessDetail(fairnessAnalysis),
   };
 }
 
@@ -272,10 +290,38 @@ function buildFairnessSegmentRows(
       state: readString(record, "state") || "UNKNOWN",
       scoreRunCount: readString(record, "score_run_count") || "0",
       averageScore: readString(record, "average_score") || "N/A",
+      minimumScore: readString(record, "minimum_score") || "N/A",
+      maximumScore: readString(record, "maximum_score") || "N/A",
+      scoreRunRefs: summarizeSourceRefs(extractRecords(record.score_run_refs)),
       sourceRefs: summarizeSourceRefs(extractRecords(record.source_refs)),
       reasonCodes: formatList(record.reason_codes),
     };
   });
+}
+
+function buildFairnessDetail(
+  fairnessAnalysis: Record<string, unknown>
+): PmOperatingQualityFairnessDetail {
+  return {
+    product: [
+      readString(fairnessAnalysis, "product_name"),
+      readString(fairnessAnalysis, "product_version"),
+    ]
+      .filter(Boolean)
+      .join(" / ") || "N/A",
+    asOfDate: readString(fairnessAnalysis, "as_of_date") || "N/A",
+    minimumSegmentScoreRunCount:
+      readString(fairnessAnalysis, "minimum_segment_score_run_count") || "N/A",
+    maximumAverageScoreSpread:
+      readString(fairnessAnalysis, "maximum_average_score_spread") || "N/A",
+    observedAverageScoreSpread:
+      readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
+    generatedAt: readString(fairnessAnalysis, "generated_at") || "N/A",
+    generatedBy: readString(fairnessAnalysis, "generated_by") || "N/A",
+    sourceRefs: summarizeSourceRefs(extractRecords(fairnessAnalysis.source_refs)),
+    forbiddenUses: formatForbiddenUses(fairnessAnalysis.forbidden_uses),
+    reasonCodes: formatList(fairnessAnalysis.reason_codes),
+  };
 }
 
 function resolvePanelState(
@@ -310,7 +356,7 @@ function resolvePanelState(
 function summarizeForbiddenUses(rows: PmOperatingQualityScoreRunRow[]): string {
   const forbiddenUses = rows.flatMap((row) => splitList(row.forbiddenUses)).filter(uniqueString);
   return forbiddenUses.length > 0
-    ? forbiddenUses.map((value) => value.replaceAll("_", " ")).join(", ")
+    ? forbiddenUses.map(formatForbiddenUse).join(", ")
     : "No forbidden-use list returned";
 }
 
@@ -355,6 +401,15 @@ function formatBoolean(value: unknown): string {
 function formatList(value: unknown): string {
   const items = extractStringArray(value);
   return items.length > 0 ? items.join(", ") : "N/A";
+}
+
+function formatForbiddenUses(value: unknown): string {
+  const items = extractStringArray(value);
+  return items.length > 0 ? items.map(formatForbiddenUse).join(", ") : "N/A";
+}
+
+function formatForbiddenUse(value: string): string {
+  return value.replaceAll("_", " ");
 }
 
 function summarizeSourceRefs(refs: Array<Record<string, unknown>>): string {
