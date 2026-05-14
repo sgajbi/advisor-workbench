@@ -1779,6 +1779,46 @@
   margin-top: 10px;
 }
 
+.manageScope :global(.outcome-review-readiness-band) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.outcome-review-readiness-band div) {
+  display: grid;
+  gap: 6px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border-right: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.outcome-review-readiness-band div:last-child) {
+  border-right: 0;
+}
+
+.manageScope :global(.outcome-review-readiness-band span) {
+  color: #45464d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.outcome-review-readiness-band strong) {
+  color: #131b2e;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
 .manageScope :global(.outcome-review-workspace-grid) {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 0.95fr);
@@ -1836,7 +1876,8 @@
   padding: 14px;
 }
 
-.manageScope :global(.outcome-review-action-stack button) {
+.manageScope :global(.outcome-review-action-stack button),
+.manageScope :global(.outcome-review-action-stack a) {
   display: grid;
   gap: 6px;
   width: 100%;
@@ -1848,9 +1889,16 @@
   color: #191c1e;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
 }
 
-.manageScope :global(.outcome-review-action-stack button:hover) {
+.manageScope :global(.outcome-review-action-stack button:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.manageScope :global(.outcome-review-action-stack button:hover:not(:disabled)),
+.manageScope :global(.outcome-review-action-stack a:hover) {
   background: #f7f9fb;
   border-color: #725b26;
 }
@@ -1868,6 +1916,26 @@
 
 .manageScope :global(.outcome-review-detail-panel) {
   margin-top: 14px;
+}
+
+.manageScope :global(.outcome-review-detail-context) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e0e3e5;
+  background: #ffffff;
+}
+
+.manageScope :global(.outcome-review-detail-context span) {
+  padding: 4px 7px;
+  border: 1px solid #e0e3e5;
+  border-radius: 4px;
+  background: #f7f9fb;
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
 }
 
 .manageScope :global(.outcome-review-detail-grid) {
@@ -1948,6 +2016,7 @@
 
 @media (max-width: 1180px) {
   .manageScope :global(.outcome-review-status-strip),
+  .manageScope :global(.outcome-review-readiness-band),
   .manageScope :global(.outcome-review-workspace-grid),
   .manageScope :global(.outcome-review-detail-grid),
   .manageScope :global(.proof-pack-status-strip),
@@ -1958,12 +2027,14 @@
   }
 
   .manageScope :global(.outcome-review-status-strip .suite-row),
+  .manageScope :global(.outcome-review-readiness-band div),
   .manageScope :global(.proof-pack-status-strip .suite-row) {
     border-right: 0;
     border-bottom: 1px solid #e0e3e5;
   }
 
   .manageScope :global(.outcome-review-status-strip .suite-row:last-child),
+  .manageScope :global(.outcome-review-readiness-band div:last-child),
   .manageScope :global(.proof-pack-status-strip .suite-row:last-child) {
     border-bottom: 0;
   }

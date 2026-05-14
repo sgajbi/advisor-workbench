@@ -102,6 +102,9 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       ].filter((value) => value && value !== "N/A").length
     : 0;
   const evidencePackStatus = primaryReview?.proofPackId !== "N/A" ? "Available" : "Not available";
+  const sourceEvidenceStatus =
+    readyEvidenceCount >= 3 ? "Available" : readyEvidenceCount > 0 ? "Partial" : "Not available";
+  const evidencePackHref = `/workbench/${encodeURIComponent(portfolioId)}?mode=proof`;
 
   async function requestOutcomeReportJob() {
     if (!primaryReview || primaryReview.reportInputBlocked || reportJobPending) {
@@ -189,6 +192,25 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
 
       {primaryReview && hasItems ? (
         <>
+          <div className="outcome-review-readiness-band" aria-label="Selected outcome review readiness">
+            <div>
+              <span>Review Window</span>
+              <strong>{primaryReview.reviewWindow}</strong>
+            </div>
+            <div>
+              <span>Report Input</span>
+              <strong>{primaryReview.reportInputBlocked ? "Blocked" : "Ready"}</strong>
+            </div>
+            <div>
+              <span>AI Narrative</span>
+              <strong>{primaryReview.aiEvidenceBlocked ? "Blocked" : "Ready"}</strong>
+            </div>
+            <div>
+              <span>Source Evidence</span>
+              <strong>{sourceEvidenceStatus}</strong>
+            </div>
+          </div>
+
           <div className="outcome-review-workspace-grid">
             <div className="outcome-review-card outcome-review-timeline-card">
               <div className="outcome-review-card-header">
@@ -230,23 +252,30 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                 <h3>Recommended Actions</h3>
               </div>
               <div className="outcome-review-action-stack">
-                <button type="button">
+                <a href="#outcome-review-detail">
                   <strong>Review client impact</strong>
                   <span>Assess outcome dimensions against the mandate objective.</span>
-                </button>
-                <button type="button">
-                  <strong>Open evidence pack</strong>
-                  <span>{evidencePackStatus === "Available" ? "Review the available mandate evidence." : "Evidence pack has not been returned."}</span>
-                </button>
-                <button type="button">
-                  <strong>Record advisor note</strong>
-                  <span>Capture the business rationale before closing the review.</span>
+                </a>
+                {primaryReview.proofPackId !== "N/A" ? (
+                  <a href={evidencePackHref}>
+                    <strong>Open evidence pack</strong>
+                    <span>Review the mandate evidence linked to this outcome.</span>
+                  </a>
+                ) : (
+                  <button type="button" disabled>
+                    <strong>Open evidence pack</strong>
+                    <span>Evidence pack has not been returned by Gateway.</span>
+                  </button>
+                )}
+                <button type="button" onClick={requestOutcomeAiNarrative} disabled={!aiNarrativeAvailable || aiNarrativePending}>
+                  <strong>{aiNarrativePending ? "Requesting advisor memo" : "Request advisor memo"}</strong>
+                  <span>Ask the governed AI workflow for PM handoff commentary.</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="outcome-review-detail-panel">
+          <div className="outcome-review-detail-panel" id="outcome-review-detail">
             <div className="outcome-review-detail-header">
               <div>
                 <h3>Selected Review Detail</h3>
@@ -268,6 +297,11 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                   {aiNarrativePending ? "Requesting memo" : "Request advisor memo"}
                 </ActionButton>
               </div>
+            </div>
+            <div className="outcome-review-detail-context" aria-label="Selected review source posture">
+              <span>Updated {primaryReview.updatedAt}</span>
+              <span>Retention {primaryReview.retentionUntil}</span>
+              <span>{primaryReview.lineage.length} source refs</span>
             </div>
 
             <div className="outcome-review-detail-grid">
