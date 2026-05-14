@@ -25,7 +25,6 @@ import {
 import {
   businessStateLabel,
   formatBusinessReason,
-  formatBusinessSource,
 } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
@@ -37,14 +36,18 @@ function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
   if (
     normalized === "READY" ||
     normalized === "SUPPORTED" ||
-    normalized === "SELECTED"
+    normalized === "SELECTED" ||
+    normalized === "PASS" ||
+    normalized.includes("WITHIN")
   ) {
     return "success";
   }
   if (
     normalized === "DEGRADED" ||
     normalized === "PENDING_REVIEW" ||
-    normalized.includes("REVIEW")
+    normalized.includes("REVIEW") ||
+    normalized.includes("PENDING") ||
+    normalized.includes("ACCEPTABLE")
   ) {
     return "warn";
   }
@@ -118,9 +121,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
         portfolio,
       });
       setResponse(generated);
-      setActionMessage(
-        `Generated ${generated.data.alternative_set_id ?? "alternative set"}`,
-      );
+      setActionMessage("Construction alternatives generated.");
     } catch (error) {
       setActionError(
         error instanceof Error
@@ -144,13 +145,16 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     setSelectionPendingId(alternativeId);
     setActionError(null);
     setActionMessage(null);
+    const selectedLabel =
+      model.alternatives.find((alternative) => alternative.alternativeId === alternativeId)?.label ??
+      "construction path";
     try {
       const selected = await selectDpmConstructionAlternative({
         alternativeSetId: model.alternativeSetId,
         alternativeId,
       });
       setResponse(selected);
-      setActionMessage(`Selected ${alternativeId}`);
+      setActionMessage(`Selected ${selectedLabel}.`);
     } catch (error) {
       setActionError(
         error instanceof Error
@@ -165,14 +169,14 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   return (
     <SectionBlock
       title="Construction Alternatives"
-      subtitle="Compare mandate-fit alternatives before selecting a rebalance construction."
+      subtitle="Compare suitable implementation paths before advisor approval."
       className="construction-alternatives-panel"
       actions={
         <div className="construction-alternatives-badge-row">
           <SemanticBadge tone={badgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
-          <SemanticBadge>Decision evidence available</SemanticBadge>
+          <SemanticBadge tone="success">Evidence Available</SemanticBadge>
         </div>
       }
     >
@@ -190,16 +194,10 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
       ) : null}
 
       <div className="construction-alternatives-summary">
-        <MetricRow label="Alternative Set ID" value={model.alternativeSetId} />
-        <MetricRow label="Objective" value={model.objective} />
-        <MetricRow
-          label="State"
-          value={
-            <SemanticBadge tone={badgeTone(model.alternativeSetState)}>
-              {model.alternativeSetState}
-            </SemanticBadge>
-          }
-        />
+        <MetricRow label="Recommended Path" value={model.recommendedPathLabel} />
+        <MetricRow label="Mandate Fit" value={model.mandateFitLabel} />
+        <MetricRow label="Drift Improvement" value={model.driftImprovementLabel} />
+        <MetricRow label="Approval Readiness" value={model.approvalReadinessLabel} />
       </div>
 
       <div className="construction-alternatives-action-row" aria-label="Construction actions">
@@ -219,8 +217,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
             </Text>
           ) : null}
           <Text variant="secondary" className="muted">
-            LOTUS-GATEWAY forwards this request to manage and preserves the
-            returned construction truth.
+            Alternatives are generated from the supported mandate and portfolio data available for this account.
           </Text>
         </div>
       </div>
@@ -229,7 +226,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
         <div className="construction-alternatives-reason-row">
           {model.supportabilityReasons.map((reason) => (
             <SemanticBadge key={reason} tone="warn">
-              {reason}
+              {formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
         </div>
@@ -237,42 +234,49 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
 
       <div className="construction-alternatives-grid">
         <div className="construction-alternatives-primary">
-          <AnalyticsTable
-            ariaLabel="Ranked construction alternatives"
-            variant="analysis"
-            density="compact"
-            columns={[
-              { key: "id", label: "ID" },
-              { key: "turnover", label: "Turnover %", align: "right" },
-              { key: "cash", label: "Cash After %", align: "right" },
-              { key: "risk", label: "Risk Delta", align: "right" },
-              { key: "te", label: "TE Delta (bps)", align: "right" },
-              { key: "status", label: "Status" },
-            ]}
-            rows={model.alternatives.map((alternative) => {
-              const selected =
-                model.selectedAlternativeId === alternative.alternativeId;
-              const selectable =
-                !selected &&
-                model.state !== "blocked" &&
-                model.state !== "unsupported";
-              return {
-                key: alternative.alternativeId,
-                cells: [
-                  <span className="construction-alternative-id" key={`${alternative.alternativeId}-id`}>
-                    {alternative.alternativeId}
-                    {selected ? <SemanticBadge tone="success">Selected</SemanticBadge> : null}
-                  </span>,
-                  alternative.turnoverPct,
-                  alternative.cashAfterPct,
-                  alternative.riskDelta,
-                  alternative.trackingErrorDeltaBps,
-                  <span className="construction-alternative-status-cell" key={`${alternative.alternativeId}-status`}>
-                    <SemanticBadge tone={badgeTone(alternative.status)}>
-                      {alternative.status}
-                    </SemanticBadge>
+          <div className="construction-alternatives-card">
+            <div className="construction-alternatives-card-header">
+              <Text as="h3" variant="subsectionTitle">Alternatives Comparison</Text>
+              <span>{model.alternatives.length} paths</span>
+            </div>
+            <AnalyticsTable
+              ariaLabel="Alternatives comparison"
+              variant="analysis"
+              density="compact"
+              columns={[
+                { key: "alternative", label: "Alternative" },
+                { key: "objective", label: "Objective" },
+                { key: "turnover", label: "Turnover", align: "right" },
+                { key: "cash", label: "Cash After", align: "right" },
+                { key: "drift", label: "Drift Improvement", align: "right" },
+                { key: "fit", label: "Mandate Fit" },
+                { key: "action", label: "Action" },
+              ]}
+              rows={model.alternatives.map((alternative) => {
+                const selected =
+                  model.selectedAlternativeId === alternative.alternativeId;
+                const selectable =
+                  !selected &&
+                  model.state !== "blocked" &&
+                  model.state !== "unsupported";
+                return {
+                  key: alternative.alternativeId,
+                  cells: [
+                    <span className="construction-alternative-label" key={`${alternative.alternativeId}-label`}>
+                      {alternative.label}
+                      {alternative.isRecommended ? <SemanticBadge tone="success">Recommended</SemanticBadge> : null}
+                      {selected ? <SemanticBadge tone="success">Selected</SemanticBadge> : null}
+                    </span>,
+                    alternative.objective,
+                    alternative.turnoverPct,
+                    alternative.cashAfterPct,
+                    alternative.driftImprovementPct,
+                    <SemanticBadge key={`${alternative.alternativeId}-fit`} tone={badgeTone(alternative.mandateFit)}>
+                      {alternative.mandateFit}
+                    </SemanticBadge>,
                     <ActionButton
-                      priority="secondary"
+                      key={`${alternative.alternativeId}-action`}
+                      priority={alternative.isRecommended ? "primary" : "secondary"}
                       onClick={() => selectAlternative(alternative.alternativeId)}
                       disabled={!selectable || Boolean(selectionPendingId)}
                     >
@@ -280,56 +284,67 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                         ? "Selected"
                         : selectionPendingId === alternative.alternativeId
                           ? "Selecting"
-                          : "Select"}
-                    </ActionButton>
-                  </span>,
-                ],
-              };
-            })}
-            emptyState={{
-              title: "No construction alternatives returned",
-              body: "Generate an alternative set to compare construction choices.",
-            }}
-          />
+                          : alternative.actionLabel}
+                    </ActionButton>,
+                  ],
+                };
+              })}
+              emptyState={{
+                title: "No construction alternatives returned",
+                body: "Generate an alternative set to compare construction choices.",
+              }}
+            />
+          </div>
 
           <div className="construction-alternatives-detail-grid">
             <div className="construction-alternatives-detail-card">
               <Text as="h3" variant="subsectionTitle">
-                Detail: {model.selectedAlternative?.alternativeId ?? "N/A"}
+                Selected Alternative Detail: {model.selectedAlternative?.label ?? "N/A"}
               </Text>
+              <p className="construction-alternatives-rationale">
+                {model.selectedBusinessRationale}
+              </p>
               <dl>
                 <div>
-                  <dt>Rationale</dt>
-                  <dd>{model.selectedAlternative?.rationale ?? "N/A"}</dd>
+                  <dt>Turnover</dt>
+                  <dd>{model.selectedAlternative?.turnoverPct ?? "N/A"}</dd>
                 </div>
                 <div>
-                  <dt>Trade Count</dt>
-                  <dd>{model.selectedAlternative?.tradeCount ?? "N/A"}</dd>
+                  <dt>Cash After</dt>
+                  <dd>{model.selectedAlternative?.cashAfterPct ?? "N/A"}</dd>
                 </div>
                 <div>
-                  <dt>Evidence</dt>
-                  <dd>
-                    {model.selectedAlternative
-                      ? `${model.selectedAlternative.objectiveTraceCount} objective / ${model.selectedAlternative.constraintTraceCount} constraint`
-                      : "N/A"}
-                  </dd>
+                  <dt>Drift Improvement</dt>
+                  <dd>{model.selectedAlternative?.driftImprovementPct ?? "N/A"}</dd>
                 </div>
               </dl>
+              <div className="construction-allocation-list" aria-label="Allocation comparison">
+                {model.allocationRows.map((row) => (
+                  <div key={row.key}>
+                    <div>
+                      <strong>{row.label}</strong>
+                      <span>{row.before} to {row.after}</span>
+                    </div>
+                    <div aria-hidden="true">
+                      <i style={{ width: row.beforeWidth }} />
+                      <b style={{ width: row.afterWidth }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="construction-alternatives-detail-card">
               <Text as="h3" variant="subsectionTitle">
-                Constraint Fit
+                Mandate Integrity Checks
               </Text>
               {model.constraints.length > 0 ? (
                 <div className="construction-constraint-list">
                   {model.constraints.map((constraint) => (
                     <div key={constraint.key}>
-                      <strong>{constraint.name}</strong>
-                      <span>{constraint.current}</span>
-                      <span>{constraint.after}</span>
+                      <strong>{businessStateLabel(constraint.name)}</strong>
                       <SemanticBadge tone={badgeTone(constraint.state)}>
-                        {constraint.state}
+                        {businessStateLabel(constraint.state)}
                       </SemanticBadge>
                     </div>
                   ))}
@@ -342,38 +357,46 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                   body="Constraint rows are not available for the selected alternative."
                 />
               )}
+              <div className="construction-trade-impact">
+                <strong>Trade Impact Summary</strong>
+                <div>
+                  <span>Estimated Trades</span>
+                  <b>{model.tradeImpact.tradeCount}</b>
+                </div>
+                <div>
+                  <span>Buys</span>
+                  <b>{model.tradeImpact.buyCount}</b>
+                </div>
+                <div>
+                  <span>Trims</span>
+                  <b>{model.tradeImpact.trimCount}</b>
+                </div>
+                <div>
+                  <span>Cash Reduction</span>
+                  <b>{model.tradeImpact.cashReductionCount}</b>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="construction-source-readiness-card">
           <Text as="h3" variant="subsectionTitle">
-            Data Readiness
+            Recommended Actions
           </Text>
-          {model.sourceReadiness.length > 0 ? (
-            <div className="construction-source-readiness-list">
-              {model.sourceReadiness.map((source) => (
-                <div key={source.key}>
-                  <div>
-                    <strong>{formatBusinessSource(source.source)}</strong>
-                    <span>
-                      {source.reasonCode !== "-"
-                        ? formatBusinessReason(source.reasonCode)
-                        : source.lastUpdated}
-                    </span>
-                  </div>
-                  <SemanticBadge tone={badgeTone(source.state)}>{source.state}</SemanticBadge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ScreenStatePanel
-              kind="empty"
-              surface="portfolio"
-              title="No data readiness returned"
-              body="Generate alternatives to retrieve data readiness for this mandate."
-            />
-          )}
+          <div className="construction-source-readiness-list">
+            <button
+              type="button"
+              onClick={() => model.selectedAlternative ? void selectAlternative(model.selectedAlternative.alternativeId) : undefined}
+              disabled={!model.selectedAlternative || model.state === "blocked" || Boolean(selectionPendingId)}
+            >
+              <strong>Select recommended path</strong>
+              <span>{model.recommendedPathLabel}</span>
+            </button>
+            <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=waves`}>Review trade impact</a>
+            <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=mandate`}>Resolve mandate attention item</a>
+            <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=proof`}>Open evidence pack</a>
+          </div>
         </div>
       </div>
     </SectionBlock>

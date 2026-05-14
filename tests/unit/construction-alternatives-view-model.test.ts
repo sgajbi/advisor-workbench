@@ -28,7 +28,7 @@ const readyResponse: DpmConstructionGatewayResponse = {
     },
     constraints: [
       {
-        name: "Balanced band",
+        name: "Asset allocation range",
         current: "Breach",
         after: "Pass",
         state: "PASS",
@@ -36,12 +36,19 @@ const readyResponse: DpmConstructionGatewayResponse = {
     ],
     alternatives: [
       {
-        alternative_id: "alt_min_turnover",
-        method: "MIN_TURNOVER",
+        alternative_id: "alt_balanced_transition",
+        label: "Balanced Transition",
+        objective: "Restore model weights with moderate turnover",
+        mandate_fit: "Within Range",
+        recommended: true,
+        method: "BALANCED_TRANSITION",
         method_status: "READY",
+        rationale: "Balances drift reduction, cash deployment, transaction cost, and mandate fit.",
         comparison_metrics: {
-          turnover_weight: "0.045",
-          cash_weight: "0.08",
+          turnover_weight: "0.048",
+          cash_weight: "0.021",
+          drift_improvement_pct: "0.724",
+          trade_count: 8,
         },
         objective_trace: [{ term: "turnover" }],
         constraint_trace: [{ constraint: "cash_band" }],
@@ -51,6 +58,17 @@ const readyResponse: DpmConstructionGatewayResponse = {
         },
       },
     ],
+    allocation_comparison: [
+      { label: "Equities", before: "64%", after: "58%" },
+      { label: "Fixed Income", before: "29%", after: "40%" },
+      { label: "Cash", before: "7%", after: "2%" },
+    ],
+    trade_impact: {
+      trade_count: 8,
+      buy_count: 4,
+      trim_count: 3,
+      cash_reduction_count: 1,
+    },
   },
 };
 
@@ -66,20 +84,31 @@ describe("construction alternatives view model", () => {
     );
     expect(model.supportabilityState).toBe("READY");
     expect(model.supportabilityReasons).toEqual(["REGIME_SCENARIO_PACK_READY"]);
+    expect(model.recommendedPathLabel).toBe("Balanced Transition");
+    expect(model.mandateFitLabel).toBe("Within Range");
+    expect(model.driftImprovementLabel).toBe("72.4%");
+    expect(model.approvalReadinessLabel).toBe("Ready");
     expect(model.alternatives[0]).toEqual({
-      alternativeId: "alt_min_turnover",
-      method: "MIN_TURNOVER",
+      alternativeId: "alt_balanced_transition",
+      method: "BALANCED_TRANSITION",
       status: "READY",
-      label: "alt_min_turnover",
-      rationale: "No rationale available.",
-      turnoverPct: "0.045",
-      cashAfterPct: "0.08",
+      label: "Balanced Transition",
+      objective: "Restore model weights with moderate turnover",
+      mandateFit: "Within Range",
+      actionLabel: "Review",
+      isRecommended: true,
+      rationale: "Balances drift reduction, cash deployment, transaction cost, and mandate fit.",
+      turnoverPct: "4.8%",
+      cashAfterPct: "2.1%",
+      driftImprovementPct: "72.4%",
       riskDelta: "N/A",
       trackingErrorDeltaBps: "N/A",
-      tradeCount: "N/A",
+      tradeCount: "8",
       metrics: [
-        { key: "turnover_weight", label: "turnover weight", value: "0.045" },
-        { key: "cash_weight", label: "cash weight", value: "0.08" },
+        { key: "turnover_weight", label: "turnover weight", value: "4.8%" },
+        { key: "cash_weight", label: "cash weight", value: "2.1%" },
+        { key: "drift_improvement_pct", label: "drift improvement pct", value: "72.4%" },
+        { key: "trade_count", label: "trade count", value: "8" },
       ],
       reasonCodes: [
         "TARGET_METHOD_COMPARISON_AVAILABLE",
@@ -88,11 +117,22 @@ describe("construction alternatives view model", () => {
       objectiveTraceCount: 1,
       constraintTraceCount: 1,
     });
-    expect(model.selectedAlternative?.alternativeId).toBe("alt_min_turnover");
+    expect(model.selectedAlternative?.alternativeId).toBe("alt_balanced_transition");
+    expect(model.tradeImpact).toEqual({
+      tradeCount: "8",
+      buyCount: "4",
+      trimCount: "3",
+      cashReductionCount: "1",
+    });
+    expect(model.allocationRows.map((row) => `${row.label}:${row.before}->${row.after}`)).toEqual([
+      "Equities:64%->58%",
+      "Fixed Income:29%->40%",
+      "Cash:7%->2%",
+    ]);
     expect(model.constraints).toEqual([
       {
-        key: "Balanced band-0",
-        name: "Balanced band",
+        key: "Asset allocation range-0",
+        name: "Asset allocation range",
         state: "PASS",
         current: "Breach",
         after: "Pass",

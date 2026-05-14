@@ -13,7 +13,7 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   test.setTimeout(120_000);
   await mkdir(outputDir, { recursive: true });
 
-  await page.goto(`/workbench/${portfolioId}`, {
+  await page.goto(`/workbench/${portfolioId}?mode=construction`, {
     waitUntil: "domcontentloaded",
     timeout: 60_000,
   });
@@ -22,8 +22,6 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   await expect(panel.getByRole("heading", { name: "Construction Alternatives" })).toBeVisible({
     timeout: 60_000,
   });
-  await expect(panel.getByText("Manage authority: lotus-manage:RFC-0039")).toBeVisible();
-  await expect(panel.getByLabel("Status lotus-gateway")).toBeVisible();
   await expect(
     panel.getByText("Construction alternatives have not been generated")
   ).toBeVisible();
@@ -82,9 +80,13 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
     },
     ui: {
       screenshotPath,
-      includesGatewaySource: panelText.includes("LOTUS-GATEWAY"),
+      includesGatewaySource: panelText.includes("Gateway") || panelText.includes("LOTUS-GATEWAY"),
       includesManageAuthority: panelText.includes("lotus-manage:RFC-0039"),
       includesNoLocalMethodologyClaim: !panelText.includes("local optimizer"),
+      includesBusinessAlternativeCopy:
+        panelText.includes("Alternatives Comparison") ||
+        panelText.includes("Recommended Path") ||
+        panelText.includes("Mandate Fit"),
       textExcerpt: panelText.slice(0, 2000),
     },
   };
@@ -97,7 +99,8 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   expect(response.ok(), `generation response status ${response.status()}`).toBe(true);
   expect(evidence.response.sourceService).toMatch(/lotus-(gateway|manage)/i);
   expect(evidence.response.authority).toBe("lotus-manage:RFC-0039");
-  expect(evidence.ui.includesGatewaySource).toBe(true);
-  expect(evidence.ui.includesManageAuthority).toBe(true);
+  expect(evidence.ui.includesGatewaySource).toBe(false);
+  expect(evidence.ui.includesManageAuthority).toBe(false);
+  expect(evidence.ui.includesBusinessAlternativeCopy).toBe(true);
   expect(evidence.ui.includesNoLocalMethodologyClaim).toBe(true);
 });
