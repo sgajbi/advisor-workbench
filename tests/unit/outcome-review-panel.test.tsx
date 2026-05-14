@@ -84,11 +84,29 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Ready for Advisor Review")).toBeInTheDocument();
     expect(screen.getAllByText("Within Mandate").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
+      "Report InputReady"
+    );
+    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
+      "AI NarrativeReady"
+    );
+    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
+      "Source EvidenceAvailable"
+    );
     expect(screen.queryByText("or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("rr_1")).not.toBeInTheDocument();
     expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("link", { name: /Review client impact/ })).toHaveAttribute(
+      "href",
+      "#outcome-review-detail"
+    );
+    expect(screen.getByRole("link", { name: /Open evidence pack/ })).toHaveAttribute(
+      "href",
+      "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof"
+    );
+    expect(screen.queryByText("Record advisor note")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeEnabled();
   });
