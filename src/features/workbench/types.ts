@@ -1379,6 +1379,27 @@ export type DpmCampaignDefinitionGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmPmOperatingQualitySupportability = {
+  source_service: string;
+  authority: string;
+  state: string;
+  reason_codes: string[];
+  blocked_actions: string[];
+  policy_id?: string | null;
+  policy_version?: string | null;
+  score_run_id?: string | null;
+  count?: number | null;
+};
+
+export type DpmPmOperatingQualityGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability: DpmPmOperatingQualitySupportability;
+  data: Record<string, unknown>;
+};
+
 export type DpmWaveAiPmMemoResponse = {
   correlation_id: string;
   contract_version: string;

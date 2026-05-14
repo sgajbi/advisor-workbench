@@ -25,6 +25,7 @@ import {
   DpmOutcomeReviewNarrativeResponse,
   DpmOperationsHandoffSummaryResponse,
   DpmPortfolioMemoryGatewayResponse,
+  DpmPmOperatingQualityGatewayResponse,
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
@@ -1417,6 +1418,179 @@ export async function requestDpmOperationsHandoffSummary(
   );
 }
 
+export async function listDpmPmOperatingQualityPolicies(params?: {
+  policyId?: string;
+  enabled?: boolean;
+  asOfDate?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.policyId) {
+    query.set("policy_id", params.policyId);
+  }
+  if (params?.enabled !== undefined) {
+    query.set("enabled", String(params.enabled));
+  }
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.policies.list",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "server",
+        "/dpm/command-center/pm-operating-quality/policies",
+        "DPM PM operating quality policies",
+        query
+      )
+  );
+}
+
+export async function getDpmPmOperatingQualityPolicy(params: {
+  policyId: string;
+  policyVersion: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.policies.get",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "client",
+        `/dpm/command-center/pm-operating-quality/policies/${encodeURIComponent(
+          params.policyId
+        )}/versions/${encodeURIComponent(params.policyVersion)}`,
+        "DPM PM operating quality policy"
+      )
+  );
+}
+
+export async function putDpmPmOperatingQualityPolicy(params: {
+  policyId: string;
+  policyVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.policies.put",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/pm-operating-quality/policies/${encodeURIComponent(
+            params.policyId
+          )}/versions/${encodeURIComponent(params.policyVersion)}`
+        ),
+        "persist DPM PM operating quality policy",
+        {
+          method: "PUT",
+          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
+          body: JSON.stringify({ body: params.body }),
+        }
+      )
+  );
+}
+
+export async function listDpmPmOperatingQualityScoreRuns(params?: {
+  pmId?: string;
+  bookId?: string;
+  policyId?: string;
+  asOfDate?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("book_id", params?.bookId ?? dpmContext.commandCenterBookId);
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.pmId) {
+    query.set("pm_id", params.pmId);
+  }
+  if (params?.policyId) {
+    query.set("policy_id", params.policyId);
+  }
+  if (params?.state) {
+    query.set("state", params.state);
+  }
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.score-runs.list",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "server",
+        "/dpm/command-center/pm-operating-quality/score-runs",
+        "DPM PM operating quality score runs",
+        query
+      )
+  );
+}
+
+export async function getDpmPmOperatingQualityScoreRun(
+  scoreRunId: string
+): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.score-runs.get",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "client",
+        `/dpm/command-center/pm-operating-quality/score-runs/${encodeURIComponent(scoreRunId)}`,
+        "DPM PM operating quality score run"
+      )
+  );
+}
+
+export async function previewDpmPmOperatingQualityScoreRun(params: {
+  pmId?: string;
+  bookId?: string;
+  policyId?: string;
+  policyVersion?: string;
+  asOfDate?: string;
+  actorId?: string;
+  outcomeReviewIds?: string[];
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const body = buildPmOperatingQualityScoreRunBody(params);
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.score-runs.preview",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/score-runs/preview"),
+        "preview DPM PM operating quality score run",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
+          body: JSON.stringify({ body }),
+        }
+      )
+  );
+}
+
+export async function createDpmPmOperatingQualityScoreRun(params: {
+  pmId?: string;
+  bookId?: string;
+  policyId?: string;
+  policyVersion?: string;
+  asOfDate?: string;
+  actorId?: string;
+  outcomeReviewIds?: string[];
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const body = buildPmOperatingQualityScoreRunBody(params);
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.score-runs.create",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/score-runs"),
+        "create DPM PM operating quality score run",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
+          body: JSON.stringify({ body }),
+        }
+      )
+  );
+}
+
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];
@@ -1838,6 +2012,38 @@ function buildDpmWaveCallerHeaders(actorId?: string): Record<string, string> {
     "X-Actor-Id": actorId ?? callerContext.actorId,
     "X-Caller-Application": "lotus-workbench",
     "X-Correlation-Id": "corr-workbench-dpm-wave",
+  };
+}
+
+function buildDpmPmOperatingQualityCallerHeaders(actorId?: string): Record<string, string> {
+  const callerContext = resolveDefaultCallerContext();
+  return {
+    "Content-Type": "application/json",
+    "X-Actor-Id": actorId ?? callerContext.actorId,
+    "X-Caller-Application": "lotus-workbench",
+    "X-Correlation-Id": "corr-workbench-pm-operating-quality",
+  };
+}
+
+function buildPmOperatingQualityScoreRunBody(params: {
+  pmId?: string;
+  bookId?: string;
+  policyId?: string;
+  policyVersion?: string;
+  asOfDate?: string;
+  actorId?: string;
+  outcomeReviewIds?: string[];
+}): Record<string, unknown> {
+  const dpmContext = resolveDefaultDpmContext();
+  const callerContext = resolveDefaultCallerContext();
+  return {
+    pm_id: params.pmId ?? dpmContext.commandCenterPortfolioManagerId,
+    book_id: params.bookId ?? dpmContext.commandCenterBookId,
+    policy_id: params.policyId ?? "pmq_sg_dpm",
+    policy_version: params.policyVersion ?? "2026.05",
+    as_of_date: params.asOfDate ?? dpmContext.commandCenterAsOfDate,
+    actor_id: params.actorId ?? callerContext.actorId,
+    outcome_review_ids: params.outcomeReviewIds ?? [],
   };
 }
 

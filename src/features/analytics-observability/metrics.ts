@@ -335,6 +335,41 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.waves.operations-handoff-summary",
   },
   {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-policy-list",
+    operation: "dpm.pm-operating-quality.policies.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-policy-detail",
+    operation: "dpm.pm-operating-quality.policies.get",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-policy-upsert",
+    operation: "dpm.pm-operating-quality.policies.put",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-score-run-list",
+    operation: "dpm.pm-operating-quality.score-runs.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-score-run-detail",
+    operation: "dpm.pm-operating-quality.score-runs.get",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-score-run-preview",
+    operation: "dpm.pm-operating-quality.score-runs.preview",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-score-run-create",
+    operation: "dpm.pm-operating-quality.score-runs.create",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",
