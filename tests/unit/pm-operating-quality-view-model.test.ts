@@ -107,6 +107,13 @@ const fairnessPreview: DpmPmOperatingQualityGatewayResponse = {
           state: "READY",
           score_run_count: 2,
           average_score: "90.00",
+          source_refs: [
+            {
+              source_system: "lotus-manage",
+              source_product: "PmOperatingQualityScoreRun",
+              source_id: "pmq_run_001",
+            },
+          ],
           reason_codes: ["PM_QUALITY_SEGMENT_READY"],
         },
         {
@@ -136,6 +143,12 @@ describe("PM operating quality view model", () => {
       "mandate_balanced",
       "mandate_income",
     ]);
+    expect(model.sourceSegmentRows[0]).toEqual(
+      expect.objectContaining({
+        segment: "Balanced DPM Mandates",
+        sourceRefs: "lotus-core:MandateTypeSegment",
+      })
+    );
     expect(model.forbiddenUsePosture).toContain("protected class inference");
   });
 
@@ -156,6 +169,9 @@ describe("PM operating quality view model", () => {
       "Balanced DPM Mandates",
       "Income DPM Mandates",
     ]);
+    expect(model.fairnessSegmentRows[0].sourceRefs).toBe(
+      "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001"
+    );
     expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
   });
 });
