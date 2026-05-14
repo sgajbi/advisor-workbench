@@ -10,7 +10,7 @@ function getPanel(container: HTMLElement): HTMLElement {
 }
 
 describe("RebalanceStatus", () => {
-  it("renders manage-owned stateful execution supportability", () => {
+  it("renders stateful rebalance review supportability", () => {
     const { container } = render(
       <RebalanceStatus
         snapshot={{
@@ -50,22 +50,22 @@ describe("RebalanceStatus", () => {
     expect(scope.getByText("Ready")).toBeInTheDocument();
     expect(scope.getByText("Healthy")).toBeInTheDocument();
     expect(scope.getByText("Fresh")).toBeInTheDocument();
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("4");
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("Runs");
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("12");
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("Operations");
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("3");
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("Decisions");
-    expect(scope.getByText("Last run: rr_100 - 2026-03-27T12:00:00Z")).toBeInTheDocument();
-    expect(scope.getByText("action_register_current")).toBeInTheDocument();
-    const dashboard = scope.getByLabelText("DPM operations dashboard");
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("4");
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("Runs");
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("12");
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("Operations");
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("3");
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("Decisions");
+    expect(scope.getByText("Latest assessment: 2026-03-27T12:00:00Z")).toBeInTheDocument();
+    expect(scope.getByText("Action Register Current")).toBeInTheDocument();
+    const dashboard = scope.getByLabelText("Rebalance review activity");
     expect(dashboard).toHaveTextContent("2");
     expect(dashboard).toHaveTextContent("Recent runs");
     expect(dashboard).toHaveTextContent("1");
     expect(dashboard).toHaveTextContent("Run issues");
-    expect(dashboard).toHaveTextContent("rr_100");
+    expect(dashboard).toHaveTextContent("Review 1");
     expect(dashboard).toHaveTextContent("PM Review Required");
-    expect(dashboard).toHaveTextContent("rr_099");
+    expect(dashboard).toHaveTextContent("Review 2");
     expect(dashboard).toHaveTextContent("Source Readiness Blocked");
   });
 
@@ -93,14 +93,14 @@ describe("RebalanceStatus", () => {
     expect(scope.getByText("Pending Review")).toBeInTheDocument();
     expect(scope.getByText("Action Required")).toBeInTheDocument();
     expect(scope.getByText("Stale")).toBeInTheDocument();
-    expect(scope.getByText("Last run: N/A")).toBeInTheDocument();
-    expect(scope.getByText("SOURCE_READINESS_INCOMPLETE")).toBeInTheDocument();
-    expect(scope.getByLabelText("DPM operations dashboard")).toHaveTextContent(
-      "No recent manage rebalance runs were returned by Gateway for this portfolio."
+    expect(scope.getByText("Latest assessment: Not available")).toBeInTheDocument();
+    expect(scope.getByText("Source Readiness Incomplete")).toBeInTheDocument();
+    expect(scope.getByLabelText("Rebalance review activity")).toHaveTextContent(
+      "No recent rebalance review activity is available for this portfolio."
     );
   });
 
-  it("marks missing Gateway supportability as unknown", () => {
+  it("marks missing supportability as unknown", () => {
     const { container } = render(
       <RebalanceStatus
         snapshot={{
@@ -112,11 +112,11 @@ describe("RebalanceStatus", () => {
     );
 
     const scope = within(getPanel(container));
-    expect(scope.getAllByText("Unknown").length).toBeGreaterThanOrEqual(2);
-    expect(scope.getByLabelText("Rebalance execution evidence")).toHaveTextContent("N/A");
-    expect(scope.getByLabelText("Rebalance execution evidence")).not.toHaveTextContent("0");
+    expect(scope.getAllByText("Not available").length).toBeGreaterThanOrEqual(2);
+    expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("N/A");
+    expect(scope.getByLabelText("Rebalance decision evidence")).not.toHaveTextContent("0");
     expect(
-      scope.getByText("Gateway did not return manage action-register supportability for this portfolio.")
+      scope.getByText("Decision support is not available for this portfolio.")
     ).toBeInTheDocument();
   });
 });

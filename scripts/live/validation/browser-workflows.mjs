@@ -392,17 +392,17 @@ export async function validateOutcomeReviewPanel(
   });
   const outcomeReviewPanel = workbenchPanelByClass(page, "outcome-review-panel");
   await expect(
-    outcomeReviewPanel.getByRole("heading", { name: "Post-Trade Outcome Review" })
+    outcomeReviewPanel.getByRole("heading", { name: "Outcome Reviews" })
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(outcomeReviewPanel.getByLabel("Status lotus-manage")).toBeVisible({
+  await expect(outcomeReviewPanel.getByText("Evidence available")).toBeVisible({
     timeout: timeoutMs,
   });
   await assertTableHasRows(
-    tableByExactLabel(page, "Post-trade outcome reviews"),
+    tableByExactLabel(page, "Outcome reviews"),
     1,
-    "Post-trade outcome reviews"
+    "Outcome reviews"
   );
   await assertTableHasRows(
     tableByExactLabel(page, "Outcome review dimensions"),
@@ -410,14 +410,14 @@ export async function validateOutcomeReviewPanel(
     "Outcome review dimensions"
   );
   await assertTableHasRows(
-    tableByExactLabel(page, "Outcome review source lineage"),
+    tableByExactLabel(page, "Outcome review evidence references"),
     1,
-    "Outcome review source lineage"
+    "Outcome review evidence references"
   );
   await expect(outcomeReviewPanel.getByText("Report Input", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(outcomeReviewPanel.getByText("AI Evidence", { exact: true })).toBeVisible({
+  await expect(outcomeReviewPanel.getByText("Memo Evidence", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.outcome_review");

@@ -234,6 +234,7 @@ export function businessStateLabel(value: string | number | null | undefined): s
     NOT_REQUESTED: "Not requested",
     OPEN: "Open",
     PARTIAL: "Needs attention",
+    PM_REVIEW_REQUIRED: "PM Review Required",
     READY: "Ready",
     SIMULATION_READY: "Simulation ready",
     SOURCE_CHECKED: "Data checked",

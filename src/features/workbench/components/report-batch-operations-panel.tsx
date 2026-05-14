@@ -16,6 +16,10 @@ import type {
   ReportBatchStatusResponse,
   ReportBatchWorkerRunResponse,
 } from "@/features/workbench/types";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolioId: string;
@@ -44,7 +48,7 @@ function summarizeCounts(status: ReportBatchStatusResponse | null): string {
     return "No batch materialized";
   }
   return Object.entries(status.status_counts)
-    .map(([key, value]) => `${key}: ${value}`)
+    .map(([key, value]) => `${businessStateLabel(key)}: ${value}`)
     .join(" | ");
 }
 
@@ -169,16 +173,16 @@ export default function ReportBatchOperationsPanel({
         <ScreenStatePanel
           kind="error"
           surface="portfolio"
-          title="Report batch operation failed"
+          title="Report operation failed"
           body={error}
         />
       ) : null}
 
       <div className="report-batch-status-strip">
         <SemanticBadge tone={statusTone(status?.status ?? handle?.status ?? "not_created")}>
-          {status?.status ?? handle?.status ?? "Not created"}
+          {businessStateLabel(status?.status ?? handle?.status ?? "Not created")}
         </SemanticBadge>
-        <span>{batchId ?? "No batch id"}</span>
+        <span>{batchId ? "Report batch available" : "No report batch"}</span>
         <span>{summarizeCounts(status)}</span>
       </div>
 
@@ -187,11 +191,11 @@ export default function ReportBatchOperationsPanel({
           <span>Leased {runResult.leased_count}</span>
           <span>Dispatched {runResult.dispatched_count}</span>
           <span>Executed {runResult.executed_count}</span>
-          <span>{reconciledReportJobId}</span>
+          <span>{reconciledReportJobId !== "No report job" ? "Report job available" : reconciledReportJobId}</span>
           {runResult.back_pressure_reasons.length > 0 ? (
-            <span>Back pressure {runResult.back_pressure_reasons.join(", ")}</span>
+            <span>Back pressure {runResult.back_pressure_reasons.map(formatBusinessReason).join(", ")}</span>
           ) : null}
-          {runResult.skipped_reason ? <span>Skipped {runResult.skipped_reason}</span> : null}
+          {runResult.skipped_reason ? <span>Skipped {formatBusinessReason(runResult.skipped_reason)}</span> : null}
         </div>
       ) : null}
 
@@ -209,8 +213,8 @@ export default function ReportBatchOperationsPanel({
           key: item.batch_item_id,
           cells: [
             item.portfolio_id,
-            item.status,
-            item.report_job_id ?? "Not linked",
+            businessStateLabel(item.status),
+            item.report_job_id ? "Available" : "Not linked",
             item.attempt_count.toString(),
           ],
         }))}
@@ -223,14 +227,14 @@ export default function ReportBatchOperationsPanel({
       <div className="report-batch-archive-retrieval" aria-label="Archived document retrieval">
         <div className="report-batch-archive-controls">
           <label className="workbench-field-label" htmlFor="report-batch-archive-document-id">
-            Archived document ID
+            Archived document reference
           </label>
           <input
             id="report-batch-archive-document-id"
             className="workbench-input"
             value={archiveDocumentId}
             onChange={(event) => setArchiveDocumentId(event.target.value)}
-            placeholder="doc_..."
+            placeholder="Enter reference..."
           />
           <ActionButton
             onClick={loadArchiveDocument}
@@ -244,16 +248,15 @@ export default function ReportBatchOperationsPanel({
             <SemanticBadge tone={statusTone(archiveMetadata.purgeStatus)}>
               {archiveMetadata.outputFormat.toUpperCase()}
             </SemanticBadge>
-            <span>{archiveMetadata.reportType}</span>
+            <span>{businessStateLabel(archiveMetadata.reportType)}</span>
             <span>{archiveMetadata.asOfDate}</span>
-            <span>{archiveMetadata.retentionPolicyId ?? "No retention policy"}</span>
-            <span>{archiveMetadata.legalHoldStatus}</span>
+            <span>{archiveMetadata.retentionPolicyId ? "Retention policy available" : "No retention policy"}</span>
+            <span>{businessStateLabel(archiveMetadata.legalHoldStatus)}</span>
             <a href={buildArchivedDocumentDownloadUrl(archiveMetadata.documentId)}>Download</a>
           </div>
         ) : (
           <p className="muted report-batch-archive-empty">
-            Retrieve archived report metadata and downloads through the Workbench BFF and Gateway
-            document boundary.
+            Retrieve archived report details and downloads from the governed document archive.
           </p>
         )}
       </div>

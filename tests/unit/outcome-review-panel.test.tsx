@@ -65,21 +65,21 @@ describe("OutcomeReviewPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders manage-backed outcome review state and evidence posture", () => {
+  it("renders outcome review state and evidence posture", () => {
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
 
-    expect(screen.getByRole("heading", { name: "Post-Trade Outcome Review" })).toBeInTheDocument();
-    expect(screen.getByText("SUPPORTED")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Outcome Reviews" })).toBeInTheDocument();
+    expect(screen.getByText("Supported")).toBeInTheDocument();
     expect(screen.getByText("or_1")).toBeInTheDocument();
-    expect(screen.getByText("rr_1")).toBeInTheDocument();
-    expect(screen.getByText("tracking_error")).toBeInTheDocument();
-    expect(screen.getByText("sha256:risk")).toBeInTheDocument();
-    expect(screen.getAllByText("Available").length).toBe(2);
+    expect(screen.queryByText("rr_1")).not.toBeInTheDocument();
+    expect(screen.getByText("Tracking Error")).toBeInTheDocument();
+    expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Request AI review" })).toBeEnabled();
   });
 
-  it("requests a governed outcome-review report job from manage report input", async () => {
+  it("requests an outcome-review report job from available report input", async () => {
     vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue({
       ...readyResponse,
       data: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
@@ -102,10 +102,10 @@ describe("OutcomeReviewPanel", () => {
         outcomeReportInput: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
       });
     });
-    expect(screen.getByText("accepted / rjob_outcome_1")).toBeInTheDocument();
+    expect(screen.getByText("Report request Accepted.")).toBeInTheDocument();
   });
 
-  it("requests a governed outcome-review AI narrative through Gateway", async () => {
+  it("requests an outcome-review narrative", async () => {
     vi.mocked(requestDpmOutcomeReviewAiNarrative).mockResolvedValue({
       correlation_id: "corr-ai",
       contract_version: "v1",
@@ -136,7 +136,7 @@ describe("OutcomeReviewPanel", () => {
         outcomeReviewId: "or_1",
       });
     });
-    expect(screen.getByText("COMPLETED / packrun_or_1")).toBeInTheDocument();
+    expect(screen.getByText("Review request Completed.")).toBeInTheDocument();
   });
 
   it("keeps report and AI handoff run posture visible after both actions", async () => {
@@ -174,11 +174,11 @@ describe("OutcomeReviewPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
     fireEvent.click(screen.getByRole("button", { name: "Request AI review" }));
 
-    expect(await screen.findByText("accepted / rjob_outcome_1")).toBeInTheDocument();
-    expect(screen.getByText("COMPLETED / packrun_or_1")).toBeInTheDocument();
+    expect(await screen.findByText("Report request Accepted.")).toBeInTheDocument();
+    expect(screen.getByText("Review request Completed.")).toBeInTheDocument();
   });
 
-  it("renders blocked handoff posture from Gateway supportability", () => {
+  it("renders blocked handoff posture from supportability", () => {
     render(
       <OutcomeReviewPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -195,7 +195,7 @@ describe("OutcomeReviewPanel", () => {
     );
 
     expect(screen.getByText("Outcome review handoff is blocked")).toBeInTheDocument();
-    expect(screen.getAllByText("Blocked").length).toBe(2);
+    expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Portfolio Operations")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request AI review" })).toBeDisabled();
   });
@@ -209,7 +209,7 @@ describe("OutcomeReviewPanel", () => {
       />
     );
 
-    expect(screen.getByText("Outcome review endpoint is unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Outcome review is unavailable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch DPM outcome reviews (503)")).toBeInTheDocument();
   });
 });

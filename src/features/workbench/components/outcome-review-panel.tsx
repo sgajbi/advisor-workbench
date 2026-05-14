@@ -20,6 +20,11 @@ import {
   buildOutcomeReviewPanelModel,
   type OutcomeReviewPanelState,
 } from "@/features/workbench/outcome-review-view-model";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+  formatBusinessSource,
+} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolioId: string;
@@ -46,27 +51,27 @@ function statePanelCopy(state: OutcomeReviewPanelState, portfolioId: string) {
     return {
       kind: "empty" as const,
       title: "No outcome reviews for this portfolio",
-      body: `No RFC-0042 outcome review has been materialized for ${portfolioId}.`,
+      body: `No outcome review is currently available for ${portfolioId}.`,
     };
   }
   if (state === "blocked") {
     return {
       kind: "permission_blocked" as const,
       title: "Outcome review handoff is blocked",
-      body: "Manage has blocked one or more downstream handoff actions for this review set.",
+      body: "Resolve the open review items before preparing advisor handoffs.",
     };
   }
   if (state === "unsupported") {
     return {
       kind: "unavailable" as const,
       title: "Outcome review is not supported",
-      body: "The authoritative manage supportability state says this outcome-review path is unsupported.",
+      body: "Outcome review is not available for this portfolio.",
     };
   }
   return {
     kind: "partial" as const,
     title: "Outcome review data is unavailable",
-    body: "Gateway did not return a usable manage outcome-review payload for this portfolio.",
+    body: "Outcome review details are temporarily unavailable for this portfolio.",
   };
 }
 
@@ -116,7 +121,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         outcomeReviewId: primaryReview.outcomeReviewId,
         outcomeReportInput: reportInput.data,
       });
-      setReportJobStatus(`${handle.status} / ${handle.report_job_id}`);
+      setReportJobStatus(`Report request ${businessStateLabel(handle.status)}.`);
     } catch (error) {
       setReportJobError(error instanceof Error ? error.message : "Outcome report job failed");
     } finally {
@@ -137,7 +142,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       setAiNarrativeStatus(describeNarrativeRun(narrative.data));
     } catch (error) {
       setAiNarrativeError(
-        error instanceof Error ? error.message : "Outcome AI narrative request failed"
+        error instanceof Error ? error.message : "Outcome review request failed"
       );
     } finally {
       setAiNarrativePending(false);
@@ -146,15 +151,15 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
 
   return (
     <SectionBlock
-      title="Post-Trade Outcome Review"
-      subtitle={`Manage authority: ${model.authority}. Correlation: ${model.correlationId}`}
+      title="Outcome Reviews"
+      subtitle="Review mandate outcomes, advisor observations, and evidence readiness."
       className="outcome-review-panel"
       actions={
         <div className="outcome-review-badge-row">
           <SemanticBadge tone={badgeTone(model.supportabilityState)}>
-            {model.supportabilityState}
+            {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
-          <SemanticBadge>{model.sourceService}</SemanticBadge>
+          <SemanticBadge>Evidence available</SemanticBadge>
         </div>
       }
     >
@@ -162,7 +167,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         <ScreenStatePanel
           kind={errorMessage ? "partial" : stateCopy.kind}
           surface="portfolio"
-          title={errorMessage ? "Outcome review endpoint is unavailable" : stateCopy.title}
+          title={errorMessage ? "Outcome review is unavailable" : stateCopy.title}
           body={errorMessage ?? stateCopy.body}
         />
       ) : null}
@@ -178,7 +183,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           }
         />
         <MetricRow
-          label="AI Evidence"
+          label="Memo Evidence"
           value={
             <SemanticBadge tone={handoffTone(primaryReview?.aiEvidenceBlocked)}>
               {handoffLabel(primaryReview?.aiEvidenceBlocked)}
@@ -212,7 +217,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
             ))
           ) : (
             <Text variant="secondary" className="muted">
-              Creates Gateway-backed governed report and AI review handoffs.
+              Prepares advisor review, report input, and memo handoffs from available evidence.
             </Text>
           )}
         </div>
@@ -222,21 +227,21 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         <div className="outcome-review-reason-row">
           {[...model.supportabilityReasons, ...model.blockedActions].map((reason) => (
             <SemanticBadge key={reason} tone={reason.startsWith("CREATE") || reason.startsWith("REQUEST") ? "danger" : "warn"}>
-              {reason}
+              {formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
         </div>
       ) : null}
 
       <AnalyticsTable
-        ariaLabel="Post-trade outcome reviews"
+        ariaLabel="Outcome reviews"
         variant="portfolio"
         density="compact"
         columns={[
           { key: "review", label: "Review" },
           { key: "state", label: "State" },
-          { key: "run", label: "Run" },
-          { key: "proof-pack", label: "Proof Pack" },
+          { key: "run", label: "Rebalance" },
+          { key: "proof-pack", label: "Evidence" },
           { key: "updated", label: "Updated" },
         ]}
         rows={model.items.map((item) => ({
@@ -244,24 +249,24 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           cells: [
             item.outcomeReviewId,
             <SemanticBadge key={`${item.outcomeReviewId}-state`} tone={badgeTone(item.state)}>
-              {item.state}
+              {businessStateLabel(item.state)}
             </SemanticBadge>,
-            item.rebalanceRunId,
-            item.proofPackId,
+            item.rebalanceRunId !== "N/A" ? "Available" : "Not available",
+            item.proofPackId !== "N/A" ? "Available" : "Not available",
             item.updatedAt,
           ],
         }))}
         emptyState={{
           title: "No outcome reviews returned",
-          body: "The Gateway BFF returned no manage outcome-review records for this portfolio.",
+          body: "No outcome review rows are currently available for this portfolio.",
         }}
       />
 
       {primaryReview && hasItems ? (
         <>
           <div className="outcome-review-hash-strip">
-            <span>Expected {primaryReview.expectedSnapshotHash}</span>
-            <span>Realized {primaryReview.realizedSnapshotHash}</span>
+            <span>Expected Snapshot {availabilityLabel(primaryReview.expectedSnapshotHash)}</span>
+            <span>Realized Snapshot {availabilityLabel(primaryReview.realizedSnapshotHash)}</span>
             <span>Retention {primaryReview.retentionUntil}</span>
           </div>
 
@@ -279,46 +284,50 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
             rows={primaryReview.dimensions.map((row) => ({
               key: row.key,
               cells: [
-                row.dimension,
+                businessStateLabel(row.dimension),
                 row.expected,
                 row.realized,
                 row.variance,
                 <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
-                  {row.state}
+                  {businessStateLabel(row.state)}
                 </SemanticBadge>,
               ],
             }))}
             emptyState={{
               title: "No dimension results returned",
-              body: "The review exists, but manage did not return expected-versus-realized dimension rows.",
+              body: "The review exists, but no expected-versus-realized dimension rows are available.",
             }}
           />
 
           <AnalyticsTable
-            ariaLabel="Outcome review source lineage"
+            ariaLabel="Outcome review evidence references"
             variant="observation"
             density="compact"
             columns={[
-              { key: "source", label: "Source" },
+              { key: "source", label: "Business Area" },
               { key: "reference", label: "Reference" },
               { key: "freshness", label: "Freshness" },
-              { key: "hash", label: "Hash" },
+              { key: "hash", label: "Audit" },
             ]}
             rows={primaryReview.lineage.map((row) => ({
               key: row.key,
-              cells: [row.source, row.reference, row.freshness, row.hash],
+              cells: [
+                formatBusinessSource(row.source),
+                row.reference !== "N/A" ? "Reference available" : "Reference not available",
+                businessStateLabel(row.freshness),
+                availabilityLabel(row.hash),
+              ],
             }))}
             emptyState={{
-              title: "No source lineage returned",
-              body: "Manage returned the review without lineage rows in the list payload.",
+              title: "No evidence references returned",
+              body: "The review is available without detailed evidence-reference rows.",
             }}
           />
         </>
       ) : null}
 
       <Text variant="secondary" className="muted">
-        Report and AI handoff availability is derived from manage-published blocked actions and
-        the Gateway outcome-review contract.
+        Review handoff availability reflects the current advisor approval and evidence posture.
       </Text>
     </SectionBlock>
   );
@@ -327,9 +336,13 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
 function describeNarrativeRun(data: Record<string, unknown>): string {
   const workflowPackRun = readRecord(data.workflow_pack_run);
   const execution = readRecord(data.execution);
-  const runId = readString(workflowPackRun.run_id) ?? "workflow-pack run";
   const status = readString(execution.status) ?? "submitted";
-  return `${status} / ${runId}`;
+  const reviewState = readString(workflowPackRun.review_state);
+  return `Review request ${businessStateLabel(reviewState ?? status)}.`;
+}
+
+function availabilityLabel(value: string): string {
+  return value && value !== "N/A" ? "Available" : "Not available";
 }
 
 function readRecord(value: unknown): Record<string, unknown> {
