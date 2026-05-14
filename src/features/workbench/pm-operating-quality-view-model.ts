@@ -96,6 +96,8 @@ export type PmOperatingQualityPanelModel = {
   fairnessState: string;
   fairnessSpread: string;
   fairnessDetail: PmOperatingQualityFairnessDetail;
+  scoreRunPreviewReadinessState: string;
+  scoreRunPreviewReadiness: string;
   fairnessPreviewReadinessState: string;
   fairnessPreviewReadiness: string;
 };
@@ -140,6 +142,11 @@ export function buildPmOperatingQualityPanelModel(params: {
     segmentCount: fairnessSegmentRequests.length,
     blockedActions,
   });
+  const scoreRunPreviewReadiness = resolveScoreRunPreviewReadiness({
+    policyId,
+    policyVersion,
+    blockedActions,
+  });
 
   return {
     state: resolvePanelState(supportabilityState, policyRows.length, scoreRunRows.length, Boolean(primary)),
@@ -166,6 +173,8 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessState: normalizeState(readString(fairnessAnalysis, "state")),
     fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
     fairnessDetail: buildFairnessDetail(fairnessAnalysis),
+    scoreRunPreviewReadinessState: scoreRunPreviewReadiness.state,
+    scoreRunPreviewReadiness: scoreRunPreviewReadiness.detail,
     fairnessPreviewReadinessState: fairnessPreviewReadiness.state,
     fairnessPreviewReadiness: fairnessPreviewReadiness.detail,
   };
@@ -333,6 +342,29 @@ function buildFairnessDetail(
     sourceRefs: summarizeSourceRefs(extractRecords(fairnessAnalysis.source_refs)),
     forbiddenUses: formatForbiddenUses(fairnessAnalysis.forbidden_uses),
     reasonCodes: formatList(fairnessAnalysis.reason_codes),
+  };
+}
+
+function resolveScoreRunPreviewReadiness(params: {
+  policyId: string;
+  policyVersion: string;
+  blockedActions: string[];
+}): { state: string; detail: string } {
+  if (params.blockedActions.includes("PREVIEW_SCORE_RUN")) {
+    return {
+      state: "BLOCKED",
+      detail: "Blocked by Manage action register",
+    };
+  }
+  if (params.policyId === "N/A" || params.policyVersion === "N/A") {
+    return {
+      state: "BLOCKED",
+      detail: "Blocked until Manage returns policy id and version",
+    };
+  }
+  return {
+    state: "READY",
+    detail: `Ready for policy ${params.policyId} / ${params.policyVersion}`,
   };
 }
 

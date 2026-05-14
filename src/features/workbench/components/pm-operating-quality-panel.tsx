@@ -96,6 +96,10 @@ export default function PmOperatingQualityPanel({
     if (pendingAction) {
       return;
     }
+    if (model.scoreRunPreviewReadinessState !== "READY") {
+      setActionError(model.scoreRunPreviewReadiness);
+      return;
+    }
     setPendingAction(true);
     setActionError(null);
     setActionMessage(null);
@@ -204,7 +208,7 @@ export default function PmOperatingQualityPanel({
               <ActionButton
                 priority="secondary"
                 onClick={previewScoreRun}
-                disabled={pendingAction || model.blockedActions.includes("PREVIEW_SCORE_RUN")}
+                disabled={pendingAction || model.scoreRunPreviewReadinessState !== "READY"}
               >
                 {pendingAction ? "Previewing" : "Preview Score Run"}
               </ActionButton>
@@ -259,6 +263,7 @@ export default function PmOperatingQualityPanel({
           </Text>
           <div className="pm-quality-governance-stack">
             <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
+            <MetricRow label="Score Preview Readiness" value={model.scoreRunPreviewReadiness} />
             <MetricRow label="Preview Readiness" value={model.fairnessPreviewReadiness} />
             <MetricRow label="Source Segments" value={String(model.fairnessSegmentRequests.length)} />
             <MetricRow label="Fairness Spread" value={model.fairnessSpread} />
