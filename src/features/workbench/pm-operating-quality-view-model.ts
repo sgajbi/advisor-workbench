@@ -39,6 +39,14 @@ export type PmOperatingQualityFairnessSegmentRequest = {
   source_refs?: Array<Record<string, unknown>>;
 };
 
+export type PmOperatingQualitySourceSegmentRow = {
+  key: string;
+  segment: string;
+  segmentType: string;
+  scoreRunCount: string;
+  sourceRefs: string;
+};
+
 export type PmOperatingQualityFairnessSegmentRow = {
   key: string;
   segment: string;
@@ -46,6 +54,7 @@ export type PmOperatingQualityFairnessSegmentRow = {
   state: string;
   scoreRunCount: string;
   averageScore: string;
+  sourceRefs: string;
   reasonCodes: string;
 };
 
@@ -63,6 +72,7 @@ export type PmOperatingQualityPanelModel = {
   policyRows: PmOperatingQualityPolicyRow[];
   scoreRunRows: PmOperatingQualityScoreRunRow[];
   fairnessSegmentRequests: PmOperatingQualityFairnessSegmentRequest[];
+  sourceSegmentRows: PmOperatingQualitySourceSegmentRow[];
   fairnessSegmentRows: PmOperatingQualityFairnessSegmentRow[];
   selectedScoreRun: PmOperatingQualityScoreRunRow | null;
   fairnessAsOfDate: string;
@@ -87,6 +97,7 @@ export function buildPmOperatingQualityPanelModel(params: {
   ].filter(uniqueByScoreRunId);
   const fairnessAnalysis = readFairnessAnalysis(params.fairnessPreview);
   const fairnessSegmentRows = buildFairnessSegmentRows(fairnessAnalysis);
+  const fairnessSegmentRequests = extractFairnessSegmentRequests(params.scoreRuns);
   const selectedScoreRun = scoreRunRows[0] ?? null;
   const reasonCodes = [
     ...(supportability?.reason_codes ?? []),
@@ -119,7 +130,8 @@ export function buildPmOperatingQualityPanelModel(params: {
     blockedActions,
     policyRows,
     scoreRunRows,
-    fairnessSegmentRequests: extractFairnessSegmentRequests(params.scoreRuns),
+    fairnessSegmentRequests,
+    sourceSegmentRows: buildSourceSegmentRows(fairnessSegmentRequests),
     fairnessSegmentRows,
     selectedScoreRun,
     fairnessAsOfDate: firstNonEmpty(selectedScoreRun?.asOfDate),
@@ -201,6 +213,18 @@ function buildScoreRunRows(
   });
 }
 
+function buildSourceSegmentRows(
+  segments: PmOperatingQualityFairnessSegmentRequest[]
+): PmOperatingQualitySourceSegmentRow[] {
+  return segments.map((segment, index) => ({
+    key: `${segment.segment_id}-${index}`,
+    segment: segment.display_name || segment.segment_id,
+    segmentType: segment.segment_type,
+    scoreRunCount: String(segment.score_run_ids.length),
+    sourceRefs: summarizeSourceRefs(segment.source_refs ?? []),
+  }));
+}
+
 function extractFairnessSegmentRequests(
   response: DpmPmOperatingQualityGatewayResponse | null
 ): PmOperatingQualityFairnessSegmentRequest[] {
@@ -248,6 +272,7 @@ function buildFairnessSegmentRows(
       state: readString(record, "state") || "UNKNOWN",
       scoreRunCount: readString(record, "score_run_count") || "0",
       averageScore: readString(record, "average_score") || "N/A",
+      sourceRefs: summarizeSourceRefs(extractRecords(record.source_refs)),
       reasonCodes: formatList(record.reason_codes),
     };
   });
@@ -330,6 +355,28 @@ function formatBoolean(value: unknown): string {
 function formatList(value: unknown): string {
   const items = extractStringArray(value);
   return items.length > 0 ? items.join(", ") : "N/A";
+}
+
+function summarizeSourceRefs(refs: Array<Record<string, unknown>>): string {
+  if (refs.length === 0) {
+    return "N/A";
+  }
+  return refs
+    .map((ref) =>
+      firstNonEmpty(
+        readString(ref, "source_ref"),
+        [
+          readString(ref, "source_system"),
+          readString(ref, "source_product") || readString(ref, "source_type"),
+          readString(ref, "source_id"),
+        ]
+          .filter(Boolean)
+          .join(":"),
+        readString(ref, "source_type")
+      )
+    )
+    .filter((value) => value !== "N/A")
+    .join(", ") || "N/A";
 }
 
 function splitList(value: string): string[] {

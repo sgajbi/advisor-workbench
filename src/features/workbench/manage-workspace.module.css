@@ -1003,6 +1003,7 @@
 .manageScope :global(.dpm-command-center-panel),
 .manageScope :global(.dpm-wave-command-center-panel),
 .manageScope :global(.portfolio-memory-panel),
+.manageScope :global(.pm-operating-quality-panel),
 .manageScope :global(.construction-alternatives-panel),
 .manageScope :global(.outcome-review-panel),
 .manageScope :global(.proof-pack-panel),
@@ -1027,6 +1028,176 @@
   border-bottom: 1px solid #c6c6cd;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 251, 0.92));
+}
+
+.manageScope :global(.pm-operating-quality-panel > .section-block-header) {
+  margin: -18px -18px 0;
+  padding: 18px;
+  border-bottom: 1px solid #c6c6cd;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 251, 0.92));
+}
+
+.manageScope :global(.pm-operating-quality-panel > .section-block-header h2) {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: 0;
+}
+
+.manageScope :global(.pm-quality-badge-row),
+.manageScope :global(.pm-quality-reason-row) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.manageScope :global(.pm-quality-status-strip) {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  margin-top: 12px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.pm-quality-status-strip .suite-row) {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 96px;
+  padding: 14px 16px;
+  border-top: 0;
+  border-right: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.pm-quality-status-strip .suite-row:last-child) {
+  border-right: 0;
+}
+
+.manageScope :global(.pm-quality-status-strip .suite-row span) {
+  color: #45464d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.pm-quality-status-strip .suite-row strong) {
+  color: #131b2e;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 19px;
+  overflow-wrap: anywhere;
+}
+
+.manageScope :global(.pm-quality-reason-row) {
+  margin-top: 10px;
+}
+
+.manageScope :global(.pm-quality-workspace) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.manageScope :global(.pm-quality-primary-card),
+.manageScope :global(.pm-quality-governance-card) {
+  overflow: hidden;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.pm-quality-card-header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #c6c6cd;
+  background: #f7f9fb;
+}
+
+.manageScope :global(.pm-quality-card-header span) {
+  color: #725b26;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.pm-quality-action-row) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.manageScope :global(.pm-quality-primary-card .analytics-table-frame),
+.manageScope :global(.pm-operating-quality-panel .analytics-table-frame) {
+  border-color: #c6c6cd;
+  box-shadow: 0 1px 2px rgba(19, 27, 46, 0.03);
+}
+
+.manageScope :global(.pm-quality-primary-card .analytics-table-frame) {
+  margin-top: 0;
+  border-width: 0;
+  border-radius: 0;
+}
+
+.manageScope :global(.pm-operating-quality-panel .analytics-table-frame table) {
+  min-width: 780px;
+}
+
+.manageScope :global(.pm-quality-governance-card) {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.manageScope :global(.pm-quality-governance-stack) {
+  display: grid;
+  gap: 10px;
+}
+
+.manageScope :global(.pm-quality-governance-stack .suite-row) {
+  min-height: 58px;
+  padding: 10px 0;
+  border-top: 1px solid #e0e3e5;
+}
+
+.manageScope :global(.pm-quality-governance-stack .suite-row:first-child) {
+  border-top: 0;
+}
+
+.manageScope :global(.pm-quality-governance-stack .suite-row span) {
+  color: #45464d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.pm-quality-governance-stack .suite-row strong) {
+  color: #131b2e;
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.manageScope :global(.pm-quality-evidence-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 12px;
+  margin-top: 14px;
 }
 
 .manageScope :global(.portfolio-memory-panel > .section-block-header h2) {
@@ -3058,6 +3229,9 @@
   .manageScope :global(.portfolio-memory-status-strip),
   .manageScope :global(.portfolio-memory-workspace),
   .manageScope :global(.portfolio-memory-detail-grid),
+  .manageScope :global(.pm-quality-status-strip),
+  .manageScope :global(.pm-quality-workspace),
+  .manageScope :global(.pm-quality-evidence-grid),
   .manageScope :global(.construction-alternatives-summary),
   .manageScope :global(.construction-alternatives-grid),
   .manageScope :global(.construction-alternatives-detail-grid) {

@@ -148,7 +148,7 @@ export default function PmOperatingQualityPanel({
       subtitle="Gateway-backed supervisory evidence for Manage-owned PM policy and score-run posture."
       className="pm-operating-quality-panel"
       actions={
-        <div className="portfolio-memory-badge-row">
+        <div className="pm-quality-badge-row">
           <SemanticBadge tone={toneForState(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
@@ -170,7 +170,7 @@ export default function PmOperatingQualityPanel({
         />
       ) : null}
 
-      <div className="portfolio-memory-status-strip">
+      <div className="pm-quality-status-strip">
         <MetricRow label="Policy" value={`${model.policyId} / ${model.policyVersion}`} />
         <MetricRow label="Latest Score Run" value={model.scoreRunId} />
         <MetricRow label="Fairness Preview" value={model.fairnessAnalysisId} />
@@ -178,7 +178,7 @@ export default function PmOperatingQualityPanel({
         <MetricRow label="Authority" value={model.authority} />
       </div>
 
-      <div className="portfolio-memory-reason-row">
+      <div className="pm-quality-reason-row">
         {model.reasonCodes.length > 0 ? (
           model.reasonCodes.map((reason) => (
             <SemanticBadge key={reason} tone={toneForState(reason)}>
@@ -190,30 +190,32 @@ export default function PmOperatingQualityPanel({
         )}
       </div>
 
-      <div className="portfolio-memory-workspace">
-        <div className="portfolio-memory-timeline-card">
-          <div className="portfolio-memory-card-header">
+      <div className="pm-quality-workspace">
+        <div className="pm-quality-primary-card">
+          <div className="pm-quality-card-header">
             <Text as="h3" variant="subsectionTitle">
               Score-Run Evidence
             </Text>
-            <ActionButton
-              priority="secondary"
-              onClick={previewScoreRun}
-              disabled={pendingAction || model.blockedActions.includes("PREVIEW_SCORE_RUN")}
-            >
-              {pendingAction ? "Previewing" : "Preview"}
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={previewFairnessAnalysis}
-              disabled={
-                pendingFairnessAction ||
-                model.blockedActions.includes("PREVIEW_FAIRNESS_ANALYSIS") ||
-                model.fairnessSegmentRequests.length < 2
-              }
-            >
-              {pendingFairnessAction ? "Checking" : "Preview Fairness"}
-            </ActionButton>
+            <div className="pm-quality-action-row">
+              <ActionButton
+                priority="secondary"
+                onClick={previewScoreRun}
+                disabled={pendingAction || model.blockedActions.includes("PREVIEW_SCORE_RUN")}
+              >
+                {pendingAction ? "Previewing" : "Preview Score Run"}
+              </ActionButton>
+              <ActionButton
+                priority="primary"
+                onClick={previewFairnessAnalysis}
+                disabled={
+                  pendingFairnessAction ||
+                  model.blockedActions.includes("PREVIEW_FAIRNESS_ANALYSIS") ||
+                  model.fairnessSegmentRequests.length < 2
+                }
+              >
+                {pendingFairnessAction ? "Checking" : "Preview Fairness"}
+              </ActionButton>
+            </div>
           </div>
           {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
           <AnalyticsTable
@@ -248,11 +250,11 @@ export default function PmOperatingQualityPanel({
           />
         </div>
 
-        <aside className="portfolio-memory-actions-card">
+        <aside className="pm-quality-governance-card">
           <Text as="h3" variant="subsectionTitle">
             Governance Posture
           </Text>
-          <div className="portfolio-memory-action-stack">
+          <div className="pm-quality-governance-stack">
             <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
             <MetricRow label="Source Segments" value={String(model.fairnessSegmentRequests.length)} />
             <MetricRow label="Fairness Spread" value={model.fairnessSpread} />
@@ -269,6 +271,32 @@ export default function PmOperatingQualityPanel({
         </aside>
       </div>
 
+      <div className="pm-quality-evidence-grid">
+        <AnalyticsTable
+          ariaLabel="PM operating quality source segments"
+          variant="analysis"
+          density="compact"
+          columns={[
+            { key: "segment", label: "Source Segment" },
+            { key: "type", label: "Type" },
+            { key: "count", label: "Score Runs" },
+            { key: "source", label: "Source Refs" },
+          ]}
+          rows={model.sourceSegmentRows.map((row) => ({
+            key: row.key,
+            cells: [
+              <strong key={`${row.key}-segment`}>{row.segment}</strong>,
+              row.segmentType,
+              row.scoreRunCount,
+              row.sourceRefs,
+            ],
+          }))}
+          emptyState={{
+            title: "No source-defined segments returned",
+            body: "Workbench waits for Manage/Gateway segment assignments before enabling fairness review.",
+          }}
+        />
+
       <AnalyticsTable
         ariaLabel="PM operating quality fairness segments"
         variant="analysis"
@@ -279,6 +307,7 @@ export default function PmOperatingQualityPanel({
           { key: "state", label: "State" },
           { key: "count", label: "Score Runs" },
           { key: "average", label: "Average Score" },
+          { key: "source", label: "Source Refs" },
           { key: "reason", label: "Reason" },
         ]}
         rows={model.fairnessSegmentRows.map((row) => ({
@@ -291,6 +320,7 @@ export default function PmOperatingQualityPanel({
             </SemanticBadge>,
             row.scoreRunCount,
             row.averageScore,
+            row.sourceRefs,
             row.reasonCodes,
           ],
         }))}
@@ -302,6 +332,7 @@ export default function PmOperatingQualityPanel({
               : "Manage has not returned source-defined segment assignments for a fairness preview.",
         }}
       />
+      </div>
 
       <AnalyticsTable
         ariaLabel="PM operating quality policies"

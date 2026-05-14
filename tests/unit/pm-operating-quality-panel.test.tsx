@@ -78,6 +78,13 @@ const scoreRuns: DpmPmOperatingQualityGatewayResponse = {
         segment_type: "MANDATE_TYPE",
         display_name: "Balanced DPM Mandates",
         score_run_ids: ["pmq_run_001"],
+        source_refs: [
+          {
+            source_system: "lotus-core",
+            source_type: "MandateTypeSegment",
+            source_id: "balanced",
+          },
+        ],
       },
       {
         segment_id: "mandate_income",
@@ -101,6 +108,8 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
+    expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
+    expect(screen.getByText("lotus-core:MandateTypeSegment:balanced")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();
@@ -144,12 +153,19 @@ describe("PmOperatingQualityPanel", () => {
         policyVersion: "2026.05",
         asOfDate: "2026-05-13",
         segments: [
-          {
-            segment_id: "mandate_balanced",
-            segment_type: "MANDATE_TYPE",
-            display_name: "Balanced DPM Mandates",
-            score_run_ids: ["pmq_run_001"],
-          },
+            {
+              segment_id: "mandate_balanced",
+              segment_type: "MANDATE_TYPE",
+              display_name: "Balanced DPM Mandates",
+              score_run_ids: ["pmq_run_001"],
+              source_refs: [
+                {
+                  source_system: "lotus-core",
+                  source_type: "MandateTypeSegment",
+                  source_id: "balanced",
+                },
+              ],
+            },
           {
             segment_id: "mandate_income",
             segment_type: "MANDATE_TYPE",
