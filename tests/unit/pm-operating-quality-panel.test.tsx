@@ -146,6 +146,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(
       screen.getByText("System: lotus-core | Product: MandateTypeSegment | Id: balanced")
     ).toBeInTheDocument();
+    expect(screen.getAllByText("Mandate type").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();

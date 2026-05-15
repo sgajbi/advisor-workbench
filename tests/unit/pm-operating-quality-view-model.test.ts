@@ -201,6 +201,7 @@ describe("PM operating quality view model", () => {
     expect(model.sourceSegmentRows[0]).toEqual(
       expect.objectContaining({
         segment: "Balanced DPM Mandates",
+        segmentType: "Mandate type",
         sourceRefs: "System: lotus-core | Product: MandateTypeSegment",
       })
     );
@@ -244,6 +245,7 @@ describe("PM operating quality view model", () => {
       "Balanced DPM Mandates",
       "Income DPM Mandates",
     ]);
+    expect(model.fairnessSegmentRows[0].segmentType).toBe("Mandate type");
     expect(model.fairnessSegmentRows[0].sourceRefs).toBe(
       "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
     );
