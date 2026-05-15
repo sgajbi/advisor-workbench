@@ -70,6 +70,13 @@ const scoreRuns: DpmPmOperatingQualityGatewayResponse = {
         content_hash: "sha256:pm-quality",
         reason_codes: ["PM_QUALITY_READY"],
         forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_product: "PmOperatingQualityScoreRun",
+            source_id: "pmq_run_001",
+          },
+        ],
       },
     ],
     fairness_segments: [
@@ -125,7 +132,11 @@ describe("PmOperatingQualityPanel", () => {
       screen.getAllByText("Ready: 2 source-defined segments from Manage").length
     ).toBeGreaterThan(0);
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
+    expect(screen.getAllByText("Source Refs").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
+    expect(
+      screen.getByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001")
+    ).toBeInTheDocument();
     expect(
       screen.getByText("System: lotus-core | Product: MandateTypeSegment | Id: balanced")
     ).toBeInTheDocument();

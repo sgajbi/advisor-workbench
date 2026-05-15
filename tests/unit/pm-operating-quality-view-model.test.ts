@@ -59,6 +59,13 @@ const scoreRuns: DpmPmOperatingQualityGatewayResponse = {
         score: "90.00",
         reason_codes: ["PM_QUALITY_READY"],
         forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_product: "PmOperatingQualityScoreRun",
+            source_id: "pmq_run_001",
+          },
+        ],
       },
     ],
     fairness_segments: [
@@ -170,6 +177,9 @@ describe("PM operating quality view model", () => {
     expect(model.policyRows).toHaveLength(1);
     expect(model.scoreRunRows).toHaveLength(1);
     expect(model.scoreRunRows[0].score).toBe("90.00");
+    expect(model.scoreRunRows[0].sourceRefs).toBe(
+      "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
+    );
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
     expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");
     expect(model.operationEvidence).toEqual({
