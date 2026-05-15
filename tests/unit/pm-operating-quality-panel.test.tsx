@@ -144,10 +144,10 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getAllByText("PM Quality Ready (PM_QUALITY_READY)").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
     expect(
-      screen.getByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001")
+      screen.getByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("System: lotus-core | Product: MandateTypeSegment | Id: balanced")
+      screen.getByText("System: lotus-core | Product: MandateTypeSegment | ID: balanced")
     ).toBeInTheDocument();
     expect(screen.getAllByText("Mandate type").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
@@ -365,7 +365,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("15.00")).toBeInTheDocument();
     expect(screen.getAllByText("31.00").length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001")
+      screen.getAllByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001")
         .length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText(/protected class inference/i).length).toBeGreaterThan(0);
