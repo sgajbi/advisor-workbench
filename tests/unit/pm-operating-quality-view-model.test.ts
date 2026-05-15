@@ -181,7 +181,7 @@ describe("PM operating quality view model", () => {
       "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
     );
     expect(model.scoreRunRows[0].forbiddenUses).toBe(
-      "protected class inference, autonomous pm ranking"
+      "Protected Class Inference (protected_class_inference), Autonomous Pm Ranking (autonomous_pm_ranking)"
     );
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
     expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");
@@ -205,7 +205,9 @@ describe("PM operating quality view model", () => {
         sourceRefs: "System: lotus-core | Product: MandateTypeSegment",
       })
     );
-    expect(model.forbiddenUsePosture).toContain("protected class inference");
+    expect(model.forbiddenUsePosture).toContain(
+      "Protected Class Inference (protected_class_inference)"
+    );
   });
 
   it("renders fairness preview as review-required evidence without client-side analysis", () => {
@@ -231,7 +233,9 @@ describe("PM operating quality view model", () => {
         sourceRefs: "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001",
       })
     );
-    expect(model.fairnessDetail.forbiddenUses).toContain("protected class inference");
+    expect(model.fairnessDetail.forbiddenUses).toContain(
+      "Protected Class Inference (protected_class_inference)"
+    );
     expect(model.operationEvidence).toEqual({
       operation: "Fairness analysis preview",
       correlationId: "corr-fairness",

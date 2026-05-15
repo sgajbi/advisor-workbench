@@ -543,7 +543,7 @@ function formatForbiddenUses(value: unknown): string {
 }
 
 function formatForbiddenUse(value: string): string {
-  return value.replaceAll("_", " ");
+  return `${formatActionLabel(value)} (${value})`;
 }
 
 function formatActionLabel(value: string): string {
