@@ -294,4 +294,24 @@ describe("PM operating quality view model", () => {
       "Blocked until Manage returns policy id and version"
     );
   });
+
+  it("preserves Manage action-register fairness preview blocks", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns: {
+        ...scoreRuns,
+        supportability: {
+          ...scoreRuns.supportability,
+          state: "BLOCKED",
+          blocked_actions: ["PREVIEW_FAIRNESS_ANALYSIS"],
+        },
+      },
+    });
+
+    expect(model.state).toBe("blocked");
+    expect(model.fairnessPreviewReadinessState).toBe("BLOCKED");
+    expect(model.fairnessPreviewReadiness).toBe("Blocked by Manage action register");
+    expect(model.blockedActionPosture).toBe("PREVIEW_FAIRNESS_ANALYSIS (lotus-manage)");
+    expect(model.scoreRunPreviewReadinessState).toBe("READY");
+  });
 });

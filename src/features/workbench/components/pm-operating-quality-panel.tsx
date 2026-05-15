@@ -273,6 +273,17 @@ export default function PmOperatingQualityPanel({
             </div>
           </div>
           {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
+          <div
+            className="pm-quality-command-readiness"
+            aria-label="PM operating quality command readiness"
+          >
+            <MetricRow label="Score Preview Command" value={model.scoreRunPreviewReadiness} />
+            <MetricRow label="Fairness Preview Command" value={model.fairnessPreviewReadiness} />
+            <MetricRow
+              label="Execution Boundary"
+              value="Gateway and Manage evidence only; no scoring, ranking, trade approval, order routing, or client contact in Workbench"
+            />
+          </div>
           {actionError ? (
             <div className="pm-quality-action-error" aria-label="PM operating quality action error posture">
               <MetricRow label="Status Class" value={actionError.statusClass} />
