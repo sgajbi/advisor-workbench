@@ -1,3 +1,4 @@
+import { preserveBusinessAcronyms } from "./business-label-formatters";
 import type { DpmPmOperatingQualityGatewayResponse } from "./types";
 
 export type PmOperatingQualityPanelState =
@@ -547,11 +548,12 @@ function formatForbiddenUse(value: string): string {
 }
 
 function formatActionLabel(value: string): string {
-  return value
-    .replaceAll("_", " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (match) => match.toUpperCase())
-    .replace(/\b(Pm|Hr|Oms|Dpm|Ai|Usd)\b/g, (match) => match.toUpperCase());
+  return preserveBusinessAcronyms(
+    value
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (match) => match.toUpperCase())
+  );
 }
 
 function formatSegmentType(value: string | null | undefined): string {
