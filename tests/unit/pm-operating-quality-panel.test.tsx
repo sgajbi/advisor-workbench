@@ -116,7 +116,9 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("Ready: 2 source-defined segments from Manage")).toBeInTheDocument();
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
-    expect(screen.getByText("lotus-core:MandateTypeSegment:balanced")).toBeInTheDocument();
+    expect(
+      screen.getByText("System: lotus-core | Product: MandateTypeSegment | Id: balanced")
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();
@@ -151,6 +153,30 @@ describe("PmOperatingQualityPanel", () => {
     ).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Score Run" })).toBeDisabled();
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
+  });
+
+  it("classifies Gateway action failures without calling Manage directly", async () => {
+    vi.mocked(previewDpmPmOperatingQualityScoreRun).mockRejectedValue(
+      new Error("Failed to fetch preview DPM PM operating quality score run (409)")
+    );
+
+    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    fireEvent.click(screen.getByRole("button", { name: "Preview Score Run" }));
+
+    await waitFor(() => {
+      expect(previewDpmPmOperatingQualityScoreRun).toHaveBeenCalledWith({
+        policyId: "pmq_sg_dpm",
+        policyVersion: "2026.05",
+      });
+    });
+    expect(
+      screen.getByLabelText("PM operating quality action error posture")
+    ).toBeInTheDocument();
+    expect(screen.getByText("business blocked")).toBeInTheDocument();
+    expect(screen.getByText("409")).toBeInTheDocument();
+    expect(screen.getByText("Gateway PM operating quality route")).toBeInTheDocument();
+    expect(screen.getByText(/Failed to fetch preview DPM PM operating quality score run/)).toBeInTheDocument();
+    expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 
   it("explains when fairness preview is blocked by missing source-defined segments", () => {
@@ -280,7 +306,10 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("PmOperatingQualityFairnessAnalysis / v1")).toBeInTheDocument();
     expect(screen.getByText("15.00")).toBeInTheDocument();
     expect(screen.getAllByText("31.00").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("lotus-manage:PmOperatingQualityScoreRun:pmq_run_001").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001")
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText(/protected class inference/i).length).toBeGreaterThan(0);
   });
 });

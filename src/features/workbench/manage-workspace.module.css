@@ -1188,6 +1188,43 @@
   overflow-wrap: anywhere;
 }
 
+.manageScope :global(.pm-quality-action-error) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #f3c5c1;
+  background: #fff7f6;
+}
+
+.manageScope :global(.pm-quality-action-error .suite-row) {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 62px;
+  padding: 10px 12px;
+  border-top: 0;
+  border-right: 1px solid #f3c5c1;
+}
+
+.manageScope :global(.pm-quality-action-error .suite-row:last-child) {
+  border-right: 0;
+}
+
+.manageScope :global(.pm-quality-action-error .suite-row span) {
+  color: #93000a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.pm-quality-action-error .suite-row strong) {
+  color: #191c1e;
+  font-size: 12px;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+
 .manageScope :global(.pm-operating-quality-panel .analytics-table-frame table) {
   min-width: 780px;
 }
@@ -3332,6 +3369,7 @@
   .manageScope :global(.portfolio-memory-workspace),
   .manageScope :global(.portfolio-memory-detail-grid),
   .manageScope :global(.pm-quality-status-strip),
+  .manageScope :global(.pm-quality-action-error),
   .manageScope :global(.pm-quality-operation-evidence),
   .manageScope :global(.pm-quality-workspace),
   .manageScope :global(.pm-quality-evidence-grid),

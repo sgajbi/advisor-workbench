@@ -188,7 +188,7 @@ describe("PM operating quality view model", () => {
     expect(model.sourceSegmentRows[0]).toEqual(
       expect.objectContaining({
         segment: "Balanced DPM Mandates",
-        sourceRefs: "lotus-core:MandateTypeSegment",
+        sourceRefs: "System: lotus-core | Product: MandateTypeSegment",
       })
     );
     expect(model.forbiddenUsePosture).toContain("protected class inference");
@@ -214,7 +214,7 @@ describe("PM operating quality view model", () => {
         maximumAverageScoreSpread: "15.00",
         observedAverageScoreSpread: "31.00",
         generatedBy: "lotus-manage",
-        sourceRefs: "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001",
+        sourceRefs: "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001",
       })
     );
     expect(model.fairnessDetail.forbiddenUses).toContain("protected class inference");
@@ -226,15 +226,16 @@ describe("PM operating quality view model", () => {
       upstreamStatus: "200",
     });
     expect(model.blockedActions).toEqual(["CREATE_SCORE_RUN"]);
+    expect(model.blockedActionPosture).toBe("CREATE_SCORE_RUN (lotus-manage)");
     expect(model.fairnessSegmentRows.map((row) => row.segment)).toEqual([
       "Balanced DPM Mandates",
       "Income DPM Mandates",
     ]);
     expect(model.fairnessSegmentRows[0].sourceRefs).toBe(
-      "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001"
+      "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
     );
     expect(model.fairnessSegmentRows[0].scoreRunRefs).toBe(
-      "lotus-manage:PmOperatingQualityScoreRun:pmq_run_001"
+      "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
     );
     expect(model.fairnessSegmentRows[0].minimumScore).toBe("89.00");
     expect(model.fairnessSegmentRows[0].maximumScore).toBe("91.00");
