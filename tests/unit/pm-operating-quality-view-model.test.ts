@@ -240,7 +240,7 @@ describe("PM operating quality view model", () => {
       upstreamStatus: "200",
     });
     expect(model.blockedActions).toEqual(["CREATE_SCORE_RUN"]);
-    expect(model.blockedActionPosture).toBe("CREATE_SCORE_RUN (lotus-manage)");
+    expect(model.blockedActionPosture).toBe("Create Score Run (CREATE_SCORE_RUN; lotus-manage)");
     expect(model.fairnessSegmentRows.map((row) => row.segment)).toEqual([
       "Balanced DPM Mandates",
       "Income DPM Mandates",
@@ -326,7 +326,9 @@ describe("PM operating quality view model", () => {
     expect(model.state).toBe("blocked");
     expect(model.fairnessPreviewReadinessState).toBe("BLOCKED");
     expect(model.fairnessPreviewReadiness).toBe("Blocked by Manage action register");
-    expect(model.blockedActionPosture).toBe("PREVIEW_FAIRNESS_ANALYSIS (lotus-manage)");
+    expect(model.blockedActionPosture).toBe(
+      "Preview Fairness Analysis (PREVIEW_FAIRNESS_ANALYSIS; lotus-manage)"
+    );
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
   });
 });
