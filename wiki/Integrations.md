@@ -115,6 +115,10 @@ must travel through Gateway-shaped contracts.
     implemented proof-pack panel consumes the Gateway proof-pack
     generation, detail, Markdown, report-input, AI-evidence, and AI PM memo contracts, and the
     implemented outcome panel consumes the Gateway outcome-review list and AI-narrative contracts.
+    Performance risk concentration consumes Gateway `ConcentrationRiskReport:v1` output from
+    `lotus-risk`, including source-owned `TOP_POSITION_WEIGHT` current/proposed/delta fields and
+    current/proposed top-position driver identities; Workbench renders these fields but does not
+    recompute top-position weights or infer largest holdings locally.
     The implemented command-center exception queue consumes the Gateway exception-summary contract.
     The implemented portfolio-memory panel consumes the Gateway portfolio-memory contract and
     preserves manage event order without reconstructing timeline nodes, and the implemented PM
