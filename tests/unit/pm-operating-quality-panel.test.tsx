@@ -137,7 +137,9 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getAllByText("2026-05-13").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Forbidden Uses").length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText("protected class inference, autonomous pm ranking").length
+      screen.getAllByText(
+        "Protected Class Inference (protected_class_inference), Autonomous Pm Ranking (autonomous_pm_ranking)"
+      ).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("Pm Quality Ready (PM_QUALITY_READY)").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
