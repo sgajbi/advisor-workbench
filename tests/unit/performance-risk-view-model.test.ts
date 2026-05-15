@@ -58,9 +58,25 @@ describe("buildPerformanceRiskViewModel", () => {
       label: "Portfolio Concentration Index",
       interpretationBand: "Moderate",
     });
-    expect(viewModel.concentrationContextRows[0]).toMatchObject({
-      label: "Issuer Coverage",
-    });
+    expect(viewModel.concentrationContextRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Top Position Methodology",
+          value: "TOP_POSITION_WEIGHT",
+          support:
+            "Gateway and Workbench render returned top-position weights and drivers without recalculating them.",
+        }),
+        expect.objectContaining({
+          label: "Top Position Driver",
+          value: "PIMCO GIS Income Fund",
+          support:
+            "Current PIMCO GIS Income Fund 18.40%; proposed PIMCO GIS Income Fund 18.40%; source delta 0.00%.",
+        }),
+        expect.objectContaining({
+          label: "Issuer Coverage",
+        }),
+      ])
+    );
     expect(viewModel.supportability.map((item) => item.key)).toEqual([
       "summary:portfolio_returns",
       "summary:benchmark_returns",

@@ -1750,7 +1750,30 @@ function mapConcentrationContextRows(
   }
   const executionContext = payload.execution_context;
   const valuationContext = payload.valuation_context;
+  const currentTopPosition = payload.single_position_concentration.top_position_current;
+  const proposedTopPosition = payload.single_position_concentration.top_position_proposed;
   return [
+    {
+      key: "top_position_methodology",
+      label: "Top Position Methodology",
+      value: "TOP_POSITION_WEIGHT",
+      definition:
+        "Source-owned concentration methodology from lotus-risk ConcentrationRiskReport:v1.",
+      support:
+        "Gateway and Workbench render returned top-position weights and drivers without recalculating them.",
+    },
+    {
+      key: "top_position_driver",
+      label: "Top Position Driver",
+      value: formatConcentrationPositionDriverLabel(currentTopPosition),
+      definition:
+        "Current largest-position driver returned by the source concentration report.",
+      support: buildTopPositionDriverSupport({
+        currentDriver: currentTopPosition,
+        proposedDriver: proposedTopPosition,
+        delta: payload.single_position_concentration.top_position_weight_delta,
+      }),
+    },
     {
       key: "issuer_coverage",
       label: "Issuer Coverage",
@@ -1789,6 +1812,39 @@ function mapConcentrationContextRows(
       support: valuationContext?.portfolio_currency ? "Portfolio currency" : "Portfolio currency",
     },
   ];
+}
+
+function formatConcentrationPositionDriverLabel(driver: {
+  security_id?: string | null;
+  security_name?: string | null;
+}) {
+  return driver.security_name ?? driver.security_id ?? "N/A";
+}
+
+function buildTopPositionDriverSupport({
+  currentDriver,
+  proposedDriver,
+  delta,
+}: {
+  currentDriver: {
+    security_id?: string | null;
+    security_name?: string | null;
+    weight: number;
+  };
+  proposedDriver: {
+    security_id?: string | null;
+    security_name?: string | null;
+    weight: number;
+  };
+  delta: number;
+}) {
+  const currentLabel = formatConcentrationPositionDriverLabel(currentDriver);
+  const proposedLabel = formatConcentrationPositionDriverLabel(proposedDriver);
+  return `Current ${currentLabel} ${formatRiskPercentValue(
+    currentDriver.weight
+  )}; proposed ${proposedLabel} ${formatRiskPercentValue(
+    proposedDriver.weight
+  )}; source delta ${formatSignedRiskPercentValue(delta)}.`;
 }
 
 function mapDrawdownHeadlineMetrics(
@@ -2168,6 +2224,14 @@ function formatRiskPercentValue(
     minimumFractionDigits,
     maximumFractionDigits,
   });
+}
+
+function formatSignedRiskPercentValue(value: number | null | undefined) {
+  if (typeof value !== "number") {
+    return "N/A";
+  }
+  const formatted = formatRiskPercentValue(value);
+  return value > 0 ? `+${formatted}` : formatted;
 }
 
 function describeDrawdownHeadlineMetric(

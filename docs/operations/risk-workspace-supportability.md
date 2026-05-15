@@ -199,7 +199,8 @@ Current payload blocks:
 1. `portfolio_concentration`
    - portfolio-level HHI current / proposed / delta
 2. `single_position_concentration`
-   - top-position weights
+   - source-owned `TOP_POSITION_WEIGHT` current / proposed / delta fields from
+     `ConcentrationRiskReport:v1`
    - top-`n` cumulative weights
    - named current / proposed top-position drivers
 3. `issuer_concentration`
@@ -219,6 +220,10 @@ This gives the front office three explicit answers on first paint:
 1. how concentrated the live book is,
 2. which position and issuer are driving that concentration,
 3. how trustworthy the issuer concentration view is.
+
+Workbench may format the source-owned top-position weights and driver names for display, but it
+must not recalculate `TOP_POSITION_WEIGHT`, infer the largest position locally, or override the
+current/proposed driver identities returned through Gateway.
 
 ## Cache and refresh posture
 
