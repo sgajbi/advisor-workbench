@@ -69,6 +69,18 @@ function statePanelCopy(state: PmOperatingQualityPanelState) {
   };
 }
 
+function formatReasonCodeList(value: string): string {
+  if (!value || value === "N/A" || value === "-") {
+    return value || "N/A";
+  }
+  return value
+    .split(",")
+    .map((reason) => reason.trim())
+    .filter(Boolean)
+    .map((reason) => `${formatBusinessReason(reason)} (${reason})`)
+    .join(", ");
+}
+
 function buildActionError(error: unknown, fallback: string): PmQualityActionError {
   const message = error instanceof Error ? error.message : fallback;
   const status = resolveErrorStatus(message);
@@ -326,7 +338,7 @@ export default function PmOperatingQualityPanel({
                 row.score,
                 row.forbiddenUses,
                 row.sourceRefs,
-                row.reasonCodes,
+                formatReasonCodeList(row.reasonCodes),
               ],
             }))}
             emptyState={{
@@ -389,7 +401,10 @@ export default function PmOperatingQualityPanel({
           <div className="pm-quality-detail-stack">
             <MetricRow label="Generated At" value={model.fairnessDetail.generatedAt} />
             <MetricRow label="Analysis Source Refs" value={model.fairnessDetail.sourceRefs} />
-            <MetricRow label="Analysis Reason Codes" value={model.fairnessDetail.reasonCodes} />
+            <MetricRow
+              label="Analysis Reason Codes"
+              value={formatReasonCodeList(model.fairnessDetail.reasonCodes)}
+            />
             <MetricRow label="Forbidden Use Boundary" value={model.fairnessDetail.forbiddenUses} />
           </div>
         </div>
@@ -447,7 +462,7 @@ export default function PmOperatingQualityPanel({
               `${row.minimumScore} / ${row.maximumScore}`,
               row.scoreRunRefs,
               row.sourceRefs,
-              row.reasonCodes,
+              formatReasonCodeList(row.reasonCodes),
             ],
           }))}
           emptyState={{
@@ -480,7 +495,7 @@ export default function PmOperatingQualityPanel({
               {businessStateLabel(row.state)}
             </SemanticBadge>,
             row.asOfDate,
-            row.reasonCodes,
+            formatReasonCodeList(row.reasonCodes),
           ],
         }))}
         emptyState={{
