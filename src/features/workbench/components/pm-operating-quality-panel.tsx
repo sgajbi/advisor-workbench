@@ -308,6 +308,7 @@ export default function PmOperatingQualityPanel({
               { key: "policy", label: "Policy" },
               { key: "state", label: "State" },
               { key: "score", label: "Score" },
+              { key: "source", label: "Source Refs" },
               { key: "reason", label: "Reason" },
             ]}
             rows={model.scoreRunRows.map((row) => ({
@@ -320,12 +321,13 @@ export default function PmOperatingQualityPanel({
                   {businessStateLabel(row.state)}
                 </SemanticBadge>,
                 row.score,
+                row.sourceRefs,
                 row.reasonCodes,
               ],
             }))}
             emptyState={{
               title: "No score runs returned",
-              body: "Preview or create a Manage score run before using score-run evidence.",
+              body: "Load or preview Manage score-run evidence before using score-run posture.",
             }}
           />
         </div>

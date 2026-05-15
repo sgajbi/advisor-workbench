@@ -27,6 +27,7 @@ export type PmOperatingQualityScoreRunRow = {
   score: string;
   asOfDate: string;
   forbiddenUses: string;
+  sourceRefs: string;
   reasonCodes: string;
   contentHash: string;
 };
@@ -286,6 +287,7 @@ function buildScoreRunRows(
       score: readString(record, "score") || readString(record, "overall_score") || "N/A",
       asOfDate: readString(record, "as_of_date") || readString(record, "created_at") || "N/A",
       forbiddenUses: formatList(record.forbidden_uses),
+      sourceRefs: summarizeSourceRefs(extractRecords(record.source_refs)),
       reasonCodes: formatList(record.reason_codes),
       contentHash:
         readString(record, "content_hash") ||
