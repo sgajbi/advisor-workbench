@@ -337,7 +337,11 @@ export function formatBusinessReason(value: string | null | undefined): string {
   if (normalized.includes("CASH")) {
     return "Cash range";
   }
-  return businessStateLabel(value);
+  return preserveBusinessAcronyms(businessStateLabel(value));
+}
+
+function preserveBusinessAcronyms(value: string): string {
+  return value.replace(/\b(Pm|Hr|Oms|Dpm|Ai|Usd)\b/g, (match) => match.toUpperCase());
 }
 
 export function businessLastReviewed(value: string | null | undefined): string {
