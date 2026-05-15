@@ -1,4 +1,5 @@
 import type { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
+import { preserveBusinessAcronyms } from "@/features/workbench/business-label-formatters";
 
 import type { ManageWorkspaceData } from "./manage-workspace";
 
@@ -337,7 +338,7 @@ export function formatBusinessReason(value: string | null | undefined): string {
   if (normalized.includes("CASH")) {
     return "Cash range";
   }
-  return businessStateLabel(value);
+  return preserveBusinessAcronyms(businessStateLabel(value));
 }
 
 export function businessLastReviewed(value: string | null | undefined): string {
