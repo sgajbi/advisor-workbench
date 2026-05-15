@@ -140,6 +140,7 @@ export default function PmOperatingQualityPanel({
   });
   const stateCopy = statePanelCopy(model.state);
   const loadError = policiesError || scoreRunsError;
+  const hasFairnessPreview = model.fairnessAnalysisId !== "N/A";
   const shouldShowStatePanel =
     Boolean(loadError) ||
     Boolean(actionError) ||
@@ -377,9 +378,27 @@ export default function PmOperatingQualityPanel({
             <Text as="h3" variant="subsectionTitle">
               Fairness Preview Detail
             </Text>
-            <SemanticBadge tone={toneForState(model.fairnessState)}>
-              {businessStateLabel(model.fairnessState)}
+            <SemanticBadge tone={toneForState(hasFairnessPreview ? model.fairnessState : "PENDING")}>
+              {hasFairnessPreview ? businessStateLabel(model.fairnessState) : "Not previewed"}
             </SemanticBadge>
+          </div>
+          <div
+            className="pm-quality-fairness-preview-posture"
+            aria-label="PM operating quality fairness preview posture"
+          >
+            <MetricRow
+              label="Gateway Preview State"
+              value={
+                hasFairnessPreview
+                  ? "Fairness analysis returned by Gateway"
+                  : "Awaiting Gateway fairness preview"
+              }
+            />
+            <MetricRow label="Preview Readiness" value={model.fairnessPreviewReadiness} />
+            <MetricRow
+              label="Authority Boundary"
+              value="Manage owns segment posture and fairness spread; Workbench does not calculate or rank"
+            />
           </div>
           <div className="pm-quality-detail-grid">
             <MetricRow label="Product" value={model.fairnessDetail.product} />
