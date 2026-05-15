@@ -550,7 +550,8 @@ function formatActionLabel(value: string): string {
   return value
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(/\b\w/g, (match) => match.toUpperCase());
+    .replace(/\b\w/g, (match) => match.toUpperCase())
+    .replace(/\b(Pm|Hr|Oms|Dpm|Ai|Usd)\b/g, (match) => match.toUpperCase());
 }
 
 function formatSegmentType(value: string | null | undefined): string {
