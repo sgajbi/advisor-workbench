@@ -110,10 +110,20 @@ describe("PmOperatingQualityPanel", () => {
     expect(
       screen.getByLabelText("PM operating quality Gateway operation evidence")
     ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality command readiness")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Score Preview Command")).toBeInTheDocument();
+    expect(screen.getByText("Fairness Preview Command")).toBeInTheDocument();
+    expect(screen.getByText(/no scoring, ranking, trade approval/i)).toBeInTheDocument();
     expect(screen.getByText("Score-run evidence load")).toBeInTheDocument();
     expect(screen.getByText("corr-score")).toBeInTheDocument();
-    expect(screen.getByText("Ready for policy pmq_sg_dpm / 2026.05")).toBeInTheDocument();
-    expect(screen.getByText("Ready: 2 source-defined segments from Manage")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Ready for policy pmq_sg_dpm / 2026.05").length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("Ready: 2 source-defined segments from Manage").length
+    ).toBeGreaterThan(0);
     expect(screen.getByText("Source Segments")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
     expect(
@@ -200,8 +210,35 @@ describe("PmOperatingQualityPanel", () => {
       />
     );
 
-    expect(screen.getByText("Blocked: 1 source-defined segment returned")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Blocked: 1 source-defined segment returned").length
+    ).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
+    expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
+  });
+
+  it("keeps Manage action-register blocks visible before command execution", () => {
+    render(
+      <PmOperatingQualityPanel
+        policies={policies}
+        scoreRuns={{
+          ...scoreRuns,
+          supportability: {
+            ...scoreRuns.supportability,
+            state: "BLOCKED",
+            blocked_actions: ["PREVIEW_FAIRNESS_ANALYSIS"],
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText("PM operating quality command readiness")).toBeInTheDocument();
+    expect(screen.getAllByText("Blocked by Manage action register").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("PREVIEW_FAIRNESS_ANALYSIS (lotus-manage)")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Preview Fairness" }));
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 
