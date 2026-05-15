@@ -254,7 +254,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByLabelText("PM operating quality command readiness")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked by Manage action register").length).toBeGreaterThan(0);
     expect(
-      screen.getByText("PREVIEW_FAIRNESS_ANALYSIS (lotus-manage)")
+      screen.getByText("Preview Fairness Analysis (PREVIEW_FAIRNESS_ANALYSIS; lotus-manage)")
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Preview Fairness" }));

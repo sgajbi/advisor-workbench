@@ -491,7 +491,7 @@ function summarizeBlockedActions(actions: string[], sourceService: string | null
     return "None";
   }
   const source = sourceService || "Manage action register";
-  return actions.map((action) => `${action} (${source})`).join(", ");
+  return actions.map((action) => `${formatActionLabel(action)} (${action}; ${source})`).join(", ");
 }
 
 function uniqueByScoreRunId(row: PmOperatingQualityScoreRunRow, index: number, rows: PmOperatingQualityScoreRunRow[]) {
@@ -544,6 +544,13 @@ function formatForbiddenUses(value: unknown): string {
 
 function formatForbiddenUse(value: string): string {
   return value.replaceAll("_", " ");
+}
+
+function formatActionLabel(value: string): string {
+  return value
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
 function formatSegmentType(value: string | null | undefined): string {
