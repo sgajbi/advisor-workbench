@@ -180,6 +180,9 @@ describe("PM operating quality view model", () => {
     expect(model.scoreRunRows[0].sourceRefs).toBe(
       "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
     );
+    expect(model.scoreRunRows[0].forbiddenUses).toBe(
+      "protected class inference, autonomous pm ranking"
+    );
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
     expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");
     expect(model.operationEvidence).toEqual({
