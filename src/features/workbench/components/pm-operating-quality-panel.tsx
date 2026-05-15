@@ -33,6 +33,13 @@ type Props = {
   scoreRunsError?: string | null;
 };
 
+type PmQualityActionError = {
+  body: string;
+  status: string;
+  statusClass: string;
+  source: string;
+};
+
 function statePanelCopy(state: PmOperatingQualityPanelState) {
   if (state === "empty") {
     return {
@@ -62,6 +69,43 @@ function statePanelCopy(state: PmOperatingQualityPanelState) {
   };
 }
 
+function buildActionError(error: unknown, fallback: string): PmQualityActionError {
+  const message = error instanceof Error ? error.message : fallback;
+  const status = resolveErrorStatus(message);
+  return {
+    body: message,
+    status: status ?? "N/A",
+    statusClass: status ? classifyStatus(status) : "unknown",
+    source: "Gateway PM operating quality route",
+  };
+}
+
+function buildBlockedActionError(message: string): PmQualityActionError {
+  return {
+    body: message,
+    status: "N/A",
+    statusClass: "blocked",
+    source: "Manage action register via Gateway supportability",
+  };
+}
+
+function resolveErrorStatus(message: string): string | null {
+  return message.match(/\((\d{3})\)$/)?.[1] ?? null;
+}
+
+function classifyStatus(status: string): string {
+  if (status === "401" || status === "403") {
+    return "permission blocked";
+  }
+  if (status === "404" || status === "409" || status === "422") {
+    return "business blocked";
+  }
+  if (status.startsWith("5")) {
+    return "upstream unavailable";
+  }
+  return "request failed";
+}
+
 export default function PmOperatingQualityPanel({
   policies,
   scoreRuns,
@@ -74,7 +118,7 @@ export default function PmOperatingQualityPanel({
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const model = buildPmOperatingQualityPanelModel({
     policies,
@@ -97,7 +141,7 @@ export default function PmOperatingQualityPanel({
       return;
     }
     if (model.scoreRunPreviewReadinessState !== "READY") {
-      setActionError(model.scoreRunPreviewReadiness);
+      setActionError(buildBlockedActionError(model.scoreRunPreviewReadiness));
       return;
     }
     setPendingAction(true);
@@ -111,7 +155,7 @@ export default function PmOperatingQualityPanel({
       setPreviewResponse(response);
       setActionMessage("Preview returned Manage operating-quality evidence.");
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "PM operating quality preview failed");
+      setActionError(buildActionError(error, "PM operating quality preview failed"));
     } finally {
       setPendingAction(false);
     }
@@ -122,11 +166,15 @@ export default function PmOperatingQualityPanel({
       return;
     }
     if (model.fairnessPreviewReadinessState !== "READY") {
-      setActionError(model.fairnessPreviewReadiness);
+      setActionError(buildBlockedActionError(model.fairnessPreviewReadiness));
       return;
     }
     if (model.policyId === "N/A" || model.policyVersion === "N/A") {
-      setActionError("PM operating quality policy id/version is required for fairness preview.");
+      setActionError(
+        buildBlockedActionError(
+          "PM operating quality policy id/version is required for fairness preview."
+        )
+      );
       return;
     }
     setPendingFairnessAction(true);
@@ -143,7 +191,7 @@ export default function PmOperatingQualityPanel({
       setActionMessage("Fairness preview returned Manage segment evidence.");
     } catch (error) {
       setActionError(
-        error instanceof Error ? error.message : "PM operating quality fairness preview failed"
+        buildActionError(error, "PM operating quality fairness preview failed")
       );
     } finally {
       setPendingFairnessAction(false);
@@ -174,7 +222,7 @@ export default function PmOperatingQualityPanel({
           kind={loadError || actionError ? "partial" : stateCopy.kind}
           surface="portfolio"
           title={loadError || actionError ? "PM operating quality needs attention" : stateCopy.title}
-          body={loadError || actionError || stateCopy.body}
+          body={loadError || actionError?.body || stateCopy.body}
         />
       ) : null}
 
@@ -225,6 +273,13 @@ export default function PmOperatingQualityPanel({
             </div>
           </div>
           {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
+          {actionError ? (
+            <div className="pm-quality-action-error" aria-label="PM operating quality action error posture">
+              <MetricRow label="Status Class" value={actionError.statusClass} />
+              <MetricRow label="Gateway Status" value={actionError.status} />
+              <MetricRow label="Error Source" value={actionError.source} />
+            </div>
+          ) : null}
           <div className="pm-quality-operation-evidence" aria-label="PM operating quality Gateway operation evidence">
             <MetricRow label="Operation" value={model.operationEvidence.operation} />
             <MetricRow label="Correlation" value={model.operationEvidence.correlationId} />
@@ -276,7 +331,7 @@ export default function PmOperatingQualityPanel({
             <MetricRow label="Fairness Spread" value={model.fairnessSpread} />
             <MetricRow
               label="Blocked Actions"
-              value={model.blockedActions.length ? model.blockedActions.join(", ") : "None"}
+              value={model.blockedActionPosture}
             />
             <MetricRow label="Policy Versions" value={String(model.policyRows.length)} />
             <Text variant="secondary">

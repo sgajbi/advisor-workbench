@@ -93,6 +93,7 @@ export type PmOperatingQualityPanelModel = {
   count: string;
   reasonCodes: string[];
   blockedActions: string[];
+  blockedActionPosture: string;
   policyRows: PmOperatingQualityPolicyRow[];
   scoreRunRows: PmOperatingQualityScoreRunRow[];
   fairnessSegmentRequests: PmOperatingQualityFairnessSegmentRequest[];
@@ -171,6 +172,7 @@ export function buildPmOperatingQualityPanelModel(params: {
     count: formatCount(supportability?.count, scoreRunRows.length),
     reasonCodes,
     blockedActions,
+    blockedActionPosture: summarizeBlockedActions(blockedActions, supportability?.source_service),
     policyRows,
     scoreRunRows,
     fairnessSegmentRequests,
@@ -482,6 +484,14 @@ function summarizeForbiddenUses(rows: PmOperatingQualityScoreRunRow[]): string {
     : "No forbidden-use list returned";
 }
 
+function summarizeBlockedActions(actions: string[], sourceService: string | null | undefined): string {
+  if (actions.length === 0) {
+    return "None";
+  }
+  const source = sourceService || "Manage action register";
+  return actions.map((action) => `${action} (${source})`).join(", ");
+}
+
 function uniqueByScoreRunId(row: PmOperatingQualityScoreRunRow, index: number, rows: PmOperatingQualityScoreRunRow[]) {
   return rows.findIndex((candidate) => candidate.scoreRunId === row.scoreRunId) === index;
 }
@@ -539,21 +549,25 @@ function summarizeSourceRefs(refs: Array<Record<string, unknown>>): string {
     return "N/A";
   }
   return refs
-    .map((ref) =>
-      firstNonEmpty(
-        readString(ref, "source_ref"),
-        [
-          readString(ref, "source_system"),
-          readString(ref, "source_product") || readString(ref, "source_type"),
-          readString(ref, "source_id"),
-        ]
-          .filter(Boolean)
-          .join(":"),
-        readString(ref, "source_type")
-      )
-    )
+    .map(formatSourceRef)
     .filter((value) => value !== "N/A")
     .join(", ") || "N/A";
+}
+
+function formatSourceRef(ref: Record<string, unknown>): string {
+  const explicitRef = readString(ref, "source_ref");
+  if (explicitRef) {
+    return `Ref: ${explicitRef}`;
+  }
+  const system = readString(ref, "source_system");
+  const product = readString(ref, "source_product") || readString(ref, "source_type");
+  const id = readString(ref, "source_id");
+  const parts = [
+    system ? `System: ${system}` : "",
+    product ? `Product: ${product}` : "",
+    id ? `Id: ${id}` : "",
+  ].filter(Boolean);
+  return parts.join(" | ") || firstNonEmpty(readString(ref, "source_type"));
 }
 
 function splitList(value: string): string[] {
