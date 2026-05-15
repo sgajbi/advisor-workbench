@@ -304,7 +304,7 @@ function buildSourceSegmentRows(
   return segments.map((segment, index) => ({
     key: `${segment.segment_id}-${index}`,
     segment: segment.display_name || segment.segment_id,
-    segmentType: segment.segment_type,
+    segmentType: formatSegmentType(segment.segment_type),
     scoreRunCount: String(segment.score_run_ids.length),
     sourceRefs: summarizeSourceRefs(segment.source_refs ?? []),
   }));
@@ -353,7 +353,7 @@ function buildFairnessSegmentRows(
     return {
       key: `${segmentId}-${index}`,
       segment: readString(record, "display_name") || segmentId,
-      segmentType: readString(record, "segment_type") || "N/A",
+      segmentType: formatSegmentType(readString(record, "segment_type")),
       state: readString(record, "state") || "UNKNOWN",
       scoreRunCount: readString(record, "score_run_count") || "0",
       averageScore: readString(record, "average_score") || "N/A",
@@ -544,6 +544,22 @@ function formatForbiddenUses(value: unknown): string {
 
 function formatForbiddenUse(value: string): string {
   return value.replaceAll("_", " ");
+}
+
+function formatSegmentType(value: string | null | undefined): string {
+  const normalized = value?.trim().toUpperCase();
+  if (!normalized) {
+    return "N/A";
+  }
+  const labels: Record<string, string> = {
+    MANDATE_TYPE: "Mandate type",
+    REGION: "Region",
+    BOOK_PROFILE: "Book profile",
+    CLIENT_CONSTRAINT_PROFILE: "Client constraint profile",
+    MARKET_REGIME: "Market regime",
+    CUSTOM_SOURCE_SEGMENT: "Custom source segment",
+  };
+  return labels[normalized] ?? normalized.replaceAll("_", " ").toLowerCase();
 }
 
 function summarizeSourceRefs(refs: Array<Record<string, unknown>>): string {
