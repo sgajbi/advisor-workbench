@@ -181,7 +181,7 @@ describe("PM operating quality view model", () => {
       "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
     );
     expect(model.scoreRunRows[0].forbiddenUses).toBe(
-      "Protected Class Inference (protected_class_inference), Autonomous Pm Ranking (autonomous_pm_ranking)"
+      "Protected Class Inference (protected_class_inference), Autonomous PM Ranking (autonomous_pm_ranking)"
     );
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
     expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");

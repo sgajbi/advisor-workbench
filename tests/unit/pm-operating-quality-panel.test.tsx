@@ -138,7 +138,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getAllByText("Forbidden Uses").length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(
-        "Protected Class Inference (protected_class_inference), Autonomous Pm Ranking (autonomous_pm_ranking)"
+        "Protected Class Inference (protected_class_inference), Autonomous PM Ranking (autonomous_pm_ranking)"
       ).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("Pm Quality Ready (PM_QUALITY_READY)").length).toBeGreaterThan(0);
