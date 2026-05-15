@@ -136,7 +136,9 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getAllByText("As Of").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2026-05-13").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Forbidden Uses").length).toBeGreaterThan(0);
-    expect(screen.getByText("protected_class_inference, autonomous_pm_ranking")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("protected class inference, autonomous pm ranking").length
+    ).toBeGreaterThan(0);
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
     expect(
       screen.getByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001")
