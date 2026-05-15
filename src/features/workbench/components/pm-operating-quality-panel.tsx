@@ -306,8 +306,10 @@ export default function PmOperatingQualityPanel({
               { key: "scoreRun", label: "Score Run" },
               { key: "pm", label: "PM / Book" },
               { key: "policy", label: "Policy" },
+              { key: "asOf", label: "As Of" },
               { key: "state", label: "State" },
               { key: "score", label: "Score" },
+              { key: "forbiddenUses", label: "Forbidden Uses" },
               { key: "source", label: "Source Refs" },
               { key: "reason", label: "Reason" },
             ]}
@@ -317,10 +319,12 @@ export default function PmOperatingQualityPanel({
                 <strong key={`${row.key}-id`}>{row.scoreRunId}</strong>,
                 `${row.pmId} / ${row.bookId}`,
                 row.policy,
+                row.asOfDate,
                 <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
                   {businessStateLabel(row.state)}
                 </SemanticBadge>,
                 row.score,
+                row.forbiddenUses,
                 row.sourceRefs,
                 row.reasonCodes,
               ],
