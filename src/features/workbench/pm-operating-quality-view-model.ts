@@ -593,7 +593,7 @@ function formatSourceRef(ref: Record<string, unknown>): string {
   const parts = [
     system ? `System: ${system}` : "",
     product ? `Product: ${product}` : "",
-    id ? `Id: ${id}` : "",
+    id ? `ID: ${id}` : "",
   ].filter(Boolean);
   return parts.join(" | ") || firstNonEmpty(readString(ref, "source_type"));
 }

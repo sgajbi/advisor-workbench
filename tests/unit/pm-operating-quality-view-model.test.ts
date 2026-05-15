@@ -178,7 +178,7 @@ describe("PM operating quality view model", () => {
     expect(model.scoreRunRows).toHaveLength(1);
     expect(model.scoreRunRows[0].score).toBe("90.00");
     expect(model.scoreRunRows[0].sourceRefs).toBe(
-      "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
+      "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001"
     );
     expect(model.scoreRunRows[0].forbiddenUses).toBe(
       "Protected Class Inference (protected_class_inference), Autonomous PM Ranking (autonomous_pm_ranking)"
@@ -230,7 +230,7 @@ describe("PM operating quality view model", () => {
         maximumAverageScoreSpread: "15.00",
         observedAverageScoreSpread: "31.00",
         generatedBy: "lotus-manage",
-        sourceRefs: "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001",
+        sourceRefs: "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001",
       })
     );
     expect(model.fairnessDetail.forbiddenUses).toContain(
@@ -251,10 +251,10 @@ describe("PM operating quality view model", () => {
     ]);
     expect(model.fairnessSegmentRows[0].segmentType).toBe("Mandate type");
     expect(model.fairnessSegmentRows[0].sourceRefs).toBe(
-      "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
+      "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001"
     );
     expect(model.fairnessSegmentRows[0].scoreRunRefs).toBe(
-      "System: lotus-manage | Product: PmOperatingQualityScoreRun | Id: pmq_run_001"
+      "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001"
     );
     expect(model.fairnessSegmentRows[0].minimumScore).toBe("89.00");
     expect(model.fairnessSegmentRows[0].maximumScore).toBe("91.00");
