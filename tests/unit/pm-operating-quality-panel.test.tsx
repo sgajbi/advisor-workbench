@@ -5,12 +5,17 @@ import PmOperatingQualityPanel from "../../src/features/workbench/components/pm-
 import {
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityScoreRun,
+  requestDpmPmOperatingQualitySummary,
 } from "../../src/features/workbench/api";
-import type { DpmPmOperatingQualityGatewayResponse } from "../../src/features/workbench/types";
+import type {
+  DpmPmOperatingQualityGatewayResponse,
+  DpmPmOperatingQualitySummaryResponse,
+} from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/api", () => ({
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
+  requestDpmPmOperatingQualitySummary: vi.fn(),
 }));
 
 const policies: DpmPmOperatingQualityGatewayResponse = {
@@ -103,6 +108,48 @@ const scoreRuns: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const summaryResponse: DpmPmOperatingQualitySummaryResponse = {
+  correlation_id: "corr-pmq-summary",
+  contract_version: "v1",
+  source_service: "lotus-ai",
+  evidence_source_service: "lotus-manage",
+  manage_upstream_status: 200,
+  ai_upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    state: "READY",
+    reason_codes: ["PM_QUALITY_READY"],
+    blocked_actions: [],
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    score_run_id: "pmq_run_001",
+  },
+  score_run: {
+    score_run_id: "pmq_run_001",
+    content_hash: "sha256:pm-quality",
+  },
+  summary_request: {
+    requested_outputs: ["score_run_summary", "governance_summary"],
+    audience: ["portfolio_manager", "investment_control"],
+  },
+  data: {
+    execution: {
+      status: "COMPLETED",
+      audit: { workflow_pack_run_id: "packrun_pmq_1" },
+      result: {
+        structured_output: {
+          summary_status: "REVIEW_REQUIRED",
+        },
+      },
+    },
+    workflow_pack_run: {
+      run_id: "packrun_pmq_1",
+      workflow_authority_owner: "lotus-manage",
+    },
+  },
+};
+
 describe("PmOperatingQualityPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -120,13 +167,17 @@ describe("PmOperatingQualityPanel", () => {
     expect(
       screen.getByLabelText("PM operating quality command readiness")
     ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality support summary posture")
+    ).toBeInTheDocument();
     expect(screen.getByText("Score Preview Command")).toBeInTheDocument();
+    expect(screen.getByText("Summary Request")).toBeInTheDocument();
     expect(screen.getByText("Fairness Preview Command")).toBeInTheDocument();
     expect(
       screen.getByLabelText("PM operating quality fairness analysis posture")
     ).toBeInTheDocument();
     expect(screen.getByText("Awaiting persisted analysis detail or preview")).toBeInTheDocument();
-    expect(screen.getByText(/no scoring, ranking, trade approval/i)).toBeInTheDocument();
+    expect(screen.getByText(/no browser prompt, scoring, ranking, trade approval/i)).toBeInTheDocument();
     expect(screen.getByText("Score-run evidence load")).toBeInTheDocument();
     expect(screen.getByText("corr-score")).toBeInTheDocument();
     expect(
@@ -155,6 +206,8 @@ describe("PmOperatingQualityPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("Mandate type").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
+    expect(screen.getByText("Not requested")).toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();
   });
@@ -379,5 +432,30 @@ describe("PmOperatingQualityPanel", () => {
         "PM Quality Fairness Spread Review Required (PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED)"
       ).length
     ).toBeGreaterThan(0);
+  });
+
+  it("requests a review-required PM quality support summary through Gateway", async () => {
+    vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue(summaryResponse);
+
+    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    fireEvent.click(screen.getByRole("button", { name: "Request Support Summary" }));
+
+    await waitFor(() => {
+      expect(requestDpmPmOperatingQualitySummary).toHaveBeenCalledWith({
+        scoreRunId: "pmq_run_001",
+      });
+    });
+    expect(
+      screen.getByText("Support summary returned review-required PM quality evidence.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("PM quality support summary")).toBeInTheDocument();
+    expect(screen.getByText("COMPLETED")).toBeInTheDocument();
+    expect(screen.getByText("REVIEW_REQUIRED")).toBeInTheDocument();
+    expect(screen.getAllByText("lotus-manage").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("packrun_pmq_1").length).toBeGreaterThan(0);
+    expect(screen.getByText("score_run_summary, governance_summary")).toBeInTheDocument();
+    expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
+    expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 });

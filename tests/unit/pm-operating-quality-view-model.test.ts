@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { buildPmOperatingQualityPanelModel } from "../../src/features/workbench/pm-operating-quality-view-model";
-import type { DpmPmOperatingQualityGatewayResponse } from "../../src/features/workbench/types";
+import type {
+  DpmPmOperatingQualityGatewayResponse,
+  DpmPmOperatingQualitySummaryResponse,
+} from "../../src/features/workbench/types";
 
 const policies: DpmPmOperatingQualityGatewayResponse = {
   correlation_id: "corr-policy",
@@ -208,6 +211,48 @@ const fairnessAnalyses: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const summary: DpmPmOperatingQualitySummaryResponse = {
+  correlation_id: "corr-summary",
+  contract_version: "v1",
+  source_service: "lotus-ai",
+  evidence_source_service: "lotus-manage",
+  manage_upstream_status: 200,
+  ai_upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    state: "READY",
+    reason_codes: ["PM_QUALITY_READY"],
+    blocked_actions: [],
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    score_run_id: "pmq_run_001",
+  },
+  score_run: {
+    score_run_id: "pmq_run_001",
+    content_hash: "sha256:pm-quality",
+  },
+  summary_request: {
+    requested_outputs: ["score_run_summary", "governance_summary"],
+    audience: ["portfolio_manager", "investment_control"],
+  },
+  data: {
+    execution: {
+      status: "COMPLETED",
+      audit: { workflow_pack_run_id: "packrun_pmq_1" },
+      result: {
+        structured_output: {
+          summary_status: "REVIEW_REQUIRED",
+        },
+      },
+    },
+    workflow_pack_run: {
+      run_id: "packrun_pmq_1",
+      workflow_authority_owner: "lotus-manage",
+    },
+  },
+};
+
 describe("PM operating quality view model", () => {
   it("preserves Manage PM quality policy, score-run, and source-defined segment posture", () => {
     const model = buildPmOperatingQualityPanelModel({ policies, scoreRuns });
@@ -225,6 +270,8 @@ describe("PM operating quality view model", () => {
     );
     expect(model.scoreRunPreviewReadinessState).toBe("READY");
     expect(model.scoreRunPreviewReadiness).toBe("Ready for policy pmq_sg_dpm / 2026.05");
+    expect(model.summaryRequestReadinessState).toBe("READY");
+    expect(model.summaryRequestReadiness).toBe("Ready for score run pmq_run_001");
     expect(model.operationEvidence).toEqual({
       operation: "Score-run evidence load",
       correlationId: "corr-score",
@@ -248,6 +295,35 @@ describe("PM operating quality view model", () => {
     expect(model.forbiddenUsePosture).toContain(
       "Protected Class Inference (protected_class_inference)"
     );
+  });
+
+  it("renders governed PM quality summary posture without exposing score-run hashes", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      summary,
+    });
+
+    expect(model.operationEvidence).toEqual({
+      operation: "PM quality support summary",
+      correlationId: "corr-summary",
+      contractVersion: "v1",
+      sourceService: "lotus-ai",
+      upstreamStatus: "200",
+    });
+    expect(model.summaryPosture).toEqual({
+      status: "COMPLETED",
+      reviewState: "REVIEW_REQUIRED",
+      workflowAuthority: "lotus-manage",
+      runId: "packrun_pmq_1",
+      requestedOutputs: "score_run_summary, governance_summary",
+      audience: "portfolio_manager, investment_control",
+      evidenceSource: "lotus-manage",
+      supportability: "Review required",
+      boundary:
+        "Support-only, review-required summary from Gateway and lotus-ai; not approval, ranking, HR, compensation, conduct, client-contact, execution, or OMS evidence.",
+    });
+    expect(JSON.stringify(model.summaryPosture)).not.toContain("sha256:pm-quality");
   });
 
   it("renders persisted fairness-analysis list posture without browser-side fairness calculation", () => {

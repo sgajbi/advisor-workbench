@@ -381,6 +381,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "pm-operating-quality-score-run-ai-summary",
+    operation: "dpm.pm-operating-quality.score-runs.ai-summary",
+  },
+  {
+    route: "workbench.manage",
     panel: "pm-operating-quality-fairness-preview",
     operation: "dpm.pm-operating-quality.fairness-analyses.preview",
   },

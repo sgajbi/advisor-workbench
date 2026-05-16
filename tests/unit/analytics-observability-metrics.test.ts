@@ -491,6 +491,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "pm-operating-quality-score-run-ai-summary",
+        "dpm.pm-operating-quality.score-runs.ai-summary",
+      ],
+      [
+        "workbench.manage",
         "pm-operating-quality-fairness-preview",
         "dpm.pm-operating-quality.fairness-analyses.preview",
       ],

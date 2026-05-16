@@ -14,12 +14,16 @@ import {
 import {
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityScoreRun,
+  requestDpmPmOperatingQualitySummary,
 } from "@/features/workbench/api";
 import {
   buildPmOperatingQualityPanelModel,
   type PmOperatingQualityPanelState,
 } from "@/features/workbench/pm-operating-quality-view-model";
-import type { DpmPmOperatingQualityGatewayResponse } from "@/features/workbench/types";
+import type {
+  DpmPmOperatingQualityGatewayResponse,
+  DpmPmOperatingQualitySummaryResponse,
+} from "@/features/workbench/types";
 import {
   businessStateLabel,
   formatBusinessReason,
@@ -136,8 +140,11 @@ export default function PmOperatingQualityPanel({
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [fairnessPreviewResponse, setFairnessPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [summaryResponse, setSummaryResponse] =
+    useState<DpmPmOperatingQualitySummaryResponse | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
+  const [pendingSummaryAction, setPendingSummaryAction] = useState(false);
   const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const model = buildPmOperatingQualityPanelModel({
@@ -147,6 +154,7 @@ export default function PmOperatingQualityPanel({
     fairnessAnalysisDetail,
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
+    summary: summaryResponse,
   });
   const stateCopy = statePanelCopy(model.state);
   const loadError =
@@ -222,6 +230,32 @@ export default function PmOperatingQualityPanel({
     }
   }
 
+  async function requestSupportSummary() {
+    if (pendingSummaryAction) {
+      return;
+    }
+    if (model.summaryRequestReadinessState !== "READY" || !model.selectedScoreRun) {
+      setActionError(buildBlockedActionError(model.summaryRequestReadiness));
+      return;
+    }
+    setPendingSummaryAction(true);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const response = await requestDpmPmOperatingQualitySummary({
+        scoreRunId: model.selectedScoreRun.scoreRunId,
+      });
+      setSummaryResponse(response);
+      setActionMessage("Support summary returned review-required PM quality evidence.");
+    } catch (error) {
+      setActionError(
+        buildActionError(error, "PM operating quality support summary request failed")
+      );
+    } finally {
+      setPendingSummaryAction(false);
+    }
+  }
+
   return (
     <SectionBlock
       title="PM Operating Quality"
@@ -285,6 +319,16 @@ export default function PmOperatingQualityPanel({
                 {pendingAction ? "Previewing" : "Preview Score Run"}
               </ActionButton>
               <ActionButton
+                priority="secondary"
+                onClick={requestSupportSummary}
+                disabled={
+                  pendingSummaryAction ||
+                  model.summaryRequestReadinessState !== "READY"
+                }
+              >
+                {pendingSummaryAction ? "Requesting" : "Request Support Summary"}
+              </ActionButton>
+              <ActionButton
                 priority="primary"
                 onClick={previewFairnessAnalysis}
                 disabled={
@@ -302,10 +346,11 @@ export default function PmOperatingQualityPanel({
             aria-label="PM operating quality command readiness"
           >
             <MetricRow label="Score Preview Command" value={model.scoreRunPreviewReadiness} />
+            <MetricRow label="Summary Request" value={model.summaryRequestReadiness} />
             <MetricRow label="Fairness Preview Command" value={model.fairnessPreviewReadiness} />
             <MetricRow
               label="Execution Boundary"
-              value="Gateway and Manage evidence only; no scoring, ranking, trade approval, order routing, or client contact in Workbench"
+              value="Gateway-backed evidence only; no browser prompt, scoring, ranking, trade approval, order routing, OMS, or client contact in Workbench"
             />
           </div>
           {actionError ? (
@@ -321,6 +366,17 @@ export default function PmOperatingQualityPanel({
             <MetricRow label="Contract" value={model.operationEvidence.contractVersion} />
             <MetricRow label="Source Service" value={model.operationEvidence.sourceService} />
             <MetricRow label="Upstream Status" value={model.operationEvidence.upstreamStatus} />
+          </div>
+          <div className="pm-quality-operation-evidence" aria-label="PM operating quality support summary posture">
+            <MetricRow label="Summary Status" value={model.summaryPosture.status} />
+            <MetricRow label="Review Posture" value={model.summaryPosture.reviewState} />
+            <MetricRow label="Workflow Authority" value={model.summaryPosture.workflowAuthority} />
+            <MetricRow label="Workflow Run" value={model.summaryPosture.runId} />
+            <MetricRow label="Requested Outputs" value={model.summaryPosture.requestedOutputs} />
+            <MetricRow label="Audience" value={model.summaryPosture.audience} />
+            <MetricRow label="Evidence Source" value={model.summaryPosture.evidenceSource} />
+            <MetricRow label="Summary Supportability" value={model.summaryPosture.supportability} />
+            <MetricRow label="Support Boundary" value={model.summaryPosture.boundary} />
           </div>
           <AnalyticsTable
             ariaLabel="PM operating quality score runs"
@@ -367,6 +423,7 @@ export default function PmOperatingQualityPanel({
           <div className="pm-quality-governance-stack">
             <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
             <MetricRow label="Score Preview Readiness" value={model.scoreRunPreviewReadiness} />
+            <MetricRow label="Summary Readiness" value={model.summaryRequestReadiness} />
             <MetricRow label="Preview Readiness" value={model.fairnessPreviewReadiness} />
             <MetricRow label="Source Segments" value={String(model.fairnessSegmentRequests.length)} />
             <MetricRow label="Persisted Analyses" value={String(model.fairnessAnalysisRows.length)} />
@@ -377,8 +434,9 @@ export default function PmOperatingQualityPanel({
             />
             <MetricRow label="Policy Versions" value={String(model.policyRows.length)} />
             <Text variant="secondary">
-              Workbench preserves Gateway and Manage evidence only. It does not rank PMs, calculate
-              PM quality, approve trades, create HR or compensation decisions, or contact clients.
+              Workbench preserves Gateway, Manage, and review-gated AI evidence only. It does not
+              rank PMs, calculate PM quality, construct prompts, approve trades, create HR or
+              compensation decisions, operate OMS workflows, or contact clients.
             </Text>
           </div>
         </aside>
