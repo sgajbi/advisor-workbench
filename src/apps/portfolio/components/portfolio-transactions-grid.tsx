@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { AgGridReact } from "ag-grid-react";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -13,14 +12,12 @@ import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
 import { WorkbenchInlineRefreshNote } from "@/design-system";
-import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
 import {
-  PORTFOLIO_GRID_DEFAULT_COLUMN_DEF,
   buildPortfolioDataGridColumn,
   getPortfolioAmountToneClass,
   shouldPinPortfolioGridLeadColumns,
@@ -29,13 +26,9 @@ import {
   buildTransactionFilterOptions,
   shouldReuseInitialTransactions,
 } from "./portfolio-transactions-grid-helpers";
+import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
-
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
-
-ensureAgGridModulesRegistered();
 
 type PortfolioTransactionsGridProps = {
   portfolioId: string;
@@ -430,29 +423,18 @@ export default function PortfolioTransactionsGrid({
           rows={5}
         />
       ) : rowData.length ? (
-        <div
-          className={`ag-theme-quartz portfolio-data-grid ${showExpandedColumns ? "portfolio-data-grid-dense" : ""}`}
-          aria-label="Portfolio transactions grid"
-        >
-          <AgGridReact<TransactionRow>
-            rowData={rowData}
-            columnDefs={columnDefs}
-            theme="legacy"
-            quickFilterText={quickSearch}
-            defaultColDef={PORTFOLIO_GRID_DEFAULT_COLUMN_DEF}
-            animateRows={false}
-            domLayout="autoHeight"
-            headerHeight={32}
-            rowHeight={showExpandedColumns ? 34 : 36}
-            ensureDomOrder
-            suppressCellFocus={false}
-            onRowClicked={({ data }) => {
-              if (data) {
-                onRowSelect?.(data);
-              }
-            }}
-          />
-        </div>
+        <PortfolioDataGridFrame<TransactionRow>
+          ariaLabel="Portfolio transactions grid"
+          density={gridDensity}
+          rowData={rowData}
+          columnDefs={columnDefs}
+          quickFilterText={quickSearch}
+          onRowClicked={({ data }) => {
+            if (data) {
+              onRowSelect?.(data);
+            }
+          }}
+        />
       ) : loadError ? (
         <PortfolioModuleState
           variant="status"
