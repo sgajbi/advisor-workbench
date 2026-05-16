@@ -22,19 +22,29 @@ export default function PortfolioExecutiveSummary({
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
 }) {
-  const allocationRows = resolvePortfolioSummaryAllocationRows(workspace).slice(0, 5);
+  const isDetailedView = context.viewMode === "detailed";
+  const allocationRows = isDetailedView
+    ? []
+    : resolvePortfolioSummaryAllocationRows(workspace).slice(0, 5);
   const totalAllocationWeight = allocationRows.reduce(
     (total, row) => total + Math.max(0, row.weight ?? 0),
     0
   );
-  const topHoldingRows = resolvePortfolioSummaryTopHoldingRows(workspace).slice(0, 5);
+  const topHoldingRows = isDetailedView
+    ? []
+    : resolvePortfolioSummaryTopHoldingRows(workspace).slice(0, 5);
   const cashflow = workspace.cashflow_outlook;
   const portfolioId = encodeURIComponent(workspace.portfolio.portfolio_id);
   const attentionItems = buildPortfolioSummaryAttentionItems(workspace);
   const readiness = buildPortfolioSummaryReadiness(workspace);
 
   return (
-    <section className="portfolio-executive-summary-grid" aria-label="Portfolio summary previews">
+    <section
+      className={`portfolio-executive-summary-grid${
+        isDetailedView ? " portfolio-executive-summary-grid-detailed" : ""
+      }`}
+      aria-label={isDetailedView ? "Portfolio operating brief" : "Portfolio summary previews"}
+    >
       <div className="portfolio-summary-kpi-strip" aria-label="Portfolio operating metrics">
         <div className="portfolio-summary-kpi">
           <span>Market Value</span>
@@ -59,46 +69,48 @@ export default function PortfolioExecutiveSummary({
         </div>
       </div>
 
-      <div className="portfolio-summary-module portfolio-allocation-summary portfolio-summary-module-wide">
-        <div className="portfolio-summary-module-header">
-          <div>
-            <h3>Asset Allocation</h3>
-          </div>
-          <span>Updated {formatDate(context.selectedAsOfDate)}</span>
-        </div>
-        {allocationRows.length ? (
-          <div className="portfolio-allocation-summary-body">
-            <div className="portfolio-allocation-stack" aria-label="Asset allocation by weight">
-              {allocationRows.map((row, index) => (
-                <div
-                  key={row.label}
-                  className={`portfolio-allocation-stack-segment portfolio-allocation-stack-segment-${index % 5}`}
-                  style={{
-                    width: `${Math.max(2, Math.min(row.weight ?? 0, 100))}%`,
-                    flexGrow: totalAllocationWeight > 100 ? 0 : Math.max(0, row.weight ?? 0),
-                  }}
-                  title={`${row.label}: ${formatPct(row.weight)}`}
-                />
-              ))}
+      {isDetailedView ? null : (
+        <div className="portfolio-summary-module portfolio-allocation-summary portfolio-summary-module-wide">
+          <div className="portfolio-summary-module-header">
+            <div>
+              <h3>Asset Allocation</h3>
             </div>
-            <div className="portfolio-allocation-legend">
-              {allocationRows.map((row, index) => (
-                <div key={row.label} className="portfolio-allocation-legend-item">
-                  <span className={`portfolio-allocation-dot portfolio-allocation-dot-${index % 5}`} />
-                  <div>
-                    <strong>{row.label}</strong>
-                    <small>
-                      {formatCurrency(row.value, workspace.portfolio.base_currency)} ({formatPct(row.weight)})
-                    </small>
+            <span>Updated {formatDate(context.selectedAsOfDate)}</span>
+          </div>
+          {allocationRows.length ? (
+            <div className="portfolio-allocation-summary-body">
+              <div className="portfolio-allocation-stack" aria-label="Asset allocation by weight">
+                {allocationRows.map((row, index) => (
+                  <div
+                    key={row.label}
+                    className={`portfolio-allocation-stack-segment portfolio-allocation-stack-segment-${index % 5}`}
+                    style={{
+                      width: `${Math.max(2, Math.min(row.weight ?? 0, 100))}%`,
+                      flexGrow: totalAllocationWeight > 100 ? 0 : Math.max(0, row.weight ?? 0),
+                    }}
+                    title={`${row.label}: ${formatPct(row.weight)}`}
+                  />
+                ))}
+              </div>
+              <div className="portfolio-allocation-legend">
+                {allocationRows.map((row, index) => (
+                  <div key={row.label} className="portfolio-allocation-legend-item">
+                    <span className={`portfolio-allocation-dot portfolio-allocation-dot-${index % 5}`} />
+                    <div>
+                      <strong>{row.label}</strong>
+                      <small>
+                        {formatCurrency(row.value, workspace.portfolio.base_currency)} ({formatPct(row.weight)})
+                      </small>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="portfolio-summary-empty-copy">Allocation is unavailable for this portfolio.</p>
-        )}
-      </div>
+          ) : (
+            <p className="portfolio-summary-empty-copy">Allocation is unavailable for this portfolio.</p>
+          )}
+        </div>
+      )}
 
       <div className="portfolio-summary-module portfolio-attention-summary">
         <div className="portfolio-summary-module-header">
@@ -125,47 +137,49 @@ export default function PortfolioExecutiveSummary({
         </div>
       </div>
 
-      <div className="portfolio-summary-module portfolio-top-holdings-summary portfolio-summary-module-wide">
-        <div className="portfolio-summary-module-header">
-          <div>
-            <h3>Top Holdings</h3>
+      {isDetailedView ? null : (
+        <div className="portfolio-summary-module portfolio-top-holdings-summary portfolio-summary-module-wide">
+          <div className="portfolio-summary-module-header">
+            <div>
+              <h3>Top Holdings</h3>
+            </div>
+            <ActionLink href={`/positions?portfolioId=${portfolioId}`}>View All Positions</ActionLink>
           </div>
-          <ActionLink href={`/positions?portfolioId=${portfolioId}`}>View All Positions</ActionLink>
-        </div>
-        <table className="portfolio-summary-table">
-          <thead>
-            <tr>
-              <th>Instrument</th>
-              <th className="numeric">Weight</th>
-              <th className="numeric">Value ({workspace.portfolio.base_currency})</th>
-              <th className="numeric">Unrealized P&L</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topHoldingRows.length ? (
-              topHoldingRows.map((row) => (
-                <tr key={row.securityId}>
-                  <td>
-                    <strong>{row.instrument}</strong>
-                    <span>
-                      {row.securityId} · {row.assetClass}
-                    </span>
-                  </td>
-                  <td className="numeric">{formatPct(row.weight)}</td>
-                  <td className="numeric">{formatCurrency(row.marketValue, workspace.portfolio.base_currency)}</td>
-                  <td className={`numeric ${getPortfolioSummaryValueToneClass(row.unrealizedPnl)}`}>
-                    {formatCurrency(row.unrealizedPnl, workspace.portfolio.base_currency)}
-                  </td>
-                </tr>
-              ))
-            ) : (
+          <table className="portfolio-summary-table">
+            <thead>
               <tr>
-                <td colSpan={4}>Top holdings are unavailable for this portfolio.</td>
+                <th>Instrument</th>
+                <th className="numeric">Weight</th>
+                <th className="numeric">Value ({workspace.portfolio.base_currency})</th>
+                <th className="numeric">Unrealized P&L</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {topHoldingRows.length ? (
+                topHoldingRows.map((row) => (
+                  <tr key={row.securityId}>
+                    <td>
+                      <strong>{row.instrument}</strong>
+                      <span>
+                        {row.securityId} · {row.assetClass}
+                      </span>
+                    </td>
+                    <td className="numeric">{formatPct(row.weight)}</td>
+                    <td className="numeric">{formatCurrency(row.marketValue, workspace.portfolio.base_currency)}</td>
+                    <td className={`numeric ${getPortfolioSummaryValueToneClass(row.unrealizedPnl)}`}>
+                      {formatCurrency(row.unrealizedPnl, workspace.portfolio.base_currency)}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4}>Top holdings are unavailable for this portfolio.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="portfolio-summary-side-stack">
         <div className="portfolio-summary-module portfolio-liquidity-summary">
