@@ -16,6 +16,7 @@ describe("portfolio record screen view model", () => {
       kicker: "Position inventory",
     });
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
+    expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("Income composition");
     expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain("Forward liquidity");
   });
 
@@ -32,6 +33,57 @@ describe("portfolio record screen view model", () => {
       { label: "Total Market Value", value: "1,000,000 USD" },
       { label: "Positions", value: "11" },
       { label: "Window", value: "30D" },
+    ]);
+
+    expect(
+      buildPortfolioRecordHeaderKpis(
+        {
+          ...workspace,
+          income_summary: {
+            reporting_currency: "USD",
+            window_start_date: "2026-04-12",
+            window_end_date: "2026-05-12",
+            totals_requested_window: buildIncomePeriod(42901.4, 3),
+            totals_year_to_date: buildIncomePeriod(128450, 8),
+            income_types: [],
+          },
+          activity_summary: {
+            reporting_currency: "USD",
+            window_start_date: "2026-04-12",
+            window_end_date: "2026-05-12",
+            buckets: [
+              {
+                bucket: "external_funding",
+                requested_window: {
+                  reporting_currency_amount: 150000,
+                  transaction_count: 1,
+                },
+                year_to_date: {
+                  reporting_currency_amount: 150000,
+                  transaction_count: 1,
+                },
+              },
+              {
+                bucket: "fees",
+                requested_window: {
+                  reporting_currency_amount: -1450,
+                  transaction_count: 1,
+                },
+                year_to_date: {
+                  reporting_currency_amount: -1450,
+                  transaction_count: 1,
+                },
+              },
+            ],
+          },
+        },
+        "30D",
+        "income"
+      )
+    ).toEqual([
+      { label: "Net Income", value: "42,901.4 USD" },
+      { label: "Net Activity", value: "148,550 USD" },
+      { label: "Events", value: "5" },
     ]);
 
     expect(
@@ -123,5 +175,26 @@ function buildWorkspace(): PortfolioWorkspace {
     workflow_actions: [],
     warnings: [],
     partial_failures: [],
+  };
+}
+
+function buildIncomePeriod(amount: number, transactionCount: number) {
+  return {
+    gross: {
+      reporting_currency_amount: amount,
+      transaction_count: transactionCount,
+    },
+    withholding_tax: {
+      reporting_currency_amount: 0,
+      transaction_count: 0,
+    },
+    other_deductions: {
+      reporting_currency_amount: 0,
+      transaction_count: 0,
+    },
+    net: {
+      reporting_currency_amount: amount,
+      transaction_count: transactionCount,
+    },
   };
 }

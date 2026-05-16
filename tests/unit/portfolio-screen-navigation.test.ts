@@ -13,6 +13,7 @@ describe("portfolio screen navigation", () => {
       "portfolio",
       "positions",
       "transactions",
+      "income",
       "cashflow",
       "performance",
       "risk",
@@ -22,6 +23,9 @@ describe("portfolio screen navigation", () => {
     ]);
     expect(items.find((item) => item.key === "positions")?.href).toBe(
       "/positions?portfolioId=PB%20SG%2F001"
+    );
+    expect(items.find((item) => item.key === "income")?.href).toBe(
+      "/income?portfolioId=PB%20SG%2F001"
     );
     expect(items.find((item) => item.key === "risk")?.href).toBe(
       "/performance?mode=risk&portfolioId=PB%20SG%2F001"

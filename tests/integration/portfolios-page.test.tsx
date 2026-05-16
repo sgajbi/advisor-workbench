@@ -338,7 +338,7 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Income & Activity/i })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("heading", { name: /Portfolio Context/i })).toBeInTheDocument();
@@ -353,7 +353,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Recent Flows/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Income & Activity/i })).toBeInTheDocument();
     expect(
       screen
         .getAllByRole("link", { name: /Positions/i })
@@ -366,17 +366,23 @@ describe("PortfolioFoundationPage", () => {
     ).toBe(true);
     expect(
       screen
+        .getAllByRole("link", { name: /Income & Activity/i })
+        .some((link) => link.getAttribute("href")?.includes("/income"))
+    ).toBe(true);
+    expect(
+      screen
         .getAllByRole("link", { name: /Cashflow/i })
         .some((link) => link.getAttribute("href")?.includes("/cashflow"))
     ).toBe(true);
     expect(screen.getByText("Performance not available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Why performance is unavailable" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Expand|Collapse/i }).length).toBeGreaterThanOrEqual(1);
-    expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeTruthy();
-    expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeTruthy();
+    expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeFalsy();
+    expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeFalsy();
     expect(screen.getByRole("heading", { name: /Advisor Guidance/i })).toBeInTheDocument();
-    expect(screen.getByText("Income is not classified yet")).toBeInTheDocument();
-    expect(screen.getByText("Activity totals are incomplete")).toBeInTheDocument();
+    expect(screen.getByText(/Dedicated record screen/i)).toBeInTheDocument();
+    expect(screen.queryByText("Income is not classified yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("Activity totals are incomplete")).not.toBeInTheDocument();
 
     expect(screen.getByRole("tab", { name: "Detailed" })).toHaveAttribute(
       "aria-selected",
@@ -396,7 +402,7 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
 
     expect(window.localStorage.getItem("lotus:portfolio:view-mode")).toBe("summary");
-    expect(screen.queryByRole("heading", { name: /Recent Flows/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Income & Activity/i })).not.toBeInTheDocument();
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(true);

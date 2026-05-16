@@ -29,16 +29,18 @@ export default function PortfolioRecordEvidenceRail({
   const sourcePostureItems =
     screen === "transactions"
       ? buildTransactionSourcePosture(workspace, portfolioId)
-      : screen === "cashflow"
-        ? buildCashflowSourcePosture(workspace)
-      : buildPositionSourcePosture({
-          workspace,
-          portfolioId,
-          unpricedCount,
-          reprocessingCount,
-          staleCount,
-          reportingReady,
-        });
+      : screen === "income"
+        ? buildIncomeActivitySourcePosture(workspace)
+        : screen === "cashflow"
+          ? buildCashflowSourcePosture(workspace)
+          : buildPositionSourcePosture({
+              workspace,
+              portfolioId,
+              unpricedCount,
+              reprocessingCount,
+              staleCount,
+              reportingReady,
+            });
 
   return (
     <div className="portfolio-record-evidence-rail" aria-label="Portfolio record data governance">
@@ -78,6 +80,9 @@ export default function PortfolioRecordEvidenceRail({
           <ActionLink href={`/transactions?portfolioId=${encodeURIComponent(portfolioId)}`}>
             Transactions
           </ActionLink>
+          <ActionLink href={`/income?portfolioId=${encodeURIComponent(portfolioId)}`}>
+            Income &amp; Activity
+          </ActionLink>
           <ActionLink href={`/cashflow?portfolioId=${encodeURIComponent(portfolioId)}`}>
             Cashflow
           </ActionLink>
@@ -88,6 +93,49 @@ export default function PortfolioRecordEvidenceRail({
       </WorkbenchRailCard>
     </div>
   );
+}
+
+function buildIncomeActivitySourcePosture(workspace: PortfolioWorkspace): SourcePostureProps[] {
+  const income = workspace.income_summary;
+  const activity = workspace.activity_summary;
+  const incomeTypeCount = income?.income_types.length ?? 0;
+  const incomeEventCount =
+    income?.totals_requested_window.net.transaction_count ?? 0;
+  const activityBucketCount = activity?.buckets.length ?? 0;
+  const activityEventCount =
+    activity?.buckets.reduce(
+      (total, bucket) => total + bucket.requested_window.transaction_count,
+      0
+    ) ?? 0;
+  const reportingReady = workspace.readiness.reporting.status?.toUpperCase() === "READY";
+
+  return [
+    {
+      label: "Income Source",
+      source: "Gateway portfolio workspace",
+      detail: income
+        ? `${formatCount(incomeTypeCount, "income type")} and ${formatCount(
+            incomeEventCount,
+            "income event"
+          )} through ${formatDate(income.window_end_date)}`
+        : "No income summary returned for the selected reporting window",
+      tone: income ? "success" : "warn",
+      status: income ? "Available" : "Unavailable",
+    },
+    {
+      label: "Activity Buckets",
+      source: "Source-defined activity classification",
+      detail: activity
+        ? `${formatCount(activityBucketCount, "bucket")} and ${formatCount(
+            activityEventCount,
+            "activity event"
+          )} through ${formatDate(activity.window_end_date)}`
+        : "No activity bucket summary returned for the selected reporting window",
+      tone: activity ? "success" : "warn",
+      status: activity ? "Ready" : "Unavailable",
+    },
+    buildReportingSourcePosture(workspace, reportingReady),
+  ];
 }
 
 function buildCashflowSourcePosture(workspace: PortfolioWorkspace): SourcePostureProps[] {

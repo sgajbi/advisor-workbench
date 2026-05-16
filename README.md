@@ -79,7 +79,7 @@ Route mounting comes from `src/app/`, while app-local ownership lives under `src
 Current main surfaces:
 
 - `portfolio`
-  `/portfolio`, `/portfolios`, `/intake`
+  `/portfolio`, `/portfolios`, `/positions`, `/transactions`, `/income`, `/cashflow`, `/intake`
 - `performance`
   `/performance` with performance, risk, advisor-brief, and evidence modes
 - `workbench`

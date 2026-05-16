@@ -3446,6 +3446,7 @@ a:hover {
   font-weight: 700;
   line-height: 32px;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .portfolio-record-standalone-header p {
@@ -3457,6 +3458,8 @@ a:hover {
 
 .portfolio-record-standalone-kpis {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   border: 1px solid #d8dde5;
   background: #f8fafc;
 }
@@ -15832,5 +15835,350 @@ a:hover {
   border-left: 2px solid #fcdc9a;
   color: #fcdc9a;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.portfolio-income-activity-workspace {
+  display: grid;
+  gap: 24px;
+}
+
+.portfolio-income-activity-section {
+  display: grid;
+  gap: 12px;
+}
+
+.portfolio-income-activity-section-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.portfolio-income-activity-section-title h2 {
+  margin: 0;
+  color: #191c1e;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 18px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.portfolio-income-activity-section-title span {
+  color: #59616f;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.portfolio-income-activity-grid {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.portfolio-income-grid {
+  grid-template-columns: minmax(280px, 5fr) minmax(360px, 7fr);
+}
+
+.portfolio-activity-grid {
+  grid-template-columns: minmax(420px, 8fr) minmax(280px, 4fr);
+}
+
+.portfolio-income-card {
+  min-width: 0;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.portfolio-income-card-visual {
+  display: grid;
+  align-content: space-between;
+  gap: 28px;
+  min-height: 280px;
+  padding: 20px;
+}
+
+.portfolio-income-metric-bar {
+  display: grid;
+  gap: 10px;
+}
+
+.portfolio-income-metric-bar > div:first-child {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.portfolio-income-metric-bar span,
+.portfolio-income-table-footer,
+.portfolio-activity-buckets h3,
+.portfolio-activity-reserve span,
+.portfolio-income-handoff-card span {
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.portfolio-income-metric-bar strong {
+  color: #000000;
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 26px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.portfolio-income-bar,
+.portfolio-activity-bucket-bar {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: #e6e8ea;
+}
+
+.portfolio-income-bar-fill,
+.portfolio-activity-bucket-bar div {
+  height: 100%;
+  background: #000000;
+}
+
+.portfolio-income-bar-fill-muted {
+  background: #7c839b;
+}
+
+.portfolio-income-source-note {
+  padding-top: 16px;
+  border-top: 1px solid #c6c6cd;
+  color: #59616f;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.portfolio-income-table-card,
+.portfolio-activity-table-card {
+  overflow: hidden;
+}
+
+.portfolio-income-table,
+.portfolio-activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.portfolio-income-table th,
+.portfolio-activity-table th {
+  height: 32px;
+  padding: 0 16px;
+  border-bottom: 1px solid #c6c6cd;
+  background: #f2f4f6;
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.portfolio-income-table th:not(:first-child),
+.portfolio-income-table td:not(:first-child),
+.portfolio-activity-table th:not(:first-child),
+.portfolio-activity-table td:not(:first-child) {
+  text-align: right;
+}
+
+.portfolio-income-table td,
+.portfolio-activity-table td {
+  height: 40px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e0e3e5;
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-activity-table td:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.portfolio-activity-table small {
+  color: #59616f;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.portfolio-income-table-footer {
+  padding: 8px 16px;
+  border-top: 1px solid #c6c6cd;
+  background: #f2f4f6;
+}
+
+.portfolio-activity-table tfoot td {
+  height: 44px;
+  border-top: 2px solid #000000;
+  border-bottom: 0;
+  background: #f7f9fb;
+  color: #000000;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.portfolio-activity-table .positive {
+  color: #047857;
+}
+
+.portfolio-activity-table .negative {
+  color: #ba1a1a;
+}
+
+.portfolio-activity-side-stack {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.portfolio-activity-buckets {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.portfolio-activity-buckets h3 {
+  margin: 0;
+}
+
+.portfolio-activity-bucket-list {
+  display: grid;
+  gap: 18px;
+}
+
+.portfolio-activity-bucket-row {
+  display: grid;
+  gap: 8px;
+}
+
+.portfolio-activity-bucket-row > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.portfolio-activity-bucket-row span,
+.portfolio-activity-bucket-row strong {
+  color: #191c1e;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.portfolio-activity-bucket-row strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-activity-reserve {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  padding: 16px 20px;
+  border: 1px solid #131b2e;
+  border-left: 4px solid #fcdc9a;
+  border-radius: 6px;
+  background: #131b2e;
+  color: #ffffff;
+}
+
+.portfolio-activity-reserve strong {
+  display: block;
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 750;
+  line-height: 28px;
+}
+
+.portfolio-activity-reserve-mark {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #fcdc9a;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 5px #131b2e;
+  background: linear-gradient(135deg, #fcdc9a 0 45%, transparent 45% 55%, #fcdc9a 55% 100%);
+}
+
+.portfolio-income-handoff-section {
+  gap: 12px;
+}
+
+.portfolio-income-handoff-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.portfolio-income-handoff-card strong {
+  display: block;
+  margin-top: 2px;
+  color: #191c1e;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.portfolio-income-handoff-card p {
+  max-width: 780px;
+  margin: 0;
+  color: #59616f;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+@media (max-width: 1280px) {
+  .portfolio-income-grid,
+  .portfolio-activity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1500px) {
+  .portfolio-record-standalone-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .portfolio-record-standalone-kpis {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .portfolio-income-activity-section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .portfolio-income-metric-bar > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .portfolio-income-table,
+  .portfolio-activity-table {
+    min-width: 680px;
+  }
 }
 
