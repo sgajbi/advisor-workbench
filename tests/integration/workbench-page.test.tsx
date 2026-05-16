@@ -201,6 +201,11 @@ describe("WorkbenchPage", () => {
     ).toBe(true);
     expect(
       fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/waves/campaign-discovery")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
         input.toString().includes("/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PF_3001")
       )
     ).toBe(true);
@@ -735,6 +740,34 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
                 approved_by: "cio_ops_committee",
               },
               content_hash: "sha256:campaign-definition",
+            },
+          ],
+          limit: 10,
+          offset: 0,
+          count: 1,
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/waves/campaign-discovery")) {
+      return jsonResponse({
+        correlation_id: "corr_campaign_discovery",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              product_name: "BulkReviewCampaignDiscovery",
+              campaign_id: "campaign-holdings-202605",
+              campaign_version: "2026.05",
+              campaign_status: "ACTIVE",
+              candidate_count: 12,
+              eligible_candidate_count: 10,
+              governance_status: "APPROVED",
+              expiry_state: "ACTIVE",
+              access_purpose: "rebalance_review",
+              source_ref_count: 4,
             },
           ],
           limit: 10,

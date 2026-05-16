@@ -41,7 +41,9 @@ type Props = {
   portfolioId: string;
   waveList: DpmWaveGatewayResponse | null;
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDefinitionsError?: string | null;
+  campaignDiscoveryError?: string | null;
   errorMessage?: string | null;
 };
 
@@ -117,7 +119,9 @@ export default function DpmWaveCommandCenterPanel({
   portfolioId,
   waveList,
   campaignDefinitions = null,
+  campaignDiscovery = null,
   campaignDefinitionsError = null,
+  campaignDiscoveryError = null,
   errorMessage = null,
 }: Props) {
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
@@ -139,6 +143,7 @@ export default function DpmWaveCommandCenterPanel({
     waveItems: itemsResponse,
     actionResponse,
     campaignDefinitions,
+    campaignDiscovery,
     campaignLifecycleEvents: campaignLifecycleResponse,
   });
   const selectedWaveId = model.selectedWaveId;
@@ -344,7 +349,7 @@ export default function DpmWaveCommandCenterPanel({
         pendingLifecycleKey={pendingCampaignLifecycleKey}
         selectedCampaign={selectedCampaign}
         selectedCampaignKey={selectedCampaignKey}
-        errorMessage={campaignDefinitionsError}
+        errorMessage={campaignDefinitionsError ?? campaignDiscoveryError}
         onLoadLifecycle={loadCampaignLifecycle}
       />
 
@@ -572,8 +577,11 @@ function CampaignDefinitionsSection({
           { key: "status", label: "Status" },
           { key: "asOf", label: "As Of" },
           { key: "candidates", label: "Candidates", align: "right" },
+          { key: "eligibleCandidates", label: "Eligible", align: "right" },
           { key: "portfolioTypes", label: "Eligible Types" },
           { key: "governance", label: "Governance" },
+          { key: "expiry", label: "Expiry" },
+          { key: "purpose", label: "Purpose" },
           { key: "source", label: "Source Posture" },
           { key: "evidence", label: "Evidence" },
         ]}
@@ -595,8 +603,11 @@ function CampaignDefinitionsSection({
             </SemanticBadge>,
             row.asOfDate,
             row.candidateCount,
+            row.eligibleCandidateCount,
             row.eligiblePortfolioTypes,
             businessStateLabel(row.governanceState),
+            businessStateLabel(row.expiryState),
+            row.accessPurpose,
             row.sourcePosture,
             <ActionButton
               key={`${row.key}-evidence`}

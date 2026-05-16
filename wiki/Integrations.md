@@ -88,13 +88,15 @@ must travel through Gateway-shaped contracts.
     memo and operations-handoff summary execution remain `lotus-ai` owned; both must reach
     Workbench through Gateway wave composition only. Manage-owned `BulkReviewCampaignDefinition:v1`
     campaign definitions also reach Workbench only through Gateway
-    `/api/v1/dpm/command-center/waves/campaign-definitions`; selected lifecycle evidence reaches
+    `/api/v1/dpm/command-center/waves/campaign-definitions`; bounded
+    `BulkReviewCampaignDiscovery:v1` campaign posture reaches Workbench only through Gateway
+    `/api/v1/dpm/command-center/waves/campaign-discovery`; selected lifecycle evidence reaches
     Workbench only through Gateway
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`.
-    Workbench renders the bounded campaign-definition list and read-only lifecycle evidence but
-    does not discover campaigns, recalculate membership, infer lifecycle state, render content
-    hashes, operate retire/supersede commands, or operate a campaign-definition upsert workflow
-    locally. RFC-0039
+    Workbench renders the bounded campaign-definition list, campaign-discovery posture, and
+    read-only lifecycle evidence but does not discover global campaign cohorts, recalculate
+    membership, infer lifecycle state, render content hashes, operate retire/supersede commands,
+    or operate a campaign-definition upsert workflow locally. RFC-0039
     construction alternative generation, retrieval, supportability, and selection are manage-owned
     and must reach Workbench through Gateway construction composition only. RFC-0042
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and

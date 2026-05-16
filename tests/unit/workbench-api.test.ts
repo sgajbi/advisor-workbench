@@ -33,6 +33,7 @@ import {
   getDpmWaveReportInput,
   getDpmWaveSupportability,
   handoffDpmWave,
+  listDpmCampaignDiscovery,
   listDpmCampaignDefinitions,
   listDpmWaves,
   previewDpmWave,
@@ -2228,6 +2229,56 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-campaign-definitions");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign");
+  });
+
+  it("loads DPM campaign discovery through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-discovery",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              items: [
+                {
+                  product_name: "BulkReviewCampaignDiscovery",
+                  product_version: "v1",
+                  campaign_id: "campaign-holdings-202605",
+                  campaign_version: "2026.05",
+                  campaign_status: "ACTIVE",
+                  candidate_count: 12,
+                  eligible_candidate_count: 10,
+                },
+              ],
+              limit: 10,
+              offset: 0,
+              count: 1,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await listDpmCampaignDiscovery({
+      campaignStatus: "ACTIVE",
+      activeOn: "2026-05-16",
+      includeExpired: false,
+      limit: 10,
+      offset: 0,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-discovery?limit=10&offset=0&campaign_status=ACTIVE&active_on=2026-05-16&include_expired=false"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-discovery");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign-discovery");
   });
 
   it("loads DPM campaign-definition lifecycle evidence through the Gateway BFF without leaking campaign identifiers into metrics", async () => {

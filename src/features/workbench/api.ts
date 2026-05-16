@@ -1166,6 +1166,43 @@ export async function listDpmCampaignDefinitions(params?: {
   );
 }
 
+export async function listDpmCampaignDiscovery(params?: {
+  campaignId?: string;
+  campaignStatus?: "ACTIVE" | "RETIRED" | "SUPERSEDED";
+  asOfDate?: string;
+  activeOn?: string;
+  includeExpired?: boolean;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  const query = new URLSearchParams();
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  query.set("campaign_status", params?.campaignStatus ?? "ACTIVE");
+  if (params?.campaignId) {
+    query.set("campaign_id", params.campaignId);
+  }
+  if (params?.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params?.activeOn) {
+    query.set("active_on", params.activeOn);
+  }
+  if (params?.includeExpired !== undefined) {
+    query.set("include_expired", String(params.includeExpired));
+  }
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-discovery.list",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        "server",
+        "/dpm/command-center/waves/campaign-discovery",
+        "DPM campaign discovery",
+        query
+      )
+  );
+}
+
 export async function getDpmCampaignDefinitionLifecycleEvents(params: {
   campaignId: string;
   campaignVersion: string;
