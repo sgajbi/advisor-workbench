@@ -402,6 +402,81 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     body="Constraint rows are not available for the selected alternative."
                   />
                 )}
+                {model.currencyOverlayEvidence ? (
+                  <section className="construction-currency-overlay-evidence">
+                    <div className="construction-currency-overlay-header">
+                      <Text as="h3" variant="subsectionTitle">
+                        Currency Overlay Evidence
+                      </Text>
+                      <SemanticBadge tone={badgeTone(model.currencyOverlayEvidence.state)}>
+                        {businessStateLabel(model.currencyOverlayEvidence.state)}
+                      </SemanticBadge>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>Hedge policy source</dt>
+                        <dd>
+                          {model.currencyOverlayEvidence.sourceProductName}{" "}
+                          {model.currencyOverlayEvidence.sourceProductVersion}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Source id</dt>
+                        <dd>{model.currencyOverlayEvidence.sourceId}</dd>
+                      </div>
+                      <div>
+                        <dt>Evidence hash</dt>
+                        <dd>{model.currencyOverlayEvidence.contentHash}</dd>
+                      </div>
+                      <div>
+                        <dt>Policy rules</dt>
+                        <dd>{model.currencyOverlayEvidence.ruleCount}</dd>
+                      </div>
+                    </dl>
+                    {model.currencyOverlayEvidence.rules.length > 0 ? (
+                      <div className="construction-currency-overlay-list">
+                        <strong>Returned rules</strong>
+                        {model.currencyOverlayEvidence.rules.map((rule, index) => (
+                          <span key={`${rule}-${index}`}>{rule}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="construction-currency-overlay-list">
+                      <strong>Missing data</strong>
+                      {model.currencyOverlayEvidence.missingDataFamilies.length > 0 ? (
+                        model.currencyOverlayEvidence.missingDataFamilies.map((family) => (
+                          <SemanticBadge key={family} tone="warn">
+                            {formatBusinessReason(family)}
+                          </SemanticBadge>
+                        ))
+                      ) : (
+                        <span>None reported</span>
+                      )}
+                    </div>
+                    <div className="construction-currency-overlay-list">
+                      <strong>Blocked capabilities</strong>
+                      {model.currencyOverlayEvidence.blockedCapabilities.length > 0 ? (
+                        model.currencyOverlayEvidence.blockedCapabilities.map((capability) => (
+                          <SemanticBadge key={capability} tone="danger">
+                            {formatBusinessReason(capability)}
+                          </SemanticBadge>
+                        ))
+                      ) : (
+                        <span>None reported</span>
+                      )}
+                    </div>
+                    {model.currencyOverlayEvidence.reasonCodes.length > 0 ? (
+                      <div className="construction-currency-overlay-list">
+                        <strong>Reason codes</strong>
+                        {model.currencyOverlayEvidence.reasonCodes.map((reason) => (
+                          <SemanticBadge key={reason} tone="warn">
+                            {formatBusinessReason(reason)}
+                          </SemanticBadge>
+                        ))}
+                      </div>
+                    ) : null}
+                  </section>
+                ) : null}
               </div>
             </div>
           </div>

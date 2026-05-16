@@ -53,6 +53,27 @@ const readyResponse: DpmConstructionGatewayResponse = {
         objective_trace: [{ term: "turnover" }],
         constraint_trace: [{ constraint: "cash_band" }],
         diagnostics: {
+          authority_context: {
+            currency_overlay_context: {
+              supportability_status: "BLOCKED",
+              source_system: "lotus-core",
+              external_hedge_policy_source_product_name: "ExternalHedgePolicy",
+              external_hedge_policy_source_product_version: "v1",
+              external_hedge_policy_source_id: "sha256:external-hedge-policy",
+              external_hedge_policy_content_hash:
+                "sha256:external-hedge-policy-content",
+              external_hedge_policy_rule_count: 0,
+              external_hedge_policy_rules: [],
+              missing_data_families: ["external_hedge_policy"],
+              blocked_capabilities: [
+                "hedge_policy_approval",
+                "treasury_instruction",
+                "counterparty_selection",
+                "oms_acknowledgement",
+              ],
+              reason_codes: ["EXTERNAL_HEDGE_POLICY_FAIL_CLOSED"],
+            },
+          },
           method_plan: { reason_codes: ["TARGET_METHOD_COMPARISON_AVAILABLE"] },
           enrichment_summary: { reason_codes: ["REGIME_SCENARIO_PACK_READY"] },
         },
@@ -154,6 +175,23 @@ describe("construction alternatives view model", () => {
         reasonCode: "PRICE_STALE",
       },
     ]);
+    expect(model.currencyOverlayEvidence).toEqual({
+      state: "BLOCKED",
+      sourceProductName: "ExternalHedgePolicy",
+      sourceProductVersion: "v1",
+      sourceId: "sha256:external-hedge-policy",
+      contentHash: "sha256:external-hedge-policy-content",
+      ruleCount: "0",
+      rules: [],
+      missingDataFamilies: ["external_hedge_policy"],
+      blockedCapabilities: [
+        "hedge_policy_approval",
+        "treasury_instruction",
+        "counterparty_selection",
+        "oms_acknowledgement",
+      ],
+      reasonCodes: ["EXTERNAL_HEDGE_POLICY_FAIL_CLOSED"],
+    });
   });
 
   it("uses an idle state before Gateway returns an alternative set", () => {

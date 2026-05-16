@@ -68,6 +68,19 @@ export type ConstructionSourceReadinessRow = {
   reasonCode: string;
 };
 
+export type ConstructionCurrencyOverlayEvidence = {
+  state: string;
+  sourceProductName: string;
+  sourceProductVersion: string;
+  sourceId: string;
+  contentHash: string;
+  ruleCount: string;
+  rules: string[];
+  missingDataFamilies: string[];
+  blockedCapabilities: string[];
+  reasonCodes: string[];
+};
+
 export type ConstructionPanelModel = {
   state: ConstructionPanelState;
   supportabilityState: string;
@@ -90,6 +103,7 @@ export type ConstructionPanelModel = {
   selectedAlternative: ConstructionAlternativeRow | null;
   constraints: ConstructionConstraintRow[];
   sourceReadiness: ConstructionSourceReadinessRow[];
+  currencyOverlayEvidence: ConstructionCurrencyOverlayEvidence | null;
 };
 
 export function buildConstructionPanelModel(
@@ -123,6 +137,7 @@ export function buildConstructionPanelModel(
       selectedAlternative: null,
       constraints: [],
       sourceReadiness: [],
+      currencyOverlayEvidence: null,
     };
   }
 
@@ -135,6 +150,11 @@ export function buildConstructionPanelModel(
   const selectedAlternativeId =
     (response.supportability.selected_alternative_id ??
       readString(response.data, "selected_alternative_id")) ||
+    null;
+  const selectedRecord =
+    records.find((record) => readString(record, "alternative_id") === selectedAlternativeId) ??
+    records.find((record) => readBoolean(record, "recommended")) ??
+    records[0] ??
     null;
   return {
     state: resolvePanelState(supportabilityState, records.length),
@@ -176,6 +196,7 @@ export function buildConstructionPanelModel(
     tradeImpact: buildTradeImpact(response.data, alternatives),
     constraints: buildConstraintRows(response.data, records),
     sourceReadiness: buildSourceReadinessRows(response.data),
+    currencyOverlayEvidence: buildCurrencyOverlayEvidence(selectedRecord),
   };
 }
 
@@ -364,6 +385,59 @@ function buildSourceReadinessRows(data: Record<string, unknown>): ConstructionSo
   });
 }
 
+function buildCurrencyOverlayEvidence(
+  record: Record<string, unknown> | null,
+): ConstructionCurrencyOverlayEvidence | null {
+  if (!record) {
+    return null;
+  }
+  const diagnostics = readRecord(record.diagnostics);
+  const authorityContext = readRecord(diagnostics.authority_context);
+  const context = readRecord(authorityContext.currency_overlay_context);
+  if (Object.keys(context).length === 0) {
+    return null;
+  }
+  const sourceProductName = readString(
+    context,
+    "external_hedge_policy_source_product_name",
+  );
+  const sourceId = readString(context, "external_hedge_policy_source_id");
+  const contentHash = readString(context, "external_hedge_policy_content_hash");
+  const missingDataFamilies = extractStringArray(context.missing_data_families);
+  const blockedCapabilities = extractStringArray(context.blocked_capabilities);
+  const reasonCodes = extractStringArray(context.reason_codes);
+  const rules = extractDisplayArray(context.external_hedge_policy_rules);
+
+  if (
+    !sourceProductName &&
+    !sourceId &&
+    !contentHash &&
+    missingDataFamilies.length === 0 &&
+    blockedCapabilities.length === 0 &&
+    reasonCodes.length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    state:
+      readString(context, "supportability_status") ||
+      readString(context, "state") ||
+      "UNKNOWN",
+    sourceProductName: sourceProductName || "External hedge policy",
+    sourceProductVersion:
+      readString(context, "external_hedge_policy_source_product_version") ||
+      "N/A",
+    sourceId: sourceId || "N/A",
+    contentHash: contentHash || "N/A",
+    ruleCount: readCountLabel(context.external_hedge_policy_rule_count),
+    rules,
+    missingDataFamilies,
+    blockedCapabilities,
+    reasonCodes,
+  };
+}
+
 function recommendedPathLabel(alternatives: ConstructionAlternativeRow[]): string {
   return alternatives.find((alternative) => alternative.isRecommended)?.label ?? alternatives[0]?.label ?? "Not available";
 }
@@ -502,8 +576,27 @@ function extractStringArray(value: unknown): string[] {
   );
 }
 
+function extractDisplayArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((item) =>
+    typeof item === "string" ? item : JSON.stringify(item),
+  );
+}
+
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values));
+}
+
+function readCountLabel(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toLocaleString();
+  }
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
+  return "N/A";
 }
 
 function readRecord(value: unknown): Record<string, unknown> {
