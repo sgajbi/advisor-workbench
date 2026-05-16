@@ -195,9 +195,10 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByRole("heading", { name: /Asset Allocation/i })).toBeInTheDocument();
     expect(screen.getAllByRole("heading", { name: /Top Holdings/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByRole("heading", { name: /Performance Snapshot/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Recent Transactions/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Forward Cashflow/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Advisor Guidance/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Recent Transactions/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Cashflow Forecast/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Advisor Guidance/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Portfolio Health")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Next Actions/i })).toBeInTheDocument();
 
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
@@ -379,7 +380,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByRole("button", { name: /Expand|Collapse/i }).length).toBeGreaterThanOrEqual(1);
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeFalsy();
     expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeFalsy();
-    expect(screen.getByRole("heading", { name: /Advisor Guidance/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Advisor Guidance/i })).not.toBeInTheDocument();
     expect(screen.getByText(/Dedicated record screen/i)).toBeInTheDocument();
     expect(screen.queryByText("Income is not classified yet")).not.toBeInTheDocument();
     expect(screen.queryByText("Activity totals are incomplete")).not.toBeInTheDocument();
@@ -461,11 +462,11 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Forward Cashflow/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Cashflow Forecast/i })).toBeInTheDocument();
     });
 
     expect(document.getElementById("portfolio-drilldown")).toBeFalsy();
-    const liquidityHeading = screen.getByRole("heading", { name: /Forward Cashflow/i });
+    const liquidityHeading = screen.getByRole("heading", { name: /Cashflow Forecast/i });
     expect(screen.getAllByText(/Projected cashflow (is )?unavailable/i).length).toBeGreaterThanOrEqual(1);
     const liquidityModule = liquidityHeading.closest(".portfolio-summary-module");
     expect(liquidityModule).toBeTruthy();

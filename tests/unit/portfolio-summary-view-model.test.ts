@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildPortfolioAdvisorGuidanceItems,
+  buildPortfolioSummaryAttentionItems,
+  buildPortfolioSummaryReadiness,
   resolvePortfolioCashflowPointHeight,
   resolvePortfolioSummaryAllocationRows,
   resolvePortfolioSummaryTopHoldingRows,
@@ -50,7 +51,7 @@ describe("portfolio summary view model", () => {
     });
   });
 
-  it("uses backend truth to produce advisor guidance without inventing actions", () => {
+  it("builds bounded source-backed attention items without inventing advisor actions", () => {
     const workspace = buildWorkspace({
       partial_failures: [
         { source_service: "lotus-core", error_code: "PRICE_GAP", detail: "Missing price" },
@@ -61,30 +62,44 @@ describe("portfolio summary view model", () => {
         cash_weight_pct: 12,
         position_count: 3,
       },
-      rebalance: {
-        status: "ACTIVE",
-        last_run_at_utc: null,
-        last_rebalance_run_id: "rr_123",
-      },
+      insights: [
+        {
+          key: "drift",
+          title: "Mandate Drift",
+          detail: "US equity exposure near upper threshold.",
+          severity: "warning",
+          href: "/portfolio",
+        },
+      ],
     });
 
-    expect(buildPortfolioAdvisorGuidanceItems(workspace)).toEqual([
+    expect(buildPortfolioSummaryAttentionItems(workspace)).toEqual([
       expect.objectContaining({
-        title: "Resolve Readiness Gaps",
+        title: "Cash Drag Detected",
         tone: "warn",
-        href: "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001",
       }),
       expect.objectContaining({
-        title: "Review Cash Deployment",
+        title: "Source Coverage Gap",
         tone: "warn",
-        href: "/cashflow?portfolioId=PB_SG_GLOBAL_BAL_001",
-      }),
-      expect.objectContaining({
-        title: "DPM Operation Available",
-        priority: "Active",
-        href: "/workbench/PB_SG_GLOBAL_BAL_001",
       }),
     ]);
+  });
+
+  it("summarizes readiness indicators as a compact health ratio", () => {
+    const workspace = buildWorkspace({
+      readiness_indicators: [
+        { key: "holdings", label: "Holdings", status: "Ready", href: "/positions" },
+        { key: "pricing", label: "Pricing", status: "Missing", href: "#portfolio-attention" },
+        { key: "transactions", label: "Transactions", status: "Ready", href: "/transactions" },
+        { key: "reporting", label: "Reporting", status: "Ready", href: "/portfolio" },
+      ],
+    });
+
+    expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
+      readyCount: 3,
+      totalCount: 4,
+      percentLabel: "75%",
+    });
   });
 
   it("scales cashflow point heights against the largest projected movement", () => {

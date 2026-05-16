@@ -1,5 +1,6 @@
 import { formatCurrency, formatDate, formatPct, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
+import { buildPortfolioReadinessIndicators } from "./view-model";
 
 export type PortfolioSummaryAllocationRow = {
   label: string;
@@ -16,13 +17,16 @@ export type PortfolioSummaryHoldingRow = {
   unrealizedPnl: number | null;
 };
 
-export type PortfolioAdvisorGuidanceItem = {
+export type PortfolioSummaryAttentionItem = {
   title: string;
-  priority: string;
-  body: string;
-  action: string;
-  href: string;
-  tone: "success" | "warn" | "neutral";
+  detail: string;
+  tone: "danger" | "warn" | "neutral";
+};
+
+export type PortfolioSummaryReadiness = {
+  readyCount: number;
+  totalCount: number;
+  percentLabel: string;
 };
 
 export function resolvePortfolioSummaryAllocationRows(
@@ -105,88 +109,60 @@ export function resolvePortfolioCashflowPointHeight(
   return 18 + (Math.abs(value) / maxMagnitude) * 72;
 }
 
-export function buildPortfolioAdvisorGuidanceItems(
+export function buildPortfolioSummaryAttentionItems(
   workspace: PortfolioWorkspace
-): PortfolioAdvisorGuidanceItem[] {
-  const portfolioId = encodeURIComponent(workspace.portfolio.portfolio_id);
-  const exceptionCount =
-    workspace.partial_failures.length + (workspace.exception_summaries?.length ?? 0);
-  const firstWorkflowAction = workspace.workflow_actions?.[0];
-  const firstInsight = workspace.insights?.[0];
-  const items: PortfolioAdvisorGuidanceItem[] = [];
+): PortfolioSummaryAttentionItem[] {
+  const items: PortfolioSummaryAttentionItem[] = [];
 
-  if (exceptionCount) {
+  for (const exception of workspace.exception_summaries ?? []) {
     items.push({
-      title: "Resolve Readiness Gaps",
-      priority: "High priority",
-      body: `${exceptionCount} source-backed exception${exceptionCount === 1 ? "" : "s"} should be reviewed before client-facing use.`,
-      action: "Review Exceptions",
-      href: `/portfolio?portfolioId=${portfolioId}`,
-      tone: "warn",
-    });
-  } else {
-    items.push({
-      title: "Ready For Client Review",
-      priority: "Ready",
-      body: "Holdings, transactions, reporting, and readiness checks are usable for advisor review.",
-      action: "Open Evidence",
-      href: `/portfolio?portfolioId=${portfolioId}`,
-      tone: "success",
+      title: exception.title,
+      detail: exception.detail,
+      tone: exception.tone === "danger" ? "danger" : exception.tone === "warn" ? "warn" : "neutral",
     });
   }
 
   if (workspace.summary.cash_weight_pct > 5) {
     items.push({
-      title: "Review Cash Deployment",
-      priority: "Review",
-      body: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation may warrant deployment or liquidity confirmation against mandate.`,
-      action: "Open Cashflow",
-      href: `/cashflow?portfolioId=${portfolioId}`,
+      title: "Cash Drag Detected",
+      detail: `${formatPct(workspace.summary.cash_weight_pct)} cash exceeds the 5% review threshold for this summary posture.`,
       tone: "warn",
     });
-  } else {
+  }
+
+  if (workspace.partial_failures.length) {
+    const firstFailure = workspace.partial_failures[0];
     items.push({
-      title: "Liquidity In Range",
-      priority: "Monitor",
-      body: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation is visible with forward cashflow context.`,
-      action: "Open Cashflow",
-      href: `/cashflow?portfolioId=${portfolioId}`,
-      tone: "neutral",
+      title: "Source Coverage Gap",
+      detail: `${firstFailure.error_code}: ${firstFailure.detail}`,
+      tone: "warn",
     });
   }
 
-  if (workspace.rebalance?.status) {
+  for (const insight of workspace.insights ?? []) {
     items.push({
-      title: "DPM Operation Available",
-      priority: formatStatus(workspace.rebalance.status),
-      body: workspace.rebalance.last_rebalance_run_id
-        ? `Latest rebalance run ${workspace.rebalance.last_rebalance_run_id} is available for operational review.`
-        : "A DPM operation state is available for mandate and rebalance review.",
-      action: "Open Manage",
-      href: `/workbench/${portfolioId}`,
-      tone: "neutral",
-    });
-  } else if (firstWorkflowAction) {
-    items.push({
-      title: firstWorkflowAction.title,
-      priority: firstWorkflowAction.recommended ? "Recommended" : "Next action",
-      body: firstWorkflowAction.impact,
-      action: firstWorkflowAction.cta_label,
-      href: firstWorkflowAction.href,
-      tone: firstWorkflowAction.recommended ? "warn" : "neutral",
-    });
-  } else if (firstInsight) {
-    items.push({
-      title: firstInsight.title,
-      priority: formatStatus(firstInsight.severity),
-      body: firstInsight.detail,
-      action: "Review Insight",
-      href: firstInsight.href,
-      tone: firstInsight.severity === "critical" || firstInsight.severity === "warning" ? "warn" : "neutral",
+      title: insight.title,
+      detail: insight.detail,
+      tone: insight.severity === "critical" ? "danger" : insight.severity === "warning" ? "warn" : "neutral",
     });
   }
 
-  return items.slice(0, 3);
+  return items.slice(0, 2);
+}
+
+export function buildPortfolioSummaryReadiness(
+  workspace: PortfolioWorkspace
+): PortfolioSummaryReadiness {
+  const indicators = workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace);
+  const totalCount = Math.max(1, indicators.length);
+  const readyCount = indicators.filter((indicator) => indicator.status === "Ready").length;
+  const percent = Math.round((readyCount / totalCount) * 100);
+
+  return {
+    readyCount,
+    totalCount,
+    percentLabel: `${percent}%`,
+  };
 }
 
 export function formatProjectedCashflowPointTitle(

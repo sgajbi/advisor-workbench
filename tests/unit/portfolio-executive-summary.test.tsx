@@ -12,27 +12,23 @@ describe("PortfolioExecutiveSummary", () => {
 
     expect(screen.getByRole("heading", { name: "Asset Allocation" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Top Holdings" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Recent Transactions" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Forward Cashflow" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Advisor Guidance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cashflow Forecast" })).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Health")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Recent Transactions" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Advisor Guidance" })).not.toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: "Open Positions" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View All Positions" })).toHaveAttribute(
       "href",
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001"
     );
-    expect(screen.getByRole("link", { name: "Open Ledger" })).toHaveAttribute(
-      "href",
-      "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001"
-    );
-    expect(screen.getAllByRole("link", { name: "Open Cashflow" })[0]).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View Details" })).toHaveAttribute(
       "href",
       "/cashflow?portfolioId=PB_SG_GLOBAL_BAL_001"
     );
 
     expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
-    expect(screen.getByText("Buy")).toBeInTheDocument();
-    expect(screen.getByText("Review Cash Deployment")).toBeInTheDocument();
-    expect(screen.getByText("DPM Operation Available")).toBeInTheDocument();
+    expect(screen.getByText("Cash Drag Detected")).toBeInTheDocument();
+    expect(screen.getByLabelText("Portfolio health 75%")).toBeInTheDocument();
 
     const cashflowPoints = screen.getByLabelText("Projected cashflow points");
     expect(within(cashflowPoints).getAllByTitle(/May 2026/)).toHaveLength(2);
