@@ -24,8 +24,9 @@ describe("portfolio decision posture", () => {
     expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Exceptions")).toBeInTheDocument();
     expect(screen.getByText("Clear")).toBeInTheDocument();
-    expect(screen.getByText("DPM operations")).toBeInTheDocument();
-    expect(screen.getByText("rr_001")).toBeInTheDocument();
+    expect(screen.getByText("Mandate workflow")).toBeInTheDocument();
+    expect(screen.getByText("Mandate review available")).toBeInTheDocument();
+    expect(screen.queryByText("rr_001")).not.toBeInTheDocument();
   });
 
   it("renders evidence and deep links to governed workspaces", () => {
@@ -36,7 +37,8 @@ describe("portfolio decision posture", () => {
       />
     );
 
-    expect(screen.getByText("Evidence and Lineage")).toBeInTheDocument();
+    expect(screen.getByText("Review Evidence")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio decision review")).toBeInTheDocument();
     expect(screen.getByText("11 rows")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
       "href",
@@ -46,7 +48,7 @@ describe("portfolio decision posture", () => {
       "href",
       "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
     );
-    expect(screen.getByRole("link", { name: "DPM Operations" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Mandate Operations" })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001"
     );

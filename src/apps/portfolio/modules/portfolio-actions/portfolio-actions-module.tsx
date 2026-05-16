@@ -9,11 +9,15 @@ export default function PortfolioActionsModule({
 }: {
   actions: PortfolioWorkflowAction[];
 }) {
+  if (!actions.length) {
+    return null;
+  }
+
   return (
     <WorkbenchRailCard className="portfolio-side-card portfolio-actions-card">
       <ActionListCard
-        title="Next Actions"
-        subtitle="Recommended front-office follow-up for this book."
+        title="Recommended Actions"
+        subtitle="The next front-office checks before client use."
         items={actions.map((action, index) => ({
           key: `${action.title}-${index}`,
           sequence: action.sequence || index + 1,

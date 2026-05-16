@@ -58,14 +58,7 @@ export default function PortfolioWorkspaceSideRail({
 
   return (
     <>
-      <PortfolioEvidenceModule workspace={workspace} context={context} />
-
-      <PortfolioContextModule
-        workspace={workspace}
-        context={context}
-        copiedField={copiedContextField}
-        onCopy={copyContextValue}
-      />
+      <PortfolioActionsModule actions={actions} />
 
       <PortfolioReadinessModule
         exceptions={exceptions}
@@ -74,7 +67,13 @@ export default function PortfolioWorkspaceSideRail({
         onOpenException={onOpenException}
       />
 
-      <PortfolioActionsModule actions={actions} />
+      <PortfolioContextModule
+        workspace={workspace}
+        copiedField={copiedContextField}
+        onCopy={copyContextValue}
+      />
+
+      <PortfolioEvidenceModule workspace={workspace} context={context} />
     </>
   );
 }

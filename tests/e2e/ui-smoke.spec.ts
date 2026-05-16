@@ -8,7 +8,7 @@ test.describe('UI smoke checks', () => {
       path: '/portfolios',
       assertReady: async (page: import('@playwright/test').Page) => {
         await expect(
-          page.getByRole('heading', { name: /^Portfolio$|^Portfolio Summary$|^Portfolio unavailable$/i })
+          page.getByRole('heading', { name: /^Portfolio$|^Portfolio Review$|^Portfolio unavailable$/i })
         ).toBeVisible({ timeout: 60000 });
       },
     },
@@ -30,8 +30,7 @@ test.describe('UI smoke checks', () => {
           return;
         }
 
-        await expect(page.getByRole('tab', { name: /^Summary$/i })).toBeVisible({ timeout: 60000 });
-        await expect(page.getByRole('heading', { name: /Portfolio Summary/i })).toBeVisible({
+        await expect(page.getByRole('heading', { name: /Portfolio Review/i })).toBeVisible({
           timeout: 60000,
         });
       },
@@ -41,9 +40,9 @@ test.describe('UI smoke checks', () => {
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
     await expect(
-      page.getByRole('heading', { name: /^Portfolio$|^Portfolio Summary$|^Portfolio unavailable$/i })
+      page.getByRole('heading', { name: /^Portfolio$|^Portfolio Review$|^Portfolio unavailable$/i })
     ).toBeVisible();
-    await expect(page.getByText(/Client Portfolios|Portfolio Summary|Portfolio unavailable/i)).toBeVisible();
+    await expect(page.getByText(/Client Portfolios|Portfolio Review|Portfolio unavailable/i)).toBeVisible();
   });
 
   test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {

@@ -355,6 +355,17 @@ export type PortfolioWorkspace = {
       detail: string;
     }>;
   } | null;
+  performance_period_returns?: Array<{
+    period: "MTD" | "QTD" | "YTD";
+    return_pct: number | null;
+    benchmark_return_pct?: number | null;
+    excess_return_pct?: number | null;
+    unavailable?: {
+      title: string;
+      detail: string;
+      requirements: string[];
+    } | null;
+  }>;
   rebalance: {
     status: string;
     last_run_at_utc: string | null;

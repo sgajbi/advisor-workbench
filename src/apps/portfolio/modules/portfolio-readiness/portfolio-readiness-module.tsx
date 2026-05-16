@@ -41,8 +41,8 @@ export default function PortfolioReadinessModule({
   return (
     <WorkbenchRailCard className="portfolio-side-card portfolio-readiness-card">
       <DetailCard
-        title="Readiness and Exceptions"
-        subtitle="Only unresolved gaps that still need attention."
+        title="Reporting Readiness"
+        subtitle="Only unresolved book gaps that still need attention."
         actions={
           !exceptions.length && workspace.readiness.reporting.status.toUpperCase() !== "READY" ? (
             <StateInfoHint

@@ -39,16 +39,13 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace-toolbar", () =>
 vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
   default: ({
     toolbar,
-    detailsLoading,
     workspace,
   }: {
     toolbar?: React.ReactNode;
-    detailsLoading: boolean;
     workspace: PortfolioWorkspace | null;
   }) => (
     <div>
       {toolbar}
-      <div data-testid="details-loading">{String(detailsLoading)}</div>
       <div data-testid="portfolio-id">{workspace?.portfolio?.portfolio_id ?? "none"}</div>
       <div data-testid="insight-key">{workspace?.insights?.[0]?.key ?? "none"}</div>
       <div data-testid="exception-key">{workspace?.exception_summaries?.[0]?.key ?? "none"}</div>
@@ -117,7 +114,7 @@ describe("PortfolioWorkspaceClient", () => {
     window.localStorage.clear();
   });
 
-  it("does not duplicate summary or detailed fetches in strict mode", async () => {
+  it("does not duplicate summary fetches in strict mode and ignores legacy detailed mode changes", async () => {
     getShellWorkspaceMock.mockResolvedValue(buildWorkspace());
     getSummaryDetailsMock.mockResolvedValue({
       positions: [{ security_id: "EQ_1" }],
@@ -182,7 +179,7 @@ describe("PortfolioWorkspaceClient", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("details-loading")).toHaveTextContent("false");
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent("MANUAL_PB_USD_001");
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
@@ -202,22 +199,11 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("view-mode")).toHaveTextContent("detailed");
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId("insight-key")).toHaveTextContent("operational-alert");
-      expect(screen.getByTestId("exception-key")).toHaveTextContent("pricing");
-      expect(screen.getByTestId("workflow-action")).toHaveTextContent("Review performance");
+      expect(screen.getByTestId("view-mode")).toHaveTextContent("summary");
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
-    expect(getDetailedDetailsMock).toHaveBeenCalledTimes(1);
-    expect(getDetailedDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
-      asOfDate: "2026-03-28",
-      reportingCurrency: "USD",
-      startDate: "2026-02-26",
-      endDate: "2026-03-28",
-    });
+    expect(getDetailedDetailsMock).toHaveBeenCalledTimes(0);
   });
 
   it("recovers by fetching the portfolio shell when the server-rendered shell is unavailable", async () => {
@@ -252,10 +238,6 @@ describe("PortfolioWorkspaceClient", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("portfolio-id")).toHaveTextContent("MANUAL_PB_USD_001");
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId("details-loading")).toHaveTextContent("false");
     });
 
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
