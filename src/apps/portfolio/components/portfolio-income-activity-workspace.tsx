@@ -49,8 +49,8 @@ export default function PortfolioIncomeActivityWorkspace({
             variant="status"
             state="empty"
             title="Income is not classified yet"
-            body="The gateway-backed portfolio workspace did not return an income summary for the selected reporting window."
-            hint="Publish classified income events upstream to populate the dedicated Income and Activity screen."
+            body="No classified income was returned for the selected reporting window."
+            hint="Publish classified income events to populate the dedicated Income and Activity screen."
           />
         )}
       </section>
@@ -79,8 +79,8 @@ export default function PortfolioIncomeActivityWorkspace({
             variant="status"
             state="empty"
             title="Activity totals are incomplete"
-            body="The gateway-backed portfolio workspace did not return activity buckets for the selected reporting window."
-            hint="Publish source-defined activity buckets upstream to populate cash movement totals."
+            body="No activity buckets were returned for the selected reporting window."
+            hint="Publish source-defined activity buckets to populate cash movement totals."
           />
         )}
       </section>
@@ -113,7 +113,7 @@ function IncomeSummaryCard({
         muted
       />
       <div className="portfolio-income-source-note">
-        Source-backed income only. Forward income forecast is not part of the current portfolio workspace contract.
+        Classified booked income only. Forward income forecast is not part of this review.
       </div>
     </div>
   );
@@ -178,7 +178,7 @@ function IncomeTypeTable({
         </tbody>
       </table>
       <div className="portfolio-income-table-footer">
-        Last updated from gateway workspace source for {formatDate(income.window_end_date)}
+        Last updated for {formatDate(income.window_end_date)}
       </div>
     </div>
   );

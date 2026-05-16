@@ -78,7 +78,7 @@ export default function PortfolioRecordScreenClient({
                 <DegradedStatePanel
                   title="Portfolio records unavailable"
                 >
-                  The selected portfolio could not be loaded from the gateway-backed portfolio workspace.
+                  The selected portfolio records are not available for this review.
                 </DegradedStatePanel>
               ) : (
                 <>
