@@ -5,6 +5,7 @@ import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/d
 import {
   approveDpmWave,
   createDpmWave,
+  getDpmCampaignDefinitionLifecycleEvents,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
@@ -21,6 +22,7 @@ import type {
 vi.mock("../../src/features/workbench/api", () => ({
   approveDpmWave: vi.fn(),
   createDpmWave: vi.fn(),
+  getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
@@ -141,9 +143,30 @@ const campaignDefinitionsResponse: DpmCampaignDefinitionGatewayResponse = {
   },
 };
 
+const campaignLifecycleResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign-lifecycle",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    campaign_id: "campaign-holdings-202605",
+    campaign_version: "2026.05",
+    events: [
+      {
+        event_type: "CAMPAIGN_DEFINITION_CREATED",
+        occurred_at: "2026-05-14T09:30:00Z",
+        actor_id: "pm_sg_1",
+        status: "RECORDED",
+        reason_code: "source_backed_candidate_set",
+      },
+    ],
+  },
+};
+
 describe("DpmWaveCommandCenterPanel", () => {
   beforeEach(() => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(campaignLifecycleResponse);
   });
 
   afterEach(() => {
@@ -167,6 +190,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
 
     const table = screen.getByRole("table", { name: "Proposed rebalance changes" });
@@ -177,6 +201,32 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
     expect(screen.queryByText("corr-wave")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:campaign-definition")).not.toBeInTheDocument();
+  });
+
+  it("loads read-only campaign lifecycle evidence through the Gateway helper", async () => {
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+        campaignDefinitions={campaignDefinitionsResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open Evidence" }));
+
+    await waitFor(() =>
+      expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledWith({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      }),
+    );
+
+    const table = screen.getByRole("table", { name: "DPM campaign lifecycle evidence" });
+    expect(within(table).getByText("Campaign Definition Created")).toBeInTheDocument();
+    expect(within(table).getByText("2026-05-14T09:30:00Z")).toBeInTheDocument();
+    expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
+    expect(within(table).getByText("source_backed_candidate_set")).toBeInTheDocument();
+    expect(screen.queryByText("corr-campaign-lifecycle")).not.toBeInTheDocument();
   });
 
   it("routes bounded workflow actions through Gateway helpers", async () => {

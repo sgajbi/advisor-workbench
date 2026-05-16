@@ -55,7 +55,11 @@ promote dormant labels into product ownership just because historical route file
   `BulkReviewCampaignDefinition:v1` campaign definitions from
   `/api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
   status, as-of date, candidate count, eligible portfolio type, governance posture, and
-  source-backed posture without rendering content hashes or recalculating membership. It
+  source-backed posture without rendering content hashes or recalculating membership. It opens
+  selected campaign lifecycle evidence from
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
+  as a read-only Manage evidence feed without inferring lifecycle state or operating retire/
+  supersede commands locally. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local

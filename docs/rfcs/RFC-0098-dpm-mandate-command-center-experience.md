@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST RENDERING, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST AND LIFECYCLE-EVIDENCE RENDERING, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -458,6 +458,7 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo` | governed AI PM memo request |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
 
 Implementation note as of 2026-05-14: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
@@ -469,7 +470,11 @@ BFF/Gateway boundary. It also loads active Manage-owned `BulkReviewCampaignDefin
 campaign definitions through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
 status, as-of date, candidate count, eligible portfolio type, governance posture, and source-backed
-posture without rendering campaign content hashes or recalculating membership. The panel renders
+posture without rendering campaign content hashes or recalculating membership. The panel can open
+read-only selected campaign lifecycle evidence through Gateway
+`GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
+without inferring campaign lifecycle state, recalculating membership, or operating retire/supersede
+commands locally. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and

@@ -410,6 +410,11 @@ describe("analytics UI observability metrics", () => {
         "wave-campaign-definitions",
         "dpm.waves.campaign-definitions.list",
       ],
+      [
+        "workbench.manage",
+        "wave-campaign-lifecycle",
+        "dpm.waves.campaign-definitions.lifecycle-events",
+      ],
       ["workbench.manage", "wave-preview", "dpm.waves.preview"],
       ["workbench.manage", "wave-create", "dpm.waves.create"],
       ["workbench.manage", "wave-detail", "dpm.waves.get"],

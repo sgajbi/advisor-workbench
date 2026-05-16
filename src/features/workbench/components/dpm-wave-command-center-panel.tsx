@@ -11,6 +11,7 @@ import {
 import {
   approveDpmWave,
   createDpmWave,
+  getDpmCampaignDefinitionLifecycleEvents,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
@@ -25,6 +26,7 @@ import type {
 } from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
+  type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
   type DpmWaveItemRow,
@@ -121,10 +123,15 @@ export default function DpmWaveCommandCenterPanel({
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [actionResponse, setActionResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [proofPackResponse, setProofPackResponse] = useState<DpmWaveGatewayResponse | null>(null);
+  const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
+    useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [campaignLifecycleError, setCampaignLifecycleError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
+  const [selectedCampaignKey, setSelectedCampaignKey] = useState<string | null>(null);
 
   const model = buildDpmWaveCommandCenterModel({
     waveList,
@@ -132,6 +139,7 @@ export default function DpmWaveCommandCenterPanel({
     waveItems: itemsResponse,
     actionResponse,
     campaignDefinitions,
+    campaignLifecycleEvents: campaignLifecycleResponse,
   });
   const selectedWaveId = model.selectedWaveId;
   const lifecycleIndex = resolveLifecycleIndex(model.selectedWaveState);
@@ -160,6 +168,8 @@ export default function DpmWaveCommandCenterPanel({
   const proposedRows = useMemo(() => buildProposedChangeRows(model.itemRows), [model.itemRows]);
   const metricTiles = buildMetricTiles(model.metricRows, model.selectedWaveItemCount, model.selectedWaveIssueCount);
   const asOfDate = formatDisplayDate(model.summaryRows[0]?.asOfDate);
+  const selectedCampaign =
+    model.campaignRows.find((row) => row.key === selectedCampaignKey) ?? model.campaignRows[0] ?? null;
 
   useEffect(() => {
     if (!selectedWaveId || autoLoadedWaveId === selectedWaveId || itemsResponse || pendingAction) {
@@ -172,6 +182,12 @@ export default function DpmWaveCommandCenterPanel({
         setAutoLoadedWaveId(null);
       });
   }, [autoLoadedWaveId, itemsResponse, pendingAction, selectedWaveId]);
+
+  useEffect(() => {
+    if (!selectedCampaignKey && model.campaignRows[0]) {
+      setSelectedCampaignKey(model.campaignRows[0].key);
+    }
+  }, [model.campaignRows, selectedCampaignKey]);
 
   async function runAction(label: string, action: () => Promise<DpmWaveGatewayResponse>) {
     if (pendingAction) {
@@ -256,6 +272,29 @@ export default function DpmWaveCommandCenterPanel({
     });
   }
 
+  async function loadCampaignLifecycle(row: DpmCampaignDefinitionRow) {
+    if (pendingCampaignLifecycleKey) {
+      return;
+    }
+    setSelectedCampaignKey(row.key);
+    setPendingCampaignLifecycleKey(row.key);
+    setCampaignLifecycleError(null);
+    setCampaignLifecycleResponse(null);
+    try {
+      const response = await getDpmCampaignDefinitionLifecycleEvents({
+        campaignId: row.campaignId,
+        campaignVersion: row.campaignVersion,
+      });
+      setCampaignLifecycleResponse(response);
+    } catch (error) {
+      setCampaignLifecycleError(
+        error instanceof Error ? error.message : "Campaign lifecycle evidence could not be loaded."
+      );
+    } finally {
+      setPendingCampaignLifecycleKey(null);
+    }
+  }
+
   return (
     <SectionBlock
       title="Rebalance"
@@ -300,7 +339,13 @@ export default function DpmWaveCommandCenterPanel({
 
       <CampaignDefinitionsSection
         rows={model.campaignRows}
+        lifecycleRows={model.campaignLifecycleRows}
+        lifecycleError={campaignLifecycleError}
+        pendingLifecycleKey={pendingCampaignLifecycleKey}
+        selectedCampaign={selectedCampaign}
+        selectedCampaignKey={selectedCampaignKey}
         errorMessage={campaignDefinitionsError}
+        onLoadLifecycle={loadCampaignLifecycle}
       />
 
       <div className="rebalance-main-grid">
@@ -481,10 +526,22 @@ export default function DpmWaveCommandCenterPanel({
 
 function CampaignDefinitionsSection({
   rows,
+  lifecycleRows,
+  lifecycleError,
+  pendingLifecycleKey,
+  selectedCampaign,
+  selectedCampaignKey,
   errorMessage,
+  onLoadLifecycle,
 }: {
   rows: DpmCampaignDefinitionRow[];
+  lifecycleRows: DpmCampaignLifecycleEventRow[];
+  lifecycleError?: string | null;
+  pendingLifecycleKey?: string | null;
+  selectedCampaign: DpmCampaignDefinitionRow | null;
+  selectedCampaignKey?: string | null;
   errorMessage?: string | null;
+  onLoadLifecycle: (row: DpmCampaignDefinitionRow) => void;
 }) {
   return (
     <section className="rebalance-proposed-card" aria-labelledby="campaign-definitions-title">
@@ -518,11 +575,20 @@ function CampaignDefinitionsSection({
           { key: "portfolioTypes", label: "Eligible Types" },
           { key: "governance", label: "Governance" },
           { key: "source", label: "Source Posture" },
+          { key: "evidence", label: "Evidence" },
         ]}
         rows={rows.map((row) => ({
           key: row.key,
           cells: [
-            row.displayName,
+            <button
+              className="rebalance-link-button"
+              key={`${row.key}-select`}
+              type="button"
+              onClick={() => onLoadLifecycle(row)}
+              aria-pressed={row.key === selectedCampaignKey}
+            >
+              {row.displayName}
+            </button>,
             row.campaignVersion,
             <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
               {businessStateLabel(row.status)}
@@ -532,6 +598,14 @@ function CampaignDefinitionsSection({
             row.eligiblePortfolioTypes,
             businessStateLabel(row.governanceState),
             row.sourcePosture,
+            <ActionButton
+              key={`${row.key}-evidence`}
+              priority="secondary"
+              onClick={() => onLoadLifecycle(row)}
+              disabled={Boolean(pendingLifecycleKey)}
+            >
+              {pendingLifecycleKey === row.key ? "Loading" : "Open Evidence"}
+            </ActionButton>,
           ],
         }))}
         emptyState={{
@@ -539,6 +613,57 @@ function CampaignDefinitionsSection({
           body: "Persist a Manage campaign definition before using bulk-review campaign waves.",
         }}
       />
+      <div className="rebalance-campaign-evidence" aria-labelledby="campaign-lifecycle-title">
+        <div className="rebalance-table-heading">
+          <div>
+            <h4 id="campaign-lifecycle-title">Campaign Lifecycle Evidence</h4>
+            <p>
+              {selectedCampaign
+                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
+                : "Select a campaign definition to inspect lifecycle evidence."}
+            </p>
+          </div>
+          <SemanticBadge tone={lifecycleError ? "warn" : lifecycleRows.length ? "success" : "default"}>
+            {lifecycleError ? "Needs attention" : lifecycleRows.length ? "Loaded" : "Not loaded"}
+          </SemanticBadge>
+        </div>
+        {lifecycleError ? (
+          <ScreenStatePanel
+            kind="partial"
+            surface="portfolio"
+            title="Campaign lifecycle evidence needs attention"
+            body={lifecycleError}
+          />
+        ) : null}
+        <AnalyticsTable
+          ariaLabel="DPM campaign lifecycle evidence"
+          variant="portfolio"
+          density="compact"
+          columns={[
+            { key: "event", label: "Lifecycle Event" },
+            { key: "occurred", label: "Recorded" },
+            { key: "actor", label: "Recorded By" },
+            { key: "status", label: "Status" },
+            { key: "reason", label: "Reason" },
+          ]}
+          rows={lifecycleRows.map((row) => ({
+            key: row.key,
+            cells: [
+              row.eventType,
+              row.occurredAt,
+              row.actor,
+              <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+                {businessStateLabel(row.status)}
+              </SemanticBadge>,
+              row.reason,
+            ],
+          }))}
+          emptyState={{
+            title: "No lifecycle evidence loaded",
+            body: "Open campaign evidence to review Manage-recorded lifecycle events.",
+          }}
+        />
+      </div>
     </section>
   );
 }

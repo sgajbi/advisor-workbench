@@ -1166,6 +1166,23 @@ export async function listDpmCampaignDefinitions(params?: {
   );
 }
 
+export async function getDpmCampaignDefinitionLifecycleEvents(params: {
+  campaignId: string;
+  campaignVersion: string;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-definitions.lifecycle-events",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        "server",
+        `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+          params.campaignId
+        )}/versions/${encodeURIComponent(params.campaignVersion)}/lifecycle-events`,
+        "DPM campaign-definition lifecycle evidence"
+      )
+  );
+}
+
 export async function previewDpmWave(params: {
   portfolioId: string;
   asOfDate?: string;

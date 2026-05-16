@@ -2975,6 +2975,32 @@
   opacity: 0.45;
 }
 
+.manageScope :global(.rebalance-link-button) {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #191c1e;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+
+.manageScope :global(.rebalance-link-button:hover),
+.manageScope :global(.rebalance-link-button[aria-pressed="true"]) {
+  color: #22577a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.manageScope :global(.rebalance-campaign-evidence) {
+  border-top: 1px solid #c6c6cd;
+}
+
+.manageScope :global(.rebalance-campaign-evidence .screen-state-panel) {
+  margin: 12px 16px;
+}
+
 .manageScope :global(.rebalance-action) {
   font-weight: 700;
 }
