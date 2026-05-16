@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
   DegradedStatePanel,
@@ -18,8 +18,11 @@ import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
 import PortfolioTransactionsGrid from "./portfolio-transactions-grid";
 import PortfolioProjectedCashflowModule from "./portfolio-projected-cashflow-module";
 import PortfolioIncomeActivityWorkspace from "./portfolio-income-activity-workspace";
+import PortfolioAllocationPanel from "./portfolio-allocation-panel";
+import type { PortfolioAllocationSelection } from "../types";
 import type { PortfolioRecordScreenKind } from "../portfolio-record-screen-view-model";
 import {
+  buildPortfolioRecordDisplayName,
   buildPortfolioRecordHeaderKpis,
   buildPortfolioRecordHeaderMeta,
   buildPortfolioRecordScreenSubtitle,
@@ -49,7 +52,10 @@ export default function PortfolioRecordScreenClient({
   }, [workspace]);
   const copy = getPortfolioRecordScreenCopy(screen);
   const resolvedPortfolioId = portfolioId ?? "No portfolio";
+  const bookDisplayName = workspace ? buildPortfolioRecordDisplayName(workspace) : resolvedPortfolioId;
   const headerKpis = workspace ? buildPortfolioRecordHeaderKpis(workspace, "30D", screen) : [];
+  const [selectedAllocation, setSelectedAllocation] =
+    useState<PortfolioAllocationSelection | null>(null);
 
   return (
     <PortfolioPageLayout>
@@ -65,7 +71,7 @@ export default function PortfolioRecordScreenClient({
             className="portfolio-page-frame portfolio-record-page-frame"
             bodyClassName="portfolio-page-frame-body"
             title={copy.title}
-            subtitle={buildPortfolioRecordScreenSubtitle(screen, workspace)}
+            subtitle={buildPortfolioRecordScreenSubtitle(screen)}
           >
             <WorkbenchSectionStack className="portfolio-page-sections">
               {!workspace ? (
@@ -77,13 +83,13 @@ export default function PortfolioRecordScreenClient({
               ) : (
                 <>
                   <div className="portfolio-record-context-bar">
-                    <span>{workspace.portfolio.portfolio_id}</span>
+                    <span>{bookDisplayName}</span>
                     <span>{copy.subtitle}</span>
                   </div>
                   <section className="portfolio-record-standalone-header">
                     <div>
                       <span>{copy.kicker}</span>
-                      <h1>{workspace.portfolio.portfolio_id}</h1>
+                      <h1>{bookDisplayName}</h1>
                       <p>{buildPortfolioRecordHeaderMeta(workspace)}</p>
                     </div>
                     <div className="portfolio-record-standalone-kpis">
@@ -95,6 +101,17 @@ export default function PortfolioRecordScreenClient({
                       ))}
                     </div>
                   </section>
+                  {screen === "allocation" ? (
+                    <PortfolioAllocationPanel
+                      portfolioId={workspace.portfolio.portfolio_id}
+                      allocationViews={workspace.allocation_views ?? []}
+                      baseCurrency={workspace.portfolio.base_currency}
+                      asOfDate={context.selectedAsOfDate}
+                      reportingCurrency={context.selectedReportingCurrency}
+                      selectedAllocation={selectedAllocation}
+                      onSelectionChange={setSelectedAllocation}
+                    />
+                  ) : null}
                   {screen === "positions" ? (
                     <PortfolioHoldingsGrid
                       portfolioId={workspace.portfolio.portfolio_id}

@@ -6,7 +6,7 @@ import PortfolioRecordEvidenceRail from "../../src/apps/portfolio/components/por
 import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("PortfolioRecordEvidenceRail", () => {
-  it("renders gateway-backed positions evidence and adjacent workflow links", () => {
+  it("renders portfolio positions evidence and adjacent workflow links", () => {
     render(
       <PortfolioRecordEvidenceRail
         screen="positions"
@@ -41,7 +41,7 @@ describe("PortfolioRecordEvidenceRail", () => {
       />
     );
 
-    expect(screen.getByText("Evidence and Lineage")).toBeInTheDocument();
+    expect(screen.getByText("Data Readiness")).toBeInTheDocument();
     expect(screen.getByText("PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
     expect(screen.getByText("1 holding missing price or valuation")).toBeInTheDocument();
     expect(screen.getByText("2 positions loaded for PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe("PortfolioRecordEvidenceRail", () => {
       "href",
       "/income?portfolioId=PB_SG_GLOBAL_BAL_001"
     );
-    expect(screen.getByRole("link", { name: "DPM Operations" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Mandate Operations" })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001"
     );
@@ -151,7 +151,8 @@ describe("PortfolioRecordEvidenceRail", () => {
     expect(screen.getByText(/1 income type and 3 income events through/i)).toBeInTheDocument();
     expect(screen.getByText("Activity Buckets")).toBeInTheDocument();
     expect(screen.getByText(/1 bucket and 1 activity event through/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Gateway portfolio workspace").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Portfolio book record").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Gateway portfolio workspace")).not.toBeInTheDocument();
   });
 });
 

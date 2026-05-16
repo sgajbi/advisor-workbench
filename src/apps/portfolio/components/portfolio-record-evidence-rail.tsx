@@ -33,6 +33,8 @@ export default function PortfolioRecordEvidenceRail({
         ? buildIncomeActivitySourcePosture(workspace)
         : screen === "cashflow"
           ? buildCashflowSourcePosture(workspace)
+          : screen === "allocation"
+            ? buildAllocationSourcePosture(workspace)
           : buildPositionSourcePosture({
               workspace,
               portfolioId,
@@ -47,8 +49,8 @@ export default function PortfolioRecordEvidenceRail({
       <WorkbenchRailCard className="portfolio-record-evidence-card">
         <div className="portfolio-record-evidence-header">
           <div>
-            <Text variant="label">Data Governance</Text>
-            <Text variant="cardTitle">Evidence and Lineage</Text>
+          <Text variant="label">Review Evidence</Text>
+            <Text variant="cardTitle">Data Readiness</Text>
           </div>
           <SemanticBadge tone={workspace.partial_failures.length ? "warn" : "success"}>
             {workspace.partial_failures.length ? "Partial" : "Ready"}
@@ -63,7 +65,7 @@ export default function PortfolioRecordEvidenceRail({
       </WorkbenchRailCard>
 
       <WorkbenchRailCard className="portfolio-record-evidence-card">
-        <Text variant="label">Source Posture</Text>
+        <Text variant="label">Source Coverage</Text>
         <div className="portfolio-record-source-list">
           {sourcePostureItems.map((item) => (
             <SourcePosture key={item.label} {...item} />
@@ -75,7 +77,10 @@ export default function PortfolioRecordEvidenceRail({
         <Text variant="label">Adjacent Workflows</Text>
         <div className="portfolio-record-evidence-actions">
           <ActionLink href={`/portfolio?portfolioId=${encodeURIComponent(portfolioId)}`}>
-            Portfolio Summary
+            Portfolio Review
+          </ActionLink>
+          <ActionLink href={`/allocation?portfolioId=${encodeURIComponent(portfolioId)}`}>
+            Allocation
           </ActionLink>
           <ActionLink href={`/transactions?portfolioId=${encodeURIComponent(portfolioId)}`}>
             Transactions
@@ -87,12 +92,47 @@ export default function PortfolioRecordEvidenceRail({
             Cashflow
           </ActionLink>
           <ActionLink href={`/workbench/${encodeURIComponent(portfolioId)}`}>
-            DPM Operations
+            Mandate Operations
           </ActionLink>
         </div>
       </WorkbenchRailCard>
     </div>
   );
+}
+
+function buildAllocationSourcePosture(workspace: PortfolioWorkspace): SourcePostureProps[] {
+  const allocationViews = workspace.allocation_views ?? [];
+  const bucketCount = allocationViews.reduce(
+    (total, view) => total + view.buckets.length,
+    0
+  );
+  const dimensions = allocationViews.length;
+
+  return [
+    {
+      label: "Allocation Views",
+      source: "Portfolio book record",
+      detail: `${formatCount(dimensions, "dimension")} and ${formatCount(bucketCount, "bucket")} available`,
+      tone: bucketCount ? "success" : "warn",
+      status: bucketCount ? "Ready" : "Pending",
+    },
+    {
+      label: "Holdings Coverage",
+      source: "Core positions inventory",
+      detail: `${formatCount(workspace.positions.length, "position")} available for allocation review`,
+      tone: workspace.positions.length ? "success" : "default",
+      status: workspace.positions.length ? "Ready" : "Empty",
+    },
+    {
+      label: "Reporting Snapshot",
+      source: workspace.readiness.reporting.generated_at_utc
+        ? formatDate(workspace.readiness.reporting.generated_at_utc)
+        : "Latest available",
+      detail: `${formatCount(workspace.readiness.reporting.row_count, "row")} in latest reportable book`,
+      tone: workspace.readiness.reporting.status?.toUpperCase() === "READY" ? "success" : "warn",
+      status: formatStatus(workspace.readiness.reporting.status ?? "UNKNOWN"),
+    },
+  ];
 }
 
 function buildIncomeActivitySourcePosture(workspace: PortfolioWorkspace): SourcePostureProps[] {
@@ -112,7 +152,7 @@ function buildIncomeActivitySourcePosture(workspace: PortfolioWorkspace): Source
   return [
     {
       label: "Income Source",
-      source: "Gateway portfolio workspace",
+      source: "Portfolio book record",
       detail: income
         ? `${formatCount(incomeTypeCount, "income type")} and ${formatCount(
             incomeEventCount,
@@ -150,7 +190,7 @@ function buildCashflowSourcePosture(workspace: PortfolioWorkspace): SourcePostur
   return [
     {
       label: "Projection Source",
-      source: "Gateway portfolio workspace",
+      source: "Portfolio book record",
       detail: cashflow
         ? `${formatCount(pointCount, "projected point")} through ${formatDate(cashflow.range_end_date)}`
         : "No projected cashflow outlook returned for this portfolio",
@@ -188,7 +228,7 @@ function buildPositionSourcePosture({
   return [
     {
       label: "Pricing Source",
-      source: "Gateway portfolio workspace",
+      source: "Portfolio book record",
       detail: unpricedCount
         ? `${formatCount(unpricedCount, "holding")} missing price or valuation`
         : "All visible holdings have price and valuation data",
