@@ -6,6 +6,7 @@ describe("resolveShellApp", () => {
   it("maps portfolio and intake routes into the Portfolio workspace", () => {
     expect(resolveShellApp("/portfolio").id).toBe("portfolio");
     expect(resolveShellApp("/portfolios").id).toBe("portfolio");
+    expect(resolveShellApp("/income").id).toBe("portfolio");
     expect(resolveShellApp("/intake").id).toBe("portfolio");
   });
 

@@ -1,7 +1,7 @@
 import { formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
 
-export type PortfolioRecordScreenKind = "positions" | "transactions" | "cashflow";
+export type PortfolioRecordScreenKind = "positions" | "transactions" | "income" | "cashflow";
 
 export type PortfolioRecordScreenCopy = {
   title: string;
@@ -27,6 +27,11 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
     title: "Transactions",
     subtitle: "Booked activity, settlement state, transaction components, and source lineage.",
     kicker: "Ledger",
+  },
+  income: {
+    title: "Income & Activity",
+    subtitle: "Income composition, booked activity, cash movement, and source posture.",
+    kicker: "Income and activity",
   },
   cashflow: {
     title: "Cashflow Workspace",
@@ -64,6 +69,44 @@ export function buildPortfolioRecordHeaderKpis(
   windowLabel = "30D",
   screen?: PortfolioRecordScreenKind
 ): PortfolioRecordHeaderKpi[] {
+  if (screen === "income") {
+    const income = workspace.income_summary;
+    const activity = workspace.activity_summary;
+    const activityAmount =
+      activity?.buckets.reduce(
+        (total, bucket) => total + bucket.requested_window.reporting_currency_amount,
+        0
+      ) ?? null;
+    const eventCount =
+      (income?.totals_requested_window.net.transaction_count ?? 0) +
+      (activity?.buckets.reduce(
+        (total, bucket) => total + bucket.requested_window.transaction_count,
+        0
+      ) ?? 0);
+
+    return [
+      {
+        label: "Net Income",
+        value: income
+          ? formatCurrency(
+              income.totals_requested_window.net.reporting_currency_amount,
+              income.reporting_currency
+            )
+          : "N/A",
+      },
+      {
+        label: "Net Activity",
+        value: activityAmount == null
+          ? "N/A"
+          : formatCurrency(activityAmount, activity?.reporting_currency ?? workspace.portfolio.base_currency),
+      },
+      {
+        label: "Events",
+        value: String(eventCount),
+      },
+    ];
+  }
+
   if (screen === "cashflow") {
     const cashflow = workspace.cashflow_outlook;
     const finalCumulative =

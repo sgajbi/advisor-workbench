@@ -2,6 +2,7 @@ export type PortfolioScreenNavigationKey =
   | "portfolio"
   | "positions"
   | "transactions"
+  | "income"
   | "cashflow"
   | "performance"
   | "risk"
@@ -20,6 +21,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   { key: "portfolio", label: "Portfolio", detail: "Summary and decision context", href: "/portfolio" },
   { key: "positions", label: "Positions", detail: "Holdings, valuation, and P&L", href: "/positions" },
   { key: "transactions", label: "Transactions", detail: "Booked activity and settlement", href: "/transactions" },
+  { key: "income", label: "Income", detail: "Income and activity", href: "/income" },
   { key: "cashflow", label: "Cashflow", detail: "Forward liquidity path", href: "/cashflow" },
   { key: "performance", label: "Performance", detail: "Return and attribution workspace", href: "/performance" },
   { key: "risk", label: "Risk", detail: "Risk review workspace", href: "/performance?mode=risk" },

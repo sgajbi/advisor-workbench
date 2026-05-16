@@ -90,7 +90,7 @@ async function openDetailedPortfolio(
   await detailedViewTab.click();
   await expect(detailedViewTab).toHaveAttribute('aria-selected', 'true');
 
-  await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toBeVisible({
+  await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible({
     timeout: 15000,
   });
   await expect(page.locator('.portfolio-data-grid').first()).toBeVisible({ timeout: 15000 });
@@ -98,6 +98,29 @@ async function openDetailedPortfolio(
     page.getByLabel(/Projected cashflow chart in /i)
   ).toBeVisible({ timeout: 15000 });
 
+  return { portfolioId, available: true };
+}
+
+async function openIncomePortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
+  const portfolioId = await resolveSmokePortfolioId(request);
+  if (!portfolioId) {
+    await page.goto('/income', { waitUntil: 'domcontentloaded' });
+    return { portfolioId: null, available: false };
+  }
+
+  await page.goto(`/income?portfolioId=${portfolioId}`, { waitUntil: 'domcontentloaded' });
+  const unavailableHeading = page.getByRole('heading', { name: /^Portfolio records unavailable$/i });
+  const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
+  if (unavailableVisible) {
+    return { portfolioId, available: false };
+  }
+
+  await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible({
+    timeout: 15000,
+  });
   return { portfolioId, available: true };
 }
 
@@ -110,10 +133,9 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('heading', { name: /Portfolio Allocation/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Top Holdings/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Performance Snapshot/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /^Income$/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /^Activity$/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Income/i })).toBeVisible();
 
-    await expect(page.locator('.portfolio-paired-analytics-grid')).toBeVisible();
+    await expect(page.locator('.portfolio-paired-analytics-grid')).toHaveCount(0);
     await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toHaveCount(0);
     await expect(page.locator('.portfolio-data-grid')).toHaveCount(0);
     await expect(page.getByLabel('Income summary')).toHaveCount(0);
@@ -123,10 +145,8 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('heading', { name: /^Transactions$/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Projected Cashflow/i })).toHaveCount(0);
 
-    const pairedAnalyticsMetrics = await measureGrid(page.locator('.portfolio-paired-analytics-grid'));
-    expect(pairedAnalyticsMetrics.columns).toContain(' ');
-    expect(pairedAnalyticsMetrics.childCount).toBe(2);
-    expect(pairedAnalyticsMetrics.width).toBeGreaterThan(900);
+    const summaryModuleMetrics = await measureGrid(page.locator('.portfolio-summary-cluster').first());
+    expect(summaryModuleMetrics.width).toBeGreaterThan(900);
   });
 
   test('detailed analytics keep grids usable and analytical surfaces proportionate', async ({ page, request }) => {
@@ -134,27 +154,18 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openDetailedPortfolio(page, request);
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
 
-    const detailedAnalyticsGrid = page.locator('.portfolio-paired-analytics-grid-detailed');
-    await expect(detailedAnalyticsGrid).toBeVisible();
-
-    const analyticsGridMetrics = await measureGrid(detailedAnalyticsGrid);
-    expect(analyticsGridMetrics.childCount).toBe(2);
-    expect(analyticsGridMetrics.width).toBeGreaterThan(900);
-    expect(analyticsGridMetrics.childWidths.every((width) => width >= 900)).toBeTruthy();
+    await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Open Income & Activity/i })).toBeVisible();
 
     const holdingsGrid = page.locator('.portfolio-data-grid').first();
     await expect(holdingsGrid).toBeVisible();
     const holdingsGridMetrics = await measureAgGridViewport(holdingsGrid);
     expect(holdingsGridMetrics.centerClientWidth).toBeGreaterThan(700);
 
-    const incomeTable = page.getByLabel('Income summary').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
-    const activityTable = page.getByLabel('Activity summary').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
     const cashflowTable = page.getByLabel('Cashflow outlook').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
-    await expect(incomeTable).toBeVisible();
-    await expect(activityTable).toBeVisible();
     await expect(cashflowTable).toBeVisible();
 
-    for (const table of [incomeTable, activityTable, cashflowTable]) {
+    for (const table of [cashflowTable]) {
       const metrics = await measureTableFrame(table);
       expect(metrics.scrollWidth - metrics.clientWidth).toBeLessThanOrEqual(8);
     }
@@ -165,9 +176,22 @@ test.describe('Portfolio workbench smoke', () => {
     expect(cashflowChartMetrics.height).toBeLessThanOrEqual(260);
     expect(cashflowChartMetrics.width).toBeGreaterThan(700);
 
-    await expect(page.getByText('Window inflow')).toBeVisible();
-    await expect(page.getByText('Window outflow')).toBeVisible();
-    await expect(page.getByText('Window fees')).toBeVisible();
-    await expect(page.getByText('Window taxes')).toBeVisible();
+  });
+
+  test('income route renders the dedicated income and activity workspace', async ({ page, request }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    const session = await openIncomePortfolio(page, request);
+    test.skip(!session.available, 'Portfolio income upstream unavailable in standalone smoke environment.');
+
+    await expect(page.getByRole('heading', { name: /^Income Summary$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Activity & Cash Movements$/i })).toBeVisible();
+    await expect(page.locator('.portfolio-income-activity-workspace')).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Income summary' })).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Activity and cash movements' })).toBeVisible();
+    await expect(page.getByText('Cash Weight')).toBeVisible();
+
+    const incomeGridMetrics = await measureGrid(page.locator('.portfolio-income-grid'));
+    expect(incomeGridMetrics.childCount).toBe(2);
+    expect(incomeGridMetrics.width).toBeGreaterThan(900);
   });
 });

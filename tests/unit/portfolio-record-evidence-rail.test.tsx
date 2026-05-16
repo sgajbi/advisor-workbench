@@ -50,6 +50,10 @@ describe("PortfolioRecordEvidenceRail", () => {
       "href",
       "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001"
     );
+    expect(screen.getByRole("link", { name: "Income & Activity" })).toHaveAttribute(
+      "href",
+      "/income?portfolioId=PB_SG_GLOBAL_BAL_001"
+    );
     expect(screen.getByRole("link", { name: "DPM Operations" })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001"
@@ -101,4 +105,73 @@ describe("PortfolioRecordEvidenceRail", () => {
     expect(screen.getByText("1 component type represented in the current window")).toBeInTheDocument();
     expect(screen.getByText("Review")).toBeInTheDocument();
   });
+
+  it("renders income and activity source posture without local analytics claims", () => {
+    render(
+      <PortfolioRecordEvidenceRail
+        screen="income"
+        workspace={buildPortfolioWorkspace({
+          income_summary: {
+            reporting_currency: "USD",
+            window_start_date: "2026-04-12",
+            window_end_date: "2026-05-12",
+            totals_requested_window: buildIncomePeriod(42901.4, 3),
+            totals_year_to_date: buildIncomePeriod(128450, 8),
+            income_types: [
+              {
+                income_type: "DIVIDENDS",
+                requested_window: buildIncomePeriod(24500, 2),
+                year_to_date: buildIncomePeriod(82100, 5),
+              },
+            ],
+          },
+          activity_summary: {
+            reporting_currency: "USD",
+            window_start_date: "2026-04-12",
+            window_end_date: "2026-05-12",
+            buckets: [
+              {
+                bucket: "EXTERNAL_FUNDING",
+                requested_window: {
+                  reporting_currency_amount: 150000,
+                  transaction_count: 1,
+                },
+                year_to_date: {
+                  reporting_currency_amount: 150000,
+                  transaction_count: 1,
+                },
+              },
+            ],
+          },
+        })}
+      />
+    );
+
+    expect(screen.getByText("Income Source")).toBeInTheDocument();
+    expect(screen.getByText(/1 income type and 3 income events through/i)).toBeInTheDocument();
+    expect(screen.getByText("Activity Buckets")).toBeInTheDocument();
+    expect(screen.getByText(/1 bucket and 1 activity event through/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Gateway portfolio workspace").length).toBeGreaterThanOrEqual(1);
+  });
 });
+
+function buildIncomePeriod(amount: number, transactionCount: number) {
+  return {
+    gross: {
+      reporting_currency_amount: amount,
+      transaction_count: transactionCount,
+    },
+    withholding_tax: {
+      reporting_currency_amount: 0,
+      transaction_count: 0,
+    },
+    other_deductions: {
+      reporting_currency_amount: 0,
+      transaction_count: 0,
+    },
+    net: {
+      reporting_currency_amount: amount,
+      transaction_count: transactionCount,
+    },
+  };
+}

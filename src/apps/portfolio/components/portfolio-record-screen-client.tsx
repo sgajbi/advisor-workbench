@@ -17,6 +17,7 @@ import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
 import PortfolioTransactionsGrid from "./portfolio-transactions-grid";
 import PortfolioProjectedCashflowModule from "./portfolio-projected-cashflow-module";
+import PortfolioIncomeActivityWorkspace from "./portfolio-income-activity-workspace";
 import type { PortfolioRecordScreenKind } from "../portfolio-record-screen-view-model";
 import {
   buildPortfolioRecordHeaderKpis,
@@ -112,6 +113,9 @@ export default function PortfolioRecordScreenClient({
                       defaultEndDate={endDate ?? context.effectivePeriodEndDate}
                       initialTransactions={workspace.recent_transactions}
                     />
+                  ) : null}
+                  {screen === "income" ? (
+                    <PortfolioIncomeActivityWorkspace workspace={workspace} />
                   ) : null}
                   {screen === "cashflow" ? (
                     <PortfolioProjectedCashflowModule

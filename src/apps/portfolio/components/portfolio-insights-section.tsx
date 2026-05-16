@@ -7,7 +7,6 @@ import { formatDate } from "../formatters";
 import PortfolioInsightsStrip from "../modules/portfolio-insights/portfolio-insights-strip";
 import PortfolioCollapsibleModule from "./portfolio-collapsible-module";
 import PortfolioModuleState from "./portfolio-module-state";
-import PortfolioPairedAnalyticsSection from "./portfolio-paired-analytics-section";
 import PortfolioPerformanceSnapshotModule from "./portfolio-performance-snapshot-module";
 import PortfolioLiquiditySummaryModule from "./portfolio-liquidity-summary-module";
 import type { PortfolioInsightsSectionProps } from "./portfolio-analytical-section-types";
@@ -19,17 +18,12 @@ export function PortfolioInsightsSection({
   detailsLoading,
   showInsights,
   showLiquidityModule,
-  showChangeHighlights,
-  incomeDisplayCurrency,
-  activityDisplayCurrency,
   visibleInsights,
   holdingsDrilldown,
   filteredPositions,
-  transactionDrilldown,
   onDismissInsight,
   onSelectAllocation,
   onSelectTopHolding,
-  onSelectActivityBucket,
   getSectionExpanded,
   toggleSection,
   DeferredPortfolioAllocationPanel,
@@ -50,7 +44,7 @@ export function PortfolioInsightsSection({
     <section className="portfolio-workspace-section portfolio-summary-cluster-section">
       <SectionHeader
         title="Portfolio Insights"
-        subtitle="Allocation, concentration, liquidity, and recent activity."
+        subtitle="Allocation, concentration, liquidity, and performance context."
       />
       <div className="portfolio-analytical-surface">
         {showInsightsSummaryBand ? (
@@ -243,24 +237,6 @@ export function PortfolioInsightsSection({
           </div>
         ) : null}
 
-        {showChangeHighlights ? (
-          <PortfolioPairedAnalyticsSection
-            workspace={workspace}
-            context={context}
-            capabilities={capabilities}
-            detailsLoading={detailsLoading}
-            isDetailedView={false}
-            incomeDisplayCurrency={incomeDisplayCurrency}
-            activityDisplayCurrency={activityDisplayCurrency}
-            transactionDrilldown={transactionDrilldown}
-            onSelectActivityBucket={onSelectActivityBucket}
-            getSectionExpanded={getSectionExpanded}
-            toggleSection={toggleSection}
-            gridClassName="portfolio-analytical-zone-grid portfolio-analytical-zone-grid-balanced"
-            shellLabel="Income and activity"
-            shellValue="Current-period cash generation and money movement"
-          />
-        ) : null}
       </div>
     </section>
   );
