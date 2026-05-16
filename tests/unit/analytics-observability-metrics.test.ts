@@ -489,6 +489,16 @@ describe("analytics UI observability metrics", () => {
         "pm-operating-quality-fairness-preview",
         "dpm.pm-operating-quality.fairness-analyses.preview",
       ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-fairness-analysis-list",
+        "dpm.pm-operating-quality.fairness-analyses.list",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-fairness-analysis-detail",
+        "dpm.pm-operating-quality.fairness-analyses.get",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],

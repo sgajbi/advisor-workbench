@@ -1657,6 +1657,56 @@ export async function previewDpmPmOperatingQualityFairnessAnalysis(params: {
   );
 }
 
+export async function listDpmPmOperatingQualityFairnessAnalyses(params?: {
+  policyId?: string;
+  policyVersion?: string;
+  asOfDate?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.policyId) {
+    query.set("policy_id", params.policyId);
+  }
+  if (params?.policyVersion) {
+    query.set("policy_version", params.policyVersion);
+  }
+  if (params?.state) {
+    query.set("state", params.state);
+  }
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.fairness-analyses.list",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "server",
+        "/dpm/command-center/pm-operating-quality/fairness-analyses",
+        "DPM PM operating quality fairness analyses",
+        query
+      )
+  );
+}
+
+export async function getDpmPmOperatingQualityFairnessAnalysis(
+  fairnessAnalysisId: string
+): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.fairness-analyses.get",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "server",
+        `/dpm/command-center/pm-operating-quality/fairness-analyses/${encodeURIComponent(
+          fairnessAnalysisId
+        )}`,
+        "DPM PM operating quality fairness analysis"
+      )
+  );
+}
+
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];

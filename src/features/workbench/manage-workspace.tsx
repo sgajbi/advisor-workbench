@@ -47,8 +47,10 @@ import {
   getDpmMandateByPortfolio,
   getDpmMandateHealth,
   getDpmOutcomeReviews,
+  getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPortfolioMemory,
   getDpmProofPack,
+  listDpmPmOperatingQualityFairnessAnalyses,
   getPortfolio360,
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityScoreRuns,
@@ -80,6 +82,14 @@ export type ManageWorkspaceData = {
   pmOperatingQualityPoliciesError: string | null;
   pmOperatingQualityScoreRuns: Awaited<ReturnType<typeof listDpmPmOperatingQualityScoreRuns>> | null;
   pmOperatingQualityScoreRunsError: string | null;
+  pmOperatingQualityFairnessAnalyses: Awaited<
+    ReturnType<typeof listDpmPmOperatingQualityFairnessAnalyses>
+  > | null;
+  pmOperatingQualityFairnessAnalysesError: string | null;
+  pmOperatingQualityFairnessAnalysisDetail: Awaited<
+    ReturnType<typeof getDpmPmOperatingQualityFairnessAnalysis>
+  > | null;
+  pmOperatingQualityFairnessAnalysisDetailError: string | null;
   waves: Awaited<ReturnType<typeof listDpmWaves>> | null;
   wavesError: string | null;
   campaignDefinitions: Awaited<ReturnType<typeof listDpmCampaignDefinitions>> | null;
@@ -168,6 +178,7 @@ export async function loadManageWorkspaceData(
     campaignDefinitionsResult,
     pmQualityPoliciesResult,
     pmQualityScoreRunsResult,
+    pmQualityFairnessAnalysesResult,
     reviewsResult,
   ] = await Promise.allSettled([
     getDpmCommandCenter({ limit: 25 }),
@@ -178,6 +189,7 @@ export async function loadManageWorkspaceData(
     listDpmCampaignDefinitions({ campaignStatus: "ACTIVE", limit: 10 }),
     listDpmPmOperatingQualityPolicies({ limit: 10 }),
     listDpmPmOperatingQualityScoreRuns({ limit: 10 }),
+    listDpmPmOperatingQualityFairnessAnalyses({ limit: 10 }),
     getDpmOutcomeReviews({ portfolioId, limit: 10 }),
   ]);
 
@@ -200,6 +212,22 @@ export async function loadManageWorkspaceData(
       proofPack = await getDpmProofPack(proofPackId);
     } catch (error) {
       proofPackError = error instanceof Error ? error.message : "Evidence pack endpoint unavailable.";
+    }
+  }
+  const fairnessAnalyses = readSettledValue(pmQualityFairnessAnalysesResult);
+  let fairnessAnalysisDetail: Awaited<
+    ReturnType<typeof getDpmPmOperatingQualityFairnessAnalysis>
+  > | null = null;
+  let fairnessAnalysisDetailError: string | null = null;
+  const fairnessAnalysisId = readDpmFairnessAnalysisId(fairnessAnalyses?.data ?? null);
+  if (fairnessAnalysisId) {
+    try {
+      fairnessAnalysisDetail = await getDpmPmOperatingQualityFairnessAnalysis(fairnessAnalysisId);
+    } catch (error) {
+      fairnessAnalysisDetailError =
+        error instanceof Error
+          ? error.message
+          : "PM operating quality fairness-analysis detail endpoint unavailable.";
     }
   }
 
@@ -228,6 +256,13 @@ export async function loadManageWorkspaceData(
       pmQualityScoreRunsResult,
       "PM operating quality score-run endpoint unavailable."
     ),
+    pmOperatingQualityFairnessAnalyses: fairnessAnalyses,
+    pmOperatingQualityFairnessAnalysesError: readSettledError(
+      pmQualityFairnessAnalysesResult,
+      "PM operating quality fairness-analysis list endpoint unavailable."
+    ),
+    pmOperatingQualityFairnessAnalysisDetail: fairnessAnalysisDetail,
+    pmOperatingQualityFairnessAnalysisDetailError: fairnessAnalysisDetailError,
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
     campaignDefinitions: readSettledValue(campaignDefinitionsResult),
@@ -375,8 +410,12 @@ function renderManageMode(
         <PmOperatingQualityPanel
           policies={data.pmOperatingQualityPolicies}
           scoreRuns={data.pmOperatingQualityScoreRuns}
+          fairnessAnalyses={data.pmOperatingQualityFairnessAnalyses}
+          fairnessAnalysisDetail={data.pmOperatingQualityFairnessAnalysisDetail}
           policiesError={data.pmOperatingQualityPoliciesError}
           scoreRunsError={data.pmOperatingQualityScoreRunsError}
+          fairnessAnalysesError={data.pmOperatingQualityFairnessAnalysesError}
+          fairnessAnalysisDetailError={data.pmOperatingQualityFairnessAnalysisDetailError}
         />
       );
     case "reviews":
@@ -417,6 +456,8 @@ function ManageOverview({ data }: { data: ManageWorkspaceData }) {
   const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
   const pmQualityPolicyCount = data.pmOperatingQualityPolicies?.supportability.count ?? 0;
   const pmQualityScoreRunCount = data.pmOperatingQualityScoreRuns?.supportability.count ?? 0;
+  const pmQualityFairnessAnalysisCount =
+    data.pmOperatingQualityFairnessAnalyses?.supportability.count ?? 0;
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
   const activeExceptionCount = parseCount(commandModel.activeExceptionCount);
@@ -539,10 +580,22 @@ function ManageOverview({ data }: { data: ManageWorkspaceData }) {
       key: "quality",
       title: "PM Operating Quality",
       icon: "manage_accounts",
-      state: data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError ? "Needs attention" : "Available",
-      tone: data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError ? ("warn" as const) : ("success" as const),
-      metric: `${pmQualityScoreRunCount || pmQualityPolicyCount} evidence rows`,
-      detail: "Review Manage-owned PM quality policy, score-run, and fairness preview posture.",
+      state:
+        data.pmOperatingQualityPoliciesError ||
+        data.pmOperatingQualityScoreRunsError ||
+        data.pmOperatingQualityFairnessAnalysesError
+          ? "Needs attention"
+          : "Available",
+      tone:
+        data.pmOperatingQualityPoliciesError ||
+        data.pmOperatingQualityScoreRunsError ||
+        data.pmOperatingQualityFairnessAnalysesError
+          ? ("warn" as const)
+          : ("success" as const),
+      metric: `${
+        pmQualityFairnessAnalysisCount || pmQualityScoreRunCount || pmQualityPolicyCount
+      } evidence rows`,
+      detail: "Review Manage-owned PM quality policy, score-run, and fairness-analysis posture.",
       href: buildManageModeHref(portfolioId, "quality"),
       action: "Open PM Quality",
     },
@@ -965,6 +1018,44 @@ export function readDpmProofPackId(data: Record<string, unknown> | null): string
     const proofPackId = (item as Record<string, unknown>).proof_pack_id;
     if (typeof proofPackId === "string" && proofPackId.trim().length > 0) {
       return proofPackId;
+    }
+  }
+  return null;
+}
+
+export function readDpmFairnessAnalysisId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  if (
+    typeof data.fairness_analysis_id === "string" &&
+    data.fairness_analysis_id.trim().length > 0
+  ) {
+    return data.fairness_analysis_id;
+  }
+  const fairnessAnalysis = data.fairness_analysis;
+  if (
+    fairnessAnalysis &&
+    typeof fairnessAnalysis === "object" &&
+    !Array.isArray(fairnessAnalysis)
+  ) {
+    const fairnessAnalysisId = (fairnessAnalysis as Record<string, unknown>).fairness_analysis_id;
+    if (typeof fairnessAnalysisId === "string" && fairnessAnalysisId.trim().length > 0) {
+      return fairnessAnalysisId;
+    }
+  }
+  const items = Array.isArray(data.fairness_analyses)
+    ? data.fairness_analyses
+    : Array.isArray(data.items)
+      ? data.items
+      : [];
+  for (const item of items) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+    const fairnessAnalysisId = (item as Record<string, unknown>).fairness_analysis_id;
+    if (typeof fairnessAnalysisId === "string" && fairnessAnalysisId.trim().length > 0) {
+      return fairnessAnalysisId;
     }
   }
   return null;
