@@ -50,10 +50,7 @@ async function openSummaryPortfolio(
     return { portfolioId, available: false };
   }
 
-  await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
-  const summaryViewTab = page.getByRole('tab', { name: /^Summary$/i });
-  await expect(summaryViewTab).toBeVisible();
-  await expect(summaryViewTab).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('heading', { name: /^Portfolio Summary$/i })).toBeVisible({ timeout: 15000 });
 
   return { portfolioId, available: true };
 }
@@ -83,12 +80,7 @@ async function openDetailedPortfolio(
     return { portfolioId, available: false };
   }
 
-  await expect(page.getByRole('heading', { name: /^Portfolio$/i })).toBeVisible({ timeout: 15000 });
-
-  const detailedViewTab = page.getByRole('tab', { name: /^Detailed$/i });
-  await expect(detailedViewTab).toBeVisible();
-  await detailedViewTab.click();
-  await expect(detailedViewTab).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('heading', { name: /^Portfolio Summary$/i })).toBeVisible({ timeout: 15000 });
 
   await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible({
     timeout: 15000,
@@ -130,9 +122,10 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openSummaryPortfolio(page, request);
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
 
-    await expect(page.getByRole('heading', { name: /Portfolio Allocation/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Asset Allocation/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Top Holdings/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Performance Snapshot/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Cashflow Forecast/i })).toBeVisible();
+    await expect(page.getByText('Portfolio Health')).toBeVisible();
     await expect(page.getByRole('link', { name: /Income/i })).toBeVisible();
 
     await expect(page.locator('.portfolio-paired-analytics-grid')).toHaveCount(0);
