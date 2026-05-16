@@ -1,0 +1,97 @@
+"use client";
+
+import { useState } from "react";
+
+import {
+  ActionLink,
+  Text,
+  WorkbenchRailCard,
+} from "@/design-system";
+
+import type {
+  PortfolioExceptionSummary,
+  PortfolioWorkflowAction,
+  PortfolioWorkspace,
+} from "../types";
+import type { PortfolioWorkspaceContext } from "../view-model";
+import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
+import PortfolioContextModule from "../modules/portfolio-context/portfolio-context-module";
+import PortfolioReadinessModule from "../modules/portfolio-readiness/portfolio-readiness-module";
+import { PortfolioEvidenceModule } from "./portfolio-decision-posture";
+
+export default function PortfolioWorkspaceSideRail({
+  workspace,
+  context,
+  exceptions,
+  actions,
+  showDetailFootnote,
+  onOpenException,
+}: {
+  workspace: PortfolioWorkspace | null;
+  context: PortfolioWorkspaceContext;
+  exceptions: PortfolioExceptionSummary[];
+  actions: PortfolioWorkflowAction[];
+  showDetailFootnote: boolean;
+  onOpenException: (exception: PortfolioExceptionSummary) => void;
+}) {
+  const [copiedContextField, setCopiedContextField] = useState<string | null>(null);
+
+  const copyContextValue = async (key: string, value: string | null | undefined) => {
+    if (!value) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedContextField(key);
+      window.setTimeout(() => {
+        setCopiedContextField((current) => (current === key ? null : current));
+      }, 1600);
+    } catch {
+      setCopiedContextField(null);
+    }
+  };
+
+  if (!workspace) {
+    return <PortfolioUnavailableSideRail />;
+  }
+
+  return (
+    <>
+      <PortfolioEvidenceModule workspace={workspace} context={context} />
+
+      <PortfolioContextModule
+        workspace={workspace}
+        context={context}
+        copiedField={copiedContextField}
+        onCopy={copyContextValue}
+      />
+
+      <PortfolioReadinessModule
+        exceptions={exceptions}
+        workspace={workspace}
+        showDetailFootnote={showDetailFootnote}
+        onOpenException={onOpenException}
+      />
+
+      <PortfolioActionsModule actions={actions} />
+    </>
+  );
+}
+
+function PortfolioUnavailableSideRail() {
+  return (
+    <WorkbenchRailCard className="portfolio-side-card">
+      <div className="portfolio-card-header">
+        <Text variant="cardTitle">Available Work Areas</Text>
+        <Text variant="secondary">
+          Open adjacent portfolio workflows while the main briefing is unavailable.
+        </Text>
+      </div>
+      <div className="toolbar">
+        <ActionLink href="/performance">Performance</ActionLink>
+        <ActionLink href="/workbench">Open Operations</ActionLink>
+      </div>
+    </WorkbenchRailCard>
+  );
+}

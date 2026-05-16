@@ -1,8 +1,13 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PortfolioContextModule from "../../src/apps/portfolio/modules/portfolio-context/portfolio-context-module";
 import PortfolioReadinessModule from "../../src/apps/portfolio/modules/portfolio-readiness/portfolio-readiness-module";
+import PortfolioWorkspaceSideRail from "../../src/apps/portfolio/components/portfolio-workspace-side-rail";
+import {
+  buildPortfolioWorkspace,
+  buildPortfolioWorkspaceContext,
+} from "../fixtures/portfolio-workspace-component-fixtures";
 
 const workspace = {
   portfolio: {
@@ -82,5 +87,80 @@ describe("portfolio side rail modules", () => {
     const operationalDates = screen.getByLabelText("Readiness operational dates");
     expect(within(operationalDates).getByText("Latest transaction")).toHaveClass("workbench-definition-term");
     expect(within(operationalDates).getByText("20 Feb 2026")).toHaveClass("workbench-definition-value");
+  });
+
+  it("composes evidence, context, readiness, and actions in the portfolio workspace side rail", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: { writeText },
+    });
+    const onOpenException = vi.fn();
+    const actions = [
+      {
+        sequence: 1,
+        title: "Review proposal",
+        impact: "Confirm allocation drift before client review.",
+        target: "Performance",
+        href: "/performance",
+        cta_label: "Performance",
+        recommended: true,
+      },
+    ];
+
+    render(
+      <PortfolioWorkspaceSideRail
+        workspace={buildPortfolioWorkspace()}
+        context={buildPortfolioWorkspaceContext({ viewMode: "detailed" })}
+        exceptions={[
+          {
+            key: "pricing",
+            title: "Pricing coverage incomplete",
+            detail: "One position still needs current pricing.",
+            tone: "warn",
+            href: "#portfolio-attention",
+          },
+        ]}
+        actions={actions}
+        showDetailFootnote
+        onOpenException={onOpenException}
+      />
+    );
+
+    expect(screen.getByText("Evidence and Lineage")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Portfolio Context" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Readiness and Exceptions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Next Actions" })).toBeInTheDocument();
+    expect(screen.getByText("Review proposal")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Pricing coverage incomplete/i }));
+    expect(onOpenException).toHaveBeenCalledWith(expect.objectContaining({ key: "pricing" }));
+  });
+
+  it("renders adjacent work areas when portfolio context is unavailable", () => {
+    render(
+      <PortfolioWorkspaceSideRail
+        workspace={null}
+        context={buildPortfolioWorkspaceContext()}
+        exceptions={[]}
+        actions={[]}
+        showDetailFootnote={false}
+        onOpenException={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Available Work Areas")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
+      "href",
+      "/performance"
+    );
+    expect(screen.getByRole("link", { name: "Open Operations" })).toHaveAttribute(
+      "href",
+      "/workbench"
+    );
   });
 });
