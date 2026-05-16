@@ -48,7 +48,7 @@ export default function PortfolioRecordScreenClient({
   }, [workspace]);
   const copy = getPortfolioRecordScreenCopy(screen);
   const resolvedPortfolioId = portfolioId ?? "No portfolio";
-  const headerKpis = workspace ? buildPortfolioRecordHeaderKpis(workspace) : [];
+  const headerKpis = workspace ? buildPortfolioRecordHeaderKpis(workspace, "30D", screen) : [];
 
   return (
     <PortfolioPageLayout>

@@ -29,6 +29,8 @@ export default function PortfolioRecordEvidenceRail({
   const sourcePostureItems =
     screen === "transactions"
       ? buildTransactionSourcePosture(workspace, portfolioId)
+      : screen === "cashflow"
+        ? buildCashflowSourcePosture(workspace)
       : buildPositionSourcePosture({
           workspace,
           portfolioId,
@@ -86,6 +88,38 @@ export default function PortfolioRecordEvidenceRail({
       </WorkbenchRailCard>
     </div>
   );
+}
+
+function buildCashflowSourcePosture(workspace: PortfolioWorkspace): SourcePostureProps[] {
+  const cashflow = workspace.cashflow_outlook;
+  const pointCount = cashflow?.upcoming_points.length ?? 0;
+  const positiveCount =
+    cashflow?.upcoming_points.filter((point) => point.net_cashflow_base > 0).length ?? 0;
+  const negativeCount =
+    cashflow?.upcoming_points.filter((point) => point.net_cashflow_base < 0).length ?? 0;
+  const reportingReady = workspace.readiness.reporting.status?.toUpperCase() === "READY";
+
+  return [
+    {
+      label: "Projection Source",
+      source: "Gateway portfolio workspace",
+      detail: cashflow
+        ? `${formatCount(pointCount, "projected point")} through ${formatDate(cashflow.range_end_date)}`
+        : "No projected cashflow outlook returned for this portfolio",
+      tone: cashflow ? "success" : "warn",
+      status: cashflow ? "Available" : "Unavailable",
+    },
+    {
+      label: "Forecast Horizon",
+      source: cashflow ? `${cashflow.projection_days} day projection` : "Not provided",
+      detail: cashflow
+        ? `${formatCount(positiveCount, "inflow")} and ${formatCount(negativeCount, "outflow")} in the returned forecast`
+        : "Horizon cannot be displayed until the source outlook is available",
+      tone: cashflow ? "success" : "default",
+      status: cashflow ? "Ready" : "N/A",
+    },
+    buildReportingSourcePosture(workspace, reportingReady),
+  ];
 }
 
 function buildPositionSourcePosture({

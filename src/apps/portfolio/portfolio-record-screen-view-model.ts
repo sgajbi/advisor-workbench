@@ -29,8 +29,8 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
     kicker: "Ledger",
   },
   cashflow: {
-    title: "Cashflow",
-    subtitle: "Forward liquidity path, projected net flows, and cumulative cash movement.",
+    title: "Cashflow Workspace",
+    subtitle: "Forward liquidity path, projected settlements, and cumulative cash movement.",
     kicker: "Liquidity forecast",
   },
 };
@@ -61,8 +61,36 @@ export function buildPortfolioRecordHeaderMeta(workspace: PortfolioWorkspace): s
 
 export function buildPortfolioRecordHeaderKpis(
   workspace: PortfolioWorkspace,
-  windowLabel = "30D"
+  windowLabel = "30D",
+  screen?: PortfolioRecordScreenKind
 ): PortfolioRecordHeaderKpi[] {
+  if (screen === "cashflow") {
+    const cashflow = workspace.cashflow_outlook;
+    const finalCumulative =
+      cashflow?.upcoming_points.at(-1)?.projected_cumulative_cashflow_base ??
+      cashflow?.total_net_cashflow_base;
+
+    return [
+      {
+        label: "Net Flow",
+        value: cashflow
+          ? formatCurrency(cashflow.total_net_cashflow_base, workspace.portfolio.base_currency)
+          : "N/A",
+      },
+      {
+        label: "Horizon",
+        value: cashflow ? `${cashflow.projection_days}D` : windowLabel,
+      },
+      {
+        label: "Ending Cumulative",
+        value:
+          finalCumulative == null
+            ? "N/A"
+            : formatCurrency(finalCumulative, workspace.portfolio.base_currency),
+      },
+    ];
+  }
+
   return [
     {
       label: "Total Market Value",

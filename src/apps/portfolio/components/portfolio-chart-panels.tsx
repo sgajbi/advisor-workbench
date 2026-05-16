@@ -182,14 +182,34 @@ export function PortfolioProjectedCashflowPanel({
   const points = cashflowOutlook.upcoming_points;
   const cumulativeValues = points.map((point) => point.projected_cumulative_cashflow_base);
   const flowValues = points.map((point) => point.net_cashflow_base);
-  const minValue = Math.min(...cumulativeValues, 0);
-  const maxValue = Math.max(...cumulativeValues, 0);
+  const cumulativeMin = cumulativeValues.length ? Math.min(...cumulativeValues) : 0;
+  const cumulativeMax = cumulativeValues.length ? Math.max(...cumulativeValues) : 0;
+  const visualPadding = Math.max(Math.abs(cumulativeMin), Math.abs(cumulativeMax), 1) * 0.08;
+  const minValue = cumulativeMin - visualPadding;
+  const maxValue = cumulativeMax + visualPadding;
   const range = Math.max(maxValue - minValue, 1);
   const maxFlow = Math.max(...flowValues.map((value) => Math.abs(value)), 1);
   const finalCumulative =
     points[points.length - 1]?.projected_cumulative_cashflow_base ?? cashflowOutlook.total_net_cashflow_base;
   const positiveFlowCount = flowValues.filter((value) => value > 0).length;
   const negativeFlowCount = flowValues.filter((value) => value < 0).length;
+  const largestInflow = points.reduce<
+    NonNullable<PortfolioWorkspace["cashflow_outlook"]>["upcoming_points"][number] | null
+  >((largest, point) => {
+    if (point.net_cashflow_base <= 0) {
+      return largest;
+    }
+    return !largest || point.net_cashflow_base > largest.net_cashflow_base ? point : largest;
+  }, null);
+  const largestOutflow = points.reduce<
+    NonNullable<PortfolioWorkspace["cashflow_outlook"]>["upcoming_points"][number] | null
+  >((largest, point) => {
+    if (point.net_cashflow_base >= 0) {
+      return largest;
+    }
+    return !largest || point.net_cashflow_base < largest.net_cashflow_base ? point : largest;
+  }, null);
+  const focusPoint = largestInflow ?? largestOutflow ?? points.at(-1) ?? null;
   const chartPoints = points.map((point, index) => {
     const x = points.length === 1 ? 28 : 28 + (index / (points.length - 1)) * 264;
     const y = 172 - (((point.projected_cumulative_cashflow_base - minValue) / range) * 112 + 24);
@@ -197,30 +217,46 @@ export function PortfolioProjectedCashflowPanel({
   });
   const areaPath = buildAreaPath(chartPoints);
   const linePath = buildLinePath(chartPoints);
-  const zeroLineY = roundSvg(172 - (((0 - minValue) / range) * 112 + 24));
+  const zeroLineY = minValue <= 0 && maxValue >= 0
+    ? roundSvg(172 - (((0 - minValue) / range) * 112 + 24))
+    : null;
 
-    const flatCashflow = positiveFlowCount === 0 && negativeFlowCount === 0;
+  const flatCashflow = positiveFlowCount === 0 && negativeFlowCount === 0;
+  const focusChartPoint = focusPoint
+    ? chartPoints.find((item) => item.point.projection_date === focusPoint.projection_date)
+    : null;
+  const focusX = focusChartPoint ? Math.min(Math.max(focusChartPoint.x + 8, 46), 222) : 152;
+  const focusY = focusChartPoint ? Math.max(focusChartPoint.y - 40, 12) : 24;
 
-    return (
-      <div
-        className={
-          flatCashflow
-            ? "portfolio-chart-card portfolio-cashflow-card portfolio-cashflow-card-flat"
-            : "portfolio-chart-card portfolio-cashflow-card"
-        }
-      >
+  return (
+    <div
+      className={
+        flatCashflow
+          ? "portfolio-chart-card portfolio-cashflow-card portfolio-cashflow-card-flat"
+          : "portfolio-chart-card portfolio-cashflow-card"
+      }
+    >
       <div className="portfolio-cashflow-summary-strip" aria-label="Projected cashflow summary">
         <div className="portfolio-cashflow-summary-stat">
           <span>Net Flow</span>
           <strong>{formatCurrency(cashflowOutlook.total_net_cashflow_base, baseCurrency)}</strong>
         </div>
         <div className="portfolio-cashflow-summary-stat">
-          <span>End Horizon</span>
-          <strong>{formatCurrency(finalCumulative, baseCurrency)}</strong>
+          <span>Projection Horizon</span>
+          <strong>{`${cashflowOutlook.projection_days} days`}</strong>
         </div>
         <div className="portfolio-cashflow-summary-stat">
-          <span>Forecast Mix</span>
-          <strong>{`${positiveFlowCount} in / ${negativeFlowCount} out`}</strong>
+          <span>Largest Inflow</span>
+          <strong>
+            {largestInflow
+              ? formatCurrency(largestInflow.net_cashflow_base, baseCurrency)
+              : "No inflow"}
+          </strong>
+          {largestInflow ? <em>{formatDate(largestInflow.projection_date)}</em> : null}
+        </div>
+        <div className="portfolio-cashflow-summary-stat portfolio-cashflow-summary-stat-dark">
+          <span>Ending Cumulative</span>
+          <strong>{formatCurrency(finalCumulative, baseCurrency)}</strong>
         </div>
       </div>
       <div className="portfolio-cashflow-chart">
@@ -230,19 +266,32 @@ export function PortfolioProjectedCashflowPanel({
           role="img"
           aria-label={`Projected cashflow chart in ${baseCurrency}`}
         >
-          <line
-            x1="24"
-            x2="296"
-            y1={zeroLineY}
-            y2={zeroLineY}
-            className="portfolio-cashflow-zero-line"
-          />
+          {[36, 68, 100, 132, 164].map((gridY) => (
+            <line
+              key={`grid-${gridY}`}
+              x1="24"
+              x2="296"
+              y1={gridY}
+              y2={gridY}
+              className="portfolio-cashflow-grid-line"
+            />
+          ))}
+          {zeroLineY == null ? null : (
+            <line
+              x1="24"
+              x2="296"
+              y1={zeroLineY}
+              y2={zeroLineY}
+              className="portfolio-cashflow-zero-line"
+            />
+          )}
           {points.map((point, index) => {
             const x = points.length === 1 ? 28 : 28 + (index / (points.length - 1)) * 264;
             const width = points.length === 1 ? 28 : Math.max(12, 188 / points.length);
             const height = (Math.abs(point.net_cashflow_base) / maxFlow) * 46;
+            const flowBaselineY = 156;
             const y =
-              point.net_cashflow_base >= 0 ? zeroLineY - height : zeroLineY;
+              point.net_cashflow_base >= 0 ? flowBaselineY - height : flowBaselineY;
             return (
               <g key={`flow-${point.projection_date}`}>
                 <rect
@@ -282,7 +331,22 @@ export function PortfolioProjectedCashflowPanel({
               </circle>
             </g>
           ))}
+          {focusPoint ? (
+            <g className="portfolio-cashflow-focus-callout" aria-hidden="true">
+              <rect x={focusX} y={focusY} width="86" height="34" rx="2" />
+              <circle cx={focusX + 76} cy={focusY + 8} r="2.4" />
+              <text x={focusX + 8} y={focusY + 12}>{formatDate(focusPoint.projection_date)}</text>
+              <text x={focusX + 8} y={focusY + 24}>
+                {formatCurrency(focusPoint.net_cashflow_base, baseCurrency)}
+              </text>
+            </g>
+          ) : null}
         </svg>
+      </div>
+      <div className="portfolio-cashflow-forecast-mix" aria-label="Projected cashflow mix">
+        <span>{`${positiveFlowCount} inflow${positiveFlowCount === 1 ? "" : "s"}`}</span>
+        <span>{`${negativeFlowCount} outflow${negativeFlowCount === 1 ? "" : "s"}`}</span>
+        <span>{`Through ${formatDate(cashflowOutlook.range_end_date)}`}</span>
       </div>
       <div className="portfolio-cashflow-axis-grid">
         {points.map((point) => (
