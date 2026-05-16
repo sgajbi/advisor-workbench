@@ -16243,6 +16243,29 @@ a:hover {
   gap: 12px;
 }
 
+.portfolio-page .portfolio-executive-summary-grid-detailed {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-summary-kpi-strip {
+  grid-column: span 7;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-attention-summary {
+  grid-column: span 5;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-summary-side-stack {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+}
+
+.portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-summary-kpi {
+  min-height: 84px;
+  padding: 14px;
+}
+
 .portfolio-page .portfolio-allocation-summary-body,
 .portfolio-page .portfolio-attention-list,
 .portfolio-page .portfolio-health-summary {
@@ -16480,8 +16503,14 @@ a:hover {
 
   .portfolio-page .portfolio-summary-module-wide,
   .portfolio-page .portfolio-attention-summary,
+  .portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-summary-kpi-strip,
+  .portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-attention-summary,
   .portfolio-page .portfolio-summary-side-stack {
     grid-column: 1 / -1;
+  }
+
+  .portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-summary-side-stack {
+    grid-template-columns: 1fr;
   }
 }
 
