@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { type ReactNode, useMemo, useState } from "react";
 
 import {
-  ActionLink,
   AnalyticsModule,
   DeferredModulePlaceholder,
   DegradedStatePanel,
@@ -12,9 +11,7 @@ import {
   MetricRow,
   SectionHeader,
   SemanticBadge,
-  Text,
   WorkbenchPageFrame,
-  WorkbenchRailCard,
   WorkbenchSectionStack,
   WorkspaceGrid,
 } from "@/design-system";
@@ -59,14 +56,11 @@ import {
 } from "./portfolio-detail-drawer-builders";
 import {
   PortfolioDecisionBand,
-  PortfolioEvidenceModule,
 } from "./portfolio-decision-posture";
 import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
-import PortfolioActionsModule from "../modules/portfolio-actions/portfolio-actions-module";
-import PortfolioContextModule from "../modules/portfolio-context/portfolio-context-module";
-import PortfolioReadinessModule from "../modules/portfolio-readiness/portfolio-readiness-module";
+import PortfolioWorkspaceSideRail from "./portfolio-workspace-side-rail";
 import {
   getPortfolioWorkspaceCapabilities,
 } from "../capabilities";
@@ -127,7 +121,6 @@ export default function PortfolioWorkspaceView({
     useState<PortfolioHoldingsDrilldownFilter | null>(null);
   const [transactionDrilldown, setTransactionDrilldown] =
     useState<PortfolioTransactionDrilldownFilter | null>(null);
-  const [copiedContextField, setCopiedContextField] = useState<string | null>(null);
   const [detailDrawer, setDetailDrawer] = useState<PortfolioDetailDrawerState | null>(null);
   const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
   const setupActions = workspace?.workflow_actions ?? [];
@@ -183,22 +176,6 @@ export default function PortfolioWorkspaceView({
   const { getSectionExpanded, toggleSection } = usePortfolioSectionPreferences(
     context.viewMode,
   );
-
-  const copyContextValue = async (key: string, value: string | null | undefined) => {
-    if (!value) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedContextField(key);
-      window.setTimeout(() => {
-        setCopiedContextField((current) => (current === key ? null : current));
-      }, 1600);
-    } catch {
-      setCopiedContextField(null);
-    }
-  };
 
   const clearTransactionDrilldown = () => setTransactionDrilldown(null);
 
@@ -433,40 +410,14 @@ export default function PortfolioWorkspaceView({
           </>
         }
         side={
-          workspace ? (
-            <>
-              <PortfolioEvidenceModule workspace={workspace} context={context} />
-
-              <PortfolioContextModule
-                workspace={workspace}
-                context={context}
-                copiedField={copiedContextField}
-                onCopy={copyContextValue}
-              />
-
-              <PortfolioReadinessModule
-                exceptions={exceptionSummaries}
-                workspace={workspace}
-                showDetailFootnote={showReadinessDetailGroup}
-                onOpenException={handleOpenException}
-              />
-
-              <PortfolioActionsModule actions={setupActions} />
-            </>
-          ) : (
-            <WorkbenchRailCard className="portfolio-side-card">
-              <div className="portfolio-card-header">
-                <Text variant="cardTitle">Available Work Areas</Text>
-                <Text variant="secondary">
-                  Open adjacent portfolio workflows while the main briefing is unavailable.
-                </Text>
-              </div>
-              <div className="toolbar">
-                <ActionLink href="/performance">Performance</ActionLink>
-                <ActionLink href="/workbench">Open Operations</ActionLink>
-              </div>
-            </WorkbenchRailCard>
-          )
+          <PortfolioWorkspaceSideRail
+            workspace={workspace}
+            context={context}
+            exceptions={exceptionSummaries}
+            actions={setupActions}
+            showDetailFootnote={showReadinessDetailGroup}
+            onOpenException={handleOpenException}
+          />
         }
       />
 
