@@ -22,6 +22,7 @@ import {
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
+import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -253,20 +254,13 @@ export default function PortfolioHoldingsGrid({
   );
 
   return (
-    <div className="portfolio-grid-module portfolio-record-grid-module">
-      <div className="portfolio-record-grid-heading">
-        <div>
-          <span className="portfolio-record-grid-kicker">Positions</span>
-          <h3>Holdings</h3>
-          <p>As of {formatDate(asOfDate)} in {baseCurrency}</p>
-        </div>
-        <div className="portfolio-record-grid-summary">
-          <span>{formatCount(rowData.length, "position")}</span>
-          <strong>{formatCurrency(sumMarketValue(rowData), baseCurrency)}</strong>
-        </div>
-      </div>
-
-      <div className="portfolio-record-utility-bar">
+    <PortfolioRecordGridShell
+      kicker="Positions"
+      title="Holdings"
+      description={`As of ${formatDate(asOfDate)} in ${baseCurrency}`}
+      summaryLabel={formatCount(rowData.length, "position")}
+      summaryValue={formatCurrency(sumMarketValue(rowData), baseCurrency)}
+      searchControl={
         <TextField
           size="small"
           value={quickSearch}
@@ -275,7 +269,9 @@ export default function PortfolioHoldingsGrid({
           inputProps={{ "aria-label": "Search holdings" }}
           className="portfolio-record-search"
         />
-        <div className="portfolio-record-actions">
+      }
+      actions={
+        <>
           <Button
             size="small"
             variant="outlined"
@@ -318,8 +314,9 @@ export default function PortfolioHoldingsGrid({
           >
             Expand
           </Button>
-        </div>
-      </div>
+        </>
+      }
+    >
 
       {filterLabel ? (
         <div className="portfolio-grid-toolbar">
@@ -410,7 +407,7 @@ export default function PortfolioHoldingsGrid({
           </MenuItem>
         ))}
       </Menu>
-    </div>
+    </PortfolioRecordGridShell>
   );
 }
 

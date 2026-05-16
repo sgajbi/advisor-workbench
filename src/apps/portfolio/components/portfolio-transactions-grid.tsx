@@ -30,6 +30,7 @@ import {
   shouldReuseInitialTransactions,
 } from "./portfolio-transactions-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
+import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -306,22 +307,13 @@ export default function PortfolioTransactionsGrid({
   );
 
   return (
-    <div className="portfolio-grid-module portfolio-record-grid-module">
-      <div className="portfolio-record-grid-heading">
-        <div>
-          <span className="portfolio-record-grid-kicker">Transactions</span>
-          <h3>Ledger</h3>
-          <p>
-            Activity from {formatDate(defaultStartDate)} to {formatDate(defaultEndDate)}
-          </p>
-        </div>
-        <div className="portfolio-record-grid-summary">
-          <span>{rowData.length} events</span>
-          <strong>{formatCurrency(sumTransactionAmount(rowData), baseCurrency)}</strong>
-        </div>
-      </div>
-
-      <div className="portfolio-record-utility-bar">
+    <PortfolioRecordGridShell
+      kicker="Transactions"
+      title="Ledger"
+      description={`Activity from ${formatDate(defaultStartDate)} to ${formatDate(defaultEndDate)}`}
+      summaryLabel={`${rowData.length} events`}
+      summaryValue={formatCurrency(sumTransactionAmount(rowData), baseCurrency)}
+      searchControl={
         <TextField
           size="small"
           value={quickSearch}
@@ -330,7 +322,9 @@ export default function PortfolioTransactionsGrid({
           inputProps={{ "aria-label": "Search transactions" }}
           className="portfolio-record-search"
         />
-        <div className="portfolio-record-actions">
+      }
+      actions={
+        <>
           <Button size="small" variant={showFilters ? "contained" : "outlined"} onClick={() => setShowFilters((current) => !current)}>
             Filter
           </Button>
@@ -350,8 +344,9 @@ export default function PortfolioTransactionsGrid({
           >
             Expand
           </Button>
-        </div>
-      </div>
+        </>
+      }
+    >
 
       {showFilters ? (
         <div className="portfolio-grid-toolbar portfolio-grid-toolbar-stacked">
@@ -495,7 +490,7 @@ export default function PortfolioTransactionsGrid({
       {loading && rowData.length ? (
         <WorkbenchInlineRefreshNote message="Refreshing transactions…" />
       ) : null}
-    </div>
+    </PortfolioRecordGridShell>
   );
 }
 
