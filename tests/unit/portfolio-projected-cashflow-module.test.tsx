@@ -88,6 +88,10 @@ describe("PortfolioProjectedCashflowModule", () => {
     );
 
     expect(screen.getByRole("button", { name: "Collapse" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Net Flow");
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Projection Horizon");
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Largest Inflow");
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Ending Cumulative");
     expect(screen.getByRole("table", { name: "Cashflow outlook" })).toBeInTheDocument();
   });
 
@@ -152,7 +156,7 @@ describe("PortfolioProjectedCashflowModule", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Projected Cashflow" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cumulative Cashflow Projection" })).toBeInTheDocument();
     expect(screen.getByText("Loading projected cashflow")).toBeInTheDocument();
     expect(
       screen.getByText("Projected liquidity is loading for the selected horizon.")

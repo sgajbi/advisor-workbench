@@ -33,6 +33,34 @@ describe("portfolio record screen view model", () => {
       { label: "Positions", value: "11" },
       { label: "Window", value: "30D" },
     ]);
+
+    expect(
+      buildPortfolioRecordHeaderKpis(
+        {
+          ...workspace,
+          cashflow_outlook: {
+            as_of_date: "2026-05-12",
+            range_end_date: "2026-06-11",
+            total_net_cashflow_base: 45200,
+            projection_days: 30,
+            include_projected: true,
+            upcoming_points: [
+              {
+                projection_date: "2026-05-20",
+                net_cashflow_base: 45200,
+                projected_cumulative_cashflow_base: 8457200,
+              },
+            ],
+          },
+        },
+        "30D",
+        "cashflow"
+      )
+    ).toEqual([
+      { label: "Net Flow", value: "45,200 USD" },
+      { label: "Horizon", value: "30D" },
+      { label: "Ending Cumulative", value: "8,457,200 USD" },
+    ]);
   });
 
   it("resolves the canonical thirty-day record window from the portfolio as-of date", () => {

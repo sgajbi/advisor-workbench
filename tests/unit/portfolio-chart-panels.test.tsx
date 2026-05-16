@@ -140,6 +140,8 @@ describe("portfolio chart panels", () => {
     expect(screen.getByLabelText("Activity chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Income chart")).toBeInTheDocument();
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
+    expect(screen.getByLabelText("Projected cashflow mix")).toHaveTextContent("1 inflow");
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Largest Inflow");
     expect(screen.getByText("Inflows")).toBeInTheDocument();
     expect(screen.getByText("Dividend")).toBeInTheDocument();
     expect(screen.getByText("Window inflow")).toBeInTheDocument();

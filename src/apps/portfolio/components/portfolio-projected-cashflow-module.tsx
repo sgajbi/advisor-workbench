@@ -145,7 +145,7 @@ export default function PortfolioProjectedCashflowModule({
   return (
     <AnalyticsModule>
       <SectionHeader
-        title="Projected Cashflow"
+        title="Cumulative Cashflow Projection"
         subtitle={subtitle}
         actions={
           <>
