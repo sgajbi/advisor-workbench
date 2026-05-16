@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPortfolioRecordDisplayName,
   buildPortfolioRecordHeaderKpis,
   buildPortfolioRecordHeaderMeta,
   buildPortfolioRecordScreenSubtitle,
@@ -15,6 +16,10 @@ describe("portfolio record screen view model", () => {
       title: "Positions",
       kicker: "Position inventory",
     });
+    expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
+      title: "Allocation",
+      kicker: "Allocation review",
+    });
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
     expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("Income composition");
     expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain("Forward liquidity");
@@ -23,9 +28,16 @@ describe("portfolio record screen view model", () => {
   it("builds record headers from source-backed workspace fields", () => {
     const workspace = buildWorkspace();
 
-    expect(buildPortfolioRecordScreenSubtitle("positions", workspace)).toBe(
-      "PB_SG_GLOBAL_BAL_001 · Holdings, valuation, cost basis, portfolio weights, and unrealized P&L."
+    expect(buildPortfolioRecordScreenSubtitle("positions")).toBe(
+      "Holdings, valuation, cost basis, portfolio weights, and unrealized P&L."
     );
+    expect(buildPortfolioRecordDisplayName(workspace)).toBe("Global Balanced Mandate");
+    expect(
+      buildPortfolioRecordDisplayName({
+        ...workspace,
+        portfolio: { ...workspace.portfolio, display_name: workspace.portfolio.portfolio_id },
+      })
+    ).toBe("Balanced Mandate");
     expect(buildPortfolioRecordHeaderMeta(workspace)).toBe(
       "Discretionary mandate · USD · As of 12 May 2026 · CIF_SG_000184"
     );
@@ -33,6 +45,11 @@ describe("portfolio record screen view model", () => {
       { label: "Total Market Value", value: "1,000,000 USD" },
       { label: "Positions", value: "11" },
       { label: "Window", value: "30D" },
+    ]);
+    expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "allocation")).toEqual([
+      { label: "AUM", value: "1,000,000 USD" },
+      { label: "Buckets", value: "2" },
+      { label: "Positions", value: "11" },
     ]);
 
     expect(
@@ -152,7 +169,15 @@ function buildWorkspace(): PortfolioWorkspace {
       cash_balance_count: 1,
     },
     allocations: [],
-    allocation_views: [],
+    allocation_views: [
+      {
+        dimension: "asset_class",
+        buckets: [
+          { bucket: "Equity", market_value_base: 620000, weight_pct: 62, position_count: 6 },
+          { bucket: "Fixed Income", market_value_base: 300000, weight_pct: 30, position_count: 5 },
+        ],
+      },
+    ],
     cash_balances: [],
     top_positions: [],
     positions: [],

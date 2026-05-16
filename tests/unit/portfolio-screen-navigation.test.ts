@@ -11,6 +11,7 @@ describe("portfolio screen navigation", () => {
 
     expect(items.map((item) => item.key)).toEqual([
       "portfolio",
+      "allocation",
       "positions",
       "transactions",
       "income",
@@ -21,6 +22,9 @@ describe("portfolio screen navigation", () => {
       "advisory",
       "manage",
     ]);
+    expect(items.find((item) => item.key === "allocation")?.href).toBe(
+      "/allocation?portfolioId=PB%20SG%2F001"
+    );
     expect(items.find((item) => item.key === "positions")?.href).toBe(
       "/positions?portfolioId=PB%20SG%2F001"
     );

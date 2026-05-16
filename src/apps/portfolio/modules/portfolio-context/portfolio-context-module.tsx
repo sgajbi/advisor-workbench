@@ -2,26 +2,22 @@
 
 import { ContextCard, WorkbenchRailCard } from "@/design-system";
 
-import { formatDate } from "../../formatters";
 import type { PortfolioWorkspace } from "../../types";
-import type { PortfolioWorkspaceContext } from "../../view-model";
 
 export default function PortfolioContextModule({
   workspace,
-  context,
   copiedField,
   onCopy,
 }: {
   workspace: PortfolioWorkspace;
-  context: PortfolioWorkspaceContext;
   copiedField: string | null;
   onCopy: (key: string, value: string | null | undefined) => void;
 }) {
   return (
     <WorkbenchRailCard className="portfolio-side-card portfolio-context-card">
       <ContextCard
-        title="Portfolio Context"
-        subtitle="Identity and book setup at the current page context."
+        title="Book Context"
+        subtitle="Client book identity for this review."
         groups={[
           {
             key: "identity",
@@ -59,16 +55,7 @@ export default function PortfolioContextModule({
                 label: "Relationship Manager",
                 value: workspace.profile.advisor_id ?? "N/A",
               },
-            ],
-          },
-          {
-            key: "setup",
-            title: "Book Setup",
-            facts: [
-              { label: "Base Currency", value: workspace.portfolio.base_currency },
               { label: "Booking Centre", value: workspace.portfolio.booking_center_code ?? "N/A" },
-              { label: "Opened", value: formatDate(workspace.profile.open_date) },
-              { label: "As of", value: formatDate(context.selectedAsOfDate) },
             ],
           },
         ]}

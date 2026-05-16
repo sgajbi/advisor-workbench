@@ -15252,6 +15252,59 @@ a:hover {
 
 .portfolio-page .portfolio-executive-summary-grid {
   gap: 12px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-attention-summary,
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-health-summary {
+  grid-column: auto;
+}
+
+.portfolio-page .portfolio-operating-brief {
+  grid-column: 1 / -1;
+}
+
+.portfolio-page .portfolio-operating-brief-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+}
+
+.portfolio-page .portfolio-operating-brief-row {
+  display: grid;
+  gap: 3px;
+  min-height: 76px;
+  padding: 12px;
+  border-right: 1px solid var(--portfolio-ui-border);
+}
+
+.portfolio-page .portfolio-operating-brief-row:last-child {
+  border-right: 0;
+}
+
+.portfolio-page .portfolio-operating-brief-row span {
+  color: var(--portfolio-ui-muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.portfolio-page .portfolio-operating-brief-row strong {
+  overflow: hidden;
+  color: var(--portfolio-ui-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portfolio-page .portfolio-operating-brief-row small {
+  color: var(--portfolio-ui-muted);
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 16px;
 }
 
 .portfolio-page .portfolio-summary-module {
@@ -15295,6 +15348,139 @@ a:hover {
   color: var(--portfolio-ui-primary);
   font-size: 12px;
   line-height: 16px;
+}
+
+/* Portfolio review hierarchy polish: actions first, evidence quieter, fewer
+   competing boxed surfaces in the first viewport. */
+.portfolio-page .portfolio-layout {
+  --workstation-rail-width: 196px;
+  --workstation-side-width: 300px;
+}
+
+.portfolio-page .portfolio-hero {
+  gap: 12px;
+  padding: 16px 18px 14px;
+  border-top: 3px solid var(--portfolio-ui-primary);
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.portfolio-page .portfolio-hero-header {
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--portfolio-ui-border);
+}
+
+.portfolio-page .portfolio-hero h2 {
+  font-size: 1.35rem;
+  line-height: 1.65rem;
+}
+
+.portfolio-page .portfolio-hero-meta {
+  gap: 0.35rem 0.55rem;
+}
+
+.portfolio-page .portfolio-hero-toolbar {
+  max-width: 28rem;
+}
+
+.portfolio-page .portfolio-summary-band {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+  border-top: 0;
+}
+
+.portfolio-page .portfolio-summary-band-item {
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border-right: 1px solid var(--portfolio-ui-border);
+}
+
+.portfolio-page .portfolio-summary-band-item:first-child {
+  padding-left: 0;
+}
+
+.portfolio-page .portfolio-summary-band-item:last-child {
+  border-right: 0;
+}
+
+.portfolio-page .portfolio-decision-band {
+  grid-template-columns: minmax(16rem, 1.35fr) repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--portfolio-ui-border);
+  border-radius: var(--portfolio-ui-radius-panel);
+  background: var(--portfolio-ui-panel);
+}
+
+.portfolio-page .portfolio-decision-tile {
+  min-height: 6.2rem;
+  padding: 0.85rem 0.95rem;
+  border: 0;
+  border-right: 1px solid var(--portfolio-ui-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.portfolio-page .portfolio-decision-tile:last-child {
+  border-right: 0;
+}
+
+.portfolio-page .portfolio-decision-tile-primary {
+  background: #f4f7fb;
+}
+
+.portfolio-page .portfolio-decision-value-row {
+  align-items: flex-start;
+}
+
+.portfolio-page .portfolio-decision-value-row > span:last-child {
+  max-width: 10rem;
+}
+
+.portfolio-page .portfolio-actions-card {
+  border-color: #9aa6b6;
+  border-top: 3px solid var(--portfolio-ui-primary);
+}
+
+.portfolio-page .portfolio-actions-card .workbench-detail-card-title {
+  font-size: 0.95rem;
+}
+
+.portfolio-page .portfolio-actions-card .portfolio-workflow-item {
+  border-radius: var(--portfolio-ui-radius-panel);
+}
+
+.portfolio-page .portfolio-actions-card .portfolio-workflow-item-recommended {
+  border-color: rgba(19, 27, 46, 0.24);
+  background: #f7f9fc;
+}
+
+.portfolio-page .portfolio-evidence-card {
+  background: #fbfcfd;
+}
+
+.portfolio-page .portfolio-evidence-card .portfolio-workflow-entry-list .action-link {
+  min-height: 28px;
+  padding-inline: 0.55rem;
+}
+
+.portfolio-page .portfolio-context-card,
+.portfolio-page .portfolio-readiness-card,
+.portfolio-page .portfolio-evidence-card {
+  padding: 0.85rem;
+}
+
+@media (max-width: 1320px) {
+  .portfolio-page .portfolio-summary-band,
+  .portfolio-page .portfolio-decision-band {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolio-page .portfolio-decision-tile {
+    border-right: 1px solid var(--portfolio-ui-border);
+    border-bottom: 1px solid var(--portfolio-ui-border);
+  }
 }
 
 .portfolio-page .portfolio-allocation-bar-row {
@@ -16477,6 +16663,111 @@ a:hover {
   background: #16a34a;
 }
 
+/* Focused Portfolio Review: keep the first-viewport operating review dense and
+   readable after allocation/top-holdings moved to their own screens. */
+.portfolio-page .portfolio-executive-summary-grid-focused {
+  grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.9fr);
+  gap: 12px;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-attention-summary,
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-health-summary {
+  grid-column: auto;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-operating-brief {
+  grid-column: 1 / -1;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-attention-list,
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-health-summary {
+  padding: 12px;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-attention-item {
+  min-height: auto;
+  padding: 10px 12px;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-health-summary {
+  align-content: center;
+}
+
+.portfolio-page .portfolio-executive-summary-grid-focused .portfolio-health-summary p {
+  margin: 0;
+}
+
+.portfolio-page .portfolio-workspace-toolbar {
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--portfolio-ui-radius-panel);
+  background: var(--portfolio-ui-surface-container-lowest);
+}
+
+.portfolio-page .portfolio-workspace-toolbar-row {
+  grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-groups {
+  grid-template-columns: 1fr;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-group {
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-group-context .workbench-toolbar-group-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-sidecar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "period actions";
+  gap: 12px;
+  align-items: end;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-actions {
+  justify-self: end;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-group-period {
+  margin-left: 0;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-group-period .workbench-toolbar-group-fields {
+  display: block;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-period-control.workbench-segmented-control {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  max-width: 46rem;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-period-control .workbench-segmented-control-button {
+  min-height: 30px;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-period-control .workbench-segmented-control-button:nth-child(7) {
+  grid-column: auto;
+}
+
+.portfolio-page .portfolio-workspace-toolbar-context {
+  gap: 4px 16px;
+  font-size: 11px;
+}
+
 @media (max-width: 1180px) {
   .portfolio-page .portfolio-summary-kpi-strip,
   .portfolio-page .portfolio-allocation-legend {
@@ -16489,6 +16780,27 @@ a:hover {
   .portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-attention-summary,
   .portfolio-page .portfolio-summary-side-stack {
     grid-column: 1 / -1;
+  }
+
+  .portfolio-page .portfolio-operating-brief-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolio-page .portfolio-executive-summary-grid-focused {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-page .portfolio-executive-summary-grid-focused .portfolio-attention-summary,
+  .portfolio-page .portfolio-executive-summary-grid-focused .portfolio-health-summary {
+    grid-column: 1 / -1;
+  }
+
+  .portfolio-page .portfolio-workspace-toolbar-row,
+  .portfolio-page .portfolio-workspace-toolbar-sidecar {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "period"
+      "actions";
   }
 
   .portfolio-page .portfolio-executive-summary-grid-detailed .portfolio-summary-side-stack {

@@ -37,6 +37,7 @@ export function PortfolioDecisionBand({
         tone={toBadgeTone(getBookReadinessTone(workspace))}
         support={getBookReadinessSupport(workspace)}
         source="Book status"
+        priority="primary"
       />
       <DecisionTile
         label="Exceptions"
@@ -71,11 +72,11 @@ export function PortfolioDecisionBand({
         source="Performance"
       />
       <DecisionTile
-        label="DPM operations"
+        label="Mandate workflow"
         value={dpmStatus}
         tone={workspace.rebalance?.status ? "success" : "default"}
-        support={workspace.rebalance?.last_rebalance_run_id ?? "Portfolio-level operations posture"}
-        source="Manage"
+        support={workspace.rebalance?.status ? "Mandate review available" : "No active mandate run"}
+        source="Mandate posture"
       />
     </section>
   );
@@ -89,17 +90,17 @@ export function PortfolioEvidenceModule({
   context: PortfolioWorkspaceContext;
 }) {
   const evidenceRows = [
-    { label: "Review scope", value: "Summary and detailed portfolio review" },
-    { label: "Review inputs", value: "Portfolio book, positions, reporting, and cashflow" },
+    { label: "Review scope", value: "Portfolio decision review" },
+    { label: "Sources", value: "Book, holdings, reporting, and cashflow" },
     { label: "Benchmark", value: formatPortfolioBenchmark(workspace) },
     { label: "As-of", value: formatDate(context.selectedAsOfDate) },
-    { label: "Reporting rows", value: formatCount(workspace.readiness.reporting.row_count, "row") },
+    { label: "Reporting coverage", value: formatCount(workspace.readiness.reporting.row_count, "row") },
   ];
 
   return (
     <WorkbenchRailCard className="portfolio-side-card portfolio-evidence-card">
       <div className="portfolio-evidence-header">
-        <Text variant="cardTitle">Evidence and Lineage</Text>
+        <Text variant="cardTitle">Review Evidence</Text>
         <SemanticBadge tone={workspace.partial_failures.length ? "warn" : "success"}>
           {workspace.partial_failures.length ? "Partial" : "Ready"}
         </SemanticBadge>
@@ -118,9 +119,9 @@ export function PortfolioEvidenceModule({
         <ActionLink href={buildPortfolioModeHref(workspace, "advisor")}>Advisor Brief</ActionLink>
         <ActionLink href={buildPortfolioModeHref(workspace, "evidence")}>Evidence</ActionLink>
         <ActionLink href={`/workbench/${encodeURIComponent(workspace.portfolio.portfolio_id)}`}>
-          DPM Operations
+          Mandate Operations
         </ActionLink>
-        <ActionLink href="/data-products">Data Products</ActionLink>
+        <ActionLink href="/data-products">Source Catalog</ActionLink>
       </div>
     </WorkbenchRailCard>
   );
@@ -132,15 +133,21 @@ function DecisionTile({
   support,
   source,
   tone,
+  priority = "secondary",
 }: {
   label: string;
   value: string;
   support: string;
   source: string;
   tone: BadgeTone;
+  priority?: "primary" | "secondary";
 }) {
   return (
-    <div className="portfolio-decision-tile">
+    <div
+      className={`portfolio-decision-tile ${
+        priority === "primary" ? "portfolio-decision-tile-primary" : ""
+      }`}
+    >
       <span className="portfolio-decision-label">{label}</span>
       <div className="portfolio-decision-value-row">
         <SemanticBadge tone={tone}>{value}</SemanticBadge>

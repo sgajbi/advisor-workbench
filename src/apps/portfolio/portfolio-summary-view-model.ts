@@ -29,6 +29,11 @@ export type PortfolioSummaryReadiness = {
   percentLabel: string;
 };
 
+export type PortfolioPerformancePeriodReturn = {
+  period: "MTD" | "QTD" | "YTD";
+  returnPct: number | null;
+};
+
 export function resolvePortfolioSummaryAllocationRows(
   workspace: PortfolioWorkspace
 ): PortfolioSummaryAllocationRow[] {
@@ -125,7 +130,7 @@ export function buildPortfolioSummaryAttentionItems(
   if (workspace.summary.cash_weight_pct > 5) {
     items.push({
       title: "Cash Review Needed",
-      detail: `${formatPct(workspace.summary.cash_weight_pct)} cash exceeds the 5% review threshold for this summary posture.`,
+      detail: `${formatPct(workspace.summary.cash_weight_pct)} cash exceeds the 5% review threshold for this portfolio review.`,
       tone: "warn",
     });
   }
@@ -163,6 +168,26 @@ export function buildPortfolioSummaryReadiness(
     totalCount,
     percentLabel: `${percent}%`,
   };
+}
+
+export function resolvePortfolioPerformancePeriodReturns(
+  workspace: PortfolioWorkspace
+): PortfolioPerformancePeriodReturn[] {
+  const sourceRows = new Map(
+    (workspace.performance_period_returns ?? []).map((row) => [row.period, row.return_pct])
+  );
+
+  if (
+    workspace.performance?.period &&
+    ["MTD", "QTD", "YTD"].includes(workspace.performance.period)
+  ) {
+    sourceRows.set(workspace.performance.period as "MTD" | "QTD" | "YTD", workspace.performance.return_pct);
+  }
+
+  return ["MTD", "QTD", "YTD"].map((period) => ({
+    period: period as "MTD" | "QTD" | "YTD",
+    returnPct: sourceRows.get(period as "MTD" | "QTD" | "YTD") ?? null,
+  }));
 }
 
 export function formatProjectedCashflowPointTitle(

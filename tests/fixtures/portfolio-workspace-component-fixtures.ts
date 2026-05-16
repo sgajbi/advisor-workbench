@@ -58,6 +58,11 @@ export function buildPortfolioWorkspace(
       money_weighted_return_pct: 1.1,
       warnings: [],
     },
+    performance_period_returns: [
+      { period: "MTD", return_pct: 0.4, benchmark_return_pct: 0.3, excess_return_pct: 0.1 },
+      { period: "QTD", return_pct: 0.9, benchmark_return_pct: 0.7, excess_return_pct: 0.2 },
+      { period: "YTD", return_pct: 1.2, benchmark_return_pct: 1, excess_return_pct: 0.2 },
+    ],
     rebalance: {
       status: "READY",
       last_run_at_utc: null,

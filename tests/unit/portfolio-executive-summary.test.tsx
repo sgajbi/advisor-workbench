@@ -1,79 +1,30 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import PortfolioExecutiveSummary from "../../src/apps/portfolio/components/portfolio-executive-summary";
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
-import type { PortfolioWorkspaceContext } from "../../src/apps/portfolio/view-model";
 
 describe("PortfolioExecutiveSummary", () => {
-  it("renders summary modules and navigates to supported record screens", () => {
-    render(<PortfolioExecutiveSummary workspace={buildWorkspace()} context={buildContext()} />);
+  it("renders only decision review modules without duplicated analytics panels", () => {
+    render(<PortfolioExecutiveSummary workspace={buildWorkspace()} />);
 
-    expect(screen.getByRole("heading", { name: "Asset Allocation" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Top Holdings" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Cashflow Forecast" })).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Health")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Recent Transactions" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Advisor Guidance" })).not.toBeInTheDocument();
-
-    expect(screen.getByRole("link", { name: "View All Positions" })).toHaveAttribute(
-      "href",
-      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001"
-    );
-    expect(screen.getByRole("link", { name: "View Details" })).toHaveAttribute(
-      "href",
-      "/cashflow?portfolioId=PB_SG_GLOBAL_BAL_001"
-    );
-
-    expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Attention Items (1)" })).toBeInTheDocument();
+    expect(screen.getByText("Review Readiness")).toBeInTheDocument();
+    expect(screen.getByText("What to review next")).toBeInTheDocument();
+    expect(screen.getByText("Liquidity horizon")).toBeInTheDocument();
+    expect(screen.getByText("Mandate workflow")).toBeInTheDocument();
     expect(screen.getByText("Cash Review Needed")).toBeInTheDocument();
-    expect(screen.getByLabelText("Portfolio health 75%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Review readiness 75%")).toBeInTheDocument();
 
-    const cashflowPoints = screen.getByLabelText("Projected cashflow points");
-    expect(within(cashflowPoints).getAllByTitle(/May 2026/)).toHaveLength(2);
-  });
-
-  it("keeps detailed mode focused on key metrics and attention without duplicate preview cards", () => {
-    render(
-      <PortfolioExecutiveSummary
-        workspace={buildWorkspace()}
-        context={{ ...buildContext(), viewMode: "detailed" }}
-      />
-    );
-
-    expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
-    expect(screen.getByText("Cash Review Needed")).toBeInTheDocument();
+    expect(screen.queryByText("1,000,000 USD")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Asset Allocation" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Top Holdings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Cashflow Forecast" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Portfolio Health")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Recent Transactions" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Advisor Guidance" })).not.toBeInTheDocument();
   });
 });
-
-function buildContext(): PortfolioWorkspaceContext {
-  return {
-    selectedAsOfDate: "2026-05-12",
-    selectedReportingCurrency: "USD",
-    timeWindow: "30D",
-    periodLabel: "30D",
-    viewMode: "summary",
-    columnMode: "essential",
-    hideEmptyModules: false,
-    focusExceptions: false,
-    effectivePeriodStartDate: "2026-04-12",
-    effectivePeriodEndDate: "2026-05-12",
-    usesCustomDateRange: false,
-    hasHistoricalGap: false,
-    currencyOptions: ["USD"],
-    historicalSnapshotState: "supported",
-    historicalSnapshotReason: "Historical snapshots are source-backed.",
-    supportsHistoricalSnapshots: true,
-    reportingCurrencyRestatementState: "supported",
-    reportingCurrencyRestatementReason: "Reporting currency restatement is source-backed.",
-    supportsReportingCurrencyRestatement: true,
-  };
-}
 
 function buildWorkspace(): PortfolioWorkspace {
   return {

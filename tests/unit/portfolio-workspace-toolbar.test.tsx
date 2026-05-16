@@ -78,23 +78,21 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(screen.getByText(/As of 29 Mar 2026\./i)).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Book-style holdings honor reporting currency, but performance snapshot does not\./i
+        /Some workflow views keep book currency until full restatement is available\./i
       )
     ).toBeInTheDocument();
     expect(
       screen
         .getByLabelText("Reporting Currency")
-        .closest("div[title='Book-style holdings honor reporting currency, but performance snapshot does not.']")
+        .closest("div[title='Full currency restatement is not available for every workflow yet.']")
     ).not.toBeNull();
-    expect(screen.getByText(/Period 30D: 01 Mar 2026 to 29 Mar 2026\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     const contextControls = screen.getByRole("group", { name: "Context controls" });
-    const viewControls = screen.getByRole("group", { name: "View controls" });
     const periodControls = screen.getByRole("group", { name: "Period controls" });
     expect(contextControls).toBeInTheDocument();
-    expect(viewControls).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "View controls" })).not.toBeInTheDocument();
     expect(periodControls).toBeInTheDocument();
     expect(within(contextControls).getByText("Context")).toHaveClass("workbench-toolbar-group-title");
-    expect(within(viewControls).getAllByText("View")[0]).toHaveClass("workbench-toolbar-group-title");
     expect(within(periodControls).getAllByText("Period")[0]).toHaveClass("workbench-toolbar-group-title");
     expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
       .toBeTruthy();
@@ -103,25 +101,10 @@ describe("PortfolioWorkspaceToolbar", () => {
         ".workbench-segmented-control.portfolio-workspace-toolbar-period-control[aria-label='Portfolio period presets']"
       )
     ).toBeTruthy();
-    const viewNavigation = screen.getByRole("tablist", { name: "Portfolio view navigation" });
-    expect(viewNavigation).toHaveClass(
-      "mode-tabs",
-      "portfolio-primary-view-tabs"
-    );
-    expect(within(viewNavigation).getByRole("tab", { name: "Detailed" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(within(viewNavigation).getByRole("tab", { name: "Summary" })).toHaveAttribute(
-      "aria-selected",
-      "false"
-    );
+    expect(screen.queryByRole("tablist", { name: "Portfolio view navigation" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "YTD" }));
     expect(onControlsChange).toHaveBeenCalledWith({ timeWindow: "YTD" });
-    fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
-    expect(onControlsChange).toHaveBeenCalledWith({ viewMode: "summary" });
-
     fireEvent.click(screen.getByRole("button", { name: /Export portfolio data/i }));
     expect(onExport).toHaveBeenCalledTimes(1);
 
@@ -131,12 +114,6 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(onControlsChange).toHaveBeenCalledWith({ includeCash: false });
     fireEvent.click(within(filtersMenu).getByRole("button", { name: /Reset to default/i }));
     expect(onFilterReset).toHaveBeenCalledTimes(1);
-
-    fireEvent.keyDown(document, { key: "Escape" });
-    fireEvent.click(screen.getByRole("button", { name: "Columns", hidden: true }));
-    const columnsMenu = screen.getByRole("menu");
-    fireEvent.click(within(columnsMenu).getByRole("menuitem", { name: "Expanded columns" }));
-    expect(onControlsChange).toHaveBeenCalledWith({ columnMode: "expanded" });
 
     fireEvent.keyDown(document, { key: "Escape" });
     fireEvent.click(screen.getByRole("button", { name: "More actions", hidden: true }));
@@ -214,26 +191,26 @@ describe("PortfolioWorkspaceToolbar", () => {
 
     expect(
       screen.getByText(
-        /Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics\./i
+        /Some adjacent workflows keep their own date controls\./i
       )
     ).toBeInTheDocument();
     expect(
       screen
         .getByLabelText("As of")
         .closest(
-          "div[title='Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics.']"
+          "div[title='Historical review is not available for every adjacent workflow yet.']"
         )
     ).not.toBeNull();
     expect(
       screen.getByText(
-        /Workflow, readiness, and performance snapshot do not yet share reporting currency\./i
+        /Some workflow views keep book currency until full restatement is available\./i
       )
     ).toBeInTheDocument();
     expect(
       screen
         .getByLabelText("Reporting Currency")
         .closest(
-          "div[title='Workflow, readiness, and performance snapshot do not yet share reporting currency.']"
+          "div[title='Full currency restatement is not available for every workflow yet.']"
         )
     ).not.toBeNull();
   });

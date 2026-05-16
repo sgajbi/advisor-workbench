@@ -39,7 +39,7 @@ export default function PortfolioScreenRail({
     <Panel className="portfolio-screen-rail">
       <div className="portfolio-screen-rail-header">
         <Text variant="label">Workbench Screens</Text>
-        <strong>{portfolioId}</strong>
+        <strong>Active book</strong>
       </div>
       <nav className="portfolio-screen-rail-nav" aria-label="Workbench screen navigation">
         {screens.map((screen) => {

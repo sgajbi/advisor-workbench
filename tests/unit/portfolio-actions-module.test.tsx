@@ -23,7 +23,7 @@ describe("PortfolioActionsModule", () => {
     );
 
     expect(screen.getByText("Review performance")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Next Actions workflow list" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Recommended Actions workflow list" })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
     expect(
       screen.getByText(
@@ -40,5 +40,11 @@ describe("PortfolioActionsModule", () => {
       "href",
       "/performance"
     );
+  });
+
+  it("does not reserve rail space when there are no recommended actions", () => {
+    const { container } = render(<PortfolioActionsModule actions={[]} />);
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

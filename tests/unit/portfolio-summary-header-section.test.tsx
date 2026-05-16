@@ -16,12 +16,12 @@ describe("PortfolioSummaryHeaderSection", () => {
         context={buildPortfolioWorkspaceContext()}
         orderedWorkflowCues={[{ key: "performance", label: "Performance", href: "/performance" }]}
         primaryWorkflowCueKey="performance"
-        readinessIndicators={[]}
         onOpenMetricDrawer={vi.fn()}
       />
     );
 
-    expect(screen.getByText("Portfolio book PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio book")).toBeInTheDocument();
+    expect(screen.queryByText("Portfolio book PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Global Balanced Mandate" })).toBeInTheDocument();
     expect(screen.getByText("CIF_SG_000184")).toBeInTheDocument();
     expect(screen.getByText("Singapore")).toBeInTheDocument();
@@ -29,6 +29,9 @@ describe("PortfolioSummaryHeaderSection", () => {
     expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
     expect(screen.getByText("920,000 USD")).toBeInTheDocument();
     expect(screen.getByText("80,000 USD")).toBeInTheDocument();
+    expect(screen.getByText("0.40%")).toBeInTheDocument();
+    expect(screen.getByText("0.90%")).toBeInTheDocument();
+    expect(screen.getByText("1.20%")).toBeInTheDocument();
   });
 
   it("opens metric drawers only for supported KPI tiles", () => {
@@ -39,7 +42,6 @@ describe("PortfolioSummaryHeaderSection", () => {
         context={buildPortfolioWorkspaceContext()}
         orderedWorkflowCues={[]}
         primaryWorkflowCueKey={null}
-        readinessIndicators={[]}
         onOpenMetricDrawer={onOpenMetricDrawer}
       />
     );

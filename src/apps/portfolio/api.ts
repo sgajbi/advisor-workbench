@@ -155,6 +155,7 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "income_summary"
   | "activity_summary"
   | "performance"
+  | "performance_period_returns"
   | "readiness_indicators"
   | "exception_summaries"
   | "insights"
@@ -282,11 +283,19 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
     const bookQuery = buildPortfolioBookQuery(params);
     const summaryQuery = buildPortfolioSummaryWindowQuery(params);
+    const performancePeriodQueries = ["MTD", "QTD", "YTD"].map((timeWindow) =>
+      buildPortfolioPerformanceSnapshotQuery({
+        ...params,
+        timeWindow: timeWindow as PortfolioTimeWindow,
+        usesCustomDateRange: false,
+      })
+    );
     const [
       bookPayload,
       incomePayload,
       activityPayload,
       performancePayload,
+      ...periodPerformancePayloads
     ] = await Promise.all([
       fetchPortfolioJson<PortfolioBookResponse>(
         resolvePortfolioRequestTarget(),
@@ -307,6 +316,13 @@ export async function getPortfolioWorkspaceSummaryDetails(
         resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/performance-snapshot`,
         { query: performanceQuery }
+      ),
+      ...performancePeriodQueries.map((query) =>
+        fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
+          resolvePortfolioRequestTarget(),
+          `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/performance-snapshot`,
+          { query }
+        )
       ),
     ]);
 
@@ -330,6 +346,9 @@ export async function getPortfolioWorkspaceSummaryDetails(
       income_summary: incomePayload,
       activity_summary: activityPayload,
       performance: mapPortfolioPerformanceSnapshot(performancePayload),
+      performance_period_returns: periodPerformancePayloads.map((payload, index) =>
+        mapPortfolioPerformancePeriodReturn(["MTD", "QTD", "YTD"][index] as "MTD" | "QTD" | "YTD", payload)
+      ),
     };
   } catch {
     return null;
@@ -651,6 +670,19 @@ function mapPortfolioPerformanceSnapshot(
     unavailable: payload.unavailable ?? null,
     warnings: payload.warnings ?? [],
     partial_failures: payload.partial_failures ?? [],
+  };
+}
+
+function mapPortfolioPerformancePeriodReturn(
+  period: "MTD" | "QTD" | "YTD",
+  payload: PortfolioPerformanceSnapshotResponse | null
+): NonNullable<PortfolioWorkspace["performance_period_returns"]>[number] {
+  return {
+    period,
+    return_pct: payload?.portfolio_return_pct ?? null,
+    benchmark_return_pct: payload?.benchmark_return_pct ?? null,
+    excess_return_pct: payload?.excess_return_pct ?? null,
+    unavailable: payload?.unavailable ?? null,
   };
 }
 

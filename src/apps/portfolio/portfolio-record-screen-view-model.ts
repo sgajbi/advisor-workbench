@@ -1,7 +1,7 @@
 import { formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
 
-export type PortfolioRecordScreenKind = "positions" | "transactions" | "income" | "cashflow";
+export type PortfolioRecordScreenKind = "allocation" | "positions" | "transactions" | "income" | "cashflow";
 
 export type PortfolioRecordScreenCopy = {
   title: string;
@@ -18,6 +18,11 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   PortfolioRecordScreenKind,
   PortfolioRecordScreenCopy
 > = {
+  allocation: {
+    title: "Allocation",
+    subtitle: "Portfolio composition, exposure buckets, and look-through availability.",
+    kicker: "Allocation review",
+  },
   positions: {
     title: "Positions",
     subtitle: "Holdings, valuation, cost basis, portfolio weights, and unrealized P&L.",
@@ -47,11 +52,18 @@ export function getPortfolioRecordScreenCopy(
 }
 
 export function buildPortfolioRecordScreenSubtitle(
-  screen: PortfolioRecordScreenKind,
-  workspace: PortfolioWorkspace | null
+  screen: PortfolioRecordScreenKind
 ): string {
   const copy = getPortfolioRecordScreenCopy(screen);
-  return workspace ? `${workspace.portfolio.portfolio_id} · ${copy.subtitle}` : copy.subtitle;
+  return copy.subtitle;
+}
+
+export function buildPortfolioRecordDisplayName(workspace: PortfolioWorkspace): string {
+  if (workspace.portfolio.display_name && workspace.portfolio.display_name !== workspace.portfolio.portfolio_id) {
+    return workspace.portfolio.display_name;
+  }
+
+  return `${formatStatus(workspace.profile.risk_exposure)} Mandate`;
 }
 
 export function buildPortfolioRecordHeaderMeta(workspace: PortfolioWorkspace): string {
@@ -69,6 +81,25 @@ export function buildPortfolioRecordHeaderKpis(
   windowLabel = "30D",
   screen?: PortfolioRecordScreenKind
 ): PortfolioRecordHeaderKpi[] {
+  if (screen === "allocation") {
+    return [
+      {
+        label: "AUM",
+        value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
+      },
+      {
+        label: "Buckets",
+        value: String(
+          (workspace.allocation_views ?? []).reduce((total, view) => total + view.buckets.length, 0)
+        ),
+      },
+      {
+        label: "Positions",
+        value: String(workspace.summary.position_count),
+      },
+    ];
+  }
+
   if (screen === "income") {
     const income = workspace.income_summary;
     const activity = workspace.activity_summary;

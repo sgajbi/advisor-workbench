@@ -38,17 +38,15 @@ describe("portfolio side rail modules", () => {
     render(
       <PortfolioContextModule
         workspace={workspace as any}
-        context={{ selectedAsOfDate: "2026-02-24" } as any}
         copiedField={null}
         onCopy={onCopy}
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Portfolio Context" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Book Context" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Identity" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Book Setup" })).toBeInTheDocument();
     expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(
-      expect.arrayContaining(["Portfolio", "Client", "Base Currency", "As of"])
+      expect.arrayContaining(["Portfolio", "Client", "Relationship Manager", "Booking Centre"])
     );
     expect(screen.getByText("PB_SG_GLOBAL_BAL_001")).toHaveClass("workbench-definition-value");
 
@@ -126,10 +124,10 @@ describe("portfolio side rail modules", () => {
       />
     );
 
-    expect(screen.getByText("Evidence and Lineage")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Portfolio Context" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Readiness and Exceptions" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Next Actions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Reporting Readiness" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Book Context" })).toBeInTheDocument();
+    expect(screen.getByText("Review Evidence")).toBeInTheDocument();
     expect(screen.getByText("Review proposal")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));

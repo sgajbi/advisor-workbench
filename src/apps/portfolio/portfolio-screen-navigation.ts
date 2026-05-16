@@ -1,5 +1,6 @@
 export type PortfolioScreenNavigationKey =
   | "portfolio"
+  | "allocation"
   | "positions"
   | "transactions"
   | "income"
@@ -18,7 +19,8 @@ export type PortfolioScreenNavigationItem = {
 };
 
 const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
-  { key: "portfolio", label: "Portfolio", detail: "Summary and decision context", href: "/portfolio" },
+  { key: "portfolio", label: "Portfolio", detail: "Review and decision context", href: "/portfolio" },
+  { key: "allocation", label: "Allocation", detail: "Composition, exposure, and concentration", href: "/allocation" },
   { key: "positions", label: "Positions", detail: "Holdings, valuation, and P&L", href: "/positions" },
   { key: "transactions", label: "Transactions", detail: "Booked activity and settlement", href: "/transactions" },
   { key: "income", label: "Income", detail: "Income and activity", href: "/income" },

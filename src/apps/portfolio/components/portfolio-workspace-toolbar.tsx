@@ -7,13 +7,11 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Chip from "@mui/material/Chip";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 
 import {
   FilterBar,
-  ModeTabs,
   PageToolbar,
   WorkbenchSegmentedControl,
   WorkbenchToolbarGroup,
@@ -26,7 +24,6 @@ import type {
   PortfolioFilterOptions,
   PortfolioWorkspaceContext,
   PortfolioWorkspaceControls,
-  PortfolioViewMode,
 } from "../view-model";
 import {
   getActivePortfolioFilterCount,
@@ -56,64 +53,41 @@ export default function PortfolioWorkspaceToolbar({
   quickActions: Array<{ key: string; label: string; href: string }>;
 }) {
   const [filtersAnchor, setFiltersAnchor] = useState<HTMLElement | null>(null);
-  const [columnsAnchor, setColumnsAnchor] = useState<HTMLElement | null>(null);
   const [actionsAnchor, setActionsAnchor] = useState<HTMLElement | null>(null);
 
   const historicalContextCopy = useMemo(() => {
     if (context.historicalSnapshotState === "unsupported") {
-      return `As of ${formatDate(context.selectedAsOfDate)}. ${context.historicalSnapshotReason}`;
+      return `As of ${formatDate(context.selectedAsOfDate)}. Historical review is not available for this book yet.`;
     }
 
     if (context.historicalSnapshotState === "partial") {
-      return `As of ${formatDate(context.selectedAsOfDate)}. ${context.historicalSnapshotReason}`;
+      return `As of ${formatDate(context.selectedAsOfDate)}. Some adjacent workflows keep their own date controls.`;
     }
 
     if (!context.hasHistoricalGap) {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Snapshot-backed modules use the selected portfolio snapshot.`;
+      return `As of ${formatDate(context.selectedAsOfDate)}. Portfolio records use the selected review date.`;
     }
 
-    return `As of ${formatDate(context.selectedAsOfDate)}. Date-aware modules use the selected context; snapshot-backed modules continue to use the latest available state.`;
-  }, [
-    context.hasHistoricalGap,
-    context.historicalSnapshotReason,
-    context.historicalSnapshotState,
-    context.selectedAsOfDate,
-  ]);
+    return `As of ${formatDate(context.selectedAsOfDate)}. Some work areas use the latest available book state.`;
+  }, [context.hasHistoricalGap, context.historicalSnapshotState, context.selectedAsOfDate]);
   const activeFilterCount = getActivePortfolioFilterCount(controls);
-  const supportsCustomRange = controls.viewMode === "detailed";
   const historicalControlTitle = !context.supportsHistoricalSnapshots
-    ? context.historicalSnapshotReason
+    ? "Historical review is not available for every adjacent workflow yet."
     : undefined;
   const reportingCurrencyControlTitle = !context.supportsReportingCurrencyRestatement
-    ? context.reportingCurrencyRestatementReason
+    ? "Full currency restatement is not available for every workflow yet."
     : undefined;
   const contextSegments = useMemo(() => {
     const segments = [historicalContextCopy];
 
     if (context.reportingCurrencyRestatementState !== "supported") {
-      segments.push(context.reportingCurrencyRestatementReason);
+      segments.push("Some workflow views keep book currency until full restatement is available.");
     }
 
-    if (supportsCustomRange) {
-      segments.push(
-        `Period ${context.periodLabel}: ${formatDate(context.effectivePeriodStartDate)} to ${formatDate(
-          context.effectivePeriodEndDate
-        )}.`
-      );
-    } else {
-      segments.push(`Period ${context.periodLabel}.`);
-    }
+    segments.push(`Period ${context.periodLabel}.`);
 
     return segments;
-  }, [
-    context.effectivePeriodEndDate,
-    context.effectivePeriodStartDate,
-    context.periodLabel,
-    context.reportingCurrencyRestatementReason,
-    context.reportingCurrencyRestatementState,
-    historicalContextCopy,
-    supportsCustomRange,
-  ]);
+  }, [context.periodLabel, context.reportingCurrencyRestatementState, historicalContextCopy]);
 
   return (
     <PageToolbar className="portfolio-workspace-toolbar">
@@ -161,26 +135,6 @@ export default function PortfolioWorkspaceToolbar({
               </div>
           </WorkbenchToolbarGroup>
 
-          <WorkbenchToolbarGroup
-            title="View"
-            className="portfolio-workspace-toolbar-group portfolio-workspace-toolbar-group-view"
-            ariaLabel="View controls"
-          >
-              <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow">
-                <ModeTabs
-                  value={controls.viewMode}
-                  onChange={(nextValue: PortfolioViewMode) => {
-                    onControlsChange({ viewMode: nextValue });
-                  }}
-                  options={[
-                    { key: "summary", label: "Summary" },
-                    { key: "detailed", label: "Detailed" },
-                  ]}
-                  ariaLabel="Portfolio view navigation"
-                  className="portfolio-primary-view-tabs"
-                />
-              </div>
-          </WorkbenchToolbarGroup>
         </div>
 
         <div className="portfolio-workspace-toolbar-sidecar">
@@ -195,18 +149,6 @@ export default function PortfolioWorkspaceToolbar({
               onClick={(e) => setFiltersAnchor(e.currentTarget)}
             >
               {activeFilterCount ? `Filters (${activeFilterCount})` : "Filters"}
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              className="portfolio-workspace-toolbar-action"
-              aria-haspopup="menu"
-              aria-expanded={Boolean(columnsAnchor)}
-              aria-label="Columns"
-              onClick={(e) => setColumnsAnchor(e.currentTarget)}
-              disabled={controls.viewMode !== "detailed"}
-            >
-              Columns
             </Button>
             <Button
               variant="outlined"
@@ -248,36 +190,6 @@ export default function PortfolioWorkspaceToolbar({
                 />
               </div>
 
-              {supportsCustomRange ? (
-                <>
-                  <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-range-start">
-                    <label htmlFor="portfolio-custom-start-date">From</label>
-                    <TextField
-                      id="portfolio-custom-start-date"
-                      type="date"
-                      size="small"
-                      value={controls.customStartDate}
-                      onChange={(event) => onControlsChange({ customStartDate: event.target.value })}
-                      inputProps={{ max: controls.customEndDate || context.selectedAsOfDate }}
-                    />
-                  </div>
-
-                  <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-range-end">
-                    <label htmlFor="portfolio-custom-end-date">To</label>
-                    <TextField
-                      id="portfolio-custom-end-date"
-                      type="date"
-                      size="small"
-                      value={controls.customEndDate}
-                      onChange={(event) => onControlsChange({ customEndDate: event.target.value })}
-                      inputProps={{
-                        max: context.selectedAsOfDate,
-                        min: controls.customStartDate || undefined,
-                      }}
-                    />
-                  </div>
-                </>
-              ) : null}
           </WorkbenchToolbarGroup>
         </div>
       </div>
@@ -331,31 +243,6 @@ export default function PortfolioWorkspaceToolbar({
             onFilterReset();
           }}
         />
-      </Menu>
-
-      <Menu
-        anchorEl={columnsAnchor}
-        open={Boolean(columnsAnchor)}
-        onClose={() => setColumnsAnchor(null)}
-      >
-        <MenuItem
-          selected={controls.columnMode === "essential"}
-            onClick={() => {
-            onControlsChange({ columnMode: "essential" });
-            setColumnsAnchor(null);
-          }}
-        >
-          Essential columns
-        </MenuItem>
-        <MenuItem
-          selected={controls.columnMode === "expanded"}
-            onClick={() => {
-            onControlsChange({ columnMode: "expanded" });
-            setColumnsAnchor(null);
-          }}
-        >
-          Expanded columns
-        </MenuItem>
       </Menu>
 
       <Menu

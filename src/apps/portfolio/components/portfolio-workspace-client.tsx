@@ -8,7 +8,6 @@ import {
 
 import {
   getPortfolioWorkspaceShell,
-  getPortfolioWorkspaceDetailedDetails,
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
 } from "../api";
@@ -30,14 +29,9 @@ import PortfolioPageLayout from "./portfolio-page-layout";
 import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
 
-const PORTFOLIO_VIEW_MODE_STORAGE_KEY = "lotus:portfolio:view-mode";
 const summaryDetailsInflightRequests = new Map<
   string,
   ReturnType<typeof getPortfolioWorkspaceSummaryDetails>
->();
-const detailedDetailsInflightRequests = new Map<
-  string,
-  ReturnType<typeof getPortfolioWorkspaceDetailedDetails>
 >();
 const shellInflightRequests = new Map<
   string,
@@ -57,16 +51,14 @@ export default function PortfolioWorkspaceClient({
     buildInitialPortfolioControls(initialWorkspace)
   );
   const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
-  const [shellLoading, setShellLoading] = useState<boolean>(
+  const [, setShellLoading] = useState<boolean>(
     Boolean(selectedPortfolioId && !initialWorkspace)
   );
-  const [summaryDetailsLoading, setSummaryDetailsLoading] = useState<boolean>(
+  const [, setSummaryDetailsLoading] = useState<boolean>(
     Boolean(selectedPortfolioId && initialWorkspace)
   );
-  const [detailedDetailsLoaded, setDetailedDetailsLoaded] = useState(false);
   const [interactiveReady, setInteractiveReady] = useState(false);
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
-  const detailedRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState]
@@ -77,25 +69,10 @@ export default function PortfolioWorkspaceClient({
   }, []);
 
   useEffect(() => {
-    const storedViewMode = window.localStorage.getItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY);
-    if (storedViewMode !== "summary" && storedViewMode !== "detailed") {
-      return;
-    }
-
-    setControls((current) => applyPortfolioControlPatch(current, { viewMode: storedViewMode }));
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(PORTFOLIO_VIEW_MODE_STORAGE_KEY, controls.viewMode);
-  }, [controls.viewMode]);
-
-  useEffect(() => {
     setWorkspaceState(initialWorkspace);
     setShellLoading(Boolean(selectedPortfolioId && !initialWorkspace));
     setSummaryDetailsLoading(Boolean(initialWorkspace && selectedPortfolioId));
-    setDetailedDetailsLoaded(false);
     summaryRequestRef.current = null;
-    detailedRequestRef.current = null;
   }, [initialWorkspace, selectedPortfolioId]);
 
   useEffect(() => {
@@ -118,9 +95,7 @@ export default function PortfolioWorkspaceClient({
           const defaults = buildInitialPortfolioControls(shellWorkspace);
           return {
             ...defaults,
-            viewMode: current.viewMode,
-            columnMode:
-              current.viewMode === "detailed" ? "expanded" : defaults.columnMode,
+            timeWindow: current.timeWindow,
           };
         });
       }
@@ -185,59 +160,6 @@ export default function PortfolioWorkspaceClient({
     context.selectedReportingCurrency,
     context.timeWindow,
     context.usesCustomDateRange,
-    selectedPortfolioId,
-    workspaceState,
-  ]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadDetailedDetails() {
-      if (!selectedPortfolioId || !workspaceState || controls.viewMode !== "detailed") {
-        return;
-      }
-
-      const requestKey = `${selectedPortfolioId}:${workspaceState.as_of_date}:${context.selectedReportingCurrency}`;
-      const transactionWindowKey = `${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}`;
-      const scopedRequestKey = `${requestKey}:${transactionWindowKey}`;
-      if (
-        detailedRequestRef.current?.key === scopedRequestKey &&
-        detailedRequestRef.current?.status === "loaded"
-      ) {
-        return;
-      }
-
-      detailedRequestRef.current = { key: scopedRequestKey, status: "loading" };
-      setDetailedDetailsLoaded(false);
-      const details = await getPortfolioWorkspaceDetailedDetailsOnce(scopedRequestKey, selectedPortfolioId, {
-        asOfDate: context.selectedAsOfDate,
-        reportingCurrency: context.selectedReportingCurrency,
-        startDate: context.effectivePeriodStartDate,
-        endDate: context.effectivePeriodEndDate,
-      });
-      if (cancelled || !details) {
-        return;
-      }
-
-      setWorkspaceState((current) =>
-        current ? mergePortfolioWorkspace(current, details) : current
-      );
-      detailedRequestRef.current = { key: scopedRequestKey, status: "loaded" };
-      setDetailedDetailsLoaded(true);
-    }
-
-    void loadDetailedDetails();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    context.effectivePeriodEndDate,
-    context.effectivePeriodStartDate,
-    context.selectedAsOfDate,
-    context.selectedReportingCurrency,
-    controls.viewMode,
-    detailedDetailsLoaded,
     selectedPortfolioId,
     workspaceState,
   ]);
@@ -315,11 +237,6 @@ export default function PortfolioWorkspaceClient({
           selectedPortfolioId={selectedPortfolioId}
           workspace={workspace}
           context={context}
-          detailsLoading={
-            shellLoading ||
-            summaryDetailsLoading ||
-            (controls.viewMode === "detailed" && !detailedDetailsLoaded)
-          }
           toolbar={
             !interactiveReady ? (
               <div className="workbench-toolbar-placeholder-stack">
@@ -329,7 +246,6 @@ export default function PortfolioWorkspaceClient({
                   fields={[
                     { key: "as-of", label: "As of" },
                     { key: "reporting-currency", label: "Reporting Currency" },
-                    { key: "view", label: "View", width: "wide" },
                     { key: "period", label: "Period", width: "period" },
                   ]}
                 />
@@ -360,15 +276,8 @@ function applyPortfolioControlPatch(
 ): PortfolioWorkspaceControls {
   const next = { ...current, ...patch };
 
-  if (patch.viewMode === "summary") {
-    next.columnMode = "essential";
-    next.customStartDate = "";
-    next.customEndDate = "";
-  }
-
-  if (patch.viewMode === "detailed" && patch.columnMode === undefined) {
-    next.columnMode = "expanded";
-  }
+  next.viewMode = "summary";
+  next.columnMode = "essential";
 
   if (patch.timeWindow !== undefined && patch.customStartDate === undefined && patch.customEndDate === undefined) {
     next.customStartDate = "";
@@ -404,28 +313,6 @@ function getPortfolioWorkspaceSummaryDetailsOnce(
     summaryDetailsInflightRequests.delete(requestKey);
   });
   summaryDetailsInflightRequests.set(requestKey, request);
-  return request;
-}
-
-function getPortfolioWorkspaceDetailedDetailsOnce(
-  requestKey: string,
-  portfolioId: string,
-  params: {
-    asOfDate?: string;
-    reportingCurrency?: string;
-    startDate?: string;
-    endDate?: string;
-  }
-) {
-  const existingRequest = detailedDetailsInflightRequests.get(requestKey);
-  if (existingRequest) {
-    return existingRequest;
-  }
-
-  const request = getPortfolioWorkspaceDetailedDetails(portfolioId, params).finally(() => {
-    detailedDetailsInflightRequests.delete(requestKey);
-  });
-  detailedDetailsInflightRequests.set(requestKey, request);
   return request;
 }
 
