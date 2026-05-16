@@ -3,7 +3,6 @@
 import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from "react";
 
 import type { ColDef, GridApi, GridReadyEvent, ICellRendererParams } from "ag-grid-community";
-import { AgGridReact } from "ag-grid-react";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -12,22 +11,16 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import * as XLSX from "xlsx";
 
-import { ensureAgGridModulesRegistered } from "@/design-system/utils/ag-grid-modules";
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
 import {
-  PORTFOLIO_GRID_DEFAULT_COLUMN_DEF,
   buildPortfolioDataGridColumn,
   getPortfolioAmountToneClass,
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
+import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
-
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
-
-ensureAgGridModulesRegistered();
 
 type HoldingsColumnKey =
   | "instrument"
@@ -343,38 +336,27 @@ export default function PortfolioHoldingsGrid({
               hint="The visible book is usable, but market value and P&L are incomplete for some positions."
             />
           ) : null}
-          <div
-            className={`ag-theme-quartz portfolio-data-grid ${columnMode === "expanded" ? "portfolio-data-grid-dense" : ""}`}
-            aria-label="Portfolio holdings grid"
-          >
-            <AgGridReact<HoldingsRow>
-              rowData={rowData}
-              columnDefs={columnDefs}
-              theme="legacy"
-              quickFilterText={quickSearch}
-              defaultColDef={PORTFOLIO_GRID_DEFAULT_COLUMN_DEF}
-              animateRows={false}
-              domLayout="autoHeight"
-              headerHeight={32}
-              rowHeight={columnMode === "expanded" ? 34 : 36}
-              ensureDomOrder
-              rowSelection={{
-                mode: "multiRow",
-                checkboxes: true,
-                headerCheckbox: true,
-                enableClickSelection: true,
-              }}
-              suppressCellFocus={false}
-              onGridReady={(event: GridReadyEvent<HoldingsRow>) => {
-                gridApiRef.current = event.api;
-              }}
-              onRowClicked={({ data }) => {
-                if (data) {
-                  onRowSelect?.(data);
-                }
-              }}
-            />
-          </div>
+          <PortfolioDataGridFrame<HoldingsRow>
+            ariaLabel="Portfolio holdings grid"
+            density={columnMode}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            quickFilterText={quickSearch}
+            rowSelection={{
+              mode: "multiRow",
+              checkboxes: true,
+              headerCheckbox: true,
+              enableClickSelection: true,
+            }}
+            onGridReady={(event: GridReadyEvent<HoldingsRow>) => {
+              gridApiRef.current = event.api;
+            }}
+            onRowClicked={({ data }) => {
+              if (data) {
+                onRowSelect?.(data);
+              }
+            }}
+          />
         </>
       ) : (
         <PortfolioModuleState
