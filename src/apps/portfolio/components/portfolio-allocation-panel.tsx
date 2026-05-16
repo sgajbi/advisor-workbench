@@ -11,6 +11,17 @@ import {
   getPortfolioAllocationViews,
   type PortfolioLookThroughMode,
 } from "../api";
+import {
+  ALLOCATION_CHART_TYPES,
+  ALLOCATION_COLORS,
+  ALLOCATION_DIMENSIONS,
+  describeAllocationArc,
+  formatAllocationDimensionLabel,
+  isExpandedLookThroughSupported,
+  normalizeLookThroughMode,
+  type AllocationChartType,
+  type AllocationDimension,
+} from "../portfolio-allocation-view-model";
 import { formatCurrency, formatPct } from "../formatters";
 import type {
   PortfolioAllocationLookThrough,
@@ -18,33 +29,9 @@ import type {
   PortfolioAllocationView,
 } from "../types";
 
-const DIMENSIONS = [
-  { key: "asset_class", label: "Asset Class" },
-  { key: "currency", label: "Currency" },
-  { key: "sector", label: "Sector" },
-  { key: "region", label: "Region" },
-] as const;
-
-const CHART_TYPES = [
-  { key: "donut", label: "Donut" },
-  { key: "bar", label: "Bar" },
-  { key: "table", label: "Table" },
-] as const;
-
-const ALLOCATION_COLORS = [
-  "#1d4ed8",
-  "#0f766e",
-  "#7c3aed",
-  "#c2410c",
-  "#475569",
-  "#0f766e",
-] as const;
-
-type ChartType = (typeof CHART_TYPES)[number]["key"];
-type AllocationDimension = (typeof DIMENSIONS)[number]["key"];
 function handleInteractiveKeyPress(
   event: KeyboardEvent<Element>,
-  onActivate: () => void
+  onActivate: () => void,
 ) {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
@@ -79,22 +66,28 @@ export default function PortfolioAllocationPanel({
     useState<PortfolioLookThroughMode>("direct_only");
   const [lookThroughSupported, setLookThroughSupported] = useState(false);
   const [lookThroughBusy, setLookThroughBusy] = useState(false);
-  const [lookThroughProbeComplete, setLookThroughProbeComplete] = useState(false);
+  const [lookThroughProbeComplete, setLookThroughProbeComplete] =
+    useState(false);
   const [cachedLookThroughResponse, setCachedLookThroughResponse] = useState<{
     views: PortfolioAllocationView[];
     lookThrough: PortfolioAllocationLookThrough | null;
   } | null>(null);
 
   const viewsByDimension = useMemo(() => {
-    return new Map(resolvedAllocationViews.map((view) => [view.dimension, view]));
+    return new Map(
+      resolvedAllocationViews.map((view) => [view.dimension, view]),
+    );
   }, [resolvedAllocationViews]);
 
   const firstAvailableDimension =
-    DIMENSIONS.find((dimension) => viewsByDimension.has(dimension.key))?.key ?? "asset_class";
+    ALLOCATION_DIMENSIONS.find((dimension) =>
+      viewsByDimension.has(dimension.key),
+    )?.key ?? "asset_class";
 
-  const [activeDimension, setActiveDimension] =
-    useState<AllocationDimension>(firstAvailableDimension);
-  const [chartType, setChartType] = useState<ChartType>("donut");
+  const [activeDimension, setActiveDimension] = useState<AllocationDimension>(
+    firstAvailableDimension,
+  );
+  const [chartType, setChartType] = useState<AllocationChartType>("donut");
   const [hoveredBucket, setHoveredBucket] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,34 +111,38 @@ export default function PortfolioAllocationPanel({
         reportingCurrency,
         lookThroughMode: "prefer_look_through",
       }),
-    ]).then(([directResponse, lookThroughResponse]) => {
-      if (cancelled) {
-        return;
-      }
+    ])
+      .then(([directResponse, lookThroughResponse]) => {
+        if (cancelled) {
+          return;
+        }
 
-      if (directResponse?.views?.length) {
-        setResolvedAllocationViews(directResponse.views);
-      }
-      setLookThroughEffectiveMode(
-        normalizeLookThroughMode(directResponse?.look_through?.effective_mode)
-      );
+        if (directResponse?.views?.length) {
+          setResolvedAllocationViews(directResponse.views);
+        }
+        setLookThroughEffectiveMode(
+          normalizeLookThroughMode(
+            directResponse?.look_through?.effective_mode,
+          ),
+        );
 
-      const supportsExpandedLookThrough = isExpandedLookThroughSupported(
-        lookThroughResponse?.look_through ?? null
-      );
-      setLookThroughSupported(supportsExpandedLookThrough);
-      if (supportsExpandedLookThrough && lookThroughResponse?.views?.length) {
-        setCachedLookThroughResponse({
-          views: lookThroughResponse.views,
-          lookThrough: lookThroughResponse.look_through ?? null,
-        });
-      }
-      setLookThroughProbeComplete(true);
-    }).finally(() => {
-      if (!cancelled) {
-        setLookThroughBusy(false);
-      }
-    });
+        const supportsExpandedLookThrough = isExpandedLookThroughSupported(
+          lookThroughResponse?.look_through ?? null,
+        );
+        setLookThroughSupported(supportsExpandedLookThrough);
+        if (supportsExpandedLookThrough && lookThroughResponse?.views?.length) {
+          setCachedLookThroughResponse({
+            views: lookThroughResponse.views,
+            lookThrough: lookThroughResponse.look_through ?? null,
+          });
+        }
+        setLookThroughProbeComplete(true);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLookThroughBusy(false);
+        }
+      });
 
     return () => {
       cancelled = true;
@@ -161,12 +158,17 @@ export default function PortfolioAllocationPanel({
 
   const activeView = viewsByDimension.get(activeDimension) ?? null;
   const buckets = activeView?.buckets ?? [];
-  const activeDimensionLabel = formatDimensionLabel(activeDimension);
+  const activeDimensionLabel = formatAllocationDimensionLabel(activeDimension);
   const totalWeight =
-    buckets.reduce((sum, bucket) => sum + Math.max(bucket.weight_pct ?? 0, 0), 0) || 0;
+    buckets.reduce(
+      (sum, bucket) => sum + Math.max(bucket.weight_pct ?? 0, 0),
+      0,
+    ) || 0;
 
   const selectedBucket =
-    selectedAllocation?.dimension === activeDimension ? selectedAllocation.bucket : null;
+    selectedAllocation?.dimension === activeDimension
+      ? selectedAllocation.bucket
+      : null;
 
   const lookThroughLabel =
     lookThroughRequestedMode === "prefer_look_through" &&
@@ -177,12 +179,15 @@ export default function PortfolioAllocationPanel({
   const syncAllocationViewState = (
     nextViews: PortfolioAllocationView[],
     nextRequestedMode: PortfolioLookThroughMode,
-    nextLookThrough: PortfolioAllocationLookThrough | null | undefined
+    nextLookThrough: PortfolioAllocationLookThrough | null | undefined,
   ) => {
     setResolvedAllocationViews(nextViews);
     setLookThroughRequestedMode(nextRequestedMode);
     setLookThroughEffectiveMode(
-      normalizeLookThroughMode(nextLookThrough?.effective_mode, nextRequestedMode)
+      normalizeLookThroughMode(
+        nextLookThrough?.effective_mode,
+        nextRequestedMode,
+      ),
     );
     setHoveredBucket(null);
 
@@ -190,9 +195,11 @@ export default function PortfolioAllocationPanel({
       return;
     }
 
-    const matchingView = nextViews.find((view) => view.dimension === selectedAllocation.dimension);
+    const matchingView = nextViews.find(
+      (view) => view.dimension === selectedAllocation.dimension,
+    );
     const bucketStillAvailable = matchingView?.buckets.some(
-      (bucket) => bucket.bucket === selectedAllocation.bucket
+      (bucket) => bucket.bucket === selectedAllocation.bucket,
     );
     if (!bucketStillAvailable) {
       onSelectionChange(null);
@@ -220,7 +227,11 @@ export default function PortfolioAllocationPanel({
             });
 
       if (response?.views?.length) {
-        syncAllocationViewState(response.views, nextMode, response.look_through);
+        syncAllocationViewState(
+          response.views,
+          nextMode,
+          response.look_through,
+        );
       }
     } finally {
       setLookThroughBusy(false);
@@ -243,7 +254,7 @@ export default function PortfolioAllocationPanel({
             setHoveredBucket(null);
             onSelectionChange(null);
           }}
-          options={DIMENSIONS.map((dimension) => {
+          options={ALLOCATION_DIMENSIONS.map((dimension) => {
             const isAvailable = viewsByDimension.has(dimension.key);
             return {
               key: dimension.key,
@@ -261,7 +272,7 @@ export default function PortfolioAllocationPanel({
           <WorkbenchSegmentedControl
             value={chartType}
             onChange={setChartType}
-            options={CHART_TYPES.map((option) => ({
+            options={ALLOCATION_CHART_TYPES.map((option) => ({
               key: option.key,
               label: option.label,
             }))}
@@ -322,7 +333,7 @@ export default function PortfolioAllocationPanel({
                     onSelectionChange(
                       selectedBucket === bucket
                         ? null
-                        : { dimension: activeDimension, bucket }
+                        : { dimension: activeDimension, bucket },
                     )
                   }
                 />
@@ -337,7 +348,7 @@ export default function PortfolioAllocationPanel({
                     onSelectionChange(
                       selectedBucket === bucket
                         ? null
-                        : { dimension: activeDimension, bucket }
+                        : { dimension: activeDimension, bucket },
                     )
                   }
                 />
@@ -352,7 +363,7 @@ export default function PortfolioAllocationPanel({
                     onSelectionChange(
                       selectedBucket === bucket
                         ? null
-                        : { dimension: activeDimension, bucket }
+                        : { dimension: activeDimension, bucket },
                     )
                   }
                 />
@@ -363,16 +374,23 @@ export default function PortfolioAllocationPanel({
               <div className="portfolio-allocation-ranked">
                 <div className="portfolio-allocation-ranked-header">
                   <span>Dimension</span>
-                  <span className="portfolio-allocation-ranked-number">Market Value</span>
-                  <span className="portfolio-allocation-ranked-number">Weight</span>
-                  <span className="portfolio-allocation-ranked-number">Positions</span>
+                  <span className="portfolio-allocation-ranked-number">
+                    Market Value
+                  </span>
+                  <span className="portfolio-allocation-ranked-number">
+                    Weight
+                  </span>
+                  <span className="portfolio-allocation-ranked-number">
+                    Positions
+                  </span>
                 </div>
                 <div className="portfolio-allocation-ranked-body">
                   {buckets
                     .slice()
                     .sort(
                       (left, right) =>
-                        (right.market_value_base ?? 0) - (left.market_value_base ?? 0)
+                        (right.market_value_base ?? 0) -
+                        (left.market_value_base ?? 0),
                     )
                     .map((bucket, index) => {
                       const isHovered = hoveredBucket === bucket.bucket;
@@ -396,19 +414,30 @@ export default function PortfolioAllocationPanel({
                             onSelectionChange(
                               isSelected
                                 ? null
-                                : { dimension: activeDimension, bucket: bucket.bucket }
+                                : {
+                                    dimension: activeDimension,
+                                    bucket: bucket.bucket,
+                                  },
                             )
                           }
                         >
                           <span className="portfolio-allocation-ranked-dimension">
                             <i
                               aria-hidden="true"
-                              style={{ backgroundColor: ALLOCATION_COLORS[index % ALLOCATION_COLORS.length] }}
+                              style={{
+                                backgroundColor:
+                                  ALLOCATION_COLORS[
+                                    index % ALLOCATION_COLORS.length
+                                  ],
+                              }}
                             />
                             {bucket.bucket}
                           </span>
                           <span className="portfolio-allocation-ranked-number">
-                            {formatCurrency(bucket.market_value_base, baseCurrency)}
+                            {formatCurrency(
+                              bucket.market_value_base,
+                              baseCurrency,
+                            )}
                           </span>
                           <span className="portfolio-allocation-ranked-number">
                             {formatPct(bucket.weight_pct)}
@@ -449,15 +478,34 @@ function AllocationDonutChart({
   let cumulativeAngle = -90;
 
   return (
-    <div className="portfolio-allocation-chart" role="img" aria-label="Allocation donut chart">
+    <div
+      className="portfolio-allocation-chart"
+      role="img"
+      aria-label="Allocation donut chart"
+    >
       <svg viewBox="0 0 220 220" className="portfolio-allocation-chart-svg">
-        <circle cx="110" cy="110" r="58" className="portfolio-allocation-chart-track" />
+        <circle
+          cx="110"
+          cy="110"
+          r="58"
+          className="portfolio-allocation-chart-track"
+        />
         {buckets.map((bucket, index) => {
-          const portion = totalWeight > 0 ? Math.max(bucket.weight_pct ?? 0, 0) / totalWeight : 0;
+          const portion =
+            totalWeight > 0
+              ? Math.max(bucket.weight_pct ?? 0, 0) / totalWeight
+              : 0;
           const startAngle = cumulativeAngle;
           const endAngle = startAngle + portion * 360;
           cumulativeAngle = endAngle;
-          const path = describeArc(110, 110, 86, 58, startAngle, endAngle);
+          const path = describeAllocationArc(
+            110,
+            110,
+            86,
+            58,
+            startAngle,
+            endAngle,
+          );
           const isHovered = hoveredBucket === bucket.bucket;
           const isSelected = selectedBucket === bucket.bucket;
           return (
@@ -478,17 +526,34 @@ function AllocationDonutChart({
               onMouseEnter={() => onHover(bucket.bucket)}
               onMouseLeave={() => onHover(null)}
               onClick={() => onSelect(bucket.bucket)}
-              onKeyDown={(event) => handleInteractiveKeyPress(event, () => onSelect(bucket.bucket))}
+              onKeyDown={(event) =>
+                handleInteractiveKeyPress(event, () => onSelect(bucket.bucket))
+              }
             >
               <title>{`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}</title>
             </path>
           );
         })}
-        <circle cx="110" cy="110" r="50" className="portfolio-allocation-chart-core" />
-        <text x="110" y="104" textAnchor="middle" className="portfolio-allocation-chart-center-label">
+        <circle
+          cx="110"
+          cy="110"
+          r="50"
+          className="portfolio-allocation-chart-core"
+        />
+        <text
+          x="110"
+          y="104"
+          textAnchor="middle"
+          className="portfolio-allocation-chart-center-label"
+        >
           Allocation
         </text>
-        <text x="110" y="124" textAnchor="middle" className="portfolio-allocation-chart-center-value">
+        <text
+          x="110"
+          y="124"
+          textAnchor="middle"
+          className="portfolio-allocation-chart-center-value"
+        >
           {buckets.length} buckets
         </text>
       </svg>
@@ -509,12 +574,21 @@ function AllocationBarChart({
   onHover: (bucket: string | null) => void;
   onSelect: (bucket: string) => void;
 }) {
-  const maxWeight = Math.max(...buckets.map((bucket) => bucket.weight_pct ?? 0), 0);
+  const maxWeight = Math.max(
+    ...buckets.map((bucket) => bucket.weight_pct ?? 0),
+    0,
+  );
 
   return (
-    <div className="portfolio-allocation-chart portfolio-allocation-bar-chart" aria-label="Allocation bar chart">
+    <div
+      className="portfolio-allocation-chart portfolio-allocation-bar-chart"
+      aria-label="Allocation bar chart"
+    >
       {buckets.map((bucket, index) => {
-        const width = maxWeight > 0 ? `${((bucket.weight_pct ?? 0) / maxWeight) * 100}%` : "0%";
+        const width =
+          maxWeight > 0
+            ? `${((bucket.weight_pct ?? 0) / maxWeight) * 100}%`
+            : "0%";
         const isHovered = hoveredBucket === bucket.bucket;
         const isSelected = selectedBucket === bucket.bucket;
         return (
@@ -534,17 +608,22 @@ function AllocationBarChart({
             onMouseLeave={() => onHover(null)}
             onClick={() => onSelect(bucket.bucket)}
           >
-            <span className="portfolio-allocation-bar-label">{bucket.bucket}</span>
+            <span className="portfolio-allocation-bar-label">
+              {bucket.bucket}
+            </span>
             <span className="portfolio-allocation-bar-track">
               <span
                 className="portfolio-allocation-bar-fill"
                 style={{
                   width,
-                  backgroundColor: ALLOCATION_COLORS[index % ALLOCATION_COLORS.length],
+                  backgroundColor:
+                    ALLOCATION_COLORS[index % ALLOCATION_COLORS.length],
                 }}
               />
             </span>
-            <span className="portfolio-allocation-bar-value">{formatPct(bucket.weight_pct)}</span>
+            <span className="portfolio-allocation-bar-value">
+              {formatPct(bucket.weight_pct)}
+            </span>
           </button>
         );
       })}
@@ -566,7 +645,10 @@ function AllocationTableChart({
   onSelect: (bucket: string) => void;
 }) {
   return (
-    <div className="portfolio-allocation-chart portfolio-allocation-table-chart" aria-label="Allocation table chart">
+    <div
+      className="portfolio-allocation-chart portfolio-allocation-table-chart"
+      aria-label="Allocation table chart"
+    >
       {buckets.map((bucket, index) => {
         const isHovered = hoveredBucket === bucket.bucket;
         const isSelected = selectedBucket === bucket.bucket;
@@ -589,7 +671,10 @@ function AllocationTableChart({
           >
             <span
               className="portfolio-allocation-table-dot"
-              style={{ backgroundColor: ALLOCATION_COLORS[index % ALLOCATION_COLORS.length] }}
+              style={{
+                backgroundColor:
+                  ALLOCATION_COLORS[index % ALLOCATION_COLORS.length],
+              }}
             />
             <span>{bucket.bucket}</span>
             <span>{formatPct(bucket.weight_pct)}</span>
@@ -609,88 +694,13 @@ function AllocationEmptyState({ dimensionLabel }: { dimensionLabel: string }) {
       <div className="portfolio-allocation-empty-copy">
         <strong>{dimensionLabel} allocation is not available yet</strong>
         <p className="muted">
-          This dimension requires funded holdings with current valuations before a reliable composition view can be shown.
+          This dimension requires funded holdings with current valuations before
+          a reliable composition view can be shown.
         </p>
-        <p className="muted">Book positions and publish prices to generate allocation views.</p>
+        <p className="muted">
+          Book positions and publish prices to generate allocation views.
+        </p>
       </div>
     </div>
   );
-}
-
-function formatDimensionLabel(value: string): string {
-  return value
-    .split("_")
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
-}
-
-function normalizeLookThroughMode(
-  value: string | null | undefined,
-  fallback: PortfolioLookThroughMode = "direct_only"
-): PortfolioLookThroughMode {
-  return value === "prefer_look_through" ? "prefer_look_through" : fallback;
-}
-
-function isExpandedLookThroughSupported(
-  lookThrough: PortfolioAllocationLookThrough | null
-): boolean {
-  if (!lookThrough) {
-    return false;
-  }
-  return (
-    lookThrough.applied || lookThrough.effective_mode === "prefer_look_through"
-  );
-}
-
-function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-  return {
-    x: roundSvgCoordinate(centerX + radius * Math.cos(angleInRadians)),
-    y: roundSvgCoordinate(centerY + radius * Math.sin(angleInRadians)),
-  };
-}
-
-function describeArc(
-  x: number,
-  y: number,
-  outerRadius: number,
-  innerRadius: number,
-  startAngle: number,
-  endAngle: number
-) {
-  const startOuter = polarToCartesian(x, y, outerRadius, endAngle);
-  const endOuter = polarToCartesian(x, y, outerRadius, startAngle);
-  const startInner = polarToCartesian(x, y, innerRadius, endAngle);
-  const endInner = polarToCartesian(x, y, innerRadius, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-
-  return [
-    "M",
-    startOuter.x,
-    startOuter.y,
-    "A",
-    outerRadius,
-    outerRadius,
-    0,
-    largeArcFlag,
-    0,
-    endOuter.x,
-    endOuter.y,
-    "L",
-    endInner.x,
-    endInner.y,
-    "A",
-    innerRadius,
-    innerRadius,
-    0,
-    largeArcFlag,
-    1,
-    startInner.x,
-    startInner.y,
-    "Z",
-  ].join(" ");
-}
-
-function roundSvgCoordinate(value: number): number {
-  return Number(value.toFixed(4));
 }
