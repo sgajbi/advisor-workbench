@@ -62,7 +62,10 @@ Implemented:
    renders campaign name, version, status, as-of date, candidate count, eligible portfolio type,
    governance posture, and source-backed posture without rendering content hashes or recalculating
    membership,
-8. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
+8. opens read-only campaign lifecycle evidence through Gateway for a selected campaign definition
+   without inferring lifecycle state, recalculating membership, or operating retire/supersede
+   commands locally,
+9. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
    report-input refs,
    workflow-pack run ids, request bodies, or response bodies as metric labels.
 

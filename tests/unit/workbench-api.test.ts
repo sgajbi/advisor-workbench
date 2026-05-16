@@ -9,6 +9,7 @@ import {
   createSandboxSession,
   generateDpmConstructionAlternatives,
   generateDpmProofPackFromRun,
+  getDpmCampaignDefinitionLifecycleEvents,
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
   getDpmMandateByPortfolio,
@@ -2225,6 +2226,49 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-campaign-definitions");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign");
+  });
+
+  it("loads DPM campaign-definition lifecycle evidence through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-lifecycle",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              campaign_id: "campaign-holdings-202605",
+              campaign_version: "2026.05",
+              events: [
+                {
+                  event_type: "CAMPAIGN_DEFINITION_CREATED",
+                  actor_id: "pm_sg_1",
+                  occurred_at: "2026-05-14T09:30:00Z",
+                  status: "RECORDED",
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmCampaignDefinitionLifecycleEvents({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/lifecycle-events"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-lifecycle");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign-lifecycle");
   });
 
   it("previews, creates, reviews, actions, and inspects DPM waves through Gateway BFF", async () => {

@@ -32,7 +32,7 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "RFC-0040 PROOF-PACK PANEL" in index
     assert "Post-Trade Outcome Review Workspace Addendum" in rfc
     assert "RFC-0041 REBALANCE-WAVE PANEL" in rfc
-    assert "CAMPAIGN-DEFINITION LIST RENDERING" in rfc
+    assert "CAMPAIGN-DEFINITION LIST AND LIFECYCLE-EVIDENCE RENDERING" in rfc
     assert "PORTFOLIO-MEMORY PANEL" in rfc
     assert "Portfolio Memory Timeline Addendum" in rfc
     assert "`GET /api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`" in rfc
@@ -45,8 +45,12 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "first RFC-0041 rebalance-wave command-center" in rfc
     assert "`/api/v1/dpm/command-center/waves*`" in rfc
     assert "`GET /api/v1/dpm/command-center/waves/campaign-definitions`" in rfc
+    assert (
+        "`GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`"
+        in rfc
+    )
     assert "BulkReviewCampaignDefinition:v1" in rfc
-    assert "campaign-definition\n    list contracts" in integrations
+    assert "campaign-definition list and read-only lifecycle evidence" in integrations
     assert "approval, staging, handoff" in rfc
     assert "`GET /api/v1/dpm/command-center/waves/{wave_id}/report-input`" in rfc
     assert "`POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo`" in rfc
@@ -77,6 +81,7 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     assert "DPM rebalance-wave command center" in supported_features
     assert "approval, staging, handoff" in supported_features
     assert "active Manage-owned campaign-definition list rendering" in supported_features
+    assert "read-only campaign lifecycle evidence" in supported_features
     assert "governed AI PM memo, governed operations-handoff summary" in supported_features
     assert "governed exception-summary request" in supported_features
     assert "external OMS/execution integration" in supported_features

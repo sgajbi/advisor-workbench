@@ -206,6 +206,42 @@ describe("DPM wave command-center view model", () => {
     expect(model.aiMemoStatus).toBe("NOT_REQUESTED");
   });
 
+  it("surfaces manage-owned campaign lifecycle events without deriving campaign state", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignLifecycleEvents: {
+        correlation_id: "corr-campaign-lifecycle",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          campaign_id: "campaign-holdings-202605",
+          campaign_version: "2026.05",
+          events: [
+            {
+              event_type: "CAMPAIGN_DEFINITION_CREATED",
+              occurred_at: "2026-05-14T09:30:00Z",
+              actor_id: "pm_sg_1",
+              status: "RECORDED",
+              reason_code: "source_backed_candidate_set",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignLifecycleRows).toEqual([
+      {
+        key: "CAMPAIGN_DEFINITION_CREATED:2026-05-14T09:30:00Z",
+        eventType: "Campaign Definition Created",
+        occurredAt: "2026-05-14T09:30:00Z",
+        actor: "pm_sg_1",
+        status: "RECORDED",
+        reason: "source_backed_candidate_set",
+      },
+    ]);
+  });
+
   it("does not infer readiness from a present wave when manage supportability is blocked", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: {

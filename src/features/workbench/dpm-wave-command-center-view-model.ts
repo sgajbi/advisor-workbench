@@ -61,6 +61,15 @@ export type DpmCampaignDefinitionRow = {
   sourcePosture: string;
 };
 
+export type DpmCampaignLifecycleEventRow = {
+  key: string;
+  eventType: string;
+  occurredAt: string;
+  actor: string;
+  status: string;
+  reason: string;
+};
+
 export type DpmWaveCommandCenterPanelModel = {
   state: DpmWaveCommandCenterPanelState;
   sourceService: string;
@@ -83,6 +92,7 @@ export type DpmWaveCommandCenterPanelModel = {
   operationsHandoffSummaryRunId: string;
   summaryRows: DpmWaveSummaryRow[];
   campaignRows: DpmCampaignDefinitionRow[];
+  campaignLifecycleRows: DpmCampaignLifecycleEventRow[];
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
   proofPackRows: DpmWaveMetricRow[];
@@ -99,6 +109,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   waveAiMemo?: DpmWaveAiPmMemoResponse | null;
   operationsHandoffSummary?: DpmOperationsHandoffSummaryResponse | null;
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignLifecycleEvents?: DpmCampaignDefinitionGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
     params.actionResponse ??
@@ -166,6 +177,7 @@ export function buildDpmWaveCommandCenterModel(params: {
     operationsHandoffSummaryRunId: readWorkflowPackRunId(params.operationsHandoffSummary),
     summaryRows: listRows,
     campaignRows: buildCampaignDefinitionRows(params.campaignDefinitions?.data),
+    campaignLifecycleRows: buildCampaignLifecycleEventRows(params.campaignLifecycleEvents?.data),
     metricRows: buildMetricRows(metricSource),
     itemRows,
     proofPackRows: buildProofPackRows(proofPackPosture, itemRows),
@@ -330,6 +342,52 @@ function buildCampaignDefinitionRows(
           : "Review source refs",
     };
   });
+}
+
+function buildCampaignLifecycleEventRows(
+  data: Record<string, unknown> | undefined
+): DpmCampaignLifecycleEventRow[] {
+  return extractRecordArray(data?.events ?? data?.lifecycle_events ?? data?.items).map(
+    (record, index) => {
+      const metadata = readRecord(record.metadata);
+      return {
+        key:
+          readString(record, "event_id") ||
+          [
+            readString(record, "event_type") || `campaign-event-${index + 1}`,
+            readString(record, "occurred_at") || String(index + 1),
+          ].join(":"),
+        eventType: formatLabel(
+          readString(record, "event_type") ||
+            readString(record, "type") ||
+            readString(record, "lifecycle_event") ||
+            "Lifecycle Event"
+        ),
+        occurredAt:
+          readString(record, "occurred_at") ||
+          readString(record, "created_at") ||
+          readString(record, "effective_at") ||
+          "N/A",
+        actor:
+          readString(record, "actor_id") ||
+          readString(record, "created_by") ||
+          readString(metadata, "actor_id") ||
+          "N/A",
+        status: normalizeState(
+          readString(record, "status") ||
+            readString(record, "state") ||
+            readString(record, "campaign_status") ||
+            "RECORDED"
+        ),
+        reason:
+          readString(record, "reason_code") ||
+          readString(record, "reason") ||
+          readString(record, "rationale") ||
+          readString(metadata, "reason_code") ||
+          "N/A",
+      };
+    }
+  );
 }
 
 function findSelectedWaveListRecord(

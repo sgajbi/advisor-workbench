@@ -65,9 +65,9 @@ Current repository posture:
    Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
    blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
-   list posture, and `external_execution_claimed` posture. Workbench must not discover campaigns,
-   calculate campaign membership, render campaign content hashes, or operate campaign-definition
-   upsert locally.
+   list and lifecycle-event evidence posture, and `external_execution_claimed` posture. Workbench
+   must not discover campaigns, calculate campaign membership, infer campaign lifecycle state,
+   render campaign content hashes, or operate campaign-definition upsert locally.
 10. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
     manage/core source selector through Gateway, preserves manage-owned alternatives,
