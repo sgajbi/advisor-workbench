@@ -225,7 +225,7 @@ export default function PortfolioProjectedCashflowModule({
           }
           hint={
             loadError
-              ? "Retry with another horizon or verify that cashflow projection data is available upstream."
+              ? "Retry with another horizon or verify that cashflow projection data is available."
               : "Book future-dated events or refresh the forecast inputs to generate a liquidity path."
           }
         />

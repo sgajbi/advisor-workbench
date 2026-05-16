@@ -5,12 +5,12 @@ import PortfolioIncomeActivityWorkspace from "../../src/apps/portfolio/component
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 
 describe("PortfolioIncomeActivityWorkspace", () => {
-  it("renders income and activity from the gateway-backed workspace without local forecasts", () => {
+  it("renders booked income and activity without local forecasts", () => {
     render(<PortfolioIncomeActivityWorkspace workspace={buildWorkspace()} />);
 
     expect(screen.getByRole("heading", { name: "Income Summary" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Activity & Cash Movements" })).toBeInTheDocument();
-    expect(screen.getByText(/Source-backed income only/i)).toBeInTheDocument();
+    expect(screen.getByText(/Classified booked income only/i)).toBeInTheDocument();
 
     const incomeTable = screen.getByRole("table", { name: "Income summary" });
     expect(within(incomeTable).getByText("Dividends")).toBeInTheDocument();
@@ -38,6 +38,12 @@ describe("PortfolioIncomeActivityWorkspace", () => {
 
     expect(screen.getByText("Income is not classified yet")).toBeInTheDocument();
     expect(screen.getByText("Activity totals are incomplete")).toBeInTheDocument();
+    expect(
+      screen.getByText("No classified income was returned for the selected reporting window.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("No activity buckets were returned for the selected reporting window.")
+    ).toBeInTheDocument();
   });
 });
 

@@ -441,7 +441,7 @@ export default function PortfolioTransactionsGrid({
           state="error"
           title="Transaction history unavailable"
           body="We could not load the transaction ledger for the selected period."
-          hint="Retry the request or narrow the date window. If the issue persists, check upstream ledger availability."
+          hint="Retry the request or narrow the date window. If the issue persists, verify ledger availability."
         />
       ) : externalFilter ? (
         <PortfolioModuleState
