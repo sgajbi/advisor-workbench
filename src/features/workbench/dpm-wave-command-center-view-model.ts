@@ -56,8 +56,11 @@ export type DpmCampaignDefinitionRow = {
   status: string;
   asOfDate: string;
   candidateCount: string;
+  eligibleCandidateCount: string;
   eligiblePortfolioTypes: string;
   governanceState: string;
+  expiryState: string;
+  accessPurpose: string;
   sourcePosture: string;
 };
 
@@ -109,6 +112,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   waveAiMemo?: DpmWaveAiPmMemoResponse | null;
   operationsHandoffSummary?: DpmOperationsHandoffSummaryResponse | null;
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLifecycleEvents?: DpmCampaignDefinitionGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
@@ -176,7 +180,10 @@ export function buildDpmWaveCommandCenterModel(params: {
     operationsHandoffSummaryStatus: readWorkflowPackStatus(params.operationsHandoffSummary),
     operationsHandoffSummaryRunId: readWorkflowPackRunId(params.operationsHandoffSummary),
     summaryRows: listRows,
-    campaignRows: buildCampaignDefinitionRows(params.campaignDefinitions?.data),
+    campaignRows: buildCampaignDefinitionRows(
+      params.campaignDefinitions?.data,
+      params.campaignDiscovery?.data
+    ),
     campaignLifecycleRows: buildCampaignLifecycleEventRows(params.campaignLifecycleEvents?.data),
     metricRows: buildMetricRows(metricSource),
     itemRows,
@@ -300,9 +307,17 @@ function buildSummaryRows(data: Record<string, unknown> | undefined): DpmWaveSum
 }
 
 function buildCampaignDefinitionRows(
-  data: Record<string, unknown> | undefined
+  data: Record<string, unknown> | undefined,
+  discoveryData?: Record<string, unknown> | undefined
 ): DpmCampaignDefinitionRow[] {
+  const discoveryByKey = new Map(
+    extractRecordArray(discoveryData?.items ?? discoveryData?.campaigns).map((record, index) => [
+      buildCampaignKey(record, index),
+      record,
+    ])
+  );
   return extractRecordArray(data?.items ?? data?.campaign_definitions).map((record, index) => {
+    const discovery = discoveryByKey.get(buildCampaignKey(record, index)) ?? {};
     const governance = readRecord(record.governance);
     const candidates = extractRecordArray(record.candidates);
     const candidateSourceRefCount = candidates.reduce(
@@ -310,18 +325,20 @@ function buildCampaignDefinitionRows(
       0
     );
     const candidateCount =
+      readValue(discovery, "candidate_count") ??
       readValue(record, "candidate_count") ??
       readValue(record, "eligible_candidate_count") ??
       candidates.length;
+    const eligibleCandidateCount =
+      readValue(discovery, "eligible_candidate_count") ??
+      readValue(record, "eligible_candidate_count") ??
+      candidateCount;
     const governanceState =
+      readString(discovery, "governance_status") ||
       readString(record, "governance_state") ||
       (governance.approval_ref || governance.approved_by ? "GOVERNED" : "NOT_PROVIDED");
     return {
-      key:
-        [
-          readString(record, "campaign_id") || `campaign-${index + 1}`,
-          readString(record, "campaign_version") || "version",
-        ].join(":"),
+      key: buildCampaignKey(record, index),
       campaignId: readString(record, "campaign_id") || "N/A",
       campaignVersion: readString(record, "campaign_version") || "N/A",
       displayName:
@@ -329,12 +346,21 @@ function buildCampaignDefinitionRows(
         readString(record, "name") ||
         readString(record, "campaign_id") ||
         `Campaign ${index + 1}`,
-      status: normalizeState(readString(record, "status") || "UNKNOWN"),
+      status: normalizeState(
+        readString(record, "status") || readString(discovery, "campaign_status") || "UNKNOWN"
+      ),
       asOfDate: readString(record, "as_of_date") || "N/A",
       candidateCount: formatValue(candidateCount),
-      eligiblePortfolioTypes: extractStringArray(record.eligible_portfolio_types).join(", ") || "N/A",
+      eligibleCandidateCount: formatValue(eligibleCandidateCount),
+      eligiblePortfolioTypes:
+        extractStringArray(record.eligible_portfolio_types).join(", ") ||
+        extractStringArray(discovery.eligible_portfolio_types).join(", ") ||
+        "N/A",
       governanceState,
+      expiryState: normalizeState(readString(discovery, "expiry_state") || "N/A"),
+      accessPurpose: readString(discovery, "access_purpose") || "N/A",
       sourcePosture:
+        readValue(discovery, "source_ref_count") ||
         extractRecordArray(record.source_refs).length > 0 ||
         extractRecordArray(governance.source_refs).length > 0 ||
         candidateSourceRefCount > 0
@@ -342,6 +368,13 @@ function buildCampaignDefinitionRows(
           : "Review source refs",
     };
   });
+}
+
+function buildCampaignKey(record: Record<string, unknown>, index: number): string {
+  return [
+    readString(record, "campaign_id") || `campaign-${index + 1}`,
+    readString(record, "campaign_version") || "version",
+  ].join(":");
 }
 
 function buildCampaignLifecycleEventRows(

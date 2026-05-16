@@ -50,11 +50,12 @@ import {
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPortfolioMemory,
   getDpmProofPack,
+  listDpmCampaignDiscovery,
+  listDpmCampaignDefinitions,
   listDpmPmOperatingQualityFairnessAnalyses,
   getPortfolio360,
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityScoreRuns,
-  listDpmCampaignDefinitions,
   listDpmWaves,
 } from "@/features/workbench/api";
 import styles from "./manage-workspace.module.css";
@@ -94,6 +95,8 @@ export type ManageWorkspaceData = {
   wavesError: string | null;
   campaignDefinitions: Awaited<ReturnType<typeof listDpmCampaignDefinitions>> | null;
   campaignDefinitionsError: string | null;
+  campaignDiscovery: Awaited<ReturnType<typeof listDpmCampaignDiscovery>> | null;
+  campaignDiscoveryError: string | null;
   outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null;
   outcomeReviewError: string | null;
   proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null;
@@ -176,6 +179,7 @@ export async function loadManageWorkspaceData(
     memoryResult,
     wavesResult,
     campaignDefinitionsResult,
+    campaignDiscoveryResult,
     pmQualityPoliciesResult,
     pmQualityScoreRunsResult,
     pmQualityFairnessAnalysesResult,
@@ -187,6 +191,7 @@ export async function loadManageWorkspaceData(
     getDpmPortfolioMemory({ portfolioId, limit: 100 }),
     listDpmWaves({ triggerType: "EXPLICIT_PORTFOLIO_LIST", limit: 10 }),
     listDpmCampaignDefinitions({ campaignStatus: "ACTIVE", limit: 10 }),
+    listDpmCampaignDiscovery({ campaignStatus: "ACTIVE", limit: 10 }),
     listDpmPmOperatingQualityPolicies({ limit: 10 }),
     listDpmPmOperatingQualityScoreRuns({ limit: 10 }),
     listDpmPmOperatingQualityFairnessAnalyses({ limit: 10 }),
@@ -269,6 +274,11 @@ export async function loadManageWorkspaceData(
     campaignDefinitionsError: readSettledError(
       campaignDefinitionsResult,
       "DPM campaign-definition endpoint unavailable."
+    ),
+    campaignDiscovery: readSettledValue(campaignDiscoveryResult),
+    campaignDiscoveryError: readSettledError(
+      campaignDiscoveryResult,
+      "DPM campaign-discovery endpoint unavailable."
     ),
     outcomeReviews,
     outcomeReviewError: readSettledError(
@@ -383,7 +393,9 @@ function renderManageMode(
             portfolioId={data.portfolio.portfolio.portfolio_id}
             waveList={data.waves}
             campaignDefinitions={data.campaignDefinitions}
+            campaignDiscovery={data.campaignDiscovery}
             campaignDefinitionsError={data.campaignDefinitionsError}
+            campaignDiscoveryError={data.campaignDiscoveryError}
             errorMessage={data.wavesError}
           />
           <ProofPackPanel

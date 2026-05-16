@@ -163,6 +163,29 @@ const campaignLifecycleResponse: DpmCampaignDefinitionGatewayResponse = {
   },
 };
 
+const campaignDiscoveryResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign-discovery",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    items: [
+      {
+        product_name: "BulkReviewCampaignDiscovery",
+        campaign_id: "campaign-holdings-202605",
+        campaign_version: "2026.05",
+        campaign_status: "ACTIVE",
+        candidate_count: 12,
+        eligible_candidate_count: 10,
+        governance_status: "APPROVED",
+        expiry_state: "ACTIVE",
+        access_purpose: "rebalance_review",
+        source_ref_count: 4,
+      },
+    ],
+  },
+};
+
 describe("DpmWaveCommandCenterPanel", () => {
   beforeEach(() => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
@@ -179,6 +202,7 @@ describe("DpmWaveCommandCenterPanel", () => {
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
         campaignDefinitions={campaignDefinitionsResponse}
+        campaignDiscovery={campaignDiscoveryResponse}
       />,
     );
 
@@ -189,6 +213,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
+    expect(screen.getAllByText("10").length).toBeGreaterThan(0);
+    expect(screen.getByText("rebalance_review")).toBeInTheDocument();
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
@@ -200,6 +226,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(within(table).getByText("MSFT US")).toBeInTheDocument();
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
     expect(screen.queryByText("corr-wave")).not.toBeInTheDocument();
+    expect(screen.queryByText("corr-campaign-discovery")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:campaign-definition")).not.toBeInTheDocument();
   });
 

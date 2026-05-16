@@ -242,6 +242,63 @@ describe("DPM wave command-center view model", () => {
     ]);
   });
 
+  it("enriches campaign rows from manage-owned campaign discovery without calculating membership", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignDefinitions: {
+        correlation_id: "corr-campaign-definitions",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              campaign_id: "campaign-holdings-202605",
+              campaign_version: "2026.05",
+              display_name: "Apple and Tesla holdings review",
+              status: "ACTIVE",
+              as_of_date: "2026-05-10",
+              eligible_portfolio_types: ["DISCRETIONARY"],
+              candidates: [{ portfolio_id: "PB_SG_GLOBAL_BAL_001" }],
+            },
+          ],
+        },
+      },
+      campaignDiscovery: {
+        correlation_id: "corr-campaign-discovery",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              product_name: "BulkReviewCampaignDiscovery",
+              campaign_id: "campaign-holdings-202605",
+              campaign_version: "2026.05",
+              campaign_status: "ACTIVE",
+              candidate_count: 12,
+              eligible_candidate_count: 10,
+              governance_status: "APPROVED",
+              expiry_state: "ACTIVE",
+              access_purpose: "rebalance_review",
+              source_ref_count: 4,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignRows[0]).toMatchObject({
+      campaignId: "campaign-holdings-202605",
+      candidateCount: "12",
+      eligibleCandidateCount: "10",
+      governanceState: "APPROVED",
+      expiryState: "ACTIVE",
+      accessPurpose: "rebalance_review",
+      sourcePosture: "Source-backed",
+    });
+  });
+
   it("does not infer readiness from a present wave when manage supportability is blocked", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: {

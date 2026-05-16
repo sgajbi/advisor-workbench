@@ -55,7 +55,11 @@ promote dormant labels into product ownership just because historical route file
   `BulkReviewCampaignDefinition:v1` campaign definitions from
   `/api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
   status, as-of date, candidate count, eligible portfolio type, governance posture, and
-  source-backed posture without rendering content hashes or recalculating membership. It opens
+  source-backed posture without rendering content hashes or recalculating membership. It also
+  loads bounded `BulkReviewCampaignDiscovery:v1` posture from
+  `/api/v1/dpm/command-center/waves/campaign-discovery` and renders Manage-owned eligible
+  candidate count, expiry posture, governance posture, access purpose, and source-ref posture
+  without discovering global campaign cohorts. It opens
   selected campaign lifecycle evidence from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
   as a read-only Manage evidence feed without inferring lifecycle state or operating retire/
