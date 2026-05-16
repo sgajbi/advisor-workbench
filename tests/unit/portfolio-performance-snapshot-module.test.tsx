@@ -31,11 +31,11 @@ describe("portfolio performance snapshot module", () => {
           hasHistoricalGap: false,
           currencyOptions: ["USD"],
           historicalSnapshotState: "unsupported",
-          historicalSnapshotReason: "Historical snapshots are not yet source-backed.",
+          historicalSnapshotReason: "Historical as-of review is not available for this portfolio yet.",
           supportsHistoricalSnapshots: false,
           reportingCurrencyRestatementState: "unsupported",
           reportingCurrencyRestatementReason:
-            "Reporting currency restatement is not yet source-backed.",
+            "Reporting currency restatement is not available for this portfolio yet.",
           supportsReportingCurrencyRestatement: false,
         }}
         portfolioId="PORT_UI_1001"
@@ -84,11 +84,11 @@ describe("portfolio performance snapshot module", () => {
           hasHistoricalGap: false,
           currencyOptions: ["USD"],
           historicalSnapshotState: "unsupported",
-          historicalSnapshotReason: "Historical snapshots are not yet source-backed.",
+          historicalSnapshotReason: "Historical as-of review is not available for this portfolio yet.",
           supportsHistoricalSnapshots: false,
           reportingCurrencyRestatementState: "unsupported",
           reportingCurrencyRestatementReason:
-            "Reporting currency restatement is not yet source-backed.",
+            "Reporting currency restatement is not available for this portfolio yet.",
           supportsReportingCurrencyRestatement: false,
         }}
         portfolioId="PORT_UI_1001"
@@ -180,11 +180,11 @@ describe("portfolio performance snapshot module", () => {
           hasHistoricalGap: false,
           currencyOptions: ["USD"],
           historicalSnapshotState: "unsupported",
-          historicalSnapshotReason: "Historical snapshots are not yet source-backed.",
+          historicalSnapshotReason: "Historical as-of review is not available for this portfolio yet.",
           supportsHistoricalSnapshots: false,
           reportingCurrencyRestatementState: "unsupported",
           reportingCurrencyRestatementReason:
-            "Reporting currency restatement is not yet source-backed.",
+            "Reporting currency restatement is not available for this portfolio yet.",
           supportsReportingCurrencyRestatement: false,
         }}
         portfolioId="PORT_UI_1001"
@@ -294,11 +294,11 @@ describe("portfolio performance snapshot module", () => {
           hasHistoricalGap: false,
           currencyOptions: ["USD"],
           historicalSnapshotState: "unsupported",
-          historicalSnapshotReason: "Historical snapshots are not yet source-backed.",
+          historicalSnapshotReason: "Historical as-of review is not available for this portfolio yet.",
           supportsHistoricalSnapshots: false,
           reportingCurrencyRestatementState: "unsupported",
           reportingCurrencyRestatementReason:
-            "Reporting currency restatement is not yet source-backed.",
+            "Reporting currency restatement is not available for this portfolio yet.",
           supportsReportingCurrencyRestatement: false,
         }}
         portfolioId="PORT_UI_1001"
@@ -356,11 +356,11 @@ describe("portfolio performance snapshot module", () => {
           hasHistoricalGap: false,
           currencyOptions: ["USD"],
           historicalSnapshotState: "unsupported",
-          historicalSnapshotReason: "Historical snapshots are not yet source-backed.",
+          historicalSnapshotReason: "Historical as-of review is not available for this portfolio yet.",
           supportsHistoricalSnapshots: false,
           reportingCurrencyRestatementState: "unsupported",
           reportingCurrencyRestatementReason:
-            "Reporting currency restatement is not yet source-backed.",
+            "Reporting currency restatement is not available for this portfolio yet.",
           supportsReportingCurrencyRestatement: false,
         }}
         portfolioId="PORT_UI_1001"

@@ -7,7 +7,7 @@ import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import type { PortfolioWorkspaceContext } from "../../src/apps/portfolio/view-model";
 
 describe("PortfolioExecutiveSummary", () => {
-  it("renders source-backed summary modules and navigates to supported record screens", () => {
+  it("renders summary modules and navigates to supported record screens", () => {
     render(<PortfolioExecutiveSummary workspace={buildWorkspace()} context={buildContext()} />);
 
     expect(screen.getByRole("heading", { name: "Asset Allocation" })).toBeInTheDocument();
@@ -27,11 +27,27 @@ describe("PortfolioExecutiveSummary", () => {
     );
 
     expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
-    expect(screen.getByText("Cash Drag Detected")).toBeInTheDocument();
+    expect(screen.getByText("Cash Review Needed")).toBeInTheDocument();
     expect(screen.getByLabelText("Portfolio health 75%")).toBeInTheDocument();
 
     const cashflowPoints = screen.getByLabelText("Projected cashflow points");
     expect(within(cashflowPoints).getAllByTitle(/May 2026/)).toHaveLength(2);
+  });
+
+  it("keeps detailed mode focused on key metrics and attention without duplicate preview cards", () => {
+    render(
+      <PortfolioExecutiveSummary
+        workspace={buildWorkspace()}
+        context={{ ...buildContext(), viewMode: "detailed" }}
+      />
+    );
+
+    expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
+    expect(screen.getByText("Cash Review Needed")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Asset Allocation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Top Holdings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Cashflow Forecast" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Portfolio Health")).not.toBeInTheDocument();
   });
 });
 

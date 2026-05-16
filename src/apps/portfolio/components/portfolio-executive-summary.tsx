@@ -49,7 +49,7 @@ export default function PortfolioExecutiveSummary({
         <div className="portfolio-summary-kpi">
           <span>Market Value</span>
           <strong>{formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency)}</strong>
-          <small>{workspace.summary.position_count} source-backed positions</small>
+          <small>{workspace.summary.position_count} published positions</small>
         </div>
         <div className="portfolio-summary-kpi">
           <span>Net Return {formatStatus(workspace.performance?.period ?? context.periodLabel)}</span>
@@ -132,7 +132,7 @@ export default function PortfolioExecutiveSummary({
               </article>
             ))
           ) : (
-            <p className="portfolio-summary-empty-copy">No source-backed attention items for the selected view.</p>
+            <p className="portfolio-summary-empty-copy">No priority attention items for the selected view.</p>
           )}
         </div>
       </div>
@@ -181,6 +181,7 @@ export default function PortfolioExecutiveSummary({
         </div>
       )}
 
+      {isDetailedView ? null : (
       <div className="portfolio-summary-side-stack">
         <div className="portfolio-summary-module portfolio-liquidity-summary">
           <div className="portfolio-summary-module-header">
@@ -226,6 +227,7 @@ export default function PortfolioExecutiveSummary({
           <p>{readiness.readyCount} of {readiness.totalCount} readiness domains ready</p>
         </div>
       </div>
+      )}
     </section>
   );
 }

@@ -122,7 +122,7 @@ describe("PortfolioFoundationPage", () => {
     expect(hero?.classList.contains("portfolio-book-hero")).toBe(true);
     expect(hero?.querySelector(".portfolio-hero-header")).toBeTruthy();
     expect(hero?.querySelector(".portfolio-hero-label")).toBeTruthy();
-    expect(within(hero as HTMLElement).getByText("Portfolio / PORT_UI_1001")).toHaveClass(
+    expect(within(hero as HTMLElement).getByText("Portfolio book PORT_UI_1001")).toHaveClass(
       "portfolio-hero-label"
     );
     expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeTruthy();
@@ -165,8 +165,8 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByLabelText("Reporting Currency")).toHaveValue("USD");
     expect(screen.getByLabelText("As of")).toBeDisabled();
     expect(screen.getByLabelText("Reporting Currency")).toBeDisabled();
-    expect(screen.getByText(/Historical snapshots are not yet source-backed/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reporting currency restatement is not yet source-backed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Historical as-of review is not available/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reporting currency restatement is not available/i)).toBeInTheDocument();
     const viewNavigation = screen.getByRole("tablist", { name: "Portfolio view navigation" });
     expect(viewNavigation).toHaveClass("mode-tabs", "portfolio-primary-view-tabs");
     expect(within(viewNavigation).getByRole("tab", { name: "Summary" })).toHaveAttribute(
@@ -232,8 +232,8 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeTruthy();
     expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(4);
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Data Coverage/i })).toBeInTheDocument();
-    expect(screen.getByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Reporting Coverage/i })).toBeInTheDocument();
+    expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(
       "href",
@@ -327,7 +327,7 @@ describe("PortfolioFoundationPage", () => {
     expect(requestedUrls.some((url) => url.includes("DEMO_ADV_USD_001"))).toBe(false);
   });
 
-  it("restores detailed mode and exposes full drill-down content", async () => {
+  it("restores detailed mode and exposes focused portfolio review content", async () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
     Object.assign(navigator, {
       clipboard: {
@@ -339,7 +339,7 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Income & Activity/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Portfolio Review/i })).toBeInTheDocument();
     });
 
     expect(screen.getByRole("heading", { name: /Portfolio Context/i })).toBeInTheDocument();
@@ -347,14 +347,11 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText("Identity")).toBeInTheDocument();
     expect(screen.getByText("Book Setup")).toBeInTheDocument();
     const detailedCluster = document.querySelector(".portfolio-detailed-cluster");
-    expect(detailedCluster).toBeTruthy();
-    expect(detailedCluster?.querySelector("#portfolio-health")).toBeTruthy();
-    expect(detailedCluster?.querySelector("#portfolio-changes")).toBeTruthy();
-    expect(detailedCluster?.querySelector("#portfolio-drilldown")).toBeFalsy();
+    expect(detailedCluster).toBeFalsy();
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByRole("heading", { name: /Mandate Overview/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Portfolio Health Snapshot/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Income & Activity/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Portfolio Health Snapshot/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Income & Activity/i })).not.toBeInTheDocument();
     expect(
       screen
         .getAllByRole("link", { name: /Positions/i })
@@ -367,11 +364,6 @@ describe("PortfolioFoundationPage", () => {
     ).toBe(true);
     expect(
       screen
-        .getAllByRole("link", { name: /Income & Activity/i })
-        .some((link) => link.getAttribute("href")?.includes("/income"))
-    ).toBe(true);
-    expect(
-      screen
         .getAllByRole("link", { name: /Cashflow/i })
         .some((link) => link.getAttribute("href")?.includes("/cashflow"))
     ).toBe(true);
@@ -381,7 +373,8 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeFalsy();
     expect(document.querySelector(".portfolio-paired-analytics-grid-detailed")).toBeFalsy();
     expect(screen.queryByRole("heading", { name: /Advisor Guidance/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/Dedicated record screen/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Dedicated record screen/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/source posture/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Income is not classified yet")).not.toBeInTheDocument();
     expect(screen.queryByText("Activity totals are incomplete")).not.toBeInTheDocument();
 
@@ -462,13 +455,13 @@ describe("PortfolioFoundationPage", () => {
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Cashflow Forecast/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Portfolio Review/i })).toBeInTheDocument();
     });
 
     expect(document.getElementById("portfolio-drilldown")).toBeFalsy();
-    const liquidityHeading = screen.getByRole("heading", { name: /Cashflow Forecast/i });
+    const liquidityHeading = screen.getByRole("heading", { name: /Liquidity and Projected Cash/i });
     expect(screen.getAllByText(/Projected cashflow (is )?unavailable/i).length).toBeGreaterThanOrEqual(1);
-    const liquidityModule = liquidityHeading.closest(".portfolio-summary-module");
+    const liquidityModule = liquidityHeading.closest(".portfolio-summary-module-card");
     expect(liquidityModule).toBeTruthy();
     expect(within(liquidityModule as HTMLElement).queryByText("N/A")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Portfolio holdings grid")).not.toBeInTheDocument();

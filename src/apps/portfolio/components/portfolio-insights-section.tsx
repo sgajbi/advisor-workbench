@@ -43,8 +43,8 @@ export function PortfolioInsightsSection({
   return (
     <section className="portfolio-workspace-section portfolio-summary-cluster-section">
       <SectionHeader
-        title="Portfolio Insights"
-        subtitle="Allocation, concentration, liquidity, and performance context."
+        title="Portfolio Review"
+        subtitle="Liquidity, return, allocation mix, and concentration for the selected review window."
       />
       <div className="portfolio-analytical-surface">
         {showInsightsSummaryBand ? (
@@ -57,7 +57,7 @@ export function PortfolioInsightsSection({
             {showLiquidityModule || showPerformanceSnapshot ? (
               <div className="portfolio-analytical-upper-shell portfolio-analytical-upper-shell-primary">
                 <div className="portfolio-analytical-shell-header">
-                  <span>Performance and liquidity context</span>
+                  <span>Liquidity and return context</span>
                   <strong>
                     {context.periodLabel} as of {formatDate(context.selectedAsOfDate)}
                   </strong>
@@ -95,8 +95,8 @@ export function PortfolioInsightsSection({
         {showAllocationModule || showTopHoldingsModule ? (
           <div className="portfolio-analytical-zone-shell">
             <div className="portfolio-analytical-shell-header">
-              <span>Allocation and concentration</span>
-              <strong>Composition, ranking, and filter-ready holdings context</strong>
+              <span>Holdings mix and concentration</span>
+              <strong>Allocation and largest positions for review</strong>
             </div>
             <div className="portfolio-primary-grid portfolio-analytical-zone-grid portfolio-analytical-zone-grid-focus">
               {showAllocationModule ? (
@@ -104,7 +104,7 @@ export function PortfolioInsightsSection({
                   className="portfolio-summary-module-card portfolio-analytical-zone-card portfolio-analytical-zone-card-primary"
                   compact={isSummaryView}
                   title="Portfolio Allocation"
-                  subtitle={`Composition overview as of ${formatDate(context.selectedAsOfDate)}.`}
+                  subtitle={`Allocation mix as of ${formatDate(context.selectedAsOfDate)}.`}
                   expanded={getSectionExpanded("allocation")}
                   onToggle={() => toggleSection("allocation")}
                 >
