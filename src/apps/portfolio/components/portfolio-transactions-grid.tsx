@@ -19,7 +19,12 @@ import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
-import { shouldPinPortfolioGridLeadColumns } from "./portfolio-grid-helpers";
+import {
+  PORTFOLIO_GRID_DEFAULT_COLUMN_DEF,
+  buildPortfolioDataGridColumn,
+  getPortfolioAmountToneClass,
+  shouldPinPortfolioGridLeadColumns,
+} from "./portfolio-grid-helpers";
 import {
   buildTransactionFilterOptions,
   shouldReuseInitialTransactions,
@@ -265,7 +270,7 @@ export default function PortfolioTransactionsGrid({
         type: "numericColumn",
         valueFormatter: ({ value, data }) => formatCurrency(value, data?.currency ?? baseCurrency),
         cellClass: ({ value }) =>
-          `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getAmountToneClass(value)}`,
+          `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getPortfolioAmountToneClass(value)}`,
       }),
       buildTransactionColumn({
         field: "currency",
@@ -439,7 +444,7 @@ export default function PortfolioTransactionsGrid({
             columnDefs={columnDefs}
             theme="legacy"
             quickFilterText={quickSearch}
-            defaultColDef={DEFAULT_GRID_COLUMN_DEF}
+            defaultColDef={PORTFOLIO_GRID_DEFAULT_COLUMN_DEF}
             animateRows={false}
             domLayout="autoHeight"
             headerHeight={32}
@@ -494,27 +499,8 @@ export default function PortfolioTransactionsGrid({
   );
 }
 
-const DEFAULT_GRID_COLUMN_DEF: ColDef = {
-  sortable: true,
-  resizable: true,
-  filter: false,
-  suppressMovable: false,
-  cellClass: "portfolio-data-grid-cell",
-  headerClass: "portfolio-data-grid-header-cell",
-};
-
 function buildTransactionColumn(config: ColDef<TransactionRow>): ColDef<TransactionRow> {
-  const isNumericColumn = config.type === "numericColumn";
-  return {
-    ...config,
-    cellClass: config.cellClass ?? (isNumericColumn
-      ? "portfolio-data-grid-cell portfolio-data-grid-cell-numeric"
-      : "portfolio-data-grid-cell"),
-    headerClass: isNumericColumn
-      ? "portfolio-data-grid-header-cell portfolio-data-grid-header-cell-numeric"
-      : "portfolio-data-grid-header-cell",
-    tooltipValueGetter: (params) => String(params.value ?? ""),
-  };
+  return buildPortfolioDataGridColumn(config);
 }
 
 function transactionInstrumentCellRenderer(params: ICellRendererParams<TransactionRow, string>) {
@@ -546,19 +532,6 @@ function transactionStatusCellRenderer(params: ICellRendererParams<TransactionRo
       {value || "N/A"}
     </span>
   );
-}
-
-function getAmountToneClass(value: unknown) {
-  if (typeof value !== "number") {
-    return "";
-  }
-  if (value > 0) {
-    return "portfolio-data-grid-cell-positive";
-  }
-  if (value < 0) {
-    return "portfolio-data-grid-cell-negative";
-  }
-  return "";
 }
 
 function sumTransactionAmount(rows: TransactionRow[]) {
