@@ -193,7 +193,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("heading", { name: /Liquidity and Projected Cash/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Advisor Guidance/i })).not.toBeInTheDocument();
     expect(screen.queryByText("Portfolio Health")).not.toBeInTheDocument();
-    expect(screen.getByText("Review Readiness")).toBeInTheDocument();
+    expect(screen.getByText("Review readiness")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Recommended Actions/i })).not.toBeInTheDocument();
 
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
@@ -208,8 +208,10 @@ describe("PortfolioFoundationPage", () => {
 
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeFalsy();
     expect(document.querySelector(".portfolio-paired-analytics-grid.workbench-summary-region")).toBeFalsy();
-    expect(document.querySelectorAll(".portfolio-summary-module").length).toBe(3);
-    expect(screen.getByText("What to review next")).toBeInTheDocument();
+    expect(document.querySelectorAll(".portfolio-summary-module").length).toBe(0);
+    expect(screen.getByText("Priority review")).toBeInTheDocument();
+    expect(screen.getByText("Next action")).toBeInTheDocument();
+    expect(document.querySelector(".portfolio-decision-brief")).toBeTruthy();
     expect(document.querySelector(".portfolio-summary-module-card.workbench-summary-module-card")).toBeFalsy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();

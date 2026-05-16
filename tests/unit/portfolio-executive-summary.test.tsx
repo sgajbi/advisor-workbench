@@ -6,18 +6,21 @@ import PortfolioExecutiveSummary from "../../src/apps/portfolio/components/portf
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 
 describe("PortfolioExecutiveSummary", () => {
-  it("renders only decision review modules without duplicated analytics panels", () => {
+  it("renders a compact decision brief without duplicated analytics panels", () => {
     render(<PortfolioExecutiveSummary workspace={buildWorkspace()} />);
 
-    expect(screen.getByRole("heading", { name: "Attention Items (1)" })).toBeInTheDocument();
-    expect(screen.getByText("Review Readiness")).toBeInTheDocument();
-    expect(screen.getByText("What to review next")).toBeInTheDocument();
-    expect(screen.getByText("Liquidity horizon")).toBeInTheDocument();
-    expect(screen.getByText("Mandate workflow")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Review priority attention" })).toBeInTheDocument();
+    expect(screen.getByText("Priority review")).toBeInTheDocument();
+    expect(screen.getByText("Review readiness")).toBeInTheDocument();
+    expect(screen.getByText("Client-use blockers")).toBeInTheDocument();
+    expect(screen.getByText("Next action")).toBeInTheDocument();
     expect(screen.getByText("Cash Review Needed")).toBeInTheDocument();
-    expect(screen.getByLabelText("Review readiness 75%")).toBeInTheDocument();
+    expect(screen.getAllByText("75%").length).toBeGreaterThanOrEqual(1);
 
     expect(screen.queryByText("1,000,000 USD")).not.toBeInTheDocument();
+    expect(screen.queryByText("Liquidity horizon")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mandate workflow")).not.toBeInTheDocument();
+    expect(screen.queryByText("YTD return")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Asset Allocation" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Top Holdings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Cashflow Forecast" })).not.toBeInTheDocument();

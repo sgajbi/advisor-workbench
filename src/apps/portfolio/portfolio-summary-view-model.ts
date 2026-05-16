@@ -1,6 +1,10 @@
 import { formatCurrency, formatDate, formatPct, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
-import { buildPortfolioReadinessIndicators } from "./view-model";
+import {
+  buildPortfolioReadinessIndicators,
+  getBookReadinessStatus,
+  getBookReadinessSupport,
+} from "./view-model";
 
 export type PortfolioSummaryAllocationRow = {
   label: string;
@@ -27,6 +31,20 @@ export type PortfolioSummaryReadiness = {
   readyCount: number;
   totalCount: number;
   percentLabel: string;
+};
+
+export type PortfolioDecisionBriefRow = {
+  label: string;
+  value: string;
+  support: string;
+};
+
+export type PortfolioDecisionBrief = {
+  headline: string;
+  support: string;
+  readiness: PortfolioSummaryReadiness;
+  rows: PortfolioDecisionBriefRow[];
+  attentionItems: PortfolioSummaryAttentionItem[];
 };
 
 export type PortfolioPerformancePeriodReturn = {
@@ -167,6 +185,41 @@ export function buildPortfolioSummaryReadiness(
     readyCount,
     totalCount,
     percentLabel: `${percent}%`,
+  };
+}
+
+export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): PortfolioDecisionBrief {
+  const attentionItems = buildPortfolioSummaryAttentionItems(workspace);
+  const readiness = buildPortfolioSummaryReadiness(workspace);
+  const exceptionCount = workspace.partial_failures.length + (workspace.exception_summaries?.length ?? 0);
+  const nextAction = workspace.workflow_actions?.find((action) => action.recommended) ?? workspace.workflow_actions?.[0];
+  const primaryAttention = attentionItems[0];
+
+  return {
+    headline: primaryAttention ? "Review priority attention" : nextAction?.title ?? "Book ready for portfolio review",
+    support:
+      primaryAttention?.detail ??
+      nextAction?.impact?.split(".")[0] ??
+      "Start with readiness, blockers, and the recommended front-office action.",
+    readiness,
+    attentionItems,
+    rows: [
+      {
+        label: "Review readiness",
+        value: getBookReadinessStatus(workspace),
+        support: getBookReadinessSupport(workspace),
+      },
+      {
+        label: "Client-use blockers",
+        value: exceptionCount ? `${exceptionCount} open` : "Clear",
+        support: exceptionCount ? "Resolve before client-ready use" : "No open reporting blockers",
+      },
+      {
+        label: "Next action",
+        value: nextAction?.title ?? "Review book",
+        support: nextAction?.impact?.split(".")[0] ?? "Use the active workflow links for drill-down.",
+      },
+    ],
   };
 }
 
