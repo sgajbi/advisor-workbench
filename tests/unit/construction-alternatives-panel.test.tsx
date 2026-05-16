@@ -91,6 +91,29 @@ const readyResponse: DpmConstructionGatewayResponse = {
         },
         objective_trace: [{ term: "turnover" }],
         constraint_trace: [{ constraint: "cash_band" }],
+        diagnostics: {
+          authority_context: {
+            currency_overlay_context: {
+              supportability_status: "BLOCKED",
+              source_system: "lotus-core",
+              external_hedge_policy_source_product_name: "ExternalHedgePolicy",
+              external_hedge_policy_source_product_version: "v1",
+              external_hedge_policy_source_id: "sha256:external-hedge-policy",
+              external_hedge_policy_content_hash:
+                "sha256:external-hedge-policy-content",
+              external_hedge_policy_rule_count: 0,
+              external_hedge_policy_rules: [],
+              missing_data_families: ["external_hedge_policy"],
+              blocked_capabilities: [
+                "hedge_policy_approval",
+                "treasury_instruction",
+                "counterparty_selection",
+                "oms_acknowledgement",
+              ],
+              reason_codes: ["EXTERNAL_HEDGE_POLICY_FAIL_CLOSED"],
+            },
+          },
+        },
       },
       {
         alternative_id: "alt_low_turnover",
@@ -162,6 +185,12 @@ describe("ConstructionAlternativesPanel", () => {
     expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Apply Selection" })).toBeEnabled();
+    expect(screen.getByText("Currency Overlay Evidence")).toBeInTheDocument();
+    expect(screen.getByText("ExternalHedgePolicy v1")).toBeInTheDocument();
+    expect(screen.getByText("sha256:external-hedge-policy")).toBeInTheDocument();
+    expect(screen.getByText("sha256:external-hedge-policy-content")).toBeInTheDocument();
+    expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
+    expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof",
