@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import {
   ActionLink,
@@ -48,11 +48,7 @@ import PortfolioAnalyticalMainColumn from "./portfolio-analytical-main-column";
 import PortfolioExecutiveSummary from "./portfolio-executive-summary";
 import PortfolioExceptionsSection from "./portfolio-exceptions-section";
 import {
-  getDefaultSectionExpanded,
-  getPortfolioSectionStorageKey,
-  PORTFOLIO_COLLAPSIBLE_SECTION_KEYS,
   PortfolioChangesSection,
-  type PortfolioCollapsibleSectionKey,
   PortfolioInsightsSection,
 } from "./portfolio-analytical-sections";
 import {
@@ -75,6 +71,7 @@ import {
   getPortfolioWorkspaceCapabilities,
 } from "../capabilities";
 import { isRenderableCapability } from "@/shell/workspace-capabilities";
+import { usePortfolioSectionPreferences } from "./use-portfolio-section-preferences";
 
 // Workbench discipline:
 // first paint stays limited to framing, hero, KPI, exceptions, and side-rail summary cards.
@@ -141,7 +138,6 @@ export default function PortfolioWorkspaceView({
   const exceptionSummaries = workspace?.exception_summaries ?? [];
   const insights = workspace?.insights ?? [];
   const [dismissedInsightKeys, setDismissedInsightKeys] = useState<string[]>([]);
-  const [sectionPreferences, setSectionPreferences] = useState<Record<string, boolean>>({});
   const isSummaryView = context.viewMode === "summary";
   const isDetailedView = context.viewMode === "detailed";
   const showAttentionOnly = context.focusExceptions && Boolean(workspace?.partial_failures.length);
@@ -184,25 +180,9 @@ export default function PortfolioWorkspaceView({
     (indicator) => indicator.status !== "Ready"
   );
   const showHealthSection = isDetailedView;
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const nextPreferences = PORTFOLIO_COLLAPSIBLE_SECTION_KEYS.reduce<Record<string, boolean>>(
-      (accumulator, key) => {
-        const storedValue = window.localStorage.getItem(getPortfolioSectionStorageKey(key));
-        if (storedValue === "true" || storedValue === "false") {
-          accumulator[key] = storedValue === "true";
-        }
-        return accumulator;
-      },
-      {}
-    );
-
-    setSectionPreferences(nextPreferences);
-  }, []);
+  const { getSectionExpanded, toggleSection } = usePortfolioSectionPreferences(
+    context.viewMode,
+  );
 
   const copyContextValue = async (key: string, value: string | null | undefined) => {
     if (!value) {
@@ -218,22 +198,6 @@ export default function PortfolioWorkspaceView({
     } catch {
       setCopiedContextField(null);
     }
-  };
-
-  const getSectionExpanded = (sectionKey: PortfolioCollapsibleSectionKey) =>
-    sectionPreferences[sectionKey] ?? getDefaultSectionExpanded(sectionKey, context.viewMode);
-
-  const toggleSection = (sectionKey: PortfolioCollapsibleSectionKey) => {
-    setSectionPreferences((current) => {
-      const nextExpanded = !(current[sectionKey] ?? getDefaultSectionExpanded(sectionKey, context.viewMode));
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(getPortfolioSectionStorageKey(sectionKey), String(nextExpanded));
-      }
-      return {
-        ...current,
-        [sectionKey]: nextExpanded,
-      };
-    });
   };
 
   const clearTransactionDrilldown = () => setTransactionDrilldown(null);
