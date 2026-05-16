@@ -40,6 +40,7 @@ import {
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityScoreRun,
   requestDpmExceptionSummary,
+  requestDpmPmOperatingQualitySummary,
   requestDpmOperationsHandoffSummary,
   requestDpmOutcomeReviewAiNarrative,
   requestDpmProofPackAiPmMemo,
@@ -2788,6 +2789,7 @@ describe("workbench api", () => {
         },
       ],
     });
+    await requestDpmPmOperatingQualitySummary({ scoreRunId: "pmq_run_001" });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock.mock.calls[0][0].toString()).toContain(
@@ -2811,6 +2813,23 @@ describe("workbench api", () => {
     expect(fetchMock.mock.calls[5][0]).toBe(
       `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
     );
+    expect(fetchMock.mock.calls[6][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/pmq_run_001/ai-summary`
+    );
+    expect(fetchMock.mock.calls[6][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const summaryBody = JSON.parse(fetchMock.mock.calls[6][1].body);
+    expect(summaryBody.requested_outputs).toEqual([
+      "score_run_summary",
+      "governance_summary",
+      "fairness_review_posture",
+      "support_references",
+      "evidence_gaps",
+    ]);
+    expect(summaryBody.audience).toEqual([
+      "portfolio_manager",
+      "investment_control",
+      "cio_office",
+    ]);
     expect(fetchMock.mock.calls[5][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
     const fairnessBody = JSON.parse(fetchMock.mock.calls[5][1].body);
     expect(fairnessBody.body.policy_id).toBe("pmq_sg_dpm");
@@ -2819,6 +2838,7 @@ describe("workbench api", () => {
     expect(fairnessBody.body.maximum_average_score_spread).toBeUndefined();
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-preview");
+    expect(metricEventsJson).toContain("pm-operating-quality-score-run-ai-summary");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-list");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-detail");
     expect(metricEventsJson).not.toContain("pmq_run_001");

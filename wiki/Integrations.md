@@ -107,12 +107,13 @@ must travel through Gateway-shaped contracts.
     reach Workbench through Gateway portfolio-memory composition only.
     RFC-0043 monitoring-exception summary execution remains `lotus-ai` owned and must reach
     Workbench through Gateway exception-summary composition only.
-    PM operating quality policies, score runs, score-run preview/create, and fairness-analysis
-    preview/list/detail are manage-owned and must reach Workbench through Gateway
-    `/api/v1/dpm/command-center/pm-operating-quality*` only. Workbench renders source-defined
-    segment and fairness posture but does not discover segments, calculate PM scores, segment
-    averages, or governed spreads, infer protected classes, rank PMs, create HR/compensation/
-    conduct decisions, approve trades, contact clients, route orders, or claim OMS/execution truth.
+    PM operating quality policies, score runs, score-run preview/create, fairness-analysis
+    preview/list/detail, and PM quality support-summary requests must reach Workbench through
+    Gateway `/api/v1/dpm/command-center/pm-operating-quality*` only. Workbench renders
+    source-defined segment, fairness, and review-gated workflow-pack posture but does not
+    construct prompts, discover segments, calculate PM scores, segment averages, or governed
+    spreads, infer protected classes, rank PMs, create HR/compensation/conduct decisions, approve
+    trades, contact clients, route orders, or claim OMS/execution truth.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
     contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
     create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture,
@@ -129,8 +130,8 @@ must travel through Gateway-shaped contracts.
     The implemented portfolio-memory panel consumes the Gateway portfolio-memory contract and
     preserves manage event order without reconstructing timeline nodes, and the implemented PM
     operating quality panel consumes Gateway policy, score-run, persisted fairness-analysis
-    list/detail, and fairness-analysis preview contracts when Manage/Gateway expose source-defined
-    segment assignments.
+    list/detail, fairness-analysis preview, and score-run support-summary contracts when
+    Manage/Gateway expose source-defined segment assignments and a selected score run.
     Workbench must not calculate expected-versus-realized values. It must not rebuild proof-pack
     sections, compute proof-pack hashes, construct prompts, infer PM quality, calculate wave
     readiness, construct report input, generate memo or exception-summary narrative locally, reconstruct

@@ -1401,6 +1401,19 @@ export type DpmPmOperatingQualityGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmPmOperatingQualitySummaryResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  evidence_source_service: string;
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  supportability: DpmPmOperatingQualitySupportability;
+  score_run: Record<string, unknown>;
+  summary_request: Record<string, unknown>;
+  data: Record<string, unknown>;
+};
+
 export type DpmWaveAiPmMemoResponse = {
   correlation_id: string;
   contract_version: string;

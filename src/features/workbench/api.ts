@@ -26,6 +26,7 @@ import {
   DpmOperationsHandoffSummaryResponse,
   DpmPortfolioMemoryGatewayResponse,
   DpmPmOperatingQualityGatewayResponse,
+  DpmPmOperatingQualitySummaryResponse,
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
@@ -1640,6 +1641,45 @@ export async function createDpmPmOperatingQualityScoreRun(params: {
           method: "POST",
           headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
           body: JSON.stringify({ body }),
+        }
+      )
+  );
+}
+
+export async function requestDpmPmOperatingQualitySummary(params: {
+  scoreRunId: string;
+  requestedOutputs?: string[];
+  audience?: string[];
+  actorId?: string;
+}): Promise<DpmPmOperatingQualitySummaryResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.score-runs.ai-summary",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualitySummaryResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/pm-operating-quality/score-runs/${encodeURIComponent(
+            params.scoreRunId
+          )}/ai-summary`
+        ),
+        "request DPM PM operating quality support summary",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
+          body: JSON.stringify({
+            requested_outputs: params.requestedOutputs ?? [
+              "score_run_summary",
+              "governance_summary",
+              "fairness_review_posture",
+              "support_references",
+              "evidence_gaps",
+            ],
+            audience: params.audience ?? [
+              "portfolio_manager",
+              "investment_control",
+              "cio_office",
+            ],
+          }),
         }
       )
   );

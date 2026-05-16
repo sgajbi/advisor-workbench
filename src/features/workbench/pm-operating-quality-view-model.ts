@@ -1,5 +1,8 @@
 import { preserveBusinessAcronyms } from "./business-label-formatters";
-import type { DpmPmOperatingQualityGatewayResponse } from "./types";
+import type {
+  DpmPmOperatingQualityGatewayResponse,
+  DpmPmOperatingQualitySummaryResponse,
+} from "./types";
 
 export type PmOperatingQualityPanelState =
   | "ready"
@@ -97,6 +100,18 @@ export type PmOperatingQualityOperationEvidence = {
   upstreamStatus: string;
 };
 
+export type PmOperatingQualitySummaryPosture = {
+  status: string;
+  reviewState: string;
+  workflowAuthority: string;
+  runId: string;
+  requestedOutputs: string;
+  audience: string;
+  evidenceSource: string;
+  supportability: string;
+  boundary: string;
+};
+
 export type PmOperatingQualityPanelModel = {
   state: PmOperatingQualityPanelState;
   supportabilityState: string;
@@ -123,6 +138,9 @@ export type PmOperatingQualityPanelModel = {
   fairnessSpread: string;
   fairnessDetail: PmOperatingQualityFairnessDetail;
   operationEvidence: PmOperatingQualityOperationEvidence;
+  summaryPosture: PmOperatingQualitySummaryPosture;
+  summaryRequestReadinessState: string;
+  summaryRequestReadiness: string;
   scoreRunPreviewReadinessState: string;
   scoreRunPreviewReadiness: string;
   fairnessPreviewReadinessState: string;
@@ -136,8 +154,10 @@ export function buildPmOperatingQualityPanelModel(params: {
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
+  summary?: DpmPmOperatingQualitySummaryResponse | null;
 }): PmOperatingQualityPanelModel {
   const primary =
+    params.summary ??
     params.fairnessPreview ??
     params.fairnessAnalysisDetail ??
     params.fairnessAnalyses ??
@@ -191,6 +211,10 @@ export function buildPmOperatingQualityPanelModel(params: {
     policyVersion,
     blockedActions,
   });
+  const summaryRequestReadiness = resolveSummaryRequestReadiness({
+    scoreRunId: selectedScoreRun?.scoreRunId ?? "N/A",
+    blockedActions,
+  });
 
   return {
     state: resolvePanelState(supportabilityState, policyRows.length, scoreRunRows.length, Boolean(primary)),
@@ -231,7 +255,11 @@ export function buildPmOperatingQualityPanelModel(params: {
       fairnessAnalysisDetail: params.fairnessAnalysisDetail,
       preview: params.preview,
       fairnessPreview: params.fairnessPreview,
+      summary: params.summary,
     }),
+    summaryPosture: buildSummaryPosture(params.summary),
+    summaryRequestReadinessState: summaryRequestReadiness.state,
+    summaryRequestReadiness: summaryRequestReadiness.detail,
     scoreRunPreviewReadinessState: scoreRunPreviewReadiness.state,
     scoreRunPreviewReadiness: scoreRunPreviewReadiness.detail,
     fairnessPreviewReadinessState: fairnessPreviewReadiness.state,
@@ -246,9 +274,12 @@ function buildOperationEvidence(params: {
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
+  summary?: DpmPmOperatingQualitySummaryResponse | null;
 }): PmOperatingQualityOperationEvidence {
   const operation =
-    params.fairnessPreview
+    params.summary
+      ? "PM quality support summary"
+      : params.fairnessPreview
       ? "Fairness analysis preview"
       : params.fairnessAnalysisDetail
         ? "Fairness analysis detail load"
@@ -262,6 +293,7 @@ function buildOperationEvidence(params: {
             ? "Policy evidence load"
             : "No Gateway operation";
   const response =
+    params.summary ??
     params.fairnessPreview ??
     params.fairnessAnalysisDetail ??
     params.fairnessAnalyses ??
@@ -273,8 +305,71 @@ function buildOperationEvidence(params: {
     correlationId: response?.correlation_id ?? "N/A",
     contractVersion: response?.contract_version ?? "N/A",
     sourceService: response?.source_service ?? "N/A",
-    upstreamStatus:
-      typeof response?.upstream_status === "number" ? String(response.upstream_status) : "N/A",
+    upstreamStatus: readGatewayStatus(response),
+  };
+}
+
+function readGatewayStatus(
+  response:
+    | DpmPmOperatingQualityGatewayResponse
+    | DpmPmOperatingQualitySummaryResponse
+    | null
+    | undefined
+): string {
+  if (!response) {
+    return "N/A";
+  }
+  if ("upstream_status" in response && typeof response.upstream_status === "number") {
+    return String(response.upstream_status);
+  }
+  if ("ai_upstream_status" in response && typeof response.ai_upstream_status === "number") {
+    return String(response.ai_upstream_status);
+  }
+  return "N/A";
+}
+
+function buildSummaryPosture(
+  response: DpmPmOperatingQualitySummaryResponse | null | undefined
+): PmOperatingQualitySummaryPosture {
+  if (!response) {
+    return {
+      status: "Not requested",
+      reviewState: "N/A",
+      workflowAuthority: "N/A",
+      runId: "N/A",
+      requestedOutputs: "N/A",
+      audience: "N/A",
+      evidenceSource: "N/A",
+      supportability: "N/A",
+      boundary: "Gateway can request support-only summary; no browser prompt is constructed.",
+    };
+  }
+  const execution = asRecord(response.data.execution);
+  const workflowPackRun = asRecord(response.data.workflow_pack_run);
+  const result = asRecord(execution.result);
+  const structuredOutput = asRecord(result.structured_output);
+  return {
+    status: firstNonEmpty(readString(execution, "status"), readString(response.data, "status")),
+    reviewState: firstNonEmpty(
+      readString(structuredOutput, "summary_status"),
+      readString(structuredOutput, "review_state"),
+      readString(workflowPackRun, "review_state"),
+      response.supportability.state
+    ),
+    workflowAuthority: firstNonEmpty(
+      readString(workflowPackRun, "workflow_authority_owner"),
+      response.supportability.authority
+    ),
+    runId: firstNonEmpty(
+      readString(workflowPackRun, "run_id"),
+      readString(asRecord(execution.audit), "workflow_pack_run_id")
+    ),
+    requestedOutputs: formatList(response.summary_request.requested_outputs),
+    audience: formatList(response.summary_request.audience),
+    evidenceSource: response.evidence_source_service || "lotus-manage",
+    supportability: businessSummarySupportability(response.supportability.state),
+    boundary:
+      "Support-only, review-required summary from Gateway and lotus-ai; not approval, ranking, HR, compensation, conduct, client-contact, execution, or OMS evidence.",
   };
 }
 
@@ -509,6 +604,28 @@ function resolveScoreRunPreviewReadiness(params: {
   };
 }
 
+function resolveSummaryRequestReadiness(params: {
+  scoreRunId: string;
+  blockedActions: string[];
+}): { state: string; detail: string } {
+  if (params.blockedActions.includes("REQUEST_PM_QUALITY_SUMMARY")) {
+    return {
+      state: "BLOCKED",
+      detail: "Blocked by Manage action register",
+    };
+  }
+  if (params.scoreRunId === "N/A") {
+    return {
+      state: "BLOCKED",
+      detail: "Blocked until Manage returns a score run",
+    };
+  }
+  return {
+    state: "READY",
+    detail: `Ready for score run ${params.scoreRunId}`,
+  };
+}
+
 function resolveFairnessPreviewReadiness(params: {
   policyId: string;
   policyVersion: string;
@@ -539,6 +656,14 @@ function resolveFairnessPreviewReadiness(params: {
     state: "READY",
     detail: `Ready: ${params.segmentCount} source-defined segments from Manage`,
   };
+}
+
+function businessSummarySupportability(value: string): string {
+  const normalized = normalizeState(value);
+  if (normalized.includes("READY")) {
+    return "Review required";
+  }
+  return formatActionLabel(normalized);
 }
 
 function formatSegmentCountNoun(count: number): string {
