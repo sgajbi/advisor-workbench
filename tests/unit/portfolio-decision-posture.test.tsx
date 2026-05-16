@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
-  PortfolioDecisionBand,
   PortfolioEvidenceModule,
 } from "../../src/apps/portfolio/components/portfolio-decision-posture";
 import {
@@ -12,23 +11,6 @@ import {
 } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("portfolio decision posture", () => {
-  it("renders decision posture from source-backed workspace state", () => {
-    render(
-      <PortfolioDecisionBand
-        workspace={buildPortfolioWorkspace()}
-        context={buildPortfolioWorkspaceContext()}
-      />
-    );
-
-    expect(screen.getByText("Portfolio readiness")).toBeInTheDocument();
-    expect(screen.getAllByText("Ready").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Exceptions")).toBeInTheDocument();
-    expect(screen.getByText("Clear")).toBeInTheDocument();
-    expect(screen.getByText("Mandate workflow")).toBeInTheDocument();
-    expect(screen.getByText("Mandate review available")).toBeInTheDocument();
-    expect(screen.queryByText("rr_001")).not.toBeInTheDocument();
-  });
-
   it("renders evidence and deep links to governed workspaces", () => {
     render(
       <PortfolioEvidenceModule

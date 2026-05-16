@@ -24,9 +24,6 @@ import {
   buildMetricDrawer,
   type PortfolioDetailDrawerState,
 } from "./portfolio-detail-drawer-builders";
-import {
-  PortfolioDecisionBand,
-} from "./portfolio-decision-posture";
 import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
@@ -153,10 +150,7 @@ export default function PortfolioWorkspaceView({
                       toolbar={toolbar}
                       exceptions={<PortfolioExceptionsSection workspace={workspace} />}
                       insights={
-                        <>
-                          <PortfolioDecisionBand workspace={workspace} context={context} />
-                          <PortfolioExecutiveSummary workspace={workspace} />
-                        </>
+                        <PortfolioExecutiveSummary workspace={workspace} />
                       }
                     />
                   </>

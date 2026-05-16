@@ -2,85 +2,9 @@
 
 import { ActionLink, SemanticBadge, Text, WorkbenchRailCard } from "@/design-system";
 
-import { formatCount, formatCurrency, formatDate, formatStatus } from "../formatters";
+import { formatCount, formatDate } from "../formatters";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
-import {
-  getBookReadinessStatus,
-  getBookReadinessSupport,
-  getBookReadinessTone,
-} from "../view-model";
-
-type BadgeTone = "default" | "success" | "warn" | "danger";
-
-export function PortfolioDecisionBand({
-  workspace,
-  context,
-}: {
-  workspace: PortfolioWorkspace;
-  context: PortfolioWorkspaceContext;
-}) {
-  const bookStatus = getBookReadinessStatus(workspace);
-  const performanceStatus = workspace.performance?.unavailable ? "Partial" : "Ready";
-  const exceptionCount =
-    workspace.partial_failures.length + (workspace.exception_summaries?.length ?? 0);
-  const liquidityStatus = workspace.cashflow_outlook ? "Ready" : "Partial";
-  const dpmStatus = workspace.rebalance?.status
-    ? formatStatus(workspace.rebalance.status)
-    : "No active run";
-
-  return (
-    <section className="portfolio-decision-band" aria-label="Portfolio decision posture">
-      <DecisionTile
-        label="Portfolio readiness"
-        value={bookStatus}
-        tone={toBadgeTone(getBookReadinessTone(workspace))}
-        support={getBookReadinessSupport(workspace)}
-        source="Book status"
-        priority="primary"
-      />
-      <DecisionTile
-        label="Exceptions"
-        value={exceptionCount ? `${exceptionCount} open` : "Clear"}
-        tone={exceptionCount ? "warn" : "success"}
-        support={exceptionCount ? "Resolve reporting gaps before client use" : "No active portfolio blockers"}
-        source="Reporting checks"
-      />
-      <DecisionTile
-        label="Cash and liquidity"
-        value={liquidityStatus}
-        tone={workspace.cashflow_outlook ? "success" : "warn"}
-        support={
-          workspace.cashflow_outlook
-            ? `${formatCurrency(
-                workspace.cashflow_outlook.total_net_cashflow_base,
-                workspace.portfolio.base_currency
-              )} through ${formatDate(workspace.cashflow_outlook.range_end_date)}`
-            : "Projected cashflow unavailable"
-        }
-        source="Liquidity"
-      />
-      <DecisionTile
-        label="Performance window"
-        value={performanceStatus}
-        tone={workspace.performance?.unavailable ? "warn" : "success"}
-        support={
-          workspace.performance?.period
-            ? `${workspace.performance.period} versus ${formatPortfolioBenchmark(workspace)}`
-            : `Window ${context.periodLabel}`
-        }
-        source="Performance"
-      />
-      <DecisionTile
-        label="Mandate workflow"
-        value={dpmStatus}
-        tone={workspace.rebalance?.status ? "success" : "default"}
-        support={workspace.rebalance?.status ? "Mandate review available" : "No active mandate run"}
-        source="Mandate posture"
-      />
-    </section>
-  );
-}
 
 export function PortfolioEvidenceModule({
   workspace,
@@ -125,41 +49,6 @@ export function PortfolioEvidenceModule({
       </div>
     </WorkbenchRailCard>
   );
-}
-
-function DecisionTile({
-  label,
-  value,
-  support,
-  source,
-  tone,
-  priority = "secondary",
-}: {
-  label: string;
-  value: string;
-  support: string;
-  source: string;
-  tone: BadgeTone;
-  priority?: "primary" | "secondary";
-}) {
-  return (
-    <div
-      className={`portfolio-decision-tile ${
-        priority === "primary" ? "portfolio-decision-tile-primary" : ""
-      }`}
-    >
-      <span className="portfolio-decision-label">{label}</span>
-      <div className="portfolio-decision-value-row">
-        <SemanticBadge tone={tone}>{value}</SemanticBadge>
-        <span>{source}</span>
-      </div>
-      <p>{support}</p>
-    </div>
-  );
-}
-
-function toBadgeTone(tone: "neutral" | "success" | "warn" | "danger"): BadgeTone {
-  return tone === "neutral" ? "default" : tone;
 }
 
 function formatPortfolioBenchmark(workspace: PortfolioWorkspace): string {
