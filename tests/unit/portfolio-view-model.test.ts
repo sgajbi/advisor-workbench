@@ -103,7 +103,7 @@ function buildWorkspace(): PortfolioWorkspace {
     control_capabilities: {
       historical_snapshots: {
         state: "unsupported",
-        reason: "Historical snapshots are not yet source-backed.",
+        reason: "Historical as-of review is not available for this portfolio yet.",
         requested_as_of_date: "2026-02-24",
         effective_as_of_date: "2026-02-24",
         earliest_available_as_of_date: "2024-01-01",
@@ -112,7 +112,7 @@ function buildWorkspace(): PortfolioWorkspace {
       },
       reporting_currency_restatement: {
         state: "unsupported",
-        reason: "Reporting currency restatement is not yet source-backed.",
+        reason: "Reporting currency restatement is not available for this portfolio yet.",
         requested_reporting_currency: null,
         effective_reporting_currency: "USD",
         supported_currencies: ["USD"],
@@ -510,7 +510,7 @@ describe("portfolio view model", () => {
     expect(context.effectivePeriodEndDate).toBe("2026-02-24");
     expect(context.historicalSnapshotState).toBe("unsupported");
     expect(context.historicalSnapshotReason).toBe(
-      "Historical snapshots are not yet source-backed."
+      "Historical as-of review is not available for this portfolio yet."
     );
     expect(context.supportsHistoricalSnapshots).toBe(false);
     expect(context.reportingCurrencyRestatementState).toBe("unsupported");

@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test';
 import {
-  measureAgGridViewport,
   measureElement,
   measureGrid,
-  measureTableFrame,
   setLocalStorageBeforeNavigation,
 } from './workbench-smoke-helpers';
 
@@ -82,13 +80,12 @@ async function openDetailedPortfolio(
 
   await expect(page.getByRole('heading', { name: /^Portfolio Summary$/i })).toBeVisible({ timeout: 15000 });
 
-  await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible({
+  await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible({
     timeout: 15000,
   });
-  await expect(page.locator('.portfolio-data-grid').first()).toBeVisible({ timeout: 15000 });
-  await expect(
-    page.getByLabel(/Projected cashflow chart in /i)
-  ).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('heading', { name: /^Portfolio Allocation$/i })).toBeVisible({
+    timeout: 15000,
+  });
 
   return { portfolioId, available: true };
 }
@@ -148,26 +145,22 @@ test.describe('Portfolio workbench smoke', () => {
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
 
     await expect(page.locator('.portfolio-paired-analytics-grid-detailed')).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /Open Income & Activity/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Open Income & Activity/i })).toHaveCount(0);
+    await expect(page.getByText(/Dedicated record screen/i)).toHaveCount(0);
+    await expect(page.getByText(/source posture/i)).toHaveCount(0);
+    await expect(page.locator('.portfolio-detailed-cluster')).toHaveCount(0);
 
-    const holdingsGrid = page.locator('.portfolio-data-grid').first();
-    await expect(holdingsGrid).toBeVisible();
-    const holdingsGridMetrics = await measureAgGridViewport(holdingsGrid);
-    expect(holdingsGridMetrics.centerClientWidth).toBeGreaterThan(700);
+    await expect(page.locator('.portfolio-data-grid')).toHaveCount(0);
+    await expect(page.getByLabel(/Projected cashflow chart in /i)).toHaveCount(0);
 
-    const cashflowTable = page.getByLabel('Cashflow outlook').locator('xpath=ancestor::*[contains(@class,"analytics-table-frame")][1]');
-    await expect(cashflowTable).toBeVisible();
+    const allocationPanel = page.getByRole('heading', { name: /^Portfolio Allocation$/i })
+      .locator('xpath=ancestor::*[contains(@class,"portfolio-analytical-zone-card")][1]');
+    await expect(allocationPanel).toBeVisible();
+    const allocationMetrics = await measureElement(allocationPanel);
+    expect(allocationMetrics.width).toBeGreaterThan(700);
 
-    for (const table of [cashflowTable]) {
-      const metrics = await measureTableFrame(table);
-      expect(metrics.scrollWidth - metrics.clientWidth).toBeLessThanOrEqual(8);
-    }
-
-    const cashflowChart = page.getByLabel(/Projected cashflow chart in /i);
-    await expect(cashflowChart).toBeVisible();
-    const cashflowChartMetrics = await measureElement(cashflowChart);
-    expect(cashflowChartMetrics.height).toBeLessThanOrEqual(260);
-    expect(cashflowChartMetrics.width).toBeGreaterThan(700);
+    await expect(page.getByRole('link', { name: /Income and activity/i })).toBeVisible();
 
   });
 

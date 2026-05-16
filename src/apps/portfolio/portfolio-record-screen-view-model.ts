@@ -30,7 +30,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   },
   income: {
     title: "Income & Activity",
-    subtitle: "Income composition, booked activity, cash movement, and source posture.",
+    subtitle: "Income composition, booked activity, and cash movement for review.",
     kicker: "Income and activity",
   },
   cashflow: {

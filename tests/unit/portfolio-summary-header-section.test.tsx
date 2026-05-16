@@ -9,7 +9,7 @@ import {
 } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("PortfolioSummaryHeaderSection", () => {
-  it("renders portfolio identity, governed context, and source-backed KPI figures", () => {
+  it("renders portfolio identity, governed context, and published KPI figures", () => {
     render(
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace()}
@@ -21,7 +21,7 @@ describe("PortfolioSummaryHeaderSection", () => {
       />
     );
 
-    expect(screen.getByText("Portfolio / PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio book PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Global Balanced Mandate" })).toBeInTheDocument();
     expect(screen.getByText("CIF_SG_000184")).toBeInTheDocument();
     expect(screen.getByText("Singapore")).toBeInTheDocument();

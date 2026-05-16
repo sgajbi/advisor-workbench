@@ -1546,12 +1546,6 @@ a:hover {
   margin-bottom: 1.25rem;
 }
 
-.portfolio-paired-analytics-grid {
-  align-items: start;
-  gap: var(--space-4);
-}
-
-.portfolio-paired-analytics-shell,
 .portfolio-analytical-upper-shell,
 .portfolio-analytical-zone-shell {
   display: grid;
@@ -1601,14 +1595,6 @@ a:hover {
 
 .portfolio-analytical-shell-header-subdued strong {
   color: var(--text-muted);
-}
-
-.portfolio-paired-analytics-grid > * {
-  height: 100%;
-}
-
-.portfolio-paired-analytics-grid-detailed {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 .portfolio-analytics-module-body {
@@ -4176,10 +4162,6 @@ a:hover {
 .workspace-grid > *,
 .portfolio-summary-grid > * {
   height: 100%;
-}
-
-.workspace-grid.portfolio-paired-analytics-grid-detailed {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 .portfolio-action-grid {

@@ -39,7 +39,7 @@ export default function PortfolioSummaryHeaderSection({
         <div className="portfolio-hero-header">
           <div className="portfolio-hero-content">
             <Text variant="label" className="portfolio-hero-label">
-              Portfolio / {workspace.portfolio.portfolio_id}
+              Portfolio book {workspace.portfolio.portfolio_id}
             </Text>
             <h2>{workspace.portfolio.display_name}</h2>
             <div className="portfolio-hero-meta">

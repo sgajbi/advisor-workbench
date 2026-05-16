@@ -36,14 +36,14 @@ export function PortfolioDecisionBand({
         value={bookStatus}
         tone={toBadgeTone(getBookReadinessTone(workspace))}
         support={getBookReadinessSupport(workspace)}
-        source="Gateway / Core"
+        source="Book status"
       />
       <DecisionTile
         label="Exceptions"
         value={exceptionCount ? `${exceptionCount} open` : "Clear"}
         tone={exceptionCount ? "warn" : "success"}
-        support={exceptionCount ? "Review source gaps before client use" : "No active portfolio blockers"}
-        source="Panel registry"
+        support={exceptionCount ? "Resolve reporting gaps before client use" : "No active portfolio blockers"}
+        source="Reporting checks"
       />
       <DecisionTile
         label="Cash and liquidity"
@@ -57,7 +57,7 @@ export function PortfolioDecisionBand({
               )} through ${formatDate(workspace.cashflow_outlook.range_end_date)}`
             : "Projected cashflow unavailable"
         }
-        source="Core cashflow"
+        source="Liquidity"
       />
       <DecisionTile
         label="Performance window"
@@ -89,8 +89,8 @@ export function PortfolioEvidenceModule({
   context: PortfolioWorkspaceContext;
 }) {
   const evidenceRows = [
-    { label: "Portfolio panels", value: "portfolio.summary / portfolio.detailed" },
-    { label: "Gateway contract", value: "Portfolio workspace and deferred detail APIs" },
+    { label: "Review scope", value: "Summary and detailed portfolio review" },
+    { label: "Review inputs", value: "Portfolio book, positions, reporting, and cashflow" },
     { label: "Benchmark", value: formatPortfolioBenchmark(workspace) },
     { label: "As-of", value: formatDate(context.selectedAsOfDate) },
     { label: "Reporting rows", value: formatCount(workspace.readiness.reporting.row_count, "row") },

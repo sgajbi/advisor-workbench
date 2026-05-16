@@ -13,34 +13,27 @@ import {
 
 import type {
   PortfolioHoldingsDrilldownFilter,
-  PortfolioTransactionDrilldownFilter,
   PortfolioWorkspace,
 } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import {
   buildPortfolioReadinessIndicators,
-  buildActivityDrilldownLabel,
   buildAllocationDrilldownLabel,
   buildHoldingsStatusDrilldownLabel,
   buildSecurityDrilldownLabel,
   filterPositionsByDrilldown,
-  filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
-  getActivityDisplayCurrency,
-  getIncomeDisplayCurrency,
   getOrderedWorkflowCues,
 } from "../view-model";
 import PortfolioAnalyticalMainColumn from "./portfolio-analytical-main-column";
 import PortfolioExecutiveSummary from "./portfolio-executive-summary";
 import PortfolioExceptionsSection from "./portfolio-exceptions-section";
 import {
-  PortfolioChangesSection,
   PortfolioInsightsSection,
 } from "./portfolio-analytical-sections";
 import {
   buildExceptionDrawer,
   buildMetricDrawer,
-  buildTransactionDrilldownDrawer,
   type PortfolioDetailDrawerState,
 } from "./portfolio-detail-drawer-builders";
 import {
@@ -49,12 +42,10 @@ import {
 import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
-import PortfolioHealthSection from "./portfolio-health-section";
 import PortfolioWorkspaceSideRail from "./portfolio-workspace-side-rail";
 import {
   getPortfolioWorkspaceCapabilities,
 } from "../capabilities";
-import { isRenderableCapability } from "@/shell/workspace-capabilities";
 import { usePortfolioSectionPreferences } from "./use-portfolio-section-preferences";
 
 // Workbench discipline:
@@ -109,8 +100,6 @@ export default function PortfolioWorkspaceView({
 }) {
   const [holdingsDrilldown, setHoldingsDrilldown] =
     useState<PortfolioHoldingsDrilldownFilter | null>(null);
-  const [transactionDrilldown, setTransactionDrilldown] =
-    useState<PortfolioTransactionDrilldownFilter | null>(null);
   const [detailDrawer, setDetailDrawer] = useState<PortfolioDetailDrawerState | null>(null);
   const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
   const setupActions = workspace?.workflow_actions ?? [];
@@ -121,11 +110,9 @@ export default function PortfolioWorkspaceView({
   const exceptionSummaries = workspace?.exception_summaries ?? [];
   const insights = workspace?.insights ?? [];
   const [dismissedInsightKeys, setDismissedInsightKeys] = useState<string[]>([]);
-  const isSummaryView = context.viewMode === "summary";
   const isDetailedView = context.viewMode === "detailed";
   const showAttentionOnly = context.focusExceptions && Boolean(workspace?.partial_failures.length);
   const showInsights = !showAttentionOnly;
-  const showChanges = isDetailedView && !showAttentionOnly;
   const showReadinessDetailGroup = isDetailedView;
   const showLiquidityModule = isDetailedView;
   const showDetailedAnalyticalSections = isDetailedView && !showAttentionOnly;
@@ -135,25 +122,6 @@ export default function PortfolioWorkspaceView({
         hideEmptyModules: context.hideEmptyModules,
       })
     : null;
-  const showChangeHighlights =
-    isSummaryView &&
-    !showAttentionOnly &&
-    (detailsLoading ||
-      Boolean(
-        capabilities &&
-          (isRenderableCapability(capabilities.income) ||
-            isRenderableCapability(capabilities.activity))
-      ));
-  const incomeDisplayCurrency = getIncomeDisplayCurrency(
-    workspace?.income_summary,
-    context.selectedReportingCurrency,
-    workspace?.portfolio.base_currency ?? "USD"
-  );
-  const activityDisplayCurrency = getActivityDisplayCurrency(
-    workspace?.activity_summary,
-    context.selectedReportingCurrency,
-    workspace?.portfolio.base_currency ?? "USD"
-  );
   const filteredPositions = useMemo(
     () => (workspace ? filterPositionsByDrilldown(workspace.positions, holdingsDrilldown) : []),
     [holdingsDrilldown, workspace]
@@ -165,24 +133,6 @@ export default function PortfolioWorkspaceView({
   const { getSectionExpanded, toggleSection } = usePortfolioSectionPreferences(
     context.viewMode,
   );
-
-  const clearTransactionDrilldown = () => setTransactionDrilldown(null);
-
-  const openTransactionDrilldown = (filter: PortfolioTransactionDrilldownFilter) => {
-    setTransactionDrilldown(filter);
-    if (!workspace) {
-      return;
-    }
-
-    setDetailDrawer(
-      buildTransactionDrilldownDrawer(
-        filter,
-        workspace,
-        filterTransactionsByDrilldown(workspace.recent_transactions, filter),
-        workspace.portfolio.base_currency
-      )
-    );
-  };
 
   const handlePricingExceptionDrilldown = () => {
     if (!workspace) {
@@ -295,18 +245,13 @@ export default function PortfolioWorkspaceView({
                               detailsLoading={detailsLoading}
                               showInsights={showInsights}
                               showLiquidityModule={showLiquidityModule}
-                              showChangeHighlights={showChangeHighlights}
-                              incomeDisplayCurrency={incomeDisplayCurrency}
-                              activityDisplayCurrency={activityDisplayCurrency}
                               visibleInsights={visibleInsights}
                               holdingsDrilldown={holdingsDrilldown}
                               filteredPositions={filteredPositions}
-                              transactionDrilldown={transactionDrilldown}
                               onDismissInsight={(key) =>
                                 setDismissedInsightKeys((current) => [...current, key])
                               }
                               onSelectAllocation={(selection) => {
-                                setTransactionDrilldown(null);
                                 setHoldingsDrilldown(
                                   selection
                                     ? {
@@ -321,7 +266,6 @@ export default function PortfolioWorkspaceView({
                                 );
                               }}
                               onSelectTopHolding={(securityId) => {
-                                setTransactionDrilldown(null);
                                 setHoldingsDrilldown(
                                   securityId
                                     ? {
@@ -336,17 +280,6 @@ export default function PortfolioWorkspaceView({
                                     : null
                                 );
                               }}
-                              onSelectActivityBucket={(bucket) => {
-                                if (!bucket) {
-                                  clearTransactionDrilldown();
-                                  return;
-                                }
-                                openTransactionDrilldown({
-                                  kind: "activity",
-                                  bucket,
-                                  label: buildActivityDrilldownLabel(bucket),
-                                });
-                              }}
                               getSectionExpanded={getSectionExpanded}
                               toggleSection={toggleSection}
                               DeferredPortfolioAllocationPanel={DeferredPortfolioAllocationPanel}
@@ -354,41 +287,6 @@ export default function PortfolioWorkspaceView({
                             />
                           ) : null}
                         </>
-                      }
-                      health={
-                        showDetailedAnalyticalSections ? (
-                          <PortfolioHealthSection
-                            workspace={workspace}
-                            context={context}
-                          />
-                        ) : null
-                      }
-                      changes={
-                        showDetailedAnalyticalSections ? (
-                          <PortfolioChangesSection
-                            workspace={workspace}
-                            context={context}
-                            capabilities={capabilities!}
-                            showChanges={showChanges}
-                            incomeDisplayCurrency={incomeDisplayCurrency}
-                            activityDisplayCurrency={activityDisplayCurrency}
-                            transactionDrilldown={transactionDrilldown}
-                            isDetailedView={isDetailedView}
-                            onSelectActivityBucket={(bucket) => {
-                              if (!bucket) {
-                                clearTransactionDrilldown();
-                                return;
-                              }
-                              openTransactionDrilldown({
-                                kind: "activity",
-                                bucket,
-                                label: buildActivityDrilldownLabel(bucket),
-                              });
-                            }}
-                            getSectionExpanded={getSectionExpanded}
-                            toggleSection={toggleSection}
-                          />
-                        ) : null
                       }
                     />
                   </>

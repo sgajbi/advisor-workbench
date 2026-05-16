@@ -124,7 +124,7 @@ export function buildPortfolioSummaryAttentionItems(
 
   if (workspace.summary.cash_weight_pct > 5) {
     items.push({
-      title: "Cash Drag Detected",
+      title: "Cash Review Needed",
       detail: `${formatPct(workspace.summary.cash_weight_pct)} cash exceeds the 5% review threshold for this summary posture.`,
       tone: "warn",
     });
@@ -133,8 +133,8 @@ export function buildPortfolioSummaryAttentionItems(
   if (workspace.partial_failures.length) {
     const firstFailure = workspace.partial_failures[0];
     items.push({
-      title: "Source Coverage Gap",
-      detail: `${firstFailure.error_code}: ${firstFailure.detail}`,
+      title: "Reporting Coverage Gap",
+      detail: firstFailure.detail,
       tone: "warn",
     });
   }

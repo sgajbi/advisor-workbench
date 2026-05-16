@@ -7,7 +7,6 @@ import type {
   PortfolioAllocationSelection,
   PortfolioHoldingsDrilldownFilter,
   PortfolioInsight,
-  PortfolioTransactionDrilldownFilter,
   PortfolioWorkspace,
 } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
@@ -47,34 +46,15 @@ export type PortfolioInsightsSectionProps = {
   detailsLoading: boolean;
   showInsights: boolean;
   showLiquidityModule: boolean;
-  showChangeHighlights: boolean;
-  incomeDisplayCurrency: string;
-  activityDisplayCurrency: string;
   visibleInsights: PortfolioInsight[];
   holdingsDrilldown: PortfolioHoldingsDrilldownFilter | null;
   filteredPositions: PortfolioWorkspace["positions"];
-  transactionDrilldown: PortfolioTransactionDrilldownFilter | null;
   onDismissInsight: (key: string) => void;
   onSelectAllocation: (selection: PortfolioAllocationSelection | null) => void;
   onSelectTopHolding: (securityId: string | null) => void;
-  onSelectActivityBucket: (bucket: string | null) => void;
   getSectionExpanded: (sectionKey: PortfolioCollapsibleSectionKey) => boolean;
   toggleSection: (sectionKey: PortfolioCollapsibleSectionKey) => void;
   DeferredPortfolioAllocationPanel: ComponentType<AllocationPanelComponentProps>;
   DeferredPortfolioTopHoldingsPanel: ComponentType<TopHoldingsPanelComponentProps>;
-};
-
-export type PortfolioChangesSectionProps = {
-  workspace: PortfolioWorkspace;
-  context: PortfolioWorkspaceContext;
-  capabilities: PortfolioWorkspaceCapabilities;
-  showChanges: boolean;
-  incomeDisplayCurrency: string;
-  activityDisplayCurrency: string;
-  transactionDrilldown: PortfolioTransactionDrilldownFilter | null;
-  isDetailedView: boolean;
-  onSelectActivityBucket: (bucket: string | null) => void;
-  getSectionExpanded: (sectionKey: PortfolioCollapsibleSectionKey) => boolean;
-  toggleSection: (sectionKey: PortfolioCollapsibleSectionKey) => void;
 };
 

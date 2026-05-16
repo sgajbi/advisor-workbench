@@ -162,12 +162,12 @@ export function buildPortfolioWorkspaceContext(
     workspace?.control_capabilities?.historical_snapshots.state ?? "unsupported";
   const historicalSnapshotReason =
     workspace?.control_capabilities?.historical_snapshots.reason ??
-    "Historical snapshots are not yet source-backed.";
+    "Historical as-of review is not available for this portfolio yet.";
   const reportingCurrencyState =
     workspace?.control_capabilities?.reporting_currency_restatement.state ?? "unsupported";
   const reportingCurrencyReason =
     workspace?.control_capabilities?.reporting_currency_restatement.reason ??
-    "Reporting currency restatement is not yet source-backed.";
+    "Reporting currency restatement is not available for this portfolio yet.";
 
   const effectivePeriod = resolveEffectivePeriod(
     selectedAsOfDate,

@@ -21,8 +21,8 @@ export default function PortfolioExceptionsSection({ workspace }: { workspace: P
       />
       {workspace.partial_failures.length ? (
         <AnalyticsModule
-          title="Data Coverage"
-          subtitle="Source exceptions affecting operational completeness."
+          title="Reporting Coverage"
+          subtitle="Issues affecting reporting, valuation, or portfolio operations."
         >
           <MetricRow label="Active exceptions" value={workspace.partial_failures.length} />
           <div className="portfolio-guidance-list">
@@ -32,7 +32,6 @@ export default function PortfolioExceptionsSection({ workspace }: { workspace: P
                 className="portfolio-guidance-item"
               >
                 <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
-                <span className="portfolio-evidence-meta">{failure.error_code}</span>
                 <p className="portfolio-evidence-copy">{failure.detail}</p>
               </div>
             ))}

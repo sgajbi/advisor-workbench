@@ -51,7 +51,7 @@ describe("portfolio summary view model", () => {
     });
   });
 
-  it("builds bounded source-backed attention items without inventing advisor actions", () => {
+  it("builds bounded attention items without inventing advisor actions", () => {
     const workspace = buildWorkspace({
       partial_failures: [
         { source_service: "lotus-core", error_code: "PRICE_GAP", detail: "Missing price" },
@@ -75,11 +75,11 @@ describe("portfolio summary view model", () => {
 
     expect(buildPortfolioSummaryAttentionItems(workspace)).toEqual([
       expect.objectContaining({
-        title: "Cash Drag Detected",
+        title: "Cash Review Needed",
         tone: "warn",
       }),
       expect.objectContaining({
-        title: "Source Coverage Gap",
+        title: "Reporting Coverage Gap",
         tone: "warn",
       }),
     ]);

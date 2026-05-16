@@ -16,7 +16,7 @@ describe("PortfolioExceptionsSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders source service, error code, and detail for active coverage failures", () => {
+  it("renders service area and advisor-readable detail for active coverage failures", () => {
     render(
       <PortfolioExceptionsSection
         workspace={buildPortfolioWorkspace({
@@ -36,7 +36,7 @@ describe("PortfolioExceptionsSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Portfolio data")).toBeInTheDocument();
-    expect(screen.getByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).toBeInTheDocument();
+    expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
     expect(screen.getByText("cash balance service unavailable")).toBeInTheDocument();
   });
 });
