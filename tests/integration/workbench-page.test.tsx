@@ -144,6 +144,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getAllByRole("heading", { name: "PM Operating Quality" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
+    expect(screen.getByLabelText("PM operating quality persisted fairness analyses")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality fairness segments")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
@@ -155,6 +156,18 @@ describe("WorkbenchPage", () => {
     expect(
       fetchMock.mock.calls.some(([input]) =>
         input.toString().includes("/api/v1/dpm/command-center/pm-operating-quality/score-runs?")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses?")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes(
+          "/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses/pmq_fair_001"
+        )
       )
     ).toBe(true);
   });
@@ -570,6 +583,98 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
             },
           ],
           count: 2,
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses?")) {
+      return jsonResponse({
+        correlation_id: "corr_pmq_fairness_list",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+          state: "PENDING_REVIEW",
+          reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+          blocked_actions: [],
+          policy_id: "pmq_sg_dpm",
+          policy_version: "2026.05",
+          fairness_analysis_id: "pmq_fair_001",
+          count: 1,
+        },
+        data: {
+          fairness_analyses: [
+            {
+              fairness_analysis_id: "pmq_fair_001",
+              policy_id: "pmq_sg_dpm",
+              policy_version: "2026.05",
+              state: "PENDING_REVIEW",
+              as_of_date: "2026-05-13",
+              observed_average_score_spread: "31.00",
+              segment_count: 2,
+              generated_by: "lotus-manage",
+              reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+              source_refs: [
+                {
+                  source_system: "lotus-manage",
+                  source_product: "PmOperatingQualityFairnessAnalysis",
+                  source_id: "pmq_fair_001",
+                },
+              ],
+            },
+          ],
+          count: 1,
+        },
+      });
+    }
+
+    if (
+      url.includes("/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses/pmq_fair_001")
+    ) {
+      return jsonResponse({
+        correlation_id: "corr_pmq_fairness_detail",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+          state: "PENDING_REVIEW",
+          reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+          blocked_actions: [],
+          policy_id: "pmq_sg_dpm",
+          policy_version: "2026.05",
+          fairness_analysis_id: "pmq_fair_001",
+        },
+        data: {
+          fairness_analysis: {
+            fairness_analysis_id: "pmq_fair_001",
+            policy_id: "pmq_sg_dpm",
+            policy_version: "2026.05",
+            state: "PENDING_REVIEW",
+            as_of_date: "2026-05-13",
+            minimum_segment_score_run_count: 2,
+            maximum_average_score_spread: "15.00",
+            observed_average_score_spread: "31.00",
+            generated_at: "2026-05-13T08:30:00Z",
+            generated_by: "lotus-manage",
+            reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+            forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+            segment_results: [
+              {
+                segment_id: "mandate_balanced",
+                segment_type: "MANDATE_TYPE",
+                display_name: "Balanced DPM Mandates",
+                state: "READY",
+                score_run_count: "1",
+                average_score: "90.00",
+                minimum_score: "90.00",
+                maximum_score: "90.00",
+              },
+            ],
+          },
         },
       });
     }

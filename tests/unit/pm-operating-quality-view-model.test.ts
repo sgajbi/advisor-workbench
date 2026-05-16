@@ -168,6 +168,46 @@ const fairnessPreview: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const fairnessAnalyses: DpmPmOperatingQualityGatewayResponse = {
+  correlation_id: "corr-fairness-list",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+    blocked_actions: [],
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    fairness_analysis_id: "pmq_fair_001",
+    count: 1,
+  },
+  data: {
+    fairness_analyses: [
+      {
+        fairness_analysis_id: "pmq_fair_001",
+        policy_id: "pmq_sg_dpm",
+        policy_version: "2026.05",
+        state: "PENDING_REVIEW",
+        as_of_date: "2026-05-13",
+        observed_average_score_spread: "31.00",
+        segment_count: 2,
+        generated_by: "lotus-manage",
+        reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_product: "PmOperatingQualityFairnessAnalysis",
+            source_id: "pmq_fair_001",
+          },
+        ],
+      },
+    ],
+  },
+};
+
 describe("PM operating quality view model", () => {
   it("preserves Manage PM quality policy, score-run, and source-defined segment posture", () => {
     const model = buildPmOperatingQualityPanelModel({ policies, scoreRuns });
@@ -208,6 +248,39 @@ describe("PM operating quality view model", () => {
     expect(model.forbiddenUsePosture).toContain(
       "Protected Class Inference (protected_class_inference)"
     );
+  });
+
+  it("renders persisted fairness-analysis list posture without browser-side fairness calculation", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      fairnessAnalyses,
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.fairnessAnalysisId).toBe("pmq_fair_001");
+    expect(model.fairnessAnalysisRows).toHaveLength(1);
+    expect(model.fairnessAnalysisRows[0]).toEqual(
+      expect.objectContaining({
+        fairnessAnalysisId: "pmq_fair_001",
+        policy: "pmq_sg_dpm / 2026.05",
+        state: "PENDING_REVIEW",
+        observedSpread: "31.00",
+        segmentCount: "2",
+        generatedBy: "lotus-manage",
+      })
+    );
+    expect(model.fairnessAnalysisRows[0].sourceRefs).toBe(
+      "System: lotus-manage | Product: PmOperatingQualityFairnessAnalysis | ID: pmq_fair_001"
+    );
+    expect(model.operationEvidence).toEqual({
+      operation: "Fairness analysis list load",
+      correlationId: "corr-fairness-list",
+      contractVersion: "v1",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
   });
 
   it("renders fairness preview as review-required evidence without client-side analysis", () => {

@@ -63,6 +63,19 @@ export type PmOperatingQualityFairnessSegmentRow = {
   reasonCodes: string;
 };
 
+export type PmOperatingQualityFairnessAnalysisRow = {
+  key: string;
+  fairnessAnalysisId: string;
+  policy: string;
+  state: string;
+  asOfDate: string;
+  observedSpread: string;
+  segmentCount: string;
+  generatedBy: string;
+  reasonCodes: string;
+  sourceRefs: string;
+};
+
 export type PmOperatingQualityFairnessDetail = {
   product: string;
   asOfDate: string;
@@ -100,7 +113,9 @@ export type PmOperatingQualityPanelModel = {
   scoreRunRows: PmOperatingQualityScoreRunRow[];
   fairnessSegmentRequests: PmOperatingQualityFairnessSegmentRequest[];
   sourceSegmentRows: PmOperatingQualitySourceSegmentRow[];
+  fairnessAnalysisRows: PmOperatingQualityFairnessAnalysisRow[];
   fairnessSegmentRows: PmOperatingQualityFairnessSegmentRow[];
+  selectedFairnessAnalysis: PmOperatingQualityFairnessAnalysisRow | null;
   selectedScoreRun: PmOperatingQualityScoreRunRow | null;
   fairnessAsOfDate: string;
   forbiddenUsePosture: string;
@@ -117,10 +132,18 @@ export type PmOperatingQualityPanelModel = {
 export function buildPmOperatingQualityPanelModel(params: {
   policies: DpmPmOperatingQualityGatewayResponse | null;
   scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessAnalyses?: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
 }): PmOperatingQualityPanelModel {
-  const primary = params.fairnessPreview ?? params.preview ?? params.scoreRuns ?? params.policies;
+  const primary =
+    params.fairnessPreview ??
+    params.fairnessAnalysisDetail ??
+    params.fairnessAnalyses ??
+    params.preview ??
+    params.scoreRuns ??
+    params.policies;
   const supportability = primary?.supportability;
   const supportabilityState = normalizeState(supportability?.state);
   const policyRows = buildPolicyRows(params.policies);
@@ -128,13 +151,22 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...buildScoreRunRows(params.preview),
     ...buildScoreRunRows(params.scoreRuns),
   ].filter(uniqueByScoreRunId);
-  const fairnessAnalysis = readFairnessAnalysis(params.fairnessPreview);
+  const fairnessAnalysisRows = [
+    ...buildFairnessAnalysisRows(params.fairnessAnalysisDetail),
+    ...buildFairnessAnalysisRows(params.fairnessPreview),
+    ...buildFairnessAnalysisRows(params.fairnessAnalyses),
+  ].filter(uniqueByFairnessAnalysisId);
+  const fairnessAnalysis = readFairnessAnalysis(
+    params.fairnessPreview ?? params.fairnessAnalysisDetail ?? params.fairnessAnalyses
+  );
   const fairnessSegmentRows = buildFairnessSegmentRows(fairnessAnalysis);
   const fairnessSegmentRequests = extractFairnessSegmentRequests(params.scoreRuns);
   const selectedScoreRun = scoreRunRows[0] ?? null;
+  const selectedFairnessAnalysis = fairnessAnalysisRows[0] ?? null;
   const reasonCodes = [
     ...(supportability?.reason_codes ?? []),
     ...scoreRunRows.flatMap((row) => splitList(row.reasonCodes)),
+    ...fairnessAnalysisRows.flatMap((row) => splitList(row.reasonCodes)),
     ...fairnessSegmentRows.flatMap((row) => splitList(row.reasonCodes)),
   ].filter(uniqueString);
   const blockedActions = supportability?.blocked_actions ?? [];
@@ -170,8 +202,12 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessAnalysisId: firstNonEmpty(
       supportability?.fairness_analysis_id,
       readString(fairnessAnalysis, "fairness_analysis_id"),
+      selectedFairnessAnalysis?.fairnessAnalysisId,
     ),
-    count: formatCount(supportability?.count, scoreRunRows.length),
+    count: formatCount(
+      supportability?.count,
+      Math.max(scoreRunRows.length, fairnessAnalysisRows.length)
+    ),
     reasonCodes,
     blockedActions,
     blockedActionPosture: summarizeBlockedActions(blockedActions, supportability?.source_service),
@@ -179,7 +215,9 @@ export function buildPmOperatingQualityPanelModel(params: {
     scoreRunRows,
     fairnessSegmentRequests,
     sourceSegmentRows: buildSourceSegmentRows(fairnessSegmentRequests),
+    fairnessAnalysisRows,
     fairnessSegmentRows,
+    selectedFairnessAnalysis,
     selectedScoreRun,
     fairnessAsOfDate: firstNonEmpty(selectedScoreRun?.asOfDate),
     forbiddenUsePosture: summarizeForbiddenUses(scoreRunRows),
@@ -189,6 +227,8 @@ export function buildPmOperatingQualityPanelModel(params: {
     operationEvidence: buildOperationEvidence({
       policies: params.policies,
       scoreRuns: params.scoreRuns,
+      fairnessAnalyses: params.fairnessAnalyses,
+      fairnessAnalysisDetail: params.fairnessAnalysisDetail,
       preview: params.preview,
       fairnessPreview: params.fairnessPreview,
     }),
@@ -202,12 +242,18 @@ export function buildPmOperatingQualityPanelModel(params: {
 function buildOperationEvidence(params: {
   policies: DpmPmOperatingQualityGatewayResponse | null;
   scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessAnalyses?: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
 }): PmOperatingQualityOperationEvidence {
   const operation =
     params.fairnessPreview
       ? "Fairness analysis preview"
+      : params.fairnessAnalysisDetail
+        ? "Fairness analysis detail load"
+        : params.fairnessAnalyses
+          ? "Fairness analysis list load"
       : params.preview
         ? "Score-run preview"
         : params.scoreRuns
@@ -215,7 +261,13 @@ function buildOperationEvidence(params: {
           : params.policies
             ? "Policy evidence load"
             : "No Gateway operation";
-  const response = params.fairnessPreview ?? params.preview ?? params.scoreRuns ?? params.policies;
+  const response =
+    params.fairnessPreview ??
+    params.fairnessAnalysisDetail ??
+    params.fairnessAnalyses ??
+    params.preview ??
+    params.scoreRuns ??
+    params.policies;
   return {
     operation,
     correlationId: response?.correlation_id ?? "N/A",
@@ -309,6 +361,48 @@ function buildSourceSegmentRows(
     scoreRunCount: String(segment.score_run_ids.length),
     sourceRefs: summarizeSourceRefs(segment.source_refs ?? []),
   }));
+}
+
+function buildFairnessAnalysisRows(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined
+): PmOperatingQualityFairnessAnalysisRow[] {
+  if (!response) {
+    return [];
+  }
+  const data = asRecord(response.data);
+  const records = extractRecords(data.fairness_analyses).length
+    ? extractRecords(data.fairness_analyses)
+    : extractRecords(data.items).length
+      ? extractRecords(data.items)
+      : [asRecord(data.fairness_analysis)].filter(hasAnyFairnessAnalysisIdentity);
+  return records.map((record, index) => {
+    const fairnessAnalysisId =
+      readString(record, "fairness_analysis_id") ||
+      response.supportability.fairness_analysis_id ||
+      `fairness-analysis-${index + 1}`;
+    const policyId = readString(record, "policy_id") || response.supportability.policy_id || "N/A";
+    const policyVersion =
+      readString(record, "policy_version") || response.supportability.policy_version || "N/A";
+    return {
+      key: `${fairnessAnalysisId}-${index}`,
+      fairnessAnalysisId,
+      policy: `${policyId} / ${policyVersion}`,
+      state:
+        readString(record, "state") ||
+        readString(record, "supportability_state") ||
+        response.supportability.state ||
+        "UNKNOWN",
+      asOfDate: readString(record, "as_of_date") || readString(record, "generated_at") || "N/A",
+      observedSpread: readString(record, "observed_average_score_spread") || "N/A",
+      segmentCount: formatCount(
+        readNumber(record, "segment_count"),
+        extractRecords(record.segment_results).length
+      ),
+      generatedBy: readString(record, "generated_by") || "N/A",
+      reasonCodes: formatList(record.reason_codes),
+      sourceRefs: summarizeSourceRefs(extractRecords(record.source_refs)),
+    };
+  });
 }
 
 function extractFairnessSegmentRequests(
@@ -511,6 +605,18 @@ function hasAnyScoreRunIdentity(record: Record<string, unknown>) {
   return Boolean(readString(record, "score_run_id"));
 }
 
+function hasAnyFairnessAnalysisIdentity(record: Record<string, unknown>) {
+  return Boolean(readString(record, "fairness_analysis_id"));
+}
+
+function uniqueByFairnessAnalysisId(
+  row: PmOperatingQualityFairnessAnalysisRow,
+  index: number,
+  rows: PmOperatingQualityFairnessAnalysisRow[]
+) {
+  return rows.findIndex((candidate) => candidate.fairnessAnalysisId === row.fairnessAnalysisId) === index;
+}
+
 function formatCount(count: number | null | undefined, fallback: number) {
   if (typeof count === "number" && Number.isFinite(count)) {
     return String(count);
@@ -620,6 +726,18 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function readNumber(record: Record<string, unknown>, key: string): number | null {
+  const value = record[key];
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 function readString(record: Record<string, unknown>, key: string): string {

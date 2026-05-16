@@ -91,12 +91,13 @@ Current repository posture:
     shown as unknown/N/A rather than as verified zero activity.
 14. Manage `mode=quality` renders the PM operating quality governance surface from Gateway
     `/api/v1/dpm/command-center/pm-operating-quality/policies*`,
-    `/score-runs*`, and `/fairness-analyses/preview`. Workbench renders Manage-owned policy,
-    score-run, source-defined segment, fairness-analysis preview, source refs, reason-code,
-    supportability, and forbidden-use posture without calculating PM scores, discovering segments,
-    calculating segment averages or governed spreads, inferring protected classes, ranking PMs,
-    creating HR/compensation/conduct decisions, approving trades, contacting clients, routing
-    orders, or claiming OMS/execution truth.
+    `/score-runs*`, `/fairness-analyses`, `/fairness-analyses/{fairness_analysis_id}`, and
+    `/fairness-analyses/preview`. Workbench renders Manage-owned policy, score-run,
+    source-defined segment, persisted fairness-analysis list/detail, preview, source refs,
+    reason-code, supportability, and forbidden-use posture without calculating PM scores,
+    discovering segments, calculating segment averages or governed spreads, inferring protected
+    classes, ranking PMs, creating HR/compensation/conduct decisions, approving trades, contacting
+    clients, routing orders, or claiming OMS/execution truth.
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
@@ -224,11 +225,11 @@ Important validation expectations:
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,
     response bodies, and screen content must never be emitted as metric labels.
 16. DPM PM operating quality policy, score-run, score-run preview, create, and fairness-analysis
-    preview operations are Workbench gateway-only operations. Observability labels must remain
-    bounded to route, panel, operation, freshness, supportability, status class, and error category;
-    policy ids, policy versions, score-run ids, fairness-analysis ids, segment ids, PM ids, book ids,
-    source refs, content hashes, request bodies, response bodies, score values, and screen content
-    must never be emitted as metric labels.
+    preview/list/detail operations are Workbench gateway-only operations. Observability labels must
+    remain bounded to route, panel, operation, freshness, supportability, status class, and error
+    category; policy ids, policy versions, score-run ids, fairness-analysis ids, segment ids, PM
+    ids, book ids, source refs, content hashes, request bodies, response bodies, score values, and
+    screen content must never be emitted as metric labels.
 
 ### Visual Review Gate
 

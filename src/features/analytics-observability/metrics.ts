@@ -380,6 +380,16 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.pm-operating-quality.fairness-analyses.preview",
   },
   {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-fairness-analysis-list",
+    operation: "dpm.pm-operating-quality.fairness-analyses.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-fairness-analysis-detail",
+    operation: "dpm.pm-operating-quality.fairness-analyses.get",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

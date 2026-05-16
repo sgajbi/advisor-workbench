@@ -123,9 +123,9 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("Score Preview Command")).toBeInTheDocument();
     expect(screen.getByText("Fairness Preview Command")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality fairness preview posture")
+      screen.getByLabelText("PM operating quality fairness analysis posture")
     ).toBeInTheDocument();
-    expect(screen.getByText("Awaiting Gateway fairness preview")).toBeInTheDocument();
+    expect(screen.getByText("Awaiting persisted analysis detail or preview")).toBeInTheDocument();
     expect(screen.getByText(/no scoring, ranking, trade approval/i)).toBeInTheDocument();
     expect(screen.getByText("Score-run evidence load")).toBeInTheDocument();
     expect(screen.getByText("corr-score")).toBeInTheDocument();
@@ -365,7 +365,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("Fairness analysis preview")).toBeInTheDocument();
     expect(screen.getByText("Fairness analysis returned by Gateway")).toBeInTheDocument();
     expect(screen.getByText("corr-pmq-fairness")).toBeInTheDocument();
-    expect(screen.getByText("Fairness Preview Detail")).toBeInTheDocument();
+    expect(screen.getByText("Fairness Analysis Detail")).toBeInTheDocument();
     expect(screen.getByText("PmOperatingQualityFairnessAnalysis / v1")).toBeInTheDocument();
     expect(screen.getByText("15.00")).toBeInTheDocument();
     expect(screen.getAllByText("31.00").length).toBeGreaterThan(0);
