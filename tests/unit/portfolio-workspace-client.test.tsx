@@ -6,13 +6,11 @@ import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import PortfolioWorkspaceClient from "../../src/apps/portfolio/components/portfolio-workspace-client";
 
 const getSummaryDetailsMock = vi.fn();
-const getDetailedDetailsMock = vi.fn();
 const getShellWorkspaceMock = vi.fn();
 
 vi.mock("../../src/apps/portfolio/api", () => ({
   getPortfolioWorkspaceShell: (...args: unknown[]) => getShellWorkspaceMock(...args),
   getPortfolioWorkspaceSummaryDetails: (...args: unknown[]) => getSummaryDetailsMock(...args),
-  getPortfolioWorkspaceDetailedDetails: (...args: unknown[]) => getDetailedDetailsMock(...args),
   mergePortfolioWorkspace: (
     current: PortfolioWorkspace,
     details: Partial<PortfolioWorkspace>
@@ -110,7 +108,6 @@ describe("PortfolioWorkspaceClient", () => {
   afterEach(() => {
     getShellWorkspaceMock.mockReset();
     getSummaryDetailsMock.mockReset();
-    getDetailedDetailsMock.mockReset();
     window.localStorage.clear();
   });
 
@@ -124,42 +121,6 @@ describe("PortfolioWorkspaceClient", () => {
       income_summary: null,
       activity_summary: null,
     });
-    getDetailedDetailsMock.mockResolvedValue({
-      cash_balances: [],
-      recent_transactions: [],
-      cashflow_outlook: null,
-      readiness_indicators: [{ key: "holdings", label: "Holdings", status: "Ready", href: "#x" }],
-      exception_summaries: [
-        {
-          key: "pricing",
-          title: "Pricing gap",
-          detail: "Missing prices",
-          tone: "warn",
-          href: "#pricing",
-        },
-      ],
-      insights: [
-        {
-          key: "operational-alert",
-          title: "Ops",
-          detail: "Gateway insight",
-          severity: "warning",
-          href: "#ops",
-        },
-      ],
-      workflow_actions: [
-        {
-          sequence: 1,
-          title: "Review performance",
-          impact: "Review return path.",
-          target: "Target: Performance workflow",
-          href: "/performance",
-          cta_label: "Performance",
-          recommended: true,
-        },
-      ],
-    });
-
     render(
       <StrictMode>
         <PortfolioWorkspaceClient
@@ -192,7 +153,6 @@ describe("PortfolioWorkspaceClient", () => {
       reportEndDate: "2026-03-28",
       usesCustomDateRange: false,
     });
-    expect(getDetailedDetailsMock).toHaveBeenCalledTimes(0);
 
     await act(async () => {
       screen.getByRole("button", { name: "Switch Detailed" }).click();
@@ -203,7 +163,6 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
-    expect(getDetailedDetailsMock).toHaveBeenCalledTimes(0);
   });
 
   it("recovers by fetching the portfolio shell when the server-rendered shell is unavailable", async () => {
@@ -218,8 +177,6 @@ describe("PortfolioWorkspaceClient", () => {
       income_summary: null,
       activity_summary: null,
     });
-    getDetailedDetailsMock.mockResolvedValue(null);
-
     render(
       <PortfolioWorkspaceClient
         portfolios={[
