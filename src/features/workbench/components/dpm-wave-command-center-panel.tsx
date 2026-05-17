@@ -959,7 +959,7 @@ function CampaignDefinitionsSection({
           <SummaryCell label="Review Date" value={launchPosture.requestedAsOfDate} />
           <SummaryCell label="Reviewed By" value={launchPosture.actor} />
           <SummaryCell label="Durable Wave" value={launchPosture.launchedWaveId} />
-          <SummaryCell label="Replay Posture" value={launchPosture.replayPosture} />
+          <SummaryCell label="Idempotency Evidence" value={launchPosture.idempotencyEvidence} />
         </div>
         <div className="rebalance-action-row">
           <span>{formatBusinessReason(launchPosture.reason)}</span>

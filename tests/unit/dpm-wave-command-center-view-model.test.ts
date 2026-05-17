@@ -317,6 +317,9 @@ describe("DPM wave command-center view model", () => {
           requested_as_of_date: "2026-05-10",
           actor_id: "pm_sg_1",
           reason_codes: [],
+          create_headers: {
+            "Idempotency-Key": "campaign-launch:campaign-holdings-202605:2026.05:abc",
+          },
         },
       },
       campaignLaunchResponse: {
@@ -328,7 +331,6 @@ describe("DPM wave command-center view model", () => {
             state: "CREATED",
             trigger_type: "BULK_REVIEW_CAMPAIGN",
           },
-          idempotent_replay: true,
         },
       },
     });
@@ -340,7 +342,7 @@ describe("DPM wave command-center view model", () => {
       requestedAsOfDate: "2026-05-10",
       actor: "pm_sg_1",
       launchedWaveId: "dwv_campaign_launch_001",
-      replayPosture: "Replay preserved",
+      idempotencyEvidence: "campaign-launch:campaign-holdings-202605:2026.05:abc",
     });
   });
 

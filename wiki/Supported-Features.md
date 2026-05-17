@@ -74,7 +74,7 @@ Implemented:
    state, membership, readiness, idempotency, maker-checker, trade approval, order generation,
    routing, fills, settlement, or OMS execution,
 11. checks campaign launch-package readiness through Gateway and enables launch only when Manage
-   returns `READY`, preserving durable wave and replay posture without recomputing membership,
+   returns `READY`, preserving durable wave and idempotency evidence without recomputing membership,
    readiness, maker-checker workflow, trade approval, staging, or OMS execution locally,
 12. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
    report-input refs,
