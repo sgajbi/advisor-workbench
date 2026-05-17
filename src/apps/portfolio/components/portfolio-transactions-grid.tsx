@@ -23,12 +23,19 @@ import {
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
 import {
+  buildTransactionExportRows,
   buildTransactionFilterOptions,
+  buildTransactionLedgerQuery,
+  buildTransactionRows,
   shouldReuseInitialTransactions,
+  sumTransactionAmount,
+  type TransactionRow,
 } from "./portfolio-transactions-grid-helpers";
 import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
+
+export type { TransactionRow } from "./portfolio-transactions-grid-helpers";
 
 type PortfolioTransactionsGridProps = {
   portfolioId: string;
@@ -41,23 +48,6 @@ type PortfolioTransactionsGridProps = {
   externalFilter?: PortfolioTransactionDrilldownFilter | null;
   onClearExternalFilter?: () => void;
   onRowSelect?: (row: TransactionRow) => void;
-};
-
-export type TransactionRow = {
-  transactionId: string;
-  tradeDate: string;
-  settleDate: string | null;
-  type: string;
-  instrument: string;
-  securityId: string;
-  quantity: number;
-  price: number | null;
-  amount: number | null;
-  currency: string;
-  status: string;
-  componentType: string | null;
-  sourceSystem: string | null;
-  raw: PortfolioTransactionView;
 };
 
 export default function PortfolioTransactionsGrid({
@@ -119,35 +109,14 @@ export default function PortfolioTransactionsGrid({
 
       setLoading(true);
       setLoadError(false);
-      const payload = await getPortfolioTransactionLedger(portfolioId, {
+      const payload = await getPortfolioTransactionLedger(portfolioId, buildTransactionLedgerQuery({
         asOfDate,
         startDate,
         endDate,
         transactionType,
         componentType,
-        securityId: externalFilter?.kind === "security" ? externalFilter.security_id : undefined,
-        linkedTransactionGroupId:
-          externalFilter?.kind === "linked_group"
-            ? externalFilter.linked_transaction_group_id
-            : undefined,
-        fxContractId:
-          externalFilter?.kind === "fx_contract"
-            ? externalFilter.fx_contract_id
-            : undefined,
-        swapEventId:
-          externalFilter?.kind === "swap_event"
-            ? externalFilter.swap_event_id
-            : undefined,
-        nearLegGroupId:
-          externalFilter?.kind === "near_leg_group"
-            ? externalFilter.near_leg_group_id
-            : undefined,
-        farLegGroupId:
-          externalFilter?.kind === "far_leg_group"
-            ? externalFilter.far_leg_group_id
-            : undefined,
-        limit: 200,
-      });
+        externalFilter,
+      }));
 
       if (!cancelled) {
         if (payload) {
@@ -195,23 +164,7 @@ export default function PortfolioTransactionsGrid({
   );
 
   const rowData = useMemo<TransactionRow[]>(
-    () =>
-      filteredTransactions.map((transaction) => ({
-        transactionId: transaction.transaction_id,
-        tradeDate: transaction.transaction_date,
-        settleDate: transaction.settlement_date ?? null,
-        type: formatStatus(transaction.transaction_type),
-        instrument: transaction.instrument_id,
-        securityId: transaction.security_id,
-        quantity: transaction.quantity,
-        price: transaction.price ?? null,
-        amount: transaction.net_cost_base ?? transaction.gross_amount ?? null,
-        currency: transaction.currency ?? baseCurrency,
-        status: formatStatus(transaction.settlement_status),
-        componentType: transaction.component_type ? formatStatus(transaction.component_type) : null,
-        sourceSystem: transaction.source_system ? formatStatus(transaction.source_system) : null,
-        raw: transaction,
-      })),
+    () => buildTransactionRows(filteredTransactions, baseCurrency),
     [baseCurrency, filteredTransactions]
   );
 
@@ -511,25 +464,8 @@ function transactionStatusCellRenderer(params: ICellRendererParams<TransactionRo
   );
 }
 
-function sumTransactionAmount(rows: TransactionRow[]) {
-  return rows.reduce((total, row) => total + (row.amount ?? 0), 0);
-}
-
 function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
-  const exportRows = rows.map((row) => ({
-    "Trade Date": formatDate(row.tradeDate),
-    "Settle Date": formatDate(row.settleDate),
-    Type: row.type,
-    Instrument: row.instrument,
-    Quantity: row.quantity,
-    Price: row.price ?? "",
-    [`Amount (${baseCurrency})`]: row.amount ?? "",
-    Currency: row.currency,
-    Status: row.status,
-    Component: row.componentType ?? "",
-    Source: row.sourceSystem ?? "",
-  }));
-  const worksheet = XLSX.utils.json_to_sheet(exportRows);
+  const worksheet = XLSX.utils.json_to_sheet(buildTransactionExportRows(rows, baseCurrency));
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
   XLSX.writeFileXLSX(workbook, "portfolio-transactions.xlsx");
