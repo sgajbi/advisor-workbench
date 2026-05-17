@@ -459,6 +459,7 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | append-only Manage launch history and idempotency posture for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and replay posture for a selected campaign definition |
 | `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
 
@@ -475,14 +476,17 @@ status, as-of date, candidate count, eligible portfolio type, governance posture
 posture without rendering campaign content hashes or recalculating membership. The panel can open
 read-only selected campaign lifecycle evidence through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
-without inferring campaign lifecycle state, recalculating membership, or operating retire/supersede
-commands locally. It checks launch-package readiness through Gateway
+and append-only launch history through Gateway
+`GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`,
+including Manage-recorded wave id, actor, requested as-of date, correlation id, and idempotency
+key without inferring campaign lifecycle state, recomputing launch state, recalculating membership,
+or operating retire/supersede commands locally. It checks launch-package readiness through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
 and exposes campaign launch through Gateway
 `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
 only when Manage returns `READY`, preserving durable wave response and replay posture without
-recomputing membership, launch readiness, maker-checker workflow, trade approval, staging, or OMS
-execution locally. The panel renders
+recomputing membership, launch readiness, idempotency, maker-checker workflow, trade approval,
+staging, or OMS execution locally. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and

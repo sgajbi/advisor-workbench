@@ -71,6 +71,21 @@ export type DpmCampaignLifecycleEventRow = {
   actor: string;
   status: string;
   reason: string;
+  waveId: string;
+  requestedAsOfDate: string;
+  correlationId: string;
+  idempotencyKey: string;
+};
+
+export type DpmCampaignLaunchHistoryRow = {
+  key: string;
+  waveId: string;
+  actor: string;
+  requestedAsOfDate: string;
+  replayPosture: string;
+  reason: string;
+  correlationId: string;
+  idempotencyKey: string;
 };
 
 export type DpmCampaignLaunchPosture = {
@@ -106,6 +121,7 @@ export type DpmWaveCommandCenterPanelModel = {
   summaryRows: DpmWaveSummaryRow[];
   campaignRows: DpmCampaignDefinitionRow[];
   campaignLifecycleRows: DpmCampaignLifecycleEventRow[];
+  campaignLaunchHistoryRows: DpmCampaignLaunchHistoryRow[];
   campaignLaunchPosture: DpmCampaignLaunchPosture;
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
@@ -125,6 +141,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLifecycleEvents?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignLaunchHistory?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchPackage?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchResponse?: DpmWaveGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
@@ -198,6 +215,7 @@ export function buildDpmWaveCommandCenterModel(params: {
       params.campaignDiscovery?.data
     ),
     campaignLifecycleRows: buildCampaignLifecycleEventRows(params.campaignLifecycleEvents?.data),
+    campaignLaunchHistoryRows: buildCampaignLaunchHistoryRows(params.campaignLaunchHistory?.data),
     campaignLaunchPosture: buildCampaignLaunchPosture(
       params.campaignLaunchPackage?.data,
       params.campaignLaunchResponse?.data
@@ -473,6 +491,53 @@ function buildCampaignLifecycleEventRows(
           readString(record, "rationale") ||
           readString(metadata, "reason_code") ||
           "N/A",
+        waveId:
+          readString(record, "wave_id") ||
+          readString(metadata, "wave_id") ||
+          "N/A",
+        requestedAsOfDate:
+          readString(record, "requested_as_of_date") ||
+          readString(metadata, "requested_as_of_date") ||
+          "N/A",
+        correlationId:
+          readString(record, "correlation_id") ||
+          readString(metadata, "correlation_id") ||
+          "N/A",
+        idempotencyKey:
+          readString(record, "idempotency_key") ||
+          readString(metadata, "idempotency_key") ||
+          "N/A",
+      };
+    }
+  );
+}
+
+function buildCampaignLaunchHistoryRows(
+  data: Record<string, unknown> | undefined
+): DpmCampaignLaunchHistoryRow[] {
+  return extractRecordArray(data?.items ?? data?.launch_history ?? data?.history).map(
+    (record, index) => {
+      const waveId = readString(record, "wave_id") || `launch-${index + 1}`;
+      const reasonCodes = extractStringArray(record.reason_codes);
+      const idempotentReplay = readValue(record, "idempotent_replay");
+      return {
+        key: [
+          waveId,
+          readString(record, "requested_as_of_date") || String(index + 1),
+          readString(record, "idempotency_key") || "idempotency",
+        ].join(":"),
+        waveId,
+        actor: readString(record, "actor_id") || "N/A",
+        requestedAsOfDate: readString(record, "requested_as_of_date") || "N/A",
+        replayPosture:
+          idempotentReplay === true
+            ? "Replay preserved"
+            : idempotentReplay === false
+              ? "New launch"
+              : "N/A",
+        reason: reasonCodes.length > 0 ? reasonCodes.join(", ") : "N/A",
+        correlationId: readString(record, "correlation_id") || "N/A",
+        idempotencyKey: readString(record, "idempotency_key") || "N/A",
       };
     }
   );

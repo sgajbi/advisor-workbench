@@ -238,6 +238,10 @@ describe("DPM wave command-center view model", () => {
         actor: "pm_sg_1",
         status: "RECORDED",
         reason: "source_backed_candidate_set",
+        waveId: "N/A",
+        requestedAsOfDate: "N/A",
+        correlationId: "N/A",
+        idempotencyKey: "N/A",
       },
     ]);
   });
@@ -337,6 +341,70 @@ describe("DPM wave command-center view model", () => {
       actor: "pm_sg_1",
       launchedWaveId: "dwv_campaign_launch_001",
       replayPosture: "Replay preserved",
+    });
+  });
+
+  it("preserves launched lifecycle events and append-only launch history", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignLifecycleEvents: {
+        correlation_id: "corr-campaign-lifecycle",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          events: [
+            {
+              event_type: "LAUNCHED",
+              occurred_at: "2026-05-14T09:30:00Z",
+              actor_id: "pm_sg_1",
+              status: "RECORDED",
+              reason_code: "campaign_definition_launched",
+              wave_id: "dwv_campaign_launch_001",
+              requested_as_of_date: "2026-05-10",
+              correlation_id: "corr-campaign-launch",
+              idempotency_key: "campaign-launch:campaign-holdings-202605:2026.05:abc",
+            },
+          ],
+        },
+      },
+      campaignLaunchHistory: {
+        correlation_id: "corr-campaign-launch-history",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              wave_id: "dwv_campaign_launch_001",
+              actor_id: "pm_sg_1",
+              requested_as_of_date: "2026-05-10",
+              correlation_id: "corr-campaign-launch",
+              idempotency_key: "campaign-launch:campaign-holdings-202605:2026.05:abc",
+              idempotent_replay: true,
+              reason_codes: ["campaign_definition_launch_replayed"],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignLifecycleRows[0]).toMatchObject({
+      eventType: "Launched",
+      waveId: "dwv_campaign_launch_001",
+      requestedAsOfDate: "2026-05-10",
+      correlationId: "corr-campaign-launch",
+      idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
+    });
+    expect(model.campaignLaunchHistoryRows[0]).toEqual({
+      key: "dwv_campaign_launch_001:2026-05-10:campaign-launch:campaign-holdings-202605:2026.05:abc",
+      waveId: "dwv_campaign_launch_001",
+      actor: "pm_sg_1",
+      requestedAsOfDate: "2026-05-10",
+      replayPosture: "Replay preserved",
+      reason: "campaign_definition_launch_replayed",
+      correlationId: "corr-campaign-launch",
+      idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
     });
   });
 

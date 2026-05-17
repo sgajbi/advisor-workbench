@@ -5,6 +5,7 @@ import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/d
 import {
   approveDpmWave,
   createDpmWave,
+  getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmWaveItems,
@@ -24,6 +25,7 @@ import type {
 vi.mock("../../src/features/workbench/api", () => ({
   approveDpmWave: vi.fn(),
   createDpmWave: vi.fn(),
+  getDpmCampaignDefinitionLaunchHistory: vi.fn(),
   getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
   getDpmWaveItems: vi.fn(),
@@ -157,11 +159,37 @@ const campaignLifecycleResponse: DpmCampaignDefinitionGatewayResponse = {
     campaign_version: "2026.05",
     events: [
       {
-        event_type: "CAMPAIGN_DEFINITION_CREATED",
+        event_type: "LAUNCHED",
         occurred_at: "2026-05-14T09:30:00Z",
         actor_id: "pm_sg_1",
         status: "RECORDED",
-        reason_code: "source_backed_candidate_set",
+        reason_code: "campaign_definition_launched",
+        wave_id: "dwv_campaign_launch_001",
+        requested_as_of_date: "2026-05-10",
+        correlation_id: "corr-campaign-launch",
+        idempotency_key: "campaign-launch:campaign-holdings-202605:2026.05:abc",
+      },
+    ],
+  },
+};
+
+const campaignLaunchHistoryResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign-launch-history",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    campaign_id: "campaign-holdings-202605",
+    campaign_version: "2026.05",
+    items: [
+      {
+        wave_id: "dwv_campaign_launch_001",
+        actor_id: "pm_sg_1",
+        requested_as_of_date: "2026-05-10",
+        correlation_id: "corr-campaign-launch",
+        idempotency_key: "campaign-launch:campaign-holdings-202605:2026.05:abc",
+        idempotent_replay: true,
+        reason_codes: ["campaign_definition_launch_replayed"],
       },
     ],
   },
@@ -231,6 +259,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   beforeEach(() => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(campaignLifecycleResponse);
+    vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(campaignLaunchHistoryResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(campaignLaunchPackageResponse);
     vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(campaignLaunchResponse);
   });
@@ -260,6 +289,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByText("rebalance_review")).toBeInTheDocument();
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Launch History" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
@@ -294,11 +324,47 @@ describe("DpmWaveCommandCenterPanel", () => {
     );
 
     const table = screen.getByRole("table", { name: "DPM campaign lifecycle evidence" });
-    expect(within(table).getByText("Campaign Definition Created")).toBeInTheDocument();
+    expect(within(table).getByText("Launched")).toBeInTheDocument();
     expect(within(table).getByText("2026-05-14T09:30:00Z")).toBeInTheDocument();
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
-    expect(within(table).getByText("source_backed_candidate_set")).toBeInTheDocument();
+    expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
+    expect(within(table).getByText("2026-05-10")).toBeInTheDocument();
+    expect(within(table).getByText("campaign_definition_launched")).toBeInTheDocument();
+    expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();
+    expect(
+      within(table).getByText("campaign-launch:campaign-holdings-202605:2026.05:abc"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("corr-campaign-lifecycle")).not.toBeInTheDocument();
+  });
+
+  it("loads append-only campaign launch history through the Gateway helper", async () => {
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+        campaignDefinitions={campaignDefinitionsResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open History" }));
+
+    await waitFor(() =>
+      expect(getDpmCampaignDefinitionLaunchHistory).toHaveBeenCalledWith({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      }),
+    );
+
+    const table = screen.getByRole("table", { name: "DPM campaign launch history" });
+    expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
+    expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
+    expect(within(table).getByText("Replay preserved")).toBeInTheDocument();
+    expect(within(table).getByText("campaign_definition_launch_replayed")).toBeInTheDocument();
+    expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();
+    expect(
+      within(table).getByText("campaign-launch:campaign-holdings-202605:2026.05:abc"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("corr-campaign-launch-history")).not.toBeInTheDocument();
   });
 
   it("enables campaign launch only after Manage launch readiness is ready", async () => {
