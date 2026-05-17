@@ -103,6 +103,8 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   const portfolioId = portfolio.portfolio.portfolio_id;
   const stateCopy = statePanelCopy(model.state, portfolioId);
   const selectedAlternative = model.selectedAlternative;
+  const eligibleInstrumentEvidence =
+    model.currencyOverlayEvidence?.eligibleInstrumentEvidence;
   const canSelectSelectedAlternative = Boolean(
     selectedAlternative &&
       model.alternativeSetId !== "N/A" &&
@@ -439,6 +441,33 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                         {model.currencyOverlayEvidence.rules.map((rule, index) => (
                           <span key={`${rule}-${index}`}>{rule}</span>
                         ))}
+                      </div>
+                    ) : null}
+                    {eligibleInstrumentEvidence ? (
+                      <div className="construction-currency-overlay-list">
+                        <strong>Eligible instrument evidence</strong>
+                        <span>
+                          {eligibleInstrumentEvidence.sourceProductName}{" "}
+                          {eligibleInstrumentEvidence.sourceProductVersion}
+                        </span>
+                        <span>
+                          Source id: {eligibleInstrumentEvidence.sourceId}
+                        </span>
+                        <span>
+                          Evidence hash:{" "}
+                          {eligibleInstrumentEvidence.contentHash}
+                        </span>
+                        <span>
+                          Instrument rows:{" "}
+                          {eligibleInstrumentEvidence.instrumentCount}
+                        </span>
+                        {eligibleInstrumentEvidence.instruments.length > 0
+                          ? eligibleInstrumentEvidence.instruments.map((instrument, index) => (
+                              <span key={`${instrument}-${index}`}>
+                                {instrument}
+                              </span>
+                            ))
+                          : null}
                       </div>
                     ) : null}
                     <div className="construction-currency-overlay-list">

@@ -76,9 +76,19 @@ export type ConstructionCurrencyOverlayEvidence = {
   contentHash: string;
   ruleCount: string;
   rules: string[];
+  eligibleInstrumentEvidence: ConstructionEligibleInstrumentEvidence | null;
   missingDataFamilies: string[];
   blockedCapabilities: string[];
   reasonCodes: string[];
+};
+
+export type ConstructionEligibleInstrumentEvidence = {
+  sourceProductName: string;
+  sourceProductVersion: string;
+  sourceId: string;
+  contentHash: string;
+  instrumentCount: string;
+  instruments: string[];
 };
 
 export type ConstructionPanelModel = {
@@ -407,11 +417,13 @@ function buildCurrencyOverlayEvidence(
   const blockedCapabilities = extractStringArray(context.blocked_capabilities);
   const reasonCodes = extractStringArray(context.reason_codes);
   const rules = extractDisplayArray(context.external_hedge_policy_rules);
+  const eligibleInstrumentEvidence = buildEligibleInstrumentEvidence(context);
 
   if (
     !sourceProductName &&
     !sourceId &&
     !contentHash &&
+    !eligibleInstrumentEvidence &&
     missingDataFamilies.length === 0 &&
     blockedCapabilities.length === 0 &&
     reasonCodes.length === 0
@@ -432,9 +444,55 @@ function buildCurrencyOverlayEvidence(
     contentHash: contentHash || "N/A",
     ruleCount: readCountLabel(context.external_hedge_policy_rule_count),
     rules,
+    eligibleInstrumentEvidence,
     missingDataFamilies,
     blockedCapabilities,
     reasonCodes,
+  };
+}
+
+function buildEligibleInstrumentEvidence(
+  context: Record<string, unknown>,
+): ConstructionEligibleInstrumentEvidence | null {
+  const sourceProductName = readString(
+    context,
+    "external_eligible_hedge_instrument_source_product_name",
+  );
+  const sourceProductVersion = readString(
+    context,
+    "external_eligible_hedge_instrument_source_product_version",
+  );
+  const sourceId = readString(
+    context,
+    "external_eligible_hedge_instrument_source_id",
+  );
+  const contentHash = readString(
+    context,
+    "external_eligible_hedge_instrument_content_hash",
+  );
+  const instruments = extractDisplayArray(
+    context.external_eligible_hedge_instruments,
+  );
+
+  if (
+    !sourceProductName &&
+    !sourceProductVersion &&
+    !sourceId &&
+    !contentHash &&
+    instruments.length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    sourceProductName: sourceProductName || "External eligible hedge instruments",
+    sourceProductVersion: sourceProductVersion || "N/A",
+    sourceId: sourceId || "N/A",
+    contentHash: contentHash || "N/A",
+    instrumentCount: readCountLabel(
+      context.external_eligible_hedge_instrument_count,
+    ),
+    instruments,
   };
 }
 

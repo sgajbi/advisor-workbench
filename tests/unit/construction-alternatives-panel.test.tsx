@@ -103,14 +103,36 @@ const readyResponse: DpmConstructionGatewayResponse = {
                 "sha256:external-hedge-policy-content",
               external_hedge_policy_rule_count: 0,
               external_hedge_policy_rules: [],
-              missing_data_families: ["external_hedge_policy"],
+              external_eligible_hedge_instrument_source_product_name:
+                "ExternalEligibleHedgeInstrument",
+              external_eligible_hedge_instrument_source_product_version: "v1",
+              external_eligible_hedge_instrument_source_id:
+                "sha256:external-eligible-hedge-instrument",
+              external_eligible_hedge_instrument_content_hash:
+                "sha256:external-eligible-hedge-instrument-content",
+              external_eligible_hedge_instrument_count: 0,
+              external_eligible_hedge_instruments: [],
+              missing_data_families: [
+                "external_hedge_policy",
+                "external_eligible_hedge_instrument",
+              ],
               blocked_capabilities: [
                 "hedge_policy_approval",
+                "eligible_instrument_selection",
+                "suitability_approval",
+                "product_recommendation",
                 "treasury_instruction",
                 "counterparty_selection",
+                "best_execution",
                 "oms_acknowledgement",
+                "fills",
+                "settlement",
+                "autonomous_treasury_action",
               ],
-              reason_codes: ["EXTERNAL_HEDGE_POLICY_FAIL_CLOSED"],
+              reason_codes: [
+                "EXTERNAL_HEDGE_POLICY_FAIL_CLOSED",
+                "EXTERNAL_ELIGIBLE_HEDGE_INSTRUMENTS_FAIL_CLOSED",
+              ],
             },
           },
         },
@@ -189,8 +211,26 @@ describe("ConstructionAlternativesPanel", () => {
     expect(screen.getByText("ExternalHedgePolicy v1")).toBeInTheDocument();
     expect(screen.getByText("sha256:external-hedge-policy")).toBeInTheDocument();
     expect(screen.getByText("sha256:external-hedge-policy-content")).toBeInTheDocument();
+    expect(screen.getByText("Eligible instrument evidence")).toBeInTheDocument();
+    expect(
+      screen.getByText("ExternalEligibleHedgeInstrument v1"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Source id: sha256:external-eligible-hedge-instrument"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Evidence hash: sha256:external-eligible-hedge-instrument-content",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Instrument rows: 0")).toBeInTheDocument();
     expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
+    expect(screen.getByText("Eligible Instrument Selection")).toBeInTheDocument();
+    expect(screen.getByText("Product Recommendation")).toBeInTheDocument();
     expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
+    expect(
+      screen.getByText("External Eligible Hedge Instruments Fail Closed"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof",
