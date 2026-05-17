@@ -521,6 +521,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "pm-operating-quality-fairness-analysis-create",
+        "dpm.pm-operating-quality.fairness-analyses.create",
+      ],
+      [
+        "workbench.manage",
         "pm-operating-quality-fairness-analysis-list",
         "dpm.pm-operating-quality.fairness-analyses.list",
       ],

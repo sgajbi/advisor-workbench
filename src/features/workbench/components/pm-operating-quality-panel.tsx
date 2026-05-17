@@ -12,6 +12,8 @@ import {
   Text,
 } from "@/design-system";
 import {
+  createDpmPmOperatingQualityFairnessAnalysis,
+  getDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityScoreRun,
   requestDpmPmOperatingQualitySummary,
@@ -46,6 +48,13 @@ type PmQualityActionError = {
   status: string;
   statusClass: string;
   source: string;
+};
+
+type FairnessCreateEvidence = {
+  fairnessAnalysisId: string;
+  correlationId: string;
+  sourceService: string;
+  upstreamStatus: string;
 };
 
 function statePanelCopy(state: PmOperatingQualityPanelState) {
@@ -140,10 +149,15 @@ export default function PmOperatingQualityPanel({
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [fairnessPreviewResponse, setFairnessPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [createdFairnessAnalysisResponse, setCreatedFairnessAnalysisResponse] =
+    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [fairnessCreateEvidence, setFairnessCreateEvidence] =
+    useState<FairnessCreateEvidence | null>(null);
   const [summaryResponse, setSummaryResponse] =
     useState<DpmPmOperatingQualitySummaryResponse | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
+  const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
   const [pendingSummaryAction, setPendingSummaryAction] = useState(false);
   const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -151,7 +165,7 @@ export default function PmOperatingQualityPanel({
     policies,
     scoreRuns,
     fairnessAnalyses,
-    fairnessAnalysisDetail,
+    fairnessAnalysisDetail: createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
     summary: summaryResponse,
@@ -227,6 +241,52 @@ export default function PmOperatingQualityPanel({
       );
     } finally {
       setPendingFairnessAction(false);
+    }
+  }
+
+  async function createFairnessAnalysis() {
+    if (pendingFairnessCreateAction) {
+      return;
+    }
+    if (model.fairnessPreviewReadinessState !== "READY") {
+      setActionError(buildBlockedActionError(model.fairnessPreviewReadiness));
+      return;
+    }
+    if (model.policyId === "N/A" || model.policyVersion === "N/A") {
+      setActionError(
+        buildBlockedActionError(
+          "PM operating quality policy id/version is required for fairness analysis persistence."
+        )
+      );
+      return;
+    }
+    setPendingFairnessCreateAction(true);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const response = await createDpmPmOperatingQualityFairnessAnalysis({
+        policyId: model.policyId,
+        policyVersion: model.policyVersion,
+        asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
+        segments: model.fairnessSegmentRequests,
+      });
+      setCreatedFairnessAnalysisResponse(response);
+      setFairnessCreateEvidence(buildFairnessCreateEvidence(response));
+      const fairnessAnalysisId = readFairnessAnalysisId(response);
+      if (fairnessAnalysisId) {
+        const detail = await getDpmPmOperatingQualityFairnessAnalysis(
+          fairnessAnalysisId,
+          "client"
+        );
+        setCreatedFairnessAnalysisResponse(detail);
+      }
+      setActionMessage("Persisted fairness analysis returned Manage evidence.");
+    } catch (error) {
+      setActionError(
+        buildActionError(error, "PM operating quality fairness analysis persistence failed")
+      );
+    } finally {
+      setPendingFairnessCreateAction(false);
     }
   }
 
@@ -338,6 +398,16 @@ export default function PmOperatingQualityPanel({
               >
                 {pendingFairnessAction ? "Checking" : "Preview Fairness"}
               </ActionButton>
+              <ActionButton
+                priority="primary"
+                onClick={createFairnessAnalysis}
+                disabled={
+                  pendingFairnessCreateAction ||
+                  model.fairnessPreviewReadinessState !== "READY"
+                }
+              >
+                {pendingFairnessCreateAction ? "Persisting" : "Persist Fairness"}
+              </ActionButton>
             </div>
           </div>
           {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
@@ -348,6 +418,7 @@ export default function PmOperatingQualityPanel({
             <MetricRow label="Score Preview Command" value={model.scoreRunPreviewReadiness} />
             <MetricRow label="Summary Request" value={model.summaryRequestReadiness} />
             <MetricRow label="Fairness Preview Command" value={model.fairnessPreviewReadiness} />
+            <MetricRow label="Fairness Persist Command" value={model.fairnessPreviewReadiness} />
             <MetricRow
               label="Execution Boundary"
               value="Gateway-backed evidence only; no browser prompt, scoring, ranking, trade approval, order routing, OMS, or client contact in Workbench"
@@ -367,6 +438,14 @@ export default function PmOperatingQualityPanel({
             <MetricRow label="Source Service" value={model.operationEvidence.sourceService} />
             <MetricRow label="Upstream Status" value={model.operationEvidence.upstreamStatus} />
           </div>
+          {fairnessCreateEvidence ? (
+            <div className="pm-quality-operation-evidence" aria-label="PM operating quality persisted fairness create evidence">
+              <MetricRow label="Persisted Analysis" value={fairnessCreateEvidence.fairnessAnalysisId} />
+              <MetricRow label="Create Correlation" value={fairnessCreateEvidence.correlationId} />
+              <MetricRow label="Create Source" value={fairnessCreateEvidence.sourceService} />
+              <MetricRow label="Create Upstream Status" value={fairnessCreateEvidence.upstreamStatus} />
+            </div>
+          ) : null}
           <div className="pm-quality-operation-evidence" aria-label="PM operating quality support summary posture">
             <MetricRow label="Summary Status" value={model.summaryPosture.status} />
             <MetricRow label="Review Posture" value={model.summaryPosture.reviewState} />
@@ -631,4 +710,31 @@ export default function PmOperatingQualityPanel({
       />
     </SectionBlock>
   );
+}
+
+function readFairnessAnalysisId(response: DpmPmOperatingQualityGatewayResponse): string | null {
+  if (response.supportability.fairness_analysis_id) {
+    return response.supportability.fairness_analysis_id;
+  }
+  const data = response.data;
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return null;
+  }
+  const fairnessAnalysis = (data as Record<string, unknown>).fairness_analysis;
+  if (!fairnessAnalysis || typeof fairnessAnalysis !== "object" || Array.isArray(fairnessAnalysis)) {
+    return null;
+  }
+  const candidate = (fairnessAnalysis as Record<string, unknown>).fairness_analysis_id;
+  return typeof candidate === "string" && candidate ? candidate : null;
+}
+
+function buildFairnessCreateEvidence(
+  response: DpmPmOperatingQualityGatewayResponse
+): FairnessCreateEvidence {
+  return {
+    fairnessAnalysisId: readFairnessAnalysisId(response) ?? "N/A",
+    correlationId: response.correlation_id || "N/A",
+    sourceService: response.supportability.source_service || response.source_service || "N/A",
+    upstreamStatus: String(response.upstream_status ?? "N/A"),
+  };
 }

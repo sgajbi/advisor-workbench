@@ -5,6 +5,7 @@ import {
   applySandboxChanges,
   buildArchivedDocumentDownloadUrl,
   calculateCompositePerformanceTwrClient,
+  createDpmPmOperatingQualityFairnessAnalysis,
   createPortfolioReportBatch,
   createSandboxSession,
   generateDpmConstructionAlternatives,
@@ -2969,6 +2970,24 @@ describe("workbench api", () => {
         },
       ],
     });
+    await createDpmPmOperatingQualityFairnessAnalysis({
+      policyId: "pmq_sg_dpm",
+      policyVersion: "2026.05",
+      segments: [
+        {
+          segment_id: "mandate_balanced",
+          segment_type: "MANDATE_TYPE",
+          display_name: "Balanced DPM Mandates",
+          score_run_ids: ["pmq_run_001"],
+        },
+        {
+          segment_id: "mandate_income",
+          segment_type: "MANDATE_TYPE",
+          display_name: "Income DPM Mandates",
+          score_run_ids: ["pmq_run_002"],
+        },
+      ],
+    });
     await requestDpmPmOperatingQualitySummary({ scoreRunId: "pmq_run_001" });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -2994,10 +3013,13 @@ describe("workbench api", () => {
       `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
     );
     expect(fetchMock.mock.calls[6][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses`
+    );
+    expect(fetchMock.mock.calls[7][0]).toBe(
       `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/pmq_run_001/ai-summary`
     );
-    expect(fetchMock.mock.calls[6][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const summaryBody = JSON.parse(fetchMock.mock.calls[6][1].body);
+    expect(fetchMock.mock.calls[7][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const summaryBody = JSON.parse(fetchMock.mock.calls[7][1].body);
     expect(summaryBody.requested_outputs).toEqual([
       "score_run_summary",
       "governance_summary",
@@ -3016,8 +3038,13 @@ describe("workbench api", () => {
     expect(fairnessBody.body.segments).toHaveLength(2);
     expect(fairnessBody.body.minimum_segment_score_run_count).toBeUndefined();
     expect(fairnessBody.body.maximum_average_score_spread).toBeUndefined();
+    expect(fetchMock.mock.calls[6][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const persistedFairnessBody = JSON.parse(fetchMock.mock.calls[6][1].body);
+    expect(persistedFairnessBody.body.policy_id).toBe("pmq_sg_dpm");
+    expect(persistedFairnessBody.body.segments).toHaveLength(2);
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-preview");
+    expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-create");
     expect(metricEventsJson).toContain("pm-operating-quality-score-run-ai-summary");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-list");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-detail");
