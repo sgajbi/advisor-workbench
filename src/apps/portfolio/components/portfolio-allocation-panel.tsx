@@ -1,27 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
 import {
   WorkbenchSegmentedControl,
   WorkbenchSummaryToolbar,
 } from "@/design-system";
 
 import {
-  getPortfolioAllocationViews,
-  type PortfolioLookThroughMode,
-} from "../api";
-import {
   ALLOCATION_CHART_TYPES,
   ALLOCATION_DIMENSIONS,
-  formatAllocationDimensionLabel,
-  isExpandedLookThroughSupported,
-  normalizeLookThroughMode,
-  type AllocationChartType,
-  type AllocationDimension,
 } from "../portfolio-allocation-view-model";
 import type {
-  PortfolioAllocationLookThrough,
   PortfolioAllocationSelection,
   PortfolioAllocationView,
 } from "../types";
@@ -32,6 +20,7 @@ import {
   AllocationRankedList,
   AllocationTableChart,
 } from "./portfolio-allocation-visuals";
+import { usePortfolioAllocationPanelState } from "./use-portfolio-allocation-panel-state";
 
 export default function PortfolioAllocationPanel({
   portfolioId,
@@ -52,185 +41,34 @@ export default function PortfolioAllocationPanel({
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
 }) {
-  const [resolvedAllocationViews, setResolvedAllocationViews] =
-    useState<PortfolioAllocationView[]>(allocationViews);
-  const [lookThroughRequestedMode, setLookThroughRequestedMode] =
-    useState<PortfolioLookThroughMode>("direct_only");
-  const [lookThroughEffectiveMode, setLookThroughEffectiveMode] =
-    useState<PortfolioLookThroughMode>("direct_only");
-  const [lookThroughSupported, setLookThroughSupported] = useState(false);
-  const [lookThroughBusy, setLookThroughBusy] = useState(false);
-  const [lookThroughProbeComplete, setLookThroughProbeComplete] =
-    useState(false);
-  const [cachedLookThroughResponse, setCachedLookThroughResponse] = useState<{
-    views: PortfolioAllocationView[];
-    lookThrough: PortfolioAllocationLookThrough | null;
-  } | null>(null);
-
-  const viewsByDimension = useMemo(() => {
-    return new Map(
-      resolvedAllocationViews.map((view) => [view.dimension, view]),
-    );
-  }, [resolvedAllocationViews]);
-
-  const firstAvailableDimension =
-    ALLOCATION_DIMENSIONS.find((dimension) =>
-      viewsByDimension.has(dimension.key),
-    )?.key ?? "asset_class";
-
-  const [activeDimension, setActiveDimension] = useState<AllocationDimension>(
-    firstAvailableDimension,
-  );
-  const [chartType, setChartType] = useState<AllocationChartType>("donut");
-  const [hoveredBucket, setHoveredBucket] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setResolvedAllocationViews(allocationViews);
-    setLookThroughRequestedMode("direct_only");
-    setLookThroughEffectiveMode("direct_only");
-    setLookThroughSupported(false);
-    setLookThroughBusy(true);
-    setLookThroughProbeComplete(false);
-    setCachedLookThroughResponse(null);
-
-    void Promise.all([
-      getPortfolioAllocationViews(portfolioId, {
-        asOfDate,
-        reportingCurrency,
-        lookThroughMode: "direct_only",
-      }),
-      getPortfolioAllocationViews(portfolioId, {
-        asOfDate,
-        reportingCurrency,
-        lookThroughMode: "prefer_look_through",
-      }),
-    ])
-      .then(([directResponse, lookThroughResponse]) => {
-        if (cancelled) {
-          return;
-        }
-
-        if (directResponse?.views?.length) {
-          setResolvedAllocationViews(directResponse.views);
-        }
-        setLookThroughEffectiveMode(
-          normalizeLookThroughMode(
-            directResponse?.look_through?.effective_mode,
-          ),
-        );
-
-        const supportsExpandedLookThrough = isExpandedLookThroughSupported(
-          lookThroughResponse?.look_through ?? null,
-        );
-        setLookThroughSupported(supportsExpandedLookThrough);
-        if (supportsExpandedLookThrough && lookThroughResponse?.views?.length) {
-          setCachedLookThroughResponse({
-            views: lookThroughResponse.views,
-            lookThrough: lookThroughResponse.look_through ?? null,
-          });
-        }
-        setLookThroughProbeComplete(true);
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLookThroughBusy(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [allocationViews, asOfDate, portfolioId, reportingCurrency]);
-
-  useEffect(() => {
-    if (viewsByDimension.has(activeDimension)) {
-      return;
-    }
-    setActiveDimension(firstAvailableDimension);
-  }, [activeDimension, firstAvailableDimension, viewsByDimension]);
-
-  const activeView = viewsByDimension.get(activeDimension) ?? null;
-  const buckets = activeView?.buckets ?? [];
-  const activeDimensionLabel = formatAllocationDimensionLabel(activeDimension);
-  const totalWeight =
-    buckets.reduce(
-      (sum, bucket) => sum + Math.max(bucket.weight_pct ?? 0, 0),
-      0,
-    ) || 0;
-
-  const selectedBucket =
-    selectedAllocation?.dimension === activeDimension
-      ? selectedAllocation.bucket
-      : null;
-
-  const lookThroughLabel =
-    lookThroughRequestedMode === "prefer_look_through" &&
-    lookThroughEffectiveMode === "prefer_look_through"
-      ? "Expanded exposure"
-      : "Direct holdings";
-
-  const syncAllocationViewState = (
-    nextViews: PortfolioAllocationView[],
-    nextRequestedMode: PortfolioLookThroughMode,
-    nextLookThrough: PortfolioAllocationLookThrough | null | undefined,
-  ) => {
-    setResolvedAllocationViews(nextViews);
-    setLookThroughRequestedMode(nextRequestedMode);
-    setLookThroughEffectiveMode(
-      normalizeLookThroughMode(
-        nextLookThrough?.effective_mode,
-        nextRequestedMode,
-      ),
-    );
-    setHoveredBucket(null);
-
-    if (!selectedAllocation) {
-      return;
-    }
-
-    const matchingView = nextViews.find(
-      (view) => view.dimension === selectedAllocation.dimension,
-    );
-    const bucketStillAvailable = matchingView?.buckets.some(
-      (bucket) => bucket.bucket === selectedAllocation.bucket,
-    );
-    if (!bucketStillAvailable) {
-      onSelectionChange(null);
-    }
-  };
-
-  const toggleLookThrough = async () => {
-    const nextMode: PortfolioLookThroughMode =
-      lookThroughRequestedMode === "prefer_look_through"
-        ? "direct_only"
-        : "prefer_look_through";
-    setLookThroughBusy(true);
-
-    try {
-      const response =
-        nextMode === "prefer_look_through" && cachedLookThroughResponse
-          ? {
-              views: cachedLookThroughResponse.views,
-              look_through: cachedLookThroughResponse.lookThrough,
-            }
-          : await getPortfolioAllocationViews(portfolioId, {
-              asOfDate,
-              reportingCurrency,
-              lookThroughMode: nextMode,
-            });
-
-      if (response?.views?.length) {
-        syncAllocationViewState(
-          response.views,
-          nextMode,
-          response.look_through,
-        );
-      }
-    } finally {
-      setLookThroughBusy(false);
-    }
-  };
+  const allocationState = usePortfolioAllocationPanelState({
+    portfolioId,
+    allocationViews,
+    asOfDate,
+    reportingCurrency,
+    selectedAllocation,
+    onSelectionChange,
+  });
+  const {
+    viewsByDimension,
+    activeDimension,
+    activeDimensionLabel,
+    buckets,
+    totalWeight,
+    chartType,
+    setChartType,
+    hoveredBucket,
+    setHoveredBucket,
+    selectedBucket,
+    lookThroughRequestedMode,
+    lookThroughLabel,
+    lookThroughSupported,
+    lookThroughBusy,
+    lookThroughProbeComplete,
+    changeDimension,
+    selectBucket,
+    toggleLookThrough,
+  } = allocationState;
 
   return (
     <div
@@ -243,11 +81,7 @@ export default function PortfolioAllocationPanel({
       <WorkbenchSummaryToolbar className="portfolio-allocation-toolbar">
         <WorkbenchSegmentedControl
           value={activeDimension}
-          onChange={(nextDimension) => {
-            setActiveDimension(nextDimension);
-            setHoveredBucket(null);
-            onSelectionChange(null);
-          }}
+          onChange={changeDimension}
           options={ALLOCATION_DIMENSIONS.map((dimension) => {
             const isAvailable = viewsByDimension.has(dimension.key);
             return {
@@ -256,7 +90,7 @@ export default function PortfolioAllocationPanel({
               disabled: !isAvailable,
               title: isAvailable
                 ? dimension.label
-                : `${dimension.label} pending source support`,
+                : `${dimension.label} allocation coverage unavailable`,
             };
           })}
           ariaLabel="Allocation dimensions"
@@ -298,8 +132,8 @@ export default function PortfolioAllocationPanel({
             }}
           >
             {lookThroughRequestedMode === "prefer_look_through"
-              ? "Look-through on"
-              : "Look-through off"}
+              ? "Expanded exposure"
+              : "Direct holdings"}
           </button>
         </div>
       </WorkbenchSummaryToolbar>
@@ -310,7 +144,7 @@ export default function PortfolioAllocationPanel({
         aria-label={`${activeDimensionLabel} allocation view`}
       >
         <div className="portfolio-analytical-utility-header">
-          <span>Current View</span>
+          <span>Allocation Lens</span>
           <strong>{`${activeDimensionLabel} • ${buckets.length} buckets • ${lookThroughLabel}`}</strong>
         </div>
         {buckets.length ? (
@@ -323,13 +157,7 @@ export default function PortfolioAllocationPanel({
                   hoveredBucket={hoveredBucket}
                   selectedBucket={selectedBucket}
                   onHover={setHoveredBucket}
-                  onSelect={(bucket) =>
-                    onSelectionChange(
-                      selectedBucket === bucket
-                        ? null
-                        : { dimension: activeDimension, bucket },
-                    )
-                  }
+                  onSelect={selectBucket}
                 />
               ) : null}
               {chartType === "bar" ? (
@@ -338,13 +166,7 @@ export default function PortfolioAllocationPanel({
                   hoveredBucket={hoveredBucket}
                   selectedBucket={selectedBucket}
                   onHover={setHoveredBucket}
-                  onSelect={(bucket) =>
-                    onSelectionChange(
-                      selectedBucket === bucket
-                        ? null
-                        : { dimension: activeDimension, bucket },
-                    )
-                  }
+                  onSelect={selectBucket}
                 />
               ) : null}
               {chartType === "table" ? (
@@ -353,13 +175,7 @@ export default function PortfolioAllocationPanel({
                   hoveredBucket={hoveredBucket}
                   selectedBucket={selectedBucket}
                   onHover={setHoveredBucket}
-                  onSelect={(bucket) =>
-                    onSelectionChange(
-                      selectedBucket === bucket
-                        ? null
-                        : { dimension: activeDimension, bucket },
-                    )
-                  }
+                  onSelect={selectBucket}
                 />
               ) : null}
             </div>

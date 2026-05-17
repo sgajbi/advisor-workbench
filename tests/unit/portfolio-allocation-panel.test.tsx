@@ -104,9 +104,15 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tab", { name: "Currency" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Sector" })).toBeEnabled();
     expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Region" })).toHaveAttribute(
+      "title",
+      "Region allocation coverage unavailable",
+    );
+    expect(screen.queryByTitle("Region pending source support")).not.toBeInTheDocument();
     expect(document.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
+    expect(screen.getByText("Allocation Lens")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Checking look-through support" })).toBeDisabled();
     expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
 
