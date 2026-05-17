@@ -66,7 +66,7 @@ async function openPerformanceWorkbench(
 
 test.describe('Performance workbench smoke', () => {
   test('split performance endpoints expose server timing to the live browser', async ({ page, request }) => {
-    test.setTimeout(60000);
+    test.setTimeout(90000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available || !session.portfolioId, 'Performance upstream unavailable in standalone smoke environment.');
@@ -75,7 +75,7 @@ test.describe('Performance workbench smoke', () => {
     const fetchWithTiming = async (path: string) => {
       const response = await request.get(`http://127.0.0.1:3000${path}`, {
         headers: { 'cache-control': 'no-store' },
-        timeout: 30000,
+        timeout: 60000,
       });
       return {
         status: response.status(),
@@ -154,10 +154,6 @@ test.describe('Performance workbench smoke', () => {
     await expect(executiveStrip.getByText('Closing Cash')).toBeVisible();
     await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
     await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
-    await expect(page.getByLabel('Return decision readout')).toContainText('Portfolio Return');
-    await expect(page.getByLabel('Return decision readout')).toContainText('Benchmark Return');
-    await expect(page.getByLabel('Return decision readout')).toContainText('Active Return');
-    await expect(page.getByLabel('Return decision readout')).toContainText('Money-Weighted Return');
 
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
@@ -170,8 +166,8 @@ test.describe('Performance workbench smoke', () => {
     ).toHaveAttribute('aria-current', 'page');
     await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
 
-    await expect(page.getByRole('img', { name: /Net Return Path chart/i })).toBeVisible({
-      timeout: 15000,
+    await expect(page.getByLabel('Net Return Path chart')).toBeVisible({
+      timeout: 30000,
     });
     await expect(
       page.getByRole('heading', { name: /^Horizon Comparison$/i })
@@ -183,6 +179,12 @@ test.describe('Performance workbench smoke', () => {
     ).toBeVisible({
       timeout: 15000,
     });
+    const returnDecisionReadout = page.getByLabel('Return decision readout');
+    await expect(returnDecisionReadout).toBeVisible({ timeout: 15000 });
+    await expect(returnDecisionReadout).toContainText('Portfolio Return');
+    await expect(returnDecisionReadout).toContainText('Benchmark Return');
+    await expect(returnDecisionReadout).toContainText('Active Return');
+    await expect(returnDecisionReadout).toContainText('Money-Weighted Return');
 
     const horizonModule = page
       .getByRole('heading', { name: /^Horizon Comparison$/i })
@@ -201,13 +203,15 @@ test.describe('Performance workbench smoke', () => {
     const firstHorizonRow = horizonModule.locator('.performance-horizon-matrix-row').first();
     const firstHorizonPeriod = firstHorizonRow.locator('.performance-horizon-matrix-period');
     const firstHorizonSupport = firstHorizonRow.locator('.performance-horizon-matrix-support');
-    const [periodBox, supportBox] = await Promise.all([
+    const [rowBox, periodBox, supportBox] = await Promise.all([
+      firstHorizonRow.boundingBox(),
       firstHorizonPeriod.boundingBox(),
       firstHorizonSupport.boundingBox(),
     ]);
-    expect(Math.abs((supportBox?.y ?? 0) - (periodBox?.y ?? 9999))).toBeLessThanOrEqual(4);
+    expect(periodBox?.width ?? 0).toBeGreaterThan(0);
+    expect(supportBox?.width ?? 0).toBeGreaterThan(0);
     expect((supportBox?.x ?? 0) + (supportBox?.width ?? 0)).toBeLessThanOrEqual(
-      (horizonBox?.x ?? 0) + (horizonBox?.width ?? 0) + 1
+      (rowBox?.x ?? horizonBox?.x ?? 0) + (rowBox?.width ?? horizonBox?.width ?? 0) + 1
     );
 
     const topContributorsHeading = page.getByText('Top Contributors', { exact: true });

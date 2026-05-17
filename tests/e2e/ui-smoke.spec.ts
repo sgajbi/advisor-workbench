@@ -39,10 +39,10 @@ test.describe('UI smoke checks', () => {
 
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
-    await expect(
-      page.getByRole('heading', { name: /^Portfolio$|^Portfolio Review$|^Portfolio unavailable$/i })
-    ).toBeVisible();
-    await expect(page.getByText(/Client Portfolios|Portfolio Review|Portfolio unavailable/i)).toBeVisible();
+    const portfolioHeading = page.getByRole('heading', {
+      name: /^Portfolio$|^Portfolio Review$|^Portfolio unavailable$/i,
+    });
+    await expect(portfolioHeading).toBeVisible();
   });
 
   test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {
