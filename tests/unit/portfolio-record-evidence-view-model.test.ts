@@ -71,6 +71,9 @@ describe("portfolio record evidence view model", () => {
       "Cashflow",
       "Mandate Operations",
     ]);
+    expect(viewModel.adjacentWorkflows.map((workflow) => workflow.label)).not.toContain(
+      "Positions",
+    );
   });
 
   it("builds income and activity evidence with front-office copy", () => {
@@ -94,11 +97,13 @@ describe("portfolio record evidence view model", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Income Source",
+          source: "Book records",
           detail: "No classified income returned for the selected reporting window",
           status: "Unavailable",
         }),
         expect.objectContaining({
           label: "Activity Buckets",
+          source: "Activity classification",
           detail: "No activity buckets returned for the selected reporting window",
           status: "Unavailable",
         }),

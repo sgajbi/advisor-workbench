@@ -199,7 +199,9 @@ describe("PortfolioWorkspaceClient", () => {
 
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
     expect(getShellWorkspaceMock).toHaveBeenCalledWith("MANUAL_PB_USD_001");
-    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    });
     expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       reportingCurrency: "USD",
