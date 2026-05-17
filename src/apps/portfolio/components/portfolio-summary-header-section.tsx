@@ -63,7 +63,7 @@ export default function PortfolioSummaryHeaderSection({
             {
               key: "aum",
               label: "AUM",
-              value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
+              value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Total portfolio market value in the portfolio base currency as of the selected date.",
               support: `As of ${formatDate(context.selectedAsOfDate)}`,
@@ -74,7 +74,8 @@ export default function PortfolioSummaryHeaderSection({
               label: "Invested Assets",
               value: formatCurrency(
                 workspace.summary.invested_market_value_base,
-                workspace.portfolio.base_currency
+                workspace.portfolio.base_currency,
+                0
               ),
               definition:
                 "Market value currently invested in funded holdings, excluding operational cash inventory.",
@@ -84,7 +85,7 @@ export default function PortfolioSummaryHeaderSection({
             {
               key: "available_cash",
               label: "Cash",
-              value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
+              value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Available cash inventory in the portfolio base currency across published cash balances.",
               support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,

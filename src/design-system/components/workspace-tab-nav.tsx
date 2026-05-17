@@ -26,8 +26,13 @@ export default function WorkspaceTabNav({
         item.disabled || !item.href ? (
           <span
             key={item.key}
-            className="workspace-tab-nav-link workspace-tab-nav-link-disabled"
+            className={cx(
+              "workspace-tab-nav-link",
+              item.active && "workspace-tab-nav-link-active",
+              "workspace-tab-nav-link-disabled"
+            )}
             aria-disabled="true"
+            aria-current={item.active ? "page" : undefined}
             title={item.title}
           >
             {item.label}

@@ -217,7 +217,7 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
       {
         label: "Next action",
         value: nextAction?.title ?? "Review book",
-        support: nextAction?.impact?.split(".")[0] ?? "Use the active workflow links for drill-down.",
+        support: nextAction?.impact?.split(".")[0] ?? "Open the relevant workflow to resolve the attention item.",
       },
     ],
   };

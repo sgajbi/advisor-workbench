@@ -115,26 +115,33 @@ export async function validatePortfolioPanels(
     waitUntil: "networkidle",
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Portfolio Summary", exact: true })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Portfolio Review", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: portfolioId, exact: true })).toBeVisible({
+  await expect(page.getByRole("region", { name: "Portfolio decision review" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Asset Allocation" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Balanced Mandate", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Top Holdings" })).toBeVisible({
+  await expect(page.getByText("MTD Return")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByLabel("Portfolio summary previews")).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByRole("heading", { name: "Recent Transactions" })).toBeVisible({
+  await expect(page.getByText("QTD Return")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Forward Cashflow" })).toBeVisible({
+  await expect(page.getByText("YTD Return")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByLabel("Projected cashflow points")).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByRole("heading", { name: "Review priority attention" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Review Evidence" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Performance Snapshot" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Summary" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Detailed" })).toHaveCount(0);
   await screenshotRegisteredPanel(page, "portfolio.summary");
 }
 
@@ -418,7 +425,7 @@ export async function validateOutcomeReviewPanel(
   await expect(outcomeReviewPanel.getByRole("button", { name: "Request report" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(outcomeReviewPanel.getByRole("button", { name: "Request advisor memo" })).toBeVisible({
+  await expect(outcomeReviewPanel.getByRole("button", { name: "Request advisor memo", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.outcome_review");
@@ -484,11 +491,11 @@ export async function validateDpmWaveCommandCenterPanel(
     "Open Evidence Pack",
     "Load Changes",
   ]) {
-    await expect(wavePanel.getByRole("button", { name: actionName })).toBeVisible({
+    await expect(wavePanel.getByRole("button", { name: actionName, exact: true })).toBeVisible({
       timeout: timeoutMs,
     });
   }
-  await wavePanel.getByRole("button", { name: "Preview" }).click({
+  await wavePanel.getByRole("button", { name: "Preview", exact: true }).click({
     timeout: timeoutMs,
   });
   await expect(wavePanel.getByText("Preview completed.")).toBeVisible({
